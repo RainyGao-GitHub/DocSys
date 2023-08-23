@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.DocSystem.common.ActionContext;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
@@ -43,6 +44,9 @@ public class CommonAction {
 	//if true 表示需要对子目录也执行相同的action
 	public boolean recursion = false;
     
+	//ActionContext For VerReposCommit
+	public ActionContext context = null;
+	
 	public void setAction(Action action) {
 		this.action = action;
 	}
@@ -212,7 +216,14 @@ public class CommonAction {
     //ActionId 1:FS 2:VerRepos 3:DB 4:Index  5:AutoSyncUp
 	//ActionType 1:add 2:delete 3:update 4:move 5:copy
     //DocType 0:DocName 1:RealDoc 2:VirtualDoc   AutoSyncUp(1: localDocChanged  2: remoteDocChanged)
-	public static void insertCommonAction(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser, ActionType actionId, Action actionType, DocType docType, List<CommonAction> subActionList, User user, boolean recursion) 
+	public static void insertCommonAction(List<CommonAction> actionList, 
+			Repos repos, Doc srcDoc, Doc dstDoc, 
+			String commitMsg,String commitUser, 
+			ActionType actionId, Action actionType, DocType docType,
+			List<CommonAction> subActionList, 
+			User user, 
+			boolean recursion, 
+			ActionContext context) 
 	{	
 		CommonAction action = new CommonAction();
 		action.setType(actionId);		
@@ -231,11 +242,18 @@ public class CommonAction {
 		
 		action.setSubActionList(subActionList);
 		action.recursion = recursion;
+		action.context = context;
 		
 		actionList.add(action);
 	}
 	
-	public static void insertCommonActionEx(List<CommonAction> actionList, Repos repos, Doc srcDoc, Doc dstDoc, List<Doc> docList, String commitMsg,String commitUser, ActionType actionId, Action actionType, DocType docType, String actionName, List<CommonAction> subActionList, User user, boolean recursion) 
+	public static void insertCommonActionEx(List<CommonAction> actionList, 
+			Repos repos, Doc srcDoc, Doc dstDoc, List<Doc> docList, 
+			String commitMsg,String commitUser, 
+			ActionType actionId, Action actionType, DocType docType, String actionName, 
+			List<CommonAction> subActionList, 
+			User user, 
+			boolean recursion) 
 	{	
 		CommonAction action = new CommonAction();
 		action.setType(actionId);		

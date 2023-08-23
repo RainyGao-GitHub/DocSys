@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.DocSystem.common.entity.BackupConfig;
+import com.DocSystem.common.entity.CommitEntry;
+import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposFullBackupTask;
@@ -85,4 +87,8 @@ public interface Channel {
 	void searchDocAsync(List<Repos> reposList, DocSearchContext searchContext);
 
 	List<SystemLog> getSystemLogList(SystemLog queryLog, Long startTime, Long endTime);
+
+	void insertCommitEntry(CommitEntry entry);
+
+	void insertCommit(CommitLog commit);
 }

@@ -148,6 +148,7 @@ import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;
+import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.common.entity.MxsDocConfig;
@@ -1223,7 +1224,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(checkLock == false || false == checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, user, false))
 		{
-			CommonAction.insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AutoSyncup, syncType, DocType.REALDOC, null, user, false);
+			CommonAction.insertCommonAction(actionList,repos,doc, null, commitMsg, user.getName(), ActionType.AutoSyncup, syncType, DocType.REALDOC, null, user, false, null);
 		}
 	}
 	
@@ -3913,8 +3914,8 @@ public class BaseController  extends BaseFunction{
 			return 1;
 		}
 		
-		//TODO: insertCommit
-		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
+		//TODO: 由于版本提交是异步操作，为了避免异步调用过程出错，所以总是先插入记录，
+		//		然后在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -3923,7 +3924,7 @@ public class BaseController  extends BaseFunction{
 			//Insert VerRepos Add Action
 			if(repos.getVerCtrl() > 0)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false, context);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -3956,7 +3957,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//BuildMultiActionListForDocAdd();
-		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser);
+		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser, context);
 
 		if(asyncActionList != null && asyncActionList.size() > 0)
 		{
@@ -4080,7 +4081,7 @@ public class BaseController  extends BaseFunction{
 			//Insert VerRepos Add Action
 			if(repos.getVerCtrl() > 0)
 			{
-				CommonAction.insertCommonAction(asyncActionList , repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList , repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.REALDOC, null, login_user, false, context);
 			}
 		}
 		else
@@ -4095,7 +4096,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//BuildMultiasyncActionListForDocAdd();
-		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser);
+		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser, context);
 		if(asyncActionList != null && asyncActionList.size() > 0)
 		{
 			context.docLockType = lockType;
@@ -4239,7 +4240,7 @@ public class BaseController  extends BaseFunction{
 			//Insert VerRepos Add Action
 			if(repos.getVerCtrl() > 0)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action_Type, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action_Type, DocType.REALDOC, null, login_user, false, context);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -4272,7 +4273,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//BuildMultiActionListForDocAdd();
-		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser);
+		BuildAsyncActionListForDocAdd(asyncActionList, repos, doc, commitMsg, commitUser, context);
 
 		if(asyncActionList != null && asyncActionList.size() > 0)
 		{
@@ -4466,7 +4467,7 @@ public class BaseController  extends BaseFunction{
 			//Insert VerRepos Delete Action
 			if(repos.getVerCtrl() > 0)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.DELETE, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.DELETE, DocType.REALDOC, null, login_user, false, context);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -4504,7 +4505,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Build ActionList for RDocIndex/VDoc/VDocIndex/VDocVerRepos delete
-		BuildAsyncActionListForDocDelete(asyncActionList, repos, doc, commitMsg, commitUser,true);
+		BuildAsyncActionListForDocDelete(asyncActionList, repos, doc, commitMsg, commitUser,true, context);
 		
 		if(asyncActionList != null && asyncActionList.size() > 0)
 		{
@@ -4524,7 +4525,12 @@ public class BaseController  extends BaseFunction{
 	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
 	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, 
 			String commitId, Long commitTime, String commitMsg, String commitUsers, User user) {
-		//TODO:
+		
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return;
+		}
+		
 		CommitEntry entry = new CommitEntry();
 		entry.id = commitId;
 		entry.time = commitTime;
@@ -4540,10 +4546,18 @@ public class BaseController  extends BaseFunction{
 		entry.reposName = repos.getName();
 		entry.path = doc.getPath();
 		entry.name = doc.getName();
+		
+		channel.insertCommitEntry(entry);
 	}
 	
 	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, 
 			String commitId, Long commitTime, String commitMsg, String commitUser, User user) {
+		
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return;
+		}
+		
 		switch(action)
 		{
 		case "copyDoc":
@@ -4560,6 +4574,11 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void insertCommit(Repos repos, ActionContext context) {
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return;
+		}
+		
 		// TODO Auto-generated method stub
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
@@ -4575,10 +4594,16 @@ public class BaseController  extends BaseFunction{
 		
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();
+		
+		channel.insertCommit(commit);
 	}
 	
 	private void insertCommit(Repos repos, FolderUploadAction action) {
-		// TODO Auto-generated method stub
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return;
+		}
+		
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
@@ -4592,23 +4617,55 @@ public class BaseController  extends BaseFunction{
 		commit.commitUsers = action.commitUser;
 		
 		commit.reposId = repos.getId();
-		commit.reposName = repos.getName();				
+		commit.reposName = repos.getName();		
+		
+		channel.insertCommit(commit);
 	}
 	
-	private void updateCommit(String commitId) {
-		// TODO Auto-generated method stub
+	private void updateCommit(Repos repos, ActionContext context) {
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return;
+		}
+		
+		//reposId / reposName
+		//commitMsg / commitUser / commitId
+		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
+		
+	}
+	
+	private void updateCommit(Repos repos, FolderUploadAction action) {
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return;
+		}
+		
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
 		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		
 	}
 
-	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser) 
+	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser, ActionContext context) 
 	{
 		//Insert index add action for RDoc Name
-		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.DOCNAME, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, 
+				repos, doc, null, 
+				commitMsg, commitUser, 
+				ActionType.SearchIndex, Action.ADD, DocType.DOCNAME, 
+				null, 
+				null, 
+				false, 
+				null);
 		//Insert index add action for RDoc
-		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.REALDOC, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, 
+				repos, doc, null, 
+				commitMsg, commitUser, 
+				ActionType.SearchIndex, Action.ADD, DocType.REALDOC, 
+				null, 
+				null, 
+				false,
+				null);
 
 		
 		//Insert add action for VDoc
@@ -4621,26 +4678,61 @@ public class BaseController  extends BaseFunction{
 		List<CommonAction> subActionList = new ArrayList<CommonAction>();
 		if(repos.getVerCtrl1() > 0)
 		{
-			CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.ADD, DocType.VIRTURALDOC, null, null, false); //verRepos commit
+			CommonAction.insertCommonAction(subActionList, 
+					repos, doc, null, 
+					commitMsg, commitUser, 
+					ActionType.VerRepos, Action.ADD, DocType.VIRTURALDOC, 
+					null, 
+					null, 
+					false,
+					context); //verRepos commit
 		}
-		CommonAction.insertCommonAction(subActionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.VIRTURALDOC, null, null, false);	//Add Index For VDoc
+		CommonAction.insertCommonAction(subActionList, 
+				repos, doc, null, 
+				commitMsg, commitUser, 
+				ActionType.SearchIndex, Action.ADD, DocType.VIRTURALDOC, 
+				null,
+				null, 
+				false,
+				null);	//Add Index For VDoc
 		
 		//Insert add action for VDoc
-		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.FS, Action.ADD, DocType.VIRTURALDOC, subActionList, null, false);			
+		CommonAction.insertCommonAction(asyncActionList, 
+				repos, doc, null, 
+				commitMsg, commitUser, 
+				ActionType.FS, Action.ADD, DocType.VIRTURALDOC, 
+				subActionList, 
+				null, 
+				false,
+				null);			
 	}
 
-	protected void BuildAsyncActionListForDocDelete(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs) 
+	protected void BuildAsyncActionListForDocDelete(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser, boolean deleteSubDocs, ActionContext context) 
 	{
 		//注意：删除操作的VirtualDoc是不删除的
 		
 		//Insert index delete action for All( DocName / RDoc /VDoc )
-		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.DELETE, DocType.ALL, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, 
+				repos, doc, null, 
+				commitMsg, commitUser, 
+				ActionType.SearchIndex, Action.DELETE, DocType.ALL, 
+				null, 
+				null, 
+				false,
+				null);
 	}
 
 	void BuildAsyncActionListForDocUpdate(List<CommonAction> asyncActionList, Repos repos, Doc doc, String reposRPath) 
 	{		
 		//Insert index update action for RDoc
-		CommonAction.insertCommonAction(asyncActionList, repos, doc, null, null, null, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.REALDOC, null, null, false);
+		CommonAction.insertCommonAction(asyncActionList, 
+				repos, doc, null, 
+				null, null, 
+				ActionType.SearchIndex, Action.UPDATE, DocType.REALDOC, 
+				null, 
+				null, 
+				false,
+				null);
 	}
 	
 	private void BuildAsyncActionListForDocCopy(List<CommonAction> asyncActionList, Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, String commitUser, boolean isMove)
@@ -4664,16 +4756,37 @@ public class BaseController  extends BaseFunction{
 		{								
 			//Doc的VirtualDoc的移动或复制操作（目录的话会移动或复制其子目录的VirtualDoc）
 			//注意：copy和move操作的VirtualDoc是不进行版本提交的
-			CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.VFS, actionId, DocType.VIRTURALDOC, null, null, true);
+			CommonAction.insertCommonAction(asyncActionList, 
+					repos, srcDoc, dstDoc, 
+					commitMsg, commitUser, 
+					ActionType.VFS, actionId, DocType.VIRTURALDOC, 
+					null, 
+					null, 
+					true,
+					null);
 			
 			//Insert IndexAction For Copy or Move
 			if(isMove)  //delete all index for srcDoc and add all index for dstDoc (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.MOVE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);
+				CommonAction.insertCommonAction(asyncActionList, 
+						repos, srcDoc, dstDoc, 
+						commitMsg, commitUser, 
+						ActionType.SearchIndex, Action.MOVE, DocType.ALL, 
+						null, 
+						null, 
+						true,
+						null);
 			}
 			else	//ADD all index for dstDoc (DocName /RDoc /VDoc)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, srcDoc, dstDoc, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.COPY, com.DocSystem.common.CommonAction.DocType.ALL, null, null, true);				
+				CommonAction.insertCommonAction(asyncActionList, 
+						repos, srcDoc, dstDoc, 
+						commitMsg, commitUser, 
+						ActionType.SearchIndex, Action.COPY, DocType.ALL, 
+						null, 
+						null, 
+						true,
+						null);				
 			}
 		}	
 	}
@@ -8006,13 +8119,32 @@ public class BaseController  extends BaseFunction{
 			//Insert VerRepos Update Action
 			if(repos.getVerCtrl() > 0)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, 
+						repos, doc, null, 
+						commitMsg, commitUser, 
+						ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, 
+						null, 
+						login_user, 
+						false,
+						context);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{	
-				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
-				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, 
+						repos, doc, null, null, 
+						commitMsg, commitUser, 
+						ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDoc", 
+						null, 
+						login_user, 
+						false);
+				CommonAction.insertCommonActionEx(asyncActionList, 
+						repos, doc, null, null, 
+						commitMsg, commitUser, 
+						ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", 
+						null, 
+						login_user, 
+						false);
 				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 			}
@@ -8129,7 +8261,14 @@ public class BaseController  extends BaseFunction{
 			//Insert VerRepos Update Action
 			if(repos.getVerCtrl() > 0)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, 
+						repos, doc, null, 
+						commitMsg, commitUser, 
+						ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, 
+						null, 
+						login_user, 
+						false,
+						context);
 			}
 		}
 		else
@@ -8503,13 +8642,32 @@ public class BaseController  extends BaseFunction{
 			//Insert VerRepos Update Action
 			if(repos.getVerCtrl() > 0)
 			{
-				CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(asyncActionList, 
+						repos, doc, null, 
+						commitMsg, commitUser, 
+						ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, 
+						null, 
+						login_user, 
+						false,
+						context);
 			}
 			
 			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
 			{	
-				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
-				CommonAction.insertCommonActionEx(asyncActionList, repos, doc, null, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", null, login_user, false);
+				CommonAction.insertCommonActionEx(asyncActionList, 
+						repos, doc, null, null, 
+						commitMsg, commitUser, 
+						ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDoc", 
+						null, 
+						login_user, 
+						false);
+				CommonAction.insertCommonActionEx(asyncActionList, 
+						repos, doc, null, null, 
+						commitMsg, commitUser, 
+						ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", 
+						null, 
+						login_user, 
+						false);
 				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 			}
@@ -8549,7 +8707,9 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected boolean updateRealDocContent(Repos repos, Doc doc, 
-			String commitMsg, String commitUser, User login_user,ReturnAjax rt, List<CommonAction> actionList) 
+			String commitMsg, String commitUser, User login_user,ReturnAjax rt, 
+			List<CommonAction> actionList, 
+			HttpServletRequest request, String event, String subEvent, String eventName, String queryId) 
 	{		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
@@ -8563,7 +8723,12 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}		
 		
-		boolean ret = updateRealDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), login_user, event, subEvent, eventName, queryId, repos, doc, null, null);
+		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";
+		context.commitMsg = commitMsg;
+		context.commitUser = login_user.getName();
+		
+		boolean ret = updateRealDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList, context);
 		
 		//revert the lockStatus
 		unlockDoc(doc, lockType, login_user);
@@ -8572,7 +8737,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean updateRealDocContent_FSM(Repos repos, Doc doc,
-			String commitMsg, String commitUser, User login_user, ReturnAjax rt, List<CommonAction> asyncActionList) 
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt, 
+			List<CommonAction> asyncActionList,
+			 ActionContext context) 
 	{
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);	
@@ -8595,7 +8762,14 @@ public class BaseController  extends BaseFunction{
 				//Insert VerRepos Update Action
 				if(repos.getVerCtrl() > 0)
 				{
-					CommonAction.insertCommonAction(asyncActionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, null, login_user, false);
+					CommonAction.insertCommonAction(asyncActionList, 
+							repos, doc, null, 
+							commitMsg, commitUser, 
+							ActionType.VerRepos, Action.UPDATE, DocType.REALDOC, 
+							null, 
+							login_user, 
+							false,
+							context);
 				}
 				
 				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
@@ -8661,10 +8835,24 @@ public class BaseController  extends BaseFunction{
 		verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, null, 2, null, null);
 
 		//Insert Push Action
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
+		CommonAction.insertCommonAction(actionList, 
+				repos, doc, null, 
+				commitMsg, commitUser, 
+				ActionType.VerRepos, Action.PUSH, DocType.VIRTURALDOC, 
+				null, 
+				login_user, 
+				false,
+				null);
 
 		//Insert index add action for VDoc
-		CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
+		CommonAction.insertCommonAction(actionList, 
+				repos, doc, null, 
+				commitMsg, commitUser, 
+				ActionType.SearchIndex, Action.UPDATE, DocType.VIRTURALDOC, 
+				null, 
+				login_user, 
+				false,
+				null);
 		return true;
 	}
 	
@@ -8699,10 +8887,24 @@ public class BaseController  extends BaseFunction{
 				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, null, 2, null, null);
 
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, 
+						repos, doc, null, 
+						commitMsg, commitUser, 
+						ActionType.VerRepos, Action.PUSH, DocType.VIRTURALDOC, 
+						null, 
+						login_user, 
+						false,
+						null);
 
 				//Insert index add action for VDoc
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.UPDATE, DocType.VIRTURALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, 
+						repos, doc, null, 
+						commitMsg, commitUser, 
+						ActionType.SearchIndex, Action.UPDATE, DocType.VIRTURALDOC, 
+						null, 
+						login_user, 
+						false,
+						null);
 				return true;
 			}
 		}
@@ -8715,10 +8917,24 @@ public class BaseController  extends BaseFunction{
 				verReposDocCommit(repos, false, vDoc, commitMsg, commitUser,rt, null, 2, null, null);
 
 				//Insert Push Action
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.VerRepos, Action.PUSH, DocType.VIRTURALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, 
+						repos, doc, null, 
+						commitMsg, commitUser, 
+						ActionType.VerRepos, Action.PUSH, DocType.VIRTURALDOC, 
+						null, 
+						login_user, 
+						false,
+						null);
 
 				//Insert index update action for VDoc
-				CommonAction.insertCommonAction(actionList, repos, doc, null, commitMsg, commitUser, ActionType.SearchIndex, Action.ADD, DocType.VIRTURALDOC, null, login_user, false);
+				CommonAction.insertCommonAction(actionList, 
+						repos, doc, null, 
+						commitMsg, commitUser, 
+						ActionType.SearchIndex, Action.ADD, DocType.VIRTURALDOC, 
+						null, 
+						login_user, 
+						false,
+						null);
 				return true;
 			}
 		}
@@ -21254,7 +21470,6 @@ public class BaseController  extends BaseFunction{
 		User user = action.user;
 		String commitMsg = action.commitMsg;
 		String commitUser = action.commitUser;
-		String commitId = action.commitId;
 		String localChangesRootPath =  action.localChangesRootPath;
 
 		Log.info("folderUploadEndHander() [" + doc.getPath() + doc.getName() + "]");
@@ -21284,7 +21499,7 @@ public class BaseController  extends BaseFunction{
 				if(revision != null)
 				{
 					//更新commitInfo的版本提交信息: 将revision写入commitInfo中
-					updateCommit(commitId);
+					updateCommit(repos, action);
 					
 					verReposPullPush(repos, true, rt);
 				
@@ -21292,7 +21507,7 @@ public class BaseController  extends BaseFunction{
 				else
 				{
 					//更新commitInfo的版本提交信息: 将verReposDocCommit失败的信息写入commitInfo中
-					updateCommit(commitId);					
+					updateCommit(repos, action);					
 				}
 				
 				//远程自动推送

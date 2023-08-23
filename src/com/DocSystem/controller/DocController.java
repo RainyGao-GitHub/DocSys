@@ -2129,7 +2129,7 @@ public class DocController extends BaseController{
 			{
 				commitMsg = "更新 " + path + name;
 			}
-			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList);
+			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList, request, "updateDocContent", "updateDocContent", "修改文件", taskId);
 			
 			writeJson(rt, response);
 	
