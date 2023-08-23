@@ -88,9 +88,9 @@ public interface Channel {
 
 	List<SystemLog> getSystemLogList(SystemLog queryLog, Long startTime, Long endTime);
 
-	void insertCommitEntry(CommitEntry entry);
+	void insertCommitEntry(Repos repos, CommitEntry entry);
 
-	void insertCommit(CommitLog commit);
+	void insertCommit(Repos repos, CommitLog commit);
 
-	void updateCommit(CommitLog commit);
+	void updateCommit(Repos repos, CommitLog commit);
 }

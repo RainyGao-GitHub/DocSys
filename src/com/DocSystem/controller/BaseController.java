@@ -4596,10 +4596,12 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		CommitEntry entry = new CommitEntry();
-		entry.id = commitId;
+		entry.id = commitId + "_" + doc.getDocId();
 		entry.time = commitTime;
 		entry.userId = user.getId();
 		entry.userName = user.getName();
+
+		entry.commitId = commitId;
 		entry.commitMsg = commitMsg;
 		entry.commitUsers = commitUsers;
 
@@ -4611,7 +4613,7 @@ public class BaseController  extends BaseFunction{
 		entry.path = doc.getPath();
 		entry.name = doc.getName();
 		
-		channel.insertCommitEntry(entry);
+		channel.insertCommitEntry(repos, entry);
 	}
 	
 	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, 
@@ -4659,7 +4661,7 @@ public class BaseController  extends BaseFunction{
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();
 		
-		channel.insertCommit(commit);
+		channel.insertCommit(repos, commit);
 	}
 	
 	
@@ -4688,7 +4690,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: fill verReposInfo
 		
-		channel.updateCommit(commit);
+		channel.updateCommit(repos, commit);
 	}
 	
 	private void insertCommit(Repos repos, FolderUploadAction action) {
@@ -4712,7 +4714,7 @@ public class BaseController  extends BaseFunction{
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();		
 		
-		channel.insertCommit(commit);
+		channel.insertCommit(repos, commit);
 	}
 	
 	private void updateCommit(Repos repos, FolderUploadAction action) {
@@ -4739,7 +4741,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: fill verReposInfo
 		
-		channel.insertCommit(commit);
+		channel.updateCommit(repos, commit);
 	}
 
 	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser, ActionContext context) 
@@ -11886,7 +11888,52 @@ public class BaseController  extends BaseFunction{
 	}
 	
     /************************* DocSys全文搜索操作接口 ***********************************/
-    //indexLibType
+	/**************** IndexLib For CommitHistory *******/
+	protected static String getIndexLibPathForCommitEntry(Repos repos, Date date)
+	{
+		String indexLib = repos.getPath() + "ReposHistory/" + date.getYear() + "-" + date.getMonth() + "/CommitEntry";	
+		return indexLib;
+	}
+	
+	protected static String getIndexLibPathForCommitLog(Repos repos, Date date)
+	{
+		String indexLib = repos.getPath() + "ReposHistory/" + date.getYear() + "-" + date.getMonth() + "/CommitLog";	
+		return indexLib;
+	}
+	
+	//Add Index For CommitEntry
+	public boolean addIndexForCommitEntry(Repos repos, CommitEntry entry)
+	{
+		Log.debug("addIndexForCommitEntry() commitId:" + entry.commitId);
+		Date date = new Date(entry.time);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		boolean ret = false;
+		ret = LuceneUtil2.addCommitEntryIndex(entry, indexLib);
+		return ret;
+	}
+	
+	public boolean addIndexForCommitLog(Repos repos, CommitLog commit)
+	{
+		Log.debug("addIndexForCommitEntry() commitId:" + commit.id);
+		Date date = new Date(commit.time);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		boolean ret = false;
+		ret = LuceneUtil2.addCommitLogIndex(commit, indexLib);
+		return ret;
+	}
+	
+	public boolean updateIndexForCommitLog(Repos repos, CommitLog commit)
+	{
+		Log.debug("addIndexForCommitEntry() commitId:" + commit.id);
+		Date date = new Date(commit.time);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		boolean ret = false;
+		ret = LuceneUtil2.updateCommitLogIndex(commit, indexLib);
+		return ret;
+	}
+	
+	/*********************** IndexLib For Doc ****************************/
+	//indexLibType
     protected final static int INDEX_DOC_NAME	=0;
     protected final static int INDEX_R_DOC		=1;
     protected final static int INDEX_V_DOC		=2;
