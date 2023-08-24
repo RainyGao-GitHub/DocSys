@@ -19,7 +19,7 @@ public class CommitLog {
 	public String reposName;	//reposName
 	
 	public String verReposInfo;			//verReposInfo (url/user/pwd)
-	public Integer verReposStatus = 0;	//status for verReposCommit: 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息
+	public Integer verReposStatus;	//status for verReposCommit: 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息
 	public String verReposRevision;		//revision of this verReposCommit
 	public String verReposErrorInfo;	//errorInfo of this verReposCommit
 }
