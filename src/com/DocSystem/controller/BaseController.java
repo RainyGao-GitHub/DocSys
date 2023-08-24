@@ -4590,10 +4590,10 @@ public class BaseController  extends BaseFunction{
 	private void insertCommitEntry(Repos repos, Doc doc, String action, String subAction, 
 			Long commitId, Long startTime, String commitMsg, String commitUsers, User user) {
 		
-		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		{
-			return;
-		}
+		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		//{
+		//	return;
+		//}
 		
 		CommitEntry entry = new CommitEntry();
 		entry.id = buildUniqueIdForCommitEntry(commitId, repos, doc);
@@ -4620,10 +4620,10 @@ public class BaseController  extends BaseFunction{
 	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, 
 			Long commitId, Long commitTime, String commitMsg, String commitUser, User user) {
 		
-		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		{
-			return;
-		}
+		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		//{
+		//	return;
+		//}
 		
 		switch(action)
 		{
@@ -4641,10 +4641,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void insertCommit(Repos repos, ActionContext context) {
-		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		{
-			return;
-		}
+		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		//{
+		//	return;
+		//}
 		
 		// TODO Auto-generated method stub
 		//reposId / reposName
@@ -4670,10 +4670,10 @@ public class BaseController  extends BaseFunction{
 	
 	
 	private void updateCommit(Repos repos, ActionContext context) {
-		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		{
-			return;
-		}
+		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		//{
+		//	return;
+		//}
 		
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
@@ -4706,10 +4706,10 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private void insertCommit(Repos repos, FolderUploadAction action) {
-		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		{
-			return;
-		}
+		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		//{
+		//	return;
+		//}
 		
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
@@ -4732,10 +4732,10 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private void updateCommit(Repos repos, FolderUploadAction action) {
-		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		{
-			return;
-		}
+		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		//{
+		//	return;
+		//}
 		
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
@@ -11931,20 +11931,20 @@ public class BaseController  extends BaseFunction{
 	
 	protected static String getIndexLibPathForCommitEntry(Repos repos, int year)
 	{
-		String indexLib = repos.getPath() + "ReposHistory/" + year + "/CommitEntry";	
+		String indexLib = repos.getPath() + repos.getId() + "/ReposHistory/CommitEntry_" + year;	
 		return indexLib;
 	}
 	
 	protected static String getIndexLibPathForCommitLog(Repos repos, int year)
 	{
-		String indexLib = repos.getPath() + "ReposHistory/" + year + "/CommitLog";	
+		String indexLib = repos.getPath() + repos.getId() + "/ReposHistory/CommitLog_" + year;	
 		return indexLib;
 	}
 	
 	//Add Index For CommitEntry
 	public boolean addIndexForCommitEntry(Repos repos, CommitEntry entry)
 	{
-		Log.debug("addIndexForCommitEntry() commitId:" + entry.commitId);
+		Log.debug("addIndexForCommitEntry() id:" + entry.id);
 		Date date = new Date(entry.startTime);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date);
 		boolean ret = false;
@@ -11954,9 +11954,9 @@ public class BaseController  extends BaseFunction{
 	
 	public boolean addIndexForCommitLog(Repos repos, CommitLog commit)
 	{
-		Log.debug("addIndexForCommitEntry() id:" + commit.id);
+		Log.debug("addIndexForCommitLog() id:" + commit.id);
 		Date date = new Date(commit.startTime);
-		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		String indexLib = getIndexLibPathForCommitLog(repos, date);
 		boolean ret = false;
 		ret = LuceneUtil2.addCommitLogIndex(commit, indexLib);
 		return ret;
@@ -11964,9 +11964,9 @@ public class BaseController  extends BaseFunction{
 	
 	public boolean updateIndexForCommitLog(Repos repos, CommitLog commit)
 	{
-		Log.debug("addIndexForCommitEntry() id:" + commit.id);
+		Log.debug("updateIndexForCommitLog() id:" + commit.id);
 		Date date = new Date(commit.startTime);
-		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		String indexLib = getIndexLibPathForCommitLog(repos, date);
 		boolean ret = false;
 		ret = LuceneUtil2.updateCommitLogIndex(commit, indexLib);
 		return ret;

@@ -2284,10 +2284,10 @@ public class LuceneUtil2   extends BaseFunction
 		try {
 			QueryCondition conditionDocId = new QueryCondition();
 			conditionDocId.setField("docId");				 
-			conditionDocId.setFieldType(QueryCondition.FIELD_TYPE_Integer);
+			conditionDocId.setFieldType(QueryCondition.FIELD_TYPE_Long);
 			conditionDocId.setValue(qEntry.docId);
-			conditionDocId.setQueryType(QueryCondition.FIELD_TYPE_Integer);	        	
-			conditionDocId.setOccurType( Occur.MUST);
+			conditionDocId.setQueryType(QueryCondition.FIELD_TYPE_Long);	        	
+			conditionDocId.setOccurType( Occur.SHOULD);
 			conditions.add(conditionDocId);
 			
 			QueryCondition conditionPath = new QueryCondition();
@@ -2295,7 +2295,7 @@ public class LuceneUtil2   extends BaseFunction
 			conditionPath.setFieldType(QueryCondition.FIELD_TYPE_String);
 			conditionPath.setValue(qEntry.path + qEntry.name + "/");
 			conditionPath.setQueryType(QueryCondition.SEARCH_TYPE_Prefix);	        	
-			conditionPath.setOccurType(Occur.MUST);
+			conditionPath.setOccurType(Occur.SHOULD);
 			conditions.add(conditionPath);
         } catch (Exception e) {
         	Log.info("buildQueryConditionsForCommitEntryEx() 异常");
