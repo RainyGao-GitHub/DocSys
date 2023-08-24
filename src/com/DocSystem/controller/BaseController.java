@@ -11174,6 +11174,7 @@ public class BaseController  extends BaseFunction{
 	//目前只针对RealDoc
 	protected List<LogEntry> getCommitHistory(Repos repos, Doc doc, int maxLogNum, String endCommitId) 
 	{
+		Log.debug("getCommitHistory() maxLogNum:" + maxLogNum + " endCommitId:" + endCommitId);
 		List<LogEntry> commitHistory = channel.queryCommitHistory(repos, doc, maxLogNum, null, endCommitId);
 		return commitHistory;
 	}
@@ -11920,13 +11921,23 @@ public class BaseController  extends BaseFunction{
 	/**************** IndexLib For CommitHistory *******/
 	protected static String getIndexLibPathForCommitEntry(Repos repos, Date date)
 	{
-		String indexLib = repos.getPath() + "ReposHistory/" + date.getYear() + "/CommitEntry";	
-		return indexLib;
+		return getIndexLibPathForCommitEntry(repos, date.getYear());
 	}
 	
 	protected static String getIndexLibPathForCommitLog(Repos repos, Date date)
 	{
-		String indexLib = repos.getPath() + "ReposHistory/" + date.getYear() + "/CommitLog";	
+		return getIndexLibPathForCommitLog(repos, date.getYear());
+	}
+	
+	protected static String getIndexLibPathForCommitEntry(Repos repos, int year)
+	{
+		String indexLib = repos.getPath() + "ReposHistory/" + year + "/CommitEntry";	
+		return indexLib;
+	}
+	
+	protected static String getIndexLibPathForCommitLog(Repos repos, int year)
+	{
+		String indexLib = repos.getPath() + "ReposHistory/" + year + "/CommitLog";	
 		return indexLib;
 	}
 	
