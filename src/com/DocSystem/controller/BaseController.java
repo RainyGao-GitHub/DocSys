@@ -21248,6 +21248,7 @@ public class BaseController  extends BaseFunction{
 		context.doc = doc;
 		context.newDoc = newDoc;
 		context.folderUploadAction = folderUploadAction;
+		context.startTime = new Date().getTime();
 		return context;
 	}
 	
