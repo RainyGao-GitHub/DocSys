@@ -11177,7 +11177,7 @@ public class BaseController  extends BaseFunction{
 		List<LogEntry> commitHistory = channel.queryCommitHistory(repos, doc, maxLogNum, null, endCommitId);
 		return commitHistory;
 	}
-	protected List<ChangedItem> getGetCommitHistoryDetail(Repos repos, Doc doc, String commitId) 
+	protected List<ChangedItem> getCommitHistoryDetail(Repos repos, Doc doc, String commitId) 
 	{
 		List<ChangedItem> commitEntryList = channel.queryCommitHistoryDetail(repos, doc, commitId);
 		return commitEntryList;

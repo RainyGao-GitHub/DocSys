@@ -4502,7 +4502,11 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc inputDoc = doc;
-		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
+		if(historyType == null)
+		{
+			historyType = 0;
+		}
+		if(historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
 		{
 			inputDoc = buildVDoc(doc);
 		}		
@@ -4518,9 +4522,17 @@ public class DocController extends BaseController{
 		{
 			commitId = null;
 		}
+		
 		if(isFSM(repos) || inputDoc.getIsRealDoc() == false)
 		{
-			logList = verReposGetHistory(repos, false, inputDoc, num, commitId);
+			if(historyType == 0)
+			{
+				logList = getCommitHistory(repos, inputDoc, num, commitId);
+			}
+			else
+			{
+				logList = verReposGetHistory(repos, false, inputDoc, num, commitId);
+			}
 		}
 		else
 		{
@@ -4573,7 +4585,11 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
 		Doc inputDoc = doc;
-		if(historyType != null && historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
+		if(historyType == null)
+		{
+			historyType = 0;
+		}
+		if(historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
 		{
 			inputDoc = buildVDoc(doc);
 		}
@@ -4581,7 +4597,14 @@ public class DocController extends BaseController{
 		List<ChangedItem> changedItemList = null;
 		if(isFSM(repos) || historyType == 1)
 		{
-			changedItemList = verReposGetHistoryDetail(repos, false, inputDoc, commitId);
+			if(historyType == 0)
+			{
+				changedItemList = getCommitHistoryDetail(repos, inputDoc, commitId);				
+			}
+			else
+			{
+				changedItemList = verReposGetHistoryDetail(repos, false, inputDoc, commitId);
+			}
 		}
 		else
 		{
