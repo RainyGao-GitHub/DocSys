@@ -2263,6 +2263,7 @@ public class LuceneUtil2   extends BaseFunction
 			BooleanQuery query2 = LuceneUtil2.buildBooleanQueryWithConditions(conditions2);
 			if(query2 != null)
 			{
+				query2.setMinimumNumberShouldMatch(1);	//docId和path至少要满足一个
 				query.add(query2, Occur.MUST);
 			}
         }
