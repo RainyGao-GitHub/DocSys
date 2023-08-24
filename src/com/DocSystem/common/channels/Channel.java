@@ -93,4 +93,8 @@ public interface Channel {
 	void insertCommit(Repos repos, CommitLog commit);
 
 	void updateCommit(Repos repos, CommitLog commit);
+
+	List<LogEntry> queryCommitHistory(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId);
+
+	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);
 }

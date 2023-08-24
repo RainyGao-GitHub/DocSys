@@ -11170,18 +11170,31 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	/*************** DocSys verRepos操作接口 *********************/	
-	protected List<LogEntry> verReposGetHistory(Repos repos,boolean convert, Doc doc, int maxLogNum, String commitId) 
+	//获取文件的提交历史: 该接口是基于IndexLib实现的通用版本管理接口
+	//目前只针对RealDoc
+	protected List<LogEntry> getCommitHistory(Repos repos, Doc doc, int maxLogNum, String endCommitId) 
+	{
+		List<LogEntry> commitHistory = channel.queryCommitHistory(repos, doc, maxLogNum, null, endCommitId);
+		return commitHistory;
+	}
+	protected List<ChangedItem> getGetCommitHistoryDetail(Repos repos, Doc doc, String commitId) 
+	{
+		List<ChangedItem> commitEntryList = channel.queryCommitHistoryDetail(repos, doc, commitId);
+		return commitEntryList;
+	}
+
+	protected List<LogEntry> verReposGetHistory(Repos repos,boolean convert, Doc doc, int maxLogNum, String endCommitId) 
 	{
 		doc = docConvert(doc, convert);
 		
 		int verCtrl = getVerCtrl(repos, doc);
 		if(verCtrl == 1)
 		{
-			return svnGetHistory(repos, doc, maxLogNum, commitId);
+			return svnGetHistory(repos, doc, maxLogNum, endCommitId);
 		}
 		else if(verCtrl == 2)
 		{
-			return gitGetHistory(repos, doc, maxLogNum, commitId);
+			return gitGetHistory(repos, doc, maxLogNum, endCommitId);
 		}
 		return null;
 	}
