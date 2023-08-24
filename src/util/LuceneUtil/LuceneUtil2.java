@@ -2158,15 +2158,12 @@ public class LuceneUtil2   extends BaseFunction
         BooleanQuery query =  LuceneUtil2.buildBooleanQueryWithConditions(conditions);
 		
         //表示查询时间范围内的所有记录
-        if(qCommit != null)
-        {
-	        List<QueryCondition> conditions2 = LuceneUtil2.buildQueryConditionsForObject(qCommit, Occur.MUST, QueryCondition.SEARCH_TYPE_Term);
-			BooleanQuery query2 = LuceneUtil2.buildBooleanQueryWithConditions(conditions2);
-			if(query2 != null)
-			{
-				query.add(query2, Occur.MUST);
-			}
-        }
+        List<QueryCondition> conditions2 = LuceneUtil2.buildQueryConditionsForObject(qCommit, Occur.MUST, QueryCondition.SEARCH_TYPE_Term);
+		BooleanQuery query2 = LuceneUtil2.buildBooleanQueryWithConditions(conditions2);
+		if(query2 != null)
+		{
+			query.add(query2, Occur.MUST);
+		}
 		return query;
 	}
 
