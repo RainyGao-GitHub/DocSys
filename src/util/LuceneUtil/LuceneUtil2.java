@@ -2169,8 +2169,142 @@ public class LuceneUtil2   extends BaseFunction
         }
 		return query;
 	}
+
+	//查询指定范围内的commitEntry [主要用于查询指定Doc以及subDocs对应的commitEntry]
+	//entry: 需要指定docId/path/name
+	//maxNum: 最大记录条数
+	public static List<CommitEntry> queryCommitEntryEx(CommitEntry entry, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib) {
+		//按commitId正序排序
+    	Sort sort = new Sort();
+    	SortField field = new SortField("commitId", SortField.Type.LONG, false);
+		sort.setSort(field);
+		
+		Log.debug("queryCommitEntry() indexLib:" + indexLib);
+			
+		List<CommitEntry> list = multiQueryForCommitEntryEx(entry, startCommitId, endCommitId, maxNum, indexLib, sort);
+		return list;
+	}
 	
-	//查询指定范围内的commitEntry
+	public static List<CommitEntry> multiQueryForCommitEntryEx(CommitEntry qEntry, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib, Sort sort)
+	{
+		List<CommitEntry> list =  new ArrayList<CommitEntry>();
+		
+	    Directory directory = null;
+        DirectoryReader ireader = null;
+        IndexSearcher isearcher = null;
+
+		try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			Log.debug("multiQueryForCommitEntry() " + indexLib + " 不存在！");
+    			return null;
+    		}
+    		
+	        directory = FSDirectory.open(file);
+	        ireader = DirectoryReader.open(directory);
+	        isearcher = new IndexSearcher(ireader);
+	
+	        BooleanQuery builder = buildBooleanQueryForCommitEntryEx(qEntry, startCommitId, endCommitId);
+	        if(builder != null)
+	        {
+	        	String preCommitId = "";
+				TopDocs hits = isearcher.search( builder, maxNum, sort); 
+	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
+	        	{
+	        		Document document = isearcher.doc( scoreDoc.doc );
+	        		String commitId = document.get("commitId");
+	        		//相同的commitEntry只添加一次
+	        		if(commitId.equals(preCommitId) == false)
+	        		{
+		        		CommitEntry log = new CommitEntry();
+		        		LuceneUtil2.buildObjectForDocument(log, document);
+			            list.add(log);
+	        		}
+	        	}
+	        }
+		} catch (Exception e) {
+			errorLog("multiQueryForCommitEntry() 异常");
+			errorLog(e);
+		} finally {
+			if(ireader != null)
+			{
+				try {
+					ireader.close();
+				} catch (Exception e1) {
+					errorLog(e1);
+				}
+			}
+			
+			if(directory != null)
+			{
+				try {
+					directory.close();
+				} catch (Exception e1) {
+					errorLog(e1);
+				}
+			}
+		}				
+		return list;
+    }
+	
+	private static BooleanQuery buildBooleanQueryForCommitEntryEx(CommitEntry qEntry, Long startCommitId, Long endCommitId) 
+	{
+		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
+		QueryCondition condition = new QueryCondition();
+        condition.setField("commitId");
+        condition.setValue(startCommitId);
+        condition.setEndValue(endCommitId);
+        condition.setFieldType(QueryCondition.FIELD_TYPE_Long_Range);
+        conditions.add(condition);
+        BooleanQuery query =  LuceneUtil2.buildBooleanQueryWithConditions(conditions);
+		
+        //表示查询时间范围内的所有记录
+        if(qEntry != null)
+        {
+	        List<QueryCondition> conditions2 = LuceneUtil2.buildQueryConditionsForCommitEntryEx(qEntry);
+			BooleanQuery query2 = LuceneUtil2.buildBooleanQueryWithConditions(conditions2);
+			if(query2 != null)
+			{
+				query.add(query2, Occur.MUST);
+			}
+        }
+		return query;
+	}
+		
+	public static List<QueryCondition> buildQueryConditionsForCommitEntryEx(CommitEntry qEntry) 
+	{
+		if(qEntry == null)
+		{
+			return null;
+		}
+
+		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
+
+		try {
+			QueryCondition conditionDocId = new QueryCondition();
+			conditionDocId.setField("docId");				 
+			conditionDocId.setFieldType(QueryCondition.FIELD_TYPE_Integer);
+			conditionDocId.setValue(qEntry.docId);
+			conditionDocId.setQueryType(QueryCondition.FIELD_TYPE_Integer);	        	
+			conditionDocId.setOccurType( Occur.MUST);
+			conditions.add(conditionDocId);
+			
+			QueryCondition conditionPath = new QueryCondition();
+			conditionPath.setField("path");				 
+			conditionPath.setFieldType(QueryCondition.FIELD_TYPE_String);
+			conditionPath.setValue(qEntry.path + qEntry.name + "/");
+			conditionPath.setQueryType(QueryCondition.SEARCH_TYPE_Prefix);	        	
+			conditionPath.setOccurType(Occur.MUST);
+			conditions.add(conditionPath);
+        } catch (Exception e) {
+        	Log.info("buildQueryConditionsForCommitEntryEx() 异常");
+        	Log.info(e);
+        }
+		return conditions;
+	}
+	
+	//查询指定范围内的commitEntry [主要用于查询指定commitId对应的commitEntry]
 	//maxNum: 最大记录条数
 	public static List<CommitEntry> queryCommitEntry(CommitEntry entry, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib) {
 		//按commitId正序排序
@@ -2264,4 +2398,5 @@ public class LuceneUtil2   extends BaseFunction
         }
 		return query;
 	}
+
 }
