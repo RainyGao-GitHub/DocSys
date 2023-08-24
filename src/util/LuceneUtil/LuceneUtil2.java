@@ -41,6 +41,8 @@ import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
@@ -68,9 +70,11 @@ import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.Log;
+import com.DocSystem.common.Path;
 import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.QueryCondition;
+import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import java.math.BigDecimal;
@@ -2071,4 +2075,193 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
 	
+	//查询指定范围内的commitLog	
+	//maxNum: 最大记录条数
+	public static List<CommitLog> queryCommitLog(CommitLog commit, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib) {
+		//按commitId正序排序
+    	Sort sort = new Sort();
+    	SortField field = new SortField("commitId", SortField.Type.LONG, false);
+		sort.setSort(field);
+		
+		Log.debug("queryCommitLog() indexLib:" + indexLib);
+			
+		List<CommitLog> list = multiQueryForCommitLog(commit, startCommitId, endCommitId, maxNum, indexLib, sort);
+		return list;
+	}
+	
+	public static List<CommitLog> multiQueryForCommitLog(CommitLog qCommit, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib, Sort sort)
+	{
+		List<CommitLog> list =  new ArrayList<CommitLog>();
+		
+	    Directory directory = null;
+        DirectoryReader ireader = null;
+        IndexSearcher isearcher = null;
+
+		try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			Log.debug("multiQueryForSystemLog() " + indexLib + " 不存在！");
+    			return null;
+    		}
+    		
+	        directory = FSDirectory.open(file);
+	        ireader = DirectoryReader.open(directory);
+	        isearcher = new IndexSearcher(ireader);
+	
+	        BooleanQuery builder = buildBooleanQueryForCommitLog(qCommit, startCommitId, endCommitId);
+	        if(builder != null)
+	        {
+				TopDocs hits = isearcher.search( builder, maxNum, sort); 
+	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
+	        	{
+	        		Document document = isearcher.doc( scoreDoc.doc );
+	        		CommitLog log = new CommitLog();
+	        		LuceneUtil2.buildObjectForDocument(log, document);
+		            list.add(log);
+	        	}
+	        }
+		} catch (Exception e) {
+			errorLog("multiQueryForSystemLog() 异常");
+			errorLog(e);
+		} finally {
+			if(ireader != null)
+			{
+				try {
+					ireader.close();
+				} catch (Exception e1) {
+					errorLog(e1);
+				}
+			}
+			
+			if(directory != null)
+			{
+				try {
+					directory.close();
+				} catch (Exception e1) {
+					errorLog(e1);
+				}
+			}
+		}				
+		return list;
+    }
+	
+	private static BooleanQuery buildBooleanQueryForCommitLog(CommitLog qCommit, Long startCommitId, Long endCommitId) 
+	{
+		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
+		QueryCondition condition = new QueryCondition();
+        condition.setField("commitId");
+        condition.setValue(startCommitId);
+        condition.setEndValue(endCommitId);
+        condition.setFieldType(QueryCondition.FIELD_TYPE_Long_Range);
+        conditions.add(condition);
+        BooleanQuery query =  LuceneUtil2.buildBooleanQueryWithConditions(conditions);
+		
+        //表示查询时间范围内的所有记录
+        if(qCommit != null)
+        {
+	        List<QueryCondition> conditions2 = LuceneUtil2.buildQueryConditionsForObject(qCommit, Occur.MUST, QueryCondition.SEARCH_TYPE_Term);
+			BooleanQuery query2 = LuceneUtil2.buildBooleanQueryWithConditions(conditions2);
+			if(query2 != null)
+			{
+				query.add(query2, Occur.MUST);
+			}
+        }
+		return query;
+	}
+	
+	//查询指定范围内的commitEntry
+	//maxNum: 最大记录条数
+	public static List<CommitEntry> queryCommitEntry(CommitEntry entry, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib) {
+		//按commitId正序排序
+    	Sort sort = new Sort();
+    	SortField field = new SortField("commitId", SortField.Type.LONG, false);
+		sort.setSort(field);
+		
+		Log.debug("queryCommitEntry() indexLib:" + indexLib);
+			
+		List<CommitEntry> list = multiQueryForCommitEntry(entry, startCommitId, endCommitId, maxNum, indexLib, sort);
+		return list;
+	}
+	
+	public static List<CommitEntry> multiQueryForCommitEntry(CommitEntry qEntry, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib, Sort sort)
+	{
+		List<CommitEntry> list =  new ArrayList<CommitEntry>();
+		
+	    Directory directory = null;
+        DirectoryReader ireader = null;
+        IndexSearcher isearcher = null;
+
+		try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			Log.debug("multiQueryForCommitEntry() " + indexLib + " 不存在！");
+    			return null;
+    		}
+    		
+	        directory = FSDirectory.open(file);
+	        ireader = DirectoryReader.open(directory);
+	        isearcher = new IndexSearcher(ireader);
+	
+	        BooleanQuery builder = buildBooleanQueryForCommitEntry(qEntry, startCommitId, endCommitId);
+	        if(builder != null)
+	        {
+				TopDocs hits = isearcher.search( builder, maxNum, sort); 
+	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
+	        	{
+	        		Document document = isearcher.doc( scoreDoc.doc );
+	        		CommitEntry log = new CommitEntry();
+	        		LuceneUtil2.buildObjectForDocument(log, document);
+		            list.add(log);
+	        	}
+	        }
+		} catch (Exception e) {
+			errorLog("multiQueryForCommitEntry() 异常");
+			errorLog(e);
+		} finally {
+			if(ireader != null)
+			{
+				try {
+					ireader.close();
+				} catch (Exception e1) {
+					errorLog(e1);
+				}
+			}
+			
+			if(directory != null)
+			{
+				try {
+					directory.close();
+				} catch (Exception e1) {
+					errorLog(e1);
+				}
+			}
+		}				
+		return list;
+    }
+	
+	private static BooleanQuery buildBooleanQueryForCommitEntry(CommitEntry qEntry, Long startCommitId, Long endCommitId) 
+	{
+		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
+		QueryCondition condition = new QueryCondition();
+        condition.setField("commitId");
+        condition.setValue(startCommitId);
+        condition.setEndValue(endCommitId);
+        condition.setFieldType(QueryCondition.FIELD_TYPE_Long_Range);
+        conditions.add(condition);
+        BooleanQuery query =  LuceneUtil2.buildBooleanQueryWithConditions(conditions);
+		
+        //表示查询时间范围内的所有记录
+        if(qEntry != null)
+        {
+	        List<QueryCondition> conditions2 = LuceneUtil2.buildQueryConditionsForObject(qEntry, Occur.MUST, QueryCondition.SEARCH_TYPE_Term);
+			BooleanQuery query2 = LuceneUtil2.buildBooleanQueryWithConditions(conditions2);
+			if(query2 != null)
+			{
+				query.add(query2, Occur.MUST);
+			}
+        }
+		return query;
+	}
 }
