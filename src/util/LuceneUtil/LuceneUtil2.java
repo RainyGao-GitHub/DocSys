@@ -1956,6 +1956,7 @@ public class LuceneUtil2   extends BaseFunction
     public static boolean addCommitLogIndex(CommitLog commit, String indexLib)
     {	
     	Log.debug("addCommitLogIndex() id:" + commit.id + " indexLib:"+indexLib);    	
+    	Log.printObject("addCommitLogIndex() commit:", commit);
 
     	Analyzer analyzer = null;
 		Directory directory = null;
@@ -2043,6 +2044,7 @@ public class LuceneUtil2   extends BaseFunction
 	public static boolean addCommitEntryIndex(CommitEntry entry, String indexLib)
     {	
     	Log.debug("addCommitEntryIndex() id:" + entry.id + " indexLib:"+indexLib);    	
+    	Log.printObject("addCommitEntryIndex() entry:", entry);
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
