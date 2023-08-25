@@ -2135,9 +2135,9 @@ public class LuceneUtil2   extends BaseFunction
 	//查询指定范围内的commitLog	
 	//maxNum: 最大记录条数
 	public static List<CommitLog> queryCommitLog(CommitLog commit, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib) {
-		//按commitId正序排序
+		//按commitId反序排序
     	Sort sort = new Sort();
-    	SortField field = new SortField("commitId", SortField.Type.LONG, false);
+    	SortField field = new SortField("commitId", SortField.Type.LONG, true);
 		sort.setSort(field);
 		
 		Log.debug("queryCommitLog() indexLib:" + indexLib);
