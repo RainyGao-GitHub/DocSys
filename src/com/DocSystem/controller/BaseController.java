@@ -4613,6 +4613,7 @@ public class BaseController  extends BaseFunction{
 		entry.reposName = repos.getName();
 		entry.path = doc.getPath();
 		entry.name = doc.getName();
+		entry.docId = doc.getDocId();
 		
 		channel.insertCommitEntry(repos, entry);
 	}
