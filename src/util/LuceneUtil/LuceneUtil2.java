@@ -2103,7 +2103,7 @@ public class LuceneUtil2   extends BaseFunction
     		File file = new File(indexLib);
     		if(!file.exists())
     		{
-    			Log.debug("multiQueryForSystemLog() " + indexLib + " 不存在！");
+    			Log.debug("multiQueryForCommitLog() " + indexLib + " 不存在！");
     			return null;
     		}
     		
@@ -2120,11 +2120,12 @@ public class LuceneUtil2   extends BaseFunction
 	        		Document document = isearcher.doc( scoreDoc.doc );
 	        		CommitLog log = new CommitLog();
 	        		LuceneUtil2.buildObjectForDocument(log, document);
-		            list.add(log);
+	        		Log.printObject("multiQueryForCommitLog() log", log);
+	        	    list.add(log);
 	        	}
 	        }
 		} catch (Exception e) {
-			errorLog("multiQueryForSystemLog() 异常");
+			errorLog("multiQueryForCommitLog() 异常");
 			errorLog(e);
 		} finally {
 			if(ireader != null)
@@ -2196,7 +2197,7 @@ public class LuceneUtil2   extends BaseFunction
     		File file = new File(indexLib);
     		if(!file.exists())
     		{
-    			Log.debug("multiQueryForCommitEntry() " + indexLib + " 不存在！");
+    			Log.debug("multiQueryForCommitEntryEx() " + indexLib + " 不存在！");
     			return null;
     		}
     		
@@ -2218,12 +2219,13 @@ public class LuceneUtil2   extends BaseFunction
 	        		{
 		        		CommitEntry log = new CommitEntry();
 		        		LuceneUtil2.buildObjectForDocument(log, document);
-			            list.add(log);
+		        		Log.printObject("multiQueryForCommitEntryEx() log", log);
+		        		list.add(log);
 	        		}
 	        	}
 	        }
 		} catch (Exception e) {
-			errorLog("multiQueryForCommitEntry() 异常");
+			errorLog("multiQueryForCommitEntryEx() 异常");
 			errorLog(e);
 		} finally {
 			if(ireader != null)
@@ -2347,6 +2349,7 @@ public class LuceneUtil2   extends BaseFunction
 	        		Document document = isearcher.doc( scoreDoc.doc );
 	        		CommitEntry log = new CommitEntry();
 	        		LuceneUtil2.buildObjectForDocument(log, document);
+	        		Log.printObject("multiQueryForCommitEntry() log", log);
 		            list.add(log);
 	        	}
 	        }
