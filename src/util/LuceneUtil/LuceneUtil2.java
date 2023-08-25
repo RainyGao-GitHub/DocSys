@@ -2100,7 +2100,8 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		redisSyncLockEx(lockName, lockInfo);
 			
-        	deleteCommitLogIndexBasic(commit.id, indexLib);
+    		//TODO: 保留旧的记录
+        	//deleteCommitLogIndexBasic(commit.id, indexLib);
         	ret = addCommitLogIndexBasic(commit, indexLib);
 			
     		redisSyncUnlockEx(lockName, lockInfo, synclock);
