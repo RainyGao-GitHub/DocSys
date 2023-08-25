@@ -2178,7 +2178,8 @@ public class LuceneUtil2   extends BaseFunction
 	        		//相同的commitEntry只添加一次
 	        		if(commitId.equals(preCommitId) == false)
 	        		{
-		        		CommitLog log = new CommitLog();
+	        			preCommitId = commitId;
+	        			CommitLog log = new CommitLog();
 		        		LuceneUtil2.buildObjectForDocument(log, document);
 		        		Log.printObject("multiQueryForCommitLog() log", log);
 		        		list.add(log);
@@ -2278,6 +2279,7 @@ public class LuceneUtil2   extends BaseFunction
 	        		//相同的commitEntry只添加一次
 	        		if(commitId.equals(preCommitId) == false)
 	        		{
+	        			preCommitId = commitId;
 		        		CommitEntry log = new CommitEntry();
 		        		LuceneUtil2.buildObjectForDocument(log, document);
 		        		Log.printObject("multiQueryForCommitEntryEx() log", log);
