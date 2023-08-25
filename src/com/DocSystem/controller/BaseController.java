@@ -4596,8 +4596,6 @@ public class BaseController  extends BaseFunction{
 		//}
 		
 		CommitEntry entry = new CommitEntry();
-		entry.id = buildUniqueIdForCommitEntry(commitId, repos, doc);
-
 		entry.startTime = startTime;
 		entry.userId = user.getId();
 		entry.userName = user.getName();
@@ -4611,10 +4609,11 @@ public class BaseController  extends BaseFunction{
 
 		entry.reposId = repos.getId();
 		entry.reposName = repos.getName();
+		entry.docId = doc.getDocId();
 		entry.path = doc.getPath();
 		entry.name = doc.getName();
-		entry.docId = doc.getDocId();
-		
+
+		entry.id = buildUniqueIdForCommitEntry(entry);
 		channel.insertCommitEntry(repos, entry);
 	}
 	
@@ -4652,9 +4651,6 @@ public class BaseController  extends BaseFunction{
 		//commitMsg / commitUser / commitId
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
-		commit.id = buildUniqueIdForCommitLog(context.commitId, repos);
-		
-		
 		commit.startTime = context.startTime;
 		commit.userId = context.user.getId();
 		commit.userName = context.user.getName();
@@ -4666,6 +4662,7 @@ public class BaseController  extends BaseFunction{
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();
 		
+		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.insertCommit(repos, commit);
 	}
 	
@@ -4680,7 +4677,7 @@ public class BaseController  extends BaseFunction{
 		//commitMsg / commitUser / commitId
 		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
-		commit.id = buildUniqueIdForCommitLog(context.commitId, repos);
+		commit.id = buildUniqueIdForCommitLog(commit);
 		
 		commit.startTime = context.startTime;
 		commit.endTime = new Date().getTime();	//End Time
@@ -4700,12 +4697,12 @@ public class BaseController  extends BaseFunction{
 		channel.updateCommit(repos, commit);
 	}
 	
-	private String buildUniqueIdForCommitLog(Long commitId, Repos repos) {
-		return commitId + "_" + repos.getId();
+	private String buildUniqueIdForCommitLog(CommitLog commit) {
+		return commit.commitId + "_" + commit.reposId;
 	}
 	
-	private String buildUniqueIdForCommitEntry(Long commitId, Repos repos, Doc doc) {
-		return commitId + "_" + repos.getId() + "_" + doc.getDocId();
+	private String buildUniqueIdForCommitEntry(CommitEntry entry) {
+		return entry.commitId + "_" + entry.reposId + "_" + entry.docId;
 	}
 
 	private void insertCommit(Repos repos, FolderUploadAction action) {
@@ -4718,8 +4715,6 @@ public class BaseController  extends BaseFunction{
 		//commitMsg / commitUser / commitId
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
-		commit.id = buildUniqueIdForCommitLog(action.commitId, repos);
-		
 		commit.startTime = action.startTime;
 		commit.userId = action.user.getId();
 		commit.userName = action.user.getName();
@@ -4730,7 +4725,8 @@ public class BaseController  extends BaseFunction{
 		
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();		
-		
+
+		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.insertCommit(repos, commit);
 	}
 	
@@ -4743,9 +4739,7 @@ public class BaseController  extends BaseFunction{
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
 		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
-		CommitLog commit = new CommitLog();
-		commit.id = buildUniqueIdForCommitLog(action.commitId, repos);
-		
+		CommitLog commit = new CommitLog();		
 		commit.startTime = action.startTime;
 		commit.endTime = new Date().getTime();	//结束时间
 		commit.userId = action.user.getId();
@@ -4760,6 +4754,7 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: fill verReposInfo
 		
+		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.updateCommit(repos, commit);
 	}
 

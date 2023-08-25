@@ -21,7 +21,7 @@ public class CommitEntry {
 	
 	public Integer reposId;		//reposId 
 	public String reposName;	//reposName
+	public Long docId;			//commitEntry DocId
 	public String path;			//commitEntryPath
 	public String name;			//commitEntryName
-	public Long docId;		//commitEntry DocId
 }
