@@ -1953,10 +1953,10 @@ public class LuceneUtil2   extends BaseFunction
 	}
 	
 	//MxsDoc历史版本	
-    public static boolean addCommitLogIndex(CommitLog commit, String indexLib)
+    public static boolean addCommitLogIndexBasic(CommitLog commit, String indexLib)
     {	
-    	Log.debug("addCommitLogIndex() id:" + commit.id + " indexLib:"+indexLib);    	
-    	Log.printObject("addCommitLogIndex() commit:", commit);
+    	Log.debug("addCommitLogIndexBasic() id:" + commit.id + " indexLib:"+indexLib);    	
+    	Log.printObject("addCommitLogIndexBasic() commit:", commit);
 
     	Analyzer analyzer = null;
 		Directory directory = null;
@@ -1964,54 +1964,44 @@ public class LuceneUtil2   extends BaseFunction
     	
 		boolean ret = false;
 		
-		Object synclock = getSyncLock(indexLib);
-		
-		String lockInfo = "LuceneUtil2 addCommitLogIndex synclock:" + indexLib;
-		String lockName = "indexLibSyncLock" + indexLib;
-		synchronized(synclock)
-    	{
-    		redisSyncLockEx(lockName, lockInfo);
-			
-    		try {
-		    	analyzer = new IKAnalyzer();
-		    	directory = FSDirectory.open(new File(indexLib));
-	
-		        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
-		        indexWriter = new IndexWriter(directory, config);
-		
-		        Document document = LuceneUtil2.buildDocumentForObject(commit);
-		        indexWriter.addDocument(document);
-		        
-		        indexWriter.commit();
-		        
-		        indexWriter.close();
-		        indexWriter = null;
-		        directory.close();
-		        directory = null;
-		        analyzer.close();
-		        analyzer = null;
-		        
-		        ret = true;
-			} catch (Exception e) {				
-		        Log.debug("addCommitLogIndex() 异常");
-		        Log.debug(e);
-			} finally {
-				closeResource(indexWriter, directory, analyzer);
-			}
-    		
-			redisSyncUnlockEx(lockName, lockInfo, synclock);
-    	}
+		try {
+	    	analyzer = new IKAnalyzer();
+	    	directory = FSDirectory.open(new File(indexLib));
 
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+	        indexWriter = new IndexWriter(directory, config);
+	
+	        Document document = LuceneUtil2.buildDocumentForObject(commit);
+	        indexWriter.addDocument(document);
+	        
+	        indexWriter.commit();
+	        
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        analyzer.close();
+	        analyzer = null;
+	        
+	        ret = true;
+		} catch (Exception e) {				
+	        Log.debug("addCommitLogIndexBasic() 异常");
+	        Log.debug(e);
+		} finally {
+			closeResource(indexWriter, directory, analyzer);
+		}
+    		
     	return ret;
     }
-    
-	protected static boolean deleteCommitLogIndex(String id, String indexLib)
+
+	protected static boolean deleteCommitLogIndexBasic(String id, String indexLib)
 	{
-    	Log.debug("deleteCommitLogIndex() id:" + id + " indexLib:"+indexLib);
+    	Log.debug("deleteCommitLogIndexBasic() id:" + id + " indexLib:"+indexLib);
+    	boolean ret = false;
+    	
     	Analyzer analyzer = null;
     	Directory directory = null;
-    	IndexWriter indexWriter = null;
-    	
+    	IndexWriter indexWriter = null;    	
 		try {
 			directory = FSDirectory.open(new File(indexLib));
 		
@@ -2026,30 +2016,25 @@ public class LuceneUtil2   extends BaseFunction
 	        indexWriter = null;
 	        directory.close();
 	        directory = null;
-	        return true;
+	        ret = true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
 			errorLog(e);
-			return false;
 		}
+		
+		return ret;
     }   
 	
-	public static boolean updateCommitLogIndex(CommitLog commit, String indexLib)
+	public static boolean addCommitEntryIndexBasic(CommitEntry entry, String indexLib)
     {	
-    	Log.debug("updateCommitLogIndex() id:" + commit.id + " indexLib:"+indexLib);    	
-    	deleteCommitLogIndex(commit.id, indexLib);
-    	return addCommitLogIndex(commit, indexLib);
-    }
-	
-	public static boolean addCommitEntryIndex(CommitEntry entry, String indexLib)
-    {	
-    	Log.debug("addCommitEntryIndex() id:" + entry.id + " indexLib:"+indexLib);    	
-    	Log.printObject("addCommitEntryIndex() entry:", entry);
+    	Log.debug("addCommitEntryIndexBasic() id:" + entry.id + " indexLib:"+indexLib);    	
+    	Log.printObject("addCommitEntryIndexBasic() entry:", entry);
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
 		IndexWriter indexWriter = null;
-    	
+		
+		boolean ret = false;
 		try {
 	    	analyzer = new IKAnalyzer();
 	    	directory = FSDirectory.open(new File(indexLib));
@@ -2068,13 +2053,83 @@ public class LuceneUtil2   extends BaseFunction
 	        directory = null;
 	        analyzer.close();
 	        analyzer = null;	        
-	    	return true;
+	    	ret = true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
 	        errorLog("addCommitEntryIndex() 异常");
 			errorLog(e);
-			return false;
 		}
+		return ret;
+    }
+	
+    public static boolean addCommitLogIndex(CommitLog commit, String indexLib)
+    {	
+    	Log.debug("addCommitLogIndex() id:" + commit.id + " indexLib:"+indexLib);    	
+    	Log.printObject("addCommitLogIndex() commit:", commit);
+
+    	boolean ret = false;
+		
+		Object synclock = getSyncLock(indexLib);
+		
+		String lockInfo = "LuceneUtil2 addCommitLogIndex synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
+    	{
+    		redisSyncLockEx(lockName, lockInfo);
+			
+    		ret = addCommitLogIndexBasic(commit, indexLib);
+			
+    		redisSyncUnlockEx(lockName, lockInfo, synclock);
+    	}
+
+    	return ret;
+    }
+	
+	public static boolean updateCommitLogIndex(CommitLog commit, String indexLib)
+    {	
+    	Log.debug("updateCommitLogIndex() id:" + commit.id + " indexLib:"+indexLib);    	
+    	Log.printObject("updateCommitLogIndex() commit:", commit);
+
+    	boolean ret = false;
+		
+		Object synclock = getSyncLock(indexLib);
+		
+		String lockInfo = "LuceneUtil2 updateCommitLogIndex synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
+    	{
+    		redisSyncLockEx(lockName, lockInfo);
+			
+        	deleteCommitLogIndexBasic(commit.id, indexLib);
+        	ret = addCommitLogIndexBasic(commit, indexLib);
+			
+    		redisSyncUnlockEx(lockName, lockInfo, synclock);
+    	}
+
+    	return ret;
+    }
+	
+	public static boolean addCommitEntryIndex(CommitEntry entry, String indexLib)
+    {	
+    	Log.debug("addCommitEntryIndex() id:" + entry.id + " indexLib:"+indexLib);    	
+    	Log.printObject("addCommitEntryIndex() entry:", entry);
+    	
+		boolean ret = false;
+		
+		Object synclock = getSyncLock(indexLib);
+		
+		String lockInfo = "LuceneUtil2 addCommitEntryIndex synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
+    	{
+    		redisSyncLockEx(lockName, lockInfo);
+    	
+    		ret = addCommitEntryIndexBasic(entry, indexLib);
+			
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
+    	}
+		
+		return ret;
     }
 	
 	//查询指定范围内的commitLog	
