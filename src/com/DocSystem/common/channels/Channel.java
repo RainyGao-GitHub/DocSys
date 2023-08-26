@@ -3,6 +3,8 @@ package com.DocSystem.common.channels;
 import java.util.HashMap;
 import java.util.List;
 
+import com.DocSystem.common.FolderUploadAction;
+import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
@@ -89,6 +91,8 @@ public interface Channel {
 	List<SystemLog> getSystemLogList(SystemLog queryLog, Long startTime, Long endTime);
 
 	void insertCommitEntry(Repos repos, CommitEntry entry);
+	
+	void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList);
 
 	void insertCommit(Repos repos, CommitLog commit);
 

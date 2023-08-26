@@ -68,9 +68,11 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.QueryCondition;
@@ -2025,10 +2027,10 @@ public class LuceneUtil2   extends BaseFunction
 		return ret;
     }   
 	
-	public static boolean addCommitEntryIndexBasic(CommitEntry entry, String indexLib)
+	public static boolean addIndexForCommitEntryBasic(CommitEntry entry, String indexLib)
     {	
-    	Log.debug("addCommitEntryIndexBasic() id:" + entry.id + " indexLib:"+indexLib);    	
-    	Log.printObject("addCommitEntryIndexBasic() entry:", entry);
+    	Log.debug("addIndexForCommitEntryBasic() id:" + entry.id + " indexLib:"+indexLib);    	
+    	Log.printObject("addIndexForCommitEntryBasic() entry:", entry);
     	
     	Analyzer analyzer = null;
 		Directory directory = null;
@@ -2056,7 +2058,7 @@ public class LuceneUtil2   extends BaseFunction
 	    	ret = true;
 		} catch (Exception e) {
 			closeResource(indexWriter, directory, analyzer);
-	        errorLog("addCommitEntryIndex() 异常");
+	        errorLog("addIndexForCommitEntryBasic() 异常");
 			errorLog(e);
 		}
 		return ret;
@@ -2110,22 +2112,22 @@ public class LuceneUtil2   extends BaseFunction
     	return ret;
     }
 	
-	public static boolean addCommitEntryIndex(CommitEntry entry, String indexLib)
+	public static boolean addIndexForCommitEntry(CommitEntry entry, String indexLib)
     {	
-    	Log.debug("addCommitEntryIndex() id:" + entry.id + " indexLib:"+indexLib);    	
-    	Log.printObject("addCommitEntryIndex() entry:", entry);
+    	Log.debug("addIndexForCommitEntry() id:" + entry.id + " indexLib:"+indexLib);    	
+    	Log.printObject("addIndexForCommitEntry() entry:", entry);
     	
 		boolean ret = false;
 		
 		Object synclock = getSyncLock(indexLib);
 		
-		String lockInfo = "LuceneUtil2 addCommitEntryIndex synclock:" + indexLib;
+		String lockInfo = "LuceneUtil2 addIndexForCommitEntry synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
 		synchronized(synclock)
     	{
     		redisSyncLockEx(lockName, lockInfo);
     	
-    		ret = addCommitEntryIndexBasic(entry, indexLib);
+    		ret = addIndexForCommitEntryBasic(entry, indexLib);
 			
 			redisSyncUnlockEx(lockName, lockInfo, synclock);
     	}
@@ -2133,6 +2135,56 @@ public class LuceneUtil2   extends BaseFunction
 		return ret;
     }
 	
+	public static boolean addIndexForCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList, String indexLib)
+	{
+    	Log.debug("addIndexForCommitEntries() action:" + action.event + " indexLib:"+indexLib);    	
+    	Log.printObject("addIndexForCommitEntries() action:", action);
+    	
+		boolean ret = false;
+		
+		Object synclock = getSyncLock(indexLib);
+		
+		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
+    	{
+    		redisSyncLockEx(lockName, lockInfo);
+    	
+    		for(CommitAction commitAction: commitActionList)
+    		{
+    			CommitEntry entry = new CommitEntry();
+    			entry.startTime = action.startTime;
+    			entry.userId = action.user.getId();
+    			entry.userName = action.user.getName();
+
+    			entry.commitId = action.commitId;
+    			entry.commitMsg = action.commitMsg;
+    			entry.commitUsers = action.commitUser;
+
+    			entry.commitAction = action.event;
+
+    			entry.reposId = repos.getId();
+    			entry.reposName = repos.getName();
+    			entry.docId = action.doc.getDocId();
+    			entry.path = action.doc.getPath();
+    			entry.name = action.doc.getName();
+
+    			entry.id = buildUniqueIdForCommitEntry(entry);
+    		
+    			addIndexForCommitEntryBasic(entry, indexLib);
+    		}
+    		
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
+    	}
+		
+		ret = true;
+		return ret;
+	}
+	
+	public static String buildUniqueIdForCommitEntry(CommitEntry entry) {
+		return entry.commitId + "_" + entry.reposId + "_" + entry.docId;
+	}
+
 	//查询指定范围内的commitLog	
 	//maxNum: 最大记录条数
 	public static List<CommitLog> queryCommitLog(CommitLog commit, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib) {

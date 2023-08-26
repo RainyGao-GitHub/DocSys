@@ -4596,7 +4596,7 @@ public class BaseController  extends BaseFunction{
 		entry.path = doc.getPath();
 		entry.name = doc.getName();
 
-		entry.id = buildUniqueIdForCommitEntry(entry);
+		entry.id = LuceneUtil2.buildUniqueIdForCommitEntry(entry);
 		channel.insertCommitEntry(repos, entry);
 	}
 	
@@ -4621,6 +4621,11 @@ public class BaseController  extends BaseFunction{
 			insertCommitEntry(repos, dstDoc, action, 0, commitId, commitTime, commitMsg, commitUser, user);
 			break;			
 		}
+	}
+	
+
+	protected void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList) {
+		channel.insertCommitEntries(repos, action, commitActionList);
 	}
 	
 	private void insertCommit(Repos repos, ActionContext context) {
@@ -4684,10 +4689,6 @@ public class BaseController  extends BaseFunction{
 		return commit.commitId + "_" + commit.reposId;
 	}
 	
-	private String buildUniqueIdForCommitEntry(CommitEntry entry) {
-		return entry.commitId + "_" + entry.reposId + "_" + entry.docId;
-	}
-
 	private void insertCommit(Repos repos, FolderUploadAction action) {
 		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		//{
@@ -11921,7 +11922,19 @@ public class BaseController  extends BaseFunction{
 		Date date = new Date(entry.startTime);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date);
 		boolean ret = false;
-		ret = LuceneUtil2.addCommitEntryIndex(entry, indexLib);
+		ret = LuceneUtil2.addIndexForCommitEntry(entry, indexLib);
+		return ret;
+	}
+
+	public boolean addIndexForCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList)
+	{
+		Log.debug("addIndexForCommitEntries() action:" + action.event);
+		Date date = new Date(action.startTime);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		boolean ret = false;
+		
+		ret = LuceneUtil2.addIndexForCommitEntries(repos, action, commitActionList, indexLib);
+		
 		return ret;
 	}
 	
@@ -21670,11 +21683,14 @@ public class BaseController  extends BaseFunction{
 				
 				//提交版本
 				ReturnAjax rt = new ReturnAjax();
-				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, null, null);
+				List<CommitAction> commitActionList = new ArrayList<CommitAction>();
+				List<CommitAction> commitActionListFake = new ArrayList<CommitAction>();			
+				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, commitActionList, commitActionListFake);
 				if(revision != null)
 				{
 					//更新commitInfo的版本提交信息: 将revision写入commitInfo中
 					updateCommit(repos, action);
+					insertCommitEntries(repos, action, commitActionList);
 					
 					verReposPullPush(repos, true, rt);
 				
@@ -21683,6 +21699,7 @@ public class BaseController  extends BaseFunction{
 				{
 					//更新commitInfo的版本提交信息: 将verReposDocCommit失败的信息写入commitInfo中
 					updateCommit(repos, action);					
+					insertCommitEntries(repos, action, commitActionList);
 				}
 				
 				//远程自动推送
