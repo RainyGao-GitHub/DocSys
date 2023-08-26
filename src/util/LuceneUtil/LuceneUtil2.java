@@ -2421,7 +2421,7 @@ public class LuceneUtil2   extends BaseFunction
 	
 	//查询指定范围内的commitEntry [主要用于查询指定commitId对应的commitEntry]
 	//maxNum: 最大记录条数
-	public static List<CommitEntry> queryCommitEntry(CommitEntry entry, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib) {
+	public static List<CommitEntry> queryCommitEntry(CommitEntry entry, Integer maxNum, String indexLib) {
 		//按commitId正序排序
     	Sort sort = new Sort();
     	SortField field = new SortField("commitId", SortField.Type.LONG, false);
@@ -2429,11 +2429,11 @@ public class LuceneUtil2   extends BaseFunction
 		
 		Log.debug("queryCommitEntry() indexLib:" + indexLib);
 			
-		List<CommitEntry> list = multiQueryForCommitEntry(entry, startCommitId, endCommitId, maxNum, indexLib, sort);
+		List<CommitEntry> list = multiQueryForCommitEntry(entry, maxNum, indexLib, sort);
 		return list;
 	}
 	
-	public static List<CommitEntry> multiQueryForCommitEntry(CommitEntry qEntry, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib, Sort sort)
+	public static List<CommitEntry> multiQueryForCommitEntry(CommitEntry qEntry, Integer maxNum, String indexLib, Sort sort)
 	{
 		List<CommitEntry> list =  new ArrayList<CommitEntry>();
 		
@@ -2453,7 +2453,7 @@ public class LuceneUtil2   extends BaseFunction
 	        ireader = DirectoryReader.open(directory);
 	        isearcher = new IndexSearcher(ireader);
 	
-	        BooleanQuery builder = buildBooleanQueryForCommitEntry(qEntry, startCommitId, endCommitId);
+	        BooleanQuery builder = buildBooleanQueryForCommitEntry(qEntry);
 	        if(builder != null)
 	        {
 				TopDocs hits = isearcher.search( builder, maxNum, sort); 
@@ -2491,28 +2491,11 @@ public class LuceneUtil2   extends BaseFunction
 		return list;
     }
 	
-	private static BooleanQuery buildBooleanQueryForCommitEntry(CommitEntry qEntry, Long startCommitId, Long endCommitId) 
+	private static BooleanQuery buildBooleanQueryForCommitEntry(CommitEntry qEntry) 
 	{
-		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
-		QueryCondition condition = new QueryCondition();
-        condition.setField("commitId");
-        condition.setValue(startCommitId);
-        condition.setEndValue(endCommitId);
-        condition.setFieldType(QueryCondition.FIELD_TYPE_Long_Range);
-        conditions.add(condition);
-        BooleanQuery query =  LuceneUtil2.buildBooleanQueryWithConditions(conditions);
-		
-        //表示查询时间范围内的所有记录
-        if(qEntry != null)
-        {
-	        List<QueryCondition> conditions2 = LuceneUtil2.buildQueryConditionsForObject(qEntry, Occur.MUST, QueryCondition.SEARCH_TYPE_Term);
-			BooleanQuery query2 = LuceneUtil2.buildBooleanQueryWithConditions(conditions2);
-			if(query2 != null)
-			{
-				query.add(query2, Occur.MUST);
-			}
-        }
-		return query;
+        List<QueryCondition> conditions2 = LuceneUtil2.buildQueryConditionsForObject(qEntry, Occur.MUST, QueryCondition.SEARCH_TYPE_Term);
+		BooleanQuery query2 = LuceneUtil2.buildBooleanQueryWithConditions(conditions2);
+		return query2;
 	}
 
 }
