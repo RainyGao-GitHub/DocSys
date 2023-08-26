@@ -24,4 +24,5 @@ public class CommitEntry {
 	public Long docId;			//commitEntry DocId
 	public String path;			//commitEntryPath
 	public String name;			//commitEntryName
+	public Integer isSrcEntry;	//For copy/move/renameDoc used to mark the entry is srcEntry or not
 }
