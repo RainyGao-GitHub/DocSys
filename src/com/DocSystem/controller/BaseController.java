@@ -3680,7 +3680,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(isFSM(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
 		{
-			successDocList = verReposCheckOut(repos, false, doc, localParentPath, doc.getName(), commitId, true, true, downloadList);
+			successDocList = verReposCheckOutEx(repos, doc, localParentPath, doc.getName(), commitId, true, true, downloadList);
 		}
 		else
 		{
@@ -7310,6 +7310,66 @@ public class BaseController  extends BaseFunction{
 	
 	protected Doc remoteServerGetDoc(Repos repos, Doc doc, String revision) {
 		return getRemoteStorageEntry(repos, doc, repos.remoteServerConfig);
+	}
+	
+	protected Doc verReposGetDocEx(Repos repos, Doc doc, String commitId)
+	{
+		//TOOD: getCommitLog by commitId
+		CommitLog qCommit = new CommitLog();
+		qCommit.commitId = Long.parseLong(commitId);
+		List<CommitLog> list = channel.queryCommitLog(repos, qCommit);
+		if(list == null)
+		{
+			return null;
+		}
+		
+		//Find out the commit with revision info
+		CommitLog commit = null;
+		for(int i=0; i<list.size(); i++)
+		{
+			CommitLog tmpCommit = list.get(i);
+			if(tmpCommit.verReposRevision != null)
+			{
+				commit = tmpCommit;
+				break;
+			}
+		}
+		
+		if(commit == null)
+		{
+			Log.debug("verReposGetDocEx() there is no commit with revision");
+			return null;
+		}
+		
+		//To get the docInfo by revision
+		RemoteStorageConfig remote = parseRemoteStorageConfig(commit.verReposInfo, null);
+		if(remote.GIT.isRemote == 1)
+		{
+			//需要指定本地的clone目录，检查repos当前的localGitPath是否一致
+			String verReposUrl = repos.getSvnPath();
+			String localVerReposPathForGit = null;
+			if(verReposUrl == null && verReposUrl.equals(remote.GIT.url))
+			{
+				localVerReposPathForGit = repos.getLocalSvnPath();
+			}
+			else
+			{				
+				localVerReposPathForGit = getLocalVerReposPathForDocHistory(repos, remote);
+			}
+			remote.GIT.localVerReposPath = localVerReposPathForGit;
+		}
+		
+		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote);		
+		return remoteDoc;		
+	}
+	
+	private static String getLocalVerReposPathForDocHistory(Repos repos, RemoteStorageConfig remote)
+	{
+		//GIT的远程仓库需要本地仓库存放路径（这个仓库放在和版本仓库相同的位置）
+		String localGitReposRootPath = repos.getPath() + "DocSysVerReposes/";
+		String verReposName = repos.getId() + "_GIT_DocHistory" + remote.GIT.url.hashCode();
+		String localVerReposPath = localGitReposRootPath + verReposName + "/";
+		return localVerReposPath;
 	}
 	
 	protected Doc verReposGetDoc(Repos repos, Doc doc, String revision)
@@ -11517,8 +11577,6 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.checkPath(entryPath, commitId);
 	}
 
-
-
 	/*
 	 * verReposCheckOut
 	 * 参数：
@@ -11539,6 +11597,11 @@ public class BaseController  extends BaseFunction{
 			return gitCheckOut(repos, doc, localParentPath, targetName, commitId, force, auto, downloadList);
 		}
 		return null;
+	}
+	
+	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
+	{
+		return channel.verReposCheckOutEx(repos, doc, localParentPath, targetName, commitId, force, auto, downloadList);
 	}
 	
 	protected List<Doc> verReposCheckOutForDownload(Repos repos, Doc doc, ReposAccess reposAccess, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 

@@ -2199,6 +2199,78 @@ public class LuceneUtil2   extends BaseFunction
 		return list;
 	}
 	
+	//查询指定范围内的commitLog	
+	//maxNum: 最大记录条数
+	public static List<CommitLog> queryCommitLog(CommitLog commit, Integer maxNum, String indexLib) {
+		//按commitId反序排序
+    	Sort sort = new Sort();
+    	SortField field = new SortField("commitId", SortField.Type.LONG, true);
+		sort.setSort(field);
+		
+		Log.debug("queryCommitLog() indexLib:" + indexLib);
+			
+		List<CommitLog> list = multiQueryForCommitLog(commit, maxNum, indexLib, sort);
+		return list;
+	}
+	
+	public static List<CommitLog> multiQueryForCommitLog(CommitLog qCommit, Integer maxNum, String indexLib, Sort sort)
+	{
+		List<CommitLog> list =  new ArrayList<CommitLog>();
+		
+	    Directory directory = null;
+        DirectoryReader ireader = null;
+        IndexSearcher isearcher = null;
+
+		try {
+    		File file = new File(indexLib);
+    		if(!file.exists())
+    		{
+    			Log.debug("multiQueryForCommitLog() " + indexLib + " 不存在！");
+    			return null;
+    		}
+    		
+	        directory = FSDirectory.open(file);
+	        ireader = DirectoryReader.open(directory);
+	        isearcher = new IndexSearcher(ireader);
+	
+	        BooleanQuery builder = buildBooleanQueryForCommitLog(qCommit);
+	        if(builder != null)
+	        {
+				TopDocs hits = isearcher.search( builder, maxNum, sort);
+	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
+	        	{
+	        		Document document = isearcher.doc( scoreDoc.doc );
+	        		CommitLog log = new CommitLog();
+		        	LuceneUtil2.buildObjectForDocument(log, document);
+		        	Log.printObject("multiQueryForCommitLog() log", log);
+		        	list.add(log);
+	        	}
+	        }
+		} catch (Exception e) {
+			errorLog("multiQueryForCommitLog() 异常");
+			errorLog(e);
+		} finally {
+			if(ireader != null)
+			{
+				try {
+					ireader.close();
+				} catch (Exception e1) {
+					errorLog(e1);
+				}
+			}
+			
+			if(directory != null)
+			{
+				try {
+					directory.close();
+				} catch (Exception e1) {
+					errorLog(e1);
+				}
+			}
+		}				
+		return list;
+    }
+	
 	public static List<CommitLog> multiQueryForCommitLog(CommitLog qCommit, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib, Sort sort)
 	{
 		List<CommitLog> list =  new ArrayList<CommitLog>();
@@ -2264,6 +2336,15 @@ public class LuceneUtil2   extends BaseFunction
 		return list;
     }
 	
+	//查询指定的commitLog
+	private static BooleanQuery buildBooleanQueryForCommitLog(CommitLog qCommit) 
+	{	
+        List<QueryCondition> conditions2 = LuceneUtil2.buildQueryConditionsForObject(qCommit, Occur.MUST, QueryCondition.SEARCH_TYPE_Term);
+		BooleanQuery query2 = LuceneUtil2.buildBooleanQueryWithConditions(conditions2);
+		return query2;
+	}
+	
+	//查询指定commit范围内的commitLog
 	private static BooleanQuery buildBooleanQueryForCommitLog(CommitLog qCommit, Long startCommitId, Long endCommitId) 
 	{
 		List<QueryCondition> conditions = new ArrayList<QueryCondition>();

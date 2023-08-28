@@ -1,9 +1,11 @@
 package com.DocSystem.common.channels;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 import com.DocSystem.common.FolderUploadAction;
+import com.DocSystem.common.Log;
 import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.CommitEntry;
@@ -21,6 +23,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.websocket.entity.DocSearchContext;
 
 import util.ReturnAjax;
+import util.LuceneUtil.LuceneUtil2;
 
 /**
  * business channel
@@ -97,8 +100,14 @@ public interface Channel {
 	void insertCommit(Repos repos, CommitLog commit);
 
 	void updateCommit(Repos repos, CommitLog commit);
-
+	
+	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit);
+	
 	List<LogEntry> queryCommitHistory(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId);
 
 	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);
+
+	List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, 
+			boolean force, boolean auto, HashMap<String,String> downloadList); 
+	
 }

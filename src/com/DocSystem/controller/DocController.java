@@ -3330,7 +3330,7 @@ public class DocController extends BaseController{
 				Doc remoteDoc = null;
 				if(isFSM(repos))
 				{
-					remoteDoc = verReposGetDoc(repos, doc, commitId);
+					remoteDoc = verReposGetDocEx(repos, doc, commitId);
 				}
 				else
 				{
@@ -3367,8 +3367,8 @@ public class DocController extends BaseController{
 				if(file.exists() == false)
 				{
 					if(isFSM(repos))
-					{
-						verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+					{						
+						verReposCheckOutEx(repos, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
 					}
 					else
 					{
@@ -4052,7 +4052,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
 				}
 				else
 				{
@@ -4192,7 +4192,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOut(repos, false, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
 				}
 				else
 				{
