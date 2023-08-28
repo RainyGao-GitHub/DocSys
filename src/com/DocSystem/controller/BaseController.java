@@ -4650,12 +4650,14 @@ public class BaseController  extends BaseFunction{
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();		
 		
+		commit.verReposInfo = buildVerReposInfo(repos);
+		
 		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.insertCommit(repos, commit);
 	}
 	
 	
-	private void updateCommit(Repos repos, ActionContext context) {
+	private void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo) {
 		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		//{
 		//	return;
@@ -4680,11 +4682,76 @@ public class BaseController  extends BaseFunction{
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();
 		
-		//TODO: fill verReposInfo
+		commit.verReposInfo = buildVerReposInfo(repos);
+		if(revision == null)
+		{
+			commit.verReposStatus = -1;
+			commit.verReposErrorInfo = errorInfo;
+		}
+		else
+		{
+			commit.verReposStatus = 200;	
+			commit.verReposRevision = revision;
+		}
 		
 		channel.updateCommit(repos, commit);
 	}
 	
+	private String buildVerReposInfo(Repos repos) {
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return null;
+		}
+		
+		Integer verCtrl = repos.getVerCtrl();
+		if(verCtrl == null)
+		{
+			Log.debug("buildRemoteStorageStr() verCtrl not configured");
+			return null;
+		}
+		
+		String verReposURL = null;
+		String verReposUserName = "";
+		String verReposPwd = "";
+		
+		if(repos.getIsRemote() != null && repos.getIsRemote() == 1)	//远程仓库
+		{
+			verReposURL = repos.getSvnPath();
+			if(verReposURL == null || verReposURL.isEmpty())
+			{
+				Log.debug("buildRemoteStorageStr() verReposURL not configured");
+				return null;
+			}
+			verReposUserName = repos.getSvnUser();
+			verReposPwd = repos.getSvnPwd();
+		}
+		else
+		{
+			String localVerReposPath = repos.getLocalSvnPath();
+			if(localVerReposPath == null || localVerReposPath.isEmpty())
+			{
+				localVerReposPath = repos.getPath() + "DocSysVerReposes/";
+			}
+			String verReposName = Path.getVerReposName(repos, true);
+			verReposURL = "file://" + localVerReposPath + verReposName + "/";
+			verReposUserName = "";
+			verReposPwd = "";
+		}
+		
+		
+		String remoteStorage = null;
+		switch(verCtrl)
+		{
+		case 1:
+			remoteStorage = "svn://" + verReposURL + ";userName=" + verReposUserName + ";pwd=" + verReposPwd;
+			break;
+		case 2:
+			remoteStorage = "git://" + verReposURL + ";userName=" + verReposUserName + ";pwd=" + verReposPwd;
+			break;
+		}
+		return remoteStorage;
+	}
+
 	private String buildUniqueIdForCommitLog(CommitLog commit) {
 		return commit.commitId + "_" + commit.reposId;
 	}
@@ -4708,13 +4775,15 @@ public class BaseController  extends BaseFunction{
 		commit.commitUsers = action.commitUser;
 		
 		commit.reposId = repos.getId();
-		commit.reposName = repos.getName();		
+		commit.reposName = repos.getName();	
+		
+		commit.verReposInfo = buildVerReposInfo(repos);
 
 		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.insertCommit(repos, commit);
 	}
 	
-	private void updateCommit(Repos repos, FolderUploadAction action) {
+	private void updateCommit(Repos repos, FolderUploadAction action, String revision, String errorInfo) {
 		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		//{
 		//	return;
@@ -4736,8 +4805,18 @@ public class BaseController  extends BaseFunction{
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();
 		
-		//TODO: fill verReposInfo
-		
+		commit.verReposInfo = buildVerReposInfo(repos);
+		if(revision == null)
+		{
+			commit.verReposStatus = -1;
+			commit.verReposErrorInfo = errorInfo;
+		}
+		else
+		{
+			commit.verReposStatus = 200;	
+			commit.verReposRevision = revision;
+		}
+
 		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.updateCommit(repos, commit);
 	}
@@ -8006,14 +8085,13 @@ public class BaseController  extends BaseFunction{
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
-					updateCommit(repos, action.context);
 				}
 				else
 				{
 					ret = true;
-					updateCommit(repos, action.context);
 					verReposPullPush(repos, isRealDoc, rt);					
 				}
+				updateCommit(repos, action.context, revision, rt.getDebugLog());
 				break;
 			case MOVE:	//move
 				revision = verReposDocMove(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
@@ -8021,7 +8099,6 @@ public class BaseController  extends BaseFunction{
 				{
 					docSysWarningLog("executeVerReposAction() verReposRealDocMove Failed", rt);
 					docSysDebugLog("executeVerReposAction() verReposRealDocMove srcDoc [" + doc.getPath() + doc.getName() + "] dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
-					updateCommit(repos, action.context);
 				}
 				else
 				{
@@ -8030,15 +8107,14 @@ public class BaseController  extends BaseFunction{
 					newDoc.setRevision(revision);
 					updateVerReposDBEntry(repos, newDoc, true);				
 
-					updateCommit(repos, action.context);
 					verReposPullPush(repos, isRealDoc, rt);
 				}
+				updateCommit(repos, action.context, revision, rt.getDebugLog());
 				break;
 			case COPY: //copy
 				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
 				if(revision == null)
 				{
-					updateCommit(repos, action.context);
 					docSysDebugLog("executeVerReposAction() verReposRealDocCopy srcDoc [" + doc.getPath() + doc.getName()+ "] to dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
 				}
 				else
@@ -8046,10 +8122,9 @@ public class BaseController  extends BaseFunction{
 					ret = true;
 					newDoc.setRevision(revision);
 					updateVerReposDBEntry(repos, newDoc, true);
-
-					updateCommit(repos, action.context);
 					verReposPullPush(repos, isRealDoc, rt);
 				}
+				updateCommit(repos, action.context, revision, rt.getDebugLog());
 				break;
 			case PUSH: //push
 				ret = verReposPullPush(repos, isRealDoc, rt);
@@ -21689,7 +21764,7 @@ public class BaseController  extends BaseFunction{
 				if(revision != null)
 				{
 					//更新commitInfo的版本提交信息: 将revision写入commitInfo中
-					updateCommit(repos, action);
+					updateCommit(repos, action, revision, rt.getDebugLog());
 					insertCommitEntries(repos, action, commitActionList);
 					
 					verReposPullPush(repos, true, rt);
@@ -21698,7 +21773,7 @@ public class BaseController  extends BaseFunction{
 				else
 				{
 					//更新commitInfo的版本提交信息: 将verReposDocCommit失败的信息写入commitInfo中
-					updateCommit(repos, action);					
+					updateCommit(repos, action, revision, rt.getDebugLog());					
 					insertCommitEntries(repos, action, commitActionList);
 				}
 				
