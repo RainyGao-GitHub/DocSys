@@ -7312,14 +7312,16 @@ public class BaseController  extends BaseFunction{
 		return getRemoteStorageEntry(repos, doc, repos.remoteServerConfig);
 	}
 	
-	protected Doc verReposGetDocEx(Repos repos, Doc doc, String commitId)
+	protected RemoteStorageConfig getHistoryVerReposConfig(Repos repos, String commitId)
 	{
 		//TOOD: getCommitLog by commitId
+		Log.debug("getHistoryVerReposConfig() commitId:" + commitId);
 		CommitLog qCommit = new CommitLog();
 		qCommit.commitId = Long.parseLong(commitId);
 		List<CommitLog> list = channel.queryCommitLog(repos, qCommit);
-		if(list == null)
+		if(list == null || list.size() == 0)
 		{
+			Log.debug("getHistoryVerReposConfig() there is not commitLog for commitId:" + commitId);
 			return null;
 		}
 		
@@ -7337,18 +7339,24 @@ public class BaseController  extends BaseFunction{
 		
 		if(commit == null)
 		{
-			Log.debug("verReposGetDocEx() there is no commit with revision");
+			Log.debug("getHistoryVerReposConfig() there is no commit with revision");
 			return null;
 		}
 		
-		//To get the docInfo by revision
+		//Parse verReposInfo
 		RemoteStorageConfig remote = parseRemoteStorageConfig(commit.verReposInfo, null);
+		if(remote == null)
+		{
+			Log.debug("getHistoryVerReposConfig() failed to parase verReposInfo:" + commit.verReposInfo);			
+			return null;
+		}
+		
 		if(remote.GIT.isRemote == 1)
 		{
 			//需要指定本地的clone目录，检查repos当前的localGitPath是否一致
 			String verReposUrl = repos.getSvnPath();
 			String localVerReposPathForGit = null;
-			if(verReposUrl == null && verReposUrl.equals(remote.GIT.url))
+			if(verReposUrl != null && verReposUrl.equals(remote.GIT.url))
 			{
 				localVerReposPathForGit = repos.getLocalSvnPath();
 			}
@@ -7359,10 +7367,38 @@ public class BaseController  extends BaseFunction{
 			remote.GIT.localVerReposPath = localVerReposPathForGit;
 		}
 		
-		Doc remoteDoc = getRemoteStorageEntry(repos, doc, remote);		
+		return remote;
+	}
+	
+	protected Doc verReposGetDocEx(Repos repos, Doc doc, String commitId)
+	{
+		if(commitId == null)
+		{
+			commitId = getLatestCommitId(repos);
+		}
+		
+		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commitId);
+		if(historyVerReposConfig == null)
+		{
+			Log.debug("verReposGetDocEx() failed to get historyVerReposConfig");			
+			return null;
+		}
+		
+		Doc remoteDoc = getRemoteStorageEntry(repos, doc, historyVerReposConfig);		
 		return remoteDoc;		
 	}
 	
+	private String getLatestCommitId(Repos repos) {
+		//获取最近的一次提交
+		List<CommitLog> list = channel.queryCommitLog(repos, null, 1, null, null);
+		if(list == null || list.size() == 0)
+		{
+			Log.debug("getLatestCommitId() failed to get the latest commitLog");
+			return null;
+		}
+		return list.get(0).commitId + "";
+	}
+
 	private static String getLocalVerReposPathForDocHistory(Repos repos, RemoteStorageConfig remote)
 	{
 		//GIT的远程仓库需要本地仓库存放路径（这个仓库放在和版本仓库相同的位置）

@@ -102,7 +102,9 @@ public interface Channel {
 	void updateCommit(Repos repos, CommitLog commit);
 	
 	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit);
-	
+
+	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit, int maxLogNum, String startCommitId, String endCommitId);
+
 	List<LogEntry> queryCommitHistory(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId);
 
 	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);

@@ -4014,7 +4014,7 @@ public class DocController extends BaseController{
 			Doc remoteDoc = null;
 			if(isFSM(repos))
 			{
-				remoteDoc = verReposGetDoc(repos, doc, commitId);
+				remoteDoc = verReposGetDocEx(repos, doc, commitId);
 			}
 			else
 			{
@@ -4154,7 +4154,7 @@ public class DocController extends BaseController{
 			Doc remoteDoc = null;
 			if(isFSM(repos))
 			{
-				remoteDoc = verReposGetDoc(repos, doc, commitId);
+				remoteDoc = verReposGetDocEx(repos, doc, commitId);
 			}
 			else
 			{
