@@ -4662,9 +4662,7 @@ public class BaseController  extends BaseFunction{
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
 		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
-		CommitLog commit = new CommitLog();
-		commit.id = buildUniqueIdForCommitLog(commit);
-		
+		CommitLog commit = new CommitLog();		
 		commit.startTime = context.startTime;
 		commit.endTime = new Date().getTime();	//End Time
 		
@@ -4690,6 +4688,7 @@ public class BaseController  extends BaseFunction{
 			commit.verReposRevision = revision;
 		}
 		
+		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.updateCommit(repos, commit);
 	}
 	
