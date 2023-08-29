@@ -3368,7 +3368,7 @@ public class DocController extends BaseController{
 				{
 					if(isFSM(repos))
 					{						
-						verReposCheckOutEx(repos, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+						verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, true, null);
 					}
 					else
 					{
@@ -4052,11 +4052,11 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOutEx(repos, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, true, null);
 				}
 				else
 				{
-					channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, null);
+					channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, 3, null);
 				}
 			}
 			
@@ -4192,11 +4192,11 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOutEx(repos, doc, tempLocalRootPath + doc.getPath(), doc.getName(), commitId, true, true, null);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, true, null);
 				}
 				else
 				{
-					channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, 3, null);
+					channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, 3, null);
 				}
 			}
 			

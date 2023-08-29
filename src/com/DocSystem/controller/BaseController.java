@@ -3671,16 +3671,12 @@ public class BaseController  extends BaseFunction{
 			commitMsg = doc.getPath() + doc.getName() + " 回退至版本:" + commitId;
 		}
 
-		//Checkout to localParentPath
-		String localRootPath = doc.getLocalRootPath();
-		String localParentPath = localRootPath + doc.getPath();
-		
 		//Do checkout the entry to
 		List<Doc> successDocList = null;
 		
 		if(isFSM(repos) || doc.getIsRealDoc() == false) //文件管理系统或者VDOC
 		{
-			successDocList = verReposCheckOutEx(repos, doc, localParentPath, doc.getName(), commitId, true, true, downloadList);
+			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, true, true, downloadList);
 		}
 		else
 		{
@@ -11638,7 +11634,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	
-	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
+	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String tmpLocalRootPath, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
 	{
 		CommitLog commit = getCommitLogById(repos, commitId);
 		if(commit == null)
@@ -11654,7 +11650,13 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return channel.remoteStorageCheckOut(historyVerReposConfig, repos, doc, null, commitId, auto, 0, null);
+		return channel.remoteStorageCheckOut(
+				historyVerReposConfig, 
+				repos, doc, 
+				tmpLocalRootPath, localParentPath, targetName, 
+				commitId, 
+				constants.PullType.force, 
+				downloadList);
 	}
 	
 	/*
