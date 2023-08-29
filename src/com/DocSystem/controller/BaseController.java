@@ -7312,37 +7312,9 @@ public class BaseController  extends BaseFunction{
 		return getRemoteStorageEntry(repos, doc, repos.remoteServerConfig);
 	}
 	
-	protected RemoteStorageConfig getHistoryVerReposConfig(Repos repos, String commitId)
+
+	protected RemoteStorageConfig getHistoryVerReposConfig(Repos repos, CommitLog commit)
 	{
-		//TOOD: getCommitLog by commitId
-		Log.debug("getHistoryVerReposConfig() commitId:" + commitId);
-		CommitLog qCommit = new CommitLog();
-		qCommit.commitId = Long.parseLong(commitId);
-		List<CommitLog> list = channel.queryCommitLog(repos, qCommit);
-		if(list == null || list.size() == 0)
-		{
-			Log.debug("getHistoryVerReposConfig() there is not commitLog for commitId:" + commitId);
-			return null;
-		}
-		
-		//Find out the commit with revision info
-		CommitLog commit = null;
-		for(int i=0; i<list.size(); i++)
-		{
-			CommitLog tmpCommit = list.get(i);
-			if(tmpCommit.verReposRevision != null)
-			{
-				commit = tmpCommit;
-				break;
-			}
-		}
-		
-		if(commit == null)
-		{
-			Log.debug("getHistoryVerReposConfig() there is no commit with revision");
-			return null;
-		}
-		
 		//Parse verReposInfo
 		RemoteStorageConfig remote = parseRemoteStorageConfig(commit.verReposInfo, null);
 		if(remote == null)
@@ -7370,33 +7342,65 @@ public class BaseController  extends BaseFunction{
 		return remote;
 	}
 	
-	protected Doc verReposGetDocEx(Repos repos, Doc doc, String commitId)
+	protected CommitLog getCommitLogById(Repos repos, String commitId)
 	{
+		Log.debug("getCommitLogById() commitId:" + commitId);
+
 		if(commitId == null)
 		{
-			commitId = getLatestCommitId(repos);
+			return getLatestCommit(repos);
 		}
 		
-		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commitId);
-		if(historyVerReposConfig == null)
+		//根据commitId
+		CommitLog qCommit = new CommitLog();
+		qCommit.commitId = Long.parseLong(commitId);
+		List<CommitLog> list = channel.queryCommitLog(repos, qCommit);
+		if(list == null || list.size() == 0)
 		{
-			Log.debug("verReposGetDocEx() failed to get historyVerReposConfig");			
+			Log.debug("getCommitLogById() there is not commitLog for commitId:" + commitId);
 			return null;
 		}
 		
-		Doc remoteDoc = getRemoteStorageEntry(repos, doc, historyVerReposConfig);		
-		return remoteDoc;		
+		//Find out the commit with revision info
+		CommitLog commit = null;
+		for(int i=0; i<list.size(); i++)
+		{
+			CommitLog tmpCommit = list.get(i);
+			if(tmpCommit.verReposRevision != null)
+			{
+				commit = tmpCommit;
+				break;
+			}
+		}
+		return commit;
 	}
-	
-	private String getLatestCommitId(Repos repos) {
-		//获取最近的一次提交
-		List<CommitLog> list = channel.queryCommitLog(repos, null, 1, null, null);
+
+	private CommitLog getLatestCommit(Repos repos) {
+		//获取最近的10次提交
+		List<CommitLog> list = channel.queryCommitLog(repos, null, 10, null, null);
 		if(list == null || list.size() == 0)
 		{
 			Log.debug("getLatestCommitId() failed to get the latest commitLog");
 			return null;
 		}
-		return list.get(0).commitId + "";
+		
+		CommitLog commit = null;
+		for(int i=0; i<list.size(); i++)
+		{
+			CommitLog tmpCommit = list.get(i);
+			if(tmpCommit.verReposRevision != null)
+			{
+				commit = tmpCommit;
+				break;
+			}
+		}
+		
+		return commit;
+	}
+
+	private String getLatestCommitId(Repos repos) {
+		CommitLog commit = getLatestCommit(repos);
+		return commit.commitId + "";
 	}
 
 	private static String getLocalVerReposPathForDocHistory(Repos repos, RemoteStorageConfig remote)
@@ -7406,6 +7410,26 @@ public class BaseController  extends BaseFunction{
 		String verReposName = repos.getId() + "_GIT_DocHistory" + remote.GIT.url.hashCode();
 		String localVerReposPath = localGitReposRootPath + verReposName + "/";
 		return localVerReposPath;
+	}
+	
+	protected Doc verReposGetDocEx(Repos repos, Doc doc, String commitId)
+	{
+		CommitLog commit = getCommitLogById(repos, commitId);
+		if(commit == null)
+		{
+			Log.debug("verReposGetDocEx() failed to get commitLog for commitId:" + commitId);			
+			return null;
+		}
+				
+		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
+		if(historyVerReposConfig == null)
+		{
+			Log.debug("verReposGetDocEx() failed to get historyVerReposConfig");			
+			return null;
+		}
+		
+		Doc remoteDoc = getRemoteStorageEntry(repos, doc, historyVerReposConfig);		
+		return remoteDoc;		
 	}
 	
 	protected Doc verReposGetDoc(Repos repos, Doc doc, String revision)
@@ -11613,6 +11637,26 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.checkPath(entryPath, commitId);
 	}
 
+	
+	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
+	{
+		CommitLog commit = getCommitLogById(repos, commitId);
+		if(commit == null)
+		{
+			Log.debug("verReposCheckOutEx() failed to get commitLog for commitId:" + commitId);			
+			return null;
+		}
+		
+		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
+		if(historyVerReposConfig == null)
+		{
+			Log.debug("verReposCheckOutEx() failed to get historyVerReposConfig from commitLog");			
+			return null;
+		}
+		
+		return channel.remoteStorageCheckOut(historyVerReposConfig, repos, doc, null, commitId, auto, 0, null);
+	}
+	
 	/*
 	 * verReposCheckOut
 	 * 参数：
@@ -11633,11 +11677,6 @@ public class BaseController  extends BaseFunction{
 			return gitCheckOut(repos, doc, localParentPath, targetName, commitId, force, auto, downloadList);
 		}
 		return null;
-	}
-	
-	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
-	{
-		return channel.verReposCheckOutEx(repos, doc, localParentPath, targetName, commitId, force, auto, downloadList);
 	}
 	
 	protected List<Doc> verReposCheckOutForDownload(Repos repos, Doc doc, ReposAccess reposAccess, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 

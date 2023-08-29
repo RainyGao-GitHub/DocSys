@@ -36,28 +36,76 @@ public interface Channel {
     String channelName();
 
 	//Repos RemoteServer
-	String remoteServerDocCommit(Repos repos, Doc doc, String commitMsg, User accessUser, ReturnAjax rt,
-			boolean force, int subDocCommitFlag);
-	String remoteServerDocCopy(Repos repos, Doc srcDoc, Doc dstDoc, String commitMsg, User accessUser, ReturnAjax rt,
+	String remoteServerDocCommit(
+			Repos repos, Doc doc, 
+			String commitMsg, 
+			User accessUser, 
+			ReturnAjax rt,
+			boolean force, 
+			int subDocCommitFlag);
+	String remoteServerDocCopy(
+			Repos repos, Doc srcDoc, Doc dstDoc, 
+			String commitMsg, 
+			User accessUser, 
+			ReturnAjax rt,
 			boolean isMove);
-	List<Doc> remoteServerCheckOut(Repos repos, Doc doc, String tempLocalRootPath, String localParentPath,
-			String targetName, String commitId, int pullType, HashMap<String, String> downloadList);
-	List<Doc> remoteServerCheckOutForDownload(Repos repos, Doc doc, ReposAccess reposAccess, String tempLocalRootPath,
-			String localParentPath, String targetName, String commitId, boolean force, boolean auto,
+	List<Doc> remoteServerCheckOut(
+			Repos repos, Doc doc, 
+			String tempLocalRootPath, String localParentPath, String targetName, 
+			String commitId, 
+			int pullType, 
 			HashMap<String, String> downloadList);
-	List<ChangedItem> remoteServerGetHistoryDetail(Repos repos, Doc doc, String commitId);
-	List<LogEntry> remoteServerGetHistory(Repos repos, Doc doc, int maxLogNum, String commitId);
+	List<Doc> remoteServerCheckOutForDownload(
+			Repos repos, Doc doc, 
+			ReposAccess reposAccess, 
+			String tempLocalRootPath, String localParentPath, String targetName, 
+			String commitId, 
+			boolean force, boolean auto,
+			HashMap<String, String> downloadList);
+	List<ChangedItem> remoteServerGetHistoryDetail(
+			Repos repos, Doc doc, 
+			String commitId);
+	List<LogEntry> remoteServerGetHistory(
+			Repos repos, Doc doc, 
+			int maxLogNum, 
+			String commitId);
 	
 	//Repos RemoteStorage
-	List<Doc> remoteStorageGetEntryListEx(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc,
+	List<Doc> remoteStorageGetEntryListEx(
+			RemoteStorageSession session, 
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc,
 			String commitId);
-	Doc remoteStorageGetEntryEx(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc,
+	Doc remoteStorageGetEntryEx(
+			RemoteStorageSession session, 
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc,
 			String commitId);
-	boolean remoteStoragePull(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, int pullType, ReturnAjax rt);
-	boolean remoteStoragePush(RemoteStorageConfig remote, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, int pushType, ReturnAjax rt);
-	
+	boolean remoteStoragePull(
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc, 
+			User accessUser, 
+			String commitId, 
+			boolean recurcive, 
+			int pullType, 
+			ReturnAjax rt);
+	boolean remoteStoragePush(
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc, 
+			User accessUser, 
+			String commitMsg, 
+			boolean recurcive, 
+			int pushType, 
+			ReturnAjax rt);
+
 	//Repos AutoBackUp
-	void reposBackUp(BackupConfig backupConfig, Repos repos, Doc doc, User accessUser, String commitMsg, boolean recurcive, boolean force, ReturnAjax rt);
+	void reposBackUp(
+			BackupConfig backupConfig, 
+			Repos repos, Doc doc, 
+			User accessUser, 
+			String commitMsg, 
+			boolean recurcive, boolean force, 
+			ReturnAjax rt);
 
 	//Repos FullBackUp
 	boolean reposFullBackUp(ReposFullBackupTask task);
@@ -76,12 +124,36 @@ public interface Channel {
 	//RemoteStorage Basic Interface
 	RemoteStorageSession doRemoteStorageLoginEx(Repos fakeRepos, RemoteStorageConfig remote);
 	void doRemoteStorageLogoutEx(RemoteStorageSession remoteStorageSession);
-	List<Doc> getRemoteStorageEntryListEx(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc,
+	List<Doc> getRemoteStorageEntryListEx(
+			RemoteStorageSession session, 
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc,
 			String commitId);
-	HashMap<String, Doc> getRemoteStorageEntryHashMapEx(RemoteStorageSession session, RemoteStorageConfig remote,
-			Repos repos, Doc doc, String commitId);
-	Doc getRemoteStorageEntryEx(RemoteStorageSession session, RemoteStorageConfig remote, Repos repos, Doc doc,
+	HashMap<String, Doc> getRemoteStorageEntryHashMapEx(
+			RemoteStorageSession session, 
+			RemoteStorageConfig remote,
+			Repos repos, Doc doc, 
 			String commitId);
+	Doc getRemoteStorageEntryEx(
+			RemoteStorageSession session, 
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc,
+			String commitId);
+	List<Doc> remoteStorageCheckOut(
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc, 
+			String tempLocalRootPath, String localParentPath, String targetName, 
+			String commitId, 
+			int pullType, 
+			HashMap<String,String> downloadList);
+	List<Doc> remoteStorageCheckOutForDownload(
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc, 
+			ReposAccess reposAccess, 
+			String tempLocalRootPath, String localParentPath, String targetName, 
+			String commitId, 
+			boolean force, boolean auto, 
+			HashMap<String,String> downloadList);
 
 	String buildMailContent(String content);
 	
@@ -107,9 +179,5 @@ public interface Channel {
 
 	List<LogEntry> queryCommitHistory(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId);
 
-	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);
-
-	List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String localParentPath, String targetName, String commitId, 
-			boolean force, boolean auto, HashMap<String,String> downloadList); 
-	
+	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);	
 }
