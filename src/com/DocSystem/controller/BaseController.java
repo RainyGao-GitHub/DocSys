@@ -11654,8 +11654,40 @@ public class BaseController  extends BaseFunction{
 				historyVerReposConfig, 
 				repos, doc, 
 				tmpLocalRootPath, localParentPath, targetName, 
-				commitId, 
+				commit.verReposRevision, 
 				constants.PullType.force, 
+				downloadList);
+	}
+	
+	protected List<Doc> verReposCheckOutForDownloadEx(
+			Repos repos, Doc doc, 
+			ReposAccess reposAccess, 
+			String tmpLocalRootPath, String localParentPath, String targetName, 
+			String commitId, 
+			boolean force, boolean auto, 
+			HashMap<String,String> downloadList) 
+	{
+		CommitLog commit = getCommitLogById(repos, commitId);
+		if(commit == null)
+		{
+			Log.debug("verReposCheckOutForDownloadEx() failed to get commitLog for commitId:" + commitId);			
+			return null;
+		}
+		
+		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
+		if(historyVerReposConfig == null)
+		{
+			Log.debug("verReposCheckOutForDownloadEx() failed to get historyVerReposConfig from commitLog");			
+			return null;
+		}
+		
+		return channel.remoteStorageCheckOutForDownload(
+				historyVerReposConfig, 
+				repos, doc, 
+				reposAccess,
+				tmpLocalRootPath, localParentPath, targetName, 
+				commit.verReposRevision, 
+				force, auto, 
 				downloadList);
 	}
 	
@@ -20692,7 +20724,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		task.info = "版本检出中...";
-		if(verReposCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, tmpCheckoutName, commitId, true, false, downloadList) == null)
+		if(verReposCheckOutForDownloadEx(repos, doc, reposAccess, tmpCheckoutPath, "", tmpCheckoutName, commitId, true, false, downloadList) == null)
 		{
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() verReposCheckOutForDownload result is null for commit:" + commitId);
 
