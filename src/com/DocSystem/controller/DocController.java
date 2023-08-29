@@ -42,6 +42,7 @@ import com.DocSystem.common.constants;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LargeFileScanTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
@@ -4998,7 +4999,7 @@ public class DocController extends BaseController{
 					return;				
 				}
 	
-				Doc remoteEntry = verReposGetDoc(repos, doc, null);
+				Doc remoteEntry = verReposGetDocEx(repos, doc, null);
 				if(remoteEntry == null)
 				{
 					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
@@ -5066,9 +5067,10 @@ public class DocController extends BaseController{
 				{
 					if(localEntry.getType() != 0)
 					{
-						if(commitId.equals(remoteEntry.getRevision()))
+						CommitLog commit = getCommitLogById(repos, commitId);
+						if(commit != null && commit.verReposRevision == null && commit.verReposRevision.equals(remoteEntry.getRevision()))
 						{
-							docSysDebugLog("revertDocHistory() commitId:" + commitId + " latestCommitId:" + remoteEntry.getRevision(), rt);
+							docSysDebugLog("revertDocHistory() commit.verReposRevision:" + commit.verReposRevision + " remoteEntry.revision:" + remoteEntry.getRevision(), rt);
 							docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
 							unlockDoc(doc, lockType, reposAccess.getAccessUser());
 							writeJson(rt, response);
@@ -5118,6 +5120,21 @@ public class DocController extends BaseController{
 	}
 	
 	
+	private boolean isLatestCommit(Repos repos, String commitId, Doc remoteEntry) {
+		CommitLog commit = getCommitLogById(repos, commitId);
+		if(commit == null || commit.verReposRevision == null)
+		{
+			return false;
+		}
+		
+		if(commit.verReposRevision.equals(remoteEntry.getRevision()))
+		{
+			return true;
+		}
+
+		return false;
+	}
+
 	/****************   set  Doc RemoteStorage Ignore ******************/
 	@RequestMapping("/setRemoteStorageIgnore.do")
 	public void setRemoteStorageIgnore(
