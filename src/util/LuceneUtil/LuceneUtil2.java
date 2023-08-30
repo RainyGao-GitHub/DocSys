@@ -2407,7 +2407,7 @@ public class LuceneUtil2   extends BaseFunction
 	public static List<CommitEntry> queryCommitEntryEx(CommitEntry entry, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib) {
 		//按commitId正序排序
     	Sort sort = new Sort();
-    	SortField field = new SortField("commitId", SortField.Type.LONG, false);
+    	SortField field = new SortField("commitId", SortField.Type.LONG, true);
 		sort.setSort(field);
 		
 		Log.debug("queryCommitEntry() indexLib:" + indexLib);
@@ -2540,7 +2540,7 @@ public class LuceneUtil2   extends BaseFunction
 	public static List<CommitEntry> queryCommitEntry(CommitEntry entry, Integer maxNum, String indexLib) {
 		//按commitId正序排序
     	Sort sort = new Sort();
-    	SortField field = new SortField("commitId", SortField.Type.LONG, false);
+    	SortField field = new SortField("commitId", SortField.Type.LONG, true);
 		sort.setSort(field);
 		
 		Log.debug("queryCommitEntry() indexLib:" + indexLib);
