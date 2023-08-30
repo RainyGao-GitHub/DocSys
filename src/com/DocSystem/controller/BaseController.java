@@ -9035,6 +9035,7 @@ public class BaseController  extends BaseFunction{
 		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";
 		context.commitMsg = commitMsg;
 		context.commitUser = login_user.getName();
+		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
 		boolean ret = updateRealDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList, context);
 		
