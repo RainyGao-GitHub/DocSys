@@ -73,6 +73,7 @@ import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.CommitAction.CommitAction;
+import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.QueryCondition;
@@ -2162,6 +2163,7 @@ public class LuceneUtil2   extends BaseFunction
     			entry.commitUsers = action.commitUser;
 
     			entry.commitAction = action.event;
+    			entry.realCommitAction = getRealCommitAction(commitAction.getAction());
 
     			entry.reposId = repos.getId();
     			entry.reposName = repos.getName();
@@ -2181,6 +2183,39 @@ public class LuceneUtil2   extends BaseFunction
 		return ret;
 	}
 	
+	private static String getRealCommitAction(CommitType action) {
+		String realCommitAction = null;
+		switch(action)
+		{
+		case ADD:
+			realCommitAction = "add";
+			break;
+		case DELETE:
+			realCommitAction = "delete";
+			break;
+		case MODIFY:
+			realCommitAction = "modify";
+			break;
+		case MOVE:
+			realCommitAction = "move";
+			break;
+		case COPY:
+			realCommitAction = "copy";
+			break;
+		case FILETODIR:
+			realCommitAction = "filetodir";
+			break;
+		case DIRTOFILE:
+			realCommitAction = "dirtofile";
+			break;
+		default:
+			break;
+		}
+		return realCommitAction;
+	}
+
+
+
 	public static String buildUniqueIdForCommitEntry(CommitEntry entry) {
 		return entry.commitId + "_" + entry.reposId + "_" + entry.docId;
 	}

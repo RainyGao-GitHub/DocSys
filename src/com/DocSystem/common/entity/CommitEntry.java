@@ -16,8 +16,8 @@ public class CommitEntry {
 	public String commitMsg;	//commit Message
 	public String commitUsers;	//Users who involved in this commit
 
-	public String commitAction;		//addDoc/deleteDoc/copyDoc/moveDoc/updateDoc/uploadDoc/saveDoc
-	public String commitSubAction;	//add/delete/noChange/             update/upload/save
+	public String commitAction;			//addDoc/deleteDoc/copyDoc/moveDoc/updateDoc/uploadDoc/saveDoc
+	public String realCommitAction;		//add/delete/modify/noChange/move/copy/filetodir/dirtofile	//add和modify并不影响历史文件获取，但是会影响显示
 	
 	public Integer reposId;		//reposId 
 	public String reposName;	//reposName

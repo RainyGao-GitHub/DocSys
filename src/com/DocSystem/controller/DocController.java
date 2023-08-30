@@ -2128,14 +2128,14 @@ public class DocController extends BaseController{
 			
 			if(commitMsg == null || commitMsg.isEmpty())
 			{
-				commitMsg = "更新 " + path + name;
+				commitMsg = "修改 [" + path + name + "]";
 			}
 			ret = updateRealDocContent(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, actionList, request, "updateDocContent", "updateDocContent", "修改文件", taskId);
 			
 			writeJson(rt, response);
 	
 			if(ret)
-			{
+			{				
 				addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));			
 				deleteTmpRealDocContent(repos, doc, reposAccess.getAccessUser());
 				executeCommonActionList(actionList, rt);

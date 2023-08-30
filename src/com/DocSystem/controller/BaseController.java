@@ -3903,7 +3903,12 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		insertCommit(repos, context);
-		insertCommitEntry(repos, doc, context.event, null, context.commitId, context.startTime, commitMsg, commitUser, login_user);
+		insertCommitEntry(
+				repos, doc, 
+				context.event, "add", null, 
+				context.commitId, commitMsg, commitUser,
+				context.startTime, context.endTime, 
+				login_user);
 
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -4202,9 +4207,11 @@ public class BaseController  extends BaseFunction{
 				
 		Doc fsDoc = fsGetDoc(repos, doc);
 		Action Action_Type = Action.UPDATE;
+		String realCommitAction = "modify";
 		if(preDoc == null || preDoc.getType() == 0)	//0: add  1: update
 		{
 			Action_Type = Action.ADD;
+			realCommitAction = "add";
 			doc.setCreateTime(fsDoc.getLatestEditTime());
 			doc.setCreatorName(login_user.getName());
 			doc.setCreator(login_user.getId());
@@ -4241,7 +4248,12 @@ public class BaseController  extends BaseFunction{
 		
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
-		insertCommitEntry(repos, doc, context.event, null, context.commitId, context.startTime, commitMsg, commitUser, login_user);
+		insertCommitEntry(
+				repos, doc, 
+				context.event, realCommitAction, null, 
+				context.commitId, commitMsg, commitUser,
+				context.startTime, context.endTime, 
+				login_user);
 
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -4479,7 +4491,12 @@ public class BaseController  extends BaseFunction{
 				
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
-		insertCommitEntry(repos, doc, context.event, null, context.commitId, context.startTime, commitMsg, commitUser, login_user);
+		insertCommitEntry(
+				repos, doc, 
+				context.event, "delete", null, 
+				context.commitId, commitMsg, commitUser,
+				context.startTime, context.endTime, 
+				login_user);
 
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 		rt.setData(doc);
@@ -4566,16 +4583,16 @@ public class BaseController  extends BaseFunction{
 	//TODO: MxsDoc版本管理机制是先写入commitEntryInfo，然后最后再写入commitInfo，如果有版本管理的话，则在版本仓库提交后更新commitInfo
 	//由于commitEntryInfo里已经包含了commitMsg和commitUser信息，所以即使后面的commitInfo没有写入，系统仍然可以获取到文件和目录的改动历史
 	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
-	private void insertCommitEntry(Repos repos, Doc doc, String action, Integer isSrcEntry, 
-			Long commitId, Long startTime, String commitMsg, String commitUsers, User user) {
-		
-		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		//{
-		//	return;
-		//}
-		
+	private void insertCommitEntry(
+			Repos repos, Doc doc, 
+			String action, String realAction, Integer isSrcEntry, 
+			Long commitId, String commitMsg, String commitUsers, 
+			Long startTime, Long endTime,
+			User user) 
+	{
 		CommitEntry entry = new CommitEntry();
 		entry.startTime = startTime;
+		entry.endTime = endTime;
 		entry.userId = user.getId();
 		entry.userName = user.getName();
 
@@ -4584,6 +4601,7 @@ public class BaseController  extends BaseFunction{
 		entry.commitUsers = commitUsers;
 
 		entry.commitAction = action;
+		entry.realCommitAction = realAction;
 		entry.isSrcEntry = isSrcEntry;	//only for copyDoc/moveDoc/renameDoc
 
 		entry.reposId = repos.getId();
@@ -4596,7 +4614,7 @@ public class BaseController  extends BaseFunction{
 		channel.insertCommitEntry(repos, entry);
 	}
 	
-	private void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, 
+	protected void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, 
 			Long commitId, Long commitTime, String commitMsg, String commitUser, User user) {
 		
 		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
@@ -4608,13 +4626,33 @@ public class BaseController  extends BaseFunction{
 		{
 		case "copyDoc":
 			//需要插入两条记录
-			insertCommitEntry(repos, srcDoc, action, 1, commitId, commitTime, commitMsg, commitUser, user);
-			insertCommitEntry(repos, dstDoc, action, 0, commitId, commitTime, commitMsg, commitUser, user);
+			insertCommitEntry(
+					repos, srcDoc, 
+					action, "copy", 1, 
+					commitId, commitMsg, commitUser, 
+					commitTime, null, 
+					user);
+			insertCommitEntry(
+					repos, dstDoc, 
+					action, "copy", 0, 
+					commitId, commitMsg, commitUser, 
+					commitTime, null,
+					user);
 			break;
 		case "moveDoc":
 			//需要插入两条记录
-			insertCommitEntry(repos, srcDoc, action, 1, commitId, commitTime, commitMsg, commitUser, user);
-			insertCommitEntry(repos, dstDoc, action, 0, commitId, commitTime, commitMsg, commitUser, user);
+			insertCommitEntry(
+					repos, srcDoc, 
+					action, "move", 1, 
+					commitId, commitMsg, commitUser,
+					commitTime, null,
+					user);
+			insertCommitEntry(
+					repos, dstDoc, 
+					action, "move", 0, 
+					commitId, commitMsg, commitUser, 
+					commitTime, null,
+					user);
 			break;			
 		}
 	}
@@ -4624,72 +4662,10 @@ public class BaseController  extends BaseFunction{
 		channel.insertCommitEntries(repos, action, commitActionList);
 	}
 	
-	private void insertCommit(Repos repos, ActionContext context) {
-		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		//{
-		//	return;
-		//}
-		
-		// TODO Auto-generated method stub
-		//reposId / reposName
-		//commitMsg / commitUser / commitId
-		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
-		CommitLog commit = new CommitLog();
-		commit.startTime = context.startTime;
-		commit.userId = context.user.getId();
-		commit.userName = context.user.getName();
-		
-		commit.commitId = context.commitId;
-		commit.commitMsg = context.commitMsg;
-		commit.commitUsers = context.commitUser;
-		
-		commit.reposId = repos.getId();
-		commit.reposName = repos.getName();		
-		
-		commit.verReposInfo = buildVerReposInfo(repos);
-		
-		commit.id = buildUniqueIdForCommitLog(commit);
-		channel.insertCommit(repos, commit);
-	}
 	
-	
-	private void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo) {
-		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		//{
-		//	return;
-		//}
-		
-		//reposId / reposName
-		//commitMsg / commitUser / commitId
-		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
-		CommitLog commit = new CommitLog();		
-		commit.startTime = context.startTime;
-		commit.endTime = new Date().getTime();	//End Time
-		
-		commit.userId = context.user.getId();
-		commit.userName = context.user.getName();
-		
-		commit.commitId = context.commitId;
-		commit.commitMsg = context.commitMsg;
-		commit.commitUsers = context.commitUser;
-		
-		commit.reposId = repos.getId();
-		commit.reposName = repos.getName();
-		
-		commit.verReposInfo = buildVerReposInfo(repos);
-		if(revision == null)
-		{
-			commit.verReposStatus = -1;
-			commit.verReposErrorInfo = errorInfo;
-		}
-		else
-		{
-			commit.verReposStatus = 200;	
-			commit.verReposRevision = revision;
-		}
-		
-		commit.id = buildUniqueIdForCommitLog(commit);
-		channel.updateCommit(repos, commit);
+	//CommitLog Insert and Update
+	private String buildUniqueIdForCommitLog(CommitLog commit) {
+		return commit.commitId + "_" + commit.reposId;
 	}
 	
 	private String buildVerReposInfo(Repos repos) {
@@ -4746,56 +4722,60 @@ public class BaseController  extends BaseFunction{
 		}
 		return remoteStorage;
 	}
-
-	private String buildUniqueIdForCommitLog(CommitLog commit) {
-		return commit.commitId + "_" + commit.reposId;
-	}
 	
-	private void insertCommit(Repos repos, FolderUploadAction action) {
+	protected void insertCommit(
+			Repos repos, 
+			Long startTime, Long endTime, 
+			Integer userId, String userName,
+			Long commitId, String commitMsg, String commitUsers) 
+	{
 		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		//{
 		//	return;
 		//}
 		
+		// TODO Auto-generated method stub
 		//reposId / reposName
 		//commitMsg / commitUser / commitId
 		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();
-		commit.startTime = action.startTime;
-		commit.userId = action.user.getId();
-		commit.userName = action.user.getName();
+		commit.startTime = startTime;
+		commit.endTime = endTime;
 		
-		commit.commitId = action.commitId;
-		commit.commitMsg = action.commitMsg;
-		commit.commitUsers = action.commitUser;
+		commit.userId = userId;
+		commit.userName = userName;
+		
+		commit.commitId = commitId;
+		commit.commitMsg = commitMsg;
+		commit.commitUsers = commitUsers;
 		
 		commit.reposId = repos.getId();
-		commit.reposName = repos.getName();	
+		commit.reposName = repos.getName();		
 		
 		commit.verReposInfo = buildVerReposInfo(repos);
-
+		
 		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.insertCommit(repos, commit);
 	}
 	
-	private void updateCommit(Repos repos, FolderUploadAction action, String revision, String errorInfo) {
-		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		//{
-		//	return;
-		//}
-		
-		//reposId / reposName
-		//commitMsg / commitUser / commitId
+	private void updateCommit(
+			Repos repos,
+			Long startTime, Long endTime, 
+			Integer userId, String userName,
+			Long commitId, String commitMsg, String commitUsers,
+			String revision, String errorInfo) 
+	{
 		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();		
-		commit.startTime = action.startTime;
-		commit.endTime = new Date().getTime();	//结束时间
-		commit.userId = action.user.getId();
-		commit.userName = action.user.getName();
+		commit.startTime = startTime;
+		commit.endTime = endTime != null? endTime : new Date().getTime();	//End Time
 		
-		commit.commitId = action.commitId;
-		commit.commitMsg = action.commitMsg;
-		commit.commitUsers = action.commitUser;
+		commit.userId = userId;
+		commit.userName = userName;
+		
+		commit.commitId = commitId;
+		commit.commitMsg = commitMsg;
+		commit.commitUsers = commitUsers;
 		
 		commit.reposId = repos.getId();
 		commit.reposName = repos.getName();
@@ -4811,9 +4791,43 @@ public class BaseController  extends BaseFunction{
 			commit.verReposStatus = 200;	
 			commit.verReposRevision = revision;
 		}
-
+		
 		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.updateCommit(repos, commit);
+	}
+	
+	private void insertCommit(Repos repos, ActionContext context) {
+		insertCommit(
+				repos,  
+				context.startTime, null,
+				context.user.getId(), context.user.getName(),
+				context.commitId, context.commitMsg, context.commitUser);	
+	}
+	
+	private void insertCommit(Repos repos, FolderUploadAction action) {
+		insertCommit(
+				repos,  
+				action.startTime, null,
+				action.user.getId(), action.user.getName(),
+				action.commitId, action.commitMsg, action.commitUser);	
+	}
+	
+	private void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo) {		
+		updateCommit(
+				repos,
+				context.startTime, context.endTime,
+				context.user.getId(), context.user.getName(),
+				context.commitId, context.commitMsg, context.commitUser,
+				revision, errorInfo);
+	}
+	
+	private void updateCommit(Repos repos, FolderUploadAction action, String revision, String errorInfo) {
+		updateCommit(
+				repos,
+				action.startTime, action.stopTime,
+				action.user.getId(), action.user.getName(),
+				action.commitId, action.commitMsg, action.commitUser,
+				revision, errorInfo);
 	}
 
 	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser, ActionContext context) 
@@ -8398,7 +8412,12 @@ public class BaseController  extends BaseFunction{
 
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
-		insertCommitEntry(repos, doc, context.event, null, context.commitId, context.startTime, commitMsg, commitUser, login_user);
+		insertCommitEntry(
+				repos, doc, 
+				context.event, "modify", null, 
+				context.commitId, commitMsg, commitUser,
+				context.startTime,  context.endTime, 
+				login_user);
 
 		//需要将文件Commit到版本仓库上去
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -8916,7 +8935,12 @@ public class BaseController  extends BaseFunction{
 		
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
-		insertCommitEntry(repos, doc, context.event, null, context.commitId, context.startTime, commitMsg, commitUser, login_user);
+		insertCommitEntry(
+				repos, doc, 
+				context.event, "add", null, 
+				context.commitId, commitMsg, commitUser,
+				context.startTime,  context.endTime, 
+				login_user);
 
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);		
@@ -9030,6 +9054,14 @@ public class BaseController  extends BaseFunction{
 		
 		if(saveRealDocContentEx(repos, doc, rt) == true)
 		{
+			insertCommit(repos, context);
+			insertCommitEntry(
+					repos, doc, 
+					context.event, "modify", null, 
+					context.commitId, commitMsg, commitUser,
+					context.startTime, context.endTime, 
+					login_user);
+			
 			doc.setLatestEditor(login_user.getId());
 			doc.setLatestEditorName(login_user.getName());
 			
