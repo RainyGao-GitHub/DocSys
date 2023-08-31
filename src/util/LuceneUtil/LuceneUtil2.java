@@ -66,6 +66,7 @@ import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
+import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.FolderUploadAction;
@@ -2167,9 +2168,61 @@ public class LuceneUtil2   extends BaseFunction
 
     			entry.reposId = repos.getId();
     			entry.reposName = repos.getName();
-    			entry.docId = action.doc.getDocId();
-    			entry.path = action.doc.getPath();
-    			entry.name = action.doc.getName();
+    			
+    			Doc doc = commitAction.getDoc();
+    			entry.docId = doc.getDocId();
+    			entry.path = doc.getPath();
+    			entry.name = doc.getName();
+
+    			entry.id = buildUniqueIdForCommitEntry(entry);
+    		
+    			addIndexForCommitEntryBasic(entry, indexLib);
+    		}
+    		
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
+    	}
+		
+		ret = true;
+		return ret;
+	}
+	
+	public static boolean addIndexForCommitEntries(Repos repos, ActionContext context,
+			List<CommitAction> commitActionList, String indexLib) 	
+	{
+    	Log.debug("addIndexForCommitEntries() context:" + context.event + " indexLib:"+indexLib);    	
+    	Log.printObject("addIndexForCommitEntries() context:", context);
+    	
+		boolean ret = false;
+		
+		Object synclock = getSyncLock(indexLib);
+		
+		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
+    	{
+    		redisSyncLockEx(lockName, lockInfo);
+    	
+    		for(CommitAction commitAction: commitActionList)
+    		{
+    			CommitEntry entry = new CommitEntry();
+    			entry.startTime = context.startTime;
+    			entry.userId = context.user.getId();
+    			entry.userName = context.user.getName();
+
+    			entry.commitId = context.commitId;
+    			entry.commitMsg = context.commitMsg;
+    			entry.commitUsers = context.commitUser;
+
+    			entry.commitAction = context.event;
+    			entry.realCommitAction = getRealCommitAction(commitAction.getAction());
+
+    			entry.reposId = repos.getId();
+    			entry.reposName = repos.getName();
+    			
+    			Doc doc = commitAction.getDoc();
+    			entry.docId = doc.getDocId();
+    			entry.path = doc.getPath();
+    			entry.name = doc.getName();
 
     			entry.id = buildUniqueIdForCommitEntry(entry);
     		

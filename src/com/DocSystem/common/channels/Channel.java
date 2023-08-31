@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.CommitAction.CommitAction;
@@ -168,6 +169,8 @@ public interface Channel {
 	void insertCommitEntry(Repos repos, CommitEntry entry);
 	
 	void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList);
+
+	void insertCommitEntries(Repos repos, ActionContext context, List<CommitAction> commitActionList);
 
 	void insertCommit(Repos repos, CommitLog commit);
 

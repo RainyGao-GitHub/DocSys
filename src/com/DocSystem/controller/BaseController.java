@@ -4662,6 +4662,9 @@ public class BaseController  extends BaseFunction{
 		channel.insertCommitEntries(repos, action, commitActionList);
 	}
 	
+	protected void insertCommitEntries(Repos repos, ActionContext context, List<CommitAction> commitActionList) {
+		channel.insertCommitEntries(repos, context, commitActionList);
+	}
 	
 	//CommitLog Insert and Update
 	private String buildUniqueIdForCommitLog(CommitLog commit) {
@@ -8205,12 +8208,12 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		if(action.getDocType() == DocType.REALDOC)
 		{
+			ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
 			switch(action.getAction())
 			{
 			case ADD: //add
-			case DELETE:	//delete
 			case UPDATE: //update
-				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, null, null);				
+				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, commitActionList, null);				
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -8222,8 +8225,22 @@ public class BaseController  extends BaseFunction{
 				}
 				updateCommit(repos, action.context, revision, rt.getDebugLog());
 				break;
+			case DELETE:	//delete
+				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, commitActionList, null);				
+				if(revision == null)
+				{
+					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
+				}
+				else
+				{
+					ret = true;
+					verReposPullPush(repos, isRealDoc, rt);					
+				}
+				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				insertCommitEntries(repos, action.context, commitActionList);
+				break;
 			case MOVE:	//move
-				revision = verReposDocMove(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
+				revision = verReposDocMove(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
 				if(revision == null)
 				{
 					docSysWarningLog("executeVerReposAction() verReposRealDocMove Failed", rt);
@@ -8239,9 +8256,10 @@ public class BaseController  extends BaseFunction{
 					verReposPullPush(repos, isRealDoc, rt);
 				}
 				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				insertCommitEntries(repos, action.context, commitActionList);
 				break;
 			case COPY: //copy
-				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, null);
+				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposRealDocCopy srcDoc [" + doc.getPath() + doc.getName()+ "] to dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
@@ -8254,6 +8272,7 @@ public class BaseController  extends BaseFunction{
 					verReposPullPush(repos, isRealDoc, rt);
 				}
 				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				insertCommitEntries(repos, action.context, commitActionList);
 				break;
 			case PUSH: //push
 				ret = verReposPullPush(repos, isRealDoc, rt);
@@ -8654,8 +8673,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//TODO: insertCommitEntry
-		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, srcDoc, dstDoc, "moveDoc", context.commitId, commitTime, commitMsg, commitUser, login_user);
+		insertCommit(repos, context);
+		insertCommitEntry(repos, srcDoc, dstDoc, "moveDoc", context.commitId, context.startTime, commitMsg, commitUser, login_user);
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -8780,8 +8799,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//TODO: insertCommitEntry
-		Long commitTime = new Date().getTime();
-		insertCommitEntry(repos, srcDoc, dstDoc, "copyDoc", context.commitId, commitTime, commitMsg, commitUser, login_user);
+		insertCommit(repos, context);
+		insertCommitEntry(repos, srcDoc, dstDoc, "copyDoc", context.commitId, context.startTime, commitMsg, commitUser, login_user);
 				
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -12208,11 +12227,23 @@ public class BaseController  extends BaseFunction{
 	public boolean addIndexForCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList)
 	{
 		Log.debug("addIndexForCommitEntries() action:" + action.event);
-		Date date = new Date(action.startTime);
+		Date date = new Date(action.commitId);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date);
 		boolean ret = false;
 		
 		ret = LuceneUtil2.addIndexForCommitEntries(repos, action, commitActionList, indexLib);
+		
+		return ret;
+	}
+	
+	public boolean addIndexForCommitEntries(Repos repos, ActionContext context, List<CommitAction> commitActionList)
+	{
+		Log.debug("addIndexForCommitEntries() context:" + context.event);
+		Date date = new Date(context.commitId);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		boolean ret = false;
+		
+		ret = LuceneUtil2.addIndexForCommitEntries(repos, context, commitActionList, indexLib);
 		
 		return ret;
 	}
