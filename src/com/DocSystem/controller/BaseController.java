@@ -4590,6 +4590,9 @@ public class BaseController  extends BaseFunction{
 			Long startTime, Long endTime,
 			User user) 
 	{
+		Log.debug("insertCommitEntry() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers
+					+ " action:" + action + " realAction:" + realAction + " [" + doc.getPath() + doc.getName() + "]");
+		
 		CommitEntry entry = new CommitEntry();
 		entry.startTime = startTime;
 		entry.endTime = endTime;
@@ -4615,13 +4618,8 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected void insertCommitEntry(Repos repos, Doc srcDoc, Doc dstDoc, String action, 
-			Long commitId, Long commitTime, String commitMsg, String commitUser, User user) {
-		
-		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		//{
-		//	return;
-		//}
-		
+			Long commitId, Long commitTime, String commitMsg, String commitUser, User user) 
+	{
 		switch(action)
 		{
 		case "copyDoc":
@@ -4659,10 +4657,16 @@ public class BaseController  extends BaseFunction{
 	
 
 	protected void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList) {
+		Log.debug("insertCommitEntries() commitId:" + action.commitId + " commitMsg:" + action.commitMsg + " commitUsers:" + action.commitUser
+				+ " action:" + action.event + " [" + action.doc.getPath() + action.doc.getName() + "]");
+		
 		channel.insertCommitEntries(repos, action, commitActionList);
 	}
 	
-	protected void insertCommitEntries(Repos repos, ActionContext context, List<CommitAction> commitActionList) {
+	protected void insertCommitEntries(Repos repos, ActionContext context, List<CommitAction> commitActionList) 
+	{
+		Log.debug("insertCommitEntries() commitId:" + context.commitId + " commitMsg:" + context.commitMsg + " commitUsers:" + context.commitUser
+				+ " action:" + context.event + " [" + context.doc.getPath() + context.doc.getName() + "]");
 		channel.insertCommitEntries(repos, context, commitActionList);
 	}
 	
@@ -4732,15 +4736,8 @@ public class BaseController  extends BaseFunction{
 			Integer userId, String userName,
 			Long commitId, String commitMsg, String commitUsers) 
 	{
-		//if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
-		//{
-		//	return;
-		//}
-		
-		// TODO Auto-generated method stub
-		//reposId / reposName
-		//commitMsg / commitUser / commitId
-		//verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
+		Log.debug("updateCommit() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers);
+
 		CommitLog commit = new CommitLog();
 		commit.startTime = startTime;
 		commit.endTime = endTime;
@@ -4768,6 +4765,8 @@ public class BaseController  extends BaseFunction{
 			Long commitId, String commitMsg, String commitUsers,
 			String revision, String errorInfo) 
 	{
+		Log.debug("updateCommit() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers 
+					+ " revision:" + revision + " errorInfo:" + errorInfo);
 		//更新verReposCommitInfo: status : 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息; 
 		CommitLog commit = new CommitLog();		
 		commit.startTime = startTime;
