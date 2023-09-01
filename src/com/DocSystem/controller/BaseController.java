@@ -8679,7 +8679,10 @@ public class BaseController  extends BaseFunction{
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
 		{
-			String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+			ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
+			String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, commitActionList);
+			updateCommit(repos, context, revision, rt.getDebugLog());
+			insertCommitEntries(repos, context, commitActionList);		
 			if(revision == null)
 			{
 				docSysWarningLog("moveDoc_FSM() verReposRealDocMove Failed", rt);
@@ -8806,8 +8809,14 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos))
 		{
 			Log.debug("copyDoc_FSM() verReposDocCopy");		
+	
 			//需要将文件Commit到VerRepos上去
+			ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
 			String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+			
+			updateCommit(repos, context, revision, rt.getDebugLog());
+			insertCommitEntries(repos, context, commitActionList);
+			
 			if(revision == null)
 			{
 				docSysDebugLog("copyDoc_FSM() verReposRealDocCopy srcDoc [" + srcDoc.getPath() + srcDoc.getName()+ "] to dstDoc [" + dstDoc.getPath() + dstDoc.getName() + "] Failed", rt);
