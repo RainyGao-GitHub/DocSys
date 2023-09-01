@@ -4480,7 +4480,7 @@ public class BaseController  extends BaseFunction{
 		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
 		//get RealDoc Full ParentPath
-		if(deleteRealDoc(repos,doc,rt) == false)
+		if(deleteRealDocEx(repos, doc, context, rt) == false)
 		{
 			unlockDoc(doc, lockType, login_user);
 
@@ -4583,6 +4583,35 @@ public class BaseController  extends BaseFunction{
 	//TODO: MxsDoc版本管理机制是先写入commitEntryInfo，然后最后再写入commitInfo，如果有版本管理的话，则在版本仓库提交后更新commitInfo
 	//由于commitEntryInfo里已经包含了commitMsg和commitUser信息，所以即使后面的commitInfo没有写入，系统仍然可以获取到文件和目录的改动历史
 	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
+	public CommitEntry buildCommitEntry(
+			Repos repos,
+			Long docId, String path, String name,
+			String action, String realAction, Integer isSrcEntry, 
+			Long commitId, String commitMsg, String commitUsers, 
+			Long startTime, Long endTime,
+			User user) 
+	{
+		CommitEntry entry = new CommitEntry();
+		entry.startTime = startTime;
+		entry.endTime = endTime;
+		entry.userId = user.getId();
+		entry.userName = user.getName();
+
+		entry.commitId = commitId;
+		entry.commitMsg = commitMsg;
+		entry.commitUsers = commitUsers;
+
+		entry.commitAction = action;
+		entry.realCommitAction = realAction;
+		entry.isSrcEntry = isSrcEntry;	//only for copyDoc/moveDoc/renameDoc
+
+		entry.reposId = repos.getId();
+		entry.reposName = repos.getName();
+		entry.docId = docId;
+		entry.path = path;
+		entry.name = name;
+		return entry;
+	}
 	private void insertCommitEntry(
 			Repos repos, Doc doc, 
 			String action, String realAction, Integer isSrcEntry, 
@@ -10274,6 +10303,74 @@ public class BaseController  extends BaseFunction{
 		
 		return true;
 	}
+	
+	//TODO: 为每个删除的Entry增加一个记录用于版本历史信息查询（会影响删除速度）
+	protected boolean deleteRealDocEx(Repos repos, Doc doc, ActionContext context, ReturnAjax rt)
+	{	
+		context.commitEntryList = new ArrayList<CommitEntry>();
+		if(delFileOrDir(doc.getLevel(), doc.getLocalRootPath(), doc.getPath(), doc.getName(), context.commitEntryList) == false)
+		{
+			docSysDebugLog("deleteRealDocEx() delFileOrDir [" + doc.getLocalRootPath() + doc.getPath() + doc.getName() + "] 删除失败！", rt);
+			return false;
+		}
+		
+		return true;
+	}
+	
+    //Delete Directory or File
+    public static boolean delFileOrDir(int level, String localRootPath, String path, String name, List<CommitEntry> deletedList)
+    {
+    	String filePath = localRootPath + path + name;
+        File file=new File(filePath);
+        if(file.exists())
+        {
+            if(file.isDirectory())
+            {
+            	Log.info("delFileOrDir() delete Dir:" + filePath);
+               
+            	String subDirPath = path + name + "/";
+         	   
+            	File[] tmp=file.listFiles();
+	            for(int i=0;i<tmp.length;i++)
+	            {
+	            	if(delFileOrDir(level+1, localRootPath, subDirPath, tmp[i].getName(), deletedList) == false)
+	                {
+	                	Log.debug("delFileOrDir() delete subDir Failed:" + subDirPath);
+	                    return false;
+	                }
+	            }
+	            
+	            if(file.delete() == false)
+	            {
+	            	Log.info("delFileOrDir() delete Dir Failed:" + path);
+	                return false;
+	            }
+	            
+	            //TOOD: 这里只是记录最简单的信息，在真正insertCommitEntry的时候再补齐
+	            CommitEntry commitEntry = new CommitEntry();
+	            commitEntry.docId = Path.getDocId(level, path + name);
+	            commitEntry.path = path;
+	            commitEntry.name = name;
+	            deletedList.add(commitEntry);
+	            return true;	            
+            }
+            
+            if(file.delete() == false)
+            {
+            	Log.debug("delFileOrDir() delete File Failed:" + path);
+            	return false;
+            }
+            
+            //TOOD: 这里只是记录最简单的信息，在真正insertCommitEntry的时候再补齐
+            CommitEntry commitEntry = new CommitEntry();
+            commitEntry.docId = Path.getDocId(level, path + name);
+            commitEntry.path = path;
+            commitEntry.name = name;
+            deletedList.add(commitEntry);
+            return true;	
+        }
+        return true;
+    }
 	
 	//Function: saveRealDoc
 	protected boolean saveRealDoc(Repos repos, Doc doc, Integer saveType, 

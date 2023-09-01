@@ -737,9 +737,14 @@ public class Path {
 			docPath = parentPath.substring(0, parentPath.length()-1);	//remove the last char '/'
 		}
 		
-		Long docId = level*100000000000L + docPath.hashCode() + 102147483647L;	//为了避免文件重复使用level*100000000 + docName的hashCode
+		Long docId = getDocId(level, docPath);	
 		return docId;
-	}		
+	}
+	
+	public static Long getDocId(int level, String docPath)
+	{
+		return level*100000000000L + docPath.hashCode() + 102147483647L; //为了避免文件重复, 使用level*100000000 + docName的hashCode
+	}
 	
 	protected Long buildPidByPath(int level, String path) 
 	{
