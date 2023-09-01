@@ -4527,7 +4527,7 @@ public class DocController extends BaseController{
 		{
 			if(historyType == 0)
 			{
-				logList = getCommitHistory(repos, inputDoc, num, commitId);
+				logList = getCommitHistoryEx(repos, inputDoc, num, commitId);
 			}
 			else
 			{
@@ -4599,7 +4599,7 @@ public class DocController extends BaseController{
 		{
 			if(historyType == 0)
 			{
-				changedItemList = getCommitHistoryDetail(repos, inputDoc, commitId);				
+				changedItemList = getCommitHistoryDetailEx(repos, inputDoc, commitId);				
 			}
 			else
 			{

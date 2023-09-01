@@ -11397,6 +11397,30 @@ public class BaseController  extends BaseFunction{
 	/*************** DocSys verRepos操作接口 *********************/	
 	//获取文件的提交历史: 该接口是基于IndexLib实现的通用版本管理接口
 	//目前只针对RealDoc
+	protected List<LogEntry> getCommitHistoryEx(Repos repos, Doc doc, int maxLogNum, String endCommitId) 
+	{
+		Log.debug("getCommitHistoryEx() maxLogNum:" + maxLogNum + " endCommitId:" + endCommitId);
+		if(isLegacyReposHistory(repos))
+		{
+			return verReposGetHistory(repos, false, doc, maxLogNum, endCommitId);
+		}
+		return getCommitHistory(repos, doc, maxLogNum, endCommitId);
+	}
+	
+	protected List<ChangedItem> getCommitHistoryDetailEx(Repos repos, Doc doc, String commitId) 
+	{
+		Log.debug("getCommitHistoryEx() [" + doc.getPath() + doc.getName() + "] commitId:" + commitId);
+		if(isLegacyReposHistory(repos))
+		{
+			return verReposGetHistoryDetail(repos, false, doc, commitId);
+		}
+		return getCommitHistoryDetail(repos, doc, commitId);
+	}
+	
+	private boolean isLegacyReposHistory(Repos repos) {
+		return !FileUtil.isFileExist(repos.getPath() + repos.getId() + "/versionExtentionSetting");
+	}
+
 	protected List<LogEntry> getCommitHistory(Repos repos, Doc doc, int maxLogNum, String endCommitId) 
 	{
 		Log.debug("getCommitHistory() maxLogNum:" + maxLogNum + " endCommitId:" + endCommitId);
