@@ -4626,13 +4626,13 @@ public class BaseController  extends BaseFunction{
 			//需要插入两条记录
 			insertCommitEntry(
 					repos, srcDoc, 
-					action, "copy", 1, 
+					action, "noChange", 1, 
 					commitId, commitMsg, commitUser, 
 					commitTime, null, 
 					user);
 			insertCommitEntry(
 					repos, dstDoc, 
-					action, "copy", 0, 
+					action, "add", 0, 
 					commitId, commitMsg, commitUser, 
 					commitTime, null,
 					user);
@@ -4641,13 +4641,13 @@ public class BaseController  extends BaseFunction{
 			//需要插入两条记录
 			insertCommitEntry(
 					repos, srcDoc, 
-					action, "move", 1, 
+					action, "delete", 1, 
 					commitId, commitMsg, commitUser,
 					commitTime, null,
 					user);
 			insertCommitEntry(
 					repos, dstDoc, 
-					action, "move", 0, 
+					action, "add", 0, 
 					commitId, commitMsg, commitUser, 
 					commitTime, null,
 					user);
@@ -4736,7 +4736,7 @@ public class BaseController  extends BaseFunction{
 			Integer userId, String userName,
 			Long commitId, String commitMsg, String commitUsers) 
 	{
-		Log.debug("updateCommit() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers);
+		Log.debug("insertCommit() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers);
 
 		CommitLog commit = new CommitLog();
 		commit.startTime = startTime;
@@ -8213,6 +8213,7 @@ public class BaseController  extends BaseFunction{
 			case ADD: //add
 			case UPDATE: //update
 				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, commitActionList, null);				
+				updateCommit(repos, action.context, revision, rt.getDebugLog());
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -8222,10 +8223,11 @@ public class BaseController  extends BaseFunction{
 					ret = true;
 					verReposPullPush(repos, isRealDoc, rt);					
 				}
-				updateCommit(repos, action.context, revision, rt.getDebugLog());
 				break;
 			case DELETE:	//delete
 				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, commitActionList, null);				
+				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				insertCommitEntries(repos, action.context, commitActionList);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -8235,11 +8237,12 @@ public class BaseController  extends BaseFunction{
 					ret = true;
 					verReposPullPush(repos, isRealDoc, rt);					
 				}
-				updateCommit(repos, action.context, revision, rt.getDebugLog());
-				insertCommitEntries(repos, action.context, commitActionList);
 				break;
 			case MOVE:	//move
 				revision = verReposDocMove(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
+				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				insertCommitEntries(repos, action.context, commitActionList);
+
 				if(revision == null)
 				{
 					docSysWarningLog("executeVerReposAction() verReposRealDocMove Failed", rt);
@@ -8254,11 +8257,11 @@ public class BaseController  extends BaseFunction{
 
 					verReposPullPush(repos, isRealDoc, rt);
 				}
-				updateCommit(repos, action.context, revision, rt.getDebugLog());
-				insertCommitEntries(repos, action.context, commitActionList);
 				break;
 			case COPY: //copy
 				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
+				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				insertCommitEntries(repos, action.context, commitActionList);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposRealDocCopy srcDoc [" + doc.getPath() + doc.getName()+ "] to dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
@@ -8270,8 +8273,6 @@ public class BaseController  extends BaseFunction{
 					updateVerReposDBEntry(repos, newDoc, true);
 					verReposPullPush(repos, isRealDoc, rt);
 				}
-				updateCommit(repos, action.context, revision, rt.getDebugLog());
-				insertCommitEntries(repos, action.context, commitActionList);
 				break;
 			case PUSH: //push
 				ret = verReposPullPush(repos, isRealDoc, rt);

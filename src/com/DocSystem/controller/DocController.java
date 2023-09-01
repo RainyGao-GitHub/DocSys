@@ -637,6 +637,18 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
+		
+		if(dstName == null || "".equals(dstName))
+		{
+			dstName = srcName;
+		}
+		
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
+		}
+		
+		String commitUser = reposAccess.getAccessUser().getName();
 				
 		//检查用户是否有目标目录权限新增文件
 		String reposPath = Path.getReposPath(repos);
@@ -660,19 +672,6 @@ public class DocController extends BaseController{
 			copyAfterHandler(0, srcDoc, dstDoc, reposAccess, context, rt);
 			return;
 		}
-		
-		if(dstName == null || "".equals(dstName))
-		{
-			dstName = srcName;
-		}
-		
-		if(commitMsg == null || commitMsg.isEmpty())
-		{
-			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
-		}
-		
-		String commitUser = reposAccess.getAccessUser().getName();
-
 		
 		Doc tmpDoc = docSysGetDoc(repos, srcDoc, false);
 		if(tmpDoc == null || tmpDoc.getType() == 0)
@@ -777,6 +776,24 @@ public class DocController extends BaseController{
 		}
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
+
+		if(dstName == null || "".equals(dstName))
+		{
+			dstName = srcName;
+		}
+		
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			if(move)
+			{
+				commitMsg = "移动 " + srcPath + srcName + " 到 " + dstPath + dstName;				
+			}
+			else
+			{
+				commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
+			}
+		}
+		String commitUser = reposAccess.getAccessUser().getName();
 		
 		//检查用户是否有目标目录权限新增文件
 		String reposPath = Path.getReposPath(repos);
@@ -807,24 +824,6 @@ public class DocController extends BaseController{
 			copyAfterHandler(0, srcDoc, dstDoc, reposAccess, context, rt);	
 			return;
 		}
-		
-		if(dstName == null || "".equals(dstName))
-		{
-			dstName = srcName;
-		}
-		
-		if(commitMsg == null || commitMsg.isEmpty())
-		{
-			if(move)
-			{
-				commitMsg = "移动 " + srcPath + srcName + " 到 " + dstPath + dstName;				
-			}
-			else
-			{
-				commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
-			}
-		}
-		String commitUser = reposAccess.getAccessUser().getName();
 		
 		Doc tmpDoc = docSysGetDoc(repos, srcDoc, false);
 		if(tmpDoc == null || tmpDoc.getType() == null ||tmpDoc.getType() == 0)
