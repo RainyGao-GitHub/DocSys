@@ -8812,7 +8812,7 @@ public class BaseController  extends BaseFunction{
 	
 			//需要将文件Commit到VerRepos上去
 			ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
-			String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, null);
+			String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, commitActionList);
 			
 			updateCommit(repos, context, revision, rt.getDebugLog());
 			insertCommitEntries(repos, context, commitActionList);

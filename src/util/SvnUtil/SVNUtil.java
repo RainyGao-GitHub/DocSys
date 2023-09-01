@@ -1222,7 +1222,7 @@ public class SVNUtil  extends BaseController{
 	}	
 			
 	//move or copy Doc
-	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove, List<CommitAction> commitActionList2)
+	public String copyDoc(Doc srcDoc, Doc dstDoc, String commitMsg,String commitUser,boolean isMove, List<CommitAction> commitActionList)
 	{   		
 		String srcEntryPath = srcDoc.getPath() + srcDoc.getName();
 		Integer type = checkPath(srcEntryPath,null);
@@ -1240,7 +1240,11 @@ public class SVNUtil  extends BaseController{
 
 		String dstEntryPath = dstDoc.getPath() + dstDoc.getName();
 		
-		List <CommitAction> commitActionList = new ArrayList<CommitAction>();
+		if(commitActionList == null)
+		{
+			commitActionList = new ArrayList<CommitAction>();
+		}
+		
 	    //Do copy File Or Dir
 	    if(isMove)
 	    {
