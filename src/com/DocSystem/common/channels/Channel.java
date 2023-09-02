@@ -184,5 +184,7 @@ public interface Channel {
 
 	List<CommitEntry> queryCommitEntry(Repos repos, Doc doc, String commitId);
 	
-	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);	
+	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);
+
+	boolean convertReposHistory(Repos repos, ReturnAjax rt);
 }

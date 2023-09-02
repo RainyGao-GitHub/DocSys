@@ -551,6 +551,54 @@ public class ReposController extends BaseController{
 		addSystemLog(request, login_user, "deleteRepos", "deleteRepos", "删除仓库", null, "成功", repos, null, null, buildSystemLogDetailContent(rt));
 	}
 	
+	/****************   delete a Repository ******************/
+	@RequestMapping("/convertReposHistory.do")
+	public void convertReposHistory(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		Log.infoHead("****************** convertReposHistory.do ***********************");
+		Log.debug("convertReposHistory vid: " + vid);
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		User login_user = getLoginUser(session, request, response, rt);
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//检查是否是超级管理员或者仓库owner
+		if(login_user.getType() != 2)	//超级管理员 或 仓库的拥有者可以转换仓库历史格式
+		{
+			//getRepos
+			Repos repos = new Repos();
+			repos.setId(vid);
+			repos.setOwner(login_user.getId());	//拥有人
+			List <Repos> list = reposService.getReposList(repos);
+			if(list == null || list.size() != 1)	//仓库拥有人
+			{
+				rt.setError("您无权进行该操作!");				
+				writeJson(rt, response);	
+				return;
+			}
+		}
+		
+		Repos repos = getReposEx(vid);
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			rt.setError("该仓库未设置版本管理!");				
+			writeJson(rt, response);	
+			return;			
+		}
+		
+		setReposIsBusy(repos.getId(), true);
+		
+		channel.convertReposHistory(repos, rt);
+		
+		writeJson(rt, response);	
+		setReposIsBusy(repos.getId(), false);			
+
+		addSystemLog(request, login_user, "convertReposHistory", "convertReposHistory", "转换仓库历史格式", null, "成功", repos, null, null, buildSystemLogDetailContent(rt));
+	}
+	
 	@RequestMapping("/backupReposEncryptConfig.do")
 	public void backupReposEncryptConfig(Integer reposId, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception 
 	{

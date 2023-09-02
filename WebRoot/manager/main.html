@@ -4914,6 +4914,42 @@
         });
 	}
 	
+	function convertReposHistoryConfirm(id)
+	{	
+		console.log("convertReposHistoryConfirm");
+		qiao.bs.confirm({
+			id: "convertReposHistoryConfirmDialog",
+	        title: "转换仓库历史",
+	        msg: "是否将仓库历史转换成最新格式？",
+	        okbtn: "确定",
+	        qubtn: "取消",
+	    },function () {
+	    	convertReposHistory(id);
+	    	return true;   
+	    });
+	}
+	
+	function convertReposHistory(reposId){
+        $.ajax({
+            url : "/DocSystem/Repos/convertReposHistory.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 vid : reposId,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                    showErrorMessage("仓库历史转换成功");
+                }else {
+                	showErrorMessage("仓库历史转换失败：" + ret.msgInfo);
+                }
+            },
+            error : function () {
+            	showErrorMessage("仓库历史转换失败:服务器异常");
+            }
+        });
+	}
+	
 	function disableRepos(reposId){
 		console.log("disableRepos() " + reposId);
 		disableReposConfirm(reposId);
