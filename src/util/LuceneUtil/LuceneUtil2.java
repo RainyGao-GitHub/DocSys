@@ -2151,31 +2151,27 @@ public class LuceneUtil2   extends BaseFunction
 		synchronized(synclock)
     	{
     		redisSyncLockEx(lockName, lockInfo);
-    	
+    		
+    		//使用共用的commitEntry来减少内存的占用
+    		CommitEntry commitEntry = new CommitEntry();
+			commitEntry.startTime = action.startTime;
+			commitEntry.userId = action.user.getId();
+			commitEntry.userName = action.user.getName();
+			commitEntry.commitId = action.commitId;
+			commitEntry.commitMsg = action.commitMsg;
+			commitEntry.commitUsers = action.commitUser;
+			commitEntry.commitAction = action.event;
+			commitEntry.reposId = repos.getId();
+			commitEntry.reposName = repos.getName();
+			
     		for(CommitEntry entry: commitEntryList)
     		{
-    			entry.startTime = action.startTime;
-    			entry.userId = action.user.getId();
-    			entry.userName = action.user.getName();
-
-    			entry.commitId = action.commitId;
-    			entry.commitMsg = action.commitMsg;
-    			entry.commitUsers = action.commitUser;
-
-    			entry.commitAction = action.event;
-
-    			entry.reposId = repos.getId();
-    			entry.reposName = repos.getName();
-    			
-    			//Doc Info already set in commitEntryList
-    			//entry.realCommitAction = realCommitAction;
-    			//entry.docId = docId;
-    			//entry.path = path;
-    			//entry.name = name;
-    			
-    			entry.id = buildUniqueIdForCommitEntry(entry);
-    		
-    			addIndexForCommitEntryBasic(entry, indexLib);
+    			commitEntry.realCommitAction = entry.realCommitAction;
+    			commitEntry.docId = entry.docId;
+    			commitEntry.path = entry.path;
+    			commitEntry.name = entry.name;
+    			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+    			addIndexForCommitEntryBasic(commitEntry, indexLib);
     		}
     		
 			redisSyncUnlockEx(lockName, lockInfo, synclock);
@@ -2201,30 +2197,26 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		redisSyncLockEx(lockName, lockInfo);
     	
+    		//使用共用的commitEntry来减少内存的占用
+    		CommitEntry commitEntry = new CommitEntry();
+			commitEntry.startTime = context.startTime;
+			commitEntry.userId = context.user.getId();
+			commitEntry.userName = context.user.getName();
+			commitEntry.commitId = context.commitId;
+			commitEntry.commitMsg = context.commitMsg;
+			commitEntry.commitUsers = context.commitUser;
+			commitEntry.commitAction = context.event;
+			commitEntry.reposId = repos.getId();
+			commitEntry.reposName = repos.getName();
+			
     		for(CommitEntry entry: commitEntryList)
     		{
-    			entry.startTime = context.startTime;
-    			entry.userId = context.user.getId();
-    			entry.userName = context.user.getName();
-
-    			entry.commitId = context.commitId;
-    			entry.commitMsg = context.commitMsg;
-    			entry.commitUsers = context.commitUser;
-
-    			entry.commitAction = context.event;
-
-    			entry.reposId = repos.getId();
-    			entry.reposName = repos.getName();
-    			
-    			//Doc Info already set in commitEntryList
-    			//entry.realCommitAction = realCommitAction;
-    			//entry.docId = docId;
-    			//entry.path = path;
-    			//entry.name = name;
-    			
-    			entry.id = buildUniqueIdForCommitEntry(entry);
-    		
-    			addIndexForCommitEntryBasic(entry, indexLib);
+    			commitEntry.realCommitAction = entry.realCommitAction;
+    			commitEntry.docId = entry.docId;
+    			commitEntry.path = entry.path;
+    			commitEntry.name = entry.name;
+    			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+    			addIndexForCommitEntryBasic(commitEntry, indexLib);
     		}
     		
 			redisSyncUnlockEx(lockName, lockInfo, synclock);
