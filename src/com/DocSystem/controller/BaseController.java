@@ -8627,7 +8627,7 @@ public class BaseController  extends BaseFunction{
 		//TODO: generateCommitId
 		context.commitId = generateCommitId(repos, dstDoc, dstDocLock.createTime[lockType]);
 		
-		if(moveRealDoc(repos, srcDoc, dstDoc, rt) == false)
+		if(moveRealDocEx(repos, srcDoc, dstDoc, context, rt) == false)
 		{
 			unlockDoc(srcDoc, lockType, login_user);
 			unlockDoc(dstDoc, lockType, login_user);
