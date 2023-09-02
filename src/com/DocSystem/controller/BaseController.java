@@ -11640,7 +11640,9 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private boolean isLegacyReposHistory(Repos repos) {
-		return !FileUtil.isFileExist(repos.getPath() + repos.getId() + "/data/versionExtentionSetting");
+		String path = Path.getReposVersionExtentionConfigPath(repos);
+		File file = new File(path);
+		return !file.exists();
 	}
 
 	protected List<LogEntry> getCommitHistory(Repos repos, Doc doc, int maxLogNum, String endCommitId) 

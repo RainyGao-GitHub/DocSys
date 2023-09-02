@@ -781,6 +781,11 @@ public class Path {
 		String path = getReposPath(repos) + "data/versionIgnoreSetting/";
 		return path;
 	}
+	
+	public static String getReposVersionExtentionConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/versionExtentionSetting/";
+		return path;
+	}
 		
 	public static String getReposTextSearchConfigPath(Repos repos) {
 		String path = getReposPath(repos) + "data/textSearchSetting/";
