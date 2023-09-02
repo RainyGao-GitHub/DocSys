@@ -10987,7 +10987,89 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}
+
+	protected boolean moveRealDocEx(Repos repos, Doc srcDoc, Doc dstDoc, ActionContext context, ReturnAjax rt)
+	{
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return moveRealDoc(repos, srcDoc, dstDoc, rt);
+		}
+		
+		//检查srcEntry和dstEntry
+		String srcDocPath = srcDoc.getLocalRootPath() + srcDoc.getPath() + srcDoc.getName();
+		String dstDocPath = dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getName();
+    	if(FileUtil.isFileExist(srcDocPath) == false)
+		{
+			docSysDebugLog("moveRealDocEx() 文件: " + srcDocPath + " 不存在", rt);
+			return false;
+		}
+		
+		if(FileUtil.isFileExist(dstDocPath) == true)
+		{
+			docSysDebugLog("moveRealDocEx() 文件: " + dstDocPath + " 已存在", rt);
+			return false;
+		}
+		
+		if(false == FileUtil.moveFileOrDir(srcDoc.getLocalRootPath() + srcDoc.getPath(), srcDoc.getName(), 
+				dstDoc.getLocalRootPath() + dstDoc.getPath(), dstDoc.getName(), true))	//强制覆盖
+		{
+			docSysDebugLog("moveRealDocEx() move " + srcDocPath + " to "+ dstDocPath + " Failed", rt);
+			return false;
+		}
+		
+		//Build ComitEntryList
+		context.commitEntryList = new ArrayList<CommitEntry>();
+		buildCommitEntryListForDocMove(
+				srcDoc.getLevel(), srcDoc.getLocalRootPath(), srcDoc.getPath(), srcDoc.getName(), 
+				dstDoc.getLevel(), dstDoc.getLocalRootPath(), dstDoc.getPath(), dstDoc.getName(),
+				context.commitEntryList);
+
+		return true;
+	}
 	
+	private void buildCommitEntryListForDocMove(
+			int level, String localRootPath, String path, String name, 
+    		int dstLevel, String dstLocalRootPath, String dstPath, String dstName,     		
+    		List<CommitEntry> commitEntryList) 
+	{
+    	String dstFilePath = dstLocalRootPath + dstPath + dstName;
+        
+    	File dstFile = new File(dstFilePath); 
+        if(dstFile.exists())
+        {
+            //TOOD: 这里只是记录最简单的信息，在真正insertCommitEntry的时候再补齐
+        	CommitEntry commitEntry = new CommitEntry();
+            commitEntry.realCommitAction = "delete";
+            commitEntry.docId = Path.getDocId(level, path + name);
+            commitEntry.path = path;
+            commitEntry.name = name;
+            CommitEntry dstCommitEntry = new CommitEntry();
+            dstCommitEntry.realCommitAction = "add";
+            dstCommitEntry.docId = Path.getDocId(dstLevel, dstPath + dstName);
+            dstCommitEntry.path = dstPath;
+            dstCommitEntry.name = dstName;            
+            commitEntryList.add(commitEntry);
+            commitEntryList.add(dstCommitEntry);     
+        	
+            if(dstFile.isFile())        		
+        	{
+				return;
+            }
+            
+        	//SubEntries under folder	              	
+        	String subDirPath = path + name + "/";
+        	String dstSubDirPath = dstPath + dstName + "/";
+        	File[] tmp=dstFile.listFiles();
+            for(int i=0;i<tmp.length;i++)
+            {
+            	buildCommitEntryListForDocMove(
+            			level+1, localRootPath, subDirPath, tmp[i].getName(),
+            			dstLevel+1, dstLocalRootPath, dstSubDirPath, tmp[i].getName(),
+            			commitEntryList);
+            }
+        }
+ 	}
+
 	protected boolean moveRealDoc(Repos repos, Doc srcDoc, Doc dstDoc, ReturnAjax rt) 
 	{
 		if(isFSM(repos) == false)
