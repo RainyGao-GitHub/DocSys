@@ -11944,6 +11944,26 @@ public class BaseController  extends BaseFunction{
 	
 	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String tmpLocalRootPath, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
 	{
+		if(isLegacyReposHistory(repos))
+		{
+			if(tmpLocalRootPath == null)
+			{
+				tmpLocalRootPath = doc.getLocalRootPath();
+			}
+			
+			if(localParentPath == null)
+			{
+				localParentPath = doc.getPath();
+			}
+			
+			if(targetName == null)
+			{
+				targetName = doc.getName();
+			}
+
+			return verReposCheckOut(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, commitId, force, auto, downloadList);
+		}
+		
 		CommitLog commit = getCommitLogById(repos, commitId);
 		if(commit == null)
 		{
