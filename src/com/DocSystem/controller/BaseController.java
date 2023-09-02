@@ -8753,7 +8753,7 @@ public class BaseController  extends BaseFunction{
 						
 		//复制文件或目录
 		Log.debug("copyDoc_FSM() copyRealDoc");		
-		if(copyRealDoc(repos, srcDoc, dstDoc, rt) == false)
+		if(copyRealDocEx(repos, srcDoc, dstDoc, context, rt) == false)
 		{
 			unlockDoc(srcDoc, lockType, login_user);
 			unlockDoc(dstDoc, lockType, login_user);
@@ -10231,7 +10231,7 @@ public class BaseController  extends BaseFunction{
 	{	
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
-			return FileUtil.delFileOrDir(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+			return deleteRealDoc(repos, doc, rt);
 		}
 		
 		context.commitEntryList = new ArrayList<CommitEntry>();
@@ -10245,7 +10245,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
     //Delete Directory or File
-    public static boolean delFileOrDir(int level, String localRootPath, String path, String name, List<CommitEntry> deletedList)
+    public static boolean delFileOrDir(int level, String localRootPath, String path, String name, List<CommitEntry> commitEntryList)
     {
     	String filePath = localRootPath + path + name;
         File file=new File(filePath);
@@ -10260,7 +10260,7 @@ public class BaseController  extends BaseFunction{
             	File[] tmp=file.listFiles();
 	            for(int i=0;i<tmp.length;i++)
 	            {
-	            	if(delFileOrDir(level+1, localRootPath, subDirPath, tmp[i].getName(), deletedList) == false)
+	            	if(delFileOrDir(level+1, localRootPath, subDirPath, tmp[i].getName(), commitEntryList) == false)
 	                {
 	                	Log.debug("delFileOrDir() delete subDir Failed:" + subDirPath);
 	                    return false;
@@ -10275,10 +10275,11 @@ public class BaseController  extends BaseFunction{
 	            
 	            //TOOD: 这里只是记录最简单的信息，在真正insertCommitEntry的时候再补齐
 	            CommitEntry commitEntry = new CommitEntry();
+	            commitEntry.realCommitAction = "delete";
 	            commitEntry.docId = Path.getDocId(level, path + name);
 	            commitEntry.path = path;
 	            commitEntry.name = name;
-	            deletedList.add(commitEntry);
+	            commitEntryList.add(commitEntry);
 	            return true;	            
             }
             
@@ -10293,7 +10294,7 @@ public class BaseController  extends BaseFunction{
             commitEntry.docId = Path.getDocId(level, path + name);
             commitEntry.path = path;
             commitEntry.name = name;
-            deletedList.add(commitEntry);
+            commitEntryList.add(commitEntry);
             return true;	
         }
         return true;
@@ -11023,6 +11024,121 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}
+	
+	protected boolean copyRealDocEx(Repos repos, Doc srcDoc, Doc dstDoc, ActionContext context, ReturnAjax rt) 
+	{
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return copyRealDoc(repos, srcDoc, dstDoc, rt);
+		}
+		
+		//检查srcEntry和dstEntry
+		String srcDocPath = srcDoc.getLocalRootPath() + srcDoc.getPath() + srcDoc.getName();
+		String dstDocPath = dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getName();
+    	if(FileUtil.isFileExist(srcDocPath) == false)
+		{
+			docSysDebugLog("copyRealDocEx() 文件: " + srcDocPath + " 不存在", rt);
+			return false;
+		}
+		
+		if(FileUtil.isFileExist(dstDocPath) == true)
+		{
+			docSysDebugLog("copyRealDocEx() 文件: " + dstDocPath + " 已存在", rt);
+			return false;
+		}
+		
+		context.commitEntryList = new ArrayList<CommitEntry>();
+		if(false == copyFileOrDir(srcDoc.getLevel(), srcDoc.getLocalRootPath(), srcDoc.getPath(), srcDoc.getName(), 
+								  dstDoc.getLevel(), dstDoc.getLocalRootPath(), dstDoc.getPath(), dstDoc.getName(),
+								  context.commitEntryList))
+		{
+			docSysDebugLog("copyRealDocEx() copyFileOrDir [" + srcDoc.getLocalRootPath() + srcDoc.getPath() + srcDoc.getName() + "] "
+					+ "[" + dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getName() +"] 复制失败！", rt);
+			return false;
+		}
+		
+		return true;
+	}
+	
+    //Delete Directory or File
+    public static boolean copyFileOrDir(
+    		int level, String localRootPath, String path, String name, 
+    		int dstLevel, String dstLocalRootPath, String dstPath, String dstName,     		
+    		List<CommitEntry> commitEntryList)
+    {    	
+    	String filePath = localRootPath + path + name;
+    	String dstFilePath = dstLocalRootPath + dstPath + dstName;
+        
+    	File file = new File(filePath);
+    	File dstFile = new File(dstFilePath); 
+        if(file.exists())
+        {
+        	if(file.isFile())
+        	{
+        		if(FileUtil.copyFile(filePath, dstFilePath, true) == false)
+            	{
+        			Log.debug("copyFileOrDir() copy " + filePath + " to " + dstFilePath + " failed");
+        			return false;
+            	}
+        		
+	            //TOOD: 这里只是记录最简单的信息，在真正insertCommitEntry的时候再补齐
+	            CommitEntry commitEntry = new CommitEntry();
+	            commitEntry.realCommitAction = "noChange";
+	            commitEntry.docId = Path.getDocId(level, path + name);
+	            commitEntry.path = path;
+	            commitEntry.name = name;
+	            CommitEntry dstCommitEntry = new CommitEntry();
+	            dstCommitEntry.realCommitAction = "add";
+	            dstCommitEntry.docId = Path.getDocId(dstLevel, dstPath + dstName);
+	            dstCommitEntry.path = dstPath;
+	            dstCommitEntry.name = dstName;            
+	            commitEntryList.add(commitEntry);
+	            commitEntryList.add(dstCommitEntry);     		
+        		return true;
+            }
+            
+        	//Folder	
+        	Log.info("copyFileOrDir() copy Dir:" + filePath + " to " + dstFilePath);
+            
+        	if(dstFile.mkdirs() == false)
+        	{
+        		Log.debug("copyFileOrDir() create dir Failed:" + dstFilePath);
+        		return false;
+        	}
+        	
+            //TOOD: 这里只是记录最简单的信息，在真正insertCommitEntry的时候再补齐
+            CommitEntry commitEntry = new CommitEntry();
+            commitEntry.realCommitAction = "noChange";
+            commitEntry.docId = Path.getDocId(level, path + name);
+            commitEntry.path = path;
+            commitEntry.name = name;
+            CommitEntry dstCommitEntry = new CommitEntry();
+            dstCommitEntry.realCommitAction = "add";
+            dstCommitEntry.docId = Path.getDocId(dstLevel, dstPath + dstName);
+            dstCommitEntry.path = dstPath;
+            dstCommitEntry.name = dstName;            
+            commitEntryList.add(commitEntry);
+            commitEntryList.add(dstCommitEntry);
+        	
+        	String subDirPath = path + name + "/";
+        	String dstSubDirPath = dstPath + dstName + "/";
+     	   
+        	File[] tmp=file.listFiles();
+            for(int i=0;i<tmp.length;i++)
+            {
+            	if(false == copyFileOrDir(
+            			level+1, localRootPath, subDirPath, tmp[i].getName(),
+            			dstLevel+1, dstLocalRootPath, dstSubDirPath, tmp[i].getName(),
+            			commitEntryList))
+                {
+                    return false;
+                }
+            }
+            
+            return true;	            
+        }
+        return true;
+    }
 	
 	protected boolean copyRealDoc(Repos repos, Doc srcDoc, Doc dstDoc, ReturnAjax rt) 
 	{
