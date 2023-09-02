@@ -3897,12 +3897,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
-			insertCommitEntry(
-					repos, doc, 
-					context.folderUploadAction.event, "add", null, 
-					context.folderUploadAction.commitId, context.folderUploadAction.commitMsg, context.folderUploadAction.commitUser,
-					context.startTime, context.endTime, 
-					login_user);
+			insertCommitEntry(repos, doc, context.folderUploadAction, "add", login_user);
 
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
@@ -3910,12 +3905,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		insertCommit(repos, context);
-		insertCommitEntry(
-				repos, doc, 
-				context.event, "add", null, 
-				context.commitId, context.commitMsg, context.commitUser,
-				context.startTime, context.endTime, 
-				login_user);
+		insertCommitEntry(repos, doc, context, "add", login_user);
 
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -4248,6 +4238,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
+			insertCommitEntry(repos, doc, context.folderUploadAction, realCommitAction, login_user);
+			
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
 			return 1;
@@ -4255,12 +4247,7 @@ public class BaseController  extends BaseFunction{
 		
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
-		insertCommitEntry(
-				repos, doc, 
-				context.event, realCommitAction, null, 
-				context.commitId, commitMsg, commitUser,
-				context.startTime, context.endTime, 
-				login_user);
+		insertCommitEntry(repos, doc, context, realCommitAction, login_user);
 
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -4498,12 +4485,7 @@ public class BaseController  extends BaseFunction{
 				
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
-		insertCommitEntry(
-				repos, doc, 
-				context.event, "delete", null, 
-				context.commitId, commitMsg, commitUser,
-				context.startTime, context.endTime, 
-				login_user);
+		insertCommitEntry(repos, doc, context, "delete", login_user);
 
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 		rt.setData(doc);
@@ -4590,35 +4572,6 @@ public class BaseController  extends BaseFunction{
 	//TODO: MxsDoc版本管理机制是先写入commitEntryInfo，然后最后再写入commitInfo，如果有版本管理的话，则在版本仓库提交后更新commitInfo
 	//由于commitEntryInfo里已经包含了commitMsg和commitUser信息，所以即使后面的commitInfo没有写入，系统仍然可以获取到文件和目录的改动历史
 	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
-	public CommitEntry buildCommitEntry(
-			Repos repos,
-			Long docId, String path, String name,
-			String action, String realAction, Integer isSrcEntry, 
-			Long commitId, String commitMsg, String commitUsers, 
-			Long startTime, Long endTime,
-			User user) 
-	{
-		CommitEntry entry = new CommitEntry();
-		entry.startTime = startTime;
-		entry.endTime = endTime;
-		entry.userId = user.getId();
-		entry.userName = user.getName();
-
-		entry.commitId = commitId;
-		entry.commitMsg = commitMsg;
-		entry.commitUsers = commitUsers;
-
-		entry.commitAction = action;
-		entry.realCommitAction = realAction;
-		entry.isSrcEntry = isSrcEntry;	//only for copyDoc/moveDoc/renameDoc
-
-		entry.reposId = repos.getId();
-		entry.reposName = repos.getName();
-		entry.docId = docId;
-		entry.path = path;
-		entry.name = name;
-		return entry;
-	}
 	private void insertCommitEntry(
 			Repos repos, Doc doc, 
 			String action, String realAction, Integer isSrcEntry, 
@@ -4691,6 +4644,24 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
+
+	private void insertCommitEntry(Repos repos, Doc doc, ActionContext context, String realCommitAction, User user) {
+		insertCommitEntry(
+				repos, doc, 
+				context.event, realCommitAction, null, 
+				context.commitId, context.commitMsg, context.commitUser,
+				context.startTime, context.endTime,
+				user);				
+	}
+
+	private void insertCommitEntry(Repos repos, Doc doc, FolderUploadAction action, String realCommitAction, User user) {
+		insertCommitEntry(
+				repos, doc, 
+				action.event, realCommitAction, null, 
+				action.commitId, action.commitMsg, action.commitUser,
+				action.startTime, action.stopTime,
+				user);		
+	}
 
 	protected void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList) {
 		Log.debug("insertCommitEntries() commitId:" + action.commitId + " commitMsg:" + action.commitMsg + " commitUsers:" + action.commitUser
@@ -8280,8 +8251,6 @@ public class BaseController  extends BaseFunction{
 			case MOVE:	//move
 				revision = verReposDocMove(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
 				updateCommit(repos, action.context, revision, rt.getDebugLog());
-				insertCommitEntries(repos, action.context, commitActionList);
-
 				if(revision == null)
 				{
 					docSysWarningLog("executeVerReposAction() verReposRealDocMove Failed", rt);
@@ -8299,7 +8268,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case COPY: //copy
 				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
-				insertCommit(repos, action.context, revision, rt.getDebugLog());
+				updateCommit(repos, action.context, revision, rt.getDebugLog());
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposRealDocCopy srcDoc [" + doc.getPath() + doc.getName()+ "] to dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
@@ -8462,6 +8431,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
+			insertCommitEntry(repos, doc, context.folderUploadAction, "modify", login_user);
+
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
 			return 1;
@@ -8469,12 +8440,7 @@ public class BaseController  extends BaseFunction{
 
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
-		insertCommitEntry(
-				repos, doc, 
-				context.event, "modify", null, 
-				context.commitId, commitMsg, commitUser,
-				context.startTime,  context.endTime, 
-				login_user);
+		insertCommitEntry(repos, doc, context, "modify", login_user);
 
 		//需要将文件Commit到版本仓库上去
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -8710,7 +8676,6 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
-		//TODO: insertCommitEntry
 		insertCommit(repos, context);
 		insertCommitEntry(repos, srcDoc, dstDoc, "moveDoc", context.commitId, context.startTime, commitMsg, commitUser, login_user);
 		
@@ -8992,12 +8957,7 @@ public class BaseController  extends BaseFunction{
 				
 		if(context.folderUploadAction != null)
 		{
-			insertCommitEntry(
-					repos, doc, 
-					context.event, "add", null, 
-					context.commitId, context.folderUploadAction.commitMsg, context.folderUploadAction.commitUser,
-					context.startTime,  context.endTime, 
-					login_user);
+			insertCommitEntry(repos, doc, context.folderUploadAction, "add", login_user);
 			
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
@@ -9006,13 +8966,8 @@ public class BaseController  extends BaseFunction{
 		
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
-		insertCommitEntry(
-				repos, doc, 
-				context.event, "add", null, 
-				context.commitId, commitMsg, commitUser,
-				context.startTime,  context.endTime, 
-				login_user);
-
+		insertCommitEntry(repos, doc, context, "add", login_user);
+		
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -9127,12 +9082,7 @@ public class BaseController  extends BaseFunction{
 		if(saveRealDocContentEx(repos, doc, rt) == true)
 		{
 			insertCommit(repos, context);
-			insertCommitEntry(
-					repos, doc, 
-					context.event, "modify", null, 
-					context.commitId, commitMsg, commitUser,
-					context.startTime, context.endTime, 
-					login_user);
+			insertCommitEntry(repos, doc, context, "modify", login_user);
 			
 			doc.setLatestEditor(login_user.getId());
 			doc.setLatestEditorName(login_user.getName());
