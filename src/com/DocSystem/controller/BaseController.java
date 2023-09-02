@@ -3897,6 +3897,13 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
+			insertCommitEntry(
+					repos, doc, 
+					context.folderUploadAction.event, "add", null, 
+					context.folderUploadAction.commitId, context.folderUploadAction.commitMsg, context.folderUploadAction.commitUser,
+					context.startTime, context.endTime, 
+					login_user);
+
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
 			return 1;
@@ -3906,7 +3913,7 @@ public class BaseController  extends BaseFunction{
 		insertCommitEntry(
 				repos, doc, 
 				context.event, "add", null, 
-				context.commitId, commitMsg, commitUser,
+				context.commitId, context.commitMsg, context.commitUser,
 				context.startTime, context.endTime, 
 				login_user);
 
@@ -4685,18 +4692,18 @@ public class BaseController  extends BaseFunction{
 	}
 	
 
-	protected void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList) {
+	protected void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList) {
 		Log.debug("insertCommitEntries() commitId:" + action.commitId + " commitMsg:" + action.commitMsg + " commitUsers:" + action.commitUser
 				+ " action:" + action.event + " [" + action.doc.getPath() + action.doc.getName() + "]");
 		
-		channel.insertCommitEntries(repos, action, commitActionList);
+		channel.insertCommitEntries(repos, action, commitEntryList);
 	}
 	
-	protected void insertCommitEntries(Repos repos, ActionContext context, List<CommitAction> commitActionList) 
+	protected void insertCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList) 
 	{
 		Log.debug("insertCommitEntries() commitId:" + context.commitId + " commitMsg:" + context.commitMsg + " commitUsers:" + context.commitUser
 				+ " action:" + context.event + " [" + context.doc.getPath() + context.doc.getName() + "]");
-		channel.insertCommitEntries(repos, context, commitActionList);
+		channel.insertCommitEntries(repos, context, commitEntryList);
 	}
 	
 	//CommitLog Insert and Update
@@ -4850,6 +4857,8 @@ public class BaseController  extends BaseFunction{
 				context.user.getId(), context.user.getName(),
 				context.commitId, context.commitMsg, context.commitUser,
 				revision, errorInfo);
+		
+		insertCommitEntries(repos, context,  context.commitEntryList);
 	}
 	
 	private void updateCommit(Repos repos, FolderUploadAction action, String revision, String errorInfo) {
@@ -4859,6 +4868,8 @@ public class BaseController  extends BaseFunction{
 				action.user.getId(), action.user.getName(),
 				action.commitId, action.commitMsg, action.commitUser,
 				revision, errorInfo);
+		
+		//insertCommitEntries(repos, action,  action.commitEntryList);
 	}
 
 	private void BuildAsyncActionListForDocAdd(List<CommonAction> asyncActionList, Repos repos, Doc doc, String commitMsg, String commitUser, ActionContext context) 
@@ -8256,7 +8267,6 @@ public class BaseController  extends BaseFunction{
 			case DELETE:	//delete
 				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, commitActionList, null);				
 				updateCommit(repos, action.context, revision, rt.getDebugLog());
-				insertCommitEntries(repos, action.context, commitActionList);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -8289,8 +8299,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case COPY: //copy
 				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
-				updateCommit(repos, action.context, revision, rt.getDebugLog());
-				insertCommitEntries(repos, action.context, commitActionList);
+				insertCommit(repos, action.context, revision, rt.getDebugLog());
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposRealDocCopy srcDoc [" + doc.getPath() + doc.getName()+ "] to dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
@@ -8711,7 +8720,6 @@ public class BaseController  extends BaseFunction{
 			ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
 			String revision = verReposDocMove(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, commitActionList);
 			updateCommit(repos, context, revision, rt.getDebugLog());
-			insertCommitEntries(repos, context, commitActionList);		
 			if(revision == null)
 			{
 				docSysWarningLog("moveDoc_FSM() verReposRealDocMove Failed", rt);
@@ -8844,7 +8852,6 @@ public class BaseController  extends BaseFunction{
 			String revision = verReposDocCopy(repos, true, srcDoc, dstDoc,commitMsg, commitUser,rt, commitActionList);
 			
 			updateCommit(repos, context, revision, rt.getDebugLog());
-			insertCommitEntries(repos, context, commitActionList);
 			
 			if(revision == null)
 			{
@@ -8985,6 +8992,13 @@ public class BaseController  extends BaseFunction{
 				
 		if(context.folderUploadAction != null)
 		{
+			insertCommitEntry(
+					repos, doc, 
+					context.event, "add", null, 
+					context.commitId, context.folderUploadAction.commitMsg, context.folderUploadAction.commitUser,
+					context.startTime,  context.endTime, 
+					login_user);
+			
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
 			return 1;
@@ -12354,26 +12368,26 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 
-	public boolean addIndexForCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList)
+	public boolean addIndexForCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList)
 	{
 		Log.debug("addIndexForCommitEntries() action:" + action.event);
 		Date date = new Date(action.commitId);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date);
 		boolean ret = false;
 		
-		ret = LuceneUtil2.addIndexForCommitEntries(repos, action, commitActionList, indexLib);
+		ret = LuceneUtil2.addIndexForCommitEntries(repos, action, commitEntryList, indexLib);
 		
 		return ret;
 	}
 	
-	public boolean addIndexForCommitEntries(Repos repos, ActionContext context, List<CommitAction> commitActionList)
+	public boolean addIndexForCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList)
 	{
 		Log.debug("addIndexForCommitEntries() context:" + context.event);
 		Date date = new Date(context.commitId);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date);
 		boolean ret = false;
 		
-		ret = LuceneUtil2.addIndexForCommitEntries(repos, context, commitActionList, indexLib);
+		ret = LuceneUtil2.addIndexForCommitEntries(repos, context, commitEntryList, indexLib);
 		
 		return ret;
 	}
@@ -22130,7 +22144,6 @@ public class BaseController  extends BaseFunction{
 				{
 					//更新commitInfo的版本提交信息: 将revision写入commitInfo中
 					updateCommit(repos, action, revision, rt.getDebugLog());
-					insertCommitEntries(repos, action, commitActionList);
 					
 					verReposPullPush(repos, true, rt);
 				
@@ -22139,7 +22152,6 @@ public class BaseController  extends BaseFunction{
 				{
 					//更新commitInfo的版本提交信息: 将verReposDocCommit失败的信息写入commitInfo中
 					updateCommit(repos, action, revision, rt.getDebugLog());					
-					insertCommitEntries(repos, action, commitActionList);
 				}
 				
 				//远程自动推送

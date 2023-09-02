@@ -1,7 +1,9 @@
 package com.DocSystem.common;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
@@ -47,5 +49,7 @@ public class FolderUploadAction {
 	//MxsDoc系统的commitId
 	public Long commitId;
 	public String commitMsg;
-	public String commitUser;	
+	public String commitUser;
+
+	public List<CommitEntry> commitEntryList;	
 }

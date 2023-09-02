@@ -2137,7 +2137,7 @@ public class LuceneUtil2   extends BaseFunction
 		return ret;
     }
 	
-	public static boolean addIndexForCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList, String indexLib)
+	public static boolean addIndexForCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList, String indexLib)
 	{
     	Log.debug("addIndexForCommitEntries() action:" + action.event + " indexLib:"+indexLib);    	
     	Log.printObject("addIndexForCommitEntries() action:", action);
@@ -2152,9 +2152,8 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		redisSyncLockEx(lockName, lockInfo);
     	
-    		for(CommitAction commitAction: commitActionList)
+    		for(CommitEntry entry: commitEntryList)
     		{
-    			CommitEntry entry = new CommitEntry();
     			entry.startTime = action.startTime;
     			entry.userId = action.user.getId();
     			entry.userName = action.user.getName();
@@ -2164,16 +2163,10 @@ public class LuceneUtil2   extends BaseFunction
     			entry.commitUsers = action.commitUser;
 
     			entry.commitAction = action.event;
-    			entry.realCommitAction = getRealCommitAction(commitAction.getAction());
 
     			entry.reposId = repos.getId();
     			entry.reposName = repos.getName();
     			
-    			Doc doc = commitAction.getDoc();
-    			entry.docId = doc.getDocId();
-    			entry.path = doc.getPath();
-    			entry.name = doc.getName();
-
     			entry.id = buildUniqueIdForCommitEntry(entry);
     		
     			addIndexForCommitEntryBasic(entry, indexLib);
@@ -2187,7 +2180,7 @@ public class LuceneUtil2   extends BaseFunction
 	}
 	
 	public static boolean addIndexForCommitEntries(Repos repos, ActionContext context,
-			List<CommitAction> commitActionList, String indexLib) 	
+			List<CommitEntry> commitEntryList, String indexLib) 	
 	{
     	Log.debug("addIndexForCommitEntries() context:" + context.event + " indexLib:"+indexLib);    	
     	Log.printObject("addIndexForCommitEntries() context:", context);
@@ -2202,9 +2195,8 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		redisSyncLockEx(lockName, lockInfo);
     	
-    		for(CommitAction commitAction: commitActionList)
+    		for(CommitEntry entry: commitEntryList)
     		{
-    			CommitEntry entry = new CommitEntry();
     			entry.startTime = context.startTime;
     			entry.userId = context.user.getId();
     			entry.userName = context.user.getName();
@@ -2214,16 +2206,10 @@ public class LuceneUtil2   extends BaseFunction
     			entry.commitUsers = context.commitUser;
 
     			entry.commitAction = context.event;
-    			entry.realCommitAction = getRealCommitAction(commitAction.getAction());
 
     			entry.reposId = repos.getId();
     			entry.reposName = repos.getName();
     			
-    			Doc doc = commitAction.getDoc();
-    			entry.docId = doc.getDocId();
-    			entry.path = doc.getPath();
-    			entry.name = doc.getName();
-
     			entry.id = buildUniqueIdForCommitEntry(entry);
     		
     			addIndexForCommitEntryBasic(entry, indexLib);

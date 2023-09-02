@@ -168,9 +168,9 @@ public interface Channel {
 
 	void insertCommitEntry(Repos repos, CommitEntry entry);
 	
-	void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitAction> commitActionList);
+	void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList);
 
-	void insertCommitEntries(Repos repos, ActionContext context, List<CommitAction> commitActionList);
+	void insertCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList);
 
 	void insertCommit(Repos repos, CommitLog commit);
 
