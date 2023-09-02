@@ -11995,6 +11995,26 @@ public class BaseController  extends BaseFunction{
 			boolean force, boolean auto, 
 			HashMap<String,String> downloadList) 
 	{
+		if(isLegacyReposHistory(repos))
+		{
+			if(tmpLocalRootPath == null)
+			{
+				tmpLocalRootPath = doc.getLocalRootPath();
+			}
+			
+			if(localParentPath == null)
+			{
+				localParentPath = doc.getPath();
+			}
+			
+			if(targetName == null)
+			{
+				targetName = doc.getName();
+			}
+
+			return verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath + localParentPath, targetName, commitId, force, auto, downloadList);
+		}
+		
 		CommitLog commit = getCommitLogById(repos, commitId);
 		if(commit == null)
 		{
@@ -21053,7 +21073,7 @@ public class BaseController  extends BaseFunction{
 		if(downloadAll == null || downloadAll == 0)
 		{
 			downloadList  = new HashMap<String,String>();
-			buildDownloadList(repos, true, doc, commitId, downloadList);
+			buildDownloadListEx(repos, doc, commitId, downloadList);
 			if(downloadList != null && downloadList.size() == 0)
 			{
 				Log.debug("executeDownloadPrepareTaskForVerReposEntry() there is no changed file for commit:" + commitId);
@@ -21425,6 +21445,29 @@ public class BaseController  extends BaseFunction{
                 },
                 deleteDelayTime,
                 TimeUnit.SECONDS);
+	}
+	
+	protected void buildDownloadListEx(Repos repos, Doc doc, String commitId, HashMap<String, String> downloadList) 
+	{
+		if(isLegacyReposHistory(repos))
+		{
+			buildDownloadList(repos, true, doc, commitId, downloadList);
+			return;
+		}
+		
+		List<CommitEntry> changedItemList = channel.queryCommitEntry(repos, doc, commitId);
+		String docEntryPath = doc.getPath() + doc.getName();
+		//过滤掉不在doc目录下的ChangeItems
+		for(int i=0; i< changedItemList.size(); i++)
+		{
+			CommitEntry changeItem = changedItemList.get(i);
+			String changeItemEntryPath = changeItem.path + changeItem.name;
+			if(changeItemEntryPath.contains(docEntryPath))
+			{
+				downloadList.put(changeItemEntryPath, changeItemEntryPath);
+				Log.debug("buildDownloadList Add [" +changeItemEntryPath + "]");
+			}
+		}	
 	}
 	
 	protected void buildDownloadList(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> downloadList) 
