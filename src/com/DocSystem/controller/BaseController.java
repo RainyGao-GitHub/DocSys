@@ -10268,9 +10268,14 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	//TODO: 为每个删除的Entry增加一个记录用于版本历史信息查询（会影响删除速度）
+	//TODO: 有版本管理的仓库需要记录删除的所有节点，需要在写入版本仓库完成后写入
 	protected boolean deleteRealDocEx(Repos repos, Doc doc, ActionContext context, ReturnAjax rt)
 	{	
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return FileUtil.delFileOrDir(doc.getLocalRootPath() + doc.getPath() + doc.getName());
+		}
+		
 		context.commitEntryList = new ArrayList<CommitEntry>();
 		if(delFileOrDir(doc.getLevel(), doc.getLocalRootPath(), doc.getPath(), doc.getName(), context.commitEntryList) == false)
 		{

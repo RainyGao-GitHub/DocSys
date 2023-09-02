@@ -2167,6 +2167,12 @@ public class LuceneUtil2   extends BaseFunction
     			entry.reposId = repos.getId();
     			entry.reposName = repos.getName();
     			
+    			//Doc Info already set in commitEntryList
+    			//entry.realCommitAction = realCommitAction;
+    			//entry.docId = docId;
+    			//entry.path = path;
+    			//entry.name = name;
+    			
     			entry.id = buildUniqueIdForCommitEntry(entry);
     		
     			addIndexForCommitEntryBasic(entry, indexLib);
@@ -2209,6 +2215,12 @@ public class LuceneUtil2   extends BaseFunction
 
     			entry.reposId = repos.getId();
     			entry.reposName = repos.getName();
+    			
+    			//Doc Info already set in commitEntryList
+    			//entry.realCommitAction = realCommitAction;
+    			//entry.docId = docId;
+    			//entry.path = path;
+    			//entry.name = name;
     			
     			entry.id = buildUniqueIdForCommitEntry(entry);
     		
