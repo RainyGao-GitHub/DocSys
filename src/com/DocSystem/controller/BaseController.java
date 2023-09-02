@@ -22251,18 +22251,11 @@ public class BaseController  extends BaseFunction{
 				List<CommitAction> commitActionList = new ArrayList<CommitAction>();
 				List<CommitAction> commitActionListFake = new ArrayList<CommitAction>();			
 				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, commitActionList, commitActionListFake);
+				//更新commitInfo的版本提交信息: 将revision写入commitInfo中
+				updateCommit(repos, action, revision, rt.getDebugLog());
 				if(revision != null)
 				{
-					//更新commitInfo的版本提交信息: 将revision写入commitInfo中
-					updateCommit(repos, action, revision, rt.getDebugLog());
-					
 					verReposPullPush(repos, true, rt);
-				
-				}
-				else
-				{
-					//更新commitInfo的版本提交信息: 将verReposDocCommit失败的信息写入commitInfo中
-					updateCommit(repos, action, revision, rt.getDebugLog());					
 				}
 				
 				//远程自动推送
