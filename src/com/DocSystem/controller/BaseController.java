@@ -11981,6 +11981,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("verReposCheckOutEx() failed to get commitLog for commitId:" + commitId);			
 			return null;
 		}
+		Log.debug("verReposCheckOutEx() revision:" + commit.verReposRevision);			
 		
 		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
 		if(historyVerReposConfig == null)
