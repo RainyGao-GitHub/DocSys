@@ -52,14 +52,14 @@ public interface Channel {
 			boolean isMove);
 	List<Doc> remoteServerCheckOut(
 			Repos repos, Doc doc, 
-			String tempLocalRootPath, String localParentPath, String targetName, 
+			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
 			int pullType, 
 			HashMap<String, String> downloadList);
 	List<Doc> remoteServerCheckOutForDownload(
 			Repos repos, Doc doc, 
 			ReposAccess reposAccess, 
-			String tempLocalRootPath, String localParentPath, String targetName, 
+			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
 			boolean force, boolean auto,
 			HashMap<String, String> downloadList);
@@ -143,7 +143,7 @@ public interface Channel {
 	List<Doc> remoteStorageCheckOut(
 			RemoteStorageConfig remote, 
 			Repos repos, Doc doc, 
-			String tempLocalRootPath, String localParentPath, String targetName, 
+			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
 			int pullType, 
 			HashMap<String,String> downloadList);
@@ -151,7 +151,7 @@ public interface Channel {
 			RemoteStorageConfig remote, 
 			Repos repos, Doc doc, 
 			ReposAccess reposAccess, 
-			String tempLocalRootPath, String localParentPath, String targetName, 
+			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
 			boolean force, boolean auto, 
 			HashMap<String,String> downloadList);
