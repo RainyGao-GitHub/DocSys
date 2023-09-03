@@ -12559,7 +12559,7 @@ public class BaseController  extends BaseFunction{
 	public boolean addIndexForCommitLog(Repos repos, CommitLog commit)
 	{
 		Log.debug("addIndexForCommitLog() id:" + commit.id);
-		Date date = new Date(commit.startTime);
+		Date date = new Date(commit.commitId);
 		String indexLib = getIndexLibPathForCommitLog(repos, date);
 		boolean ret = false;
 		ret = LuceneUtil2.addCommitLogIndex(commit, indexLib);
@@ -12569,7 +12569,7 @@ public class BaseController  extends BaseFunction{
 	public boolean updateIndexForCommitLog(Repos repos, CommitLog commit)
 	{
 		Log.debug("updateIndexForCommitLog() id:" + commit.id);
-		Date date = new Date(commit.startTime);
+		Date date = new Date(commit.commitId);
 		String indexLib = getIndexLibPathForCommitLog(repos, date);
 		boolean ret = false;
 		ret = LuceneUtil2.updateCommitLogIndex(commit, indexLib);
