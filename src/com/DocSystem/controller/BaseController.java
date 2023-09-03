@@ -7397,6 +7397,11 @@ public class BaseController  extends BaseFunction{
 	
 	protected Doc verReposGetDocEx(Repos repos, Doc doc, String commitId)
 	{
+		if(isLegacyReposHistory(repos))
+		{
+			return verReposGetDoc(repos, doc, commitId);
+		}
+		
 		CommitLog commit = getCommitLogById(repos, commitId);
 		if(commit == null)
 		{
