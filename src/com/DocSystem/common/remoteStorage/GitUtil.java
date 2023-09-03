@@ -434,6 +434,7 @@ public class GitUtil {
     
 	public boolean getRemoteFile(String remoteEntryPath, String localParentPath, String targetName, String revision, boolean force) 
 	{
+		Log.debug("getRemoteFile() [" + localParentPath + targetName + "]");
 		File localEntry = new File(localParentPath + targetName);
 		if(force == false)
 		{
