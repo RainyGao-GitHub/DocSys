@@ -1145,7 +1145,7 @@ public class SvnUtil {
     		return 2;
     	case 'M':
     		return 3;
-    	case 'R':
+    	case 'R':	//Replace
     		return 5;
     	}
     	

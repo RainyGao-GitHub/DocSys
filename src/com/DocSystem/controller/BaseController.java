@@ -4639,11 +4639,11 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//CommitLog Insert and Update
-	private String buildUniqueIdForCommitLog(CommitLog commit) {
+	protected String buildUniqueIdForCommitLog(CommitLog commit) {
 		return commit.commitId + "_" + commit.reposId;
 	}
 	
-	private String buildVerReposInfo(Repos repos) {
+	protected String buildVerReposInfo(Repos repos) {
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
 			return null;

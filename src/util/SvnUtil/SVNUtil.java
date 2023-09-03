@@ -502,8 +502,8 @@ public class SVNUtil  extends BaseController{
     		return 2;
     	case 'M':
     		return 3;
-    	case 'R':
-    		return 5;
+    	case 'R':	//Replace -> move
+    		return 4;
     	}
     	
     	return null;
