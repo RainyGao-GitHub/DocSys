@@ -12547,6 +12547,12 @@ public class BaseController  extends BaseFunction{
 	public boolean addIndexForCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList)
 	{
 		Log.debug("addIndexForCommitEntries() context:" + context.event);
+		if(commitEntryList == null || commitEntryList.size() == 0)
+		{
+			Log.debug("addIndexForCommitEntries() commitEntryList is null or empty");
+			return true;
+		}
+		
 		Date date = new Date(context.commitId);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date);
 		boolean ret = false;
