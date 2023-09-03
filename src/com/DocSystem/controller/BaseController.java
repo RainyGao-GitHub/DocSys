@@ -11639,10 +11639,21 @@ public class BaseController  extends BaseFunction{
 		return getCommitHistoryDetail(repos, doc, commitId);
 	}
 	
-	private boolean isLegacyReposHistory(Repos repos) {
+	protected boolean isLegacyReposHistory(Repos repos) {
 		String path = Path.getReposVersionExtentionConfigPath(repos);
 		File file = new File(path);
 		return !file.exists();
+	}
+	
+	protected boolean setReposHistoryFormat(Repos repos, boolean legacyForamt) 
+	{
+		String path = Path.getReposVersionExtentionConfigPath(repos);
+		File file = new File(path);
+		if(legacyForamt)
+		{
+			return file.delete();
+		}
+		return file.mkdirs();
 	}
 
 	protected List<LogEntry> getCommitHistory(Repos repos, Doc doc, int maxLogNum, String endCommitId) 

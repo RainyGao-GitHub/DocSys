@@ -589,6 +589,13 @@ public class ReposController extends BaseController{
 			return;			
 		}
 		
+		if(isLegacyReposHistory(repos) == false)
+		{
+			rt.setError("该仓库历史已是最新格式!");				
+			writeJson(rt, response);	
+			return;						
+		}
+		
 		setReposIsBusy(repos.getId(), true);
 		
 		channel.convertReposHistory(repos, rt);
