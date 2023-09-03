@@ -2104,8 +2104,7 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		redisSyncLockEx(lockName, lockInfo);
 			
-    		//TODO: 保留旧的记录
-        	//deleteCommitLogIndexBasic(commit.id, indexLib);
+    		deleteCommitLogIndexBasic(commit.id, indexLib);
         	ret = addCommitLogIndexBasic(commit, indexLib);
 			
     		redisSyncUnlockEx(lockName, lockInfo, synclock);
@@ -2373,20 +2372,13 @@ public class LuceneUtil2   extends BaseFunction
 	        if(builder != null)
 	        {
 				TopDocs hits = isearcher.search( builder, maxNum, sort);
-				String preCommitId = "";
-	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
+				for ( ScoreDoc scoreDoc : hits.scoreDocs )
 	        	{
 	        		Document document = isearcher.doc( scoreDoc.doc );
-	        		String commitId = document.get("commitId");
-	        		//相同的commitEntry只添加一次
-	        		if(commitId.equals(preCommitId) == false)
-	        		{
-	        			preCommitId = commitId;
-	        			CommitLog log = new CommitLog();
-		        		LuceneUtil2.buildObjectForDocument(log, document);
-		        		Log.printObject("multiQueryForCommitLog() log", log);
-		        		list.add(log);
-	        		}
+        			CommitLog log = new CommitLog();
+	        		LuceneUtil2.buildObjectForDocument(log, document);
+	        		Log.printObject("multiQueryForCommitLog() log", log);
+	        		list.add(log);
 	        	}
 	        }
 		} catch (Exception e) {
