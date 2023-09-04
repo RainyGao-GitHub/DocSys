@@ -3643,7 +3643,7 @@ public class BaseController  extends BaseFunction{
     	return value;
 	}
 	
-	protected boolean revertDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, 
+	protected boolean revertRealDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, 
 			HashMap<String, String> downloadList,	//if not null, only files in this hashMap need to be reverted 
 			List<CommonAction> asyncActionList) 	//actions which need to execute async after this function
 	{			
@@ -3654,21 +3654,13 @@ public class BaseController  extends BaseFunction{
 
 		//将历史版本CheckOut到本地
 		List<Doc> successDocList = null;
-		if(doc.getIsRealDoc() == false)
-		{
-			successDocList = verReposCheckOut(repos, true, doc, null, null, commitId, true, true, downloadList);		
+		if(isFSM(repos)) //文件管理系统
+		{	
+			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, true, true, downloadList);
 		}
 		else
 		{
-			if(isFSM(repos)) //文件管理系统
-			{
-					
-				successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, true, true, downloadList);
-			}
-			else
-			{
-				successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, downloadList);
-			}
+			successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, downloadList);
 		}
 		
 		if(successDocList == null || successDocList.size() == 0)
@@ -3681,51 +3673,69 @@ public class BaseController  extends BaseFunction{
 		
 		//Do commit to verRepos		
 		String revision = null;
-		if(doc.getIsRealDoc() == false)
+		if(isFSM(repos)) //文件管理系统
 		{
 			String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + new Date().getTime() + "/";
 			if(convertRevertedDocListToLocalChanges(successDocList, localChangesRootPath))
 			{
 				revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, null, null);
+				if(revision != null)
+				{
+					verReposPullPush(repos, true, rt);
+				}
 				FileUtil.delDir(localChangesRootPath);
 			}
-			
+				
 			//add successDocList to asyncActionList
-			CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, null, true);	
+			CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, null, true);
 		}
 		else
 		{
-			if(isFSM(repos)) //文件管理系统
-			{
-				String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + new Date().getTime() + "/";
-				if(convertRevertedDocListToLocalChanges(successDocList, localChangesRootPath))
-				{
-					revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, null, null);
-					if(revision != null)
-					{
-						verReposPullPush(repos, true, rt);
-					}
-					FileUtil.delDir(localChangesRootPath);
-				}
-				
-				//add successDocList to asyncActionList
-				CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, null, true);
-			}
-			else
-			{
-		        if(channel == null)
-		        {
-					docSysErrorLog("非商业版不支持前置仓库！", rt);
-					return false;
-		        }
+			if(channel == null)
+		    {
+				docSysErrorLog("非商业版不支持前置仓库！", rt);
+				return false;
+		     }
 		        
-		        revision = channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2);
-				if(revision == null)
-				{
-					return false;
-				}
-			}		
-		}	
+		     revision = channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2);
+			 if(revision == null)
+			 { 
+				 return false;
+			 }
+		}		
+		return true;
+	}
+	
+	protected boolean revertVirtualDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, 
+			HashMap<String, String> downloadList,	//if not null, only files in this hashMap need to be reverted 
+			List<CommonAction> asyncActionList) 	//actions which need to execute async after this function
+	{			
+		if(commitMsg == null)
+		{
+			commitMsg = doc.getPath() + doc.getName() + " 回退至版本:" + commitId;
+		}
+
+		//将历史版本CheckOut到本地
+		List<Doc> successDocList = verReposCheckOut(repos, true, doc, null, null, commitId, true, true, downloadList);		
+		if(successDocList == null || successDocList.size() == 0)
+		{
+			docSysDebugLog("未找到需要恢复的文件！",rt);
+			return true;
+		}
+		
+		//Log.printObject("revertDocHistory checkOut successDocList:", successDocList);
+		
+		//Do commit to verRepos		
+		String revision = null;
+		String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + new Date().getTime() + "/";
+		if(convertRevertedDocListToLocalChanges(successDocList, localChangesRootPath))
+		{
+			revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, null, null);
+			FileUtil.delDir(localChangesRootPath);
+		}
+			
+		//add successDocList to asyncActionList
+		CommonAction.insertCommonActionEx(asyncActionList, repos, null, null, successDocList, commitMsg, commitUser, com.DocSystem.common.CommonAction.ActionType.SearchIndex, com.DocSystem.common.CommonAction.Action.UPDATE, com.DocSystem.common.CommonAction.DocType.ALL, null, null, null, true);
 		return true;
 	}
 	
