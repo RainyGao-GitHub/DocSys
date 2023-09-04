@@ -5996,14 +5996,12 @@ public class BaseController  extends BaseFunction{
 	{
 		//本地有改动需要提交
 		Log.info("syncupLocalChanges_FSM() 本地有改动: [" + doc.getPath()+doc.getName() + "], do Commit");
-		if(commitMsg == null)
-		{
-			commitMsg = "自动同步 ./" +  doc.getPath()+doc.getName();
-		}
-		if(commitUser == null)
-		{
-			commitUser = login_user.getName();
-		}
+		
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(null, login_user, "syncupDocHistory", "syncupDocHistory", "历史版本同步", null, repos, doc, null, null);
+		context.info = "历史版本同步 [" + doc.getPath() + doc.getName() + "]";
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
+		context.commitUser = login_user.getName();
 		
 		//LockDoc
 		DocLock docLock = null;
@@ -6018,7 +6016,15 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, subDocSyncupFlag, null, null);
+		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
+		
+		insertCommit(repos, context);
+		insertCommitEntry(repos, doc, context, "syncup", null, login_user);
+		
+		ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
+		String revision = verReposDocCommit(repos, false, doc, context.commitMsg, context.commitUser, rt, localChangesRootPath, subDocSyncupFlag, commitActionList, null);
+		updateCommit(repos, context, revision, rt.getDebugLog(), commitActionList);
+		
 		if(revision == null)
 		{
 			Log.info("syncupLocalChangesEx_FSM() 本地改动Commit失败:" + revision);
