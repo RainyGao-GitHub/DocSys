@@ -42,7 +42,6 @@ import com.DocSystem.common.constants;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
-import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LargeFileScanTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
@@ -149,6 +148,15 @@ public class DocController extends BaseController{
 				reposAccess,
 				rt,
 				response, request, session);
+		
+		if(content != null && content.isEmpty() == false)
+		{
+			String reposPath = Path.getReposPath(repos);
+			String localRootPath = Path.getReposRealPath(repos);
+			String localVRootPath = Path.getReposVirtualPath(repos);
+			Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, 0L, "");
+			updateVirualDocContent(repos, doc, commitMsg, reposAccess.getAccessUser().getName(), reposAccess.getAccessUser(), rt, null);
+		}
 	}
 
 	@RequestMapping("/addDocRS.do")  //文件名、文件类型、所在仓库、父节点
