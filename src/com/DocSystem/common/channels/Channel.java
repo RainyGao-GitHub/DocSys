@@ -172,6 +172,8 @@ public interface Channel {
 
 	void insertCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList);
 
+	void insertCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList);
+
 	void insertCommit(Repos repos, CommitLog commit);
 
 	void updateCommit(Repos repos, CommitLog commit);
@@ -187,4 +189,6 @@ public interface Channel {
 	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);
 
 	boolean convertReposHistory(Repos repos, ReturnAjax rt);
+
+	Doc getHistoryDoc(Repos repos, Doc doc, String commitId);
 }

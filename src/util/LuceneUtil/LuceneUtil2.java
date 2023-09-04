@@ -2169,6 +2169,7 @@ public class LuceneUtil2   extends BaseFunction
     			commitEntry.docId = entry.docId;
     			commitEntry.path = entry.path;
     			commitEntry.name = entry.name;
+    			commitEntry.entryType = entry.entryType;
     			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
     			addIndexForCommitEntryBasic(commitEntry, indexLib);
     		}
@@ -2214,6 +2215,55 @@ public class LuceneUtil2   extends BaseFunction
     			commitEntry.docId = entry.docId;
     			commitEntry.path = entry.path;
     			commitEntry.name = entry.name;
+    			commitEntry.entryType = entry.entryType;
+    			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+    			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    		}
+    		
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
+    	}
+		
+		ret = true;
+		return ret;
+	}
+	
+	public static boolean addIndexForCommitEntriesEx(Repos repos, ActionContext context,
+			List<CommitAction> commitActionList, String indexLib) 	
+	{
+    	Log.debug("addIndexForCommitEntriesEx() context:" + context.event + " indexLib:"+indexLib);    	
+    	Log.printObject("addIndexForCommitEntriesEx() context:", context);
+    	
+		boolean ret = false;
+		
+		Object synclock = getSyncLock(indexLib);
+		
+		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
+    	{
+    		redisSyncLockEx(lockName, lockInfo);
+    	
+    		//使用共用的commitEntry来减少内存的占用
+    		CommitEntry commitEntry = new CommitEntry();
+			commitEntry.startTime = context.startTime;
+			commitEntry.userId = context.user.getId();
+			commitEntry.userName = context.user.getName();
+			commitEntry.commitId = context.commitId;
+			commitEntry.commitMsg = context.commitMsg;
+			commitEntry.commitUsers = context.commitUser;
+			commitEntry.commitAction = context.event;
+			commitEntry.reposId = repos.getId();
+			commitEntry.reposName = repos.getName();
+			
+			Doc doc = null;
+    		for(CommitAction entry: commitActionList)
+    		{
+    			doc = entry.getDoc(); 
+    			commitEntry.realCommitAction = getRealCommitAction(entry.getAction());
+    			commitEntry.docId = doc.getDocId();
+    			commitEntry.path = doc.getPath();
+    			commitEntry.name = doc.getName();
+    			commitEntry.entryType = doc.getType();
     			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
     			addIndexForCommitEntryBasic(commitEntry, indexLib);
     		}

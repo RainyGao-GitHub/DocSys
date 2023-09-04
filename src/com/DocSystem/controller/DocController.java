@@ -5086,10 +5086,9 @@ public class DocController extends BaseController{
 			{
 				if(localEntry.getType() != 0)
 				{
-					CommitLog commit = getCommitLogById(repos, commitId);
-					if(commit != null && commit.verReposRevision == null && commit.verReposRevision.equals(remoteEntry.getRevision()))
+					if(isLatestCommitEx(repos, commitId, remoteEntry))
 					{
-						docSysDebugLog("revertDocHistory() commit.verReposRevision:" + commit.verReposRevision + " remoteEntry.revision:" + remoteEntry.getRevision(), rt);
+						docSysDebugLog("revertDocHistory() commitId:" + commitId + " remoteEntry.revision:" + remoteEntry.getRevision(), rt);
 						docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
 						unlockDoc(doc, lockType, reposAccess.getAccessUser());
 						writeJson(rt, response);
@@ -5101,7 +5100,7 @@ public class DocController extends BaseController{
 			}
 		}
 		
-		revertResult  = revertRealDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null, asyncActionList);
+		revertResult  = revertRealDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context, null, asyncActionList);
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
 		
@@ -5237,19 +5236,8 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private boolean isLatestCommit(Repos repos, String commitId, Doc remoteEntry) {
-		CommitLog commit = getCommitLogById(repos, commitId);
-		if(commit == null || commit.verReposRevision == null)
-		{
-			return false;
-		}
-		
-		if(commit.verReposRevision.equals(remoteEntry.getRevision()))
-		{
-			return true;
-		}
-
-		return false;
+	private boolean isLatestCommitEx(Repos repos, String commitId, Doc remoteEntry) {
+		return commitId.equals(remoteEntry.getRevision());
 	}
 
 	/****************   set  Doc RemoteStorage Ignore ******************/

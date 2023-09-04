@@ -3643,7 +3643,12 @@ public class BaseController  extends BaseFunction{
     	return value;
 	}
 	
-	protected boolean revertRealDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, 
+	protected boolean revertRealDocHistory(
+			Repos repos, Doc doc, 
+			String commitId, String commitMsg, String commitUser, 
+			User login_user, 
+			ReturnAjax rt,
+			ActionContext context,
 			HashMap<String, String> downloadList,	//if not null, only files in this hashMap need to be reverted 
 			List<CommonAction> asyncActionList) 	//actions which need to execute async after this function
 	{			
@@ -3657,6 +3662,8 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos)) //文件管理系统
 		{	
 			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, true, true, downloadList);
+			insertCommit(repos, context);
+			insertCommitEntry(repos, doc, context, "revert", null, login_user);
 		}
 		else
 		{
@@ -3678,7 +3685,10 @@ public class BaseController  extends BaseFunction{
 			String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + new Date().getTime() + "/";
 			if(convertRevertedDocListToLocalChanges(successDocList, localChangesRootPath))
 			{
-				revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, null, null);
+				ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
+				revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, commitActionList, null);
+				updateCommit(repos, context, revision, rt.getDebugLog(), commitActionList);
+				
 				if(revision != null)
 				{
 					verReposPullPush(repos, true, rt);
@@ -4599,16 +4609,17 @@ public class BaseController  extends BaseFunction{
 		entry.commitId = commitId;
 		entry.commitMsg = commitMsg;
 		entry.commitUsers = commitUsers;
-
 		entry.commitAction = action;
-		entry.realCommitAction = realAction;
-		entry.isSrcEntry = isSrcEntry;	//only for copyDoc/moveDoc/renameDoc
-
+		
 		entry.reposId = repos.getId();
 		entry.reposName = repos.getName();
+		
 		entry.docId = doc.getDocId();
 		entry.path = doc.getPath();
 		entry.name = doc.getName();
+		entry.entryType = doc.getType();
+		entry.realCommitAction = realAction;
+		entry.isSrcEntry = isSrcEntry;	//only for copyDoc/moveDoc/renameDoc
 
 		entry.id = LuceneUtil2.buildUniqueIdForCommitEntry(entry);
 		channel.insertCommitEntry(repos, entry);
@@ -4644,6 +4655,13 @@ public class BaseController  extends BaseFunction{
 		Log.debug("insertCommitEntries() commitId:" + context.commitId + " commitMsg:" + context.commitMsg + " commitUsers:" + context.commitUser
 				+ " action:" + context.event + " [" + context.doc.getPath() + context.doc.getName() + "]");
 		channel.insertCommitEntries(repos, context, commitEntryList);
+	}
+	
+	protected void insertCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList) 
+	{
+		Log.debug("insertCommitEntries() commitId:" + context.commitId + " commitMsg:" + context.commitMsg + " commitUsers:" + context.commitUser
+				+ " action:" + context.event + " [" + context.doc.getPath() + context.doc.getName() + "]");
+		channel.insertCommitEntriesEx(repos, context, commitActionList);
 	}
 	
 	//CommitLog Insert and Update
@@ -4790,7 +4808,7 @@ public class BaseController  extends BaseFunction{
 				action.commitId, action.commitMsg, action.commitUser);	
 	}
 	
-	private void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo) {		
+	private void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo, ArrayList<CommitAction> commitActionList) {		
 		updateCommit(
 				repos,
 				context.startTime, context.endTime,
@@ -4798,7 +4816,15 @@ public class BaseController  extends BaseFunction{
 				context.commitId, context.commitMsg, context.commitUser,
 				revision, errorInfo);
 		
-		insertCommitEntries(repos, context,  context.commitEntryList);
+		if(context.commitEntryList != null)
+		{
+			insertCommitEntries(repos, context,  context.commitEntryList);
+		}
+		
+		if(commitActionList != null && commitActionList.size() > 0)
+		{
+			insertCommitEntriesEx(repos, context,  commitActionList);			
+		}		
 	}
 	
 	private void updateCommit(Repos repos, FolderUploadAction action, String revision, String errorInfo) {
@@ -7410,24 +7436,26 @@ public class BaseController  extends BaseFunction{
 			return verReposGetDoc(repos, doc, commitId);
 		}
 		
-		CommitLog commit = getCommitLogById(repos, commitId);
-		if(commit == null)
-		{
-			Log.debug("verReposGetDocEx() failed to get commitLog for commitId:" + commitId);			
-			return null;
-		}
-				
-		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
-		if(historyVerReposConfig == null)
-		{
-			Log.debug("verReposGetDocEx() failed to get historyVerReposConfig");			
-			return null;
-		}
-		
-		Doc remoteDoc = getRemoteStorageEntry(repos, doc, historyVerReposConfig);		
-		return remoteDoc;		
+		return getHistoyDoc(repos, doc, commitId);
 	}
 	
+	
+	
+	private Doc getHistoyDoc(Repos repos, Doc doc, String commitId) {
+		if(commitId == null)
+		{
+			List<CommitLog> list = channel.queryCommitLog(repos, null, 1, null, null);
+			if(list == null || list.size() == 0)
+			{
+				Log.debug("getLatestCommitId() failed to get the latest commitLog");
+				return null;
+			}
+			commitId =  list.get(0).commitId + "";
+		}
+		
+		return channel.getHistoryDoc(repos, doc, commitId);
+	}
+
 	protected Doc verReposGetDoc(Repos repos, Doc doc, String revision)
 	{
 		if(repos.getVerCtrl() == 1)
@@ -8198,7 +8226,7 @@ public class BaseController  extends BaseFunction{
 			case ADD: //add
 			case UPDATE: //update
 				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, commitActionList, null);				
-				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				updateCommit(repos, action.context, revision, rt.getDebugLog(), null);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -8211,7 +8239,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case DELETE:	//delete
 				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, commitActionList, null);				
-				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				updateCommit(repos, action.context, revision, rt.getDebugLog(), null);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -8224,7 +8252,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case MOVE:	//move
 				revision = verReposDocMove(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
-				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				updateCommit(repos, action.context, revision, rt.getDebugLog(), null);
 				if(revision == null)
 				{
 					docSysWarningLog("executeVerReposAction() verReposRealDocMove Failed", rt);
@@ -8242,7 +8270,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case COPY: //copy
 				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
-				updateCommit(repos, action.context, revision, rt.getDebugLog());
+				updateCommit(repos, action.context, revision, rt.getDebugLog(), null);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposRealDocCopy srcDoc [" + doc.getPath() + doc.getName()+ "] to dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
@@ -10294,6 +10322,7 @@ public class BaseController  extends BaseFunction{
 	            commitEntry.docId = Path.getDocId(level, path + name);
 	            commitEntry.path = path;
 	            commitEntry.name = name;
+	            commitEntry.entryType = file.isFile()? 1:2;
 	            commitEntryList.add(commitEntry);
 	            return true;	            
             }
@@ -11058,11 +11087,13 @@ public class BaseController  extends BaseFunction{
             commitEntry.docId = Path.getDocId(level, path + name);
             commitEntry.path = path;
             commitEntry.name = name;
+            commitEntry.entryType = dstFile.isFile()? 1:2;
             CommitEntry dstCommitEntry = new CommitEntry();
             dstCommitEntry.realCommitAction = "add";
             dstCommitEntry.docId = Path.getDocId(dstLevel, dstPath + dstName);
             dstCommitEntry.path = dstPath;
-            dstCommitEntry.name = dstName;            
+            dstCommitEntry.name = dstName;
+            dstCommitEntry.entryType = dstFile.isFile()? 1:2;
             commitEntryList.add(commitEntry);
             commitEntryList.add(dstCommitEntry);     
         	
@@ -11184,11 +11215,14 @@ public class BaseController  extends BaseFunction{
 	            commitEntry.docId = Path.getDocId(level, path + name);
 	            commitEntry.path = path;
 	            commitEntry.name = name;
+	            commitEntry.entryType = 1;
+	            
 	            CommitEntry dstCommitEntry = new CommitEntry();
 	            dstCommitEntry.realCommitAction = "add";
 	            dstCommitEntry.docId = Path.getDocId(dstLevel, dstPath + dstName);
 	            dstCommitEntry.path = dstPath;
-	            dstCommitEntry.name = dstName;            
+	            dstCommitEntry.name = dstName;        
+	            dstCommitEntry.entryType = 1;
 	            commitEntryList.add(commitEntry);
 	            commitEntryList.add(dstCommitEntry);     		
         		return true;
@@ -11209,11 +11243,13 @@ public class BaseController  extends BaseFunction{
             commitEntry.docId = Path.getDocId(level, path + name);
             commitEntry.path = path;
             commitEntry.name = name;
+            commitEntry.entryType = 2;
             CommitEntry dstCommitEntry = new CommitEntry();
             dstCommitEntry.realCommitAction = "add";
             dstCommitEntry.docId = Path.getDocId(dstLevel, dstPath + dstName);
             dstCommitEntry.path = dstPath;
-            dstCommitEntry.name = dstName;            
+            dstCommitEntry.name = dstName;    
+            dstCommitEntry.entryType = 2;
             commitEntryList.add(commitEntry);
             commitEntryList.add(dstCommitEntry);
         	
@@ -12574,6 +12610,24 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		
 		ret = LuceneUtil2.addIndexForCommitEntries(repos, context, commitEntryList, indexLib);
+		
+		return ret;
+	}
+	
+	public boolean addIndexForCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList)
+	{
+		Log.debug("addIndexForCommitEntriesEx() context:" + context.event);
+		if(commitActionList == null || commitActionList.size() == 0)
+		{
+			Log.debug("addIndexForCommitEntriesEx() commitActionList is null or empty");
+			return true;
+		}
+		
+		Date date = new Date(context.commitId);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		boolean ret = false;
+		
+		ret = LuceneUtil2.addIndexForCommitEntriesEx(repos, context, commitActionList, indexLib);
 		
 		return ret;
 	}
