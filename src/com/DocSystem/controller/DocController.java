@@ -888,7 +888,7 @@ public class DocController extends BaseController{
 
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
-			commitMsg = "同步 " + doc.getPath() + doc.getName();
+			commitMsg = "同步 [" + doc.getPath() + doc.getName() + "]";
 		}
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		if(checkDocLocked(doc, DocLock.LOCK_TYPE_FORCE, reposAccess.getAccessUser(), false))
