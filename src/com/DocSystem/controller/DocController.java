@@ -4505,20 +4505,85 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(historyType != null && historyType == 1)
+		{
+			getVirtualDocHistory(
+					repos, 
+					docId, pid, path, name, level, type, 
+					maxLogNum,
+					commitId,
+					shareId, 
+					rt, 
+					session, request, response);
+			return;
+		}
+
+		getRealDocHistory(
+				repos, 
+				docId, pid, path, name, level, type, 
+				maxLogNum,
+				commitId,
+				shareId, 
+				rt, 
+				session, request, response);
+		
+	}
+
+	private void getRealDocHistory(
+			Repos repos, 
+			Long docId, Long pid, String path, String name,  Integer level, Integer type, 
+			Integer maxLogNum,
+			String commitId,	//获取该commitId更早的历史
+			Integer shareId,
+			ReturnAjax rt,
+			HttpSession session, HttpServletRequest request,HttpServletResponse response)
+	{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc inputDoc = doc;
-		if(historyType == null)
+		Doc inputDoc = doc;	
+		int num = 100;
+		if(maxLogNum != null)
 		{
-			historyType = 0;
+			num = maxLogNum;
 		}
-		if(historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
+		
+		List<LogEntry> logList = null;
+		if(commitId == null || commitId.isEmpty())
 		{
-			inputDoc = buildVDoc(doc);
-		}		
+			commitId = null;
+		}
+		
+		if(isFSM(repos))
+		{
+			logList = getCommitHistoryEx(repos, inputDoc, num, commitId);
+		}
+		else
+		{
+			logList = channel.remoteServerGetHistory(repos, inputDoc, num, commitId);
+		}
+		
+		rt.setData(logList);
+		writeJson(rt, response);
+	}
+	
+	private void getVirtualDocHistory(
+			Repos repos, 
+			Long docId, Long pid, String path, String name,  Integer level, Integer type, 
+			Integer maxLogNum,
+			String commitId,	//获取该commitId更早的历史
+			Integer shareId,
+			ReturnAjax rt,
+			HttpSession session, HttpServletRequest request,HttpServletResponse response) 
+	{
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		
+		Doc inputDoc = buildVDoc(doc);
 		
 		int num = 100;
 		if(maxLogNum != null)
@@ -4532,21 +4597,7 @@ public class DocController extends BaseController{
 			commitId = null;
 		}
 		
-		if(isFSM(repos) || inputDoc.getIsRealDoc() == false)
-		{
-			if(historyType == 0)
-			{
-				logList = getCommitHistoryEx(repos, inputDoc, num, commitId);
-			}
-			else
-			{
-				logList = verReposGetHistory(repos, false, inputDoc, num, commitId);
-			}
-		}
-		else
-		{
-			logList = channel.remoteServerGetHistory(repos, inputDoc, num, commitId);
-		}
+		logList = verReposGetHistory(repos, false, inputDoc, num, commitId);
 		
 		rt.setData(logList);
 		writeJson(rt, response);
@@ -4587,38 +4638,77 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(historyType != null && historyType == 1)
+		{
+			getVirtualDocHistoryDetail(
+					repos, 
+					docId, pid, path, name, level, type, 
+					commitId,
+					shareId, 
+					rt, 
+					session, request, response);
+			return;	
+		}
+		
+		getRealDocHistoryDetail(
+				repos, 
+				docId, pid, path, name, level, type, 
+				commitId,
+				shareId, 
+				rt, 
+				session, request, response);
+	}
+
+	private void getRealDocHistoryDetail(
+			Repos repos, 
+			Long docId, Long pid, String path, String name, Integer level, Integer type, 
+			String commitId, 
+			Integer shareId, 
+			ReturnAjax rt, 
+			HttpSession session, HttpServletRequest request, HttpServletResponse response) 
+	{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
 
-		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		
-		Doc inputDoc = doc;
-		if(historyType == null)
-		{
-			historyType = 0;
-		}
-		if(historyType == 1)	//0: For RealDoc 1: For VirtualDoc 
-		{
-			inputDoc = buildVDoc(doc);
-		}
-
 		List<ChangedItem> changedItemList = null;
-		if(isFSM(repos) || historyType == 1)
+		if(isFSM(repos))
 		{
-			if(historyType == 0)
-			{
-				changedItemList = getCommitHistoryDetailEx(repos, inputDoc, commitId);				
-			}
-			else
-			{
-				changedItemList = verReposGetHistoryDetail(repos, false, inputDoc, commitId);
-			}
+			changedItemList = getCommitHistoryDetailEx(repos, doc, commitId);				
 		}
 		else
 		{
-			changedItemList = channel.remoteServerGetHistoryDetail(repos, inputDoc, commitId);
+			changedItemList = channel.remoteServerGetHistoryDetail(repos, doc, commitId);
 		}
+		
+		if(changedItemList == null)
+		{
+			Log.debug("getHistoryDetail 该版本没有文件改动");
+		}
+		rt.setData(changedItemList);
+		
+		writeJson(rt, response);
+		
+	}
+
+	private void getVirtualDocHistoryDetail(
+			Repos repos, 
+			Long docId, Long pid, String path, String name, Integer level, Integer type, 
+			String commitId, 
+			Integer shareId, 
+			ReturnAjax rt, 
+			HttpSession session, HttpServletRequest request, HttpServletResponse response) 
+	{
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+
+		Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+		Doc inputDoc = buildVDoc(doc);
+		
+		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, false, inputDoc, commitId);
 		
 		if(changedItemList == null)
 		{
