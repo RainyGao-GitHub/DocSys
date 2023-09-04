@@ -2256,16 +2256,114 @@ public class LuceneUtil2   extends BaseFunction
 			commitEntry.reposName = repos.getName();
 			
 			Doc doc = null;
+			Doc newDoc = null;
     		for(CommitAction entry: commitActionList)
-    		{
-    			doc = entry.getDoc(); 
-    			commitEntry.realCommitAction = getRealCommitAction(entry.getAction());
-    			commitEntry.docId = doc.getDocId();
-    			commitEntry.path = doc.getPath();
-    			commitEntry.name = doc.getName();
-    			commitEntry.entryType = doc.getType();
-    			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
-    			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    		{    			
+    			switch(entry.getAction())
+    			{
+    			case ADD:
+        			doc = entry.getDoc(); 
+        			commitEntry.docId = doc.getDocId();
+        			commitEntry.path = doc.getPath();
+        			commitEntry.name = doc.getName();
+        			commitEntry.entryType = doc.getType();
+    				commitEntry.realCommitAction = "add";
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				break;
+    			case DELETE:
+        			doc = entry.getDoc(); 
+        			commitEntry.docId = doc.getDocId();
+        			commitEntry.path = doc.getPath();
+        			commitEntry.name = doc.getName();
+        			commitEntry.entryType = doc.getType();
+    				commitEntry.realCommitAction = "delete";
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				break;
+    			case MODIFY:
+        			doc = entry.getDoc(); 
+        			commitEntry.docId = doc.getDocId();
+        			commitEntry.path = doc.getPath();
+        			commitEntry.name = doc.getName();
+        			commitEntry.entryType = doc.getType();
+    				commitEntry.realCommitAction = "modify";
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				break;
+    			case MOVE:
+        			doc = entry.getDoc(); 
+        			commitEntry.docId = doc.getDocId();
+        			commitEntry.path = doc.getPath();
+        			commitEntry.name = doc.getName();
+        			commitEntry.entryType = doc.getType();
+    				commitEntry.realCommitAction = "delete";
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				//Add DstEntry
+        			newDoc = entry.getDoc(); 
+        			commitEntry.docId = newDoc.getDocId();
+        			commitEntry.path = newDoc.getPath();
+        			commitEntry.name = newDoc.getName();
+        			commitEntry.entryType = newDoc.getType();
+        			commitEntry.realCommitAction = "add";
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+        			break;
+    			case COPY:
+        			doc = entry.getDoc(); 
+        			commitEntry.docId = doc.getDocId();
+        			commitEntry.path = doc.getPath();
+        			commitEntry.name = doc.getName();
+        			commitEntry.entryType = doc.getType();
+    				commitEntry.realCommitAction = "noChange";
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				//Add DstEntry
+        			newDoc = entry.getDoc(); 
+        			commitEntry.docId = newDoc.getDocId();
+        			commitEntry.path = newDoc.getPath();
+        			commitEntry.name = newDoc.getName();
+        			commitEntry.entryType = newDoc.getType();
+        			commitEntry.realCommitAction = "add";
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				break;
+    			case FILETODIR:
+        			doc = entry.getDoc(); 
+        			commitEntry.docId = doc.getDocId();
+        			commitEntry.path = doc.getPath();
+        			commitEntry.name = doc.getName();
+        			commitEntry.entryType = doc.getType();
+    				commitEntry.realCommitAction = "delete";
+    				commitEntry.entryType = 1; //File
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				//Add DstEntry
+        			commitEntry.entryType = 2; //Dir
+        			commitEntry.realCommitAction = "add";
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				break;
+    			case DIRTOFILE:
+        			doc = entry.getDoc(); 
+        			commitEntry.docId = doc.getDocId();
+        			commitEntry.path = doc.getPath();
+        			commitEntry.name = doc.getName();
+        			commitEntry.entryType = doc.getType();
+    				commitEntry.realCommitAction = "delete";
+    				commitEntry.entryType = 2; //Dir
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				//Add DstEntry
+        			commitEntry.entryType = 1; //File
+        			commitEntry.realCommitAction = "add";
+        			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+        			addIndexForCommitEntryBasic(commitEntry, indexLib);
+    				break;
+    			default:
+    				break;
+    			}
     		}
     		
 			redisSyncUnlockEx(lockName, lockInfo, synclock);
