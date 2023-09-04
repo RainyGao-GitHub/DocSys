@@ -1851,30 +1851,11 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			
-			if(FileUtil.createDir(reposDir+"refData/") == false)
-			{
-				rt.setError("创建refData目录失败");
-				return false;
-			}
-			else
-			{
-				if(FileUtil.createDir(reposDir+"refData/rdata/") == false)
-				{
-					rt.setError("创建refData/rdata目录失败");
-					return false;
-				}
-				if(FileUtil.createDir(reposDir+"refData/vdata/") == false)
-				{
-					rt.setError("创建refData/vdata目录失败");
-					return false;
-				}
-			}
-			
 			if(FileUtil.createDir(reposDir+"tmp/") == false)
 			{
 				rt.setError("创建tmp目录失败");
 				return false;
-			}
+			}			
 		}	
 		else
 		{

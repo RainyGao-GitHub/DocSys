@@ -329,6 +329,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//Init verRepos for RealDoc
+		setReposHistoryFormat(repos, false);	//设置历史版本使用新格式（MxsDoc自定义格式）
 		if(initVerRepos(repos,true,rt) == false)
 		{
 			deleteRepos(repos);
