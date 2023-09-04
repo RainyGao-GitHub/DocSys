@@ -3277,9 +3277,13 @@ public class DocController extends BaseController{
 
 	/****************   get Document Content ******************/
 	@RequestMapping("/getDocContent.do")
-	public void getDocContent(Integer reposId, String path, String name, Integer docType, String commitId,
+	public void getDocContent(
+			Integer reposId, String path, String name, 
+			Integer docType, //1: RealDoc 2: VirtualDoc	
+			String commitId,
 			Integer shareId,
-			HttpServletRequest request,HttpServletResponse response,HttpSession session){
+			HttpServletRequest request,HttpServletResponse response,HttpSession session)
+	{
 
 		Log.infoHead("************** getDocContent [" + path + name + "] ************");
 		Log.info("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType+ " shareId:" + shareId + " commitId:" + commitId);
@@ -3308,131 +3312,96 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(docType != null && docType == 1)
+		{
+			if(commitId == null)
+			{
+				getVirtualDocContent(
+						repos, 
+						path, name, 
+						commitId,
+						shareId,
+						rt,
+						request, response, session);
+				return;
+			}
+			
+			getVirtualDocHistoryContent(
+					repos, 
+					path, name, 
+					commitId,
+					shareId,
+					rt,
+					request, response, session);
+			return;			
+		}
+		
+		if(commitId == null)
+		{
+			getRealDocContent(
+					repos, 
+					path, name, 
+					commitId,
+					shareId,
+					rt,
+					request, response, session);
+			return;
+		}
+		
+		getRealDocHistoryContent(
+				repos, 
+				path, name, 
+				commitId,
+				shareId,
+				rt,
+				request, response, session);
+	}
+
+	private void getRealDocContent(
+			Repos repos, 
+			String path, String name, 
+			String commitId,
+			Integer shareId,
+			ReturnAjax rt,
+			HttpServletRequest request,HttpServletResponse response,HttpSession session) 
+	{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		path = doc.getPath();
 		name = doc.getName();
 		
 		String status = "ok";
 		String content = "";
-		boolean isRealDoc = true;
-		if(docType == null) //docType表示是否为实体文件
+		Doc tmpDoc = doc;
+		if(isFSM(repos) == false)
 		{
-			docType = 1;
+			channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
+		}			
+		
+		String fileSuffix = FileUtil.getFileSuffix(name);
+		if(FileUtil.isText(fileSuffix))
+		{
+			//content = readRealDocContent(repos, tmpDoc);
+			content = readRealDocContentEx(repos, tmpDoc);				
 		}
-		if(docType == 1)
+		else if(FileUtil.isOffice(fileSuffix) || FileUtil.isPdf(fileSuffix))
 		{
-			doc.setIsRealDoc(isRealDoc);
-
-			Doc tmpDoc = doc;
-			if(commitId == null)
+			if(checkAndGenerateOfficeContentEx(repos, tmpDoc, fileSuffix))
 			{
-				if(isFSM(repos) == false)
-				{
-					channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
-				}
+				content = readOfficeContent(repos, tmpDoc);
 			}
-			else	//获取历史版本文件
+		}
+		else
+		{
+			if(isBinaryFile(repos, tmpDoc))
 			{
-				Doc remoteDoc = null;
-				if(isFSM(repos))
-				{
-					remoteDoc = verReposGetDocEx(repos, doc, commitId);
-				}
-				else
-				{
-					remoteDoc = remoteServerGetDoc(repos, doc, commitId);
-				}
-				
-				if(remoteDoc == null)
-				{
-					docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
-					writeJson(rt, response);			
-					return;
-				}
-				if(remoteDoc.getType() == 0)
-				{
-					docSysErrorLog(name + " 不存在！", rt);
-					writeJson(rt, response);			
-					return;				
-				}
-				else if(remoteDoc.getType() == 2)
-				{
-					docSysErrorLog(name + " 是目录！", rt);
-					writeJson(rt, response);			
-					return;				
-				}
-				
-				//checkOut历史版本文件
-				String tempLocalRootPath = Path.getReposTmpPathForHistory(repos, commitId, isRealDoc);
-				File dir = new File(tempLocalRootPath + path);
-				if(dir.exists() == false)
-				{
-					dir.mkdirs();
-				}
-				File file = new File(tempLocalRootPath + path + name);
-				if(file.exists() == false)
-				{
-					if(isFSM(repos))
-					{						
-						verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, true, null);
-					}
-					else
-					{
-						channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, 3, null);
-					}
-				}
-				tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);					
-			}
-			
-			String fileSuffix = FileUtil.getFileSuffix(name);
-			if(FileUtil.isText(fileSuffix))
-			{
-				//content = readRealDocContent(repos, tmpDoc);
-				content = readRealDocContentEx(repos, tmpDoc);				
-			}
-			else if(FileUtil.isOffice(fileSuffix) || FileUtil.isPdf(fileSuffix))
-			{
-				if(checkAndGenerateOfficeContentEx(repos, tmpDoc, fileSuffix))
-				{
-					content = readOfficeContent(repos, tmpDoc);
-				}
+				status="isBinary";
 			}
 			else
 			{
-				if(isBinaryFile(repos, tmpDoc))
-				{
-					status="isBinary";
-				}
-				else
-				{
-					content = readRealDocContentEx(repos, tmpDoc);
-				}
-			}
-		}
-		else if(docType == 2)
-		{
-			isRealDoc = false;
-			doc.setIsRealDoc(isRealDoc);
-
-			if(commitId == null)
-			{
-				content = readVirtualDocContent(repos, doc);
-			}
-			else
-			{
-				String tempLocalRootPath = Path.getReposTmpPathForHistory(repos, commitId, isRealDoc);
-				File dir = new File(tempLocalRootPath + path);
-				if(dir.exists() == false)
-				{
-					dir.mkdirs();
-					verReposCheckOut(repos, true, doc, tempLocalRootPath + path, name, commitId, true, true, null);
-				}
-
-				Doc tmpDoc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, tempLocalRootPath, localVRootPath, null, null);
-				content = readRealDocContent(repos, tmpDoc);
+				content = readRealDocContentEx(repos, tmpDoc);
 			}
 		}
 		
@@ -3442,6 +3411,176 @@ public class DocController extends BaseController{
 		}
 		
 		writeText(status+content, response);
+	}
+
+	private void getRealDocHistoryContent(
+			Repos repos, 
+			String path, String name, 
+			String commitId,
+			Integer shareId,
+			ReturnAjax rt,
+			HttpServletRequest request,HttpServletResponse response,HttpSession session) 
+	{
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		path = doc.getPath();
+		name = doc.getName();
+		
+		String status = "ok";
+		String content = "";
+		Doc tmpDoc = doc;
+		
+		Doc remoteDoc = null;
+		if(isFSM(repos))
+		{
+			remoteDoc = verReposGetDocEx(repos, doc, commitId);
+		}
+		else
+		{
+			remoteDoc = remoteServerGetDoc(repos, doc, commitId);
+		}
+				
+		if(remoteDoc == null)
+		{
+			docSysErrorLog("获取历史文件信息 " + name + " 失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		if(remoteDoc.getType() == 0)
+		{
+			docSysErrorLog(name + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;				
+		}
+		else if(remoteDoc.getType() == 2)
+		{
+			docSysErrorLog(name + " 是目录！", rt);
+			writeJson(rt, response);			
+			return;				
+		}
+				
+		//checkOut历史版本文件
+		String tempLocalRootPath = Path.getReposTmpPathForHistory(repos, commitId, true);
+		File dir = new File(tempLocalRootPath + path);
+		if(dir.exists() == false)
+		{
+			dir.mkdirs();
+		}
+		File file = new File(tempLocalRootPath + path + name);
+		if(file.exists() == false)
+		{
+			if(isFSM(repos))
+			{						
+				verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, true, null);
+			}
+			else
+			{
+				channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, 3, null);
+			}
+		}
+		tmpDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);					
+			
+		String fileSuffix = FileUtil.getFileSuffix(name);
+		if(FileUtil.isText(fileSuffix))
+		{
+			//content = readRealDocContent(repos, tmpDoc);
+			content = readRealDocContentEx(repos, tmpDoc);				
+		}
+		else if(FileUtil.isOffice(fileSuffix) || FileUtil.isPdf(fileSuffix))
+		{
+			if(checkAndGenerateOfficeContentEx(repos, tmpDoc, fileSuffix))
+			{
+				content = readOfficeContent(repos, tmpDoc);
+			}
+		}
+		else
+		{
+			if(isBinaryFile(repos, tmpDoc))
+			{
+				status="isBinary";
+			}
+			else
+			{
+				content = readRealDocContentEx(repos, tmpDoc);
+			}
+		}
+		
+		if(content == null)
+		{
+			content = "";
+		}
+		
+		writeText(status+content, response);
+	}
+
+	private void getVirtualDocHistoryContent(
+			Repos repos, 
+			String path, String name, 
+			String commitId, 
+			Integer shareId,
+			ReturnAjax rt, 
+			HttpServletRequest request, HttpServletResponse response, HttpSession session) 
+	{
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		path = doc.getPath();
+		name = doc.getName();
+		
+		String status = "ok";
+		String content = "";
+		doc.setIsRealDoc(false);
+		
+		String tempLocalRootPath = Path.getReposTmpPathForHistory(repos, commitId, false);
+		File dir = new File(tempLocalRootPath + path);
+		if(dir.exists() == false)
+		{
+			dir.mkdirs();
+			verReposCheckOut(repos, true, doc, tempLocalRootPath + path, name, commitId, true, true, null);
+		}
+
+		Doc tmpDoc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, 1, true, tempLocalRootPath, localVRootPath, null, null);
+		content = readRealDocContent(repos, tmpDoc);
+		
+		if(content == null)
+		{
+			content = "";
+		}
+		
+		writeText(status+content, response);
+		
+	}
+	
+	private void getVirtualDocContent(
+			Repos repos, 
+			String path, String name, 
+			String commitId, 
+			Integer shareId,
+			ReturnAjax rt, 
+			HttpServletRequest request, HttpServletResponse response, HttpSession session) 
+	{
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		path = doc.getPath();
+		name = doc.getName();
+		
+		String status = "ok";
+		String content = "";
+		doc.setIsRealDoc(false);
+		content = readVirtualDocContent(repos, doc);
+				
+		if(content == null)
+		{
+			content = "";
+		}
+		
+		writeText(status+content, response);
+		
 	}
 
 	/****************   get Tmp Saved Document Content ******************/
