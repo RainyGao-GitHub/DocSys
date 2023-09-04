@@ -155,6 +155,7 @@ public class DocController extends BaseController{
 			String localRootPath = Path.getReposRealPath(repos);
 			String localVRootPath = Path.getReposVirtualPath(repos);
 			Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, 0L, "");
+			doc.setContent(content);
 			updateVirualDocContent(repos, doc, commitMsg, reposAccess.getAccessUser().getName(), reposAccess.getAccessUser(), rt, null);
 		}
 	}
