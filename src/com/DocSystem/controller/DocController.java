@@ -443,7 +443,7 @@ public class DocController extends BaseController{
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, repos, srcDoc, dstDoc, null);
 		context.info = "重命名 [" + srcDoc.getPath() + srcDoc.getName() + "] 为 [" + dstDoc.getPath() + dstDoc.getName() + "]";
-		context.commitMsg = commitMsg;
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
 		
 		int ret = renameDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
@@ -556,7 +556,7 @@ public class DocController extends BaseController{
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, repos, srcDoc, dstDoc, null);
 		context.info = "移动 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
-		context.commitMsg = commitMsg;
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
 		
 		int ret = moveDoc(repos, srcDoc, dstDoc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
@@ -661,7 +661,7 @@ public class DocController extends BaseController{
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, repos, srcDoc, dstDoc, null);
 		context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
-		context.commitMsg = commitMsg;
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
 		
 		Log.debug("copyDoc checkUserAddRight");
@@ -813,7 +813,7 @@ public class DocController extends BaseController{
 		{
 			context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		}
-		context.commitMsg = commitMsg;
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
 		
 		Doc dstParentDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, "", null, 2, true, localRootPath, localVRootPath, null, null);
@@ -1182,7 +1182,7 @@ public class DocController extends BaseController{
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "checkDocInfo", "checkDocInfo", "文件上传", taskId, repos, doc, null, folderUploadAction);
 		context.info = "上传文件 [" + doc.getPath() + doc.getName() + "]";
-		context.commitMsg = commitMsg;
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
 
 		//检查登录用户的权限
@@ -4994,6 +4994,8 @@ public class DocController extends BaseController{
 			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
+		
+		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 
 		boolean revertResult = false;
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();

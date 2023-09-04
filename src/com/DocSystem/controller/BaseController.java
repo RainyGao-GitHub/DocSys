@@ -3832,7 +3832,6 @@ public class BaseController  extends BaseFunction{
 				return 0;
 			}
 			
-			//TODO: generateCommitId
 			context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		}
 		
@@ -9016,7 +9015,13 @@ public class BaseController  extends BaseFunction{
 			String commitMsg, String commitUser, User login_user,ReturnAjax rt, 
 			List<CommonAction> actionList, 
 			HttpServletRequest request, String event, String subEvent, String eventName, String queryId) 
-	{		
+	{	
+		//BuildActionContext
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), login_user, event, subEvent, eventName, queryId, repos, doc, null, null);
+		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
+		context.commitUser = login_user.getName();
+		
 		DocLock docLock = null;
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		//String lockInfo = "updateRealDocContent() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
@@ -9029,13 +9034,9 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}		
 		
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), login_user, event, subEvent, eventName, queryId, repos, doc, null, null);
-		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";
-		context.commitMsg = commitMsg;
-		context.commitUser = login_user.getName();
 		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
-		boolean ret = updateRealDocContent_FSM(repos, doc, commitMsg, commitUser, login_user, rt, actionList, context);
+		boolean ret = updateRealDocContent_FSM(repos, doc, context.commitMsg, context.commitUser, login_user, rt, actionList, context);
 		
 		//revert the lockStatus
 		unlockDoc(doc, lockType, login_user);
@@ -22016,7 +22017,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	
-	private Long generateCommitId(Repos repos, Doc doc, long startTime) {
+	protected Long generateCommitId(Repos repos, Doc doc, long startTime) {
 		return startTime;
 	}
 
@@ -22551,7 +22552,7 @@ public class BaseController  extends BaseFunction{
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, subEvent, eventName, queryId, repos, doc, null, folderUploadAction);
 		context.info = "删除 [" + doc.getPath() + doc.getName() + "]";
-		context.commitMsg = commitMsg;
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
 
 		int ret = deleteDoc(repos, doc, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context);
@@ -22619,7 +22620,7 @@ public class BaseController  extends BaseFunction{
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, event, eventName, queryId, repos, doc, null, folderUploadAction);
 		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";
-		context.commitMsg = commitMsg;
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
 		
 		//Check Edit Right
