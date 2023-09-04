@@ -3312,7 +3312,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(docType != null && docType == 1)
+		if(docType != null && docType == 2)
 		{
 			if(commitId == null)
 			{
@@ -4613,7 +4613,8 @@ public class DocController extends BaseController{
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
 	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
-			Integer historyType,Integer maxLogNum,
+			Integer historyType,
+			Integer maxLogNum,
 			String commitId,	//获取该commitId更早的历史
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
