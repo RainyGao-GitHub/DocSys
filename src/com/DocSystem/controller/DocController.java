@@ -3448,7 +3448,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		if(remoteDoc.getType() == 0)
+		if(remoteDoc.getType() == null || remoteDoc.getType() == 0)
 		{
 			docSysErrorLog(name + " 不存在！", rt);
 			writeJson(rt, response);			
