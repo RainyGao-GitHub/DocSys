@@ -599,7 +599,7 @@ public class ReposController extends BaseController{
 		
 		setReposIsBusy(repos.getId(), true);
 		
-		channel.convertReposHistory(repos, rt);
+		channel.convertReposHistory(repos, null, rt);
 		
 		writeJson(rt, response);	
 		setReposIsBusy(repos.getId(), false);			

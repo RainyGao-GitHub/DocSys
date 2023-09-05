@@ -188,7 +188,7 @@ public interface Channel {
 	
 	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);
 
-	boolean convertReposHistory(Repos repos, ReturnAjax rt);
+	boolean convertReposHistory(Repos repos, Integer maxNum, ReturnAjax rt);
 
 	Doc getHistoryDoc(Repos repos, Doc doc, String commitId);
 }
