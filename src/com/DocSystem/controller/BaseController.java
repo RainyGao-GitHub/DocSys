@@ -3663,7 +3663,8 @@ public class BaseController  extends BaseFunction{
 		{	
 			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, true, true, downloadList);
 			insertCommit(repos, context);
-			insertCommitEntry(repos, doc, context, "revert", null, login_user);
+			//TODO: revert操作的commitEntry会在updateCommit时写入
+			//insertCommitEntry(repos, doc, context, "revert", null, login_user);
 		}
 		else
 		{
@@ -4503,7 +4504,8 @@ public class BaseController  extends BaseFunction{
 				
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
 		insertCommit(repos, context);
-		insertCommitEntry(repos, doc, context, "delete", null, login_user);
+		//TODO: delete操作的commitEntry会在updateCommit时写入
+		//insertCommitEntry(repos, doc, context, "delete", null, login_user);
 
 		Log.info("deleteDoc_FSM() local doc:[" + doc.getPath() + doc.getName() + "] 删除成功");
 		rt.setData(doc);
@@ -6019,7 +6021,8 @@ public class BaseController  extends BaseFunction{
 		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
 		insertCommit(repos, context);
-		insertCommitEntry(repos, doc, context, "syncup", null, login_user);
+		//TODO: syncup操作的commitEntry会在updateCommit时写入
+		//insertCommitEntry(repos, doc, context, "syncup", null, login_user);
 		
 		ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
 		String revision = verReposDocCommit(repos, false, doc, context.commitMsg, context.commitUser, rt, localChangesRootPath, subDocSyncupFlag, commitActionList, null);
@@ -8685,8 +8688,9 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		insertCommit(repos, context);
-		insertCommitEntry(repos, srcDoc, context, "delete", 1, login_user);
-		insertCommitEntry(repos, dstDoc, context, "add", 0, login_user);
+		//TODO: move操作的commitEntry会在updateCommit时写入
+		//insertCommitEntry(repos, srcDoc, context, "delete", 1, login_user);
+		//insertCommitEntry(repos, dstDoc, context, "add", 0, login_user);
 		
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -8812,8 +8816,9 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: insertCommitEntry
 		insertCommit(repos, context);
-		insertCommitEntry(repos, srcDoc, context, "noChange", 1, login_user);
-		insertCommitEntry(repos, dstDoc, context, "add", 0, login_user);
+		//TODO: copy操作的commitEntry会在updateCommit时写入
+		//insertCommitEntry(repos, srcDoc, context, "noChange", 1, login_user);
+		//insertCommitEntry(repos, dstDoc, context, "add", 0, login_user);
 				
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
