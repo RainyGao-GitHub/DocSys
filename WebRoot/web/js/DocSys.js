@@ -1335,7 +1335,7 @@ function showSuccessMsg(msg)
 	});
 }
 
-/****************** Show File In NewPage **************************/
+//****************** Show File In NewPage **************************
 function openDocInNewPage(doc)
 {
 	console.log("openDocInNewPage() doc:",doc);
@@ -1353,7 +1353,7 @@ function openDocInNewPage(doc)
 	window.open(href);
 }
 
-/****************** Show File In NewPage/Dialog **************************/
+//****************** Show File In NewPage/Dialog **************************
 function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 {
 	console.log("openDoc() showUnknownFile:" + showUnknownFile + " openInNewPage:" + openInNewPage + " preview:" + preview);
