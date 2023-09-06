@@ -4180,7 +4180,6 @@ public class BaseController  extends BaseFunction{
 				return 0;
 			}
 			
-			//TODO: generateCommitId
 			context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		}
 		
@@ -4489,7 +4488,6 @@ public class BaseController  extends BaseFunction{
 		}
 		Log.info("deleteDoc_FSM() [" + doc.getPath() + doc.getName() + "] Lock OK");		
 		
-		//TODO: generateCommitId
 		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
 		//get RealDoc Full ParentPath
@@ -7293,6 +7291,49 @@ public class BaseController  extends BaseFunction{
 		}
 		return false;
 	}
+	
+	protected String verReposGetLatestReposRevision(Repos repos, boolean isRealDoc) 
+	{
+		int verCtrl = repos.getVerCtrl();
+		if(isRealDoc == false)
+		{
+			verCtrl = repos.getVerCtrl1();
+		}
+		
+		if(verCtrl == 1)
+		{
+			return svnGetDocLatestReposRevision(repos, isRealDoc);			
+		}
+		else if(verCtrl == 2)
+		{
+			return gitGetDocLatestReposRevision(repos, isRealDoc);	
+		}
+		return null;
+	}
+	
+	private String svnGetDocLatestReposRevision(Repos repos,boolean isRealDoc) {
+		SVNUtil svnUtil = new SVNUtil();
+		if(svnUtil.Init(repos, isRealDoc, "") == false)
+		{
+			Log.debug("svnGetDocLatestReposRevision() svnUtil.Init失败！");	
+			return null;
+		}
+
+		return svnUtil.getLatestReposRevision();	
+	}
+	
+	private String gitGetDocLatestReposRevision(Repos repos, boolean isRealDoc) {
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, isRealDoc, "") == false)
+		{
+			Log.debug("gitGetDocLatestReposRevision() GITUtil Init failed");
+			return null;
+		}
+		
+		return gitUtil.getLatestReposRevision();		
+	}
+
 
 	protected String verReposGetLatestRevision(Repos repos, boolean convert, Doc doc) 
 	{
@@ -7388,43 +7429,23 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//Find out the commit with revision info
-		CommitLog commit = null;
-		for(int i=0; i<list.size(); i++)
-		{
-			CommitLog tmpCommit = list.get(i);
-			if(tmpCommit.verReposRevision != null)
-			{
-				commit = tmpCommit;
-				break;
-			}
-		}
+		CommitLog commit = list.get(0);
 		return commit;
 	}
 
-	private CommitLog getLatestCommit(Repos repos) {
+	protected CommitLog getLatestCommit(Repos repos) {
 		//获取最近的10次提交
-		List<CommitLog> list = channel.queryCommitLog(repos, null, 10, null, null);
+		List<CommitLog> list = channel.queryCommitLog(repos, null, 1, null, null);
 		if(list == null || list.size() == 0)
 		{
 			Log.debug("getLatestCommitId() failed to get the latest commitLog");
 			return null;
 		}
 		
-		CommitLog commit = null;
-		for(int i=0; i<list.size(); i++)
-		{
-			CommitLog tmpCommit = list.get(i);
-			if(tmpCommit.verReposRevision != null)
-			{
-				commit = tmpCommit;
-				break;
-			}
-		}
-		
-		return commit;
+		return list.get(0);
 	}
 
-	private String getLatestCommitId(Repos repos) {
+	protected String getLatestCommitId(Repos repos) {
 		CommitLog commit = getLatestCommit(repos);
 		return commit.commitId + "";
 	}
@@ -8799,7 +8820,6 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
-		//TODO: generateCommitId
 		context.commitId = generateCommitId(repos, dstDoc, dstDocLock.createTime[lockType]);
 						
 		//复制文件或目录

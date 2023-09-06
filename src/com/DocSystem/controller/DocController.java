@@ -5236,28 +5236,12 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		context.commitId =  generateCommitId(repos, doc, docLock.createTime[lockType]);
+		
 		boolean revertResult = false;
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
-		if(isFSM(repos) == false)
-		{
-			//前置类型仓库不需要判断本地是否有改动
-			Log.debug("revertDocHistory reposId:" + repos.getId() + " 前置仓库不需要检查本地是否有改动");
-		}
-		else
-		{
-			if(false == localChangeSyncupBeforRevert(taskId, repos, doc, reposAccess, commitId, rt, session, request, response))
-			{
-				unlockDoc(doc, lockType, reposAccess.getAccessUser());
-				writeJson(rt, response);
-
-				docSysDebugLog("revertDocHistory() localChangeSyncupBeforRevert [" + doc.getPath() + doc.getName() + "] Failed", rt);					
-				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
-				return;		
-			}
-		}
 		
-		//历史版本恢复前可能需要先同步，因此commitId需要在同步之后设置
-		context.commitId = new Date().getTime();
+		
 		revertResult  = revertRealDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context, null, asyncActionList);
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
@@ -5275,6 +5259,17 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	private boolean isLatestCommitEx(Repos repos, String commitId, ReturnAjax rt) {
+		if(isLegacyReposHistory(repos))
+		{
+			String latestRevision = verReposGetLatestReposRevision(repos, true);
+			return latestRevision.equals(commitId);
+		}	
+		
+		String latestCommitId = getLatestCommitId(repos);
+		return latestCommitId.equals(commitId);		
+	}
+
 	private boolean localChangeSyncupBeforRevert(
 			String taskId,
 			Repos repos, 
@@ -5310,19 +5305,16 @@ public class DocController extends BaseController{
 		if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, 2, scanOption) == false)
 		{
 			docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
-			Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
+			Log.debug("localChangeSyncupBeforRevert() syncupScanForDoc_FSM!");	
 			return false;
 		}
 		
-		boolean isLatestCommitCheck = true;
 		if(isLocalChanged(scanOption))
-		{
-			isLatestCommitCheck = false;
-			
+		{	
 			//unlockDoc(doc, lockType, reposAccess.getAccessUser());
-			Log.info("revertDocHistory() 本地有改动！");
+			Log.info("localChangeSyncupBeforRevert() 本地有改动！");
 			
-			docSysDebugLog("revertDocHistory() [" + doc.getPath() + doc.getName() + "] local changed", rt);					
+			docSysDebugLog("localChangeSyncupBeforRevert() [" + doc.getPath() + doc.getName() + "] local changed", rt);					
 			ActionContext contextSyncup = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, repos, doc, null, null);
 			contextSyncup.info = "历史版本恢复 [" + doc.getPath() + doc.getName() + "], 提交本地改动";
 			contextSyncup.commitMsg = contextSyncup.info;
@@ -5334,7 +5326,7 @@ public class DocController extends BaseController{
 			updateCommit(repos, contextSyncup, revision, rt.getDebugLog(), commitActionList);
 			if(revision == null)
 			{
-				docSysDebugLog("revertDocHistory() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
+				docSysDebugLog("localChangeSyncupBeforRevert() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			}
 			else
 			{
@@ -5344,28 +5336,6 @@ public class DocController extends BaseController{
 		}
 		
 		cleanSyncUpTmpFiles(scanOption);
-		
-		//判断是否为最新版本
-		if(isLatestCommitCheck)
-		{
-			if(localEntry.getType() != 0)
-			{
-				String verReposRevision = commitId;
-				if(isLegacyReposHistory(repos) == false)
-				{
-					CommitLog commit = getCommitLogById(repos, commitId);
-					verReposRevision = commit.verReposRevision;
-				}
-				
-				if(verReposRevision != null && verReposRevision.equals(remoteEntry.getRevision()))
-				{
-					docSysDebugLog("revertDocHistory() verReposRevision:" + verReposRevision + " remoteEntry.revision:" + remoteEntry.getRevision(), rt);
-					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-					return false;
-				}
-			}	
-		}
-		
 		return true;
 	}
 
