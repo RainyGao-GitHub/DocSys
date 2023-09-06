@@ -4810,7 +4810,7 @@ public class BaseController  extends BaseFunction{
 				action.commitId, action.commitMsg, action.commitUser);	
 	}
 	
-	private void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo, ArrayList<CommitAction> commitActionList) {		
+	protected void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo, ArrayList<CommitAction> commitActionList) {		
 		updateCommit(
 				repos,
 				context.startTime, context.endTime,

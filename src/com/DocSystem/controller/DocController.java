@@ -39,6 +39,7 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.constants;
+import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
@@ -5215,8 +5216,8 @@ public class DocController extends BaseController{
 		}
 
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, repos, doc, null, null);
-		context.info = "恢复文件历史版本 [" + doc.getPath() + doc.getName() + "]";
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, repos, doc, null, null);
+		context.info = "历史版本恢复 [" + doc.getPath() + doc.getName() + "]";
 		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
 		
@@ -5230,12 +5231,10 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			
 			docSysDebugLog("revertDocHistory() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 		
-		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
-
 		boolean revertResult = false;
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos) == false)
@@ -5253,7 +5252,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 
 				docSysDebugLog("revertDocHistory() fsGetDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);					
-				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 				return;				
 			}
 
@@ -5265,7 +5264,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 				
 				docSysDebugLog("revertDocHistory() verReposGetDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);					
-				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 				return;				
 			}
 			
@@ -5285,7 +5284,7 @@ public class DocController extends BaseController{
 				writeJson(rt, response);
 
 				docSysDebugLog("revertDocHistory() syncupScanForDoc_FSM [" + doc.getPath() + doc.getName() + "] Failed", rt);
-				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 				return;
 			}
 			
@@ -5298,18 +5297,18 @@ public class DocController extends BaseController{
 				Log.info("revertDocHistory() 本地有改动！");
 				
 				docSysDebugLog("revertDocHistory() [" + doc.getPath() + doc.getName() + "] local changed", rt);					
-				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, scanOption.localChangesRootPath, 2, null, null);
+				ActionContext contextSyncup = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, repos, doc, null, null);
+				contextSyncup.info = "历史版本恢复 [" + doc.getPath() + doc.getName() + "]: 提交本地改动";
+				contextSyncup.commitMsg = contextSyncup.info;
+				contextSyncup.commitUser = reposAccess.getAccessUser().getName();
+				contextSyncup.commitId = contextSyncup.startTime;
+				
+				ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
+				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, scanOption.localChangesRootPath, 2, commitActionList, null);
+				updateCommit(repos, contextSyncup, revision, rt.getDebugLog(), commitActionList);
 				if(revision == null)
 				{
 					docSysDebugLog("revertDocHistory() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
-					
-					//unlockDoc(doc, lockType, reposAccess.getAccessUser());
-					//docSysErrorLog("本地文件有改动", rt);
-					//writeJson(rt, response);						
-	
-					//docSysDebugLog("revertDocHistory() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
-					//addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
-					//return;
 				}
 				else
 				{
@@ -5332,13 +5331,15 @@ public class DocController extends BaseController{
 						unlockDoc(doc, lockType, reposAccess.getAccessUser());
 						writeJson(rt, response);
 							
-						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 						return;
 					}
 				}	
 			}
 		}
 		
+		//历史版本恢复前可能需要先同步，因此commitId需要在同步之后设置
+		context.commitId = new Date().getTime();
 		revertResult  = revertRealDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context, null, asyncActionList);
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
@@ -5348,11 +5349,11 @@ public class DocController extends BaseController{
 		if(revertResult)
 		{
 			executeCommonActionListAsync(asyncActionList, rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 	}
 	
@@ -5437,7 +5438,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			
 			docSysDebugLog("revertDocHistory() lockDoc [" + doc.getPath() + doc.getName() + "] Failed!", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 			return;
 		}
 
@@ -5454,7 +5455,7 @@ public class DocController extends BaseController{
 				unlockDoc(doc, lockType, reposAccess.getAccessUser());
 				writeJson(rt, response);
 
-				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 				return;				
 			}
 		}
@@ -5467,11 +5468,11 @@ public class DocController extends BaseController{
 		if(revertResult)
 		{
 			executeCommonActionListAsync(asyncActionList, rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复",  taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));
 		}
 		else
 		{
-			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "恢复文件历史版本",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
 	}
 
