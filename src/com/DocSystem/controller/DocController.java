@@ -5246,16 +5246,6 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			if(false == localChangeSyncupBeforRevert(taskId, repos, doc, reposAccess, commitId, rt, session, request, response))
-			{
-				unlockDoc(doc, lockType, reposAccess.getAccessUser());
-				writeJson(rt, response);
-
-				docSysDebugLog("revertDocHistory() localChangeSyncupBeforRevert [" + doc.getPath() + doc.getName() + "] Failed", rt);					
-				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
-				return;		
-			}
-			
 			if(isLatestCommitEx(repos, doc, commitId, rt) == true)
 			{
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
@@ -5267,6 +5257,17 @@ public class DocController extends BaseController{
 				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 				return;
 			}
+			
+			if(false == localChangeSyncupBeforRevert(taskId, repos, doc, reposAccess, commitId, rt, session, request, response))
+			{
+				unlockDoc(doc, lockType, reposAccess.getAccessUser());
+				writeJson(rt, response);
+
+				docSysDebugLog("revertDocHistory() localChangeSyncupBeforRevert [" + doc.getPath() + doc.getName() + "] Failed", rt);					
+				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+				return;		
+			}
+
 		}
 		
 		//历史版本恢复前可能需要先同步，因此commitId需要在同步之后设置
@@ -5303,10 +5304,10 @@ public class DocController extends BaseController{
 		{
 			return false;
 		}
-		
+
+		Log.debug("isLatestCommitEx() targetCommit:" + commit.commitId + " latestDocCommit:" + latestDocCommit.commitId);
 		if(commit.commitId >= latestDocCommit.commitId)
 		{
-			Log.debug("isLatestCommitEx() targetCommit:" + commit.commitId + " latestDocCommit:" + latestDocCommit.commitId);
 			return true;				
 		}
 
@@ -5320,10 +5321,10 @@ public class DocController extends BaseController{
 		{
 			return false;
 		}
-		
+
+		Log.debug("isLatestVerReposCommit() targetCommit:" + commit.getCommitTime() + " latestDocCommit:" + latestDocCommit.getCommitTime());
 		if(commit.getCommitTime() >= latestDocCommit.getCommitTime())
 		{
-			Log.debug("isLatestCommitEx() targetCommit:" + commit.getCommitTime() + " latestDocCommit:" + latestDocCommit.getCommitTime());
 			return true;				
 		}
 
