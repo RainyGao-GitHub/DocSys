@@ -135,10 +135,10 @@ public class DocController extends BaseController{
 		
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
-			commitMsg = "新增文件 [" + path + name + "]";
+			commitMsg = "新增 [" + path + name + "]";
 		}
 		saveDocToRepos(
-				"addDoc", "addDoc", "新增文件", taskId,
+				"addDoc", "addDoc", "新增", taskId,
 				repos, path, name, 0L, type, null,
 				null,
 				null,
@@ -196,7 +196,7 @@ public class DocController extends BaseController{
 			}
 			
 			saveDocToDisk(
-					"addDocRS", "addDocRS", "新增文件", taskId,
+					"addDocRS", "addDocRS", "新增", taskId,
 					remoteDirectory, path, name, 0L, type, null,
 					null,
 					null,
@@ -223,7 +223,7 @@ public class DocController extends BaseController{
 		{
 			writeJson(rt, response);
 			docSysDebugLog("addDocRS() add doc [" + path + name + "] Failed", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 			return;
 		}
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
@@ -231,10 +231,10 @@ public class DocController extends BaseController{
 		
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
-			commitMsg = "新增文件 [" + path + name + "]";
+			commitMsg = "新增 [" + path + name + "]";
 		}
 		saveDocToRepos(
-				"addDocRS", "addDocRS", "新增文件", taskId,
+				"addDocRS", "addDocRS", "新增", taskId,
 				repos, path, name, 0L, type, null,
 				null,
 				null,
@@ -278,7 +278,7 @@ public class DocController extends BaseController{
 		}
 		
 		deleteDocFromRepos(
-				"deleteDoc", "deleteDoc", "删除文件", taskId,
+				"deleteDoc", "deleteDoc", "删除", taskId,
 				repos, path, name, null, type, null,
 				null,
 				null,
@@ -323,12 +323,12 @@ public class DocController extends BaseController{
 				docSysDebugLog("deleteDocRS remoteDirectory is null", rt);
 				rt.setError("服务器路径不能为空！");
 				writeJson(rt, response);			
-				addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
+				addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;				
 			}
 			
 			deleteDocFromDisk(
-					"deleteDocRS", "deleteDocRS", "删除文件", taskId,
+					"deleteDocRS", "deleteDocRS", "删除", taskId,
 					remoteDirectory, path, name, null, type, null,
 					null,
 					null,
@@ -351,7 +351,7 @@ public class DocController extends BaseController{
 		repos.disableRemoteAction = true;
 		
 		deleteDocFromRepos(
-				"deleteDocRS", "deleteDocRS", "删除文件", taskId,
+				"deleteDocRS", "deleteDocRS", "删除", taskId,
 				repos, path, name, null, type, null,
 				null,
 				null,
@@ -412,27 +412,27 @@ public class DocController extends BaseController{
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 	
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
-			commitMsg = "重命名 " + path + name + " 为 " + dstName;
+			commitMsg = "重命名 [" + path + name + "] 为 [" + path + dstName + "]";
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		Doc srcDoc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, null, type, true, localRootPath, localVRootPath, null, null);
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, "失败", repos, srcDoc, null, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名", taskId, "失败", repos, srcDoc, null, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		
@@ -445,13 +445,13 @@ public class DocController extends BaseController{
 
 			writeJson(rt, response);
 			
-			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));			
+			addSystemLog(request, reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));			
 			return;
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
 		
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名文件", taskId, repos, srcDoc, dstDoc, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "renameDoc", "renameDoc", "重命名", taskId, repos, srcDoc, dstDoc, null);
 		context.info = "重命名 [" + srcDoc.getPath() + srcDoc.getName() + "] 为 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
@@ -519,7 +519,7 @@ public class DocController extends BaseController{
 		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), srcParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 
@@ -527,7 +527,7 @@ public class DocController extends BaseController{
 		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), dstParentDoc, reposAccess.getAuthMask(), rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));	
 			return;
 		}
 		
@@ -545,7 +545,7 @@ public class DocController extends BaseController{
 		if(checkUserAccessPwd(repos, srcDoc, session, rt) == false)
 		{
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, "失败", repos, srcDoc, null, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, srcDoc, null, buildSystemLogDetailContent(rt));	
 
 			return;
 		}
@@ -557,14 +557,14 @@ public class DocController extends BaseController{
 		{
 			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
 			writeJson(rt, response);	
-			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
 
 			return;
 		}
 		srcDoc.setRevision(srcDbDoc.getRevision());
 				
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动文件", taskId, repos, srcDoc, dstDoc, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, repos, srcDoc, dstDoc, null);
 		context.info = "移动 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
@@ -655,12 +655,12 @@ public class DocController extends BaseController{
 		
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
-			commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
+			commitMsg = "复制 [" + srcPath + srcName + "] 到 [" + dstPath + dstName + "]";
 		}
 		
 		String commitUser = reposAccess.getAccessUser().getName();
 				
-		//检查用户是否有目标目录权限新增文件
+		//检查用户是否有目标目录权限新增
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
@@ -669,7 +669,7 @@ public class DocController extends BaseController{
 		Doc dstDoc = buildBasicDoc(reposId, null, dstPid, reposPath, dstPath, dstName, null, type, true, localRootPath, localVRootPath, null, null);
 
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制文件", taskId, repos, srcDoc, dstDoc, null);
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDoc", "copyDoc", "复制", taskId, repos, srcDoc, dstDoc, null);
 		context.info = "复制 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = reposAccess.getAccessUser().getName();
@@ -745,7 +745,7 @@ public class DocController extends BaseController{
 				docSysDebugLog("copyDocRS remoteDirectory is null", rt);
 				rt.setError("服务器路径不能为空！");
 				writeJson(rt, response);			
-				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
+				addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;				
 			}
 			
@@ -756,7 +756,7 @@ public class DocController extends BaseController{
 					docSysDebugLog("copyDocRS() move " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！", rt);
 					rt.setError("移动失败");
 					writeJson(rt, response);			
-					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
+					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 					return;
 				}				
 			}
@@ -767,7 +767,7 @@ public class DocController extends BaseController{
 					docSysDebugLog("copyDocRS() copy " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "失败！", rt);
 					rt.setError("复制失败");
 					writeJson(rt, response);			
-					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
+					addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制", taskId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 					return;
 				}
 			}
@@ -775,7 +775,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			
 			docSysDebugLog("copyDocRS() copy " + remoteDirectory + srcPath + srcName + " to " + remoteDirectory + dstPath + dstName + "成功！", rt);
-			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, "成功", null, null, null, buildSystemLogDetailContent(rt));
+			addSystemLog(request, reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制", taskId, "成功", null, null, null, buildSystemLogDetailContent(rt));
 			return;			
 		}
 		
@@ -796,16 +796,16 @@ public class DocController extends BaseController{
 		{
 			if(move)
 			{
-				commitMsg = "移动 " + srcPath + srcName + " 到 " + dstPath + dstName;				
+				commitMsg = "移动 [" + srcPath + srcName + "] 到 [" + dstPath + dstName + "]";				
 			}
 			else
 			{
-				commitMsg = "复制 " + srcPath + srcName + " 到 " + dstPath + dstName;
+				commitMsg = "复制 [" + srcPath + srcName + "] 到 [" + dstPath + dstName + "]";
 			}
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		
-		//检查用户是否有目标目录权限新增文件
+		//检查用户是否有目标目录权限新增
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
@@ -813,10 +813,10 @@ public class DocController extends BaseController{
 		Doc dstDoc = buildBasicDoc(reposId, null, null, reposPath, dstPath, dstName, null, null, true, localRootPath, localVRootPath, null, null);
 		
 		//Build ActionContext
-		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制文件", taskId, repos, srcDoc, dstDoc, null);		
+		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "copyDocRS", "copyDocRS", "复制", taskId, repos, srcDoc, dstDoc, null);		
 		if(move)
 		{
-			context.eventName = "移动文件";	
+			context.eventName = "移动";	
 			context.info = "移动 [" + srcDoc.getPath() + srcDoc.getName() + "] 到 [" + dstDoc.getPath() + dstDoc.getName() + "]";
 		}
 		else

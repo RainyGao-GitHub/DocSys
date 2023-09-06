@@ -22610,7 +22610,7 @@ public class BaseController  extends BaseFunction{
 
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
-			commitMsg = "删除 " + doc.getPath() + doc.getName();
+			commitMsg = "删除 [" + doc.getPath() + doc.getName() + "]";
 		}
 		String commitUser = reposAccess.getAccessUser().getName();
 		
