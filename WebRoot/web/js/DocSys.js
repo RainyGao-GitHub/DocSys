@@ -66,6 +66,12 @@ function buildRequestParamStrForDoc(docInfo)
 		andFlag = "&";
 	}
 	
+	if(docInfo.docType)
+	{
+		urlParamStr += andFlag + "docType=" + base64_encode(docInfo.docType);
+		andFlag = "&";	
+	}
+	
 	if(docInfo.isZip)
 	{
 		urlParamStr += andFlag + "isZip=" + docInfo.isZip;
@@ -105,6 +111,7 @@ function buildRequestParamStrForDoc(docInfo)
 		urlParamStr += andFlag + "shareId=" + docInfo.shareId;
 		andFlag = "&";
 	}
+	
 	return urlParamStr;
 }
 
@@ -146,6 +153,12 @@ function getDocInfoFromRequestParamStr()
 		name = "";
 	}
 	docInfo.name = name;
+	
+	var docType = getQueryString("docType");
+	if(docType && docType != null)
+	{
+		docInfo.docType = docType;
+	}
 	
 	var isZip = getQueryString("isZip");
 	if(isZip && isZip != null)
@@ -1367,6 +1380,7 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 	
 	//copy do to docInfo
 	var docInfo = copyDocInfo(doc, shareId);
+	console.log("openDoc() docInfo:", docInfo);
 	
 	if(showUnknownFile && (showUnknownFile == true || showUnknownFile == "showUnknownFile"))
 	{

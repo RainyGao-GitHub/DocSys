@@ -65,7 +65,10 @@
 			}
 			// 获取对话框传递过来的数据
 			_docInfo = artDialog2.config.data;
-			_docInfo.docType = 1;	//RealDoc
+			if(_docInfo.docType == undefined)
+			{
+				_docInfo.docType = 1;	//RealDoc
+			}
 			
 			console.log("CommonEditor initForArtDialog() _docInfo:", _docInfo);
 	
@@ -82,7 +85,10 @@
 			console.log("CommonEditor initForNewPage()");
 			
 		    _docInfo = getDocInfoFromRequestParamStr();
-		    _docInfo.docType = 1;	//RealDoc
+		    if(_docInfo.docType == undefined)
+		    {
+		    	_docInfo.docType = 1;	//RealDoc
+		    }
 		    
 		    document.title = _docInfo.name;
 		    
@@ -101,8 +107,11 @@
 			console.log("CommonEditor initForBootstrapDialog()");
 
 			_docInfo = Input_doc;		
-			_docInfo.docType = 1;	//RealDoc
-		    
+			if(_docInfo.docType == undefined)
+			{
+				_docInfo.docType = 1;	//RealDoc
+			}
+			
 			console.log("CommonEditor initForBootstrapDialog() _docInfo:", _docInfo);
 			
 			if (!_docInfo.fileSuffix) {
@@ -135,6 +144,7 @@
 	        }
 		}
 		
+		//For VDoc
 		function appReady(){
 			if(_isDynamicMode)
 			{
@@ -153,6 +163,7 @@
 			}
 		}
 		
+		//For VDoc
 		var openDocument = function(data){
 			_docInfo = data.doc;
 			if(checkDocInfo(_docInfo))
@@ -168,6 +179,7 @@
 		    }
 		};
 		
+		//For VDoc
 		function checkDocInfo(doc)
 		{
 			if(doc == undefined)
@@ -184,6 +196,7 @@
 			return true;
 		}
 		
+		//For VDoc
 	    var _postMessage = function(msg) {
 	    	if(_isDynamicMode)
 	    	{
