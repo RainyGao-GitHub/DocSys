@@ -7415,7 +7415,7 @@ public class BaseController  extends BaseFunction{
 
 		if(commitId == null)
 		{
-			return getLatestCommit(repos);
+			return getLatestCommit(repos, null);
 		}
 		
 		//根据commitId
@@ -7433,9 +7433,9 @@ public class BaseController  extends BaseFunction{
 		return commit;
 	}
 
-	protected CommitLog getLatestCommit(Repos repos) {
-		//获取最近的10次提交
-		List<CommitLog> list = channel.queryCommitLog(repos, null, 1, null, null);
+	protected CommitLog getLatestCommit(Repos repos, Doc doc)
+	{
+		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 1, null, null);
 		if(list == null || list.size() == 0)
 		{
 			Log.debug("getLatestCommitId() failed to get the latest commitLog");
@@ -7443,11 +7443,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return list.get(0);
-	}
-
-	protected String getLatestCommitId(Repos repos) {
-		CommitLog commit = getLatestCommit(repos);
-		return commit.commitId + "";
 	}
 
 	private static String getLocalVerReposPathForDocHistory(Repos repos, RemoteStorageConfig remote)

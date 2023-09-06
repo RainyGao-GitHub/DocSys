@@ -178,9 +178,14 @@ public interface Channel {
 
 	void updateCommit(Repos repos, CommitLog commit);
 	
+	//精确查询提交历史: 通常指定commitId，来获取详细的commitLog信息
 	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit);
-
+	
+	//查询仓库提交历史: 只支持仓库commitLog索引数据库，因此不支持查询指定文件或目录
 	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit, int maxLogNum, String startCommitId, String endCommitId);
+	
+	//查询文件/目录/仓库提交历史: 不指定文件或目录信息，则查询到的时仓库的提交历史
+	List<CommitLog> queryCommitLogForDoc(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId); 
 
 	List<LogEntry> queryCommitHistory(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId);
 
