@@ -43,6 +43,7 @@ import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LargeFileScanTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
@@ -5244,97 +5245,14 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			Doc localEntry = fsGetDoc(repos, doc);
-			if(localEntry == null)
+			if(false == localChangeSyncupBeforRevert(taskId, repos, doc, reposAccess, commitId, rt, session, request, response))
 			{
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
 				unlockDoc(doc, lockType, reposAccess.getAccessUser());
 				writeJson(rt, response);
 
-				docSysDebugLog("revertDocHistory() fsGetDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);					
-				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
-				return;				
-			}
-
-			Doc remoteEntry = verReposGetDocEx(repos, doc, null);
-			if(remoteEntry == null)
-			{
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
-				unlockDoc(doc, lockType, reposAccess.getAccessUser());
-				writeJson(rt, response);
-				
-				docSysDebugLog("revertDocHistory() verReposGetDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);					
-				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
-				return;				
-			}
-			
-			Doc dbDoc = dbGetDoc(repos, doc, false);
-			
-			ScanOption scanOption = new ScanOption();
-			scanOption.scanType = 2; //localChanged or dbDocRevisionIsNullAsLocalChange, remoteNotChecked
-			scanOption.scanTime = new Date().getTime();
-			scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + scanOption.scanTime + "/";
-			scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-remoteChanges-" + scanOption.scanTime + "/";
-			
-			if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, 2, scanOption) == false)
-			{
-				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
-				Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
-				unlockDoc(doc, lockType, reposAccess.getAccessUser());
-				writeJson(rt, response);
-
-				docSysDebugLog("revertDocHistory() syncupScanForDoc_FSM [" + doc.getPath() + doc.getName() + "] Failed", rt);
-				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
-				return;
-			}
-			
-			boolean isLatestCommitCheck = true;
-			if(isLocalChanged(scanOption))
-			{
-				isLatestCommitCheck = false;
-				
-				//unlockDoc(doc, lockType, reposAccess.getAccessUser());
-				Log.info("revertDocHistory() 本地有改动！");
-				
-				docSysDebugLog("revertDocHistory() [" + doc.getPath() + doc.getName() + "] local changed", rt);					
-				ActionContext contextSyncup = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, repos, doc, null, null);
-				contextSyncup.info = "历史版本恢复 [" + doc.getPath() + doc.getName() + "]: 提交本地改动";
-				contextSyncup.commitMsg = contextSyncup.info;
-				contextSyncup.commitUser = reposAccess.getAccessUser().getName();
-				contextSyncup.commitId = contextSyncup.startTime;
-				
-				ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
-				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, scanOption.localChangesRootPath, 2, commitActionList, null);
-				updateCommit(repos, contextSyncup, revision, rt.getDebugLog(), commitActionList);
-				if(revision == null)
-				{
-					docSysDebugLog("revertDocHistory() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
-				}
-				else
-				{
-					//如果版本仓库是远程仓库，则推送到远程仓库
-					verReposPullPush(repos, true, rt);
-				}
-			}
-			
-			cleanSyncUpTmpFiles(scanOption);
-			
-			//判断是否为最新版本
-			if(isLatestCommitCheck)
-			{
-				if(localEntry.getType() != 0)
-				{
-					if(isLatestCommitEx(repos, commitId, remoteEntry))
-					{
-						docSysDebugLog("revertDocHistory() commitId:" + commitId + " remoteEntry.revision:" + remoteEntry.getRevision(), rt);
-						docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
-						unlockDoc(doc, lockType, reposAccess.getAccessUser());
-						writeJson(rt, response);
-							
-						addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
-						return;
-					}
-				}	
+				docSysDebugLog("revertDocHistory() localChangeSyncupBeforRevert [" + doc.getPath() + doc.getName() + "] Failed", rt);					
+				addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+				return;		
 			}
 		}
 		
@@ -5357,6 +5275,100 @@ public class DocController extends BaseController{
 		}
 	}
 	
+	private boolean localChangeSyncupBeforRevert(
+			String taskId,
+			Repos repos, 
+			Doc doc,
+			ReposAccess reposAccess,
+			String commitId,
+			ReturnAjax rt,
+			HttpSession session, HttpServletRequest request,HttpServletResponse response) 
+	{
+		Doc localEntry = fsGetDoc(repos, doc);
+		if(localEntry == null)
+		{
+			docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取本地文件信息失败!",rt);
+			return false;		
+		}
+
+		//TODO: 注意remoteEntry是指在版本仓库里的信息，所以要直接用verReposGetDoc
+		Doc remoteEntry = verReposGetDoc(repos, doc, null);
+		if(remoteEntry == null)
+		{
+			docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
+			return false;				
+		}
+		
+		Doc dbDoc = dbGetDoc(repos, doc, false);
+		
+		ScanOption scanOption = new ScanOption();
+		scanOption.scanType = 2; //localChanged or dbDocRevisionIsNullAsLocalChange, remoteNotChecked
+		scanOption.scanTime = new Date().getTime();
+		scanOption.localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + scanOption.scanTime + "/";
+		scanOption.remoteChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-remoteChanges-" + scanOption.scanTime + "/";
+		
+		if(syncupScanForDoc_FSM(repos, doc, dbDoc, localEntry,remoteEntry, reposAccess.getAccessUser(), rt, 2, scanOption) == false)
+		{
+			docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 同步状态获取失败!",rt);
+			Log.debug("revertDocHistory() syncupScanForDoc_FSM!");	
+			return false;
+		}
+		
+		boolean isLatestCommitCheck = true;
+		if(isLocalChanged(scanOption))
+		{
+			isLatestCommitCheck = false;
+			
+			//unlockDoc(doc, lockType, reposAccess.getAccessUser());
+			Log.info("revertDocHistory() 本地有改动！");
+			
+			docSysDebugLog("revertDocHistory() [" + doc.getPath() + doc.getName() + "] local changed", rt);					
+			ActionContext contextSyncup = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复", taskId, repos, doc, null, null);
+			contextSyncup.info = "历史版本恢复 [" + doc.getPath() + doc.getName() + "], 提交本地改动";
+			contextSyncup.commitMsg = contextSyncup.info;
+			contextSyncup.commitUser = reposAccess.getAccessUser().getName();
+			contextSyncup.commitId = contextSyncup.startTime;
+			
+			ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
+			String revision = verReposDocCommit(repos, false, doc, contextSyncup.commitMsg, contextSyncup.commitUser, rt, scanOption.localChangesRootPath, 2, commitActionList, null);
+			updateCommit(repos, contextSyncup, revision, rt.getDebugLog(), commitActionList);
+			if(revision == null)
+			{
+				docSysDebugLog("revertDocHistory() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
+			}
+			else
+			{
+				//如果版本仓库是远程仓库，则推送到远程仓库
+				verReposPullPush(repos, true, rt);
+			}
+		}
+		
+		cleanSyncUpTmpFiles(scanOption);
+		
+		//判断是否为最新版本
+		if(isLatestCommitCheck)
+		{
+			if(localEntry.getType() != 0)
+			{
+				String verReposRevision = commitId;
+				if(isLegacyReposHistory(repos) == false)
+				{
+					CommitLog commit = getCommitLogById(repos, commitId);
+					verReposRevision = commit.verReposRevision;
+				}
+				
+				if(verReposRevision != null && verReposRevision.equals(remoteEntry.getRevision()))
+				{
+					docSysDebugLog("revertDocHistory() verReposRevision:" + verReposRevision + " remoteEntry.revision:" + remoteEntry.getRevision(), rt);
+					docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
+					return false;
+				}
+			}	
+		}
+		
+		return true;
+	}
+
 	private void revertVirtualDocHistory(
 			String taskId,
 			Repos repos,
@@ -5474,10 +5486,6 @@ public class DocController extends BaseController{
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "revertDocHistory", "revertDocHistory", "历史版本恢复",  taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));	
 		}
-	}
-
-	private boolean isLatestCommitEx(Repos repos, String commitId, Doc remoteEntry) {
-		return commitId.equals(remoteEntry.getRevision());
 	}
 
 	/****************   set  Doc RemoteStorage Ignore ******************/

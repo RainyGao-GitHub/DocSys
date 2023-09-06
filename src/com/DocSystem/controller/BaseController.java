@@ -3654,7 +3654,7 @@ public class BaseController  extends BaseFunction{
 	{			
 		if(commitMsg == null)
 		{
-			commitMsg = doc.getPath() + doc.getName() + " 回退至版本:" + commitId;
+			commitMsg = "历史版本恢复 [" + doc.getPath() + doc.getName() + "] 至版本:" + commitId;
 		}
 
 		//将历史版本CheckOut到本地
