@@ -3662,7 +3662,7 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos)) //文件管理系统
 		{	
 			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, true, true, downloadList);
-			insertCommit(repos, context);
+			insertCommit(repos, context, null, null);
 			//TODO: revert操作的commitEntry会在updateCommit时写入
 			//insertCommitEntry(repos, doc, context, "revert", null, login_user);
 		}
@@ -3923,7 +3923,7 @@ public class BaseController  extends BaseFunction{
 			return 1;
 		}
 		
-		insertCommit(repos, context);
+		insertCommit(repos, context, null, null);
 		insertCommitEntry(repos, doc, context, "add", null, login_user);
 
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -4264,7 +4264,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
-		insertCommit(repos, context);
+		insertCommit(repos, context, null, null);
 		insertCommitEntry(repos, doc, context, realCommitAction, null, login_user);
 
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -4501,7 +4501,7 @@ public class BaseController  extends BaseFunction{
 		}
 				
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
-		insertCommit(repos, context);
+		insertCommit(repos, context, null, null);
 		//TODO: delete操作的commitEntry会在updateCommit时写入
 		//insertCommitEntry(repos, doc, context, "delete", null, login_user);
 
@@ -4728,9 +4728,10 @@ public class BaseController  extends BaseFunction{
 			Repos repos, 
 			Long startTime, Long endTime, 
 			Integer userId, String userName,
-			Long commitId, String commitMsg, String commitUsers) 
+			Long commitId, String commitMsg, String commitUsers,
+			String revision, String errorInfo) 
 	{
-		Log.debug("insertCommit() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers);
+		Log.debug("insertCommit() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers + " revision:" + revision + " errorInfo:" + errorInfo);
 
 		CommitLog commit = new CommitLog();
 		commit.startTime = startTime;
@@ -4747,6 +4748,16 @@ public class BaseController  extends BaseFunction{
 		commit.reposName = repos.getName();		
 		
 		commit.verReposInfo = buildVerReposInfo(repos);
+		if(revision == null)
+		{
+			commit.verReposStatus = -1;
+			commit.verReposErrorInfo = errorInfo;
+		}
+		else
+		{
+			commit.verReposStatus = 200;	
+			commit.verReposRevision = revision;
+		}
 		
 		commit.id = buildUniqueIdForCommitLog(commit);
 		channel.insertCommit(repos, commit);
@@ -4792,12 +4803,13 @@ public class BaseController  extends BaseFunction{
 		channel.updateCommit(repos, commit);
 	}
 	
-	private void insertCommit(Repos repos, ActionContext context) {
+	private void insertCommit(Repos repos, ActionContext context, String revision, String errorInfo) {
 		insertCommit(
 				repos,  
 				context.startTime, null,
 				context.user.getId(), context.user.getName(),
-				context.commitId, context.commitMsg, context.commitUser);	
+				context.commitId, context.commitMsg, context.commitUser,
+				revision, errorInfo);	
 	}
 	
 	private void insertCommit(Repos repos, FolderUploadAction action) {
@@ -4805,7 +4817,8 @@ public class BaseController  extends BaseFunction{
 				repos,  
 				action.startTime, null,
 				action.user.getId(), action.user.getName(),
-				action.commitId, action.commitMsg, action.commitUser);	
+				action.commitId, action.commitMsg, action.commitUser,
+				null, null);	
 	}
 	
 	protected void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo, ArrayList<CommitAction> commitActionList) {		
@@ -6018,7 +6031,7 @@ public class BaseController  extends BaseFunction{
 		
 		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
-		insertCommit(repos, context);
+		insertCommit(repos, context, null, null);
 		//TODO: syncup操作的commitEntry会在updateCommit时写入
 		//insertCommitEntry(repos, doc, context, "syncup", null, login_user);
 		
@@ -8466,7 +8479,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
-		insertCommit(repos, context);
+		insertCommit(repos, context, null, null);
 		insertCommitEntry(repos, doc, context, "modify", null, login_user);
 
 		//需要将文件Commit到版本仓库上去
@@ -8703,7 +8716,7 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
-		insertCommit(repos, context);
+		insertCommit(repos, context, null, null);
 		//TODO: move操作的commitEntry会在updateCommit时写入
 		//insertCommitEntry(repos, srcDoc, context, "delete", 1, login_user);
 		//insertCommitEntry(repos, dstDoc, context, "add", 0, login_user);
@@ -8830,7 +8843,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//TODO: insertCommitEntry
-		insertCommit(repos, context);
+		insertCommit(repos, context, null, null);
 		//TODO: copy操作的commitEntry会在updateCommit时写入
 		//insertCommitEntry(repos, srcDoc, context, "noChange", 1, login_user);
 		//insertCommitEntry(repos, dstDoc, context, "add", 0, login_user);
@@ -8990,7 +9003,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
-		insertCommit(repos, context);
+		insertCommit(repos, context, null, null);
 		insertCommitEntry(repos, doc, context, "add", null, login_user);
 		
 		//get RealDoc Full ParentPath
@@ -9108,7 +9121,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(saveRealDocContentEx(repos, doc, rt) == true)
 		{
-			insertCommit(repos, context);
+			insertCommit(repos, context, null, null);
 			insertCommitEntry(repos, doc, context, "modify", null, login_user);
 			
 			doc.setLatestEditor(login_user.getId());
