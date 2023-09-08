@@ -3645,7 +3645,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean revertRealDocHistory(
 			Repos repos, Doc doc, 
-			String commitId, String commitMsg, String commitUser, 
+			String commitId, String preCommitId, String commitMsg, String commitUser, 
 			User login_user, 
 			ReturnAjax rt,
 			ActionContext context,
@@ -3661,7 +3661,7 @@ public class BaseController  extends BaseFunction{
 		List<Doc> successDocList = null;
 		if(isFSM(repos)) //文件管理系统
 		{	
-			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, true, true, downloadList);
+			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, preCommitId, true, downloadList);
 			insertCommit(repos, context, null, null);
 			//TODO: revert操作的commitEntry会在updateCommit时写入
 			//insertCommitEntry(repos, doc, context, "revert", null, login_user);
@@ -3717,7 +3717,7 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean revertVirtualDocHistory(Repos repos, Doc doc, String commitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, 
+	protected boolean revertVirtualDocHistory(Repos repos, Doc doc, String commitId, String preCommitId, String commitMsg, String commitUser, User login_user, ReturnAjax rt, 
 			HashMap<String, String> downloadList,	//if not null, only files in this hashMap need to be reverted 
 			List<CommonAction> asyncActionList) 	//actions which need to execute async after this function
 	{			
@@ -3727,7 +3727,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//将历史版本CheckOut到本地
-		List<Doc> successDocList = verReposCheckOut(repos, true, doc, null, null, commitId, true, true, downloadList);		
+		List<Doc> successDocList = verReposCheckOut(repos, true, doc, null, null, commitId, preCommitId, true, downloadList);		
 		if(successDocList == null || successDocList.size() == 0)
 		{
 			docSysDebugLog("未找到需要恢复的文件！",rt);
@@ -12043,7 +12043,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	
-	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String tmpLocalRootPath, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
+	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, String tmpLocalRootPath, String localParentPath, String targetName, String commitId, String preCommitId, boolean force, HashMap<String,String> downloadList) 
 	{
 		if(isLegacyReposHistory(repos))
 		{
@@ -12062,7 +12062,7 @@ public class BaseController  extends BaseFunction{
 				targetName = doc.getName();
 			}
 
-			return verReposCheckOut(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, commitId, force, auto, downloadList);
+			return verReposCheckOut(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, commitId, preCommitId, force, downloadList);
 		}
 		
 		CommitLog commit = getCommitLogById(repos, commitId);
@@ -12145,20 +12145,20 @@ public class BaseController  extends BaseFunction{
 	 * verReposCheckOut
 	 * 参数：
 	 * 	force: 如果本地target文件存在，false则跳过，否则强制替换
-	 *  auto: 如果CommitId对应的是删除操作，自动checkOut上删除前的版本（通过checkPath来确定是否是删除操作，但也有可能只是通过移动和复制的相关历史，那么往前追溯可能是有问题的） 
+	 *  preCommitId: 如果设置了preCommitId, 那么当前CommitId对应Entry不存在，则从preCommitId上获取entry
 	 */
-	protected List<Doc> verReposCheckOut(Repos repos, boolean convert, Doc doc, String localParentPath, String targetName, String commitId, boolean force, boolean auto, HashMap<String,String> downloadList) 
+	protected List<Doc> verReposCheckOut(Repos repos, boolean convert, Doc doc, String localParentPath, String targetName, String commitId, String preCommitId, boolean force, HashMap<String,String> downloadList) 
 	{
 		doc = docConvert(doc, convert);
 		
 		int verCtrl = getVerCtrl(repos, doc);
 		if(verCtrl == 1)
 		{
-			return svnCheckOut(repos, doc, localParentPath, targetName, commitId, force, auto, downloadList);		
+			return svnCheckOut(repos, doc, localParentPath, targetName, commitId, preCommitId, force, downloadList);		
 		}
 		else if(verCtrl == 2)
 		{
-			return gitCheckOut(repos, doc, localParentPath, targetName, commitId, force, auto, downloadList);
+			return gitCheckOut(repos, doc, localParentPath, targetName, commitId, preCommitId, force, downloadList);
 		}
 		return null;
 	}
@@ -12196,7 +12196,7 @@ public class BaseController  extends BaseFunction{
 		return doc;
 	}
 
-	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,String revision, boolean force, boolean auto, HashMap<String, String> downloadList)
+	protected List<Doc> svnCheckOut(Repos repos, Doc doc, String localParentPath,String targetName,String revision, String preRevision, boolean force, HashMap<String, String> downloadList)
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -12216,19 +12216,13 @@ public class BaseController  extends BaseFunction{
     	else if(type == 0)
     	{
     		Log.debug("svnCheckOut() " + entryPath + " not exists for revision:" + revision);
-    		if(auto == false)
+    		if(preRevision == null || preRevision.isEmpty())
     		{
         		return null;
     		}
 
-    		String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
-    		if(preCommitId == null)
-    		{
-        		Log.debug("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
-    			return null;
-    		}
-    		revision = preCommitId;
-    		Log.debug("svnCheckOut() try to chekout " + entryPath + " at revision:" + revision);
+    		revision = preRevision;
+    		Log.debug("svnCheckOut() try to chekout " + entryPath + " at preRevision:" + revision);
     	}
     	else
     	{
@@ -12239,26 +12233,20 @@ public class BaseController  extends BaseFunction{
 	    		if(verReposUtil.subEntriesIsEmpty(subEntries))
 	    		{
 	    	    	Log.debug("svnCheckOut() 根目录下没有文件 at revision:" + revision);
-	        		if(auto == false)
+	    	    	if(preRevision == null || preRevision.isEmpty())
 	        		{
 	        			return null;
 	        		}
 	        		
-	    	    	String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
-	    	    	if(preCommitId == null)
-	    	    	{
-	    	        	Log.debug("svnCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
-	    	    		return null;
-	    	    	}
-	    	    	revision = preCommitId;
-	    	    	Log.debug("svnCheckOut() try to chekout 根目录 at revision:" + revision);
+	    	    	revision = preRevision;
+	    	    	Log.debug("svnCheckOut() try to chekout 根目录 at preRevision:" + revision);
 	    		}
 	    	}
     	}	
 		return verReposUtil.getEntry(doc, localParentPath, targetName, revision, force, downloadList);
 	}
 	
-	protected List<Doc> gitCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String revision, boolean force, boolean auto, HashMap<String, String> downloadList) 
+	protected List<Doc> gitCheckOut(Repos repos, Doc doc, String localParentPath, String targetName, String revision, String preRevision, boolean force, HashMap<String, String> downloadList) 
 	{
 		boolean isRealDoc = doc.getIsRealDoc();
 		
@@ -12278,19 +12266,13 @@ public class BaseController  extends BaseFunction{
     	else if(type == 0)
     	{
     		Log.debug("gitCheckOut() " + entryPath + " not exists for revision:" + revision);
-    		if(auto == false)
+    		if(preRevision == null || preRevision.isEmpty())
     		{
         		return null;
     		}
 
-    		String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
-    		if(preCommitId == null)
-    		{
-        		Log.debug("gitCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
-    			return null;
-    		}
-    		revision = preCommitId;
-    		Log.debug("gitCheckOut() try to chekout " + entryPath + " at revision:" + revision);
+    		revision = preRevision;
+    		Log.debug("gitCheckOut() try to chekout " + entryPath + " at preRevision:" + revision);
     	}
     	else
     	{
@@ -12301,19 +12283,13 @@ public class BaseController  extends BaseFunction{
 	    		if(verReposUtil.subEntriesIsEmpty(subEntries))
 	    		{
 	    	    	Log.debug("gitCheckOut() 根目录下没有文件 at revision:" + revision);
-	        		if(auto == false)
+	    	    	if(preRevision == null || preRevision.isEmpty())
 	        		{
-	        			return null;
+	    	    		return null;
 	        		}
 	        		
-	    	    	String preCommitId = verReposUtil.getReposPreviousCommmitId(revision);
-	    	    	if(preCommitId == null)
-	    	    	{
-	    	        	Log.debug("gitCheckOut() getPreviousCommmitId for revision:" + revision + " 异常");
-	    	    		return null;
-	    	    	}
-	    	    	revision = preCommitId;
-	    	    	Log.debug("gitCheckOut() try to chekout 根目录 at revision:" + revision);
+	    	    	revision = preRevision;
+	    	    	Log.debug("gitCheckOut() try to chekout 根目录 at preRevision:" + revision);
 	    		}
 	    	}
     	}
