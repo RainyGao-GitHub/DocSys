@@ -2,8 +2,7 @@ package com.DocSystem.entity;
 
 public class ChangedItem 
 {
-	private Integer changeType;
-    
+	private Integer changeType;  //1:ADD 2:DELETE 3: MODIFY 4:MOVE 5:COPY [4 or 5 should never appear]
 	private Integer entryType;
 
     private String path;

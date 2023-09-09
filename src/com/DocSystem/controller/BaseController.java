@@ -3646,22 +3646,36 @@ public class BaseController  extends BaseFunction{
 	protected boolean revertRealDocHistory(
 			Repos repos, Doc doc, 
 			String commitId, String commitMsg, String commitUser, 
+			Integer downloadAll, Integer needDeletedEntry,
 			User login_user, 
 			ReturnAjax rt,
 			ActionContext context,
-			HashMap<String, String> downloadList,	//if not null, only files in this hashMap need to be reverted 
 			List<CommonAction> asyncActionList) 	//actions which need to execute async after this function
 	{			
 		if(commitMsg == null)
 		{
 			commitMsg = "历史版本恢复 [" + doc.getPath() + doc.getName() + "] 至版本:" + commitId;
 		}
+		
+		//根据donwloadAll和needDeleteEntry设置获取downloadList和deletedEntryList
+		HashMap<String, String>  deletedEntryList = null;
+		if(needDeletedEntry != null)
+		{
+			deletedEntryList = new HashMap<String,String>();
+		}
+		HashMap<String, String> downloadList = getEntryListForCheckOut(downloadAll, deletedEntryList);	//if not null, only files in this hashMap need to be reverted 
 
 		//将历史版本CheckOut到本地
 		List<Doc> successDocList = null;
 		if(isFSM(repos)) //文件管理系统
 		{	
 			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, true, downloadList);
+			if(deletedEntryList != null && deletedEntryList.size() > 0)
+			{
+				//checkOut Deleted Entries from previous commit
+				String preCommitId = verReposGetPreviousCommitIdEx(repos, commitId);
+				verReposCheckOutEx(repos, doc, null, null, null, preCommitId, true, deletedEntryList);
+			}
 			insertCommit(repos, context, null, null);
 			//TODO: revert操作的commitEntry会在updateCommit时写入
 			//insertCommitEntry(repos, doc, context, "revert", null, login_user);
@@ -3717,6 +3731,12 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
+	private HashMap<String, String> getEntryListForCheckOut(Integer downloadAll,
+			HashMap<String, String> deletedEntryList) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	protected boolean revertVirtualDocHistory(
 			Repos repos, Doc doc, 
 			String commitId, String commitMsg, String commitUser, 
@@ -21107,7 +21127,7 @@ public class BaseController  extends BaseFunction{
 		if(downloadAll == null || downloadAll == 0)
 		{
 			downloadList  = new HashMap<String,String>();
-			buildDownloadListEx(repos, doc, commitId, downloadList);
+			getEntryListForCheckOut(repos, doc, commitId, downloadList);
 			if(downloadList != null && downloadList.size() == 0)
 			{
 				Log.debug("executeDownloadPrepareTaskForVerReposEntry() there is no changed file for commit:" + commitId);
@@ -21481,11 +21501,11 @@ public class BaseController  extends BaseFunction{
                 TimeUnit.SECONDS);
 	}
 	
-	protected void buildDownloadListEx(Repos repos, Doc doc, String commitId, HashMap<String, String> downloadList) 
+	protected void getEntryListForCheckOutEx(Repos repos, Doc doc, String commitId, HashMap<String, String> changedEntries, HashMap<String, String> deletedEntries) 
 	{
 		if(isLegacyReposHistory(repos))
 		{
-			buildDownloadList(repos, true, doc, commitId, downloadList);
+			getEntryListForCheckOut(repos, true, doc, commitId, changedEntries, deletedEntries);
 			return;
 		}
 		
@@ -21496,22 +21516,44 @@ public class BaseController  extends BaseFunction{
 		{
 			CommitEntry changeItem = changedItemList.get(i);
 			String changeItemEntryPath = changeItem.path + changeItem.name;
-			if(changeItemEntryPath.contains(docEntryPath))
+			if(changeItem.realCommitAction.equals("delete"))	//this is delete entry
 			{
-				downloadList.put(changeItemEntryPath, changeItemEntryPath);
-				Log.debug("buildDownloadList Add [" +changeItemEntryPath + "]");
+				if(deletedEntries != null)
+				{
+					if(changeItemEntryPath.contains(docEntryPath))
+					{
+						deletedEntries.put(changeItemEntryPath, changeItemEntryPath);
+						Log.debug("getEntryListForCheckOutEx() Add [" +changeItemEntryPath + "] to deletedEntries");						
+					}
+				}				
+			}	
+			else	//add or modify
+			{
+				if(changedEntries != null)
+				{
+					if(changeItemEntryPath.contains(docEntryPath))
+					{
+						changedEntries.put(changeItemEntryPath, changeItemEntryPath);
+						Log.debug("getEntryListForCheckOutEx() Add [" +changeItemEntryPath + "] to changedEntries");
+					}
+				}				
 			}
 		}	
 	}
 	
-	protected void buildDownloadList(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> downloadList) 
+	protected void getEntryListForCheckOut(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> changedEntries, HashMap<String, String> deletedEntries) 
 	{
+		if(changedEntries == null && deletedEntries == null)
+		{
+			Log.debug("getEntryListForCheckOut() changedEntries and deletedEntries is null");
+			return;
+		}
+		
 		//根据commitId获取ChangeItemsList
 		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, isRealDoc, doc, commitId);
-		
 		if(changedItemList == null)
 		{
-			Log.debug("buildDownloadList verReposGetHistoryDetail Failed");
+			Log.debug("getEntryListForCheckOut() verReposGetHistoryDetail Failed");
 			return;
 		}
 		
@@ -21521,10 +21563,27 @@ public class BaseController  extends BaseFunction{
 		{
 			ChangedItem changeItem = changedItemList.get(i);
 			String changeItemEntryPath = changeItem.getEntryPath();
-			if(changeItemEntryPath.contains(docEntryPath))
+			if(changeItem.getChangeType() == 2)	//this is delete entry
 			{
-				downloadList.put(changeItemEntryPath, changeItemEntryPath);
-				Log.debug("buildDownloadList Add [" +changeItemEntryPath + "]");
+				if(deletedEntries != null)
+				{
+					if(changeItemEntryPath.contains(docEntryPath))
+					{
+						deletedEntries.put(changeItemEntryPath, changeItemEntryPath);
+						Log.debug("getEntryListForCheckOut() Add [" +changeItemEntryPath + "] to deletedEntries");						
+					}
+				}				
+			}	
+			else	//add or modify
+			{
+				if(changedEntries != null)
+				{
+					if(changeItemEntryPath.contains(docEntryPath))
+					{
+						changedEntries.put(changeItemEntryPath, changeItemEntryPath);
+						Log.debug("getEntryListForCheckOut() Add [" +changeItemEntryPath + "] to changedEntries");
+					}
+				}				
 			}
 		}		
 	}
