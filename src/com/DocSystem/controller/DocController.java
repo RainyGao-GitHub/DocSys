@@ -3278,12 +3278,13 @@ public class DocController extends BaseController{
 	}
 
 	/****************   get Document Content ******************/
+	//TODO: needDeletedEntry 逻辑未处理
 	@RequestMapping("/getDocContent.do")
 	public void getDocContent(
 			Integer reposId, String path, String name, 
 			Integer docType, //1: RealDoc 2: VirtualDoc	
 			String commitId,
-			String preCommitId,
+			Integer needDeletedEntry,	//0:不获取被删除文件的内容  1:获取被删除文件的内容
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session)
 	{
@@ -3333,7 +3334,6 @@ public class DocController extends BaseController{
 					repos, 
 					path, name, 
 					commitId,
-					preCommitId,
 					shareId,
 					rt,
 					request, response, session);
@@ -3356,7 +3356,7 @@ public class DocController extends BaseController{
 				repos, 
 				path, name, 
 				commitId,
-				preCommitId,
+				needDeletedEntry,
 				shareId,
 				rt,
 				request, response, session);
@@ -3418,11 +3418,12 @@ public class DocController extends BaseController{
 		writeText(status+content, response);
 	}
 
+	//TODO: needDeletedEntry 逻辑需要增加
 	private void getRealDocHistoryContent(
 			Repos repos, 
 			String path, String name, 
 			String commitId,
-			String preCommitId,
+			Integer needDeletedEntry,
 			Integer shareId,
 			ReturnAjax rt,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session) 
@@ -3479,7 +3480,7 @@ public class DocController extends BaseController{
 		{
 			if(isFSM(repos))
 			{						
-				verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, preCommitId, true, null);
+				verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, null);
 			}
 			else
 			{
@@ -3525,7 +3526,6 @@ public class DocController extends BaseController{
 			Repos repos, 
 			String path, String name, 
 			String commitId, 
-			String preCommitId,
 			Integer shareId,
 			ReturnAjax rt, 
 			HttpServletRequest request, HttpServletResponse response, HttpSession session) 
@@ -3546,7 +3546,7 @@ public class DocController extends BaseController{
 		if(dir.exists() == false)
 		{
 			dir.mkdirs();
-			verReposCheckOut(repos, true, doc, tempLocalRootPath + path, name, commitId, preCommitId, true, null);
+			verReposCheckOut(repos, true, doc, tempLocalRootPath + path, name, commitId, true, null);
 		}
 
 		Doc tmpDoc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, 1, true, tempLocalRootPath, localVRootPath, null, null);
@@ -4102,8 +4102,10 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
+	//TODO: needDeletedEntry 逻辑未处理
 	@RequestMapping("/getDocFileLink.do")
-	public void getDocFileLink(Integer reposId, String path, String name, String commitId, String preCommitId,
+	public void getDocFileLink(Integer reposId, String path, String name, 
+			String commitId, String needDeletedEntry,
 			Integer shareId,
 			String urlStyle,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -4207,7 +4209,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, preCommitId, true, null);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, null);
 				}
 				else
 				{
@@ -4233,8 +4235,10 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	//TODO: needDeletedEntry 逻辑未处理
 	@RequestMapping("/getDocFileLinkRS.do")
-	public void getDocFileLink(Integer reposId, String path, String name, String commitId, String preCommitId,
+	public void getDocFileLink(Integer reposId, String path, String name, 
+			String commitId, String needDeletedEntry,
 			Integer shareId,
 			String authCode,
 			String urlStyle,
@@ -4347,7 +4351,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, preCommitId, true, null);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, null);
 				}
 				else
 				{
@@ -4871,10 +4875,11 @@ public class DocController extends BaseController{
 	public void downloadHistoryDocPrepare(
 			String taskId,
 			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			String commitId, String preCommitId,
+			String commitId, 
 			Integer historyType, 
 			String entryPath,
 			Integer downloadAll,
+			Integer needDeletedEntry,	//0: 不下载被删除的文件  1: 需要下载被删除的文件
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
@@ -4990,6 +4995,7 @@ public class DocController extends BaseController{
 				
 			//通知前端下载准备中...
 			downloadPrepareTask.downloadAll = downloadAll;
+			downloadPrepareTask.needDeletedEntry = needDeletedEntry;
 			downloadPrepareTask.commitId = commitId;
 			rt.setData(downloadPrepareTask);
 			rt.setMsgData(5);
@@ -5042,7 +5048,7 @@ public class DocController extends BaseController{
 			}
 		}
 			
-		successDocList = verReposCheckOut(repos, false, vDoc, userTmpDir, targetName, commitId, preCommitId, true, downloadList);
+		successDocList = verReposCheckOut(repos, false, vDoc, userTmpDir, targetName, commitId, true, downloadList);
 		if(successDocList == null)
 		{
 			docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);
@@ -5062,15 +5068,16 @@ public class DocController extends BaseController{
 	}
 	
 	/****************   revert Document History ******************/	
+	//TODO: needDeletedEntry 逻辑未处理
 	@RequestMapping("/revertDocHistory.do")
 	public void revertDocHistory(
 			String taskId,
 			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
-			String preCommitId,
 			Integer historyType, 
 			String entryPath,
 			Integer downloadAll,
+			Integer needDeletedEntry,
 			String commitMsg,
 			Integer shareId,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
@@ -5107,9 +5114,9 @@ public class DocController extends BaseController{
 					repos, 
 					docId, pid, path, name, level, type, 
 					commitId, 
-					preCommitId,
 					entryPath, 
 					downloadAll,
+					needDeletedEntry,
 					commitMsg, 
 					reposAccess, 
 					rt, 
@@ -5122,23 +5129,24 @@ public class DocController extends BaseController{
 				repos, 
 				docId, pid, path, name, level, type, 
 				commitId, 
-				preCommitId,
 				entryPath, 
 				downloadAll,
+				needDeletedEntry,
 				commitMsg, 
 				reposAccess, 
 				rt, 
 				session, request, response);
 	}
 	
-	
+	//TODO: needDeletedEntry 逻辑未处理
 	private void revertRealDocHistory(
 			String taskId,
 			Repos repos,
 			Long docId, Long pid, String path, String name,  Integer level, Integer type,
-			String commitId, String preCommitId,
+			String commitId,
 			String entryPath,
 			Integer downloadAll,
+			Integer needDeletedEntry,
 			String commitMsg,
 			ReposAccess reposAccess,
 			ReturnAjax rt,
@@ -5281,7 +5289,7 @@ public class DocController extends BaseController{
 		//历史版本恢复前可能需要先同步，因此commitId需要在同步之后设置
 		context.commitId = new Date().getTime();
 		
-		revertResult  = revertRealDocHistory(repos, doc, commitId, preCommitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context, null, asyncActionList);
+		revertResult  = revertRealDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context, null, asyncActionList);
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
 		
@@ -5429,14 +5437,15 @@ public class DocController extends BaseController{
 		return true;
 	}
 
+	//TODO: needDeletedEntry 逻辑未处理
 	private void revertVirtualDocHistory(
 			String taskId,
 			Repos repos,
 			Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
-			String preCommitId,
 			String entryPath,
 			Integer downloadAll,
+			Integer needDeletedEntry,
 			String commitMsg,
 			ReposAccess reposAccess,
 			ReturnAjax rt,
@@ -5532,7 +5541,7 @@ public class DocController extends BaseController{
 				return;				
 			}
 		}
-		revertResult = revertVirtualDocHistory(repos, vDoc, commitId, preCommitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null, null);
+		revertResult = revertVirtualDocHistory(repos, vDoc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, null, null);
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
 		

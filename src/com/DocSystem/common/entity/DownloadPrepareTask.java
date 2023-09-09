@@ -21,6 +21,7 @@ public class DownloadPrepareTask {
 	//历史版本下载
 	public String commitId = null;
 	public Integer downloadAll = null;
+	public Integer needDeletedEntry = null;
 	
 	//需要直接压缩的目录
 	public String inputPath;
