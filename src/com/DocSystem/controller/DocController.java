@@ -3480,7 +3480,7 @@ public class DocController extends BaseController{
 		{
 			if(isFSM(repos))
 			{						
-				verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, null);
+				verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, null, needDeletedEntry, true);
 			}
 			else
 			{
@@ -3546,7 +3546,7 @@ public class DocController extends BaseController{
 		if(dir.exists() == false)
 		{
 			dir.mkdirs();
-			verReposCheckOut(repos, true, doc, tempLocalRootPath + path, name, commitId, true, null);
+			verReposCheckOutLegacy(repos, true, doc, tempLocalRootPath + path, name, commitId, true, null);
 		}
 
 		Doc tmpDoc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, 1, true, tempLocalRootPath, localVRootPath, null, null);
@@ -4105,7 +4105,7 @@ public class DocController extends BaseController{
 	//TODO: needDeletedEntry 逻辑未处理
 	@RequestMapping("/getDocFileLink.do")
 	public void getDocFileLink(Integer reposId, String path, String name, 
-			String commitId, String needDeletedEntry,
+			String commitId, Integer needDeletedEntry,
 			Integer shareId,
 			String urlStyle,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -4209,7 +4209,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, null);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, null, needDeletedEntry, true);
 				}
 				else
 				{
@@ -4238,7 +4238,7 @@ public class DocController extends BaseController{
 	//TODO: needDeletedEntry 逻辑未处理
 	@RequestMapping("/getDocFileLinkRS.do")
 	public void getDocFileLink(Integer reposId, String path, String name, 
-			String commitId, String needDeletedEntry,
+			String commitId, Integer needDeletedEntry,
 			Integer shareId,
 			String authCode,
 			String urlStyle,
@@ -4351,7 +4351,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, true, null);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, null, needDeletedEntry, true);
 				}
 				else
 				{
@@ -5039,16 +5039,16 @@ public class DocController extends BaseController{
 		if(downloadAll == null || downloadAll == 0)
 		{
 			downloadList  = new HashMap<String,String>();
-			buildDownloadList(repos, false, vDoc, commitId, downloadList);
-			if(downloadList != null && downloadList.size() == 0)
-			{
-				docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
-				writeJson(rt, response);	
-				return;
-			}
+		}
+		getEntryListForCheckOutLegacy(repos, false, vDoc, commitId, downloadList, null);
+		if(downloadList != null && downloadList.size() == 0)
+		{
+			docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
+			writeJson(rt, response);	
+			return;
 		}
 			
-		successDocList = verReposCheckOut(repos, false, vDoc, userTmpDir, targetName, commitId, true, downloadList);
+		successDocList = verReposCheckOutLegacy(repos, false, vDoc, userTmpDir, targetName, commitId, true, downloadList);
 		if(successDocList == null)
 		{
 			docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);
@@ -5289,7 +5289,14 @@ public class DocController extends BaseController{
 		//历史版本恢复前可能需要先同步，因此commitId需要在同步之后设置
 		context.commitId = new Date().getTime();
 		
-		revertResult  = revertRealDocHistory(repos, doc, commitId, commitMsg, commitUser, reposAccess.getAccessUser(), rt, context, null, asyncActionList);
+		revertResult  = revertRealDocHistory(
+				repos, doc, 
+				commitId, commitMsg, commitUser, 
+				downloadAll, needDeletedEntry, 
+				reposAccess.getAccessUser(), 
+				rt, 
+				context, 
+				asyncActionList);
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
 		

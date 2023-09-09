@@ -61,7 +61,7 @@ public interface Channel {
 			ReposAccess reposAccess, 
 			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
-			boolean force, boolean auto,
+			boolean force,
 			HashMap<String, String> downloadList);
 	List<ChangedItem> remoteServerGetHistoryDetail(
 			Repos repos, Doc doc, 
@@ -153,7 +153,7 @@ public interface Channel {
 			ReposAccess reposAccess, 
 			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
-			boolean force, boolean auto, 
+			boolean force,
 			HashMap<String,String> downloadList);
 
 	String buildMailContent(String content);
