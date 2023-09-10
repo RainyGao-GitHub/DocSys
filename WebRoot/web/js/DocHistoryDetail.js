@@ -40,6 +40,7 @@
 		    docInfo.type = 1;
 		    docInfo.isHistory = 1;
 		    docInfo.commitId = commitId;
+		    docInfo.needDeletedEntry = 1;
 		    docInfo.docType = historyType == 0? 1:2;
 		    ////openDoc(docInfo, false, "openInArtDialog", "office", gShareId);
 		    openDoc(docInfo, false, "openInDialog", "office", gShareId);

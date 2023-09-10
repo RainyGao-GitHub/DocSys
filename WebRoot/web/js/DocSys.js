@@ -98,6 +98,11 @@ function buildRequestParamStrForDoc(docInfo)
 			urlParamStr += andFlag + "commitId=" + docInfo.commitId;
 			andFlag = "&";		
 		}
+		if(docInfo.needDeletedEntry)
+		{
+			urlParamStr += andFlag + "needDeletedEntry=" + docInfo.needDeletedEntry;
+			andFlag = "&";					
+		}
 	}
 	
 	if(docInfo.fileLink)
@@ -187,6 +192,12 @@ function getDocInfoFromRequestParamStr()
 		if(commitId && commitId != null)
 		{
 			docInfo.commitId = commitId;
+		}
+
+		var needDeletedEntry = getQueryString("needDeletedEntry");
+		if(needDeletedEntry && needDeletedEntry != null)
+		{
+			docInfo.needDeletedEntry = needDeletedEntry;
 		}
 	}
 	
@@ -461,6 +472,7 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
                 name: docInfo.name,
                 docType: docInfo.docType, //取回文件内容
                 commitId: docInfo.commitId,
+                needDeletedEntry: docInfo.needDeletedEntry,
                 shareId: docInfo.shareId,
             },
             success : function (ret1) {
@@ -1490,6 +1502,7 @@ function copyDocInfo(doc, shareId)
 		if(docInfo.isHistory && docInfo.isHistory == 1)
 		{
 			docInfo.commitId = doc.commitId;
+			docInfo.needDeletedEntry = doc.needDeletedEntry;
 		}
 		
 		if(doc.fileSuffix)
