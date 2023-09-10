@@ -5313,14 +5313,17 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	
 	private boolean isLatestCommitEx(Repos repos, Doc doc, String commitId, ReturnAjax rt) 
 	{
 		if(isLegacyReposHistory(repos))
 		{
-			return isLatestVerReposCommit(repos, doc, commitId, rt);			
+			return isLatestVerReposCommitLegacy(repos, doc, commitId, rt);			
 		}
 		
+		return isLatestVerReposCommit(repos, doc, commitId, rt);
+	}
+	
+	private boolean isLatestVerReposCommit(Repos repos, Doc doc, String commitId, ReturnAjax rt) {
 		CommitLog commit = getCommitLogById(repos, commitId);
 		CommitLog latestDocCommit = getLatestCommit(repos, doc);
 		if(latestDocCommit == null || commit == null)
@@ -5335,9 +5338,10 @@ public class DocController extends BaseController{
 		}
 
 		return false;		
+
 	}
-	
-	private boolean isLatestVerReposCommit(Repos repos, Doc doc, String commitId, ReturnAjax rt) {
+
+	private boolean isLatestVerReposCommitLegacy(Repos repos, Doc doc, String commitId, ReturnAjax rt) {
 		LogEntry commit = verReposGetCommitById(repos, commitId);
 		LogEntry latestDocCommit = verReposGetLatestCommit(repos, doc);
 		if(latestDocCommit == null || commit == null)
@@ -5536,7 +5540,7 @@ public class DocController extends BaseController{
 		File localVDoc = new File(doc.getLocalVRootPath() + vDoc.getPath() + vDoc.getName());
 		if(!vDoc.getName().isEmpty() && localVDoc.exists())
 		{
-			String latestCommitId = verReposGetLatestRevision(repos, false, vDoc);
+			String latestCommitId = verReposGetLatestDocCommitIdLegacy(repos, false, vDoc);
 			if(latestCommitId != null && latestCommitId.equals(commitId))
 			{
 				docSysDebugLog("revertDocHistory() commitId:" + commitId + " latestCommitId:" + latestCommitId, rt);

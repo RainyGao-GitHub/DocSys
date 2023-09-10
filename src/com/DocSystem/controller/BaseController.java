@@ -3717,24 +3717,6 @@ public class BaseController  extends BaseFunction{
 		}		
 		return true;
 	}
-	
-	private String verReposGetPreviousCommitIdEx(Repos repos, String commitId) {
-		if(isLegacyReposHistory(repos))
-		{
-			return verReposGetPreviousCommitIdLegacy(repos, commitId);
-		}
-		return verReposGetPreviousCommitId(repos, commitId);
-	}
-
-	private String verReposGetPreviousCommitId(Repos repos, String commitId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private String verReposGetPreviousCommitIdLegacy(Repos repos, String commitId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	protected boolean revertVirtualDocHistory(
 			Repos repos, Doc doc, 
@@ -3800,7 +3782,7 @@ public class BaseController  extends BaseFunction{
 	protected String getRealRevision(Repos repos, Doc successDoc, HashMap<String, ChangedItem> changItemHashMap, String revision) {
 		if(changItemHashMap.get(successDoc.getPath() + successDoc.getName()) == null)
 		{
-			return verReposGetLatestRevision(repos, false, successDoc);
+			return verReposGetLatestDocCommitIdLegacy(repos, false, successDoc);
 		}
 		return revision;
 	}
@@ -6180,7 +6162,7 @@ public class BaseController  extends BaseFunction{
     		return true;
     	}
     	
-    	String latestRevision = verReposGetLatestRevision(repos, false, doc);
+    	String latestRevision = verReposGetLatestDocCommitIdLegacy(repos, false, doc);
         Log.debug("isRemoteDocChanged() latestRevision:" + latestRevision + " doc:" + doc.getDocId() + " [" + doc.getPath() + doc.getName() + "]");
         Log.debug("isRemoteDocChanged() previoRevision:" + dbDoc.getRevision());
         
@@ -7328,7 +7310,42 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	protected String verReposGetLatestReposRevision(Repos repos, boolean isRealDoc) 
+	private String verReposGetPreviousReposCommitIdEx(Repos repos, String commitId) {
+		if(isLegacyReposHistory(repos))
+		{
+			return verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
+		}
+		return verReposGetPreviousReposCommitId(repos, commitId);
+	}
+
+	private String verReposGetPreviousReposCommitId(Repos repos, String commitId) {
+		CommitLog commit = getPreviousCommit(repos, null, commitId);
+		if(commit == null)
+		{
+			return null;
+		}
+		return commit.commitId + "";
+	}
+
+	private String verReposGetPreviousReposCommitIdLegacy(Repos repos, boolean isRealDoc, String commitId) {
+		int verCtrl = repos.getVerCtrl();
+		if(isRealDoc == false)
+		{
+			verCtrl = repos.getVerCtrl1();
+		}
+		
+		if(verCtrl == 1)
+		{
+			return svnGetDocLatestReposRevision(repos, isRealDoc);			
+		}
+		else if(verCtrl == 2)
+		{
+			return gitGetDocLatestReposRevision(repos, isRealDoc);	
+		}
+		return null;
+	}
+	
+	protected String verReposGetLatestReposCommitIdLegacy(Repos repos, boolean isRealDoc) 
 	{
 		int verCtrl = repos.getVerCtrl();
 		if(isRealDoc == false)
@@ -7347,7 +7364,7 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private String svnGetDocLatestReposRevision(Repos repos,boolean isRealDoc) {
+	private String svnGetDocLatestReposRevision(Repos repos, boolean isRealDoc) {
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(repos, isRealDoc, "") == false)
 		{
@@ -7371,23 +7388,23 @@ public class BaseController  extends BaseFunction{
 	}
 
 
-	protected String verReposGetLatestRevision(Repos repos, boolean convert, Doc doc) 
+	protected String verReposGetLatestDocCommitIdLegacy(Repos repos, boolean convert, Doc doc) 
 	{
 		doc = docConvert(doc, convert);
 		
 		int verCtrl = getVerCtrl(repos, doc);
 		if(verCtrl == 1)
 		{
-			return svnGetDocLatestRevision(repos, doc);			
+			return svnGetLatestDocRevision(repos, doc);			
 		}
 		else if(verCtrl == 2)
 		{
-			return gitGetDocLatestRevision(repos, doc);	
+			return gitGetLatestDocRevision(repos, doc);	
 		}
 		return null;
 	}
 
-	private String svnGetDocLatestRevision(Repos repos, Doc doc) {
+	private String svnGetLatestDocRevision(Repos repos, Doc doc) {
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(repos, doc.getIsRealDoc(), "") == false)
 		{
@@ -7398,7 +7415,7 @@ public class BaseController  extends BaseFunction{
 		return svnUtil.getLatestRevision(doc);		
 	}
 	
-	private String gitGetDocLatestRevision(Repos repos, Doc doc) {
+	private String gitGetLatestDocRevision(Repos repos, Doc doc) {
 		//GitUtil Init
 		GITUtil gitUtil = new GITUtil();
 		if(gitUtil.Init(repos, doc.getIsRealDoc(), "") == false)
@@ -7415,7 +7432,6 @@ public class BaseController  extends BaseFunction{
 		return getRemoteStorageEntry(repos, doc, repos.remoteServerConfig);
 	}
 	
-
 	protected RemoteStorageConfig getHistoryVerReposConfig(Repos repos, CommitLog commit)
 	{
 		//Parse verReposInfo
@@ -7479,6 +7495,18 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return list.get(0);
+	}
+	
+	protected CommitLog getPreviousCommit(Repos repos, Doc doc, String commitId)
+	{
+		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 2, null, commitId);
+		if(list == null || list.size() < 2)
+		{
+			Log.debug("getLatestCommitId() failed to get the previous commitLog");
+			return null;
+		}
+		
+		return list.get(1);
 	}
 
 	private static String getLocalVerReposPathForDocHistory(Repos repos, RemoteStorageConfig remote)
@@ -12119,7 +12147,7 @@ public class BaseController  extends BaseFunction{
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousCommitIdLegacy(repos, commitId);
+				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
 				successList1 = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, commitId, force, deletedEntryList);
 			}
 		}
@@ -12139,7 +12167,7 @@ public class BaseController  extends BaseFunction{
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousCommitId(repos, commitId);
+				preCommitId = verReposGetPreviousReposCommitId(repos, commitId);
 				successList1 = verReposCheckOut(repos, doc, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
 		}
@@ -12213,7 +12241,7 @@ public class BaseController  extends BaseFunction{
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousCommitIdLegacy(repos, commitId);
+				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
 				successList1 = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, tmpLocalRootPath + localParentPath, targetName, commitId, force, deletedEntryList);
 			}
 		}
@@ -12233,7 +12261,7 @@ public class BaseController  extends BaseFunction{
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousCommitIdLegacy(repos, commitId);
+				preCommitId = verReposGetPreviousReposCommitId(repos, commitId);
 				successList1 = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, commitId, force, deletedEntryList);
 			}
 		}
