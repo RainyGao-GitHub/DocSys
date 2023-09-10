@@ -5811,7 +5811,7 @@ public class BaseController  extends BaseFunction{
 			Log.info("syncUpLocalWithVerRepos() ************************ 结束版本管理同步 ****************************");
 			return false;
 		}
-		Doc remoteEntry = verReposGetDoc(repos, doc, null);
+		Doc remoteEntry = verReposGetDocLegacy(repos, doc, null);
 		if(remoteEntry == null)
 		{
 			Log.info("syncUpLocalWithVerRepos() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
@@ -6062,7 +6062,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean syncupForDocChange_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
 	{
-		Doc remoteEntry = verReposGetDoc(repos, doc, null);
+		Doc remoteEntry = verReposGetDocLegacy(repos, doc, null);
 		if(remoteEntry == null)
 		{
 			docSysDebugLog("syncupForDocChange_NoFS() remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
@@ -7326,6 +7326,18 @@ public class BaseController  extends BaseFunction{
 		}
 		return commit.commitId + "";
 	}
+	
+	protected CommitLog getPreviousCommit(Repos repos, Doc doc, String commitId)
+	{
+		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 2, null, commitId);
+		if(list == null || list.size() < 2)
+		{
+			Log.debug("getLatestCommitId() failed to get the previous commitLog");
+			return null;
+		}
+		
+		return list.get(1);
+	}
 
 	private String verReposGetPreviousReposCommitIdLegacy(Repos repos, boolean isRealDoc, String commitId) {
 		int verCtrl = repos.getVerCtrl();
@@ -7345,6 +7357,72 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
+	private String verReposGetLatestReposCommitIdEx(Repos repos) 
+	{
+		if(isLegacyReposHistory(repos))
+		{
+			return verReposGetLatestReposCommitIdLegacy(repos, true);
+		}
+		return verReposGetLatestReposCommitId(repos);
+	}
+	
+	private String verReposGetLatestReposCommitId(Repos repos) {
+		CommitLog commit = getLatestReposCommit(repos);
+		if(commit == null)
+		{
+			return null;
+		}
+		return commit.commitId + "";
+	}
+	
+	protected CommitLog getCommitLogById(Repos repos, String commitId)
+	{
+		Log.debug("getCommitLogById() commitId:" + commitId);
+
+		if(commitId == null)
+		{
+			return getLatestReposCommit(repos);
+		}
+		
+		//根据commitId
+		CommitLog qCommit = new CommitLog();
+		qCommit.commitId = Long.parseLong(commitId);
+		List<CommitLog> list = channel.queryCommitLog(repos, qCommit);
+		if(list == null || list.size() == 0)
+		{
+			Log.debug("getCommitLogById() there is not commitLog for commitId:" + commitId);
+			return null;
+		}
+		
+		//Find out the commit with revision info
+		CommitLog commit = list.get(0);
+		return commit;
+	}
+
+	protected CommitLog getLatestReposCommit(Repos repos)
+	{
+		List<CommitLog> list = channel.queryCommitLog(repos, null, 1, null, null);
+		if(list == null || list.size() == 0)
+		{
+			Log.debug("getLatestCommitId() failed to get the latest commitLog");
+			return null;
+		}
+		
+		return list.get(0);
+	}
+	
+	protected CommitLog getLatestDocCommit(Repos repos, Doc doc)
+	{
+		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 1, null, null);
+		if(list == null || list.size() == 0)
+		{
+			Log.debug("getLatestCommitId() failed to get the latest commitLog");
+			return null;
+		}
+		
+		return list.get(0);
+	}
+
 	protected String verReposGetLatestReposCommitIdLegacy(Repos repos, boolean isRealDoc) 
 	{
 		int verCtrl = repos.getVerCtrl();
@@ -7460,54 +7538,6 @@ public class BaseController  extends BaseFunction{
 		
 		return remote;
 	}
-	
-	protected CommitLog getCommitLogById(Repos repos, String commitId)
-	{
-		Log.debug("getCommitLogById() commitId:" + commitId);
-
-		if(commitId == null)
-		{
-			return getLatestCommit(repos, null);
-		}
-		
-		//根据commitId
-		CommitLog qCommit = new CommitLog();
-		qCommit.commitId = Long.parseLong(commitId);
-		List<CommitLog> list = channel.queryCommitLog(repos, qCommit);
-		if(list == null || list.size() == 0)
-		{
-			Log.debug("getCommitLogById() there is not commitLog for commitId:" + commitId);
-			return null;
-		}
-		
-		//Find out the commit with revision info
-		CommitLog commit = list.get(0);
-		return commit;
-	}
-
-	protected CommitLog getLatestCommit(Repos repos, Doc doc)
-	{
-		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 1, null, null);
-		if(list == null || list.size() == 0)
-		{
-			Log.debug("getLatestCommitId() failed to get the latest commitLog");
-			return null;
-		}
-		
-		return list.get(0);
-	}
-	
-	protected CommitLog getPreviousCommit(Repos repos, Doc doc, String commitId)
-	{
-		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 2, null, commitId);
-		if(list == null || list.size() < 2)
-		{
-			Log.debug("getLatestCommitId() failed to get the previous commitLog");
-			return null;
-		}
-		
-		return list.get(1);
-	}
 
 	private static String getLocalVerReposPathForDocHistory(Repos repos, RemoteStorageConfig remote)
 	{
@@ -7522,30 +7552,22 @@ public class BaseController  extends BaseFunction{
 	{
 		if(isLegacyReposHistory(repos))
 		{
-			return verReposGetDoc(repos, doc, commitId);
+			return verReposGetDocLegacy(repos, doc, commitId);
 		}
 		
-		return getHistoyDoc(repos, doc, commitId);
+		return verReposGetDoc(repos, doc, commitId);
 	}
 	
-	
-	
-	private Doc getHistoyDoc(Repos repos, Doc doc, String commitId) {
+	private Doc verReposGetDoc(Repos repos, Doc doc, String commitId) {
 		if(commitId == null)
 		{
-			List<CommitLog> list = channel.queryCommitLog(repos, null, 1, null, null);
-			if(list == null || list.size() == 0)
-			{
-				Log.debug("getLatestCommitId() failed to get the latest commitLog");
-				return null;
-			}
-			commitId =  list.get(0).commitId + "";
+			commitId = verReposGetLatestReposCommitId(repos);
 		}
 		
 		return channel.getHistoryDoc(repos, doc, commitId);
 	}
 
-	protected Doc verReposGetDoc(Repos repos, Doc doc, String revision)
+	protected Doc verReposGetDocLegacy(Repos repos, Doc doc, String revision)
 	{
 		if(repos.getVerCtrl() == 1)
 		{

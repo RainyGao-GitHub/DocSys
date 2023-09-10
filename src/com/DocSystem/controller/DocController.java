@@ -5320,7 +5320,7 @@ public class DocController extends BaseController{
 	
 	private boolean isLatestVerReposCommit(Repos repos, Doc doc, String commitId, ReturnAjax rt) {
 		CommitLog commit = getCommitLogById(repos, commitId);
-		CommitLog latestDocCommit = getLatestCommit(repos, doc);
+		CommitLog latestDocCommit = getLatestDocCommit(repos, doc);
 		if(latestDocCommit == null || commit == null)
 		{
 			return false;
@@ -5391,7 +5391,7 @@ public class DocController extends BaseController{
 		}
 
 		//TODO: 注意remoteEntry是指在版本仓库里的信息，所以要直接用verReposGetDoc
-		Doc remoteEntry = verReposGetDoc(repos, doc, null);
+		Doc remoteEntry = verReposGetDocLegacy(repos, doc, null);
 		if(remoteEntry == null)
 		{
 			docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
