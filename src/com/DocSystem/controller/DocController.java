@@ -3290,7 +3290,7 @@ public class DocController extends BaseController{
 	{
 
 		Log.infoHead("************** getDocContent [" + path + name + "] ************");
-		Log.info("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType+ " shareId:" + shareId + " commitId:" + commitId);
+		Log.info("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType+ " shareId:" + shareId + " commitId:" + commitId  + " needDeletedEntry:" + needDeletedEntry);
 
 		//注意该接口支持name是空的的情况
 		if(path == null)
@@ -3455,9 +3455,10 @@ public class DocController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		if(remoteDoc.getType() == null || remoteDoc.getType() == 0)
+		
+		if(remoteDoc.getType() == null)
 		{
-			docSysErrorLog(name + " 不存在！", rt);
+			docSysErrorLog(name + " 是未知文件！", rt);
 			writeJson(rt, response);			
 			return;				
 		}
