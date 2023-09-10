@@ -4179,13 +4179,8 @@ public class DocController extends BaseController{
 				writeJson(rt, response);			
 				return;
 			}
-			if(remoteDoc.getType() == 0)
-			{
-				docSysErrorLog(name + " 不存在！", rt);
-				writeJson(rt, response);			
-				return;				
-			}
-			else if(remoteDoc.getType() == 2)
+			
+			if(remoteDoc.getType() != null && remoteDoc.getType() == 2)
 			{
 				docSysErrorLog(name + " 是目录！", rt);
 				writeJson(rt, response);			
@@ -4321,13 +4316,8 @@ public class DocController extends BaseController{
 				writeJson(rt, response);			
 				return;
 			}
-			if(remoteDoc.getType() == 0)
-			{
-				docSysErrorLog(name + " 不存在！", rt);
-				writeJson(rt, response);			
-				return;				
-			}
-			else if(remoteDoc.getType() == 2)
+			
+			if(remoteDoc.getType() != null && remoteDoc.getType() == 2)
 			{
 				docSysErrorLog(name + " 是目录！", rt);
 				writeJson(rt, response);			
