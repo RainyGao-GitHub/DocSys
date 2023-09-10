@@ -21639,7 +21639,7 @@ public class BaseController  extends BaseFunction{
 		{
 			CommitEntry changeItem = changedItemList.get(i);
 			String changeItemEntryPath = changeItem.path + changeItem.name;
-			if(changeItem.realCommitAction.equals("delete"))	//this is delete entry
+			if(changeItem.realCommitAction != null && changeItem.realCommitAction.equals("delete"))	//this is delete entry
 			{
 				if(deletedEntries != null)
 				{
@@ -21686,7 +21686,7 @@ public class BaseController  extends BaseFunction{
 		{
 			ChangedItem changeItem = changedItemList.get(i);
 			String changeItemEntryPath = changeItem.getEntryPath();
-			if(changeItem.getChangeType() == 2)	//this is delete entry
+			if(changeItem.getChangeType() != null && changeItem.getChangeType() == 2)	//this is delete entry
 			{
 				if(deletedEntries != null)
 				{

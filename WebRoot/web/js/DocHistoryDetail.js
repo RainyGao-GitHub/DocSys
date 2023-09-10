@@ -69,7 +69,8 @@
 	             	 name: docName,
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
-	             	 downloadAll: 1,
+	             	 downloadAll: 0,
+	             	 needDeletedEntry: 1,
 		             shareId: gShareId,
                 },
                 success : function (ret) {
