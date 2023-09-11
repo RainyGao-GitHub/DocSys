@@ -12170,7 +12170,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
-				successList1 = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, commitId, force, deletedEntryList);
+				successList1 = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
 		}
 		else
@@ -12264,7 +12264,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
-				successList1 = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, tmpLocalRootPath + localParentPath, targetName, commitId, force, deletedEntryList);
+				successList1 = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
 		}
 		else
@@ -12284,7 +12284,7 @@ public class BaseController  extends BaseFunction{
 			{
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitId(repos, commitId);
-				successList1 = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, commitId, force, deletedEntryList);
+				successList1 = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
 		}
 		
@@ -12438,7 +12438,7 @@ public class BaseController  extends BaseFunction{
     	
 		if(doc.getName().isEmpty())
     	{
-    		Log.debug("svnCheckOut() it is root doc, if there is no any subEntries means all items be deleted, we need to get preCommitId");
+    		Log.debug("svnCheckOut() it is root doc, if there is no any subEntries means all items be deleted");
     		Collection<SVNDirEntry> subEntries = verReposUtil.getSubEntries("", revision);
     		if(verReposUtil.subEntriesIsEmpty(subEntries))
     		{
@@ -12476,7 +12476,7 @@ public class BaseController  extends BaseFunction{
     	
     	if(doc.getName().isEmpty())
     	{
-    		Log.debug("gitCheckOut() it is root doc, if there is no any subEntries means all items be deleted, we need to get preCommitId");
+    		Log.debug("gitCheckOut() it is root doc, if there is no any subEntries means all items be deleted");
     		TreeWalk subEntries = verReposUtil.getSubEntries("", revision);
     		if(verReposUtil.subEntriesIsEmpty(subEntries))
     		{
@@ -12525,7 +12525,7 @@ public class BaseController  extends BaseFunction{
    
     	if(doc.getName().isEmpty())
     	{
-    		Log.debug("svnCheckOutForDownload() it is root doc, if there is no any subEntries means all items be deleted, we need to get preCommitId");
+    		Log.debug("svnCheckOutForDownload() it is root doc, if there is no any subEntries means all items be deleted");
     		Collection<SVNDirEntry> subEntries = verReposUtil.getSubEntries("", revision);
     		if(verReposUtil.subEntriesIsEmpty(subEntries))
     		{
@@ -12574,7 +12574,7 @@ public class BaseController  extends BaseFunction{
     	
     	if(doc.getName().isEmpty())
     	{
-    		Log.debug("gitCheckOutForDownload() it is root doc, if there is no any subEntries means all items be deleted, we need to get preCommitId");
+    		Log.debug("gitCheckOutForDownload() it is root doc, if there is no any subEntries means all items be deleted");
     		TreeWalk subEntries = verReposUtil.getSubEntries("", revision);
     		if(verReposUtil.subEntriesIsEmpty(subEntries))
     		{
