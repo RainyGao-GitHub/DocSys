@@ -2170,6 +2170,7 @@ public class LuceneUtil2   extends BaseFunction
     			commitEntry.path = entry.path;
     			commitEntry.name = entry.name;
     			commitEntry.entryType = entry.entryType;
+    			commitEntry.realCommitAction = entry.realCommitAction;
     			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
     			addIndexForCommitEntryBasic(commitEntry, indexLib);
     		}
@@ -2216,6 +2217,7 @@ public class LuceneUtil2   extends BaseFunction
     			commitEntry.path = entry.path;
     			commitEntry.name = entry.name;
     			commitEntry.entryType = entry.entryType;
+    			commitEntry.realCommitAction = entry.realCommitAction;
     			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
     			addIndexForCommitEntryBasic(commitEntry, indexLib);
     		}
