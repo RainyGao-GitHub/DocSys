@@ -11787,19 +11787,19 @@ public class BaseController  extends BaseFunction{
 		Log.debug("getCommitHistoryEx() maxLogNum:" + maxLogNum + " endCommitId:" + endCommitId);
 		if(isLegacyReposHistory(repos))
 		{
-			return verReposGetHistory(repos, false, doc, maxLogNum, endCommitId);
+			return verReposGetHistoryLegacy(repos, false, doc, maxLogNum, endCommitId);
 		}
-		return getCommitHistory(repos, doc, maxLogNum, endCommitId);
+		return verReposGetHistory(repos, doc, maxLogNum, endCommitId);
 	}
 	
-	protected List<ChangedItem> getCommitHistoryDetailEx(Repos repos, Doc doc, String commitId) 
+	protected List<ChangedItem> verReposGetHistoryDetailEx(Repos repos, Doc doc, String commitId) 
 	{
-		Log.debug("getCommitHistoryEx() [" + doc.getPath() + doc.getName() + "] commitId:" + commitId);
+		Log.debug("verReposGetHistoryDetailEx() [" + doc.getPath() + doc.getName() + "] commitId:" + commitId);
 		if(isLegacyReposHistory(repos))
 		{
-			return verReposGetHistoryDetail(repos, false, doc, commitId);
+			return verReposGetHistoryDetailLegacy(repos, false, doc, commitId);
 		}
-		return getCommitHistoryDetail(repos, doc, commitId);
+		return verReposGetHistoryDetail(repos, doc, commitId);
 	}
 	
 	protected boolean isLegacyReposHistory(Repos repos) {
@@ -11819,19 +11819,14 @@ public class BaseController  extends BaseFunction{
 		return file.mkdirs();
 	}
 
-	protected List<LogEntry> getCommitHistory(Repos repos, Doc doc, int maxLogNum, String endCommitId) 
+	protected List<LogEntry> verReposGetHistory(Repos repos, Doc doc, int maxLogNum, String endCommitId) 
 	{
 		Log.debug("getCommitHistory() maxLogNum:" + maxLogNum + " endCommitId:" + endCommitId);
 		List<LogEntry> commitHistory = channel.queryCommitHistory(repos, doc, maxLogNum, null, endCommitId);
 		return commitHistory;
 	}
-	protected List<ChangedItem> getCommitHistoryDetail(Repos repos, Doc doc, String commitId) 
-	{
-		List<ChangedItem> commitEntryList = channel.queryCommitHistoryDetail(repos, doc, commitId);
-		return commitEntryList;
-	}
-
-	protected List<LogEntry> verReposGetHistory(Repos repos,boolean convert, Doc doc, int maxLogNum, String endCommitId) 
+	
+	protected List<LogEntry> verReposGetHistoryLegacy(Repos repos,boolean convert, Doc doc, int maxLogNum, String endCommitId) 
 	{
 		doc = docConvert(doc, convert);
 		
@@ -11875,9 +11870,14 @@ public class BaseController  extends BaseFunction{
 		return gitUtil.getHistoryLogs(doc.getPath() + doc.getName(), null, endRevision, maxLogNum);
 	}
 
-	
 	//Get History Detail
-	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos,boolean convert, Doc doc, String commitId) 
+	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos, Doc doc, String commitId) 
+	{
+		List<ChangedItem> commitEntryList = channel.queryCommitHistoryDetailForLegacy(repos, doc, commitId);
+		return commitEntryList;
+	}
+
+	protected List<ChangedItem> verReposGetHistoryDetailLegacy(Repos repos,boolean convert, Doc doc, String commitId) 
 	{
 		doc = docConvert(doc, convert);
 
@@ -21682,7 +21682,7 @@ public class BaseController  extends BaseFunction{
 	
 	private void getEntryListForCheckOut(Repos repos, Doc doc, String commitId, HashMap<String, String> changedEntries, HashMap<String, String> deletedEntries) 
 	{
-		List<CommitEntry> changedItemList = channel.queryCommitEntry(repos, doc, commitId);
+		List<CommitEntry> changedItemList = channel.queryCommitHistoryDetail(repos, doc, commitId);
 		String docEntryPath = doc.getPath() + doc.getName();
 		//过滤掉不在doc目录下的ChangeItems
 		for(int i=0; i< changedItemList.size(); i++)
@@ -21723,7 +21723,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//根据commitId获取ChangeItemsList
-		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, isRealDoc, doc, commitId);
+		List<ChangedItem> changedItemList = verReposGetHistoryDetailLegacy(repos, isRealDoc, doc, commitId);
 		if(changedItemList == null)
 		{
 			Log.debug("getEntryListForCheckOut() verReposGetHistoryDetail Failed");

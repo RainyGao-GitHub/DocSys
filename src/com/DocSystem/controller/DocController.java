@@ -4733,7 +4733,7 @@ public class DocController extends BaseController{
 			commitId = null;
 		}
 		
-		logList = verReposGetHistory(repos, false, inputDoc, num, commitId);
+		logList = verReposGetHistoryLegacy(repos, false, inputDoc, num, commitId);
 		
 		rt.setData(logList);
 		writeJson(rt, response);
@@ -4812,7 +4812,7 @@ public class DocController extends BaseController{
 		List<ChangedItem> changedItemList = null;
 		if(isFSM(repos))
 		{
-			changedItemList = getCommitHistoryDetailEx(repos, doc, commitId);				
+			changedItemList = verReposGetHistoryDetailEx(repos, doc, commitId);				
 		}
 		else
 		{
@@ -4844,7 +4844,7 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		Doc inputDoc = buildVDoc(doc);
 		
-		List<ChangedItem> changedItemList = verReposGetHistoryDetail(repos, false, inputDoc, commitId);
+		List<ChangedItem> changedItemList = verReposGetHistoryDetailLegacy(repos, false, inputDoc, commitId);
 		
 		if(changedItemList == null)
 		{
@@ -5345,7 +5345,7 @@ public class DocController extends BaseController{
 
 	private LogEntry verReposGetLatestCommit(Repos repos, Doc doc) 
 	{
-		List<LogEntry> list = verReposGetHistory(repos, false, doc, 1, null);
+		List<LogEntry> list = verReposGetHistoryLegacy(repos, false, doc, 1, null);
 		if(list == null || list.size() == 0)
 		{
 			return null;
@@ -5356,7 +5356,7 @@ public class DocController extends BaseController{
 	private LogEntry verReposGetCommitById(Repos repos, String commitId) 
 	{
 		Doc rootDoc = buildRootDoc(repos, null, null);
-		List<LogEntry> list = verReposGetHistory(repos, false, rootDoc, 1, commitId);
+		List<LogEntry> list = verReposGetHistoryLegacy(repos, false, rootDoc, 1, commitId);
 		if(list == null || list.size() == 0)
 		{
 			return null;

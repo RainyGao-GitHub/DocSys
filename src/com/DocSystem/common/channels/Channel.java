@@ -189,9 +189,9 @@ public interface Channel {
 
 	List<LogEntry> queryCommitHistory(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId);
 
-	List<CommitEntry> queryCommitEntry(Repos repos, Doc doc, String commitId);
+	List<CommitEntry> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);
 	
-	List<ChangedItem> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);
+	List<ChangedItem> queryCommitHistoryDetailForLegacy(Repos repos, Doc doc, String commitId);
 
 	boolean convertReposHistory(Repos repos, Integer maxNum, ReturnAjax rt);
 
