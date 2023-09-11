@@ -21689,7 +21689,7 @@ public class BaseController  extends BaseFunction{
 		{
 			CommitEntry changeItem = changedItemList.get(i);
 			String changeItemEntryPath = changeItem.path + changeItem.name;
-			if(changeItem.realCommitAction != null && changeItem.realCommitAction.equals("delete"))	//this is delete entry
+			if(isDeletedEntry(changeItem))	//this is delete entry
 			{
 				if(deletedEntries != null)
 				{
@@ -21712,6 +21712,30 @@ public class BaseController  extends BaseFunction{
 				}				
 			}
 		}
+	}
+	
+	boolean isDeletedEntry(CommitEntry entry)
+	{
+		if(entry.realCommitAction != null && entry.realCommitAction.equals("delete"))
+		{
+			return true;
+		}
+		
+		if(entry.commitAction != null)
+		{
+			 switch(entry.commitAction)
+			 {
+			 case "deleteDoc":
+				 return true;
+			 case "moveDoc":
+				 if(entry.isSrcEntry != null && entry.isSrcEntry == 1)
+				 {
+					 return true;
+				 }
+				 break;
+			 }
+		}
+		return false;
 	}
 
 	protected void getEntryListForCheckOutLegacy(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> changedEntries, HashMap<String, String> deletedEntries) 
@@ -21736,7 +21760,7 @@ public class BaseController  extends BaseFunction{
 		{
 			ChangedItem changeItem = changedItemList.get(i);
 			String changeItemEntryPath = changeItem.getEntryPath();
-			if(changeItem.getChangeType() != null && changeItem.getChangeType() == 2)	//this is delete entry
+			if(isDeletedEntryLegacy(changeItem))	//this is delete entry
 			{
 				if(deletedEntries != null)
 				{
@@ -21761,6 +21785,14 @@ public class BaseController  extends BaseFunction{
 		}		
 	}
 	
+	boolean isDeletedEntryLegacy(ChangedItem changeItem )
+	{
+		if(changeItem.getChangeType() != null && changeItem.getChangeType() == 2)
+		{
+			return true;
+		}
+		return false;
+	}
 	
     public boolean copyAuthedFilesForDownload(String targetPath, String targetName, Repos repos, Doc doc, ReposAccess reposAccess) 
     {
