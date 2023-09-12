@@ -21175,6 +21175,7 @@ public class BaseController  extends BaseFunction{
 		if(tmpCheckoutName.isEmpty())
 		{
 			tmpCheckoutName = repos.getName();
+			tmpCheckoutPath = tmpCheckoutPath + tmpCheckoutName + "/";	//仓库根目录必须提供一个额外路径，否则移动会失败
 		}
 		
 		//downloadAll != 1 表示只下载在这次提交的文件
@@ -21182,7 +21183,7 @@ public class BaseController  extends BaseFunction{
 		
 		task.info = "版本检出中...";
 		//将历史版本CheckOut到临时目录
-		if(channel.remoteServerCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, null, tmpCheckoutName, commitId, true, null) == null)
+		if(channel.remoteServerCheckOutForDownload(repos, doc, reposAccess, tmpCheckoutPath, "", tmpCheckoutName, commitId, true, null) == null)
 		{
 			task.status = 3; //Failed
 			task.info = "版本检出失败(当前版本没有文件或授权)";
@@ -21329,6 +21330,7 @@ public class BaseController  extends BaseFunction{
 		if(tmpCheckoutName.isEmpty())
 		{
 			tmpCheckoutName = repos.getName();
+			tmpCheckoutPath = tmpCheckoutPath + tmpCheckoutName + "/";	//仓库根目录必须提供一个额外路径，否则移动会失败
 		}
 		
 		//downloadAll != 1 表示只下载在这次提交的文件
