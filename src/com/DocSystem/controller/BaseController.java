@@ -12168,8 +12168,10 @@ public class BaseController  extends BaseFunction{
 			successList = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, commitId, force, downloadList);
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
+				Log.debug("verReposCheckOutEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
+				Log.debug("verReposCheckOutEx() to get deletedEntryList from preCommit:" + preCommitId);
 				successList1 = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
 		}
@@ -12188,8 +12190,10 @@ public class BaseController  extends BaseFunction{
 			successList = verReposCheckOut(repos, doc, tmpLocalRootPath, localParentPath, targetName, commitId, force, downloadList);
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
+				Log.debug("verReposCheckOutEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitId(repos, commitId);
+				Log.debug("verReposCheckOutEx() to get deletedEntryList from preCommit:" + preCommitId);				
 				successList1 = verReposCheckOut(repos, doc, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
 		}
@@ -12262,8 +12266,10 @@ public class BaseController  extends BaseFunction{
 			successList = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, tmpLocalRootPath + localParentPath, targetName, commitId, force, downloadList);
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
+				Log.debug("verReposCheckOutForDownloadEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
+				Log.debug("verReposCheckOutForDownloadEx() to get deletedEntryList from preCommit:" + preCommitId);
 				successList1 = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
 		}
@@ -12282,8 +12288,10 @@ public class BaseController  extends BaseFunction{
 			successList = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, commitId, force, downloadList);
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
+				Log.debug("verReposCheckOutForDownloadEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitId(repos, commitId);
+				Log.debug("verReposCheckOutForDownloadEx() to get deletedEntryList from preCommit:" + preCommitId);
 				successList1 = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
 		}
@@ -12356,6 +12364,12 @@ public class BaseController  extends BaseFunction{
 	protected List<Doc> verReposCheckOutForDownloadLegacy(Repos repos, Doc doc, ReposAccess reposAccess, String localParentPath, String targetName, String commitId, boolean force, HashMap<String,String> downloadList) 
 	{
 		Log.debug("verReposCheckOutForDownload() doc:[" + doc.getPath() + doc.getName() + "] commitId:" + commitId);
+		if(downloadList != null && downloadList.size() == 0)
+		{
+			Log.debug("verReposCheckOutForDownload() downloadList is empty");
+			return null;
+		}
+		
 		DocAuth curDocAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, reposAccess.getAuthMask());
 		HashMap<Long, DocAuth> docAuthHashMap = getUserDocAuthHashMapWithMask(reposAccess.getAccessUser().getId(), repos.getId(), reposAccess.getAuthMask());
 
@@ -12375,6 +12389,12 @@ public class BaseController  extends BaseFunction{
 	
 	private List<Doc> verReposCheckOutForDownload(Repos repos, Doc doc, ReposAccess reposAccess, String tmpLocalRootPath, String localParentPath, String targetName, String commitId, boolean force, HashMap<String,String> downloadList) 
 	{
+		if(downloadList != null && downloadList.size() == 0)
+		{
+			Log.debug("verReposCheckOutForDownload() downloadList is empty");
+			return null;
+		}
+		
 		CommitLog commit = getCommitLogById(repos, commitId);
 		if(commit == null)
 		{
