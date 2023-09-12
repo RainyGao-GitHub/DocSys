@@ -2387,7 +2387,6 @@ public class DocController extends BaseController{
 			if(targetName.isEmpty())
 			{
 				compressTargetName = repos.getName() + ".zip";
-				compressTargetPath = compressTargetPath + repos.getName() + "/";
 			}
 			DownloadPrepareTask downloadPrepareTask = createDownloadPrepareTask(
 					repos,
@@ -4934,7 +4933,6 @@ public class DocController extends BaseController{
 			if(doc.getName().isEmpty())
 			{
 				targetName =  commitId + "_" + repos.getName();	
-				userTmpDir = userTmpDir + targetName + "/";	//仓库根目录必须提供一个额外路径，否则移动会失败
 			}
 			else
 			{

@@ -21175,7 +21175,6 @@ public class BaseController  extends BaseFunction{
 		if(tmpCheckoutName.isEmpty())
 		{
 			tmpCheckoutName = repos.getName();
-			tmpCheckoutPath = tmpCheckoutPath + tmpCheckoutName + "/";	//仓库根目录必须提供一个额外路径，否则移动会失败
 		}
 		
 		//downloadAll != 1 表示只下载在这次提交的文件
@@ -21330,7 +21329,6 @@ public class BaseController  extends BaseFunction{
 		if(tmpCheckoutName.isEmpty())
 		{
 			tmpCheckoutName = repos.getName();
-			tmpCheckoutPath = tmpCheckoutPath + tmpCheckoutName + "/";	//仓库根目录必须提供一个额外路径，否则移动会失败
 		}
 		
 		//downloadAll != 1 表示只下载在这次提交的文件
