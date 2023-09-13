@@ -7381,7 +7381,7 @@ public class BaseController  extends BaseFunction{
 		return svnUtil.getReposPreviousCommmitId(commitId);
 	}
 
-	private String verReposGetLatestReposCommitIdEx(Repos repos) 
+	protected String verReposGetLatestReposCommitIdEx(Repos repos) 
 	{
 		if(isLegacyReposHistory(repos))
 		{
@@ -7390,7 +7390,7 @@ public class BaseController  extends BaseFunction{
 		return verReposGetLatestReposCommitId(repos);
 	}
 	
-	private String verReposGetLatestReposCommitId(Repos repos) {
+	protected String verReposGetLatestReposCommitId(Repos repos) {
 		CommitLog commit = getLatestReposCommit(repos);
 		if(commit == null)
 		{

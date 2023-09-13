@@ -4823,6 +4823,16 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
+		if(commitId == null || commitId.isEmpty())
+		{
+			commitId = verReposGetLatestReposCommitIdEx(repos);
+			if(commitId == null)
+			{
+				docSysErrorLog("该仓库暂无历史数据", rt);
+				return;
+			}
+		}
+		
 		getRealDocHistoryDetail(
 				repos, 
 				docId, pid, path, name, level, type, 

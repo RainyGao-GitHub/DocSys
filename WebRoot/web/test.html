@@ -309,7 +309,7 @@
 			 			<li>	
 			 				<i class="cell w7">查询文件历史</i> 	
 			 				<i class="cell w20">		
-			 					<input id="querySystemLogUrl" value="http://localhost:8100/DocSystem/Doc/getDocHistory.do" type="text" style="width:80%">
+			 					<input id="getDocHistoryUrl" value="http://localhost:8100/DocSystem/Doc/getDocHistory.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
 			 					<textarea id="getDocHistoryParam">
@@ -317,7 +317,7 @@
 			 						"reposId":184,
 			 						"path":"",
 			 						"name":"",
-			 						"historyType": "1"	 						
+			 						"historyType": "0"	 						
 			 					}		 					
 			 					</textarea>	
 			 				</i>
@@ -331,23 +331,23 @@
 			 			<li>	
 			 				<i class="cell w7">查询历史详情</i> 	
 			 				<i class="cell w20">		
-			 					<input id="querySystemLogUrl" value="http://localhost:8100/DocSystem/Doc/getHistoryDetail.do" type="text" style="width:80%">
+			 					<input id="getHistoryDetailUrl" value="http://localhost:8100/DocSystem/Doc/getHistoryDetail.do" type="text" style="width:80%">
 			 				</i>	
 			 				<i class="cell w15">		
-			 					<textarea id="etHistoryDetailParam">
+			 					<textarea id="getHistoryDetailParam">
 			 					{
 			 						"reposId":184,
 			 						"path":"",
 			 						"name":"",
-			 						"historyType": "1"	 						
+			 						"historyType": "0"	 						
 			 					}		 					
 			 					</textarea>	
 			 				</i>
 			 				<i class="cell w10">		
-			 					<textarea id="etHistoryDetailResult"></textarea>
+			 					<textarea id="getHistoryDetailResult"></textarea>
 			 				</i>
 			 				<i class="cell w10">
-			 					<a href="javascript:void(0)" onclick="etHistoryDetailTest();" class="mybtn-primary">查询历史详情</a>
+			 					<a href="javascript:void(0)" onclick="getHistoryDetailTest();" class="mybtn-primary">查询历史详情</a>
 			 				</i>
 			 			</li>
 			</div>
