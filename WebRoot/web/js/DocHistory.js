@@ -367,7 +367,7 @@
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
 	             	 downloadAll: 0,
-	             	 needDeletedEntry,
+	             	 needDeletedEntry: 1,
 		             shareId: gShareId,
 	             },
 	             success : function (ret) {
