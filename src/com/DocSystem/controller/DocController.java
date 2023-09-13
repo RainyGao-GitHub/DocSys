@@ -4609,18 +4609,36 @@ public class DocController extends BaseController{
 
 	/****************   get Document History (logList) ******************/
 	@RequestMapping("/getDocHistory.do")
-	public void getDocHistory(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type, 
+	public void getDocHistory(
+			Integer reposId, 
+			Long docId, Long pid, String path, String name,  Integer level, Integer type, 
 			Integer historyType,
 			Integer maxLogNum,
 			String commitId,	//获取该commitId更早的历史
 			Integer shareId,
+			String authCode,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** getDocHistory [" + path + name + "] ****************");
 		Log.info("getDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = null;
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode, null, rt) == null)
+			{
+				Log.debug("getDocHistory checkAuthCode Failed");
+				//docSysErrorLog("无效授权码或授权码已过期！", rt);
+				writeJson(rt, response);		
+				return;
+			}
+			reposAccess = getAuthCode(authCode).getReposAccess();
+		}
+		else		
+		{
+			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		}	
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
@@ -4742,17 +4760,36 @@ public class DocController extends BaseController{
 
 	/****************   get Document History Detail ******************/
 	@RequestMapping("/getHistoryDetail.do")
-	public void getHistoryDetail(Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
+	public void getHistoryDetail(
+			Integer reposId, 
+			Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId,
 			Integer historyType, 
 			Integer shareId,
+			String authCode,
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** getHistoryDetail [" + path + name + "] ****************");
 		Log.info("getHistoryDetail reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId+ " shareId:" + shareId);
 		
 		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		ReposAccess reposAccess = null;
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode, null, rt) == null)
+			{
+				Log.debug("getHistoryDetail checkAuthCode Failed");
+				//docSysErrorLog("无效授权码或授权码已过期！", rt);
+				writeJson(rt, response);		
+				return;
+			}
+			reposAccess = getAuthCode(authCode).getReposAccess();
+		}
+		else		
+		{
+			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		}
+		
 		if(reposAccess == null)
 		{
 			writeJson(rt, response);			
@@ -4765,7 +4802,6 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
-		
 		
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
