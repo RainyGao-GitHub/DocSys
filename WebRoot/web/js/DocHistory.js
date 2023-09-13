@@ -167,7 +167,8 @@
                	        	SubContext.name = docName;
                	        	SubContext.historyType = historyType;
                	        	SubContext.entryPath = entryPath;
-               	        	SubContext.downloadAll = 1;	
+               	        	SubContext.downloadAll = 0;
+               	        	SubContext.needDeletedEntry = 1;
                	        	SubContext.shareId = gShareId;	
                	        	
                 	        showErrorMessage("历史版本下载准备中，可能需要花费较长时间，您可先关闭当前窗口！");
@@ -365,7 +366,8 @@
 	             	 name: docName,
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
-	             	 downloadAll: 1,
+	             	 downloadAll: 0,
+	             	 needDeletedEntry,
 		             shareId: gShareId,
 	             },
 	             success : function (ret) {
