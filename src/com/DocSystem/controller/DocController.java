@@ -43,6 +43,7 @@ import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
+import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LargeFileScanTask;
@@ -5302,10 +5303,18 @@ public class DocController extends BaseController{
 	{
 		if(isLegacyReposHistory(repos))
 		{
-			return isLatestVerReposCommitLegacy(repos, doc, commitId, rt);			
+			if(isLatestVerReposCommitLegacy(repos, doc, commitId, rt))
+			{
+				return !isAnyEntryWasDeletedInCommitLegacy(repos, doc, commitId);
+			}
+			return false;
 		}
 		
-		return isLatestVerReposCommit(repos, doc, commitId, rt);
+		if(isLatestVerReposCommit(repos, doc, commitId, rt))
+		{
+			return !isAnyEntryWasDeletedInCommit(repos, doc, commitId);
+		}
+		return false;
 	}
 	
 	private boolean isLatestVerReposCommit(Repos repos, Doc doc, String commitId, ReturnAjax rt) {
@@ -5321,9 +5330,46 @@ public class DocController extends BaseController{
 		{
 			return true;				
 		}
-
+		
 		return false;		
+	}
+	
+	private boolean isAnyEntryWasDeletedInCommit(Repos repos, Doc doc, String commitId)
+	{		
+		//需要检查detail里是否有删除操作
+		List<CommitEntry> list = channel.queryCommitHistoryDetail(repos, doc, commitId);
+		if(list == null || list.size() == 0)
+		{
+			return false;
+		}
+		
+		for(CommitEntry changedItem: list)
+		{
+			if(changedItem.realCommitAction != null && changedItem.realCommitAction.equals("delete"))
+			{
+				Log.debug("isAnyEntryWasDeletedInCommit() [" + changedItem.path + changedItem.name + "] was deleted in commit:" + commitId);
+				return false;
+			}
 
+			if(changedItem.realCommitAction != null && changedItem.realCommitAction.equals("delete"))
+			{
+				Log.debug("isAnyEntryWasDeletedInCommit() [" + changedItem.path + changedItem.name + "] was deleted in commit:" + commitId);
+				return false;
+			}
+			
+			if(changedItem.commitAction != null)
+			{
+				switch(changedItem.commitAction)
+				{
+				case "deleteDoc":
+				case "moveDoc":
+				case "renameDoc":
+					Log.debug("isAnyEntryWasDeletedInCommit() [" + changedItem.path + changedItem.name + "] was " + changedItem.commitAction + " in commit:" + commitId);					
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private boolean isLatestVerReposCommitLegacy(Repos repos, Doc doc, String commitId, ReturnAjax rt) {
@@ -5339,10 +5385,30 @@ public class DocController extends BaseController{
 		{
 			return true;				
 		}
-
+		
 		return false;		
 	}
-
+	
+	private boolean isAnyEntryWasDeletedInCommitLegacy(Repos repos, Doc doc, String commitId)
+	{
+		//需要检查detail里是否有删除操作
+		List<ChangedItem> list = verReposGetHistoryDetailLegacy(repos, false, doc, commitId);
+		if(list == null || list.size() == 0)
+		{
+			return false;
+		}
+		
+		for(ChangedItem changedItem: list)
+		{
+			if(changedItem.getChangeType() != null && changedItem.getChangeType() == 2)
+			{
+				Log.debug("isAnyEntryWasDeletedInCommitLegacy() [" + changedItem.getEntryPath() + "] was deleted in commit:" + commitId);
+				return true;
+			}
+		}
+		
+		return false;
+	}
 	private LogEntry verReposGetLatestCommit(Repos repos, Doc doc) 
 	{
 		List<LogEntry> list = verReposGetHistoryLegacy(repos, false, doc, 1, null);
