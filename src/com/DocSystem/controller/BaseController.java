@@ -7319,7 +7319,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private String verReposGetPreviousReposCommitId(Repos repos, String commitId) {
-		CommitLog commit = getPreviousCommit(repos, null, commitId);
+		CommitLog commit = verReposGetPreviousCommit(repos, null, commitId);
 		if(commit == null)
 		{
 			return null;
@@ -7327,7 +7327,7 @@ public class BaseController  extends BaseFunction{
 		return commit.commitId + "";
 	}
 	
-	protected CommitLog getPreviousCommit(Repos repos, Doc doc, String commitId)
+	protected CommitLog verReposGetPreviousCommit(Repos repos, Doc doc, String commitId)
 	{
 		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 2, null, commitId);
 		if(list == null || list.size() < 2)
@@ -7348,15 +7348,39 @@ public class BaseController  extends BaseFunction{
 		
 		if(verCtrl == 1)
 		{
-			return svnGetDocLatestReposRevision(repos, isRealDoc);			
+			return svnGetPreviousReposRevision(repos, isRealDoc, commitId);			
 		}
 		else if(verCtrl == 2)
 		{
-			return gitGetDocLatestReposRevision(repos, isRealDoc);	
+			return gitGetPreviousReposRevision(repos, isRealDoc, commitId);	
 		}
 		return null;
 	}
 	
+	private String gitGetPreviousReposRevision(Repos repos, boolean isRealDoc, String commitId) {
+		//GitUtil Init
+		GITUtil gitUtil = new GITUtil();
+		if(gitUtil.Init(repos, isRealDoc, "") == false)
+		{
+			Log.debug("gitGetPreviousReposRevision() GITUtil Init failed");
+			return null;
+		}
+		
+		return gitUtil.getReposPreviousCommmitId(commitId);	
+	}
+
+	private String svnGetPreviousReposRevision(Repos repos, boolean isRealDoc, String commitId) 
+	{
+		SVNUtil svnUtil = new SVNUtil();
+		if(svnUtil.Init(repos, isRealDoc, "") == false)
+		{
+			Log.debug("svnGetPreviousReposRevision() svnUtil.Init失败！");	
+			return null;
+		}
+
+		return svnUtil.getReposPreviousCommmitId(commitId);
+	}
+
 	private String verReposGetLatestReposCommitIdEx(Repos repos) 
 	{
 		if(isLegacyReposHistory(repos))
@@ -7433,32 +7457,32 @@ public class BaseController  extends BaseFunction{
 		
 		if(verCtrl == 1)
 		{
-			return svnGetDocLatestReposRevision(repos, isRealDoc);			
+			return svnGetLatestReposRevision(repos, isRealDoc);			
 		}
 		else if(verCtrl == 2)
 		{
-			return gitGetDocLatestReposRevision(repos, isRealDoc);	
+			return gitGetLatestReposRevision(repos, isRealDoc);	
 		}
 		return null;
 	}
 	
-	private String svnGetDocLatestReposRevision(Repos repos, boolean isRealDoc) {
+	private String svnGetLatestReposRevision(Repos repos, boolean isRealDoc) {
 		SVNUtil svnUtil = new SVNUtil();
 		if(svnUtil.Init(repos, isRealDoc, "") == false)
 		{
-			Log.debug("svnGetDocLatestReposRevision() svnUtil.Init失败！");	
+			Log.debug("svnGetLatestReposRevision() svnUtil.Init失败！");	
 			return null;
 		}
 
 		return svnUtil.getLatestReposRevision();	
 	}
 	
-	private String gitGetDocLatestReposRevision(Repos repos, boolean isRealDoc) {
+	private String gitGetLatestReposRevision(Repos repos, boolean isRealDoc) {
 		//GitUtil Init
 		GITUtil gitUtil = new GITUtil();
 		if(gitUtil.Init(repos, isRealDoc, "") == false)
 		{
-			Log.debug("gitGetDocLatestReposRevision() GITUtil Init failed");
+			Log.debug("gitGetLatestReposRevision() GITUtil Init failed");
 			return null;
 		}
 		
