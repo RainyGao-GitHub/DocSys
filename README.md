@@ -109,7 +109,7 @@ Windows系统下载【docsys-win-x.xx.xx.zip】
 ### 限制
 | 功能限制       |   个人版         | 专业版         | 企业版         | 开发者版         |
 | ------------- |  -------------   | ------------- | -------------  |
-| 价格           | [免费](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)          | [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) | [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) |  [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) |
+| 价格           | [免费](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)  | [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) | [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) |  面议 |
 | 文件管理功能     | +         |       +       |     +         |     +         |
 | 权限管理功能     | +         |       +       |     +         |     +         |
 | 用户管理功能     | +         |       +       |     +         |     +         |
