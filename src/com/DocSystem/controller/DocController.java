@@ -5069,7 +5069,7 @@ public class DocController extends BaseController{
 			HttpSession session, HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** revertDocHistory [" + path + name + "] ****************");
-		Log.info("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath+ " shareId:" + shareId);
+		Log.info("revertDocHistory reposId:" + reposId + " docId: " + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " historyType:" + historyType + " commitId:" + commitId + " entryPath:" + entryPath+ " shareId:" + shareId + " downloadAll:" + downloadAll +  " needDeletedEntry:" + needDeletedEntry);
 
 		//如果entryPath非空则表示实际要还原的entry要以entryPath为准 
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
@@ -5124,7 +5124,6 @@ public class DocController extends BaseController{
 				session, request, response);
 	}
 	
-	//TODO: needDeletedEntry 逻辑未处理
 	private void revertRealDocHistory(
 			String taskId,
 			Repos repos,
