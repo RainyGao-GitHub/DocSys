@@ -288,7 +288,7 @@
 			 				</i>
 			 			</li>
 			 			<li>	
-			 				<i class="cell w7">查询状态</i> 	
+			 				<i class="cell w7">查询系统日志</i> 	
 			 				<i class="cell w20">		
 			 					<input id="querySystemLogUrl" value="http://localhost:8100/DocSystem/Doc/querySystemLog.do" type="text" style="width:80%">
 			 				</i>	
@@ -303,7 +303,51 @@
 			 					<textarea id="querySystemLogResult"></textarea>
 			 				</i>
 			 				<i class="cell w10">
-			 					<a href="javascript:void(0)" onclick="querySystemLogTest();" class="mybtn-primary">查询状态</a>
+			 					<a href="javascript:void(0)" onclick="querySystemLogTest();" class="mybtn-primary">查询系统日志</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">查询文件历史</i> 	
+			 				<i class="cell w20">		
+			 					<input id="querySystemLogUrl" value="http://localhost:8100/DocSystem/Doc/getDocHistory.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea id="getDocHistoryParam">
+			 					{
+			 						"reposId":184,
+			 						"path":"",
+			 						"name":"",
+			 						"historyType": "1"	 						
+			 					}		 					
+			 					</textarea>	
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="getDocHistoryResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="getDocHistoryTest();" class="mybtn-primary">查询文件历史</a>
+			 				</i>
+			 			</li>
+			 			<li>	
+			 				<i class="cell w7">查询历史详情</i> 	
+			 				<i class="cell w20">		
+			 					<input id="querySystemLogUrl" value="http://localhost:8100/DocSystem/Doc/getHistoryDetail.do" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea id="etHistoryDetailParam">
+			 					{
+			 						"reposId":184,
+			 						"path":"",
+			 						"name":"",
+			 						"historyType": "1"	 						
+			 					}		 					
+			 					</textarea>	
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="etHistoryDetailResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="etHistoryDetailTest();" class="mybtn-primary">查询历史详情</a>
 			 				</i>
 			 			</li>
 			</div>
@@ -681,17 +725,91 @@ function querySystemLogTest()
         	console.log("querySystemLogTest", ret)
      		if(ret.status == "ok")
         	{
-            	alert("查询状态成功");
+            	alert("查询系统日志成功");
             	$("#querySystemLogResult").val(JSON.stringify(ret));
 			}
             else
             {
-            	alert("查询状态失败:" + ret.msgInfo);
+            	alert("查询系统日志失败:" + ret.msgInfo);
             	$("#querySystemLogResult").val(JSON.stringify(ret));        		
             }
         },
         error : function () {
-        	alert ("查询状态失败: 服务器异常");
+        	alert ("查询系统日志失败: 服务器异常");
+        }
+    });
+}
+
+function getDocHistoryTest()
+{
+	var paramStr = $("#getDocHistoryParam").val();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
+	$.ajax({
+        url : $("#getDocHistoryUrl").val(),
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId: param.reposId,
+            path:param.path,
+            name:param.name,
+            historyType:param.historyType,
+            authCode: gAuthCode,
+        },
+        success : function (ret) {
+        	console.log("getDocHistoryTest", ret)
+     		if(ret.status == "ok")
+        	{
+            	alert("获取文件历史成功");
+            	$("#getDocHistoryResult").val(JSON.stringify(ret));
+			}
+            else
+            {
+            	alert("获取文件历史失败:" + ret.msgInfo);
+            	$("#getDocHistoryTestResult").val(JSON.stringify(ret));        		
+            }
+        },
+        error : function () {
+        	alert ("获取文件历史失败: 服务器异常");
+        }
+    });
+}
+
+function getHistoryDetailTest()
+{
+	var paramStr = $("#getHistoryDetailParam").val();
+	console.log(paramStr);	
+	var param = JSON.parse(paramStr);
+	console.log(param);
+	
+	$.ajax({
+        url : $("#getHistoryDetailUrl").val(),
+        type : "post",
+        dataType : "json",
+        data : {
+            reposId: param.reposId,
+            path:param.path,
+            name:param.name,
+            historyType:param.historyType,
+            authCode: gAuthCode,
+        },
+        success : function (ret) {
+        	console.log("getHistoryDetailTest", ret)
+     		if(ret.status == "ok")
+        	{
+            	alert("获取历史详情成功");
+            	$("#getHistoryDetailResult").val(JSON.stringify(ret));
+			}
+            else
+            {
+            	alert("获取历史详情失败:" + ret.msgInfo);
+            	$("#getHistoryDetailResult").val(JSON.stringify(ret));        		
+            }
+        },
+        error : function () {
+        	alert ("获取历史详情失败: 服务器异常");
         }
     });
 }
