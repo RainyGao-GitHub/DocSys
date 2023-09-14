@@ -6705,12 +6705,33 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//Log.debug("getRemoteDocChangeType old revision:" + dbDoc.getRevision() + " new revision:" + remoteEntry.getRevision()); 
-			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null || !dbDoc.getRevision().equals(remoteEntry.getRevision()))
-			{
+			if(dbDoc.getRevision() == null || remoteEntry.getRevision() == null)
+			{	
+				//revision 信息不全直接判定未有改动
 				Log.debug("getRemoteDocChangeType file [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + ": refRevision[" + dbDoc.getRevision() + "] curRevision[" + remoteEntry.getRevision() + "]"); 
 				return DocChangeType.REMOTECHANGE;
-			}			
-			//Log.debug("getRemoteDocChangeType " + remoteEntry.getPath() + remoteEntry.getName() + " " + DocChangeType.NOCHANGE); 
+			}
+			
+			//revision信息一致: 未改动
+			if(dbDoc.getRevision().equals(remoteEntry.getRevision()))
+			{
+				return DocChangeType.NOCHANGE;
+			}
+			
+			//revision信息不一致，可能只是这个文件的内容没有发生变化导致的，实际可能已经是最新的了，需要通过commitTime进一步判定
+			if(dbDoc.commitTime == null || remoteEntry.commitTime == null)
+			{
+				Log.debug("getRemoteDocChangeType file [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + ": refCommitTime[" + dbDoc.commitTime + "] curCommitTime[" + remoteEntry.commitTime + "]"); 				
+				return DocChangeType.REMOTECHANGE;
+			}
+				
+			//dbDoc的commitTime比版本仓库中的要旧，说明版本仓库里的文件有改动
+			if(dbDoc.commitTime < remoteEntry.commitTime)
+			{
+				Log.debug("getRemoteDocChangeType file [" + remoteEntry.getPath() + remoteEntry.getName() + "] " + DocChangeType.REMOTECHANGE + ": refCommitTime[" + dbDoc.commitTime + "] curCommitTime[" + remoteEntry.commitTime + "]"); 
+				return DocChangeType.REMOTECHANGE;
+			}
+			
 			return DocChangeType.NOCHANGE;
 		}
 		
