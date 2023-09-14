@@ -813,9 +813,9 @@ public class GITUtil  extends BaseController{
 	    		//GIT的tree包含了在当前版本上存在的目录树信息，但并不知道这个目录树上每个节点的大小和最近一次的提交信息（因为有些节点不是在当前版本修改的）
 	    		//所以需要size是通过获取节点的blod信息来获取的，而文件的最近提交信息怎是要通过查询节点最近的一次log来获取
 	    		//为什么这么做主要是由GIT仓库的实现方式决定的 RevCommit[Tree[blob/Tree]]
-//	    		ObjectId objectId = treeWalk.getObjectId(0);	//不知道为什么在这里获取到的objectId是Null
-//                ObjectLoader loader = repository.open(objectId);
-//                subDoc.setSize(loader.getSize());
+	    		//	    		ObjectId objectId = treeWalk.getObjectId(0);	//不知道为什么在这里获取到的objectId是Null
+	    		//                ObjectLoader loader = repository.open(objectId);
+	    		//                subDoc.setSize(loader.getSize());
 	    		//subDoc.setLatestEditTime(commitTime);
 	    		//subDoc.setRevision(commitId);
 
@@ -828,7 +828,7 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
 
-		//由于通过treeWalk只是获取了这个Revision上的村子的文件节点（换句话说，在这个revision上存在的文件节点，并不意味着这个文件节点在这个revision上有变更）
+		//由于通过treeWalk只是获取了这个Revision上的文件节点（换句话说，在这个revision上存在的文件节点，并不意味着这个文件节点在这个revision上有变更）
         //由于目前的同步方案是通过文件节点的revision来确定文件是否被更新，因此必须获取文件节点真正有变更的最新revision，SVN在遍历节点时能够直接取到，
         //但GIT就目前而言需要额外去获取对应文件的最新版本
         //getTheRealLatestRevision For File
@@ -841,7 +841,9 @@ public class GITUtil  extends BaseController{
         		if(subDocRevisionCommit != null)
         		{
         			subDoc.setRevision(subDocRevisionCommit.getName());
-        			subDoc.setLatestEditTime(convertCommitTime(subDocRevisionCommit.getCommitTime()));	
+        			Long commitTime = convertCommitTime(subDocRevisionCommit.getCommitTime());
+        			subDoc.setLatestEditTime(commitTime);	
+        			subDoc.commitTime = commitTime;
         		}
         		else
         		{

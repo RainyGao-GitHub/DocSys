@@ -13,7 +13,7 @@ public class Doc  implements Comparable<Doc>{
 
     private String checkSum;
 
-    private String revision;
+    private String revision;	//用于标记版本信息
 
     private String path;
 
@@ -66,6 +66,8 @@ public class Doc  implements Comparable<Doc>{
 
 	private Integer shareId;
 
+	public Long commitTime;	//主要用于记录和存放remoteEntry的版本提交时间（和revision对应）
+	
 	public Boolean isBussiness;
 	
 	public Integer officeType;

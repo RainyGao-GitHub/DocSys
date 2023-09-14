@@ -4454,6 +4454,7 @@ public class BaseController  extends BaseFunction{
 		doc.setSize(file.length());
 		doc.setLatestEditTime(file.lastModified());
 		doc.setCreateTime(file.lastModified());
+		doc.commitTime = file.lastModified();	//用于辅助比较revision(revision不同时)
 		boolean ret = LuceneUtil2.addIndex(doc, null, indexLib);
 
 		if(addSubDocs && file.isDirectory())

@@ -334,6 +334,11 @@ public class LuceneUtil2   extends BaseFunction
         	document.add(new Field("revision", doc.getRevision(), Store.YES, Index.NOT_ANALYZED_NO_NORMS));
         }
         
+        if(doc.commitTime != null)
+        {
+            document.add(new LongField("commitTime", doc.getLatestEditTime(), Store.YES));
+        }
+        
         //Content
         if(content != null)
         {
@@ -382,7 +387,13 @@ public class LuceneUtil2   extends BaseFunction
     	{
     		doc.setLatestEditTime(Long.parseLong(strLatestEditTime));
     	}
-
+	   	
+	   	String strCommitTime = document.get("commitTime");
+	   	if(strCommitTime != null)
+    	{
+    		doc.commitTime = Long.parseLong(strCommitTime);
+    	}
+	   	
 	   	doc.setPath(document.get("path"));
 	   	doc.setName(document.get("name"));
 	   	doc.setRevision(document.get("revision"));

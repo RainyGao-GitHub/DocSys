@@ -1565,16 +1565,17 @@ public class SVNUtil  extends BaseController{
 	    	}
 			
 	    	String subEntryName = subEntry.getName();
-	    	Long lastChangeTime = subEntry.getDate().getTime();
+	    	Long commitTime = subEntry.getDate().getTime();
 	    	Doc subDoc = buildBasicDoc(repos.getId(), null, doc.getDocId(),  doc.getReposPath(), subDocParentPath, subEntryName, subDocLevel, subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), subEntry.getSize(), "");
 	    	subDoc.setSize(subEntry.getSize());
-	    	subDoc.setCreateTime(lastChangeTime);
-	    	subDoc.setLatestEditTime(lastChangeTime);
+	    	subDoc.setCreateTime(commitTime);
+	    	subDoc.setLatestEditTime(commitTime);
 	    	subDoc.setCreatorName(subEntry.getAuthor());
 	    	subDoc.setLatestEditorName(subEntry.getAuthor());
 	    	subDoc.setRevision(subEntry.getRevision()+"");
     		subDoc.setLocalRootPath(doc.getLocalRootPath());
     		subDoc.setLocalVRootPath(doc.getLocalVRootPath());
+    		subDoc.commitTime = commitTime;
 	        subEntryList.add(subDoc);
 	    }
 	    return subEntryList;
