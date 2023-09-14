@@ -377,7 +377,8 @@ public class GITUtil  extends BaseController{
         	Log.debug("getDoc() Failed to geRevCommitByCommitId:" + revision);
             return null;
         }
-		
+		//注意: RevCommit是Commit的信息，所以并没有文件大小信息
+        
         String commitId=commit.getName();  //revision
 	    String author=commit.getAuthorIdent().getName();  //作者
 	    String commitUser=commit.getCommitterIdent().getName();
