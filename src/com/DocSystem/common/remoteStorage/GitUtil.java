@@ -331,12 +331,6 @@ public class GitUtil {
 
 		Log.debug("geRevCommitByCommitId entryPath:" + entryPath);	
 
-    	if(OpenRepos() == false)
-    	{
-        	Log.debug("geRevCommitByCommitId() Failed to open git repository");
-    		return null;
-    	}
-    	
     	try {				
 		    Iterable<RevCommit> iterable = null;
 	    	if(commitId == null)
@@ -372,7 +366,6 @@ public class GitUtil {
 		    Iterator<RevCommit> iter=iterable.iterator();
 	        while (iter.hasNext()){
 	            RevCommit commit=iter.next();
-	            CloseRepos();
 	            return commit;
 	        }
 	        	        
@@ -380,7 +373,6 @@ public class GitUtil {
 	    } catch (Exception e) {
 			Log.debug("geRevCommitByCommitId 异常");	
 			Log.info(e);
-			CloseRepos();
 		}
     	
     	return null;

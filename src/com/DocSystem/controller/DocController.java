@@ -3429,6 +3429,8 @@ public class DocController extends BaseController{
 			ReturnAjax rt,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session) 
 	{
+		Log.info("getRealDocHistoryContent reposId:" + repos.getId() + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId  + " needDeletedEntry:" + needDeletedEntry);
+		
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
