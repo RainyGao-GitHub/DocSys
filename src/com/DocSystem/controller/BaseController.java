@@ -7515,7 +7515,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 
-		return svnUtil.getLatestRevision(doc);		
+		return svnUtil.getLatestDocRevision(doc);		
 	}
 	
 	private String gitGetLatestDocRevision(Repos repos, Doc doc) {
@@ -7527,7 +7527,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		return gitUtil.getLatestRevision(doc);		
+		return gitUtil.getLatestDocRevision(doc);		
 	}
 
 	

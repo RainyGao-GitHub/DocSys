@@ -190,7 +190,7 @@ public class SvnUtil {
 	
 	public String doCopy(String srcPath, String srcName, String dstPath, String dstName, String commitMsg,String commitUser,  boolean isMove)
 	{	
-		long latestRevision = getLatestRevision();
+		long latestRevision = getLatestReposRevision();
 		Integer type = checkPath(srcPath + srcName, -1L);
 		if(type == null || type == -1 || type == 0)
 		{
@@ -221,8 +221,100 @@ public class SvnUtil {
 	    return commitInfo.getNewRevision()+"";
 	}
 	
+	private SVNLogEntry getRevCommitByCommitId(Doc doc, String commitId) 
+	{
+		if(commitId == null)
+		{
+			return getLatestRevCommit(doc);
+		}
+		
+		String entryPath = doc.getPath() + doc.getName();
+        try {
+    		String[] targetPaths = new String[]{entryPath};
+    		long endRevision = Long.parseLong(commitId);
+    		long startRevision = 0;	//commitId是仓库的revision，所以对于文件而言需要使用区间进行查询
+    		if(entryPath.isEmpty())	//For rootDoc just to get the latest revison
+    		{
+    			startRevision = endRevision;
+    		}
+    		
+    		Collection<SVNLogEntry> logEntries = null;
+    		logEntries = repository.log(targetPaths, null, startRevision, endRevision, false, false);
+    		if(logEntries == null)
+    		{
+    			Log.debug("getRevCommitByCommitId() there is no history for " + entryPath);
+    			return null;
+    		}
+            
+    		Iterator<SVNLogEntry> entries = logEntries.iterator();
+    		SVNLogEntry logEntry = null;
+    		while(entries.hasNext()) {
+                /*
+                 * gets a next SVNLogEntry
+                 */
+                logEntry = (SVNLogEntry) entries.next();
+            }
+            
+        } catch (Exception e) {
+            Log.debug("getLogEntryList() repository.log() 异常");
+            Log.info(e);
+        }
+
+        return null;
+	}
     
-	private long getLatestRevision() {
+	private SVNLogEntry getLatestRevCommit(Doc doc) 
+	{
+		String entryPath = doc.getPath() + doc.getName();
+		
+        try {
+    		String[] targetPaths = new String[]{entryPath};
+    		long endRevision = repository.getLatestRevision();
+    		long startRevision = 0;
+    		if(entryPath.isEmpty())	//For rootDoc just to get the latest revison
+    		{
+    			startRevision = endRevision;
+    		}
+    		
+    		Collection<SVNLogEntry> logEntries = null;
+    		logEntries = repository.log(targetPaths, null, startRevision, endRevision, false, false);
+    		if(logEntries == null)
+    		{
+    			Log.debug("getLatestRevCommit() there is no history for " + entryPath);
+    			return null;
+    		}
+            
+    		Iterator<SVNLogEntry> entries = logEntries.iterator();
+    		SVNLogEntry logEntry = null;
+    		while(entries.hasNext()) {
+                /*
+                 * gets a next SVNLogEntry
+                 */
+                logEntry = (SVNLogEntry) entries.next();
+            }
+            return logEntry;
+            
+        } catch (Exception e) {
+            Log.debug("getLogEntryList() repository.log() 异常");
+            Log.info(e);
+        }
+
+        return null;
+	}
+	
+    public String getLatestDocRevision(Doc doc) 
+    {
+    	SVNLogEntry commit = getLatestRevCommit(doc);	
+    	if(commit == null)
+    	{
+    		return null;
+    	}
+    	
+        String revision = commit.getRevision() + "";  //revision
+		return revision;
+	}
+    
+	private long getLatestReposRevision() {
 		long revision = -1L;
 		try {
 			revision =  repository.getLatestRevision();

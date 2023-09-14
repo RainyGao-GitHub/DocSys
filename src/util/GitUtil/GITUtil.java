@@ -340,7 +340,7 @@ public class GITUtil  extends BaseController{
 		return null;
 	}
         
-    public String getLatestRevision(Doc doc) 
+    public String getLatestDocRevision(Doc doc) 
     {
     	RevCommit commit = getLatestRevCommit(doc);	
     	if(commit == null)

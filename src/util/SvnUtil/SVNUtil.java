@@ -238,7 +238,7 @@ public class SVNUtil  extends BaseController{
         return null;
 	}
     
-    public String getLatestRevision(Doc doc) 
+    public String getLatestDocRevision(Doc doc) 
     {
     	SVNLogEntry commit = getLatestRevCommit(doc);	
     	if(commit == null)
