@@ -242,7 +242,68 @@ public class GITUtil  extends BaseController{
 			return null;
 		}
 	}
-    
+
+	private RevCommit geRevCommitByCommitId(Doc doc, String commitId) 
+	{
+    	String entryPath = doc.getPath() + doc.getName();
+
+		Log.debug("geRevCommitByCommitId entryPath:" + entryPath);	
+
+    	if(OpenRepos() == false)
+    	{
+        	Log.debug("geRevCommitByCommitId() Failed to open git repository");
+    		return null;
+    	}
+    	
+    	try {				
+		    Iterable<RevCommit> iterable = null;
+	    	if(commitId == null)
+	    	{
+			    if(entryPath == null || entryPath.isEmpty())
+			    {
+		    		iterable = git.log().setMaxCount(1).call();
+			    }
+			    else
+			    {
+			    	iterable = git.log().addPath(entryPath).setMaxCount(1).call();
+			    }
+	    	}
+	    	else
+	    	{
+		        //Get objId for revision
+		        ObjectId objId = repository.resolve(commitId);
+		        if(objId == null)
+		        {
+		        	Log.debug("geRevCommitByCommitId() There is no any commit history for repository:"  + gitDir + " at revision:"+ commitId);
+		        	return null;
+		        }
+			    if(entryPath == null || entryPath.isEmpty())
+			    {
+			        iterable = git.log().setMaxCount(1).add(objId).call();			        
+			    }
+			    else
+			    {
+			    	iterable = git.log().addPath(entryPath).setMaxCount(1).add(objId).call();
+			    }
+	    	}
+	    	
+		    Iterator<RevCommit> iter=iterable.iterator();
+	        while (iter.hasNext()){
+	            RevCommit commit=iter.next();
+	            CloseRepos();
+	            return commit;
+	        }
+	        	        
+	        CloseRepos();
+	    } catch (Exception e) {
+			Log.debug("geRevCommitByCommitId 异常");	
+			Log.info(e);
+			CloseRepos();
+		}
+    	
+    	return null;
+	}
+	
 	private RevCommit getLatestRevCommit(Doc doc) {
     	if(OpenRepos() == false)
     	{
@@ -309,20 +370,12 @@ public class GITUtil  extends BaseController{
 	    	remoteEntry.setRevision(revision);
 	    	return remoteEntry;
 		}
-
-        if(revision != null) 
-		{
-        	//If revision already set, no need to get revision
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-	    	remoteEntry.setRevision(revision);
-	    	return remoteEntry;
-		}
-
-        RevCommit commit = getLatestRevCommit(doc);
+        
+        RevCommit commit = geRevCommitByCommitId(doc, revision);
         if(commit == null)
         {
-        	Log.debug("getLatestRevision() Failed to getLatestRevCommit");
-        	return null;
+        	Log.debug("getDoc() Failed to geRevCommitByCommitId:" + revision);
+            return null;
         }
 		
         String commitId=commit.getName();  //revision
@@ -336,6 +389,7 @@ public class GITUtil  extends BaseController{
         remoteDoc.setCreatorName(author);
         remoteDoc.setLatestEditorName(commitUser);
         remoteDoc.setLatestEditTime(commitTime);
+        remoteDoc.commitTime = commitTime;
         return remoteDoc;
     }
 

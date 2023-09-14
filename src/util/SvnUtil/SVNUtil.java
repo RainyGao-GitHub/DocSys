@@ -157,6 +157,48 @@ public class SVNUtil  extends BaseController{
 		}
 	}
     
+	private SVNLogEntry getRevCommitByCommitId(Doc doc, String commitId) 
+	{
+		if(commitId == null)
+		{
+			return getLatestRevCommit(doc);
+		}
+		
+		String entryPath = doc.getPath() + doc.getName();
+        try {
+    		String[] targetPaths = new String[]{entryPath};
+    		long endRevision = Long.parseLong(commitId);
+    		long startRevision = 0;	//commitId是仓库的revision，所以对于文件而言需要使用区间进行查询
+    		if(entryPath.isEmpty())	//For rootDoc just to get the latest revison
+    		{
+    			startRevision = endRevision;
+    		}
+    		
+    		Collection<SVNLogEntry> logEntries = null;
+    		logEntries = repository.log(targetPaths, null, startRevision, endRevision, false, false);
+    		if(logEntries == null)
+    		{
+    			Log.debug("getRevCommitByCommitId() there is no history for " + entryPath);
+    			return null;
+    		}
+            
+    		Iterator<SVNLogEntry> entries = logEntries.iterator();
+    		SVNLogEntry logEntry = null;
+    		while(entries.hasNext()) {
+                /*
+                 * gets a next SVNLogEntry
+                 */
+                logEntry = (SVNLogEntry) entries.next();
+            }
+            
+        } catch (Exception e) {
+            Log.debug("getLogEntryList() repository.log() 异常");
+            Log.info(e);
+        }
+
+        return null;
+	}
+    
 	private SVNLogEntry getLatestRevCommit(Doc doc) 
 	{
 		String entryPath = doc.getPath() + doc.getName();
@@ -231,14 +273,6 @@ public class SVNUtil  extends BaseController{
 	    	return remoteEntry;
 		}
 
-        if(commitId != null) 
-		{
-        	//If revision already set, no need to get revision
-	    	Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), type, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-	    	remoteEntry.setRevision(commitId);
-	    	return remoteEntry;
-		}
-        
         //For root doc
         if(entryPath.isEmpty())
         {
@@ -260,7 +294,7 @@ public class SVNUtil  extends BaseController{
         	return remoteEntry;
         }
         
-        
+        //获取文件的具体信息
 		Collection<SVNDirEntry> entries = getSubEntries(doc.getPath(), revision);
 		if(entries == null)
 		{
@@ -286,14 +320,15 @@ public class SVNUtil  extends BaseController{
 					Log.debug("getDoc() type not matched subEntryType:" + subEntryType + " type:" + type);      			    		
 		    	}
 	    		
-	    		Long lastChangeTime = subEntry.getDate().getTime();
+	    		Long commitTime = subEntry.getDate().getTime();
 	    		Doc remoteEntry = buildBasicDoc(doc.getVid(), doc.getDocId(), doc.getPid(), doc.getReposPath(), doc.getPath(), doc.getName(), doc.getLevel(), subEntryType, doc.getIsRealDoc(), doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
 	    		remoteEntry.setSize(subEntry.getSize());
-	    		remoteEntry.setCreateTime(lastChangeTime);
-	    		remoteEntry.setLatestEditTime(lastChangeTime);
+	    		remoteEntry.setCreateTime(commitTime);
+	    		remoteEntry.setLatestEditTime(commitTime);
 	    		remoteEntry.setCreatorName(subEntry.getAuthor());
 	    		remoteEntry.setLatestEditorName(subEntry.getAuthor());
 	    		remoteEntry.setRevision(subEntry.getRevision()+"");
+	    		remoteEntry.commitTime = commitTime;
 	    		return remoteEntry;
 	    	}
 	    }

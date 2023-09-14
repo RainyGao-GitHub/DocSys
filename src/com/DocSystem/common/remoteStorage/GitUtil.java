@@ -325,6 +325,67 @@ public class GitUtil {
 		return -1;
 	}
 	
+	public RevCommit geRevCommitByCommitId(Doc doc, String commitId) 
+	{
+    	String entryPath = doc.getPath() + doc.getName();
+
+		Log.debug("geRevCommitByCommitId entryPath:" + entryPath);	
+
+    	if(OpenRepos() == false)
+    	{
+        	Log.debug("geRevCommitByCommitId() Failed to open git repository");
+    		return null;
+    	}
+    	
+    	try {				
+		    Iterable<RevCommit> iterable = null;
+	    	if(commitId == null)
+	    	{
+			    if(entryPath == null || entryPath.isEmpty())
+			    {
+		    		iterable = git.log().setMaxCount(1).call();
+			    }
+			    else
+			    {
+			    	iterable = git.log().addPath(entryPath).setMaxCount(1).call();
+			    }
+	    	}
+	    	else
+	    	{
+		        //Get objId for revision
+		        ObjectId objId = repository.resolve(commitId);
+		        if(objId == null)
+		        {
+		        	Log.debug("geRevCommitByCommitId() There is no any commit history for repository:"  + gitDir + " at revision:"+ commitId);
+		        	return null;
+		        }
+			    if(entryPath == null || entryPath.isEmpty())
+			    {
+			        iterable = git.log().setMaxCount(1).add(objId).call();			        
+			    }
+			    else
+			    {
+			    	iterable = git.log().addPath(entryPath).setMaxCount(1).add(objId).call();
+			    }
+	    	}
+	    	
+		    Iterator<RevCommit> iter=iterable.iterator();
+	        while (iter.hasNext()){
+	            RevCommit commit=iter.next();
+	            CloseRepos();
+	            return commit;
+	        }
+	        	        
+	        CloseRepos();
+	    } catch (Exception e) {
+			Log.debug("geRevCommitByCommitId 异常");	
+			Log.info(e);
+			CloseRepos();
+		}
+    	
+    	return null;
+	}
+	
 	public RevCommit getLatestRevCommit(Doc doc) {
     	String entryPath = doc.getPath() + doc.getName();
 		try {
