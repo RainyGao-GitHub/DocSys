@@ -1,5 +1,7 @@
 package com.DocSystem.common.entity;
 
+import com.alibaba.fastjson.JSONObject;
+
 public class License {
 	public String id;	//licenseId
 
@@ -17,6 +19,8 @@ public class License {
 
 	public String installedMacList;	//已安装MAC列表
 	public Integer installedCount; //已安装设备数
+	
+	public JSONObject allowedAction;
 
 	public Integer state; //证书状态 0:已作废
 }

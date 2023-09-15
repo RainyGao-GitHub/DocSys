@@ -941,6 +941,7 @@ public class ManageController extends BaseController{
 		systemLicense.put("hasLicense", systemLicenseInfo.hasLicense);
 		systemLicense.put("customer", systemLicenseInfo.customer);
 		systemLicense.put("createTime", systemLicenseInfo.createTime);
+		systemLicense.put("allowedAction", systemLicenseInfo.allowedAction);
 		if(systemLicenseInfo.serverSN != null)
 		{
 			systemLicense.put("serverSN", systemLicenseInfo.serverSN);
