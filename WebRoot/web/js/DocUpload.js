@@ -69,7 +69,7 @@
         var reuploadStartedNum = 0;
         var reuploadList = []; //重传列表，保存的是SubContext的index
         var reuploadIndex = 0;	//This is for reupload, the index should be reuploadList[reuploadIndex]
-        var reuploadTime;
+        var reuploadTime = new Date().getTime();	//避免该参数未初始化
         
         //目录上传子元素个数统计
         var folderUploadTotalCountMap = {};
@@ -411,7 +411,7 @@
 		    	   	//threadState
 		    	   	SubContext.threadState = 0; //0:上传线程未启动, 1:上传线程已启动, 2:上传线程已终止
 		    	   	//startTime
-		    	   	SubContext.startTime = Date.now();
+		    	   	SubContext.startTime = new Date().getTime();
 		    	   	
 		    	   	SubContext.chunkThreadCount = 0;
 		    	   	
