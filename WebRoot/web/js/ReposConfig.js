@@ -106,6 +106,12 @@ var ReposConfig = (function () {
 	   		$("#showVerCtrlConfig").hide();	//隐藏 高级选项提示
 	   		$("#showVerCtrlConfig").val(0);
 	   		$("#showVerCtrlConfig").text("显示高级选项");
+	   		//清除版本管理的信息，避免对后面的逻辑造成影响
+	   		reposInfo.isRemote = 0;
+		   	reposInfo.localSvnPath = "";
+		   	reposInfo.svnPath = "";
+		   	reposInfo.svnUser = "";
+		   	reposInfo.svnPwd = "";
 	   	}
 	   	else
 	   	{	
