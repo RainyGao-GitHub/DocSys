@@ -293,6 +293,7 @@
 			Batch.num = fileNum;
 			Batch.index = 0;
 			Batch.state = 0;
+			Batch.startTime = new Date().getTime();
 			
 			//Append to Content.BatchList
 			Content.BatchList.push(Batch);
@@ -339,7 +340,7 @@
       		var fileNum =  Batch.num;
 			var commitMsg=Batch.commitMsg;
 			var batchStartTime = Batch.startTime;
-      		console.log("buildSubContextList() Batch index:" + index + " fileNum:" + fileNum + "commitMsg:"+commitMsg);
+      		console.log("buildSubContextList() Batch index:" + index + " fileNum:" + fileNum + "commitMsg:"+commitMsg + " batchStartTime:" + batchStartTime);
       		
       		var count = 0;
 			console.log("buildSubContextList fileNum:" + fileNum);
