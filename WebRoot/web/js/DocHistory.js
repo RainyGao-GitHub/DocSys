@@ -314,11 +314,11 @@
 		   		entryPath = docPath;
 		   		if(docId == 0)
 		   		{
-		   			msg = "恢复仓库到版本:" + version + "?";
+		   			msg = "是否恢复仓库在版本:" + version + "上的改动?";
 		   		}
 		   		else
 		   		{
-		   			msg = "恢复 " + entryPath + " 到版本:" + version + "?";
+		   			msg = "是否恢复 " + entryPath + " 在版本:" + version + " 上的改动?";
 		   		}
             }
             else
@@ -326,12 +326,12 @@
             	if(docId == 0)
             	{
             		entryPath = "/";
-    		   		msg = "恢复仓库备注到版本:" + version + "?";
+    		   		msg = "是否恢复仓库备注在版本:" + version + " 上的改动?";
             	}
             	else
             	{
             		entryPath = "/"+docId + "_" + docName;             		                		
-		   			msg = "恢复 " + docPath + " 的备注到版本:" + version + "?";
+		   			msg = "是否恢复 " + docPath + " 的备注在版本:" + version + " 上的改动?";
             	}
             }	
             
@@ -346,10 +346,55 @@
 		    });
 		}
 		
+		function showResetConfirm(index)
+		{
+			var commitId = $("#commitId" + index).attr("value");
+			var version = $("#commitId" + index).text();
+		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
+
+		   	var entryPath = "";
+		   	var docPath = "/"+parentPath + docName;
+		   	var msg = "";				
+		   	if(historyType == 0)
+            {
+		   		entryPath = docPath;
+		   		if(docId == 0)
+		   		{
+		   			msg = "是否将仓库回退到版本:" + version + "?";
+		   		}
+		   		else
+		   		{
+		   			msg = "是否将 " + entryPath + " 回退到版本:" + version + "?";
+		   		}
+            }
+            else
+            {
+            	if(docId == 0)
+            	{
+            		entryPath = "/";
+    		   		msg = "是否将仓库备注回退到版本:" + version + "?";
+            	}
+            	else
+            	{
+            		entryPath = "/"+docId + "_" + docName;             		                		
+		   			msg = "是否将 " + docPath + " 的备注回退到版本:" + version + "?";
+            	}
+            }	
+            
+		   	qiao.bs.confirm({
+		        id: 'resetHistoryConfirm',
+		        msg: msg,
+		    },function(){
+		    	console.log("showResetConfirm() reset commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
+				resetHistory(index, entryPath);
+		    },function(){
+		        //alert('点击了取消！');
+		    });
+		}
+		
 		function revertHistory(index, entryPath)
 		{
-			//TODO: 如果当前是目录的话，需要提示是否只还原修改过的文件，否则将把目录下所有的文件都还原到该版本
-		   	
+			//恢复本次提交被改动的文件
 			var commitId = $("#commitId" + index).attr("value");
 		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);
 	
@@ -366,22 +411,57 @@
 	             	 name: docName,
 	             	 historyType: historyType,
 	             	 entryPath: entryPath,
-	             	 downloadAll: 0,
-	             	 needDeletedEntry: 1,
 		             shareId: gShareId,
 	             },
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
 	        		  	console.log(ret.data);
-	        		  	bootstrapQ.alert("恢复成功！");
+	        		  	bootstrapQ.alert("历史版本恢复成功！");
 	                }
 	                else
 	                {
-	                	showErrorMessage(ret.msgInfo);
+	                	showErrorMessage("历史版本恢复失败:" + ret.msgInfo);
 	                }
 	            },
 	            error : function () {
 	                showErrorMessage("历史版本恢复失败:服务器异常");
+	            }
+	        });
+		}
+		
+		function resetHistory(index, entryPath)
+		{
+			//回退所有文件到指定版本
+			var commitId = $("#commitId" + index).attr("value");
+		   	console.log("revertHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);
+	
+	   		$.ajax({
+	             url : "/DocSystem/Bussiness/resetDocHistory.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	            	 commitId: commitId,
+	                 reposId : reposId,
+	                 pid: pid,
+	                 docId: docId,
+	            	 path : parentPath,
+	             	 name: docName,
+	             	 historyType: historyType,
+	             	 entryPath: entryPath,
+		             shareId: gShareId,
+	             },
+	             success : function (ret) {
+	             	if( "ok" == ret.status){
+	        		  	console.log(ret.data);
+	        		  	bootstrapQ.alert("历史版本回退成功！");
+	                }
+	                else
+	                {
+	                	showErrorMessage("历史版本回退失败:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage("历史版本回退失败:服务器异常");
 	            }
 	        });
 		}
@@ -471,6 +551,7 @@
 					}
 					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
 					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary'>恢复</a>";
+					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>回退</a>";
 					var se = "<li>"
 						+"	<i class='cell commitId w10'>"
 						+"		<span class='name  breakAll'>"
