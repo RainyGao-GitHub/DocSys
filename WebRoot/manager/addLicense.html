@@ -94,6 +94,39 @@
 		}
 	}
 	
+	function getAllowedAction()
+	{
+		var allowAllActionEnable = $("#allowAllActionEnable").is(':checked')? 1: 0;
+		var getAuthCodeEnable = $("#getAuthCodeEnable").is(':checked')? 1: 0;
+		var resetHistoryEnable = $("#resetHistoryEnable").is(':checked')? 1: 0;
+		var recoverBackupEnable = $("#recoverBackupEnable").is(':checked')? 1: 0;
+		var recycleBinEnable = $("#recycleBinEnable").is(':checked')? 1: 0;
+
+		var allowedAction = "{";		
+		if(allowAllActionEnable == 1)
+		{
+			allowedAction += "allowAllAction:\"enabled\","
+		}
+		if(allowAllActionEnable == 1)
+		{
+			allowedAction += "getAuthCode:\"enabled\","
+		}
+		if(allowAllActionEnable == 1)
+		{
+			allowedAction += "resetHistory:\"enabled\","
+		}
+		if(allowAllActionEnable == 1)
+		{
+			allowedAction += "recoverBackup:\"enabled\","
+		}
+		if(allowAllActionEnable == 1)
+		{
+			allowedAction += "recycleBin:\"enabled\","
+		}		
+		allowedAction += "}";		
+
+		}
+	
 	function addLicense(obj,event){
 		console.log("addLicense()");
 		
@@ -106,6 +139,7 @@
 	    var payInfo = $("#payInfo").val();
 	    var usersCount =  $("#usersCount").val();
 	    var validMonths =  $("#validMonths").val();
+	    var allowedAction = getAllowedAction();
 	    
 	    console.log(customer,payInfo,usersCount,validMonths);
 	    
@@ -120,6 +154,7 @@
             	payInfo : payInfo,
             	usersCount : usersCount,
             	validMonths : validMonths,
+            	allowedAction: allowedAction,
             },
             success : function (ret) {
         		//Enable the obj
