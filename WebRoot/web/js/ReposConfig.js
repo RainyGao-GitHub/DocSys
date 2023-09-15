@@ -135,16 +135,15 @@ var ReposConfig = (function () {
 	   	$("#verCtrl-svnUser").val(reposInfo.svnUser);
 	   	$("#verCtrl-svnPwd").val(reposInfo.svnPwd);
 	   	
-	   	//备注版本管理
+	   	//备注版本管理强行打开，且不允许远程
+	   	reposInfo.verCtrl1 = 1;
+	   	reposInfo.isRemote1 = 0;
+		reposInfo.localSvnPath1 = "";
+		reposInfo.svnPath1 = "";
+		reposInfo.svnUser1 = "";
+		reposInfo.svnPwd1 = "";		   	
 	   	$("#repos-verCtrl1 option[value='"+reposInfo.verCtrl1+"']").attr("selected","selected");
-	   	if(reposInfo.isRemote1 == 0)
-	   	{
-		   	$("#verCtrl1-isRemote").attr("checked",false);	   		
-	   	}
-	   	else
-	   	{
-		   	$("#verCtrl1-isRemote").attr("checked","checked");
-	   	}
+	   	$("#verCtrl1-isRemote").attr("checked",false);
 	   	$("#verCtrl1-localSvnPath").val(reposInfo.localSvnPath1);
 	   	$("#verCtrl1-svnPath").val(reposInfo.svnPath1);
 	   	$("#verCtrl1-svnUser").val(reposInfo.svnUser1);
