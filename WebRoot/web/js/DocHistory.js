@@ -577,6 +577,7 @@
 						+		opBtn
 						+ 		opBtn1 
 						+ 		opBtn2 
+						+ 		opBtn3 
 						+"	</i>"
 						+"</li>";
 					
@@ -609,6 +610,10 @@
 	        showRevertConfirm: function(index)
 			{
 	        	showRevertConfirm(index);
-			}
+			},
+	        showResetConfirm: function(index)
+			{
+	        	showResetConfirm(index);
+			}			
 	    };
 	})();
