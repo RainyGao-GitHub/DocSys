@@ -24,6 +24,76 @@
 	 	}  
 	}
 	
+	function doSelectAllowAllActionEnable(obj,event){
+		console.log("doSelectAllowAllActionEnable()");
+		var allowAllActionEnable = $("#allowAllActionEnable").is(':checked')? 1: 0;
+		console.log("doSelectAllowAllActionEnable allowAllActionEnable:" + allowAllActionEnable);
+		if(allowAllActionEnable == 0)
+		{
+			$("#getAuthCodeEnable").prop("checked",false);
+			$("#resetHistoryEnable").prop("checked",false);
+			$("#recoverBackupEnable").prop("checked",false);
+			$("#recycleBinEnable").prop("checked",false);
+			//attr不能多次选择会无效
+			//$("#getAuthCodeEnable").attr("checked",false);	
+			//$("#resetHistoryEnable").attr("checked",false);	
+			//$("#recoverBackupEnable").attr("checked",false);	
+			//$("#recycleBinEnable").attr("checked",false);	
+		}
+		else
+		{	
+			$("#getAuthCodeEnable").prop("checked",true);
+			$("#resetHistoryEnable").prop("checked",true);
+			$("#recoverBackupEnable").prop("checked",true);
+			$("#recycleBinEnable").prop("checked",true);
+			//attr不能多次选择会无效
+			//$("#getAuthCodeEnable").attr("checked","checked");
+			//$("#resetHistoryEnable").attr("checked","checked");
+			//$("#recoverBackupEnable").attr("checked","checked");
+			//$("#recycleBinEnable").attr("checked","checked");
+		}
+	}
+	
+	function doSelectGetAuthCodeEnable(obj,event){
+		console.log("doSelectGetAuthCodeEnable()");
+		var getAuthCodeEnable = $("#getAuthCodeEnable").is(':checked')? 1: 0;
+		console.log("doSelectGetAuthCodeEnable getAuthCodeEnable:" + getAuthCodeEnable);
+		if(getAuthCodeEnable == 0)
+		{
+			$("#allowAllActionEnable").prop("checked",false);
+		}
+	}
+	
+	function doSelectResetHistoryEnable(obj,event){
+		console.log("doSelectResetHistoryEnable()");
+		var resetHistoryEnable = $("#resetHistoryEnable").is(':checked')? 1: 0;
+		console.log("doSelectResetHistoryEnable resetHistoryEnable:" + resetHistoryEnable);
+		if(resetHistoryEnable == 0)
+		{
+			$("#allowAllActionEnable").prop("checked",false);
+		}
+	}
+	
+	function doSelectRecoverBackupEnable(obj,event){
+		console.log("doSelectRecoverBackupEnable()");
+		var recoverBackupEnable = $("#recoverBackupEnable").is(':checked')? 1: 0;
+		console.log("doSelectRecoverBackupEnable recoverBackupEnable:" + recoverBackupEnable);
+		if(recoverBackupEnable == 0)
+		{
+			$("#allowAllActionEnable").prop("checked",false);
+		}
+	}
+	
+	function doSelectRecycleBinEnable(obj,event){
+		console.log("doSelectRecycleBinEnable()");
+		var recycleBinEnable = $("#recycleBinEnable").is(':checked')? 1: 0;
+		console.log("doSelectRecycleBinEnable recycleBinEnable:" + recycleBinEnable);
+		if(recycleBinEnable == 0)
+		{
+			$("#allowAllActionEnable").prop("checked",false);
+		}
+	}
+	
 	function addLicense(obj,event){
 		console.log("addLicense()");
 		
@@ -165,7 +235,26 @@
                         </select>
                       </div>
                     </div>
-                    
+                    <div class="form-group">
+                      <label class="control-label col-lg-3">高级选项</label>
+                      <div class="col-lg-9" style="margin-top:10px">
+	                      <span>
+							<input type="checkbox" id="getAuthCodeEnable" value="0" onclick="doSelectGetAuthCodeEnable(this,event)">第三方接入
+						  </span> 	
+	                      <span style="margin-left:20px">
+							<input type="checkbox" id="resetHistoryEnable" value="0" onclick="doSelectResetHistoryEnable(this,event)">历史回退
+						  </span> 	
+	                      <span style="margin-left:20px">
+							<input type="checkbox" id="recoverBackupEnable" value="0" onclick="doSelectRecoverBackupEnable(this,event)">备份恢复
+						  </span> 							  
+	                      <span style="margin-left:20px">
+							<input type="checkbox" id="recycleBinEnable" value="0" onclick="doSelectRecycleBinEnable(this,event)">回收站
+						  </span> 							  
+	                      <span style="margin-left:20px">
+							<input type="checkbox" id="allowAllActionEnable" value="0" onclick="doSelectAllowAllActionEnable(this,event)">全选
+						  </span> 	
+                      </div>
+                    </div>
                     <!-- Buttons -->
                     <div class="form-group">
                       <!-- Buttons -->
