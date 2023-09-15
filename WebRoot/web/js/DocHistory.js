@@ -550,7 +550,7 @@
 						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
 					}
 					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
-					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary'>恢复</a>";
+					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>恢复</a>";
 					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>回退</a>";
 					var se = "<li>"
 						+"	<i class='cell commitId w10'>"
