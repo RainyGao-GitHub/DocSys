@@ -91,7 +91,7 @@ function DragUpload(_parentNode) {
 	}
 		
 	function _addFilesFromItems(items) {
-		//console.log("_addFilesFromItems items:", items);
+		console.log("_addFilesFromItems items:", items);
 	    var _iterator6 = dropzone_createForOfIteratorHelper(items, true),
 	        _step6;
 	    
@@ -157,12 +157,22 @@ function DragUpload(_parentNode) {
 		return file;
 	}
 	
+	function checkReadEndAndStartUpload()
+	{
+		console.log("checkReadEndAndStartUpload readResponseCount:" + readResponseCount + " readRequestCount:" + readRequestCount);
+	    if(readResponseCount >=  readRequestCount)
+	    {
+	    	console.log("checkReadEndAndStartUpload() result is ready, result size:" + result.length);
+	    	if(result.length > 0)
+	    	{
+	    		checkUserUploadRight(result,parentNode,uploadConfirm);
+	    	}
+	    }
+	}
+	
 	function _addFilesFromDirectory(directory, path) 
 	{
 	    console.log("_addFilesFromDirectory path:", path);
-	
-	    var dirReader = directory.createReader();
-	    
 	    var successHandler = function (entries) 
 	    {
 	    	console.log("_addFilesFromDirectory successHandler path:", path);
@@ -178,22 +188,30 @@ function DragUpload(_parentNode) {
 		            for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) 
 		            {
 		              var entry = _step7.value;
-		
+		              console.log("_addFilesFromDirectory entry:", entry);
 		              if (entry.isFile) 
 		              {
+		            	 //注意这个也是异步调用，所以也需要readRequestCount
+		            	 readRequestCount++;
 		            	 entry.file(function (file) {
 		            		  if (options.ignoreHiddenFiles && file.name.substring(0, 1) === ".") {
-		                        return;
+		            		      console.log("_addFilesFromDirectory successHandler " + file.name + " is hidden file");
+		            			  return;
 		                      }
 
 		                      file.fullPath = "".concat(path, "/").concat(file.name);
-			                  result.push(file);		                      
-		                      return; _this5.addFile(file);
+		                      result.push(file);		                      
+	            		      console.log("_addFilesFromDirectory successHandler add file:" + file.fullPath + " to result:" + result.length);
+	            		      
+	            		      readResponseCount++
+	            		      checkReadEndAndStartUpload();	            		      
+	            		      return;
 		                 });		                
 		              } else if (entry.isDirectory) {
 		            	  var folderFile = buildFile(entry);
 		            	  folderFile.fullPath = "".concat(path, "/").concat(entry.name);
 		            	  result.push(folderFile);
+            		      console.log("_addFilesFromDirectory successHandler add folder:" + folderFile.fullPath + " to result:" + result.length);
 						  _addFilesFromDirectory(entry, folderFile.fullPath);
 		              }
 		            } 
@@ -205,38 +223,28 @@ function DragUpload(_parentNode) {
 		          } finally {
 		            _iterator7.f();
 		          }		
-		          readEntries();
 	        }
 	        
-	    	readResponseCount++;
-	    	console.log("_addFilesFromDirectory successHandler readResponseCount:" + readResponseCount + " readRequestCount:" + readRequestCount);
-	    	if(readResponseCount >=  readRequestCount)
-	    	{
-	    	    console.log("_addFilesFromDirectory() result is ready, result size:" + result.length);
-	    	    if(result.length > 0)
-	    	    {
-	    	    	checkUserUploadRight(result,parentNode,uploadConfirm);
-	    	    }
-	    	}
+	        readResponseCount++;
+		    checkReadEndAndStartUpload();
 		};
 		
 	    var errorHandler = function errorHandler(error) {
 	    	console.log("_addFilesFromDirectory errorHandler path:", path);
-
+	    	readResponseCount++;
+		    checkReadEndAndStartUpload();
+	    	
 		    return __guardMethod__(console, "log", function (o) {
 		        return o.log(error);
 		    });
 	    };
-	
-	    var readEntries = function readEntries() 
-	    {
-	    	//注意: dirReader.readEntries是异步调用
-	    	readRequestCount++;
-	    	console.log("_addFilesFromDirectory readResponseCount:" + readResponseCount + " readRequestCount:" + readRequestCount);
-	    	return dirReader.readEntries(successHandler, errorHandler);
-	    };
-	
-	    return readEntries();
+		
+	    //启动目录读取线程: readRequestCount增1
+	    readRequestCount++;
+		var dirReader = directory.createReader();
+		console.log("_addFilesFromDirectory readResponseCount:" + readResponseCount + " readRequestCount:" + readRequestCount);
+    	dirReader.readEntries(successHandler, errorHandler);
+    	return;
 	}
 
 	//开放给外部的调用接口
