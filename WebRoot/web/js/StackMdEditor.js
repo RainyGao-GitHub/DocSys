@@ -66,7 +66,12 @@ var StackMdEditor = (function () {
 		stackEditIframeEl.prop("src",url);
 
 		//监听stackeidtor发来的消息
-		window.addEventListener('message', messageHandler);
+		console.log("StackMdEditor initEditor() start lisener for message event");
+  		window.addEventListener('message', messageHandler);
+		
+		//监听paste事件，用于触发图片粘贴功能实现
+		console.log("StackMdEditor initEditor() start lisener for paste event");
+  		document.addEventListener('paste', handlePasteImgEvent);
 	};
 	
 	/**
@@ -259,6 +264,41 @@ var StackMdEditor = (function () {
 			}
 		};
 	}
+	
+	//图片粘贴上传实现
+    function handlePasteImgEvent(event)
+    {
+    	console.log("StackMdEditor handlePasteImgEvent event:", event);
+    	
+    	var  file = null;
+    	//粘贴事件
+        if (event.clipboardData || event.originalEvent)
+        {
+        	var clipboardData = (event.clipboardData || event.originalEvent.clipboardData);
+        	console.log("StackMdEditor handlePasteImgEvent clipboardData", clipboardData);
+        	var items = clipboardData.items;
+            if(items)
+            {
+            	console.log("StackMdEditor handlePasteImgEvent items", items);
+                for (var i = 0; i <items.length; i++)
+                {
+                	if (clipboardData.items[i].type.indexOf("image") !== -1)
+                	{
+                		file = items[i].getAsFile();
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(file == null)
+    	{
+        	console.log("StackMdEditor handlePasteImgEvent file is null");
+        	return;
+        }
+
+        uploadMarkdownPic(file);
+    }
 
 	/**
 	 * stackEdit插件加载路径初始化，在原始路径上拼装文件信息，域信息
