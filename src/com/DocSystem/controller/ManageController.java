@@ -4,7 +4,10 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +30,7 @@ import util.DateFormat;
 import util.ReadProperties;
 import util.ReturnAjax;
 import com.DocSystem.entity.DocAuth;
+import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
@@ -37,6 +41,7 @@ import com.DocSystem.entity.UserGroup;
 
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
+import com.DocSystem.websocket.entity.OfficeEditorLock;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -1014,6 +1019,18 @@ public class ManageController extends BaseController{
 		else
 		{
 			reposLocksMap.clear();
+			
+			//TODO: 遍历docLocksMap的lockMap，并清空
+			Iterator<Entry<Integer, ConcurrentHashMap<String, DocLock>>> iterator = docLocksMap.entrySet().iterator();
+	        while (iterator.hasNext()) 
+	        {
+	        	Entry<Integer, ConcurrentHashMap<String, DocLock>> entry = iterator.next();
+	            if(entry != null)
+	        	{
+	            	ConcurrentHashMap<String, DocLock> lockMap = entry.getValue();
+	            	lockMap.clear();
+	        	}
+	        }
 		}
 	}
 
