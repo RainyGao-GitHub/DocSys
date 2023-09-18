@@ -36,15 +36,11 @@ import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
-import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.constants;
-import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AuthCode;
-import com.DocSystem.common.entity.CommitEntry;
-import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LargeFileScanTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
@@ -3279,7 +3275,6 @@ public class DocController extends BaseController{
 	}
 
 	/****************   get Document Content ******************/
-	//TODO: needDeletedEntry 逻辑未处理
 	@RequestMapping("/getDocContent.do")
 	public void getDocContent(
 			Integer reposId, String path, String name, 
@@ -3419,7 +3414,6 @@ public class DocController extends BaseController{
 		writeText(status+content, response);
 	}
 
-	//TODO: needDeletedEntry 逻辑需要增加
 	private void getRealDocHistoryContent(
 			Repos repos, 
 			String path, String name, 
@@ -4100,7 +4094,6 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	//TODO: needDeletedEntry 逻辑未处理
 	@RequestMapping("/getDocFileLink.do")
 	public void getDocFileLink(Integer reposId, String path, String name, 
 			String commitId, Integer needDeletedEntry,
@@ -4228,7 +4221,6 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
-	//TODO: needDeletedEntry 逻辑未处理
 	@RequestMapping("/getDocFileLinkRS.do")
 	public void getDocFileLink(Integer reposId, String path, String name, 
 			String commitId, Integer needDeletedEntry,
