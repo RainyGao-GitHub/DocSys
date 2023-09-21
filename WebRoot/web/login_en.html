@@ -1,0 +1,176 @@
+<div id="ordLogin" class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Account</label>
+        <div class="col-sm-9">
+            <input type="text" id="userName" name="userName" value="" needvalicate=true class="form-control" valicate="_required _minlen=6 _emailOR_tel" maxlength="40" class="form-control" placeholder="Email or MobilePhone" aria-required="true">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Password</label>
+        <div class="col-sm-9">
+            <input type="password" id="pwd" name="pwd" value="" class="form-control" valicate="_required _minlen=6" id="inputGroupSuccess2"  placeholder="密码">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-12 text-center">
+            <input id="rememberMe" name="rememberMe" type="checkbox">
+	            <span class="p5">Remember me<a style="margin-left:10px;" href="/DocSystem/web/getPassword.html">Forgot Password?</a></span>
+			</input>
+        </div>
+    </div>
+    <p class="text-warning"></p>
+    <div class="form-group">
+        <div class="col-sm-12 text-center">
+            <button onclick="login()" class="btn btnPrimary" style="width: 258px;height: 42px;">Sign In</button>
+        </div>
+    </div>
+</div>    
+      
+<div id="smsLogin" class="row" style="display: none;">
+    <!-- <h4 class="modal-subtitle"><a class="f-right tog-login" onclick="$('#ordLogin').show();$('#smsLogin').hide();"><em class="important">普通方式登录</em></a>用户登录</h4> -->
+    <div class="form-horizontal" id="_form_login_sms" method="POST" action="/DocSystem/User/smsLogin.do" novalidate="novalidate">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">手机号码</label>
+            <div class="col-sm-9">
+                <input type="number" name="account" required="true" digits="true" rangelength="11,11" class="form-control" placeholder="请输入注册的手机号" aria-required="true">
+            </div>
+        </div>
+        <div class="form-group" style="display:none">
+            <label class="col-sm-2 control-label">验证码</label>
+            <div class="col-sm-9">
+                <span class="vercode-img"><img src="" title="点击刷新"></span> <!-- 验证码 -->
+                <input type="hidden" name="captchaKey" required="true" aria-required="true">
+                <input type="text" name="captchaCode" required="true" rangelength="4,4" class="form-control" placeholder="请输入右侧的验证码" aria-required="true">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">短信验证码</label>
+            <div class="col-sm-9">
+                <a class="vercode" href="javascript:void">获取验证码</a>
+                <span class="vercode" style="display: none;"><em><i>60</i>秒后重新获取</em></span>
+                <input type="hidden" name="trId">
+                <input type="number" name="smsCode" digits="true" required="true" rangelength="4,6" class="form-control" placeholder="短信验证码" aria-required="true">
+            </div>
+        </div>
+        <p class="text-warning" style="display:none"></p>
+        <div class="form-group" style="margin-top: 30px;">
+            <label class="col-sm-2 control-label">&nbsp;</label>
+            <div class="col-sm-9 text-left">
+                <button onclick="smsLogin()" class="btn btnPrimary">登录</button>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+<script type="text/javascript" src="js/base64.js"></script>
+<script type="text/javascript">
+	//cookie操作接口
+	function setCookie(name, value, iDay) 
+	{
+	    var oDate=new Date();
+	     
+	    oDate.setDate(oDate.getDate()+iDay);
+	     
+	    document.cookie=name+'='+encodeURIComponent(value)+';expires='+oDate;
+	}
+	 
+	function getCookie(name)
+	{
+	    var arr=document.cookie.split('; ');
+	    var i=0;
+	    for(i=0;i<arr.length;i++)
+	    {
+	        //arr2->['username', 'abc']
+	        var arr2=arr[i].split('=');
+	         
+	        if(arr2[0]==name)
+	        {  
+	            var getC = decodeURIComponent(arr2[1]);
+	            return getC;
+	        }
+	    }
+	     
+	    return '';
+	}
+	 
+	function removeCookie(name)
+	{
+	    setCookie(name, '1', -1);
+	}
+	
+	//登录页面初始化操作
+	function LoginPageInit()
+	{
+		//console.log($.cookie("dsuser"));
+		//Set the event handler for keydown
+		console.log("LoginPageInit() Set the event handler for keydown");
+		document.onkeydown=function(event)
+		{
+			//浏览器兼容性处理
+			var e = event || window.event || arguments.callee.caller.arguments[0];
+			EnterKeyListenerForLogin(e);	
+		}	
+	}
+	
+	function showLogin(text){
+		$(".loginModal2").fadeIn("slow");
+		$("#userName").focus();
+	}
+	
+	function closeLogin(){
+		$(".loginModal2").fadeOut("slow");
+	}
+	
+	//回车键监听函数
+	function EnterKeyListenerForLogin(e){
+		//var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (e.keyCode == 13){  
+	 		login();
+	 	}  
+	}
+	
+	//登录按键处理函数
+	function login(){
+		var rememberMe = $('input[name="rememberMe"]').is(':checked')? 1: 0;
+		$.ajax({
+            url : "/DocSystem/User/login.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 userName : $('input[name="userName"]').val(),
+                 pwd : base64_encode($('input[name="pwd"]').val()),
+                 rememberMe : rememberMe,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	console.log("登录成功");
+                	login_user = $('input[name="userName"]').val();
+                	//document.location.reload();
+                	if(gShareId)
+                	{
+                		gShareId = undefined;
+                		updateUrl();
+                	}
+                	var url = window.location.href;               	
+                	window.location.href = url;	//刷新页面
+                }else {
+                	showErrorMessage("错误："+ret.msgInfo);
+                	if(ret.data == "needCheckDBSetting")
+                	{
+                		window.location.href='/DocSystem/index.jsp'
+                	}
+                }
+            },
+            error : function () {
+            	showErrorMessage("服务器异常:登录失败");
+            }
+        });
+    }
+        
+    //页面初始化代码    
+    $(function(){
+		LoginPageInit();
+		$("#userName").val(login_user);
+		//$("#userName").click().focus();
+	});
+</script>
