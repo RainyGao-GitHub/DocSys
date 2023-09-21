@@ -35,7 +35,7 @@ function lang(str)
 		
 	};
 	
-	var newStr = langTypeMap[str];
+	var newStr = translateMap[str];
 	if ( undefined == newStr )
 	{
 		return str;

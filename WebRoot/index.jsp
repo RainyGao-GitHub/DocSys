@@ -56,7 +56,7 @@ function translateToEnglish(str)
 		"系统初始化失败" : "System Init Failed",
 	};
 	
-	var newStr = langTypeMap[str];
+	var newStr = translateMap[str];
 	if ( undefined == newStr )
 	{
 		return str;
