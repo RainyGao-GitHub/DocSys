@@ -27,15 +27,109 @@ $(function () {
 	pageInit();
 });
 
+function _Lang(str1, connectStr , str2)
+{
+	if(connectStr == undefined)
+	{
+		return lang(str1);
+	}
+	
+	return lang(str1) + connectStr + lang(str2);
+}
+
+function lang(str)
+{
+	switch(lang)
+	{
+	case "en":
+		return translateToEnglish(str);
+	}
+	return str;
+}
+
+function translateToEnglish(str)
+{
+	var translateMap = 
+	{
+		"服务器异常" : "Server Exception",			
+		"系统初始化中,请稍候"	: "Systemt Init...",		
+		"系统初始化失败" : "System Init Failed",
+	};
+	
+	var newStr = langTypeMap[str];
+	if ( undefined == newStr )
+	{
+		return str;
+	}
+	
+	return newStr;
+}
+
+function getBrowserLang() 
+{
+	var browserLang = navigator.language? navigator.language : navigator.browserLanguage;
+	switch(browserLang.toLowerCase())
+	{
+	case "us":
+	case "en":
+	case "en_us":
+		return "en";
+    case "zh-tw":
+        console.log("中文繁体(中国台湾)");
+    	return "ch";
+    case "zh-hk":
+    	console.log("中文繁体(中国香港)");
+    	return "ch";
+    case "zh-cn":
+    	console.log("中文简体");
+    	return "ch";
+    default:
+        break;
+	}
+	return "ch";
+}
+
+function goToSystemIndexPage()
+{
+	switch(lang)
+	{
+	case "en":
+		window.location.href='/DocSystem/web/index_en.html';
+		break;
+	case "ch":
+		window.location.href='/DocSystem/web/index.html';
+		break;
+	default:
+		window.location.href='/DocSystem/web/index.html';
+		break;
+	}
+}
+
+function goToSystemInstallPage()
+{
+	switch(lang)
+	{
+	case "en":
+		window.location.href='/DocSystem/web/install_en.html?authCode='+docSysInitAuthCode;
+		break;
+	case "ch":
+		window.location.href='/DocSystem/web/install.html?authCode='+docSysInitAuthCode;
+		break;
+	default:
+		window.location.href='/DocSystem/web/install.html?authCode='+docSysInitAuthCode;
+		break;
+	}
+}
+
+var lang = "ch";
 function pageInit()
 {
 	console.log("pageInit");
+	lang = getBrowserLang();
+	
 	if(docSysInitState == null || docSysInitState == 0)
 	{
-		// 以下方式直接跳转
-		window.location.href='/DocSystem/web/index.html';
-		// 以下方式定时跳转
-		//setTimeout("javascript:location.href='index.html'", 5000);
+		goToSystemIndexPage();
 	}
 	else
 	{
@@ -48,13 +142,13 @@ function pageInit()
 }
 
 var count = 0;
-var dispInfo = "系统初始化中,请稍候";
+var dispInfo = _Lang("系统初始化中,请稍候");
 function updateDispInfo()
 {	
 	if(count > 3)
 	{
 		count = 0;
-		dispInfo = "系统初始化中,请稍候";
+		dispInfo = _Lang("系统初始化中,请稍候");
 	}
 	else
 	{
@@ -83,24 +177,23 @@ function docSysInit()
             {
             	if(ret.data && ret.data == "needRestart")
             	{
-            		alert("数据库配置有变更，请先重启服务！");	
-                	window.location.href='/DocSystem/web/install.html?authCode='+docSysInitAuthCode;
+            		goToSystemInstallPage();
             	}
             	else
             	{
             		//进入系统主页
-            		window.location.href='/DocSystem/web/index.html';
+            		goToSystemIndexPage();
             	}
             }
             else
             {
-            	alert("系统初始化失败:" + ret.msgInfo);
-            	window.location.href='/DocSystem/web/install.html?authCode='+docSysInitAuthCode;
+            	alert(_Lang("系统初始化失败", ":" , ret.msgInfo));
+            	goToSystemInstallPage();
             }
         },
         error : function () {
-        	alert("系统初始化失败:服务器异常");
-        	window.location.href='/DocSystem/web/install.html?authCode='+docSysInitAuthCode;
+        	_Lang("系统初始化失败", ":", "服务器异常");
+        	goToSystemInstallPage();
        }
     });
 }
