@@ -6,9 +6,9 @@
 		</div>
 	</div>
 	<div class="form-group">
-    	<label class="col-sm-2 control-label">VerifyCode</label>
+    	<label class="col-sm-2 control-label">Verification Code</label>
     	<div class="col-sm-7">
-    		<input type="text" id="verifyCode" name="verifyCode" class="form-control" maxlength="6" needvalicate=true valicate="_required _num"  placeholder="Please input your received code"/>
+    		<input type="text" id="verifyCode" name="verifyCode" class="form-control" maxlength="6" needvalicate=true valicate="_required _num"  placeholder="Please enter verification code"/>
     	</div>
     	<div class="col-sm-3">
     		<input type="button" id="svc" class="mybtn-primary m3" second="60" onclick="checkUserAndSendVerifyCode();" value="Send"/>
@@ -103,12 +103,12 @@
                 	//弹出登录对话框
                 	showLoginPanel();
                 }else {
-                	showErrorMessage(_Lang("注册失败", ":", ret.msgInfo));
+                	showErrorMessage(_Lang("注册失败", " : ", ret.msgInfo));
                 }
             },
             error : function () {
             	$("#submit").attr('disabled',false);
-            	showErrorMessage(_Lang("注册失败", ":", "服务器异常"));
+            	showErrorMessage(_Lang("注册失败", " : ", "服务器异常"));
             }
         });
     }
@@ -128,11 +128,11 @@
                 if( "ok" == ret.status ){
                 	sendVerifyCode();
                 }else {
-                	showErrorMessage(_Lang("注册失败", ":", ret.msgInfo));
+                	showErrorMessage(_Lang("注册失败", " : ", ret.msgInfo));
                 }
             },
             error : function () {
-            	showErrorMessage(_Lang("注册失败", ":", "服务器异常"));
+            	showErrorMessage(_Lang("注册失败", " : ", "服务器异常"));
             }
         });
         
@@ -156,13 +156,13 @@
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
-                	showErrorMessage(_Lang("验证码已发送", ",", "请注意查收") + "!");
+                	showErrorMessage(_Lang("验证码已发送，请注意查收！"));
                 }else {
-                	showErrorMessage(_Lang("验证码发送失败", ":", ret.msgInfo));
+                	showErrorMessage(_Lang("验证码发送失败", " : ", ret.msgInfo));
                 }
             },
             error : function () {
-            	showErrorMessage(_Lang("验证码发送失败", ":", "服务器异常"));
+            	showErrorMessage(_Lang("验证码发送失败", " : ", "服务器异常"));
             }
         });
 	}
