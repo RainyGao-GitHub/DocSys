@@ -1,0 +1,190 @@
+<div class="form-horizontal">
+	<div class="form-group" id="userIdDiv">
+		<label class="col-sm-2 control-label">Account</label>
+		<div class="col-sm-10">
+            <input type="text" id="userName" name="userName" class="form-control"  maxlength="40" needvalicate="true" valicate="_required _emailOR_tel _minlen=6" placeholder="Email or Mobile Phone" />
+		</div>
+	</div>
+	<div class="form-group">
+    	<label class="col-sm-2 control-label">Verify Code</label>
+    	<div class="col-sm-7">
+    		<input type="text" id="verifyCode" name="verifyCode" class="form-control" maxlength="6" needvalicate=true valicate="_required _num"  placeholder="Please input your received code"/>
+    	</div>
+    	<div class="col-sm-3">
+    		<input type="button" id="svc" class="mybtn-primary m3" second="60" onclick="checkUserAndSendVerifyCode();" value="Send Verify Code"/>
+    	</div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Password</label>
+        <div class="col-sm-10">
+            <input type="password" id="pwd" name="pwd" needvalicate="true" valicate="_required _minlen=6" class="form-control" placeholder="At least 6 characters"/>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Re-enter password</label>
+        <div class="col-sm-10">
+            <input type="password" id="pwd2" name="pwd2" needvalicate="true" valicate="_required _minlen=6 _equals=pwdForReg" class="form-control" placeholder="Please re-enter your password"/>
+        </div>
+    </div>
+    <div class="form-group">
+		<div class="col-sm-12 text-center">
+            <input onclick="canSubmit(this);" type="checkbox">
+				<span class="p5">By creating an account, you agree to <a>MxsDoc's Conditions of Use</a> and <a>Privacy Notice</a>.</span>
+			</input>
+       	</div>
+	</div>
+	<div class="form-group">
+		<div class="col-sm-12 text-center">
+			<input id="submitBtn" type="submit" class="hidden"/>
+				<button  id="submit" type="button" class="btn btnPrimary" onclick="register();" style="width: 288px;height: 42px;" disabled>Sign Up</button>
+		</div>
+	</div>
+</div>
+                    
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function RegisterPageInit()
+	{
+		//console.log($.cookie("dsuser"));
+		//回车键监听函数
+		EnterKeyListenerForRegister();
+	}
+	
+	function closeRegister(){
+		console.log("closeRegister");
+		$("#registerdiv").remove();	//删除全屏遮罩
+		$("#register").remove();	//删除对话框
+	}
+	
+	//回车键监听函数
+	function EnterKeyListenerForRegister(){
+		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (event.keyCode == 13){  
+	 		register();
+	 	}  
+	}
+	
+	//使能submit按键
+	function canSubmit(dom){
+		if(dom.checked) {
+			$("#submit").attr('disabled',false);
+		}
+		else {
+			$("#submit").attr('disabled',true);
+		}
+	}
+	
+	//登录按键处理函数
+	function register(){
+		console.log("register");
+		
+		//关闭按键点击避免连续点击
+		$("#submit").attr('disabled',true);
+		
+        $.ajax({
+            url : "/DocSystem/User/register.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 userName : $('input[name="userName"]').val(),
+                 pwd : MD5($('input[name="pwd"]').val()),
+                 pwd2: MD5($('input[name="pwd2"]').val()),
+                 verifyCode : $('input[name="verifyCode"]').val(),
+            },
+            success : function (ret) {
+            	$("#submit").attr('disabled',false);
+                if( "ok" == ret.status ){
+                	//window.location.href = "index.html";	//跳转到主页
+
+                	loginUser =  $('input[name="userName"]').val();
+                	
+                	//关闭注册对话框
+                	closeRegister();
+                	//弹出登录对话框
+                	showLoginPanel();
+                }else {
+                	showErrorMessage(_Lang("注册失败", ":", ret.msgInfo));
+                }
+            },
+            error : function () {
+            	$("#submit").attr('disabled',false);
+            	showErrorMessage(_Lang("注册失败", ":", "服务器异常"));
+            }
+        });
+    }
+	
+	//检查用户是否注册并发送验证码
+	function checkUserAndSendVerifyCode(){
+		console.log("checkUserAndSendVerifyCode");
+		
+		$.ajax({
+            url : "/DocSystem/User/checkUserRegistered.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 userName : $('input[name="userName"]').val(),
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	sendVerifyCode();
+                }else {
+                	showErrorMessage(_Lang("注册失败", ":", ret.msgInfo));
+                }
+            },
+            error : function () {
+            	showErrorMessage(_Lang("注册失败", ":", "服务器异常"));
+            }
+        });
+        
+	}
+	
+	//发送验证码
+	function sendVerifyCode()
+	{
+		var dom = $("#svc");
+		
+		$(dom).attr("disabled","disabled");
+		$(dom).attr("second","60");
+		remainTime(dom);
+			
+		$.ajax({
+            url : "/DocSystem/User/sendVerifyCode.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 userName : $('input[name="userName"]').val(),
+            },
+            success : function (ret) {
+                if( "ok" == ret.status ){
+                	showErrorMessage(_Lang("验证码已发送", ",", "请注意查收") + "!");
+                }else {
+                	showErrorMessage(_Lang("验证码发送失败", ":", ret.msgInfo));
+                }
+            },
+            error : function () {
+            	showErrorMessage(_Lang("验证码发送失败", ":", "服务器异常"));
+            }
+        });
+	}
+	
+	//验证码倒计时
+	function remainTime(){
+		var dom = $("#svc");
+		var i = $(dom).attr("second");
+		$(dom).val(--i + "s"); 
+		$(dom).attr("second",i);
+	    var t = setTimeout(remainTime,1000);
+	    if(i==0){
+	    	clearTimeout(t);
+	    	$(dom).removeAttr("disabled");
+	    	$(dom).val(_Lang("获取验证码"));
+	    }
+	} 
+	
+	//页面初始化代码    
+    $(function(){
+    	console.log("register Page init");
+		RegisterPageInit();
+		$("#userName").click().focus();
+	});
+</script>

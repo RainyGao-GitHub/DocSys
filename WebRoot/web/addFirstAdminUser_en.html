@@ -1,0 +1,139 @@
+<div class="form-horizontal">
+	<div class="form-group" id="userIdDiv">
+		<label class="col-sm-2 control-label">Account</label>
+		<div class="col-sm-10">
+            <input type="text" id="userName" name="userName" class="form-control"  maxlength="40" />
+		</div>
+	</div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Password</label>
+        <div class="col-sm-10">
+            <input type="password" id="pwd" name="pwd" needvalicate="true" valicate="_required _minlen=6" class="form-control" placeholder="At least 6 characters"/>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Re-enter password</label>
+        <div class="col-sm-10">
+            <input type="password" id="pwd2" name="pwd2" needvalicate="true" valicate="_required _minlen=6 _equals=pwdForReg" class="form-control" placeholder="Please re-enter your password"/>
+        </div>
+    </div>
+	<div class="form-group" id="userIdDiv">
+		<label class="col-sm-2 control-label">Phone</label>
+		<div class="col-sm-10">
+            <input type="text" id="tel" name="tel" class="form-control"  maxlength="40" needvalicate="true" valicate="_required _emailOR_tel _minlen=6" placeholder="Please enter your mobile phone number" />
+		</div>
+	</div>
+	<div class="form-group" id="userIdDiv">
+		<label class="col-sm-2 control-label">Email</label>
+		<div class="col-sm-10">
+            <input type="text" id="email" name="email" class="form-control"  maxlength="80" needvalicate="true" valicate="_required _emailOR_tel _minlen=6" placeholder="Please enter your email" />
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="col-sm-12 text-center">
+			<input id="submitBtn" type="submit" class="hidden"/>
+				<button  id="submit" type="button" class="btn btnPrimary" onclick="addFirstAdminUser();" style="width: 288px;height: 42px;">Confirm</button>
+		</div>
+	</div>
+</div>
+                    
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	function AddFirstAdminUserPageInit()
+	{
+		//console.log($.cookie("dsuser"));
+		//回车键监听函数
+		EnterKeyListenerForAddFirstAdminUser();
+	}
+	
+	function closeAddFirstAdminUser(){
+		console.log("closeAddFirstAdminUser");
+		$("#addFirstAdminUserdiv").remove();	//删除全屏遮罩
+		$("#addFirstAdminUser").remove();	//删除对话框
+	}
+	
+	//回车键监听函数
+	function EnterKeyListenerForAddFirstAdminUser(){
+		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
+	 	if (event.keyCode == 13){  
+	 		addFirstAdminUser();
+	 	}  
+	}
+		
+	//登录按键处理函数
+	function addFirstAdminUser(){
+		console.log("addFirstAdminUser");
+        var name = $('input[name="userName"]').val();
+        if(name == "")
+        {
+        	showErrorMessage(_Lang("用户名不能为空"));
+        	return;
+        }
+        
+        var tel = $('input[name="tel"]').val();
+        if(tel == "")
+        {
+        	showErrorMessage(_Lang("手机号不能为空"));
+        	return;
+        }
+
+        var email = $('input[name="email"]').val();
+        if(email == "")
+        {
+        	showErrorMessage(_Lang("邮箱不能为空"));
+        	return;
+        }
+        
+        var pwd = $('input[name="pwd"]').val();
+    	if(pwd == "")
+    	{
+    		showErrorMessage(_Lang("密码不能为空"));
+        	return;
+    	}
+        var pwd2 = $('input[name="pwd2"]').val();
+        if(pwd != pwd2)
+        {
+        	showErrorMessage(_Lang("两次密码输入不一致") + "!");        	
+        	return;
+        }
+		
+        $("#submit").attr("disabled","disabled");
+        
+        $.ajax({
+            url : "/DocSystem/Manage/addFirstAdminUser.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                 name : name,
+                 pwd : MD5(pwd),
+                 pwd2: MD5(pwd2),
+                 tel : tel,
+                 email : email,
+            },
+            success : function (ret) {
+            	$("#submit").removeAttr("disabled");
+                
+                if( "ok" == ret.status ){
+                	closeAddFirstAdminUser();
+                	//弹出登录对话框
+                	showLoginPanel();
+                	loginUser =  $('input[name="userName"]').val();
+                }else {
+                	showErrorMessage(_Lang("添加系统管理员失败", ":" , ret.msgInfo));
+                }
+            },
+            error : function () {
+            	$("#submit").removeAttr("disabled");
+            	showErrorMessage(_Lang("添加系统管理员失败", ":" , "服务器异常"));
+            }
+        });
+    }
+	
+	//页面初始化代码    
+    $(function(){
+    	console.log("addFirstAdminUser Page init");
+		AddFirstAdminUserPageInit();
+		$("#userName").click().focus();
+	});
+</script>
