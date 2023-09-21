@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>System Install - MxsDoc</title>
+
+    
+    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="static/webuploader/webuploader.css" rel="stylesheet">
+    <link href="static/cropper/cropper.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+</head>
+<body>
+<div class="manual-reader">
+    <header class="navbar navbar-static-top navbar-fixed-top manual-header" role="banner">
+    <div class="container">
+        
+        <div class="navbar-header col-sm-12 col-md-9 col-lg-8">
+            <a href="/DocSystem" class="navbar-brand" title="MxsDoc"><i class="fa fa-paper-plane"></i>MxsDoc</a>
+            <nav class="collapse navbar-collapse col-sm-10">
+                <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
+                </div>
+            </nav>
+            
+            <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block visible-sm-inline-block">
+                <button class="btn btn-default dropdown-toggle hidden-lg" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
+                <ul class="dropdown-menu" role="menu">
+                    <li>
+                        <a onclick="docSysInit();" title="Goto System">Goto System</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        
+        <nav class="navbar-collapse hidden-xs hidden-sm" role="navigation">
+            <ul class="nav navbar-nav navbar-right">
+				<li id="enterSystemBtn">
+                     <a onclick="docSysInit();" title="Goto System">Goto System</a>
+                </li>          
+            </ul>
+        </nav>
+        
+    </div>
+	</header>
+    <div class="container manual-body">
+        <div class="row">
+            <div id="menu" class="page-left"  style="display:none">
+                <ul class="menu">
+                    <li id="dbConfigTag" class="active"><a href="javascript:PageSwitch('dbConfig')" class="item">DataBase</a> </li>  
+                    <li id="sysConfigTag"><a href="javascript:PageSwitch('sysConfig')" class="item">SystemInfo</a> </li>
+                </ul>
+            </div>
+            <div id="dbConfig" class="page-right"   style="display:none">
+                <div class="m-box">
+                    <div class="box-head">
+                        <strong class="box-title">DataBase</strong>
+                        <span style="float:right">
+                        <button id="btnEnableSystemDBSet" onclick="enableSystemDBSet();" class="btn btn-success" data-loading-text="Edit" style="margin-right:1px">Edit</button>
+                        <button id="btnSaveSystemDBSet" onclick="saveSystemDBSet();" class="btn btn-success" data-loading-text="Save" style="margin-right:1px; display:none;">Save</button>
+                        <button  id="btnCancelSystemDBSet" onclick="cancelSystemDBSet();" class="btn btn-warning" data-loading-text="Cancel" style="margin-right:1px; display:none;">Cancel</button>
+                        </span>
+                    </div>
+                </div>
+                <div class="box-body" style="padding-right: 200px;">
+                    <div id="dbConfigForm">
+                        <div class="form-group">
+                            <label for="systemDbUrl">Data Source</label>
+				            <select class="form-control" id="systemDbType" onchange="doSelectDbType();" disabled="disabled" >   
+					            <option value="mysql">mysql</option>   
+					            <option value="sqlite">sqlite</option>   
+					        </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="systemDbUrl">DB URL</label>
+                            <input type="text" name="systemDbUrl" id="systemDbUrl" class="form-control disabled" disabled="disabled" placeholder="数据库链接">
+                        </div>
+                        <div class="form-group">
+                            <label for="systemDbUser">DB User</label>
+                            <input type="text" name="systemDbUser" id="systemDbUser" class="form-control disabled" disabled="disabled"  placeholder="用户名">
+                        </div>
+                        <div class="form-group">
+                            <label for="systemDbPwd">DB Password</label>
+                            <input type="text" name="systemDbPwd" id="systemDbPwd" class="form-control disabled" disabled="disabled"  placeholder="密码">
+                        </div>
+                        <div class="form-group">
+                            <button onclick="testDatabase();" class="btn btn-warning" data-loading-text="Test">Test</button>
+                            <button onclick="exportDBData();" class="btn btn-warning" data-loading-text="Export">Export</button>
+                            <button onclick="importDBData();" class="btn btn-warning" data-loading-text="Import">Import</button>
+                            <button onclick="resetDatabaseConfirm();" class="btn btn-danger" data-loading-text="Reset">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="sysConfig" class="page-right" style="display:none">
+                <div class="m-box">
+                    <div class="box-head">
+                        <strong class="box-title">SystemInfo</strong>
+                        <span style="float:right">
+                        <button id="btnEnableSystemInfoSet" onclick="enableSystemInfoSet();" class="btn btn-success" data-loading-text="Edit" style="margin-right:1px">Edit</button>
+                        <button id="btnSaveSystemInfoSet" onclick="saveSystemInfoSet();" class="btn btn-success" data-loading-text="Save" style="margin-right:1px; display:none;">Save</button>
+                        <button id="btnCancelSystemInfoSet" onclick="cancelSystemInfoSet();" class="btn btn-warning" data-loading-text="Cancel" style="margin-right:1px; display:none;">Cancel</button>
+                        </span>
+                        
+                    </div>
+                </div>
+                <div class="box-body" style="padding-right: 200px;">
+                    <div class="form-left">
+                        <div id="sysConfigForm">
+                            <div class="form-group">
+                                <label>Version</label>
+                                <input type="text" class="form-control disabled" value="" id="version" name="version" disabled="disabled" placeholder="Version">
+                            </div>
+                            <div class="form-group">
+                                <label>Server</label>
+                                <input type="text" class="form-control disabled" value="" id="tomcatPath" name="tomcatPath" disabled="disabled" placeholder="Server Install Path">
+  							</div>
+                            <div class="form-group">
+	                            <button onclick="restartTomcat();" class="btn btn-warning" data-loading-text="Restart">Restart</button>
+	                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+</div>
+</div>
+
+<div style="display:none">
+	<input id="uploadFiles" name="uploadFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
+</div>
+
+<script src="static/scripts/jquery.min.js" type="text/javascript"></script>
+<script src="static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="static/webuploader/webuploader.min.js" type="text/javascript"></script>
+<script src="static/cropper/cropper.min.js" type="text/javascript"></script>
+<script src="static/scripts/jquery.form.js" type="text/javascript"></script>
+<script src="js/main.js" type="text/javascript"></script>
+<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<script src="js/DocSys.js" type="text/javascript"></script>
+<script src="js/logon.js" type="text/javascript"></script>
+<script src="js/md5.js"></script>
+<script type="text/javascript">
+	var login_user = "";	//用来保存刚才登录的用户
+	var gShareId;
+
+    $(function () {
+    	pageInit();
+    });
+	
+   	//页面初始化
+	var gToHref;
+   	var authCode;
+    function pageInit()
+    {
+    	console.log("pageInit");
+    	authCode = getQueryString("authCode");
+    	console.log("pageInit authCode:" + authCode);
+    	
+        //显示左侧菜单栏
+        $('#menu').show();
+        //根据url中的toHref信息确定需要显示的内容
+        gToHref = getQueryString("toHref");
+        if(!gToHref)
+        {
+        	//gToHref = "sysConfig";
+        	gToHref = "dbConfig";
+        }           
+        
+        console.log("gToHref:" + gToHref); 
+        PageSwitch(gToHref);
+    }
+	
+    // 从 url 中获取参数
+    function getQueryString(name) {
+        var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null) {
+            return unescape(r[2]);
+        }
+        return null;
+    }
+    
+    //Siwtch the display of page
+    function PageSwitch(page)
+	{
+		console.log("PageSwitch:" + page);
+		switch(page)
+		{
+	   	case "sysConfig":
+		    $("#sysConfigTag").addClass("active");
+		    $("#sysConfig").show();
+
+	   		$("#dbConfigTag").removeClass("active");
+		    $("#dbConfig").hide();
+		    updateUrl(page);
+		    sysConfigPageInit();
+	      	break;
+	    default:	//myInfo
+		    $("#dbConfigTag").addClass("active");
+		    $("#dbConfig").show();
+	
+		    $("#sysConfigTag").removeClass("active");
+		    $("#sysConfig").hide();
+		    updateUrl(page);
+		    dbConfigPageInit();
+	     	break;
+	     }
+	}
+  
+	function updateUrl(pageName)
+    {
+    	console.log("updateUrl() pageName:" + pageName);
+    	var param = {
+    			toHref : pageName,
+	            authCode : authCode,
+	        };
+	        var url = makeUrl(param);
+			window.history.pushState({}, "wiki", url);
+	}
+	
+    function makeUrl(params) {
+        var href = window.location.href;
+        var i = href.indexOf("?");
+        if ( i< 0 ){
+            i = href.length;
+        }
+        href = href.substring(0,i);
+
+        var str = ""
+        for( k in params ){
+            if ( params[k]){ //params[k]
+              str += "&" + k + "=" + params[k];
+            }
+        }
+        return href + "?" + str.substr(1);
+    }
+    
+    function docSysInit()
+    {
+    	console.log("sysConfigPageInit");
+		$.ajax({
+	        url : "/DocSystem/Manage/docSysInit.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	if(ret.data && ret.data == "needRestart")
+	            	{
+	            		showErrorMessage(_Lang("数据库配置有变更，请先重启服务") + "!");	
+	            	}
+	            	else
+	            	{
+	            		//进入系统主页
+	            		window.location.href='/DocSystem/web/index_en.html';
+	            	}
+	            }
+	            else
+	            {
+		        	showErrorMessage(_Lang("系统初始化失败", ":", ret.msgInfo));
+	            	console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage(_Lang("系统初始化失败", ":", "服务器异常"));
+	        }
+	    });
+    }
+    
+	//系统配置
+	var systemInfo = {
+			version: "",
+			tomcatPath: "",
+			openOfficePath:"",
+	};
+	
+	function enableSystemInfoSet(){
+		$("#btnEnableSystemInfoSet").hide();
+		$("#btnCancelSystemInfoSet").show();
+		$("#btnSaveSystemInfoSet").show();
+		$("#tomcatPath").val(systemInfo.tomcatPath);
+		
+		$("#tomcatPath").attr('disabled',false);
+	}
+	
+	function cancelSystemInfoSet(){
+		$("#btnEnableSystemInfoSet").show();
+		$("#btnCancelSystemInfoSet").hide();
+		$("#btnSaveSystemInfoSet").hide();
+		//revert the value
+		$("#tomcatPath").attr('disabled',true);
+		$("#tomcatPath").val(systemInfo.tomcatPath);
+	}
+	
+	function saveSystemInfoSet(){
+		$("#btnEnableSystemInfoSet").show();
+		$("#btnCancelSystemInfoSet").hide();
+		$("#btnSaveSystemInfoSet").hide();
+		//revert the value
+		$("#tomcatPath").attr('disabled',true);
+
+		var tomcatPath = $("#tomcatPath").val();
+		updateSystemInfo(tomcatPath);
+	}
+	
+	function updateSystemInfo(tomcatPath, openOfficePath){
+		$.ajax({
+	        url : "/DocSystem/Manage/setSystemInfo.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	authCode: authCode,
+	        	tomcatPath: tomcatPath,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemInfo.tomcatPath = tomcatPath;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage(_Lang("更新数据库配置信息失败", ":", ret.msgInfo));
+	        		$("#tomcatPath").val(systemInfo.tomcatPath);
+		        }
+	        },
+	        error : function () {
+                showErrorMessage(_Lang("更新数据库配置信息失败", ":", "服务器异常"));
+        		$("#tomcatPath").val(systemInfo.tomcatPath);
+	        }
+	    });
+	}
+    
+	function sysConfigPageInit(){
+		console.log("sysConfigPageInit");
+		$.ajax({
+	        url : "/DocSystem/Manage/getSystemInfo.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	var config = ret.data;
+	            	systemInfo.version = config.version;
+	            	systemInfo.tomcatPath = config.tomcatPath;
+	            	systemInfo.openOfficePath = config.openOfficePath;	            	
+	            	$("#version").val(systemInfo.version);
+	            	$("#tomcatPath").val(systemInfo.tomcatPath);
+	            }
+	            else
+	            {
+	                showErrorMessage(_Lang("获取系统信息失败", ":", ret.msgInfo));
+	            	console.log(ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+                showErrorMessage(_Lang("获取系统信息失败", ":", "服务器异常"));
+	        }
+	    });
+    }
+	
+	function restartTomcat(){
+		console.log("restartTomcat()");
+		var tomcatPath = $("#tomcatPath").val();
+		if(!tomcatPath || tomcatPath == "")
+		{
+			showErrorMessage("错误：未指定服务器路径！");
+			return;
+		}
+					
+	    qiao.bs.confirm({
+	    		id: "restartTomcatConfirmDialog",
+		        title: "重启服务:",
+		        msg: "是否重启服务(" + tomcatPath + ")？",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+				doRestartTomcat(tomcatPath);
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function doRestartTomcat(tomcatPath)
+	{
+		console.log("doRestartTomcat tomcatPath:" + tomcatPath);
+		$.ajax({
+	        url : "/DocSystem/Manage/restartServer.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	authCode: authCode,
+	        	tomcatPath: tomcatPath,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	showErrorMessage("重启成功!");
+	        	}
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("重启失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("重启失败:服务器异常");
+	        }
+	    });
+	}
+	
+	//系统数据库设置
+	var systemDbSetting = {
+			type: "",
+			url: "",
+			user: "",
+			pwd: "",
+	}
+	function enableSystemDBSet(){
+		$("#btnEnableSystemDBSet").hide();
+		$("#btnCancelSystemDBSet").show();
+		$("#btnSaveSystemDBSet").show();
+		
+		$("#systemDbType").val(systemDbSetting.type);
+		$("#systemDbUrl").val(systemDbSetting.url);
+		$("#systemDbUser").val(systemDbSetting.user);
+		$("#systemDbPwd").val(systemDbSetting.pwd);
+		
+		$("#systemDbType").attr('disabled',false);;
+		$("#systemDbUrl").attr('disabled',false);;
+		$("#systemDbUser").attr('disabled',false);
+		$("#systemDbPwd").attr('disabled',false);
+	}
+	
+	function cancelSystemDBSet(){
+		$("#btnEnableSystemDBSet").show();
+		$("#btnCancelSystemDBSet").hide();
+		$("#btnSaveSystemDBSet").hide();
+		
+		//revert the value
+		$("#systemDbType").attr('disabled',true);;
+		$("#systemDbUrl").attr('disabled',true);;
+		$("#systemDbUser").attr('disabled',true);
+		$("#systemDbPwd").attr('disabled',true);
+		
+		$("#systemDbType").val(systemDbSetting.type);
+		$("#systemDbUrl").val(systemDbSetting.url);
+		$("#systemDbUser").val(systemDbSetting.user);
+		$("#systemDbPwd").val(systemDbSetting.pwd);
+	}
+	
+	function saveSystemDBSet(){
+		$("#btnEnableSystemDBSet").show();
+		$("#btnCancelSystemDBSet").hide();
+		$("#btnSaveSystemDBSet").hide();
+		//revert the value
+		$("#systemDbType").attr('disabled',true);;
+		$("#systemDbUrl").attr('disabled',true);;
+		$("#systemDbUser").attr('disabled',true);
+		$("#systemDbPwd").attr('disabled',true);
+		
+		var type = $("#systemDbType").val();
+		var url = $("#systemDbUrl").val();
+		var user = $("#systemDbUser").val();
+		var pwd = $("#systemDbPwd").val();
+		updatesystemDbSetting(type, url, user, pwd);
+	}
+	
+	function dbConfigPageInit(){
+		$.ajax({
+	        url : "/DocSystem/Manage/getSystemDbConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	        	console.log("getSystemDbConfig ret:", ret);
+	            if( "ok" == ret.status )
+	            {
+					var config = ret.data;
+					systemDbSetting.type = config.type;
+					systemDbSetting.url = config.url;
+					systemDbSetting.user = config.user;
+					systemDbSetting.pwd = config.pwd;
+	            	$("#systemDbType").val(systemDbSetting.type);
+					$("#systemDbUrl").val(systemDbSetting.url);
+	            	$("#systemDbUser").val(systemDbSetting.user);
+	            	$("#systemDbPwd").val(systemDbSetting.pwd);				
+	            }
+	            else 
+	            {
+	            	console.log(ret.msgInfo);
+	        		showErrorMessage("获取数据库信息失败:" + ret.msgInfo);
+	            	if(ret.data == "invalidAuthCode")
+	            	{
+	                	window.location.href='/DocSystem';                	            		
+	            	}
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:获取数据库信息失败");
+	        }
+	    });
+	}
+	
+	function doSelectDbType(){
+		var type = $("#systemDbType").val();
+		switch(type)
+		{
+		case "mysql":
+			$("#systemDbUrl").val("jdbc:mysql://localhost:3307/DocSystem1?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC");
+			$("#systemDbUser").val("root");
+			$("#systemDbPwd").val("");
+			break;
+		case "sqlite":
+			$("#systemDbUrl").val("jdbc:sqlite:${catalina.home}/DocSystem.db");
+			$("#systemDbUser").val("");
+			$("#systemDbPwd").val("");
+			break;
+		}
+	}
+    
+	function updatesystemDbSetting(type, url, user, pwd){
+		$.ajax({
+	        url : "/DocSystem/Manage/setSystemDBConfig.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	type: type,
+	        	url: url,
+	        	user: user,
+	        	pwd: pwd,
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	        		systemDbSetting.type = type;
+	            	systemDbSetting.url = url;
+	        		systemDbSetting.user = user;
+	        		systemDbSetting.pwd = pwd;
+	        		showErrorMessage("数据库配置修改成功，请重启服务！");
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
+	        		//restore the setting
+	        		$("#systemDbType").val(systemDbSetting.type);
+	        		$("#systemDbUrl").val(systemDbSetting.url);
+	        		$("#systemDbUser").val(systemDbSetting.user);
+	        		$("#systemDbPwd").val(systemDbSetting.pwd);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:更新数据库配置信息失败");
+        		//restore the setting
+	    		$("#systemDbType").val(systemDbSetting.type);
+        		$("#systemDbUrl").val(systemDbSetting.url);
+	    		$("#systemDbUser").val(systemDbSetting.user);
+	    		$("#systemDbPwd").val(systemDbSetting.pwd);
+	        }
+	    });
+	}
+	
+	function testDatabase(){
+		var dbType = $("#systemDbType").val();
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/testDatabase.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	type: dbType,
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+	            	showErrorMessage("数据库连接成功");
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("数据库连接失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:数据库连接失败");
+	        }
+	    });
+	}
+	
+	function resetDatabaseConfirm()
+	{
+		console.log("resetDatabaseConfirm()");
+	    qiao.bs.confirm({
+	    		id: "resetDatabaseConfirmDialog",
+		        title: "重置数据库",
+		        msg: "是否重置数据库？",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+		    	//alert("点击了确定");
+				resetDatabase();
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		//alert("点击了取消")
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function resetDatabase(){
+		var dbType = $("#systemDbType").val();
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/resetDatabase.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	type: dbType,
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+	            	showErrorMessage("重置数据库成功");
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("重置数据库失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:重置数据库失败");
+	        }
+	    });
+	}
+	
+	function exportDBData(){
+		var dbType = $("#systemDbType").val();
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
+		
+		$.ajax({
+	        url : "/DocSystem/Manage/exportDBData.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	type: dbType,
+	        	url: dbUrl,
+	        	user: dbUser,
+	        	pwd: dbPwd,
+	        	authCode: authCode,
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {	        		
+	            	//设置成功
+            	    console.log("exportDBData Ok:",ret);	   		
+        	   		var targetName = ret.data.name;
+            	    var targetPath = ret.data.path;
+            	    var deleteFlag = ret.msgData;
+        	   		
+            	    targetName = encodeURI(targetName);
+        		   	targetPath = encodeURI(targetPath);
+        	   		window.location.href = "/DocSystem/Doc/downloadDoc.do?targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag + "&authCode="+authCode;
+	            }
+	            else 
+	            {
+	                console.log(ret.msgInfo);
+	                showErrorMessage("数据库导出失败:" + ret.msgInfo);
+		        }
+	        },
+	        error : function () {
+	        	showErrorMessage("服务器异常:数据库导出失败");
+	        }
+	    });
+	}
+	
+	function importDBData(){
+		console.log("importDBData()");
+  		//清除文件控件
+		$("#uploadFiles").val("");
+	    return $("#uploadFiles").click();
+	}
+	
+	function importDBDataConfirm(e)
+	{
+		console.log("importDBData()");
+		
+		var dbType = $("#systemDbType").val();
+		var dbUrl = $("#systemDbUrl").val();
+		var dbUser = $("#systemDbUser").val();
+		var dbPwd = $("#systemDbPwd").val();
+		
+	    var files = e.target.files;
+	    var firstFile;
+	    if(files.length > 0)
+	   	{
+	    	console.log("files.length:" + files.length);
+	    	for( var i = 0 ; i < files.length ; i++ )
+	    	{  
+	    		firstFile = files[i];
+	    	   	if(typeof firstFile == 'object')
+	    	   	{
+	    	   		var relativePath = firstFile.webkitRelativePath;	//获取第一个文件的相对路径
+	    	   		console.log("firstFile relativePath:"+firstFile.webkitRelativePath);
+	    	   		break;
+	    	   	}
+	    	   	else
+	    	   	{
+	    	   		//This is something else 
+	    	   		//console.log("it is not a file");
+	    	   	}
+	    	}
+	    }
+	    else
+	   	{
+	   		bootstrapQ.alert("请选择文件");
+	      	return false;
+	   	}  
+		
+		var fileName = firstFile.name;
+	    console.log("firstFile:"+fileName);
+	    
+	    qiao.bs.confirm({
+	    		id: "importDBDataConfirmDialog",
+		        title: "导入数据",
+		        msg: "是否导入 " + fileName+ " ？",
+		        okbtn: "确认",
+		        qubtn: "取消",
+	    	},function () {
+		    	//alert("点击了确定");
+				//开始上传
+				startImportDBData(firstFile, dbType, dbUrl, dbUser, dbPwd);
+		    	return true;   //close dialog
+	    	},function()
+	    	{
+	    		//alert("点击了取消")
+	    		return true;	//close dialog
+	    	}
+	    );
+	}
+	
+	function startImportDBData(file, dbType, dbUrl, dbUser, dbPwd)
+	{
+		//新建文件上传表单
+		var form = new FormData();
+		form.append("type", dbType);
+		form.append("url", dbUrl);
+		form.append("user", dbUser);
+		form.append("pwd", dbPwd);
+		form.append("uploadFile", file);
+		form.append("authCode", authCode);
+
+
+		//新建http异步请求
+		var xhr = new XMLHttpRequest();
+		
+		//设置异步上传状态变化回调处a理函数
+		xhr.onreadystatechange = function() {				
+			//文件上传状态
+			console.log("xhr onreadystatechange() status:" + xhr.status + " readyState:" + xhr.readyState);
+			if(xhr.status == 200) 
+			{
+				if(xhr.readyState != 4)
+				{
+					//文件上传未结束
+					return;
+				}
+				
+				//上传成功！
+				var ret = JSON.parse(xhr.responseText);
+				if("ok" == ret.status){
+					showErrorMessage("导入成功");
+				 }
+				 else	//上传失败
+				 {
+					//上传失败
+					console.log("上传失败：" + ret.msgInfo);
+					showErrorMessage("导入失败:" + ret.msgInfo);
+					return;
+	             }
+			}else{
+				if(xhr.status < 300) 
+				{
+					//不是真正的异常
+					return;
+				}
+				//上传失败
+				console.log("系统异常: " + file.name + " 上传异常！");
+				showErrorMessage("系统异常: 上传异常");
+				return;
+			}
+		};
+		
+		//上传表单			
+		xhr.open("post", "/DocSystem/Manage/importDBData.do");
+		xhr.send(form);
+	}
+	
+</script>
+
+</body></html>

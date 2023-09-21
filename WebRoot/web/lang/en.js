@@ -30,6 +30,9 @@ function lang(str)
 		"用户名不能为空" : "Account can not be empty",
 		"邮箱不能为空" : "Email can not be empty",
 		"密码不能为空" : "Password can not be empty",
+		"数据库配置有变更，请先重启服务"	: "DataSource configuration was changed, Please restart server",
+		"系统初始化失败" : "System Init Failed",
+		
 	};
 	
 	var newStr = langTypeMap[str];
