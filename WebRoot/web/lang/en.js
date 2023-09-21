@@ -16,8 +16,10 @@ function lang(str)
 {
 	var translateMap = 
 	{
-			"退出登录失败" : "Log Out Failed",
-			"服务器异常" : "Server Exception",			
+		"注册失败"	: "Sign Up Failed",			
+		"登录失败"	: "Sign In Failed",
+		"退出登录失败" : "Sign Out Failed",
+		"服务器异常" : "Server Exception",			
 	};
 	
 	var newStr = langTypeMap[str];
