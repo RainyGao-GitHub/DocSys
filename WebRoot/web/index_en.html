@@ -9,10 +9,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="renderer" content="webkit" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
-    <title>首页-MxsDoc</title>    
+    <title>MxsDoc</title>    
     
-    <meta name="keywords" content="mxsdoc,Web文件系统,网页文件系统">
-   	<meta name="description" content="MxsDoc是一个开源、免费的web文件管理系统，为个人和企业用户提供便捷高效的文件存储和文件管理服务！" />
+    <meta name="keywords" content="mxsdoc">
+   	<meta name="description" content="MxsDoc is a web based document management system!" />
 	
 	<link href="css/logo/logo.css" rel="stylesheet">
 	<link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -57,7 +57,7 @@
 <body>
 <div class="header">
     <div class="container">
-        <a class="navbar-brand" href="/DocSystem">
+        <a class="navbar-brand" href="/DocSystem/index_en.html">
         	<i class="logo default"></i> 
         	MxsDoc
         </a>
@@ -65,16 +65,16 @@
                     <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                     <ul class="dropdown-menu" role="menu">
 						<li id="mobileLoginBtn">
-                            <a onclick="showLoginPanel()" title="用户登录">登录</a>
+                            <a onclick="showLoginPanel()" title="Sign In">Sign In</a>
                         </li>
                         <li id="mobileLogoutBtn">
-                        	<a onclick="userLogout()" title="退出登录">退出</a>
+                        	<a onclick="userLogout()" title="Sign Out">Sign Out</a>
                         </li>
                         <li id="mobileRegisterBtn">
-                            <a onclick="showRegisterPanel()" title="用户注册">注册</a>
+                            <a onclick="showRegisterPanel()" title="Sign Up">Sign Up</a>
                         </li>
                         <li id="mobileEnterSystemBtn">
-                            <a href="projects.html" title="进入系统">进入系统</a>
+                            <a href="projects.html" title="Enter System">Enter System</a>
                         </li>
                         
                     </ul>
@@ -85,23 +85,23 @@
 				<li id="userInfoDiv" style="display:none">
 							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
-								<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
-								<li><a href="/DocSystem/web/shareManager.html">我的分享</a></li>
-								<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
-								<li id="logoutBtn"><a onclick="userLogout()">退出登录</a></li>
+								<li><a href="/DocSystem/web/myHostPage.html">User Center</a></li>
+								<li><a href="/DocSystem/web/shareManager.html">My Sharing</a></li>
+								<li><a href="/DocSystem/web/reposManager.html">Repository Management</a></li>
+								<li id="logoutBtn"><a onclick="userLogout()">Log Out</a></li>
 							</ul>
 				</li>
 				<li id="loginBtn">
-                    <a onclick="showLoginPanel();">登录</a>
+                    <a onclick="showLoginPanel();">Sign In</a>
                 </li>
                 <li id="registerBtn">
-                    <a onclick="showRegisterPanel();">注册</a>
+                    <a onclick="showRegisterPanel();">Sign Up</a>
                 </li>
                 <li>
-                    <a target="_blank" href="http://dw.gofreeteam.com">官网</a>
+                    <a target="_blank" href="http://dw.gofreeteam.com">Official Website</a>
                 </li>
                 <li id="enterSystemLink"  style="display:none">
-                    <a href="projects.html">进入系统>></a>
+                    <a href="projects_en.html">Enter System>></a>
                 </li>
                 <li style="list-style: none; display: inline">
                     <div class="clear"></div>
@@ -118,10 +118,10 @@
 			<div class="banner text-center">
 			    <div class="container">
 			        <div class="banner-info">
-			            <h1>文件管理系统</h1>
-			            <p>简单、方便就够了</p>
-			            <a id="loginBannerBtn" class="banner_btn"  onclick="showLoginPanel();">登录</a>
-			            <a id="enterSystemBtn" class="banner_btn"  href="projects.html" style="display:none">进入系统</a>
+			            <h1>MxsDoc</h1>
+			            <p>Easy To Use</p>
+			            <a id="loginBannerBtn" class="banner_btn"  onclick="showLoginPanel();">Sign In</a>
+			            <a id="enterSystemBtn" class="banner_btn"  href="projects_en.html" style="display:none">Enter System</a>
 			        </div>
 			    </div>
 			</div>
@@ -154,8 +154,8 @@
 
 <div class="main">
     <div class="content_white">
-        <h2>系统简介</h2>
-        <p>MxsDoc是基于Web的文件管理系统，主要用于企业或个人的文件存储管理，方便随时查看和统一管理。</p>
+        <h2>MxsDoc</h2>
+        <p>MxsDoc is a web based document management system</p>
     </div>
 
 
@@ -164,28 +164,27 @@
             <div class="row text-center">
                 <div class="col-mg-3 col-xs-3 feature_grid1">
                     <i class="fa fa-bookmark fa-3x"></i>
-                    <h3 class="m_1"><a href="#">操作简单</a></h3>
-
-                    <p class="m_2">本地化操作习惯：查看、编辑、复制、粘贴、新建、删除、拖拽移动。</p>
+                    <h3 class="m_1"><a href="#">Easy to use</a></h3>
+                    <p class="m_2">online Edit/Preview/Add/Delete/Copy/Paste/DragAndMove, just like that you did it locally.</p>
                 </div>
 
                 <div class="col-md-3 col-xs-3 feature_grid1">
                     <i class="fa fa-cog fa-3x"></i>
-                    <h3 class="m_1"><a href="#">使用方便</a></h3>
-                    <p class="m_2">电脑手机自适应设计：随时随地，想看就看，想改就改。</p>
+                    <h3 class="m_1"><a href="#">Convenient</a></h3>
+                    <p class="m_2">both desktop system and mobile devices was supported.</p>
                 </div>
 
                 <div class="col-mg-3 col-xs-3 feature_grid1">
                     <i class="fa fa-paper-plane-o fa-3x"></i>
-                    <h3 class="m_1"><a href="#">安全高效</a></h3>
-                    <p class="m_2">支持增量版本控制、集中式权限管理，支持在线编辑和文件备注，安全且高效。</p>
+                    <h3 class="m_1"><a href="#">Safe and Efficient</a></h3>
+                    <p class="m_2">Document History/Encryption/Access Control/Online Office Edit.</p>
                 </div>
 
 
                 <div class="col-md-3 col-xs-3 feature_grid2">
                     <i class="fa fa-leaf fa-3x"></i>
-                    <h3 class="m_1"><a href="#">代码开源</a></h3>
-                    <p class="m_2">GPL2.0开源协议：支持系统二次开发和功能定制。</p>
+                    <h3 class="m_1"><a href="#">Open Source</a></h3>
+                    <p class="m_2">GPL2.0</p>
                 </div>
             </div>
         </div>
@@ -198,8 +197,8 @@
                     <div class="block-heading-two">
                         <h2><span>MxsDoc MxsDoc</span></h2>
                     </div>
-                    <p>构建一个属于自己的文件存储系统。</p>
-                    <p><a class="banner_btn" onclick="showFeebackPanel()">意见与反馈</a>
+                    <p>Build your private storage system。</p>
+                    <p><a class="banner_btn" onclick="showFeebackPanel()">Report a problem</a>
                     </p>
                 </div>
 
