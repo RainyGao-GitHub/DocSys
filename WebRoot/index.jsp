@@ -3,10 +3,10 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>系统引导</title>
+<title>System Init</title>
 </head>
 <body>
-	<p id="dispInfo">系统初始化中,请稍候</p>
+	<p id="dispInfo">System Init...</p>
 </body>
 
 <script src="web/static/scripts/jquery.min.js" type="text/javascript"></script>
@@ -71,8 +71,13 @@ function getBrowserLang()
 	switch(browserLang.toLowerCase())
 	{
 	case "us":
+		console.log("us");
+		return "en";
 	case "en":
+		console.log("en");
+		return "en";
 	case "en_us":
+		console.log("en_us");
 		return "en";
     case "zh-tw":
         console.log("中文繁体(中国台湾)");
@@ -192,7 +197,7 @@ function docSysInit()
             }
         },
         error : function () {
-        	_Lang("系统初始化失败", ":", "服务器异常");
+        	alert(_Lang("系统初始化失败", ":", "服务器异常"));
         	goToSystemInstallPage();
        }
     });
