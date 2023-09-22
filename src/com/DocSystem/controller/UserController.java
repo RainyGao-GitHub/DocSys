@@ -461,11 +461,6 @@ public class UserController extends BaseController {
 			return;
 		}
 
-		if(lang == null)
-		{
-			lang = "ch";
-		}
-		
 		//根据注册类型不同，验证码需要放置在不同的session里面
 		String sessionName = "";	//0 注册，1忘记密码
 		if(type == null)	//默认用于注册
@@ -487,6 +482,10 @@ public class UserController extends BaseController {
 			String code = generateVerifyCode(session,sessionName,userName);
 			
 			String content = "";
+			if(lang == null)
+			{
+				lang = "ch";
+			}
 			switch(lang)
 			{
 			case "en":	//English

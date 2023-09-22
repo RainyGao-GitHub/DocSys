@@ -676,11 +676,11 @@ public class ReposController extends BaseController{
 		{
 			String content = "";
 			String emailTitle = "";
+			
 			if(lang == null)
 			{
 				lang = "ch"; //中文
 			}
-			
 			switch(lang)
 			{
 			case "en":
