@@ -56,7 +56,12 @@ public class EmailService {
 	@SuppressWarnings("static-access")
 	@ResponseBody
 	@RequestMapping("/sendEmail")
-	public boolean sendEmail(ReturnAjax rt, String toEmail,String content, String subject){
+	public boolean sendEmail(ReturnAjax rt, String toEmail,String content, String subject, String lang){
+		if(lang == null)
+		{
+			lang = "ch";
+		}
+		
 		try {
 			Properties props = new Properties();
 			String basePath = new EmailService().getClass().getClassLoader().getResource("/").getPath();

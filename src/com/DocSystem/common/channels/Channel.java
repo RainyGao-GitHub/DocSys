@@ -156,9 +156,9 @@ public interface Channel {
 			boolean force,
 			HashMap<String,String> downloadList);
 
-	String buildMailContent(String content);
+	String buildMailContent(String content, String lang);
 	
-	String buildDocShareMailContent(String content);
+	String buildDocShareMailContent(String content, String lang);
 
 	boolean systemLicenseInfoCheck(ReturnAjax rt);
 

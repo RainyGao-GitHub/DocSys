@@ -175,6 +175,7 @@ public class ReposController extends BaseController{
 			Integer encryptType,
 			String autoSyncup,
 			String autoBackup,
+			String lang,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		
 		Log.infoHead("****************** addRepos.do ***********************");
@@ -417,7 +418,7 @@ public class ReposController extends BaseController{
 		{
 			String encrptConfigPath = Path.getReposEncryptConfigPath(repos);
 			String encrptConfigName = Path.getReposEncryptConfigFileName();
-			sendEncrptFileWithEmail(rt, login_user.getEmail(), repos, encrptConfigPath + encrptConfigName);
+			sendEncrptFileWithEmail(rt, login_user.getEmail(), repos, encrptConfigPath + encrptConfigName, lang);
 		}
 	}
 
@@ -608,7 +609,10 @@ public class ReposController extends BaseController{
 	}
 	
 	@RequestMapping("/backupReposEncryptConfig.do")
-	public void backupReposEncryptConfig(Integer reposId, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception 
+	public void backupReposEncryptConfig(
+			Integer reposId, 
+			String lang,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception 
 	{
 		Log.infoHead("****************** backupReposEncryptConfig.do ***********************");
 		Log.debug("backupReposEncryptConfig reposId: " + reposId);
@@ -661,21 +665,44 @@ public class ReposController extends BaseController{
 		addSystemLog(request, login_user, "backupReposEncryptConfig", "backupReposEncryptConfig", "备份仓库密钥", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 
 		//Send EncryptConfigFile to user with email
-		sendEncrptFileWithEmail(rt, login_user.getEmail(), repos, path + backupFileName);
+		sendEncrptFileWithEmail(rt, login_user.getEmail(), repos, path + backupFileName, lang);
 		return;
 	}
 	
 
-	private void sendEncrptFileWithEmail(ReturnAjax rt, String userMail, Repos repos, String encrypConfigFilePath) {
+	private void sendEncrptFileWithEmail(ReturnAjax rt, String userMail, Repos repos, String encrypConfigFilePath, String lang) {
 		Log.debug("sendEncrptFileWithEmail() userMail:" + userMail);
 		if(userMail != null && userMail.isEmpty() == false)
 		{
-			String content = 		
+			String content = "";
+			String emailTitle = "";
+			if(lang == null)
+			{
+				lang = "ch"; //中文
+			}
+			
+			switch(lang)
+			{
+			case "en":
+				content = 
+				"<br>"
+				+ "Attachment is the key file for repository:" +repos.getId() + " [" + repos.getName()+ "]."
+				+ "<br>It was used to encrypt and decrypt the files in this repository."
+				+ "<br>Please store it in safe place!"
+				+ "<br>"
+				+ "<br>";
+				emailTitle = "来自MxsDoc的邮件";
+				break;
+			default:
+				content = 
 					"<br>"
 					+ "附件是" +repos.getId() + "号仓库[" + repos.getName()+ "]的密钥文件，用于仓库文件的加解密，请妥善保存。"
 					+ "<br>"
 					+ "<br>";
-			String mailContent =  channel.buildMailContent(content);
+				emailTitle = "From MxsDoc";
+				break;
+			}
+			String mailContent =  channel.buildMailContent(content, lang);
 			if(mailContent == null)
 			{
 				mailContent = content;
@@ -689,7 +716,7 @@ public class ReposController extends BaseController{
 			}
 			
 			Log.debug("sendEncrptFileWithEmail() send encrptConfigFile to " + userMail);
-			emailService.sendEmailEx(rt, userMail, mailContent, "来自MxsDoc的邮件", encrypConfigFilePath);
+			emailService.sendEmailEx(rt, userMail, mailContent, emailTitle, encrypConfigFilePath);
 		}
 	}
 
@@ -1058,6 +1085,7 @@ public class ReposController extends BaseController{
 			Integer encryptType,
 			String autoSyncup,
 			String autoBackup,
+			String lang,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** updateReposInfo.do ***********************");
@@ -1321,7 +1349,7 @@ public class ReposController extends BaseController{
 		{
 			String encrptConfigPath = Path.getReposEncryptConfigPath(repos);
 			String encrptConfigName = Path.getReposEncryptConfigFileName();
-			sendEncrptFileWithEmail(rt, login_user.getEmail(), repos, encrptConfigPath + encrptConfigName);
+			sendEncrptFileWithEmail(rt, login_user.getEmail(), repos, encrptConfigPath + encrptConfigName, lang);
 		}
 	}
 

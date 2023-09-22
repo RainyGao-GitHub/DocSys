@@ -52,7 +52,16 @@ function lang(str)
 		//系统
 		"数据库配置有变更，请先重启服务"	: "DataSource configuration was changed, Please restart server",
 		"系统初始化失败" : "System Init Failed",
-				
+		//仓库访问
+		"用户未登录，请先登录！" : "Please login system firstly!",
+		"您无权修改该仓库!" : "You have no right to modify this repository!",
+		"仓库信息更新失败！" : "Failed to update the repository configuration",
+		"仓库目录修改失败" : "Failed to change folder for repository",
+		"修改仓库文件目录失败！" : "Failed to change the storage folder for repository",
+		"普通用户无权修改仓库存储位置，请联系管理员！" : "You can not change the storage folder, please contact System Administrator",
+		"版本仓库初始化失败！" : "Failed to init history storage repository",
+		
+		
 	};
 	
 	var newStr = translateMap[str];

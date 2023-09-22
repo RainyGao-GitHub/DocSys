@@ -446,6 +446,7 @@ public class UserController extends BaseController {
 	@RequestMapping("/sendVerifyCode.do")
 	public void sendVerifyCode(String userName,Integer type,
 			String mailSubject,
+			String lang,
 			HttpSession session,HttpServletResponse response)
 	{
 		Log.infoHead("************** sendVerifyCode ****************");		
@@ -460,6 +461,11 @@ public class UserController extends BaseController {
 			return;
 		}
 
+		if(lang == null)
+		{
+			lang = "ch";
+		}
+		
 		//根据注册类型不同，验证码需要放置在不同的session里面
 		String sessionName = "";	//0 注册，1忘记密码
 		if(type == null)	//默认用于注册
@@ -480,19 +486,32 @@ public class UserController extends BaseController {
 		{	
 			String code = generateVerifyCode(session,sessionName,userName);
 			
-			String content = 		
+			String content = "";
+			switch(lang)
+			{
+			case "en":	//English
+				content = 
+				"<br>"
+				+ "You received MxsDoc‘s verification code: " + code + ", please use it in 15 minutes."
+				+ "<br>"
+				+ "<br>";
+				break;
+			default:
+				content = 
 					"<br>"
 					+ "您收到了来自MxsDoc的验证码：" + code + ",15分钟内有效，请及时验证。"
 					+ "<br>"
 					+ "<br>";
+				break;
+			}
 
-			String mailContent =  channel.buildMailContent(content);
+			String mailContent =  channel.buildMailContent(content, lang);
 			if(mailContent == null)
 			{
 				mailContent = content;
 			}
 			
-			emailService.sendEmail(rt, userName, mailContent, mailSubject);
+			emailService.sendEmail(rt, userName, mailContent, mailSubject, lang);
 			writeJson(rt, response);
 			return;	
 		}

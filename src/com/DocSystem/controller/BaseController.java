@@ -3577,12 +3577,12 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 
-	protected boolean verifyTelAndEmail(User user, ReturnAjax rt) {
+	protected boolean verifyTelAndEmail(User user, String lang, ReturnAjax rt) {
 		
 		String email = user.getEmail();
 		if(email != null && !email.isEmpty())
 		{
-			if(verifyEmail(email) == false)
+			if(verifyEmail(email, lang) == false)
 			{
 				docSysErrorLog("邮箱验证失败", rt);
 				return false;			
@@ -3601,9 +3601,9 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean verifyEmail(String email) {
+	protected boolean verifyEmail(String email,String lang) {
 		ReturnAjax rt = new ReturnAjax();
-		return emailService.sendEmail(rt, email , "这是来自MxsDoc的邮箱验证邮件！", null);
+		return emailService.sendEmail(rt, email , "这是来自MxsDoc的邮箱验证邮件！", null, lang);
 	}
 
 	protected boolean verifyTelephone(String tel) {
