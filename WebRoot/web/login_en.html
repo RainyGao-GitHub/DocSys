@@ -2,7 +2,7 @@
     <div class="form-group">
         <label class="col-sm-2 control-label">Account</label>
         <div class="col-sm-9">
-            <input type="text" id="userName" name="userName" value="" needvalicate=true class="form-control" valicate="_required _minlen=6 _emailOR_tel" maxlength="40" class="form-control" placeholder="Email or MobilePhone" aria-required="true">
+            <input type="text" id="userName" name="userName" value="" needvalicate=true class="form-control" valicate="_required _minlen=6 _emailOR_tel" maxlength="40" class="form-control" placeholder="Email or Mobile Phone" aria-required="true">
         </div>
     </div>
     <div class="form-group">
@@ -154,7 +154,8 @@
                 	var url = window.location.href;               	
                 	window.location.href = url;	//刷新页面
                 }else {
-                	showErrorMessage("错误："+ret.msgInfo);
+                	showErrorMessage(_Lang("登录失败", " : ", ret.msgInfo));
+                	
                 	if(ret.data == "needCheckDBSetting")
                 	{
                 		window.location.href='/DocSystem/index.jsp'

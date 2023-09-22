@@ -16,6 +16,7 @@ function lang(str)
 {
 	var translateMap = 
 	{
+		//TODO: 后台的接口发送的邮件和短信是中文，可以考虑后台增加语言参数
 		//通用
 		"服务器异常" : "Server Exception",			
 		//注册
@@ -35,11 +36,15 @@ function lang(str)
 		"该邮箱已被使用！" : "Email have been registered",
 		"手机格式错误！" : "Incorrect Mobile Number",
 		"邮箱格式错误！" : "Incorrect Email",
+		"请填写正确的邮箱或手机" : "Please use correct email or mobile phone",
+		"请使用正确的邮箱手机！" : "Please use correct email or mobile phone",
 		"验证码错误！" : "Incorrect verification code!",
 		"密码不能为空！" : "Password is empty!",
 		"两次密码不一致，请重试！" : "Re-enter password error!",
 		//登录
 		"登录失败"	: "Sign In Failed",
+    	"获取用户信息失败" : "Get Login User Failed",
+    	"用户名或密码错误！" : "Incorrect account or password!",
 		//退出登录
 		"退出登录失败" : "Sign Out Failed",
 		//添加系统管理员
