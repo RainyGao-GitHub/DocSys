@@ -60,6 +60,8 @@ function lang(str)
 		"修改仓库文件目录失败！" : "Failed to change the storage folder for repository",
 		"普通用户无权修改仓库存储位置，请联系管理员！" : "You can not change the storage folder, please contact System Administrator",
 		"版本仓库初始化失败！" : "Failed to init history storage repository",
+		"清选择需要删除的文件或目录" : "YOu did not select any file or folder",
+		
 	};
 	
 	var newStr = translateMap[str];
