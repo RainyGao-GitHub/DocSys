@@ -7,7 +7,6 @@
  * */
 
 var gIsPC = isPC();
-
 function isPC() {
     var userAgentInfo = navigator.userAgent;
     var Agents = ["Android", "iPhone",
@@ -29,6 +28,44 @@ function isWeiXin(){
     } else { 
         return false; 
     } 
+}
+
+//语言获取接口
+function getBrowserLang() 
+{
+	var language = "ch";
+
+	var userLanguage = getCookie("UserLanguage");
+	if(userLanguage == undefined || userLanguage == "")
+	{
+		language = navigator.language;
+		console.log("getBrowserLang() navigator.language:" + language);		
+	}
+	else
+	{
+		language = userLanguage;
+		console.log("getBrowserLang() userLanguage:" + language);				
+	}
+	
+	if(language == undefined)
+	{
+		return "ch";
+	}
+	
+	switch(language.toLowerCase())
+	{
+	case "us":
+	case "en":
+	case "en_us":
+		return "en";
+    case "zh-tw":
+    case "zh-hk":
+    case "zh-cn":
+    	return "ch";
+    default:
+        break;
+	}
+	return "ch";
 }
     
 //构造 buildRequestParamStrForDoc 和 getDocInfoFromRequestParamStr 需要成对使用，用于前端页面之间传递参数

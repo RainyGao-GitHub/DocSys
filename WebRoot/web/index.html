@@ -392,6 +392,9 @@
     function pageInit()
     {
     	console.log("pageInit");
+    	
+    	Setcookie("UserLanguage", "ch");	//设置用户的语言类型	
+    	
     	//确定当前登录用户是否已登录
     	$.ajax({
             url : "/DocSystem/User/getLoginUser.do",
@@ -444,7 +447,15 @@
             },
         });
     }
-    
+
+	function Setcookie(name, value)
+	{ 
+		var expdate = new Date();
+	    expdate.setTime(expdate.getTime() +  90 * 24 * 60 * 60 * 1000);   //时间单位毫秒
+	    document.cookie = name+"="+value+";expires="+expdate.toGMTString()+";path=/"; 
+	   //即document.cookie= name+"="+value+";path=/";  时间默认为当前会话可以不要，但路径要填写，因为JS的默认路径是当前页，如果不填，此cookie只在当前页面生效！
+	}
+	
     function userLogout()
    	{
     	logout();
