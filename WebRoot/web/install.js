@@ -103,7 +103,7 @@ function docSysInit()
             {
             	if(ret.data && ret.data == "needRestart")
             	{
-            		showErrorMessage(_Lang("数据库配置有变更，请先重启服务") + "!");	
+            		showErrorMessage(_Lang("数据库配置修改成功，请重启服务！"));	
             	}
             	else
             	{

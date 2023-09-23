@@ -67,6 +67,7 @@ function lang(str)
 		"重启成功" : "Restart Successfuly",
 		"重启失败" : "Failed to restart",
 		"获取数据库信息失败" : "Failed to get DataSource configuration",
+		"数据库配置修改成功，请重启服务！" : "Update DataSource successfuly, Please restart server!",
 		"数据库配置有变更，请先重启服务！"	: "DataSource changed, Please restart server!",
 		"更新数据库配置信息失败" : "Failed to modify DataSource configuration",
 		"数据库连接成功" : "Connect DataBase Successfuly",
