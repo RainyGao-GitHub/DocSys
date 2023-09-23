@@ -2,9 +2,12 @@ var login_user = "";	//用来保存刚才登录的用户
 var gShareId;
 var gToHref;
 var authCode;
-function pageInit()
+var langType = "ch";
+function pageInit(lang)
 {
-	console.log("pageInit");
+	console.log("pageInit lang:" + lang);
+	langType = lang;
+	
 	authCode = getQueryString("authCode");
 	console.log("pageInit authCode:" + authCode);
 	
@@ -107,7 +110,7 @@ function docSysInit()
             	else
             	{
             		//进入系统主页
-            		window.location.href='/DocSystem/web/index_en.html';
+            		goToSystemIndexPage();
             	}
             }
             else
@@ -678,4 +681,20 @@ function startImportDBData(file, dbType, dbUrl, dbUser, dbPwd)
 	//上传表单			
 	xhr.open("post", "/DocSystem/Manage/importDBData.do");
 	xhr.send(form);
+}
+
+function goToSystemIndexPage()
+{
+	switch(langType)
+	{
+	case "en":
+		window.location.href='/DocSystem/web/index_en.html';
+		break;
+	case "ch":
+		window.location.href='/DocSystem/web/index.html';
+		break;
+	default:
+		window.location.href='/DocSystem/web/index.html';
+		break;
+	}
 }
