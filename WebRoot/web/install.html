@@ -12,6 +12,7 @@
     <link href="static/webuploader/webuploader.css" rel="stylesheet">
     <link href="static/cropper/cropper.min.css" rel="stylesheet">
     <link href="css/main.css" rel="stylesheet">
+ 	<script src="lang/ch.js"></script> 
 </head>
 <body>
 <div class="manual-reader">
@@ -256,7 +257,7 @@
 	            {
 	            	if(ret.data && ret.data == "needRestart")
 	            	{
-	            		showErrorMessage("数据库配置有变更，请先重启服务！");	
+	            		showErrorMessage(_Lang("数据库配置有变更，请先重启服务！"));	
 	            	}
 	            	else
 	            	{
@@ -271,7 +272,7 @@
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:系统初始化失败");
+	        	showErrorMessage(_Lang("系统初始化失败", " : ", "服务器异常");
 	        }
 	    });
     }
@@ -329,14 +330,14 @@
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
+	                showErrorMessage(_Lang("更新数据库配置信息失败", " : ", ret.msgInfo);
 	        		//restore the setting
 	        		$("#tomcatPath").val(systemInfo.tomcatPath);
 		        }
 	        },
 	        error : function () {
-	        	showErrorMessage("更新数据库配置信息失败:服务器异常");
-        		//restore the setting
+                showErrorMessage(_Lang("更新数据库配置信息失败", " : ", "服务器异常");
+	        	//restore the setting
         		$("#tomcatPath").val(systemInfo.tomcatPath);
 	        }
 	    });
@@ -363,12 +364,12 @@
 	            }
 	            else
 	            {
-		        	showErrorMessage("获取系统信息失败:" + ret.msgInfo);
+		        	showErrorMessage(_Lang("获取系统信息失败", " : ", ret.msgInfo));
 	            	console.log(ret.msgInfo);
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:获取系统信息失败");
+	        	showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
 	        }
 	    });
     }
@@ -378,16 +379,16 @@
 		var tomcatPath = $("#tomcatPath").val();
 		if(!tomcatPath || tomcatPath == "")
 		{
-			showErrorMessage("错误：未指定服务器路径！");
+			showErrorMessage(_Lang("错误", " : ", "未指定服务器路径！");
 			return;
 		}
 					
 	    qiao.bs.confirm({
 	    		id: "restartTomcatConfirmDialog",
-		        title: "重启服务:",
-		        msg: "是否重启服务(" + tomcatPath + ")？",
-		        okbtn: "确认",
-		        qubtn: "取消",
+		        title: _Lang("重启服务"),
+		        msg: _Lang("是否重启服务") + "(" + tomcatPath + ")?",
+		        okbtn: _Lang("确认"),
+		        qubtn: _Lang("取消"),
 	    	},function () {
 				doRestartTomcat(tomcatPath);
 		    	return true;   //close dialog

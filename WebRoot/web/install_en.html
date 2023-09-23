@@ -13,7 +13,6 @@
     <link href="static/webuploader/webuploader.css" rel="stylesheet">
     <link href="static/cropper/cropper.min.css" rel="stylesheet">
     <link href="css/main.css" rel="stylesheet">
-    <script src="js/md5.js"></script>
  	<script src="lang/en.js"></script>   
 </head>
 <body>
@@ -379,16 +378,16 @@
 		var tomcatPath = $("#tomcatPath").val();
 		if(!tomcatPath || tomcatPath == "")
 		{
-			showErrorMessage("错误：未指定服务器路径！");
+			showErrorMessage(_Lang("错误", " : ", "未指定服务器路径！");
 			return;
 		}
 					
 	    qiao.bs.confirm({
 	    		id: "restartTomcatConfirmDialog",
-		        title: "重启服务:",
-		        msg: "是否重启服务(" + tomcatPath + ")？",
-		        okbtn: "确认",
-		        qubtn: "取消",
+		        title: _Lang("重启服务"),
+		        msg: _Lang("是否重启服务") + "(" + tomcatPath + ")?",
+		        okbtn: _Lang("确认"),
+		        qubtn: _Lang("取消"),
 	    	},function () {
 				doRestartTomcat(tomcatPath);
 		    	return true;   //close dialog
@@ -413,16 +412,16 @@
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	showErrorMessage("重启成功!");
+	            	showErrorMessage(_Lang("重启成功") + "!");
 	        	}
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("重启失败:" + ret.msgInfo);
+	                showErrorMessage(_Lang("重启失败" + " : ", ret.msgInfo));
 		        }
 	        },
 	        error : function () {
-	        	showErrorMessage("重启失败:服务器异常");
+	        	showErrorMessage(_Lang("重启失败", " : ", "服务器异常"));
 	        }
 	    });
 	}
@@ -509,7 +508,7 @@
 	            else 
 	            {
 	            	console.log(ret.msgInfo);
-	        		showErrorMessage("获取数据库信息失败:" + ret.msgInfo);
+	        		showErrorMessage(_Lang("获取数据库信息失败", " : ", ret.msgInfo));
 	            	if(ret.data == "invalidAuthCode")
 	            	{
 	                	window.location.href='/DocSystem';                	            		
@@ -517,7 +516,7 @@
 	            }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:获取数据库信息失败");
+	        	showErrorMessage(_Lang("获取数据库信息失败", " : ", "服务器异常"));
 	        }
 	    });
 	}
@@ -558,12 +557,12 @@
 	            	systemDbSetting.url = url;
 	        		systemDbSetting.user = user;
 	        		systemDbSetting.pwd = pwd;
-	        		showErrorMessage("数据库配置修改成功，请重启服务！");
+	        		showErrorMessage(_Lang("数据库配置修改成功，请重启服务！"));
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
+	                showErrorMessage(_Lang("更新数据库配置信息失败", " : ", ret.msgInfo));
 	        		//restore the setting
 	        		$("#systemDbType").val(systemDbSetting.type);
 	        		$("#systemDbUrl").val(systemDbSetting.url);
@@ -572,7 +571,7 @@
 		        }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:更新数据库配置信息失败");
+	        	showErrorMessage(_Lang("更新数据库配置信息失败", " : ", "服务器异常"));
         		//restore the setting
 	    		$("#systemDbType").val(systemDbSetting.type);
         		$("#systemDbUrl").val(systemDbSetting.url);
@@ -603,16 +602,16 @@
 	            if( "ok" == ret.status )
 	            {	        		
 	            	//设置成功
-	            	showErrorMessage("数据库连接成功");
+	            	showErrorMessage(_Lang("数据库连接成功"));
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("数据库连接失败:" + ret.msgInfo);
+	                showErrorMessage(_Lang("数据库连接失败", " : ", ret.msgInfo));
 		        }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:数据库连接失败");
+                showErrorMessage(_Lang("数据库连接失败", " : ", "服务器异常"));
 	        }
 	    });
 	}
@@ -622,10 +621,10 @@
 		console.log("resetDatabaseConfirm()");
 	    qiao.bs.confirm({
 	    		id: "resetDatabaseConfirmDialog",
-		        title: "重置数据库",
-		        msg: "是否重置数据库？",
-		        okbtn: "确认",
-		        qubtn: "取消",
+		        title: _Lang("重置数据库"),
+		        msg: _Lang("是否重置数据库") + "?",
+		        okbtn: _Lang("确认"),
+		        qubtn: _Lang("取消"),
 	    	},function () {
 		    	//alert("点击了确定");
 				resetDatabase();
@@ -659,16 +658,16 @@
 	            if( "ok" == ret.status )
 	            {	        		
 	            	//设置成功
-	            	showErrorMessage("重置数据库成功");
+	            	showErrorMessage(_Lang("重置数据库成功"));
 	            }
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("重置数据库失败:" + ret.msgInfo);
+	                showErrorMessage(_Lang("重置数据库失败", " : ", ret.msgInfo));
 		        }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:重置数据库失败");
+                showErrorMessage(_Lang("重置数据库失败", " : ", "服务器异常"));
 	        }
 	    });
 	}
@@ -706,11 +705,11 @@
 	            else 
 	            {
 	                console.log(ret.msgInfo);
-	                showErrorMessage("数据库导出失败:" + ret.msgInfo);
+	                showErrorMessage(_Lang("数据库导出失败", " : ", ret.msgInfo));
 		        }
 	        },
 	        error : function () {
-	        	showErrorMessage("服务器异常:数据库导出失败");
+                showErrorMessage(_Lang("数据库导出失败", " : ", "服务器异常"));
 	        }
 	    });
 	}
@@ -763,10 +762,10 @@
 	    
 	    qiao.bs.confirm({
 	    		id: "importDBDataConfirmDialog",
-		        title: "导入数据",
-		        msg: "是否导入 " + fileName+ " ？",
-		        okbtn: "确认",
-		        qubtn: "取消",
+		        title: _Lang("导入数据"),
+		        msg: _Lang("是否导入") + " " + fileName+ " ?",
+		        okbtn: _Lang("确认"),
+		        qubtn: _Lang("取消"),
 	    	},function () {
 		    	//alert("点击了确定");
 				//开始上传
@@ -810,13 +809,13 @@
 				//上传成功！
 				var ret = JSON.parse(xhr.responseText);
 				if("ok" == ret.status){
-					showErrorMessage("导入成功");
+					showErrorMessage(_Lang("导入成功"));
 				 }
 				 else	//上传失败
 				 {
 					//上传失败
-					console.log("上传失败：" + ret.msgInfo);
-					showErrorMessage("导入失败:" + ret.msgInfo);
+					console.log("导入失败：" + ret.msgInfo);
+					showErrorMessage(_Lang("导入失败", " : ", ret.msgInfo));
 					return;
 	             }
 			}else{
@@ -827,7 +826,7 @@
 				}
 				//上传失败
 				console.log("系统异常: " + file.name + " 上传异常！");
-				showErrorMessage("系统异常: 上传异常");
+				showErrorMessage(_Lang("导入失败", " : ", "上传异常"));
 				return;
 			}
 		};

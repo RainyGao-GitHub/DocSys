@@ -18,7 +18,10 @@ function lang(str)
 	{
 		//TODO: 后台的接口发送的邮件和短信是中文，可以考虑后台增加语言参数
 		//通用
-		"服务器异常" : "Server Exception",			
+		"错误" : "Error",
+		"确认" : "Confirm",
+		"取消" : "Cancel",
+		"服务器异常" : "Server exception",
 		//注册
 		"注册失败"	: "Sign Up Failed",			
 		"获取验证码" : "Send",
@@ -50,8 +53,28 @@ function lang(str)
 		//添加系统管理员
 		"添加系统管理员失败" : "Failed to add System Aministrator",
 		//系统
-		"数据库配置有变更，请先重启服务"	: "DataSource configuration was changed, Please restart server",
 		"系统初始化失败" : "System Init Failed",
+		"重启服务" : "Restart Server",
+		"未指定服务器路径！" : "Server not configured",
+		"是否重启服务" : "Do you want to restart server",
+		"重启成功" : "Restart Successfuly",
+		"重启失败" : "Failed to restart",
+		"获取数据库信息失败" : "Failed to get DataSource configuration",
+		"数据库配置有变更，请先重启服务！"	: "DataSource changed, Please restart server!",
+		"更新数据库配置信息失败" : "Failed to modify DataSource configuration",
+		"数据库连接成功" : "Connect DataBase Successfuly",
+		"数据库连接失败" : "Failed to connect DataBase",
+		"重置数据库" : "Reset DataBase",
+		"是否重置数据库" : "Do you want to reset DataBase",
+		"重置数据库成功" : "Reset DataBase Successfuly",
+		"重置数据库失败" : "Failed to reset DataBase",
+		"数据库导出失败" : "Failed to export data from DataBase",
+		"导入数据" : "Import Data",
+		"是否导入" : "Do you want to import",
+		"导入成功" : "Import Successfuly",
+		"导入失败" : "Failed to import",
+		"上传异常" : "Upload exception",
+
 		//仓库访问
 		"用户未登录，请先登录！" : "Please login system firstly!",
 		"您无权修改该仓库!" : "You have no right to modify this repository!",
