@@ -446,7 +446,6 @@ public class UserController extends BaseController {
 	@RequestMapping("/sendVerifyCode.do")
 	public void sendVerifyCode(String userName,Integer type,
 			String mailSubject,
-			String lang,
 			HttpSession session,HttpServletResponse response)
 	{
 		Log.infoHead("************** sendVerifyCode ****************");		
@@ -482,10 +481,6 @@ public class UserController extends BaseController {
 			String code = generateVerifyCode(session,sessionName,userName);
 			
 			String content = "";
-			if(lang == null)
-			{
-				lang = "ch";
-			}
 			switch(lang)
 			{
 			case "en":	//English
@@ -510,7 +505,7 @@ public class UserController extends BaseController {
 				mailContent = content;
 			}
 			
-			emailService.sendEmail(rt, userName, mailContent, mailSubject, lang);
+			emailService.sendEmail(rt, userName, mailContent, mailSubject);
 			writeJson(rt, response);
 			return;	
 		}
