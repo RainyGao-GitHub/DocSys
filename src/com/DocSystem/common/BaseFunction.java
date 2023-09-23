@@ -148,7 +148,9 @@ public class BaseFunction{
     public static LDAPConfig systemLdapConfig = null;
 		
 	public static int OSType = OS.UNKOWN; //
-	
+
+	public static String lang = "ch"; //系统语言: ch:中文  en: English
+
 	//DocSysType
     protected static int docSysType = constants.DocSys_Community_Edition; //0: Community Edition 1: Enterprise Edition 2: Professional Edition 3: Personal Edition 
     

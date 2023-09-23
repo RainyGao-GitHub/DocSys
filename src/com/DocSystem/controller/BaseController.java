@@ -3582,7 +3582,7 @@ public class BaseController  extends BaseFunction{
 		String email = user.getEmail();
 		if(email != null && !email.isEmpty())
 		{
-			if(verifyEmail(email, lang) == false)
+			if(verifyEmail(email) == false)
 			{
 				docSysErrorLog("邮箱验证失败", rt);
 				return false;			
@@ -3601,9 +3601,22 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	protected boolean verifyEmail(String email,String lang) {
+	protected boolean verifyEmail(String email) {
 		ReturnAjax rt = new ReturnAjax();
-		return emailService.sendEmail(rt, email , "这是来自MxsDoc的邮箱验证邮件！", null, lang);
+		String content = "";
+		String subject = "";
+		switch(lang )
+		{
+		case "en":
+			content = "This is verification Email from MxsDoc!";
+			subject = "From MxsDoc";
+			break;
+		default:
+			content = "这是来自MxsDoc的邮箱验证邮件！";
+			subject = "来自MxsDoc的邮件";
+			break;
+		}
+		return emailService.sendEmail(rt, email , content, subject);
 	}
 
 	protected boolean verifyTelephone(String tel) {
