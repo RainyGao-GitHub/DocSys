@@ -1,6 +1,8 @@
 /*
  * English Support
  * */
+var langType = "en";
+var langExt = "_en";	//跳转网页扩展字符，用于区分跳转不同页面
 
 function _Lang(str1, connectStr , str2)
 {
@@ -21,7 +23,12 @@ function lang(str)
 		"错误" : "Error",
 		"确认" : "Confirm",
 		"取消" : "Cancel",
+		"登录" : "Sign In",
+		"注册" : "Sign Up",
+		"退出登录" : "Log Out",
+		"添加系统管理员" : "Add System Administrator",		
 		"服务器异常" : "Server exception",
+		"页面正在加载，请稍等" : "Loading",
 		//注册
 		"注册失败"	: "Sign Up Failed",			
 		"获取验证码" : "Send",

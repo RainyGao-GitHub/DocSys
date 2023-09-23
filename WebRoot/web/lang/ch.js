@@ -1,6 +1,8 @@
 /*
  * Chinese Support
  * */
+var langType = "ch";
+var langExt = "";
 
 function _Lang(str1, connectStr , str2)
 {

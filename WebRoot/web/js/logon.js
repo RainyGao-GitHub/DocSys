@@ -2,9 +2,9 @@
 		console.log("showLoginPanel");
 		bootstrapQ.dialog({
 			id: "login",
-			title: '登录',
-			url: 'login.html',
-			msg: '页面正在加载，请稍等...',
+			title: _Lang('登录'),
+			url: 'login' + langExt + '.html',
+			msg: _Lang("页面正在加载，请稍等") + "...",
 			foot: false,
 			big: false
 		}, null);
@@ -14,9 +14,9 @@
 		console.log("showRegisterPanel");
 		bootstrapQ.dialog({
 			id: "register",
-			url: 'register.html',
-			title: '注册',
-			msg: '页面正在加载，请稍等...',
+			url: 'register' + langExt + '.html',
+			title: _Lang('注册'),
+			msg: _Lang("页面正在加载，请稍等") + "...",
 			foot: false,
 			big: false
 		}, null);
@@ -26,9 +26,9 @@
 		console.log("showAddFirstAdminUserPanel");
 		bootstrapQ.dialog({
 			id: "addFirstAdminUser",
-			url: 'addFirstAdminUser.html',
-			title: '添加系统管理员',
-			msg: '页面正在加载，请稍等...',
+			url: 'addFirstAdminUser' + langExt + '.html',
+			title: _Lang('添加系统管理员'),
+			msg: _Lang("页面正在加载，请稍等") + "...",
 			foot: false,
 			big: false
 		}, null);
