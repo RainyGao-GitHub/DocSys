@@ -51,14 +51,14 @@
         <div class="row">
             <div id="menu" class="page-left"  style="display:none">
                 <ul class="menu">
-                    <li id="dbConfigTag" class="active"><a href="javascript:PageSwitch('dbConfig')" class="item">DataBase</a> </li>  
-                    <li id="sysConfigTag"><a href="javascript:PageSwitch('sysConfig')" class="item">SystemInfo</a> </li>
+                    <li id="dbConfigTag" class="active"><a href="javascript:PageSwitch('dbConfig')" class="item">Data Source</a> </li>  
+                    <li id="sysConfigTag"><a href="javascript:PageSwitch('sysConfig')" class="item">System</a> </li>
                 </ul>
             </div>
             <div id="dbConfig" class="page-right"   style="display:none">
                 <div class="m-box">
                     <div class="box-head">
-                        <strong class="box-title">DataBase</strong>
+                        <strong class="box-title">Data Source</strong>
                         <span style="float:right">
                         <button id="btnEnableSystemDBSet" onclick="enableSystemDBSet();" class="btn btn-success" data-loading-text="Edit" style="margin-right:1px">Edit</button>
                         <button id="btnSaveSystemDBSet" onclick="saveSystemDBSet();" class="btn btn-success" data-loading-text="Save" style="margin-right:1px; display:none;">Save</button>
@@ -69,7 +69,7 @@
                 <div class="box-body" style="padding-right: 200px;">
                     <div id="dbConfigForm">
                         <div class="form-group">
-                            <label for="systemDbUrl">Data Source</label>
+                            <label for="systemDbUrl">DB Type</label>
 				            <select class="form-control" id="systemDbType" onchange="doSelectDbType();" disabled="disabled" >   
 					            <option value="mysql">mysql</option>   
 					            <option value="sqlite">sqlite</option>   
@@ -99,7 +99,7 @@
             <div id="sysConfig" class="page-right" style="display:none">
                 <div class="m-box">
                     <div class="box-head">
-                        <strong class="box-title">SystemInfo</strong>
+                        <strong class="box-title">System</strong>
                         <span style="float:right">
                         <button id="btnEnableSystemInfoSet" onclick="enableSystemInfoSet();" class="btn btn-success" data-loading-text="Edit" style="margin-right:1px">Edit</button>
                         <button id="btnSaveSystemInfoSet" onclick="saveSystemInfoSet();" class="btn btn-success" data-loading-text="Save" style="margin-right:1px; display:none;">Save</button>
@@ -146,7 +146,7 @@
 <script src="js/DocSys.js" type="text/javascript"></script>
 <script src="js/logon.js" type="text/javascript"></script>
 <script src="js/md5.js"></script>
-<script type="text/javascript" src="js/en.js"></script>
+<script type="text/javascript" src="lang/en.js"></script>
 <script type="text/javascript" src="install.js"></script>
 <script type="text/javascript">
     $(function () {

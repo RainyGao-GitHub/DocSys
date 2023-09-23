@@ -64,6 +64,8 @@ function lang(str)
 		"更新数据库配置信息失败" : "Failed to modify DataSource configuration",
 		"数据库连接成功" : "Connect DataBase Successfuly",
 		"数据库连接失败" : "Failed to connect DataBase",
+		"连接数据库失败" : "Connect DataBase Failed",
+		"新建数据库失败" : "Create DataBase Failed",
 		"重置数据库" : "Reset DataBase",
 		"是否重置数据库" : "Do you want to reset DataBase",
 		"重置数据库成功" : "Reset DataBase Successfuly",

@@ -102,22 +102,22 @@ function docSysInit()
             {
             	if(ret.data && ret.data == "needRestart")
             	{
-            		showErrorMessage(_Lang("数据库配置有变更，请先重启服务！"));	
+            		showErrorMessage(_Lang("数据库配置有变更，请先重启服务") + "!");	
             	}
             	else
             	{
             		//进入系统主页
-            		window.location.href='/DocSystem/web/index.html';
+            		window.location.href='/DocSystem/web/index_en.html';
             	}
             }
             else
             {
-	        	showErrorMessage("系统初始化失败:" + ret.msgInfo);
+	        	showErrorMessage(_Lang("系统初始化失败", ":", ret.msgInfo));
             	console.log(ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage(_Lang("系统初始化失败", " : ", "服务器异常"));
+        	showErrorMessage(_Lang("系统初始化失败", ":", "服务器异常"));
         }
     });
 }
@@ -175,14 +175,12 @@ function updateSystemInfo(tomcatPath, openOfficePath){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage(_Lang("更新数据库配置信息失败", " : ", ret.msgInfo));
-        		//restore the setting
+                showErrorMessage(_Lang("更新数据库配置信息失败", ":", ret.msgInfo));
         		$("#tomcatPath").val(systemInfo.tomcatPath);
 	        }
         },
         error : function () {
-            showErrorMessage(_Lang("更新数据库配置信息失败", " : ", "服务器异常"));
-        	//restore the setting
+            showErrorMessage(_Lang("更新数据库配置信息失败", ":", "服务器异常"));
     		$("#tomcatPath").val(systemInfo.tomcatPath);
         }
     });
@@ -209,12 +207,12 @@ function sysConfigPageInit(){
             }
             else
             {
-	        	showErrorMessage(_Lang("获取系统信息失败", " : ", ret.msgInfo));
+                showErrorMessage(_Lang("获取系统信息失败", ":", ret.msgInfo));
             	console.log(ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
+            showErrorMessage(_Lang("获取系统信息失败", ":", "服务器异常"));
         }
     });
 }
@@ -258,16 +256,16 @@ function doRestartTomcat(tomcatPath)
         success : function (ret) {
             if( "ok" == ret.status )
             {
-            	showErrorMessage("重启成功!");
+            	showErrorMessage(_Lang("重启成功") + "!");
         	}
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("重启失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("重启失败" + " : ", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("重启失败:服务器异常");
+        	showErrorMessage(_Lang("重启失败", " : ", "服务器异常"));
         }
     });
 }
@@ -354,7 +352,7 @@ function dbConfigPageInit(){
             else 
             {
             	console.log(ret.msgInfo);
-        		showErrorMessage("获取数据库信息失败:" + ret.msgInfo);
+        		showErrorMessage(_Lang("获取数据库信息失败", " : ", ret.msgInfo));
             	if(ret.data == "invalidAuthCode")
             	{
                 	window.location.href='/DocSystem';                	            		
@@ -362,7 +360,7 @@ function dbConfigPageInit(){
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取数据库信息失败");
+        	showErrorMessage(_Lang("获取数据库信息失败", " : ", "服务器异常"));
         }
     });
 }
@@ -403,12 +401,12 @@ function updatesystemDbSetting(type, url, user, pwd){
             	systemDbSetting.url = url;
         		systemDbSetting.user = user;
         		systemDbSetting.pwd = pwd;
-        		showErrorMessage("数据库配置修改成功，请重启服务！");
+        		showErrorMessage(_Lang("数据库配置修改成功，请重启服务！"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("更新数据库配置信息失败", " : ", ret.msgInfo));
         		//restore the setting
         		$("#systemDbType").val(systemDbSetting.type);
         		$("#systemDbUrl").val(systemDbSetting.url);
@@ -417,7 +415,7 @@ function updatesystemDbSetting(type, url, user, pwd){
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:更新数据库配置信息失败");
+        	showErrorMessage(_Lang("更新数据库配置信息失败", " : ", "服务器异常"));
     		//restore the setting
     		$("#systemDbType").val(systemDbSetting.type);
     		$("#systemDbUrl").val(systemDbSetting.url);
@@ -448,16 +446,16 @@ function testDatabase(){
             if( "ok" == ret.status )
             {	        		
             	//设置成功
-            	showErrorMessage("数据库连接成功");
+            	showErrorMessage(_Lang("数据库连接成功"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("数据库连接失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("数据库连接失败", " : ", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:数据库连接失败");
+            showErrorMessage(_Lang("数据库连接失败", " : ", "服务器异常"));
         }
     });
 }
@@ -467,10 +465,10 @@ function resetDatabaseConfirm()
 	console.log("resetDatabaseConfirm()");
     qiao.bs.confirm({
     		id: "resetDatabaseConfirmDialog",
-	        title: "重置数据库",
-	        msg: "是否重置数据库？",
-	        okbtn: "确认",
-	        qubtn: "取消",
+	        title: _Lang("重置数据库"),
+	        msg: _Lang("是否重置数据库") + "?",
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
     	},function () {
 	    	//alert("点击了确定");
 			resetDatabase();
@@ -504,16 +502,16 @@ function resetDatabase(){
             if( "ok" == ret.status )
             {	        		
             	//设置成功
-            	showErrorMessage("重置数据库成功");
+            	showErrorMessage(_Lang("重置数据库成功"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("重置数据库失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("重置数据库失败", " : ", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:重置数据库失败");
+            showErrorMessage(_Lang("重置数据库失败", " : ", "服务器异常"));
         }
     });
 }
@@ -551,11 +549,11 @@ function exportDBData(){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("数据库导出失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("数据库导出失败", " : ", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:数据库导出失败");
+            showErrorMessage(_Lang("数据库导出失败", " : ", "服务器异常"));
         }
     });
 }
@@ -608,10 +606,10 @@ function importDBDataConfirm(e)
     
     qiao.bs.confirm({
     		id: "importDBDataConfirmDialog",
-	        title: "导入数据",
-	        msg: "是否导入 " + fileName+ " ？",
-	        okbtn: "确认",
-	        qubtn: "取消",
+	        title: _Lang("导入数据"),
+	        msg: _Lang("是否导入") + " " + fileName+ " ?",
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
     	},function () {
 	    	//alert("点击了确定");
 			//开始上传
@@ -655,13 +653,13 @@ function startImportDBData(file, dbType, dbUrl, dbUser, dbPwd)
 			//上传成功！
 			var ret = JSON.parse(xhr.responseText);
 			if("ok" == ret.status){
-				showErrorMessage("导入成功");
+				showErrorMessage(_Lang("导入成功"));
 			 }
 			 else	//上传失败
 			 {
 				//上传失败
-				console.log("上传失败：" + ret.msgInfo);
-				showErrorMessage("导入失败:" + ret.msgInfo);
+				console.log("导入失败：" + ret.msgInfo);
+				showErrorMessage(_Lang("导入失败", " : ", ret.msgInfo));
 				return;
              }
 		}else{
@@ -672,7 +670,7 @@ function startImportDBData(file, dbType, dbUrl, dbUser, dbPwd)
 			}
 			//上传失败
 			console.log("系统异常: " + file.name + " 上传异常！");
-			showErrorMessage("系统异常: 上传异常");
+			showErrorMessage(_Lang("导入失败", " : ", "上传异常"));
 			return;
 		}
 	};

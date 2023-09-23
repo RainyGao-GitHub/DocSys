@@ -3,10 +3,10 @@
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>System Init</title>
+<title>系统引导</title>
 </head>
 <body>
-	<p id="dispInfo">System Init...</p>
+	<p id="dispInfo">系统初始化中,请稍候...</p>
 </body>
 
 <script src="web/static/scripts/jquery.min.js" type="text/javascript"></script>
