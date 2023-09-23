@@ -1,26 +1,3 @@
-/* webSocketTest
-var token='dcvuahsdnfajw12kjfasfsdf34';
-var webSocket = new WebSocket("ws://localhost:8090/DocSystem/websocket",[token]);
-//var webSocket = new WebSocket("ws://echo.websocket.org");
-//var webSocket = new WebSocket("wss://echo.websocket.org");
-webSocket.onopen = function(event){
-    console.log("连接成功");
-    console.log(event);
-};
-webSocket.onerror = function(event){
-    console.log("连接失败");
-    console.log(event);
-};
-webSocket.onclose = function(event){
-    console.log("Socket连接断开");
-    console.log(event);
-};
-webSocket.onmessage = function(event){
-    //接受来自服务器的消息
-    //...
-}
-*/
-
 //全局变量定义
 //Repos Info
 var gInitReposInfo = {};
