@@ -115,12 +115,12 @@ function docSysInit()
             }
             else
             {
-	        	showErrorMessage(_Lang("系统初始化失败", ":", ret.msgInfo));
+	        	showErrorMessage(_Lang("系统初始化失败", " : ", ret.msgInfo));
             	console.log(ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage(_Lang("系统初始化失败", ":", "服务器异常"));
+        	showErrorMessage(_Lang("系统初始化失败", " : ", "服务器异常"));
         }
     });
 }
@@ -178,12 +178,12 @@ function updateSystemInfo(tomcatPath, openOfficePath){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage(_Lang("更新数据库配置信息失败", ":", ret.msgInfo));
+                showErrorMessage(_Lang("更新数据库配置信息失败", " : ", ret.msgInfo));
         		$("#tomcatPath").val(systemInfo.tomcatPath);
 	        }
         },
         error : function () {
-            showErrorMessage(_Lang("更新数据库配置信息失败", ":", "服务器异常"));
+            showErrorMessage(_Lang("更新数据库配置信息失败", " : ", "服务器异常"));
     		$("#tomcatPath").val(systemInfo.tomcatPath);
         }
     });
@@ -210,12 +210,12 @@ function sysConfigPageInit(){
             }
             else
             {
-                showErrorMessage(_Lang("获取系统信息失败", ":", ret.msgInfo));
+                showErrorMessage(_Lang("获取系统信息失败", " : ", ret.msgInfo));
             	console.log(ret.msgInfo);
             }
         },
         error : function () {
-            showErrorMessage(_Lang("获取系统信息失败", ":", "服务器异常"));
+            showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
         }
     });
 }
