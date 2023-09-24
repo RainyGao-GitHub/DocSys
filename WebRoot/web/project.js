@@ -1286,7 +1286,7 @@ function getAndShowDoc(node, openMode, edit)
                 		id: "idAlertDialog",	
                 		title: _Lang("提示"),
                 		okbtn: _Lang("确定"),
-                		msg: _Lang("获取文件信息失败" + " : " + ret.msgInfo),
+                		msg: _Lang("获取文件信息失败", " : ", ret.msgInfo),
                 	});
                 	cleanDocPreview();
             	}
@@ -1297,7 +1297,7 @@ function getAndShowDoc(node, openMode, edit)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("获取文件信息失败" + " : " + "服务器异常"),
+        		msg: _Lang("获取文件信息失败", " : ", "服务器异常"),
         	});
             cleanDocPreview();
         }
@@ -4898,7 +4898,7 @@ function contextMenuInit()
 	//secondList上的右键菜单
 	if(gIsPC == false)
 	{
-		context.attach('#secondList'), [
+		context.attach('#secondList', [
 			{text: _Lang('下载'), action: function(e){
 					e.preventDefault();
 					var treeNodes = [];
