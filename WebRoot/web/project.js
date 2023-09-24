@@ -84,22 +84,24 @@ function DoDelete(treeNodes)
 	else
 	{
 		var treeNode = treeNodes[0];
-		var msg =  "是否删除文件 " + treeNode.name;
+		var msg =  _Lang("是否删除文件") + " [" + treeNode.name + "]";
 		if(treeNodes.length > 1)
 	  	{
-			msg =  "是否删除 " + treeNode.name + "等" + treeNodes.length  +"文件";
+			msg = _Lang("是否删除") + " " + treeNode.name + " " + _Lang("等") + treeNodes.length  + _Lang("个文件");
 	  	}
 		else
 		{
 			if(treeNode.type == 2)
 			{
-				msg =  "是否删除整个目录 " + treeNode.name;
+				msg =  _Lang("是否删除目录") + " [" + treeNode.name + "]";
 			}
 		}
 
 		bootstrapQ.confirm({
 			id: "deleteConfirm",
-			title: "删除确认",
+			title: _Lang("删除确认"),
+    		okbtn: _Lang("删除"),
+    		qubtn: _Lang("取消"),
 			msg : msg,
 			},function () {
 		    	//alert("点击了确定");
@@ -186,18 +188,17 @@ function showRenameDialog(node)
 {
 	console.log("showRenameDialog node:", node);
 
-	bootstrapQ.dialog(
-		{
-			id: 'renameConfirm',
-			url: 'renameConfirm.html',
-			title: '重命名',
-			msg: '页面正在加载，请稍等...',
-			foot: false,
-	        //okbtn: "确定",
-			callback: function(){
-				renameConfirmPageInit(node);
-			},
-		});
+	bootstrapQ.dialog({
+		id: 'renameConfirm',
+		url: 'renameConfirm.html',
+		title: _Lang('重命名'),
+		msg: _Lang('页面正在加载，请稍侯') + '...',
+		foot: false,
+        //okbtn: "确定",
+		callback: function(){
+			renameConfirmPageInit(node);
+		},
+	});
 
 	return true;
 }
@@ -612,7 +613,7 @@ function showUploadConfirmPanel(files, parentNode)
 			id: 'uploadConfirm',
 			url: 'uploadConfirm.html',
 			title: '文件上传',
-			msg: '页面正在加载，请稍等...',
+			msg: _Lang('页面正在加载，请稍侯') + '...',
 			foot: false,
 			big: false,
 			//okbtn: "开始上传",
@@ -1310,7 +1311,7 @@ function showDocPwdVerifyPanel(node, successCallback)
 		id: 'docPwdVerify',
 		url: 'docPwdVerify.html',
 		title: '密码验证',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
 		callback: function(){
@@ -1744,7 +1745,7 @@ function showDocHistory(node, historyType)
 		id: "historyPage",
 		title: title,
 		url: 'historyLogs.html',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
 			foot: false,
 			big: true,
 			callback: function(){
@@ -1900,7 +1901,7 @@ function showDocPwdSetPanel(node)
 		id: 'docPwdSet',
 		url: 'docPwdSet.html',
 		title: '密码设置:' + node.name,
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: true,
 		//okbtn: "确定",
@@ -3588,7 +3589,7 @@ function showAddDocPanel(type, parentNode)
 			id: 'addDoc',
 			url: 'addDoc.html',
 			title: title,
-			msg: '页面正在加载，请稍等...',
+			msg: _Lang('页面正在加载，请稍侯') + '...',
 			foot: false,
 			big: false,
 			//okbtn: "确定",
@@ -3849,7 +3850,7 @@ function showDocSharePwdVerifyPanel(shareId, successCallback)
 		id: 'docSharePwdVerify',
 		url: 'docSharePwdVerify.html',
 		title: '密码验证',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
 		callback: function(){
@@ -5593,7 +5594,7 @@ function showDocPushPanel(node, type)
 		id: 'pushDoc',
 		url: 'pushDoc.html',
 		title: '文件推送',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
 		callback: function(){
@@ -5609,7 +5610,7 @@ function showDocPullPanel(node, type)
 		id: 'pullDoc',
 		url: 'pullDoc.html',
 		title: '文件拉取',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
 		callback: function(){
@@ -5636,7 +5637,7 @@ function showRemoteStoragePushPanel(node)
 		id: 'remoteStoragePush',
 		url: 'remoteStoragePush.html',
 		title: '文件推送',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
 		callback: function(){
@@ -5663,7 +5664,7 @@ function showRemoteStoragePullPanel(node)
 		id: 'remoteStoragePull',
 		url: 'remoteStoragePull.html',
 		title: '文件拉取',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
 		callback: function(){
@@ -5776,7 +5777,7 @@ function showDocSharePanel(docShare, docName, url)
 		id: 'docShare',
 		url: 'docShare.html',
 		title: '文件分享:' + docName,
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
 		callback: function(){

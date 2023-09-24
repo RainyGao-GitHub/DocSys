@@ -32,6 +32,7 @@ function lang(str)
 		"添加系统管理员" : "Add System Administrator",		
 		"服务器异常" : "Server exception",
 		"页面正在加载，请稍等" : "Loading",
+		"页面正在加载，请稍侯" : "Loading",
 		//注册
 		"注册失败"	: "Sign Up Failed",			
 		"获取验证码" : "Send",
@@ -96,7 +97,16 @@ function lang(str)
 		"修改仓库文件目录失败！" : "Failed to change the storage folder for repository",
 		"普通用户无权修改仓库存储位置，请联系管理员！" : "You can not change the storage folder, please contact System Administrator",
 		"版本仓库初始化失败！" : "Failed to init history storage repository",
-		"清选择需要删除的文件或目录" : "YOu did not select any file or folder",
+		
+		//文件操作
+		"删除" : "Delete",
+		"删除确认" : "Delete Confirm",
+		"是否删除" : "Do you want to delete",
+		"是否删除文件" : "Do you want to delete the file",
+		"是否删除目录" : "Do you want to delete the folder",
+		"等" : "...",
+		"个文件" : "files",
+		"清选择需要删除的文件或目录" : "No any file or folder was selected to delete",
 		
 	};
 	
