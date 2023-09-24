@@ -134,6 +134,7 @@ function lang(str)
 		"路径" : "Path",		
 		"链接" : "Link",
 		"下载链接" : "Download Link",
+		"全选" : "Select All",
 		"更多" : "More",
 		
 		"刷新失败" : "Failed to refresh",		
