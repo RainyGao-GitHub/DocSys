@@ -74,7 +74,12 @@ function DoDelete(treeNodes)
 {
 	if(treeNodes == null || treeNodes.length < 1)
 	{
-		showErrorMessage("清选择需要删除的文件或目录");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("清选择需要删除的文件或目录"),
+    	});
 	}
 	else
 	{
@@ -158,11 +163,21 @@ function refreshDoc(node, force)
             }
             else
             {
-            	showErrorMessage("刷新失败:" + ret.msgInfo);
+            	showErrorMessage({
+            		id: "idAlertDialog",	
+            		title: _Lang("提示"),
+            		okbtn: _Lang("确定"),
+            		msg: _Lang("刷新失败:" + ret.msgInfo),
+            	});
             }
         },
         error : function () {
-               showErrorMessage("刷新失败:服务器异常！");
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("刷新失败:服务器异常！"),
+        	});
         }
 	});
 }
@@ -216,11 +231,21 @@ function DoPaste(treeNodes,dstParentNode, isCopy)
 	{
 		if(isCopy)
 		{
-			showErrorMessage("请选择需要复制的文件！");
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("请选择需要复制的文件！"),
+	    	});
 		}
 		else
 		{
-			showErrorMessage("请选择需要移动的文件！");
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("请选择需要移动的文件！"),
+	    	});
 		}
 		return;
 	}
@@ -240,7 +265,12 @@ function DoPaste(treeNodes,dstParentNode, isCopy)
 function copyDocName(node){
 	if(node == null)
 	{
-		showErrorMessage("请选择文件或目录");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择文件或目录"),
+    	});
 		return false;
 	}
 
@@ -263,7 +293,12 @@ function copyDocName(node){
 function copyDocPath(node){
 	if(node == null)
 	{
-		showErrorMessage("请选择文件或目录");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择文件或目录"),
+    	});
 		return false;
 	}
 
@@ -286,7 +321,12 @@ function copyDocPath(node){
 function copyUrl(node){
 	if(node == null)
 	{
-		showErrorMessage("请选择文件或目录");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择文件或目录"),
+    	});
 		return false;
 	}
 
@@ -340,7 +380,12 @@ function downloadDoc(treeNodes,needConfirm,downloadType)
 	console.log("downloadDoc downloadType:" + downloadType + " treeNodes:", treeNodes);
 	if(!treeNodes || treeNodes == null)
 	{
-		showErrorMessage("请选择需要下载的文件！");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择需要下载的文件！"),
+    	});
 		return;
 	}
 	if(needConfirm)
@@ -456,7 +501,12 @@ function checkInUploadConfirm(e)
 
     if(fileName != curCheckInDoc.name)
     {
-    	showErrorMessage("请选择文件：" + curCheckInDoc.name);
+    	showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择文件：" + curCheckInDoc.name),
+    	});
 	    return false;
     }
 
@@ -513,18 +563,33 @@ function checkUserUploadRight(files,parentNode,callback)
 				}
 				else
 				{
-					showErrorMessage("您没有目录 "+remoteDir+" 的新增或修改权限");
+					showErrorMessage({
+		        		id: "idAlertDialog",	
+		        		title: _Lang("提示"),
+		        		okbtn: _Lang("确定"),
+		        		msg: _Lang("您没有目录 "+remoteDir+" 的新增或修改权限"),
+			    	});
 				}
 				return;
 			}
 			else
 			{
-				showErrorMessage("Error:" + ret.msgInfo);
+				showErrorMessage({
+	        		id: "idAlertDialog",	
+	        		title: _Lang("提示"),
+	        		okbtn: _Lang("确定"),
+	        		msg: _Lang("错误", " : ", ret.msgInfo),
+		    	});
 				return;
 			}
 		},
 		error : function () {
-			showErrorMessage("获取用户权限异常");
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("获取用户权限异常"),
+	    	});
 			return;
 		}
 	});
@@ -955,11 +1020,21 @@ function getReposInfo(reposId, callback){
 				//InitMenuAndDoc();
             }else {
                 $("#projectName").text("仓库名");
-                showErrorMessage("获取仓库信息失败:" + ret.msgInfo);
+                showErrorMessage({
+            		id: "idAlertDialog",	
+            		title: _Lang("提示"),
+            		okbtn: _Lang("确定"),
+            		msg: _Lang("获取仓库信息失败", " : " , ret.msgInfo),
+            	});
             }
         },
         error : function () {
-            showErrorMessage("服务器异常:获取仓库信息失败");
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("服务器异常:获取仓库信息失败"),
+        	});
         }
     });
 }
@@ -1015,12 +1090,22 @@ function getInitMenu(docId, parentPath, docName, callback)
                 	}
                 	else
                 	{
-                    	showErrorMessage("获取仓库目录失败:" + ret.msgInfo);
+                		showErrorMessage({
+                    		id: "idAlertDialog",	
+                    		title: _Lang("提示"),
+                    		okbtn: _Lang("确定"),
+                    		msg: _Lang("获取仓库目录失败", " : " , ret.msgInfo),
+                    	});
                 	}
 	           	}
 	        },
 	        error : function () {
-	            showErrorMessage("获取文件列表失败:服务器异常");
+	        	showErrorMessage({
+	        		id: "idAlertDialog",	
+	        		title: _Lang("提示"),
+	        		okbtn: _Lang("确定"),
+	        		msg: _Lang("获取文件列表失败:服务器异常"),
+	        	});
 	        }
 	    });
 }
@@ -1196,13 +1281,23 @@ function getAndShowDoc(node, openMode, edit)
             	}
             	else
             	{
-                	showErrorMessage("获取文件信息失败：" + ret.msgInfo);
+            		showErrorMessage({
+                		id: "idAlertDialog",	
+                		title: _Lang("提示"),
+                		okbtn: _Lang("确定"),
+                		msg: _Lang("获取文件信息失败：" + ret.msgInfo),
+                	});
                 	cleanDocPreview();
             	}
             }
         },
         error : function () {
-            showErrorMessage("获取文件信息失败：服务器异常");
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("获取文件信息失败：服务器异常"),
+        	});
             cleanDocPreview();
         }
     });
@@ -1595,7 +1690,12 @@ function showDocHistory(node, historyType)
 		{
 			if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
 			{
-				showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+				showErrorMessage({
+	        		id: "idAlertDialog",	
+	        		title: _Lang("提示"),
+	        		okbtn: _Lang("确定"),
+	        		msg: _Lang("该仓库未开通版本管理，请联系管理员！"),
+		    	});
 				return;
 			}
 		}
@@ -1659,7 +1759,12 @@ function lockDoc(node, lockType)
 	console.log("lockDoc() lockType:" + lockType, node);
 	if(!node || node == null)
 	{
-		showErrorMessage("请选择文件！");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择文件！"),
+    	});
 		return;
 	}
 
@@ -1691,13 +1796,23 @@ function lockDoc(node, lockType)
 			}
 			else
 			{
-				showErrorMessage(ret.msgInfo);
+				showErrorMessage({
+	        		id: "idAlertDialog",	
+	        		title: _Lang("提示"),
+	        		okbtn: _Lang("确定"),
+	        		msg: _Lang(ret.msgInfo),
+		    	});
 				return;
 			}
 		},
 		error : function ()
 		{
-			showErrorMessage("锁定失败: 服务器异常");
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("锁定失败: 服务器异常"),
+	    	});
 			return;
 		}
 	});
@@ -1708,7 +1823,12 @@ function unlockDoc(node, lockType)
 	console.log("unlockDoc() lockType:" + lockType, node);
 	if(!node || node == null)
 	{
-		showErrorMessage("请选择文件！");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择文件！"),
+    	});
 		return;
 	}
 
@@ -1740,13 +1860,23 @@ function unlockDoc(node, lockType)
 			}
 			else
 			{
-				showErrorMessage(ret.msgInfo);
+				showErrorMessage({
+	        		id: "idAlertDialog",	
+	        		title: _Lang("提示"),
+	        		okbtn: _Lang("确定"),
+	        		msg: _Lang(ret.msgInfo),
+		    	});
 				return;
 			}
 		},
 		error : function ()
 		{
-			showErrorMessage("解锁失败: 服务器异常");
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("解锁失败: 服务器异常"),
+	    	});
 			return;
 		}
 	});
@@ -1756,7 +1886,12 @@ function showDocPwdSetPanel(node)
 {
 	if(!node || node == null)
 	{
-		showErrorMessage("请选择文件！");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择文件！"),
+    	});
 		return;
 	}
 	
@@ -2021,7 +2156,12 @@ function dropInner(treeId, nodes, targetNode) {
   	  }
   	  else
   	  {
-  			showErrorMessage("targetNode is null,理论上不该出现");
+  		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("targetNode is null,理论上不该出现"),
+    	});
   			return false;
   	  }
 
@@ -2063,7 +2203,12 @@ function dropInner(treeId, nodes, targetNode) {
   		}
   		else
   		{
-  			showErrorMessage("目标节点不存在！");
+  			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("目标节点不存在！"),
+  	    	});
   			return;
   		}
 
@@ -2360,7 +2505,12 @@ function SysInit()
                 }
             },
             error : function () {
-            	showErrorMessage("服务器异常:获取用户信息失败");
+            	showErrorMessage({
+            		id: "idAlertDialog",	
+            		title: _Lang("提示"),
+            		okbtn: _Lang("确定"),
+            		msg: _Lang("服务器异常:获取用户信息失败"),
+            	});
             }
         });
 	}
@@ -3066,12 +3216,22 @@ function showDocList(node)
             	}
             	else
             	{
-                	showErrorMessage("获取子目录错误:" + ret.msgInfo);
+            		showErrorMessage({
+                		id: "idAlertDialog",	
+                		title: _Lang("提示"),
+                		okbtn: _Lang("确定"),
+                		msg: _Lang("获取子目录错误:" + ret.msgInfo),
+                	});
             	}
             }
         },
         error : function () {
-        	showErrorMessage('服务器异常: 获取子目录异常');
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang('服务器异常: 获取子目录异常'),
+        	});
         }
     });
 }
@@ -3247,11 +3407,21 @@ function searchDoc()
                	}
                	else
                	{
-               		showErrorMessage("文件搜索出错:" + ret.msgInfo);
+               		showErrorMessage({
+                		id: "idAlertDialog",	
+                		title: _Lang("提示"),
+                		okbtn: _Lang("确定"),
+                		msg: _Lang("文件搜索出错:" + ret.msgInfo),
+                	});
                	}
            },
            error : function () {
-        	   showErrorMessage('服务器异常: 搜索文件异常');
+        	   showErrorMessage({
+           		id: "idAlertDialog",	
+           		title: _Lang("提示"),
+           		okbtn: _Lang("确定"),
+           		msg: _Lang('服务器异常: 搜索文件异常'),
+           	});
            }
        });
 }
@@ -3452,7 +3622,12 @@ function checkOut(node)
 	console.log("checkOut()", node);
 	if(!node || node == null)
 	{
-		showErrorMessage("请选择文件！");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择文件！"),
+    	});
 		return;
 	}
 
@@ -3487,13 +3662,23 @@ function checkOut(node)
 			}
 			else
 			{
-				showErrorMessage(ret.msgInfo);
+				showErrorMessage({
+	        		id: "idAlertDialog",	
+	        		title: _Lang("提示"),
+	        		okbtn: _Lang("确定"),
+	        		msg: _Lang(ret.msgInfo),
+		    	});
 				return;
 			}
 		},
 		error : function ()
 		{
-			showErrorMessage("锁定失败: 服务器异常");
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("锁定失败: 服务器异常"),
+	    	});
 			return;
 		}
 	});
@@ -3637,12 +3822,22 @@ function getDocShare(callback)
             	}
             	else
             	{
-            		showErrorMessage(ret.msgInfo);
+            		showErrorMessage({
+                		id: "idAlertDialog",	
+                		title: _Lang("提示"),
+                		okbtn: _Lang("确定"),
+                		msg: _Lang(ret.msgInfo),
+                	});
             	}
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取文件分享信息失败");
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("服务器异常:获取文件分享信息失败"),
+        	});
         }
     });
 }
@@ -4130,7 +4325,12 @@ function querySystemLogTest()
         	console.log("querySystemLog ret:", ret); 
         },
         error : function () {
-            showErrorMessage("querySystemLog exception!");
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("querySystemLog exception!"),
+        	});
         }
     });
 }
@@ -4496,7 +4696,12 @@ function contextMenuInit()
 				e.preventDefault();
 				if(curRightClickedTreeNode == null)
 				{
-					showErrorMessage("请选择需要文件或目录");
+					showErrorMessage({
+		        		id: "idAlertDialog",	
+		        		title: _Lang("提示"),
+		        		okbtn: _Lang("确定"),
+		        		msg: _Lang("请选择需要文件或目录"),
+			    	});
 					return false;
 				}
 				showDocDetail(curRightClickedTreeNode);
@@ -5290,11 +5495,21 @@ function executeDoc(node)
             }
             else
             {
-            	showErrorMessage("执行失败:" + ret.msgInfo);
+            	showErrorMessage({
+            		id: "idAlertDialog",	
+            		title: _Lang("提示"),
+            		okbtn: _Lang("确定"),
+            		msg: _Lang("执行失败:" + ret.msgInfo),
+            	});
             }
         },
         error : function () {
-            showErrorMessage("执行失败:服务器异常！");
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("执行失败:服务器异常！"),
+        	});
         }
     });
 }
@@ -5302,7 +5517,12 @@ function executeDoc(node)
 function shareDoc(node){
 	if(gShareId)
 	{
-		showErrorMessage("当前为分享链接，无法再次分享！");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("当前为分享链接，无法再次分享！"),
+    	});
 		return;
 	}
 
@@ -5345,11 +5565,21 @@ function shareDoc(node){
         	}
             else
             {
-            	showErrorMessage("创建文件分享失败:" + ret.msgInfo);
+            	showErrorMessage({
+            		id: "idAlertDialog",	
+            		title: _Lang("提示"),
+            		okbtn: _Lang("确定"),
+            		msg: _Lang("创建文件分享失败", " : " , ret.msgInfo),
+            	});
             }
         },
         error : function () {
-        	showErrorMessage('服务器异常: 创建文件分享失败');
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang('服务器异常: 创建文件分享失败'),
+        	});
         }
     });
 
@@ -5393,7 +5623,12 @@ function showRemoteStoragePushPanel(node)
 	console.log("showRemoteStoragePushPanel node:", node);
 	if(gReposInfo.remoteStorageConfig == undefined)
 	{
-    	showErrorMessage("该仓库未设置远程存储！");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("该仓库未设置远程存储！"),
+    	});
 		return;
 	}
 
@@ -5415,7 +5650,12 @@ function showRemoteStoragePullPanel(node)
 	console.log("showRemoteStoragePullPanel node:", node);
 	if(gReposInfo.remoteStorageConfig == undefined)
 	{
-    	showErrorMessage("该仓库未设置远程存储！");
+		showErrorMessage({
+    		id: "idAlertDialog",	
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("该仓库未设置远程存储！"),
+    	});
 		return;
 	}
 
