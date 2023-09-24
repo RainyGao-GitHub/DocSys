@@ -202,7 +202,7 @@ function showReposList()
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("获取仓库列表失败", " : ", "服务器异常")
+        		msg: _Lang("获取仓库列表失败", " : ", "服务器异常"),
         		});
         }
     });

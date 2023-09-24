@@ -1384,6 +1384,7 @@ function closeBootstrapDialog(id){
 
 //提示对话框
 function showErrorMessage($msg) {
+	console.log("showErrorMessage() ", $msg);
 	qiao.bs.alert($msg);
 }
 

@@ -38,7 +38,12 @@ function pageInit(lang)
             }
         },
         error : function () {
-        	showErrorMessage(_Lang("获取用户信息失败", " : ", "服务器异常"));
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("获取用户信息失败", " : ", "服务器异常"),
+        		});
         }
     });
 

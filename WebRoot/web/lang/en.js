@@ -20,7 +20,10 @@ function lang(str)
 	{
 		//TODO: 后台的接口发送的邮件和短信是中文，可以考虑后台增加语言参数
 		//通用
+		"提示" : "Message",
+		"确认操作" : "Confirm",
 		"错误" : "Error",
+		"确定" : "Ok",
 		"确认" : "Confirm",
 		"取消" : "Cancel",
 		"登录" : "Sign In",
