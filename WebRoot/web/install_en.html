@@ -30,7 +30,7 @@
                 <button class="btn btn-default dropdown-toggle hidden-lg" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                 <ul class="dropdown-menu" role="menu">
                     <li>
-                        <a onclick="docSysInit();" title="Goto System">Goto System</a>
+                        <a onclick="docSysInit();" title="Enter System">Enter System</a>
                     </li>
                     
                 </ul>
@@ -40,7 +40,7 @@
         <nav class="navbar-collapse hidden-xs hidden-sm" role="navigation">
             <ul class="nav navbar-nav navbar-right">
 				<li id="enterSystemBtn">
-                     <a onclick="docSysInit();" title="Goto System">Goto System</a>
+                     <a onclick="docSysInit();" title="Enter System">Enter System</a>
                 </li>          
             </ul>
         </nav>
@@ -77,15 +77,15 @@
                         </div>
                         <div class="form-group">
                             <label for="systemDbUrl">DB URL</label>
-                            <input type="text" name="systemDbUrl" id="systemDbUrl" class="form-control disabled" disabled="disabled" placeholder="数据库链接">
+                            <input type="text" name="systemDbUrl" id="systemDbUrl" class="form-control disabled" disabled="disabled" placeholder="DataBase URL">
                         </div>
                         <div class="form-group">
                             <label for="systemDbUser">DB User</label>
-                            <input type="text" name="systemDbUser" id="systemDbUser" class="form-control disabled" disabled="disabled"  placeholder="用户名">
+                            <input type="text" name="systemDbUser" id="systemDbUser" class="form-control disabled" disabled="disabled"  placeholder="DataBase Access user">
                         </div>
                         <div class="form-group">
                             <label for="systemDbPwd">DB Password</label>
-                            <input type="text" name="systemDbPwd" id="systemDbPwd" class="form-control disabled" disabled="disabled"  placeholder="密码">
+                            <input type="text" name="systemDbPwd" id="systemDbPwd" class="form-control disabled" disabled="disabled"  placeholder="DataBase password">
                         </div>
                         <div class="form-group">
                             <button onclick="testDatabase();" class="btn btn-warning" data-loading-text="Test">Test</button>
