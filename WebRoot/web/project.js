@@ -169,7 +169,7 @@ function refreshDoc(node, force)
             		id: "idAlertDialog",	
             		title: _Lang("提示"),
             		okbtn: _Lang("确定"),
-            		msg: _Lang("刷新失败:" + ret.msgInfo),
+            		msg: _Lang("刷新失败", " : ", ret.msgInfo),
             	});
             }
         },
@@ -178,7 +178,7 @@ function refreshDoc(node, force)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("刷新失败:服务器异常！"),
+        		msg: _Lang("刷新失败", " : ", "服务器异常") + "!",
         	});
         }
 	});
@@ -190,7 +190,7 @@ function showRenameDialog(node)
 
 	bootstrapQ.dialog({
 		id: 'renameConfirm',
-		url: 'renameConfirm.html',
+		url: 'renameConfirm' + langExt + '.html',
 		title: _Lang('重命名'),
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
@@ -611,7 +611,7 @@ function showUploadConfirmPanel(files, parentNode)
 	bootstrapQ.dialog(
 		{
 			id: 'uploadConfirm',
-			url: 'uploadConfirm.html',
+			url: 'uploadConfirm' + langExt + '.html',
 			title: '文件上传',
 			msg: _Lang('页面正在加载，请稍侯') + '...',
 			foot: false,
@@ -1309,7 +1309,7 @@ function showDocPwdVerifyPanel(node, successCallback)
 	console.log("showDocPwdVerifyPanel node",node);
 	bootstrapQ.dialog({
 		id: 'docPwdVerify',
-		url: 'docPwdVerify.html',
+		url: 'docPwdVerify' + langExt + '.html',
 		title: '密码验证',
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
@@ -1744,7 +1744,7 @@ function showDocHistory(node, historyType)
 	bootstrapQ.dialog({
 		id: "historyPage",
 		title: title,
-		url: 'historyLogs.html',
+		url: 'historyLogs' + langExt + '.html',
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 			foot: false,
 			big: true,
@@ -1899,7 +1899,7 @@ function showDocPwdSetPanel(node)
 	console.log("showDocPwdSetPanel node:", node);
 	bootstrapQ.dialog({
 		id: 'docPwdSet',
-		url: 'docPwdSet.html',
+		url: 'docPwdSet' + langExt + '.html',
 		title: '密码设置:' + node.name,
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
@@ -3587,7 +3587,7 @@ function showAddDocPanel(type, parentNode)
 
 	bootstrapQ.dialog({
 			id: 'addDoc',
-			url: 'addDoc.html',
+			url: 'addDoc' + langExt + '.html',
 			title: title,
 			msg: _Lang('页面正在加载，请稍侯') + '...',
 			foot: false,
@@ -3848,7 +3848,7 @@ function showDocSharePwdVerifyPanel(shareId, successCallback)
 	console.log("showDocSharePwdVerifyPanel shareId:" + shareId);
 	bootstrapQ.dialog({
 		id: 'docSharePwdVerify',
-		url: 'docSharePwdVerify.html',
+		url: 'docSharePwdVerify' + langExt + '.html',
 		title: '密码验证',
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
@@ -5592,7 +5592,7 @@ function showDocPushPanel(node, type)
 	console.log("showDocPushPanel type:" + type, node);
 	bootstrapQ.dialog({
 		id: 'pushDoc',
-		url: 'pushDoc.html',
+		url: 'pushDoc' + langExt + '.html',
 		title: '文件推送',
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
@@ -5608,7 +5608,7 @@ function showDocPullPanel(node, type)
 	console.log("showDocPullPanel type:" + type, node);
 	bootstrapQ.dialog({
 		id: 'pullDoc',
-		url: 'pullDoc.html',
+		url: 'pullDoc' + langExt + '.html',
 		title: '文件拉取',
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
@@ -5635,7 +5635,7 @@ function showRemoteStoragePushPanel(node)
 
 	bootstrapQ.dialog({
 		id: 'remoteStoragePush',
-		url: 'remoteStoragePush.html',
+		url: 'remoteStoragePush' + langExt + '.html',
 		title: '文件推送',
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
@@ -5662,7 +5662,7 @@ function showRemoteStoragePullPanel(node)
 
 	bootstrapQ.dialog({
 		id: 'remoteStoragePull',
-		url: 'remoteStoragePull.html',
+		url: 'remoteStoragePull' + langExt + '.html',
 		title: '文件拉取',
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
@@ -5775,7 +5775,7 @@ function showDocSharePanel(docShare, docName, url)
 	console.log("showDocSharePanel docName:" + docName);
 	bootstrapQ.dialog({
 		id: 'docShare',
-		url: 'docShare.html',
+		url: 'docShare' + langExt + '.html',
 		title: '文件分享:' + docName,
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,

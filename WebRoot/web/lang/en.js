@@ -107,7 +107,9 @@ function lang(str)
 		"等" : "...",
 		"个文件" : "files",
 		"清选择需要删除的文件或目录" : "No any file or folder was selected to delete",
-		
+		"重命名" : "Rename",
+		"刷新" : "Refresh",
+		"刷新失败" : "Failed to refresh",		
 	};
 	
 	var newStr = translateMap[str];
