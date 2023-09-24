@@ -81,12 +81,22 @@ function showQRCode()
             else
             {
             	new QRCode(document.getElementById("qrcode"), "http://dw.gofreeteam.com/DocSystem");  // 设置要生成二维码的链接
-                showErrorMessage(_Lang("获取登录链接失败", " : ", ret.msgInfo));
+                showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("获取登录链接失败", " : ", ret.msgInfo)
+        		});
             }
         },
         error : function () {
         	new QRCode(document.getElementById("qrcode"), "http://dw.gofreeteam.com/DocSystem");  // 设置要生成二维码的链接
-            showErrorMessage(_Lang("获取登录链接失败", " : ", "服务器异常"));
+            showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("获取登录链接失败", " : ", "服务器异常")
+        		});
         }
     });
 
@@ -179,11 +189,21 @@ function showReposList()
             else
             {
             	console.log(ret.msgInfo);
-            	showErrorMessage(_Lang("获取仓库列表失败", " : ", ret.msgInfo));
+            	showErrorMessage({
+            		id: "idAlertDialog",	
+            		title: _Lang("提示"),
+            		okbtn: _Lang("确定"),
+            		msg: _Lang("获取仓库列表失败", " : ", ret.msgInfo),
+            	});
             }
         },
         error : function () {
-        	showErrorMessage(_Lang("获取仓库列表失败", " : ", "服务器异常"));
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("获取仓库列表失败", " : ", "服务器异常")
+        		});
         }
     });
 }
@@ -311,11 +331,21 @@ function searchDoc(pageIndex)
                	}
                	else
                	{
-               		showErrorMessage(_Lang("文件搜索出错", " : ", ret.msgInfo));
+               		showErrorMessage({
+                		id: "idAlertDialog",	
+                		title: _Lang("提示"),
+                		okbtn: _Lang("确定"),
+                		msg: _Lang("文件搜索出错", " : ", ret.msgInfo)
+                		});
                	}
            },
            error : function () {
-               showErrorMessage(_Lang("文件搜索出错", " : ", "服务器异常"));
+        	   showErrorMessage({
+           		id: "idAlertDialog",	
+           		title: _Lang("提示"),
+           		okbtn: _Lang("确定"),
+           		msg: _Lang("文件搜索出错", " : ", "服务器异常")
+           		});
            }
        });
 }
