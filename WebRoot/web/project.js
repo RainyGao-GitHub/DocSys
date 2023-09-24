@@ -236,7 +236,7 @@ function DoPaste(treeNodes,dstParentNode, isCopy)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("请选择需要复制的文件！"),
+        		msg: _Lang("请选择需要复制的文件") + "!",
 	    	});
 		}
 		else
@@ -245,7 +245,7 @@ function DoPaste(treeNodes,dstParentNode, isCopy)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("请选择需要移动的文件！"),
+        		msg: _Lang("请选择需要移动的文件") + "!",
 	    	});
 		}
 		return;
@@ -285,7 +285,7 @@ function copyDocName(node){
 	document.execCommand("Copy"); // 执行浏览器复制命令
     // 普通消息提示条
 	bootstrapQ.msg({
-				msg : '复制成功！',
+				msg : _Lang('复制成功') + '!',
 				type : 'success',
 				time : 1000,
 	});
@@ -313,7 +313,7 @@ function copyDocPath(node){
 	document.execCommand("Copy"); // 执行浏览器复制命令
     // 普通消息提示条
 	bootstrapQ.msg({
-				msg : '复制成功！',
+				msg : _Lang('复制成功') + '!',
 				type : 'success',
 				time : 1000,
 	});
@@ -355,7 +355,7 @@ function copyUrl(node){
 	document.execCommand("Copy"); // 执行浏览器复制命令
     // 普通消息提示条
 	bootstrapQ.msg({
-				msg : '复制成功！',
+				msg : _Lang('复制成功') + '!',
 				type : 'success',
 				time : 1000,
 	});
@@ -369,7 +369,7 @@ function copyString(str)
 	document.execCommand("Copy"); // 执行浏览器复制命令
     // 普通消息提示条
 	bootstrapQ.msg({
-				msg : '复制成功！',
+				msg : _Lang('复制成功') + '!',
 				type : 'success',
 				time : 1000,
 	});
@@ -385,7 +385,7 @@ function downloadDoc(treeNodes,needConfirm,downloadType)
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("请选择需要下载的文件！"),
+    		msg: _Lang("请选择需要下载的文件") + "!",
     	});
 		return;
 	}
@@ -401,17 +401,17 @@ function downloadDoc(treeNodes,needConfirm,downloadType)
 	  	var downloadDispInfo = fileName;
 	  	if(treeNodes.length > 1)
 	  	{
-	  		downloadDispInfo = downloadDispInfo + " 等" + treeNodes.length + "个文件";
+	  		downloadDispInfo = downloadDispInfo + " " + _Lang("等") + treeNodes.length + _Lang("个文件");
 	  	}
 
 		if(downloadType && downloadType == 2)
 		{
-  			downloadDispInfo = downloadDispInfo + " 备注";
+  			downloadDispInfo = downloadDispInfo + _Lang(" 备注");
 		}
 
 		qiao.bs.confirm({
 	        id: 'downloadConfirm',
-	        msg: '是否下载：' + downloadDispInfo,
+	        msg: _Lang('是否下载') + ' ' + downloadDispInfo,
 	    },function(){
 	        //alert('点击了确定！');
 			DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType);
@@ -506,7 +506,7 @@ function checkInUploadConfirm(e)
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("请选择文件：" + curCheckInDoc.name),
+    		msg: _Lang("请选择文件") + " : " + curCheckInDoc.name,
     	});
 	    return false;
     }
@@ -568,7 +568,7 @@ function checkUserUploadRight(files,parentNode,callback)
 		        		id: "idAlertDialog",	
 		        		title: _Lang("提示"),
 		        		okbtn: _Lang("确定"),
-		        		msg: _Lang("您没有目录 "+remoteDir+" 的新增或修改权限"),
+		        		msg: _Lang("您没有新增或修改权限") + "[" + remoteDir + "]",
 			    	});
 				}
 				return;
@@ -589,7 +589,7 @@ function checkUserUploadRight(files,parentNode,callback)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("获取用户权限异常"),
+        		msg: _Lang("错误", " : ", "服务器异常"),
 	    	});
 			return;
 		}
@@ -612,7 +612,7 @@ function showUploadConfirmPanel(files, parentNode)
 		{
 			id: 'uploadConfirm',
 			url: 'uploadConfirm' + langExt + '.html',
-			title: '文件上传',
+			title: _Lang('文件上传'),
 			msg: _Lang('页面正在加载，请稍侯') + '...',
 			foot: false,
 			big: false,
@@ -725,7 +725,7 @@ $(".el-download-list").delegate(".downloadCloseBtn","click",function(){
     {
 		qiao.bs.confirm({
 	        id: 'downloadCloseConfirm',
-	        msg: '下载还未结束，是否终止下载！'
+	        msg: _Lang('下载还未结束，是否终止下载') + "!",
 	    },function(){
 	        //alert('点击了确定！');
 	    	DocDownload.stopAllDownload();
@@ -796,7 +796,7 @@ $(".el-upload-list").delegate(".uploadCloseBtn","click",function(){
     {
 		qiao.bs.confirm({
 	        id: 'bsconfirm',
-	        msg: '上传还未结束，是否终止上传！'
+	        msg: _Lang('上传还未结束，是否终止上传') + "!",
 	    },function(){
 	        //alert('点击了确定！');
 	    	FileUpload.stopAllUpload();
@@ -1034,7 +1034,7 @@ function getReposInfo(reposId, callback){
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("服务器异常:获取仓库信息失败"),
+        		msg: _Lang("获取仓库信息失败", " : " , "服务器异常"),
         	});
         }
     });
@@ -1105,7 +1105,7 @@ function getInitMenu(docId, parentPath, docName, callback)
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang("获取文件列表失败:服务器异常"),
+	        		msg: _Lang("获取仓库目录失败", " : " , "服务器异常"),
 	        	});
 	        }
 	    });
@@ -1286,7 +1286,7 @@ function getAndShowDoc(node, openMode, edit)
                 		id: "idAlertDialog",	
                 		title: _Lang("提示"),
                 		okbtn: _Lang("确定"),
-                		msg: _Lang("获取文件信息失败：" + ret.msgInfo),
+                		msg: _Lang("获取文件信息失败" + " : " + ret.msgInfo),
                 	});
                 	cleanDocPreview();
             	}
@@ -1297,7 +1297,7 @@ function getAndShowDoc(node, openMode, edit)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("获取文件信息失败：服务器异常"),
+        		msg: _Lang("获取文件信息失败" + " : " + "服务器异常"),
         	});
             cleanDocPreview();
         }
@@ -1310,7 +1310,7 @@ function showDocPwdVerifyPanel(node, successCallback)
 	bootstrapQ.dialog({
 		id: 'docPwdVerify',
 		url: 'docPwdVerify' + langExt + '.html',
-		title: '密码验证',
+		title: _Lang('密码验证'),
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
@@ -1695,7 +1695,7 @@ function showDocHistory(node, historyType)
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang("该仓库未开通版本管理，请联系管理员！"),
+	        		msg: _Lang("该仓库未开通版本管理，请联系管理员") + "!",
 		    	});
 				return;
 			}
@@ -1713,18 +1713,18 @@ function showDocHistory(node, historyType)
 	}
 	console.log("docId:" + docId + "parentPath:" + parentPath + " docName:"+docName);
 
-	var title = "历史版本:" + docName;
+	var title = "历史版本" + " [" + docName + "]";
 	if(historyType == 0)
 	{
 		if(docId == 0)
 		{
-			var title = "历史版本:" + gReposInfo.name;
+			title = "历史版本 [/]";
 		}
 		else
 		{
 			if(docType == 2)
 			{
-				var title = "历史版本:" + docName + "/";
+				title = "历史版本" + " [" + docName + "/]";
 			}
 		}
 	}
@@ -1732,11 +1732,11 @@ function showDocHistory(node, historyType)
 	{
 		if(docId == 0)
 		{
-			var title = "备注历史:" + gReposInfo.name;
+			title = "备注历史" + " [/]";
 		}
 		else
 		{
-			var title = "备注历史:" + docName;
+			var title = "备注历史" + " [" + docName + "]";
 		}
 	}
 
@@ -1764,7 +1764,7 @@ function lockDoc(node, lockType)
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("请选择文件！"),
+    		msg: _Lang("请选择需要锁定的文件") + "!",
     	});
 		return;
 	}
@@ -1801,7 +1801,7 @@ function lockDoc(node, lockType)
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang(ret.msgInfo),
+	        		msg: _Lang("锁定失败", " : ", ret.msgInfo),
 		    	});
 				return;
 			}
@@ -1812,7 +1812,7 @@ function lockDoc(node, lockType)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("锁定失败: 服务器异常"),
+        		msg: _Lang("锁定失败", " : ", "服务器异常"),
 	    	});
 			return;
 		}
@@ -1828,7 +1828,7 @@ function unlockDoc(node, lockType)
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("请选择文件！"),
+    		msg: _Lang("请选择需要解锁的文件") + "!",
     	});
 		return;
 	}
@@ -1865,7 +1865,7 @@ function unlockDoc(node, lockType)
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang(ret.msgInfo),
+	        		msg: _Lang("解锁失败", " : ", ret.msgInfo),
 		    	});
 				return;
 			}
@@ -1876,7 +1876,7 @@ function unlockDoc(node, lockType)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("解锁失败: 服务器异常"),
+        		msg: _Lang("解锁失败", " : ", "服务器异常"),
 	    	});
 			return;
 		}
@@ -1891,7 +1891,7 @@ function showDocPwdSetPanel(node)
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("请选择文件！"),
+    		msg: _Lang("请选择需要设置访问密码的文件") + "!",
     	});
 		return;
 	}
@@ -1900,7 +1900,7 @@ function showDocPwdSetPanel(node)
 	bootstrapQ.dialog({
 		id: 'docPwdSet',
 		url: 'docPwdSet' + langExt + '.html',
-		title: '密码设置:' + node.name,
+		title: _Lang('访问密码设置') + " [" + node.name + "]",
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: true,
@@ -1924,8 +1924,8 @@ var setting = {
    	//可编辑功能设置
 	edit: {
            enable: true,
-           removeTitle : "删除",
-           renameTitle : "改名",
+           removeTitle : _Lang("删除"),
+           renameTitle : _Lang("重命名"),
            showRemoveBtn : false,
            showRenameBtn : false,
            drag: {
@@ -2208,7 +2208,7 @@ function dropInner(treeId, nodes, targetNode) {
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("目标节点不存在！"),
+        		msg: _Lang("目标节点不存在") + "!",
   	    	});
   			return;
   		}
@@ -2217,7 +2217,7 @@ function dropInner(treeId, nodes, targetNode) {
 
 		qiao.bs.confirm({
 		        id: 'bsconfirm',
-		        msg: '是否移动文件！'
+		        msg: _Lang('是否移动文件') + "!",
 		},function(){
 		        //alert('点击了确定！');
 	      		DocMove.moveDocs(treeNodes,parentNode,vid);
@@ -2510,7 +2510,7 @@ function SysInit()
             		id: "idAlertDialog",	
             		title: _Lang("提示"),
             		okbtn: _Lang("确定"),
-            		msg: _Lang("服务器异常:获取用户信息失败"),
+            		msg: _Lang("获取用户信息失败", " : ", "服务器异常"),
             	});
             }
         });
@@ -3221,7 +3221,7 @@ function showDocList(node)
                 		id: "idAlertDialog",	
                 		title: _Lang("提示"),
                 		okbtn: _Lang("确定"),
-                		msg: _Lang("获取子目录错误:" + ret.msgInfo),
+                		msg: _Lang("获取文件列表失败", " : ", ret.msgInfo),
                 	});
             	}
             }
@@ -3231,7 +3231,7 @@ function showDocList(node)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang('服务器异常: 获取子目录异常'),
+        		msg: _Lang("获取文件列表失败", " : ", "服务器异常"),
         	});
         }
     });
@@ -3412,7 +3412,7 @@ function searchDoc()
                 		id: "idAlertDialog",	
                 		title: _Lang("提示"),
                 		okbtn: _Lang("确定"),
-                		msg: _Lang("文件搜索出错:" + ret.msgInfo),
+                		msg: _Lang("文件搜索失败", " : ", ret.msgInfo),
                 	});
                	}
            },
@@ -3421,7 +3421,7 @@ function searchDoc()
            		id: "idAlertDialog",	
            		title: _Lang("提示"),
            		okbtn: _Lang("确定"),
-           		msg: _Lang('服务器异常: 搜索文件异常'),
+        		msg: _Lang("文件搜索失败", " : ", "服务器异常"),
            	});
            }
        });
@@ -3467,12 +3467,12 @@ function switchShowMode(showType)
 
 	 if(gShowType == 1)	//预览
    	 {
-	    $("#modeSwitchBtnText").css("title","标准模式");
+	    $("#modeSwitchBtnText").css("title", _Lang("标准模式"));
 	    $("#docPreview").show();
      }
      else
      {
-		$("#modeSwitchBtnText").css("title","电子书模式");
+		$("#modeSwitchBtnText").css("title", _Lang("电子书模式"));
 		$("#docPreview").hide();
      }
 
@@ -3579,10 +3579,10 @@ function showAddDocPanel(type, parentNode)
 	console.log("showAddDocPanel()");
 
 	//对话框 title
-    var title = "新建文件";
+    var title = _Lang("新建文件");
     if(type == 2)
     {
-    	title = "新建目录";
+    	title = _Lang("新建目录");
     }
 
 	bootstrapQ.dialog({
@@ -3627,7 +3627,7 @@ function checkOut(node)
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("请选择文件！"),
+    		msg: _Lang("请选择需要检出文件") + "!",
     	});
 		return;
 	}
@@ -3667,7 +3667,7 @@ function checkOut(node)
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang(ret.msgInfo),
+	        		msg: _Lang("检出失败", " : ", ret.msgInfo),
 		    	});
 				return;
 			}
@@ -3678,7 +3678,7 @@ function checkOut(node)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("锁定失败: 服务器异常"),
+        		msg: _Lang("检出失败", " : ", "服务器异常"),
 	    	});
 			return;
 		}
@@ -3827,7 +3827,7 @@ function getDocShare(callback)
                 		id: "idAlertDialog",	
                 		title: _Lang("提示"),
                 		okbtn: _Lang("确定"),
-                		msg: _Lang(ret.msgInfo),
+                		msg: _Lang("获取文件分享信息失败", " : ", ret.msgInfo),                		
                 	});
             	}
             }
@@ -3837,7 +3837,7 @@ function getDocShare(callback)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("服务器异常:获取文件分享信息失败"),
+        		msg: _Lang("获取文件分享信息失败", " : ", "服务器异常"),
         	});
         }
     });
@@ -3849,7 +3849,7 @@ function showDocSharePwdVerifyPanel(shareId, successCallback)
 	bootstrapQ.dialog({
 		id: 'docSharePwdVerify',
 		url: 'docSharePwdVerify' + langExt + '.html',
-		title: '密码验证',
+		title: _Lang('密码验证'),
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,

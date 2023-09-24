@@ -57,7 +57,7 @@ function lang(str)
 		"两次密码不一致，请重试！" : "Re-enter password error!",
 		//登录
 		"登录失败"	: "Sign In Failed",
-    	"获取用户信息失败" : "Get Login User Failed",
+    	"获取用户信息失败" : "Failed to get user information",
     	"用户名或密码错误！" : "Incorrect account or password!",
 		//退出登录
 		"退出登录失败" : "Sign Out Failed",
@@ -99,6 +99,9 @@ function lang(str)
 		"版本仓库初始化失败！" : "Failed to init history storage repository",
 		
 		//文件操作
+		"刷新" : "Refresh",
+		"刷新失败" : "Failed to refresh",		
+		
 		"删除" : "Delete",
 		"删除确认" : "Delete Confirm",
 		"是否删除" : "Do you want to delete",
@@ -107,9 +110,54 @@ function lang(str)
 		"等" : "...",
 		"个文件" : "files",
 		"清选择需要删除的文件或目录" : "No any file or folder was selected to delete",
+		
 		"重命名" : "Rename",
-		"刷新" : "Refresh",
-		"刷新失败" : "Failed to refresh",		
+		
+		"复制" : "Copy",
+		
+		"移动" : "Move",
+		"是否移动文件" : "Do you want to move the file or folder",	
+		"请选择需要复制的文件" : "No any file or folder was selected to copy",
+		"请选择需要移动的文件" : "No any file or folder was selected to move",
+		"请选择文件或目录" : "No any file or folder was selected",
+		"复制成功" : "Copy Ok",
+		
+		"下载" : "Download",
+		"是否下载" : "Do you want to download",
+		"请选择需要下载的文件" : "No any file or folder was selected to download",
+		"备注" : "Note",
+		"的备注" : "'s Note",
+		" 备注"  : "'s Note",
+		
+		"上传" : "Upload",
+		"文件上传" : "Document Upload",
+		"您没有新增或修改权限" : "You have no right to add or modify",
+		"下载还未结束，是否终止下载" : "Download not completed, do you want to cancel",
+		"上传还未结束，是否终止上传" : "Upload not completed, do you want to cancel",
+		"获取仓库信息失败" : "Failed to get repository information",
+		"获取仓库目录失败" : "Failed to get repository's file list",
+		"获取文件列表失败" : "Failed to get file list",
+		"获取文件信息失败" : "Failed to get document information",
+		"密码验证" : "Verify Password",
+		"该仓库未开通版本管理，请联系管理员" : "History was not configured for this repository, please contact System Administrator",
+		"历史版本" : "History",
+		"备注历史" : "Note's History",
+		"请选择需要锁定的文件" : "No any file or folder was selected to lock",
+		"请选择需要解锁的文件" : "No any file or folder was selected to unlock",
+		"锁定失败" : "Lock Failed",
+		"解锁定败" : "Unlock Failed",
+		"访问密码设置" : "Set Access Password",
+		"请选择需要设置访问密码的文件" : "No any file or folder was selected to set access password",
+		"目标节点不存在" : "Target node not exists",
+		
+		"文件搜索失败" : "Failed to search",
+		"标准模式" : "Standard Mode",
+		"电子书模式" : "E-Book Mode",
+		"新建目录" : "New Folder",
+		"新建文件" : "New File",
+		"请选择需要检出文件" : "No any file was selected to check out",
+		"获取文件分享信息失败" : "Failed to get document share information",
+		"密码验证" : "Verify Password",
 	};
 	
 	var newStr = translateMap[str];
