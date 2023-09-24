@@ -33,6 +33,8 @@ function lang(str)
 		"服务器异常" : "Server exception",
 		"页面正在加载，请稍等" : "Loading",
 		"页面正在加载，请稍侯" : "Loading",
+		"文件" : "File",
+		"文件夹" : "Folder",		
 		//注册
 		"注册失败"	: "Sign Up Failed",			
 		"获取验证码" : "Send",
@@ -100,9 +102,42 @@ function lang(str)
 		
 		//文件操作
 		"刷新" : "Refresh",
+		"分享" : "Share",
+		"打开" : "Open",
+		"新建" : "New",
+		"删除" : "Delete",
+		"重命名" : "Rename",
+		"复制" : "Copy",
+		"剪切" : "Cut",
+		"粘贴" : "Paste",
+		"移动" : "Move",
+		"下载" : "Download",
+		"上传" : "Upload",
+		"预览" : "Preview",
+		"拉取" : "Pull",
+		"推送" : "Push",
+		"锁定" : "Lock",
+		"解锁" : "Unlock",
+		"设置密码" : "Set Password",
+		"文件上传" : "Upload Document",
+		"文件推送" : "Push Document",
+		"文件拉取" : "Pull Document",
+		"文件分享" : "Share Document",
+		"在新窗口打开" : "Open In New Page",
+		"属性" : "Properties",
+		"查看历史" : "View History",		
+		"远程存储" : "Remote Storage",
+		"备注" : "Note",
+		"下载备注" : "Download Note",
+		"本地路径" : "Local File Path",
+		"名字" : "Name",
+		"路径" : "Path",		
+		"链接" : "Link",
+		"下载链接" : "Download Link",
+		"更多" : "More",
+		
 		"刷新失败" : "Failed to refresh",		
 		
-		"删除" : "Delete",
 		"删除确认" : "Delete Confirm",
 		"是否删除" : "Do you want to delete",
 		"是否删除文件" : "Do you want to delete the file",
@@ -110,27 +145,22 @@ function lang(str)
 		"等" : "...",
 		"个文件" : "files",
 		"清选择需要删除的文件或目录" : "No any file or folder was selected to delete",
-		
-		"重命名" : "Rename",
-		
-		"复制" : "Copy",
-		
-		"移动" : "Move",
+
 		"是否移动文件" : "Do you want to move the file or folder",	
 		"请选择需要复制的文件" : "No any file or folder was selected to copy",
 		"请选择需要移动的文件" : "No any file or folder was selected to move",
 		"请选择文件或目录" : "No any file or folder was selected",
 		"复制成功" : "Copy Ok",
 		
-		"下载" : "Download",
 		"是否下载" : "Do you want to download",
 		"请选择需要下载的文件" : "No any file or folder was selected to download",
-		"备注" : "Note",
 		"的备注" : "'s Note",
 		" 备注"  : "'s Note",
 		
-		"上传" : "Upload",
-		"文件上传" : "Document Upload",
+		"正在上传" : "Uploading",
+		"正在重传" : "Reuploading",
+		"上传完成" : "Upload Completed",
+		
 		"您没有新增或修改权限" : "You have no right to add or modify",
 		"下载还未结束，是否终止下载" : "Download not completed, do you want to cancel",
 		"上传还未结束，是否终止上传" : "Upload not completed, do you want to cancel",
@@ -158,6 +188,11 @@ function lang(str)
 		"请选择需要检出文件" : "No any file was selected to check out",
 		"获取文件分享信息失败" : "Failed to get document share information",
 		"密码验证" : "Verify Password",
+		
+		"当前为分享链接，无法再次分享！" : "Shared Link can not be shared again",
+		"创建文件分享失败" : "Failed to share",
+		"该仓库未设置远程存储" : "Remote Storage was not configured for this repository",
+		
 	};
 	
 	var newStr = translateMap[str];

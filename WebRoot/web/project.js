@@ -4042,11 +4042,11 @@ function DocUploadInit()
   	{
   		if(reuploadFlag == false)
   		{
-  			$(".upload-list-title").text("正在上传   " + uploadStartedNum + " / " + totalNum);
+  			$(".upload-list-title").text(_Lang("正在上传") + "  " + uploadStartedNum + " / " + totalNum);
   		}
   		else
   		{
-  			$(".upload-list-title").text("正在重传   " + reuploadStartedNum + " / " + reuploadTotalNum);
+  			$(".upload-list-title").text(_Lang("正在重传") + "  " + reuploadStartedNum + " / " + reuploadTotalNum);
   		}
   	}
 	
@@ -4125,11 +4125,19 @@ function DocUploadInit()
 	
 	var uploadEndCallback = function(totalNum, successNum){  	  		
   		//显示上传完成 
-  		var uploadEndInfo = "上传完成(共" + totalNum +"个)";
+  		var uploadEndInfo = "";
   		if(successNum != totalNum)
   		{
-  			uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
-
+  			switch(langType)
+  			{
+  			case "en":
+  				uploadEndInfo = "Upload Completed (Total : " + totalNum +")"+",Failed : " + (toalNum - successNum);
+  				break;
+  			default:
+  				uploadEndInfo = "上传完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+  				break;
+  			}
+  			
   			$(".reuploadAllBtn").show();
 
   			// 普通消息提示条
@@ -4141,6 +4149,16 @@ function DocUploadInit()
   		}
   		else
   		{
+  			switch(langType)
+  			{
+  			case "en":
+  				uploadEndInfo = "Upload Completed (Total : " + totalNum +")";
+  				break;
+  			default:
+  				uploadEndInfo = "上传完成 (共" + totalNum +"个)";
+  				break;
+  			}
+  			
   			$(".reuploadAllBtn").hide();
             // 普通消息提示条
 			bootstrapQ.msg({
@@ -4343,15 +4361,15 @@ function contextMenuInit()
 
 	//zTree外部的右键菜单
 	context.attach('#treeBody', [
-		{text: '新建', subMenu: [
-			{text: '文件',  action: function(e){
+		{text: _Lang('新建'), subMenu: [
+			{text: _Lang('文件'),  action: function(e){
 					e.preventDefault();
 					curRightClickedTreeNode = null;
 					var parentNode = getParentNodeByNode(null);
         			newDoc(1,parentNode);
 				}
 			},
-			{text: '文件夹',  action: function(e){
+			{text: _Lang('文件夹'),  action: function(e){
 					e.preventDefault();
         			curRightClickedTreeNode = null;
         			var parentNode = getParentNodeByNode(null);
@@ -4360,15 +4378,15 @@ function contextMenuInit()
 			},
 			]
 		},
-		{text: '上传', subMenu: [
-			{text: '文件',  action: function(e){
+		{text: _Lang('上传'), subMenu: [
+			{text: _Lang('文件'),  action: function(e){
 					e.preventDefault();
 					curRightClickedTreeNode = null;
 				    gParentNodeForUpload = null;	//uploadFiles is the trigger, so need to save the destination dir to gVar
 				  	uploadFiles();
 				}
 			},
-			{text: '文件夹',  action: function(e){
+			{text: _Lang('文件夹'),  action: function(e){
 					e.preventDefault();
 					curRightClickedTreeNode = null;
 				    gParentNodeForUpload = null;	//uploadFiles is the trigger, so need to save the destination dir to gVar
@@ -4378,7 +4396,7 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
-		{text: '下载', action: function(e){
+		{text: _Lang('下载'), action: function(e){
 					e.preventDefault();
 					var treeNodes = [];
 					treeNodes.push(gRootDoc);
@@ -4386,39 +4404,39 @@ function contextMenuInit()
 				}
 		},
 		{divider: true},
-		{text: '分享', action: function(e){
+		{text: _Lang('分享'), action: function(e){
 					e.preventDefault();
 					shareDoc(gRootDoc);
 				}
 		},
 		{divider: true},
-		{text: '全选', action: function(e){
+		{text: _Lang('全选'), action: function(e){
 				e.preventDefault();
 				selectAllNode(null);
 	    	}
 		},
 		{divider: true},
-		{text: '粘贴', action: function(e){
+		{text: _Lang('粘贴'), action: function(e){
 					e.preventDefault();
 					curRightClickedTreeNode = null;
 					DoPaste(gCopiedNodes,null,gIsCopy);
 				}
 		},
 		{divider: true},
-		{text: '查看历史', action: function(e){
+		{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 					curRightClickedTreeNode = null;
 	    			showDocHistory(gRootDoc,0);
 				}
 		},
 		{divider: true},
-		{text: '远程存储', subMenu: [
-			{text: '推送',  action: function(e){
+		{text: _Lang('远程存储'), subMenu: [
+			{text: _Lang('推送'),  action: function(e){
 					e.preventDefault();
 					showRemoteStoragePushPanel(gRootDoc);
 				}
 			},
-			{text: '拉取',  action: function(e){
+			{text: _Lang('拉取'),  action: function(e){
 					e.preventDefault();
 					showRemoteStoragePullPanel(gRootDoc);
 				}
@@ -4426,15 +4444,15 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
-		{text: '更多...', subMenu: [
-				{text: '备注', subMenu: [
-						{text: '查看历史', action: function(e){
+		{text: _Lang('更多') + '...', subMenu: [
+				{text: _Lang('备注'), subMenu: [
+						{text: _Lang('查看历史'), action: function(e){
 								e.preventDefault();
 								curRightClickedTreeNode = null;
 			        			showDocHistory(gRootDoc, 1);
 		        			}
 						},	
-						{text: '下载备注', action: function(e){
+						{text: _Lang('下载备注'), action: function(e){
 								e.preventDefault();
 								var treeNodes = [];
 								treeNodes.push(gRootDoc);
@@ -4444,29 +4462,29 @@ function contextMenuInit()
 	   				]
 	   			},
 	   			{divider: true},
-				{text: '推送',  action: function(e){
+				{text: _Lang('推送'),  action: function(e){
 						e.preventDefault();
 						showDocPushPanel(gRootDoc, 1);
 					}
 				},
-				{text: '拉取',  action: function(e){
+				{text: _Lang('拉取'),  action: function(e){
 						e.preventDefault();
 						showDocPullPanel(gRootDoc, 1);
 					}
 				},
 				{divider: true},
-				{text: '锁定', action: function(e){
+				{text: _Lang('锁定'), action: function(e){
 						e.preventDefault();
 						lockDoc(gRootDoc, 1);
 					}
 				},
-				{text: '解锁', action: function(e){
+				{text: _Lang('解锁'), action: function(e){
 						e.preventDefault();
 						unlockDoc(gRootDoc, 1);
 					}
 				},
 				{divider: true},
-				{text: '刷新', action: function(e){
+				{text: _Lang('刷新'), action: function(e){
 							e.preventDefault();
 							refreshDoc(null, 0);
 						}
@@ -4477,14 +4495,14 @@ function contextMenuInit()
 	);
 	//zTree上的右键菜单
 	context.attach('#tree', [
-		{text: '新建', subMenu: [
-			{text: '文件',  action: function(e){
+		{text: _Lang('新建'), subMenu: [
+			{text: _Lang('文件'),  action: function(e){
 					e.preventDefault();
 					var parentNode = getParentNodeByNode(curRightClickedTreeNode);
 					newDoc(1,parentNode);
 				}
 			},
-			{text: '文件夹',  action: function(e){
+			{text: _Lang('文件夹'),  action: function(e){
 					e.preventDefault();
 					var parentNode = getParentNodeByNode(curRightClickedTreeNode);
 					newDoc(2,parentNode);
@@ -4492,14 +4510,14 @@ function contextMenuInit()
 			},
 			]
 		},
-		{text: '上传', subMenu: [
-			{text: '文件',  action: function(e){
+		{text: _Lang('上传'), subMenu: [
+			{text: _Lang('文件'),  action: function(e){
 					e.preventDefault();
 					gParentNodeForUpload = getParentNodeByNode(curRightClickedTreeNode);	//uploadFiles is the trigger, so need to save the destination dir to gVar
 					uploadFiles();
 				}
 			},
-			{text: '文件夹',  action: function(e){
+			{text: _Lang('文件夹'),  action: function(e){
 					e.preventDefault();
 					gParentNodeForUpload = getParentNodeByNode(curRightClickedTreeNode);	//uploadFiles is the trigger, so need to save the destination dir to gVar
 					uploadDir();
@@ -4508,33 +4526,33 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
-		{text: '下载', action: function(e){
+		{text: _Lang('下载'), action: function(e){
 					e.preventDefault();
 					var treeNodes = getSelectedNodes();
 					downloadDoc(treeNodes,true,1);
 				}
 		},
 		{divider: true},
-		{text: '分享', action: function(e){
+		{text: _Lang('分享'), action: function(e){
 					e.preventDefault();
 					shareDoc(curRightClickedTreeNode);
 				}
 		},
 		{divider: true},
-		{text: '全选', action: function(e){
+		{text: _Lang('全选'), action: function(e){
 				e.preventDefault();
 				selectAllNode(curRightClickedTreeNode);
 	    	}
 		},
 		{divider: true},
-		{text: '复制', action: function(e){
+		{text: _Lang('复制'), action: function(e){
 					e.preventDefault();
 					gCopiedNodes = getSelectedNodes();
 					gIsCopy = true;
 					console.log("gCopiedNodes",gCopiedNodes);
 				}
 		},
-		{text: '剪切', action: function(e){
+		{text: _Lang('剪切'), action: function(e){
 				e.preventDefault();
 				gCopiedNodes = getSelectedNodes();
 				gIsCopy = false;
@@ -4542,20 +4560,20 @@ function contextMenuInit()
 			}
 		},
 		{divider: true},
-		{text: '粘贴', action: function(e){
+		{text: _Lang('粘贴'), action: function(e){
 					e.preventDefault();
 					var parentNode = getParentNodeByNode(curRightClickedTreeNode);
 					DoPaste(gCopiedNodes,parentNode, gIsCopy);
 				}
 		},
 		{divider: true},
-		{text: '删除', action: function(e){
+		{text: _Lang('删除'), action: function(e){
 					e.preventDefault();
 					var deleteNodes = getDeleteNodes();
 					DoDelete(deleteNodes);
 				}
 		},
-		{text: '重命名', action: function(e){
+		{text: _Lang('重命名'), action: function(e){
 					e.preventDefault();
 					if(curRightClickedTreeNode !== null)
 					{
@@ -4566,19 +4584,19 @@ function contextMenuInit()
 				}
 		},
 		{divider: true},
-		{text: '查看历史', action: function(e){
+		{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 		      		showDocHistory(curRightClickedTreeNode,0);
 				}
 		},
 		{divider: true},
-		{text: '远程存储', subMenu: [
-			{text: '推送',  action: function(e){
+		{text: _Lang('远程存储'), subMenu: [
+			{text: _Lang('推送'),  action: function(e){
 					e.preventDefault();
 					showRemoteStoragePushPanel(curRightClickedTreeNode);
 				}
 			},
-			{text: '拉取',  action: function(e){
+			{text: _Lang('拉取'),  action: function(e){
 					e.preventDefault();
 					showRemoteStoragePullPanel(curRightClickedTreeNode);
 				}
@@ -4586,8 +4604,8 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
-		{text: '更多...', subMenu: [
-					{text: '在新窗口打开', action: function(e){
+		{text: _Lang('更多') + '...', subMenu: [
+					{text: _Lang('在新窗口打开'), action: function(e){
 							e.preventDefault();
 							if(curRightClickedTreeNode != null && curRightClickedTreeNode.type == 2)
 							{
@@ -4599,36 +4617,36 @@ function contextMenuInit()
 							}
 						}
 					},
-					{text: '预览', action: function(e){
+					{text: _Lang('预览'), action: function(e){
 							e.preventDefault();
 							openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf", gShareId);
 						}
 					},
 					{divider: true},
-					{text: '复制', subMenu: [
-			           	{text: '名字', action: function(e){
+					{text: _Lang('复制'), subMenu: [
+			           	{text: _Lang('名字'), action: function(e){
 								e.preventDefault();
 			        			copyDocName(curRightClickedTreeNode);
 							}
 						},
-						{text: '路径', action: function(e){
+						{text: _Lang('路径'), action: function(e){
 									e.preventDefault();
 				        			copyDocPath(curRightClickedTreeNode);
 								}
 						},
-						{text: '链接', action: function(e){
+						{text: _Lang('链接'), action: function(e){
 									e.preventDefault();
 				        			copyUrl(curRightClickedTreeNode);
 								}
 						},
-						{text: '本地路径', action: function(e){
+						{text: _Lang('本地路径'), action: function(e){
 								e.preventDefault();
 								var localPath = getDocLocalPath(gReposInfo, curRightClickedTreeNode);
 								console.log("本地路径 localPath:" + localPath);
 								copyString(localPath);
 							}
 						},
-						{text: '下载链接', action: function(e){
+						{text: _Lang('下载链接'), action: function(e){
 								e.preventDefault();
 								curRightClickedTreeNode.shareId = gShareId;
 						  		getDocFileLink(curRightClickedTreeNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
@@ -4637,13 +4655,13 @@ function contextMenuInit()
 						]
 					},
 					{divider: true},
-					{text: '备注', subMenu: [
-								{text: '查看历史', action: function(e){
+					{text: _Lang('备注'), subMenu: [
+								{text: _Lang('查看历史'), action: function(e){
 										e.preventDefault();
 										showDocHistory(curRightClickedTreeNode,1);
 									}
 								},						
-								{text: '下载备注', action: function(e){
+								{text: _Lang('下载备注'), action: function(e){
 										e.preventDefault();
 										var treeNodes = [];
 										treeNodes.push(curRightClickedTreeNode);
@@ -4653,35 +4671,35 @@ function contextMenuInit()
 		   				  ]
 		   			},
 					{divider: true},
-					{text: '推送',  action: function(e){
+					{text: _Lang('推送'),  action: function(e){
 							e.preventDefault();
 							showDocPushPanel(curRightClickedTreeNode, 1);
 						}
 					},
-					{text: '拉取',  action: function(e){
+					{text: _Lang('拉取'),  action: function(e){
 							e.preventDefault();
 							showDocPullPanel(curRightClickedTreeNode, 1);
 						}
 					},
 					{divider: true},
-					{text: '锁定', action: function(e){
+					{text: _Lang('锁定'), action: function(e){
 							e.preventDefault();
 							lockDoc(curRightClickedTreeNode, 1);
 						}
 					},
-					{text: '解锁', action: function(e){
+					{text: _Lang('解锁'), action: function(e){
 							e.preventDefault();
 							unlockDoc(curRightClickedTreeNode, 1);
 						}
 					},
 					{divider: true},
-					{text: '设置密码', action: function(e){
+					{text: _Lang('设置密码'), action: function(e){
 							e.preventDefault();
 			        		showDocPwdSetPanel(curRightClickedTreeNode);
 						}
 					},
 					{divider: true},
-					{text: '刷新', action: function(e){
+					{text: _Lang('刷新'), action: function(e){
 								e.preventDefault();
 								if(curRightClickedTreeNode !== null)
 								{
@@ -4693,7 +4711,7 @@ function contextMenuInit()
 			  ]
 		},
 		{divider: true},
-		{text: '属性', action: function(e){
+		{text: _Lang('属性'), action: function(e){
 				e.preventDefault();
 				if(curRightClickedTreeNode == null)
 				{
@@ -4713,27 +4731,27 @@ function contextMenuInit()
 
 	//secondList外部的右键菜单
 	context.attach('#secondListBody', [
-		{text: '新建', subMenu: [
-			{text: '文件',  action: function(e){
+		{text: _Lang('新建'), subMenu: [
+			{text: _Lang('文件'),  action: function(e){
 					e.preventDefault();
 		    	  	//get the parentNode
 		    	  	newDocEx(1);
 				}
 			},
-			{text: '文件夹',  action: function(e){
+			{text: _Lang('文件夹'),  action: function(e){
 					e.preventDefault();
 					newDocEx(2);
 				}
 			},
 			]
 		},
-		{text: '上传', subMenu: [
-			{text: '文件',  action: function(e){
+		{text: _Lang('上传'), subMenu: [
+			{text: _Lang('文件'),  action: function(e){
 					e.preventDefault();
 					uploadFilesEx();
 				}
 			},
-			{text: '文件夹',  action: function(e){
+			{text: _Lang('文件夹'),  action: function(e){
 					e.preventDefault();
 					uploadDirEx();
 				}
@@ -4741,13 +4759,13 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
-		{text: '分享', action: function(e){
+		{text: _Lang('分享'), action: function(e){
 					e.preventDefault();
 					shareDoc(gDocInfo);
 				}
 		},
 		{divider: true},
-		{text: '粘贴', action: function(e){
+		{text: _Lang('粘贴'), action: function(e){
 					e.preventDefault();
 					curRightClickedDocListNode = null;
 					var parentNode = getParentNodeEx(gDocInfo);
@@ -4755,21 +4773,21 @@ function contextMenuInit()
 				}
 		},			
 		{divider: true},
-		{text: '查看历史', action: function(e){
+		{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 					var parentNode = getParentNodeEx(gDocInfo);
 	    			showDocHistory(parentNode,0);
 				}
 		},
 		{divider: true},
-		{text: '远程存储', subMenu: [
-			{text: '推送',  action: function(e){
+		{text: _Lang('远程存储'), subMenu: [
+			{text: _Lang('推送'),  action: function(e){
 					e.preventDefault();
 					var parentNode = getParentNodeEx(gDocInfo);
 					showRemoteStoragePushPanel(parentNode);
 				}
 			},
-			{text: '拉取',  action: function(e){
+			{text: _Lang('拉取'),  action: function(e){
 					e.preventDefault();
 					var parentNode = getParentNodeEx(gDocInfo);
 					showRemoteStoragePullPanel(parentNode);
@@ -4778,27 +4796,27 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
-		{text: '更多...', subMenu: [
-					{text: '复制', subMenu: [
-			           	{text: '名字', action: function(e){
+		{text: _Lang('更多') + '...', subMenu: [
+					{text: _Lang('复制'), subMenu: [
+			           	{text: _Lang('名字'), action: function(e){
 								e.preventDefault();
 								var parentNode = getParentNodeEx(gDocInfo);
 			        			copyDocName(parentNode);
 							}
 						},
-						{text: '路径', action: function(e){
+						{text: _Lang('路径'), action: function(e){
 									e.preventDefault();
 									var parentNode = getParentNodeEx(gDocInfo);
 				        			copyDocPath(parentNode);
 								}
 						},
-						{text: '链接', action: function(e){
+						{text: _Lang('链接'), action: function(e){
 									e.preventDefault();
 									var parentNode = getParentNodeEx(gDocInfo);
 				        			copyUrl(parentNode);
 								}
 						},
-						{text: '本地路径', action: function(e){
+						{text: _Lang('本地路径'), action: function(e){
 								e.preventDefault();
 								var parentNode = getParentNodeEx(gDocInfo);
 								var localPath = getDocLocalPath(gReposInfo, parentNode);
@@ -4806,7 +4824,7 @@ function contextMenuInit()
 								copyString(localPath);
 							}
 						},
-						{text: '下载链接', action: function(e){
+						{text: _Lang('下载链接'), action: function(e){
 								e.preventDefault();
 								var parentNode = getParentNodeEx(gDocInfo);
 								parentNode.shareId = gShareId;
@@ -4816,14 +4834,14 @@ function contextMenuInit()
 						]
 					},
 					{divider: true},
-					{text: '备注', subMenu: [
-   							{text: '查看历史', action: function(e){
+					{text: _Lang('备注'), subMenu: [
+   							{text: _Lang('查看历史'), action: function(e){
    									e.preventDefault();
    									var parentNode = getParentNodeEx(gDocInfo);
    				        			showDocHistory(parentNode, 1);
    			        			}
    							},						
-   							{text: '下载备注', action: function(e){
+   							{text: _Lang('下载备注'), action: function(e){
 									e.preventDefault();
 									var parentNode = getParentNodeEx(gDocInfo);
 									var treeNodes = [];
@@ -4834,40 +4852,40 @@ function contextMenuInit()
    					  	]
    	   				},   	
    	   				{divider: true},
-					{text: '推送',  action: function(e){
+					{text: _Lang('推送'),  action: function(e){
 							e.preventDefault();
 							var parentNode = getParentNodeEx(gDocInfo);
 							showDocPushPanel(parentNode, 1);
 						}
 					},
-					{text: '拉取',  action: function(e){
+					{text: _Lang('拉取'),  action: function(e){
 							e.preventDefault();
 							var parentNode = getParentNodeEx(gDocInfo);
 							showDocPullPanel(parentNode, 1);
 						}
 					},			
 					{divider: true},
-					{text: '锁定', action: function(e){
+					{text: _Lang('锁定'), action: function(e){
 							e.preventDefault();
 							var parentNode = getParentNodeEx(gDocInfo);
 							lockDoc(parentNode, 1);
 						}
 					},
-					{text: '解锁', action: function(e){
+					{text: _Lang('解锁'), action: function(e){
 							e.preventDefault();
 							var parentNode = getParentNodeEx(gDocInfo);
 							unlockDoc(parentNode, 1);
 						}
 					},
 					{divider: true},
-					{text: '设置密码', action: function(e){
+					{text: _Lang('设置密码'), action: function(e){
 							e.preventDefault();
 							var parentNode = getParentNodeEx(gDocInfo);
 			        		showDocPwdSetPanel(parentNode);
 						}
 					},
 					{divider: true},
-					{text: '刷新', action: function(e){
+					{text: _Lang('刷新'), action: function(e){
 								e.preventDefault();
 								var parentNode = getParentNodeEx(gDocInfo);
 								refreshDoc(parentNode, 0);
@@ -4880,8 +4898,8 @@ function contextMenuInit()
 	//secondList上的右键菜单
 	if(gIsPC == false)
 	{
-		context.attach('#secondList', [
-			{text: '下载', action: function(e){
+		context.attach('#secondList'), [
+			{text: _Lang('下载'), action: function(e){
 					e.preventDefault();
 					var treeNodes = [];
 					treeNodes.push(curRightClickedDocListNode);
@@ -4889,12 +4907,12 @@ function contextMenuInit()
 				}
 			},
 			{divider: true},
-			{text: '分享', action: function(e){
+			{text: _Lang('分享'), action: function(e){
 						e.preventDefault();
 						shareDoc(curRightClickedDocListNode);
 					}
 			},
-			{text: '重命名', action: function(e){
+			{text: _Lang('重命名'), action: function(e){
 						e.preventDefault();
 						if(curRightClickedDocListNode !== null)
 						{
@@ -4904,7 +4922,7 @@ function contextMenuInit()
 					}
 			},
 			{divider: true},
-			{text: '复制', action: function(e){
+			{text: _Lang('复制'), action: function(e){
 						e.preventDefault();
 						gCopiedNodes = [];
 						gIsCopy = true;
@@ -4915,7 +4933,7 @@ function contextMenuInit()
 						console.log("gCopiedNodes",gCopiedNodes);
 					}
 			},
-			{text: '剪切', action: function(e){
+			{text: _Lang('剪切'), action: function(e){
 					e.preventDefault();
 					gCopiedNodes = [];
 					gIsCopy = false;
@@ -4927,14 +4945,14 @@ function contextMenuInit()
 				}
 			},
 			{divider: true},
-			{text: '粘贴', action: function(e){
+			{text: _Lang('粘贴'), action: function(e){
 						e.preventDefault();
 						var parentNode = getParentNodeEx(gDocInfo);
 						DoPaste(gCopiedNodes, parentNode, gIsCopy);
 					}
 			},							
 			{divider: true},
-			{text: '删除', action: function(e){
+			{text: _Lang('删除'), action: function(e){
 						e.preventDefault();
 						console.log(e);
 						var deleteNodes = [];
@@ -4943,19 +4961,19 @@ function contextMenuInit()
 					}
 			},
 			{divider: true},
-			{text: '查看历史', action: function(e){
+			{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 					showDocHistory(curRightClickedDocListNode,0);
 				}
 			},	
 			{divider: true},
-			{text: '远程存储', subMenu: [
-				{text: '推送',  action: function(e){
+			{text: _Lang('远程存储'), subMenu: [
+				{text: _Lang('推送'),  action: function(e){
 						e.preventDefault();
 						showRemoteStoragePushPanel(curRightClickedDocListNode);
 					}
 				},
-				{text: '拉取',  action: function(e){
+				{text: _Lang('拉取'),  action: function(e){
 						e.preventDefault();
 						showRemoteStoragePullPanel(curRightClickedDocListNode);
 					}
@@ -4963,13 +4981,13 @@ function contextMenuInit()
 				]
 			},			
 			{divider: true},
-			{text: '更多...', subMenu: [
-				{text: '预览', action: function(e){
+			{text: _Lang('更多') + '...', subMenu: [
+				{text: _Lang('预览'), action: function(e){
 						e.preventDefault();
 						openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
 					}
 				},
-				{text: '打开', action: function(e){
+				{text: _Lang('打开'), action: function(e){
 						e.preventDefault();
 						if(curRightClickedDocListNode != null && curRightClickedDocListNode.type == 2)
 						{
@@ -4981,30 +4999,30 @@ function contextMenuInit()
 						}
 					}
 				},
-				{text: '复制', subMenu: [
-		           	{text: '名字', action: function(e){
+				{text: _Lang('复制'), subMenu: [
+		           	{text: _Lang('名字'), action: function(e){
 							e.preventDefault();
 		        			copyDocName(curRightClickedDocListNode);
 						}
 					},
-					{text: '路径', action: function(e){
+					{text: _Lang('路径'), action: function(e){
 								e.preventDefault();
 			        			copyDocPath(curRightClickedDocListNode);
 							}
 					},
-					{text: '链接', action: function(e){
+					{text: _Lang('链接'), action: function(e){
 								e.preventDefault();
 			        			copyUrl(curRightClickedDocListNode);
 							}
 					},
-					{text: '本地路径', action: function(e){
+					{text: _Lang('本地路径'), action: function(e){
 							e.preventDefault();
 							var localPath = getDocLocalPath(gReposInfo, curRightClickedDocListNode);
 							console.log("本地路径 localPath:" + localPath);
 							copyString(localPath);
 						}
 					},
-					{text: '下载链接', action: function(e){
+					{text: _Lang('下载链接'), action: function(e){
 							e.preventDefault();
 							curRightClickedDocListNode.shareId = gShareId;
 					  		getDocFileLink(curRightClickedDocListNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
@@ -5013,13 +5031,13 @@ function contextMenuInit()
 					]
 				},
 				{divider: true},					
-				{text: '备注', subMenu: [
-						{text: '查看历史', action: function(e){
+				{text: _Lang('备注'), subMenu: [
+						{text: _Lang('查看历史'), action: function(e){
 								e.preventDefault();
 							    showDocHistory(curRightClickedDocListNode,1);
 							}
 						},						
-						{text: '下载备注', action: function(e){
+						{text: _Lang('下载备注'), action: function(e){
 								e.preventDefault();
 								var treeNodes = [];
 								treeNodes.push(curRightClickedDocListNode);
@@ -5029,18 +5047,18 @@ function contextMenuInit()
 	   				]
 	   			},
 	   			{divider: true},
-				{text: '推送',  action: function(e){
+				{text: _Lang('推送'),  action: function(e){
 						e.preventDefault();
 						showDocPushPanel(curRightClickedDocListNode, 1);
 					}
 				},
-				{text: '拉取',  action: function(e){
+				{text: _Lang('拉取'),  action: function(e){
 						e.preventDefault();
 						showDocPullPanel(curRightClickedDocListNode, 1);
 					}
 				},	
 				{divider: true},
-				{text: '设置密码', action: function(e){
+				{text: _Lang('设置密码'), action: function(e){
 						e.preventDefault();
 		        		showDocPwdSetPanel(curRightClickedDocListNode);
 					}
@@ -5048,7 +5066,7 @@ function contextMenuInit()
 				]
 			},		
 			{divider: true},
-			{text: '属性', action: function(e){
+			{text: _Lang('属性'), action: function(e){
 					e.preventDefault();
 					showDocDetail(curRightClickedDocListNode);
 				}
@@ -5058,14 +5076,14 @@ function contextMenuInit()
 	else
 	{
 		context.attach('#secondList', [
-			{text: '新建', subMenu: [
-				{text: '文件',  action: function(e){
+			{text: _Lang('新建'), subMenu: [
+				{text: _Lang('文件'),  action: function(e){
 						e.preventDefault();
 						var parentNode = getParentNodeEx(gDocInfo);
 	        			newDoc(1,parentNode);
 					}
 				},
-				{text: '文件夹',  action: function(e){
+				{text: _Lang('文件夹'),  action: function(e){
 						e.preventDefault();
 						var parentNode = getParentNodeEx(gDocInfo);
 	        			newDoc(2,parentNode);
@@ -5073,15 +5091,15 @@ function contextMenuInit()
 				},
 				]
 			},
-			{text: '上传', subMenu: [
-				{text: '文件',  action: function(e){
+			{text: _Lang('上传'), subMenu: [
+				{text: _Lang('文件'),  action: function(e){
 						e.preventDefault();
 						var node = getNodeByNodeId(gDocInfo.docId);
 						gParentNodeForUpload = getParentNodeByNode(node);
 	        			uploadFiles();
 					}
 				},
-				{text: '文件夹',  action: function(e){
+				{text: _Lang('文件夹'),  action: function(e){
 						e.preventDefault();
 						var node = getNodeByNodeId(gDocInfo.docId);
 						gParentNodeForUpload = getParentNodeByNode(node);
@@ -5091,7 +5109,7 @@ function contextMenuInit()
 				]
 			},
 			{divider: true},
-			{text: '下载', action: function(e){
+			{text: _Lang('下载'), action: function(e){
 					e.preventDefault();
 					var treeNodes = [];
 					treeNodes.push(curRightClickedDocListNode);
@@ -5099,13 +5117,13 @@ function contextMenuInit()
 				}
 			},
 			{divider: true},
-			{text: '分享', action: function(e){
+			{text: _Lang('分享'), action: function(e){
 						e.preventDefault();
 						shareDoc(curRightClickedDocListNode);
 					}
 			},
 			{divider: true},
-			{text: '复制', action: function(e){
+			{text: _Lang('复制'), action: function(e){
 						e.preventDefault();
 						gCopiedNodes = [];
 						gIsCopy = true;
@@ -5116,7 +5134,7 @@ function contextMenuInit()
 						console.log("gCopiedNodes",gCopiedNodes);
 					}
 			},
-			{text: '剪切', action: function(e){
+			{text: _Lang('剪切'), action: function(e){
 					e.preventDefault();
 					gCopiedNodes = [];
 					gIsCopy = false;
@@ -5128,14 +5146,14 @@ function contextMenuInit()
 				}
 			},
 			{divider: true},
-			{text: '粘贴', action: function(e){
+			{text: _Lang('粘贴'), action: function(e){
 						e.preventDefault();
 						var parentNode = getParentNodeEx(gDocInfo);
 						DoPaste(gCopiedNodes, parentNode, gIsCopy);
 					}
 			},
 			{divider: true},
-			{text: '删除', action: function(e){
+			{text: _Lang('删除'), action: function(e){
 						e.preventDefault();
 						console.log(e);
 						var deleteNodes = [];
@@ -5143,7 +5161,7 @@ function contextMenuInit()
 						DoDelete(deleteNodes);
 					}
 			},
-			{text: '重命名', action: function(e){
+			{text: _Lang('重命名'), action: function(e){
 						e.preventDefault();
 						if(curRightClickedDocListNode !== null)
 						{
@@ -5153,19 +5171,19 @@ function contextMenuInit()
 					}
 			},
 			{divider: true},
-			{text: '查看历史', action: function(e){
+			{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 					showDocHistory(curRightClickedDocListNode,0);
 				}
 			},
 			{divider: true},
-			{text: '远程存储', subMenu: [
-					{text: '推送',  action: function(e){
+			{text: _Lang('远程存储'), subMenu: [
+					{text: _Lang('推送'),  action: function(e){
 							e.preventDefault();
 							showRemoteStoragePushPanel(curRightClickedDocListNode);
 						}
 					},
-					{text: '拉取',  action: function(e){
+					{text: _Lang('拉取'),  action: function(e){
 							e.preventDefault();
 							showRemoteStoragePullPanel(curRightClickedDocListNode);
 						}
@@ -5173,8 +5191,8 @@ function contextMenuInit()
 				]
 			},
 			{divider: true},
-			{text: '更多...', subMenu: [
-						{text: '在新窗口打开', action: function(e){
+			{text: _Lang('更多') + '...', subMenu: [
+						{text: _Lang('在新窗口打开'), action: function(e){
 								e.preventDefault();
 								if(curRightClickedDocListNode != null && curRightClickedDocListNode.type == 2)
 								{
@@ -5186,36 +5204,36 @@ function contextMenuInit()
 								}
 							}
 						},
-						{text: '预览', action: function(e){
+						{text: _Lang('预览'), action: function(e){
 								e.preventDefault();
 								openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
 							}
 						},
 						{divider: true},
-						{text: '复制', subMenu: [
-				           	{text: '名字', action: function(e){
+						{text: _Lang('复制'), subMenu: [
+				           	{text: _Lang('名字'), action: function(e){
 										e.preventDefault();
 					        			copyDocName(curRightClickedDocListNode);
 									}
 							},
-							{text: '路径', action: function(e){
+							{text: _Lang('路径'), action: function(e){
 										e.preventDefault();
 					        			copyDocPath(curRightClickedDocListNode);
 									}
 							},
-							{text: '链接', action: function(e){
+							{text: _Lang('链接'), action: function(e){
 										e.preventDefault();
 					        			copyUrl(curRightClickedDocListNode);
 									}
 							},
-							{text: '本地路径', action: function(e){
+							{text: _Lang('本地路径'), action: function(e){
 									e.preventDefault();
 									var localPath = getDocLocalPath(gReposInfo, curRightClickedDocListNode);
 									console.log("本地路径 localPath:" + localPath);
 									copyString(localPath);
 								}
 							},
-							{text: '下载链接', action: function(e){
+							{text: _Lang('下载链接'), action: function(e){
 									e.preventDefault();
 									curRightClickedDocListNode.shareId = gShareId;
 							  		getDocFileLink(curRightClickedDocListNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
@@ -5224,13 +5242,13 @@ function contextMenuInit()
 							]
 						},
 						{divider: true},
-						{text: '备注', subMenu: [
-									{text: '查看历史', action: function(e){
+						{text: _Lang('备注'), subMenu: [
+									{text: _Lang('查看历史'), action: function(e){
 											e.preventDefault();
 										    showDocHistory(curRightClickedDocListNode,1);
 										}						
 									},							
-									{text: '下载备注', action: function(e){
+									{text: _Lang('下载备注'), action: function(e){
 											e.preventDefault();
 											var treeNodes = [];
 											treeNodes.push(curRightClickedDocListNode);
@@ -5240,35 +5258,35 @@ function contextMenuInit()
 			   				]
 			   			},
 						{divider: true},
-						{text: '推送',  action: function(e){
+						{text: _Lang('推送'),  action: function(e){
 								e.preventDefault();
 								showDocPushPanel(curRightClickedDocListNode, 1);
 							}
 						},
-						{text: '拉取',  action: function(e){
+						{text: _Lang('拉取'),  action: function(e){
 								e.preventDefault();
 								showDocPullPanel(curRightClickedDocListNode, 1);
 							}
 						},
 						{divider: true},
-						{text: '锁定', action: function(e){
+						{text: _Lang('锁定'), action: function(e){
 								e.preventDefault();
 								lockDoc(curRightClickedDocListNode, 1);
 							}
 						},
-						{text: '解锁', action: function(e){
+						{text: _Lang('解锁'), action: function(e){
 								e.preventDefault();
 								unlockDoc(curRightClickedDocListNode, 1);
 							}
 						},
 						{divider: true},
-						{text: '设置密码', action: function(e){
+						{text: _Lang('设置密码'), action: function(e){
 								e.preventDefault();
 				        		showDocPwdSetPanel(curRightClickedDocListNode);
 							}
 						},
 						{divider: true},
-						{text: '刷新', action: function(e){
+						{text: _Lang('刷新'), action: function(e){
 									e.preventDefault();
 									if(curRightClickedDocListNode !== null)
 									{
@@ -5280,7 +5298,7 @@ function contextMenuInit()
    				]
    			},   			
 			{divider: true},
-			{text: '属性', action: function(e){
+			{text: _Lang('属性'), action: function(e){
 					e.preventDefault();
 					showDocDetail(curRightClickedDocListNode);
 				}
@@ -5292,7 +5310,7 @@ function contextMenuInit()
 	if(gIsPC == true)
 	{
 		context.attach('#docPreview', [
-			{text: '下载', action: function(e){
+			{text: _Lang('下载'), action: function(e){
 					e.preventDefault();
 					var treeNodes = [];
 					treeNodes.push(gDocInfo);
@@ -5300,13 +5318,13 @@ function contextMenuInit()
 				}
 			},
 			{divider: true},
-			{text: '分享', action: function(e){
+			{text: _Lang('分享'), action: function(e){
 						e.preventDefault();
 						shareDoc(gDocInfo);
 					}
 			},
 			{divider: true},
-			{text: '删除', action: function(e){
+			{text: _Lang('删除'), action: function(e){
 						e.preventDefault();
 						console.log(e);
 						var deleteNodes = [];
@@ -5315,19 +5333,19 @@ function contextMenuInit()
 					}
 			},
 			{divider: true},
-			{text: '查看历史', action: function(e){
+			{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 					showDocHistory(gDocInfo,0);
 				}
 			},
 			{divider: true},
-			{text: '远程存储', subMenu: [
-				{text: '推送',  action: function(e){
+			{text: _Lang('远程存储'), subMenu: [
+				{text: _Lang('推送'),  action: function(e){
 						e.preventDefault();
 						showRemoteStoragePushPanel(gDocInfo);
 					}
 				},
-				{text: '拉取',  action: function(e){
+				{text: _Lang('拉取'),  action: function(e){
 						e.preventDefault();
 						showRemoteStoragePullPanel(gDocInfo);
 					}
@@ -5335,8 +5353,8 @@ function contextMenuInit()
 				]
 			},
 			{divider: true},
-			{text: '更多...', subMenu: [
-				{text: '在新窗口打开', action: function(e){
+			{text: _Lang('更多') + '...', subMenu: [
+				{text: _Lang('在新窗口打开'), action: function(e){
 						e.preventDefault();
 						if(gDocInfo != null && gDocInfo.type == 2)
 						{
@@ -5348,36 +5366,36 @@ function contextMenuInit()
 						}
 					}
 				},
-				{text: '预览', action: function(e){
+				{text: _Lang('预览'), action: function(e){
 						e.preventDefault();
 						openDoc(gDocInfo, true, "openInArtDialog", "pdf", gShareId);
 					}
 				},
 				{divider: true},
-				{text: '复制', subMenu: [
-		           	{text: '名字', action: function(e){
+				{text: _Lang('复制'), subMenu: [
+		           	{text: _Lang('名字'), action: function(e){
 								e.preventDefault();
 			        			copyDocName(gDocInfo);
 							}
 					},
-					{text: '路径', action: function(e){
+					{text: _Lang('路径'), action: function(e){
 								e.preventDefault();
 			        			copyDocPath(gDocInfo);
 							}
 					},
-					{text: '链接', action: function(e){
+					{text: _Lang('链接'), action: function(e){
 								e.preventDefault();
 			        			copyUrl(gDocInfo);
 							}
 					},
-					{text: '本地路径', action: function(e){
+					{text: _Lang('本地路径'), action: function(e){
 							e.preventDefault();
 							var localPath = getDocLocalPath(gReposInfo, gDocInfo);
 							console.log("本地路径 localPath:" + localPath);
 							copyString(localPath);
 						}
 					},
-					{text: '下载链接', action: function(e){
+					{text: _Lang('下载链接'), action: function(e){
 							e.preventDefault();
 							gDocInfo.shareId = gShareId;
 					  		getDocFileLink(gDocInfo, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
@@ -5386,13 +5404,13 @@ function contextMenuInit()
 					]
 				},
 				{divider: true},
-				{text: '备注', subMenu: [
-						{text: '查看历史', action: function(e){
+				{text: _Lang('备注'), subMenu: [
+						{text: _Lang('查看历史'), action: function(e){
 								e.preventDefault();
 							    showDocHistory(gDocInfo,1);
 							}
 						},	
-						{text: '下载备注', action: function(e){
+						{text: _Lang('下载备注'), action: function(e){
 								e.preventDefault();
 								var treeNodes = [];
 								treeNodes.push(gDocInfo);
@@ -5402,18 +5420,18 @@ function contextMenuInit()
 	   				]
 	   			},
 	   			{divider: true},
-				{text: '推送',  action: function(e){
+				{text: _Lang('推送'),  action: function(e){
 						e.preventDefault();
 						showDocPushPanel(gRootDoc, 1);
 					}
 				},
-				{text: '拉取',  action: function(e){
+				{text: _Lang('拉取'),  action: function(e){
 						e.preventDefault();
 						showDocPullPanel(gRootDoc, 1);
 					}
 				},
 				{divider: true},
-				{text: '设置密码', action: function(e){
+				{text: _Lang('设置密码'), action: function(e){
 						e.preventDefault();
 		        		showDocPwdSetPanel(gDocInfo);
 					}
@@ -5421,7 +5439,7 @@ function contextMenuInit()
 				]
 			},
 			{divider: true},
-			{text: '属性', action: function(e){
+			{text: _Lang('属性'), action: function(e){
 					e.preventDefault();
 					showDocDetail(gDocInfo);
 				}
@@ -5489,7 +5507,7 @@ function executeDoc(node)
          	if( "ok" == ret.status){
          		// 普通消息提示条
 				bootstrapQ.msg({
-							msg : "执行完成！",
+							msg : _Lang("执行完成"),
 							type : 'success',
 							time : 2000,
 				});
@@ -5500,7 +5518,7 @@ function executeDoc(node)
             		id: "idAlertDialog",	
             		title: _Lang("提示"),
             		okbtn: _Lang("确定"),
-            		msg: _Lang("执行失败:" + ret.msgInfo),
+            		msg: _Lang("执行失败", ":", ret.msgInfo),
             	});
             }
         },
@@ -5509,7 +5527,7 @@ function executeDoc(node)
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("执行失败:服务器异常！"),
+        		msg: _Lang("执行失败", ":", "服务器异常"),
         	});
         }
     });
@@ -5579,7 +5597,7 @@ function shareDoc(node){
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang('服务器异常: 创建文件分享失败'),
+        		msg: _Lang("创建文件分享失败", " : " , "服务器异常"),
         	});
         }
     });
@@ -5593,7 +5611,7 @@ function showDocPushPanel(node, type)
 	bootstrapQ.dialog({
 		id: 'pushDoc',
 		url: 'pushDoc' + langExt + '.html',
-		title: '文件推送',
+		title: _Lang('文件推送'),
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
@@ -5609,7 +5627,7 @@ function showDocPullPanel(node, type)
 	bootstrapQ.dialog({
 		id: 'pullDoc',
 		url: 'pullDoc' + langExt + '.html',
-		title: '文件拉取',
+		title: _Lang('文件拉取'),
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
@@ -5628,7 +5646,7 @@ function showRemoteStoragePushPanel(node)
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("该仓库未设置远程存储！"),
+    		msg: _Lang("该仓库未设置远程存储") + "!",
     	});
 		return;
 	}
@@ -5655,7 +5673,7 @@ function showRemoteStoragePullPanel(node)
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("该仓库未设置远程存储！"),
+    		msg: _Lang("该仓库未设置远程存储" + "!"),
     	});
 		return;
 	}
@@ -5663,7 +5681,7 @@ function showRemoteStoragePullPanel(node)
 	bootstrapQ.dialog({
 		id: 'remoteStoragePull',
 		url: 'remoteStoragePull' + langExt + '.html',
-		title: '文件拉取',
+		title: _Lang('文件拉取'),
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
@@ -5776,7 +5794,7 @@ function showDocSharePanel(docShare, docName, url)
 	bootstrapQ.dialog({
 		id: 'docShare',
 		url: 'docShare' + langExt + '.html',
-		title: '文件分享:' + docName,
+		title: _Lang('文件分享') + " [" + docName + "]",
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,
