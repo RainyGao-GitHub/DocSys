@@ -18,7 +18,6 @@ function lang(str)
 {
 	var translateMap = 
 	{
-		//TODO: 后台的接口发送的邮件和短信是中文，可以考虑后台增加语言参数
 		//通用
 		"提示" : "Message",
 		"确认操作" : "Confirm",
@@ -35,6 +34,7 @@ function lang(str)
 		"页面正在加载，请稍侯" : "Loading",
 		"文件" : "File",
 		"文件夹" : "Folder",		
+		
 		//注册
 		"注册失败"	: "Sign Up Failed",			
 		"获取验证码" : "Send",
@@ -57,15 +57,19 @@ function lang(str)
 		"验证码错误！" : "Incorrect verification code!",
 		"密码不能为空！" : "Password is empty!",
 		"两次密码不一致，请重试！" : "Re-enter password error!",
+		
 		//登录
 		"登录失败"	: "Sign In Failed",
     	"获取用户信息失败" : "Failed to get user information",
     	"用户名或密码错误！" : "Incorrect account or password!",
-		//退出登录
+		
+    	//退出登录
 		"退出登录失败" : "Sign Out Failed",
+		
 		//添加系统管理员
 		"添加系统管理员失败" : "Failed to add System Aministrator",
-		//系统
+
+		//系统配置
 		"系统初始化失败" : "System Init Failed",
 		"重启服务" : "Restart Server",
 		"未指定服务器路径！" : "Server not configured",
@@ -100,7 +104,7 @@ function lang(str)
 		"普通用户无权修改仓库存储位置，请联系管理员！" : "You can not change the storage folder, please contact System Administrator",
 		"版本仓库初始化失败！" : "Failed to init history storage repository",
 		
-		//文件操作
+		//文件操作与右键菜单选项
 		"刷新" : "Refresh",
 		"分享" : "Share",
 		"打开" : "Open",
