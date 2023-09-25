@@ -8,8 +8,8 @@ var gDialogData = {};
 
 function showReposManagerPage(){
 	//open reposManager in current page
-	//window.open("/DocSystem/web/reposManager.html?vid=" + gReposInfo.id);
-	window.location.href = "/DocSystem/web/reposManager.html?vid=" + gReposInfo.id;
+	//window.open("/DocSystem/web/reposManager" + langExt + ".html?vid=" + gReposInfo.id);
+	window.location.href = "/DocSystem/web/reposManager" + langExt + ".html?vid=" + gReposInfo.id;
 }
 
 //DocShare Info
@@ -335,7 +335,7 @@ function copyUrl(node){
 	var docId = node.docId;
    	var path = base64_encode(node.path);
    	var name = base64_encode(node.name);
-   	var href = "/DocSystem/web/project.html?vid="+gReposInfo.id+"&doc="+docId+"&path="+path+"&name="+name;
+   	var href = "/DocSystem/web/project" + langExt + ".html?vid="+gReposInfo.id+"&doc="+docId+"&path="+path+"&name="+name;
 	if(gShareId)
 	{
 		href += "&shareId"+gShareId;
@@ -2499,7 +2499,7 @@ function SysInit()
                 	console.log(ret.msgInfo);
                 	//showErrorMessage("获取用户信息失败:" + ret.msgInfo);
                 	//Jump to index.html
-                    //window.location.href = "index.html";
+                    //window.location.href = "index" + langExt + ".html";
 
                 	//Show Login Dialog
                     //showLoginPanel();
@@ -3284,7 +3284,7 @@ function backToParentDoc()
 		{
 			console.log("backToParentDoc() back to projects");
 			//back to projects
-			var href = "/DocSystem/web/projects.html";
+			var href = "/DocSystem/web/projects" + langExt + ".html";
 			window.location.href = href;
 		}
 		return;

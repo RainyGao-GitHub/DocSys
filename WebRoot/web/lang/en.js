@@ -121,8 +121,6 @@ function lang(str)
 		"磁盘空间" : "Disk Space",
 		"系统错误" : "System Error",
 		
-		
-		
 		//文件操作与右键菜单选项
 		"刷新" : "Refresh",
 		"分享" : "Share",
