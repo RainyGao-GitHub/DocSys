@@ -117,6 +117,11 @@ function lang(str)
 		"隐藏高级选项" : "Hide Advanced Options",
 		"测试成功" : "Test Success",
 		"测试失败" : "Test Failed",
+		"项目名" : "Repository Name",
+		"磁盘空间" : "Disk Space",
+		"系统错误" : "System Error",
+		
+		
 		
 		//文件操作与右键菜单选项
 		"刷新" : "Refresh",
