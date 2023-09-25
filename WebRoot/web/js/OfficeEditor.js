@@ -113,12 +113,15 @@ var OfficeEditor = (function () {
 		}
 		var downloadEn = data.downloadEn == 1? true:false;
 		console.log("editEn:" + editEn + " downloadEn:" + downloadEn);
+		
+		var userName = data.realName;
+		if(userName == undefined || userName == "")
+		{
+			userName = data.userName;
+		}
 		var user = {
             "id": data.userId + "",
-            "name": data.realName,
-            //"name": data.userName,
-            //"realName": data.realName,
-            //"nickName": data.nickName,
+            "name": userName,
         };
 		
         var innerAlert = function (message) {
