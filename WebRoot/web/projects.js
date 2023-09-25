@@ -240,9 +240,9 @@ function showAddReposPanel()
 	console.log("showAddReposPanel()");
 	bootstrapQ.dialog({
 			id: 'addRepos',
-			url: 'addRepos.html',
-			title: 'Add Repository',
-			msg: 'Loading...',
+			url: 'addRepos' + langExt + '.html',
+			title: _Lang('新建仓库'),
+			msg:  _Lang('页面正在加载，请稍侯') + '...',
 			foot: false,
 			big: false,
 			//okbtn: "确定",

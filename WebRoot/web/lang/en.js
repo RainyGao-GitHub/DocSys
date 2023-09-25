@@ -96,6 +96,7 @@ function lang(str)
 		"上传异常" : "Upload exception",
 
 		//仓库访问
+		"新建仓库" : "New Repository",
 		"用户未登录，请先登录！" : "Please login system firstly!",
 		"您无权修改该仓库!" : "You have no right to modify this repository!",
 		"仓库信息更新失败！" : "Failed to update the repository configuration",
