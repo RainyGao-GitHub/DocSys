@@ -115,7 +115,10 @@ var OfficeEditor = (function () {
 		console.log("editEn:" + editEn + " downloadEn:" + downloadEn);
 		var user = {
             "id": data.userId + "",
-            "name": data.userName,
+            "name": data.realName,
+            //"name": data.userName,
+            //"realName": data.realName,
+            //"nickName": data.nickName,
         };
 		
         var innerAlert = function (message) {
