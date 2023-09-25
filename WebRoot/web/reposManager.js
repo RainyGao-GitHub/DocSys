@@ -146,7 +146,7 @@ function getReposInfo(callback){
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang("获取仓库信息失败:" + ret.msgInfo),
+	        		msg: _Lang("获取仓库信息失败", " : ", ret.msgInfo),
 	        	});
             }
         },
@@ -160,7 +160,7 @@ function getReposInfo(callback){
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("获取仓库信息失败:服务器异常"),
+        		msg: _Lang("获取仓库信息失败", " : ", "服务器异常"),
         	});
         }
     });
@@ -219,7 +219,7 @@ function updateMenu(callback) {
  	        		id: "idAlertDialog",	
  	        		title: _Lang("提示"),
  	        		okbtn: _Lang("确定"),
- 	        		msg: _Lang("更新目录失败:" + ret.msgInfo),
+ 	        		msg: _Lang("更新目录失败", " : ", ret.msgInfo),
              	}); 
              }
          },
@@ -229,7 +229,7 @@ function updateMenu(callback) {
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("服务器异常：" + ret.msgInfo),
+	        	msg: _Lang("更新目录失败", " : ", "服务器异常"),
          	});
          }
      });
@@ -274,7 +274,7 @@ function getMenu(callback) {
 		        		id: "idAlertDialog",	
 		        		title: _Lang("提示"),
 		        		okbtn: _Lang("确定"),
-		        		msg: _Lang("Error:获取仓库目录失败" + ret.MsgInfo),
+		        		msg: _Lang("获取仓库目录失败", " : ", ret.MsgInfo),
 	            	});
 	           	}
 	        },
@@ -283,7 +283,7 @@ function getMenu(callback) {
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang("服务器异常:获取仓库目录异常"),
+	        		msg: _Lang("获取仓库目录失败", " : ", "服务器异常"),
 	        	});
 	        }
 	    });
@@ -316,7 +316,7 @@ function backupReposEncryptConfig(reposId)
             success : function (ret) {
                 if( "ok" == ret.status ){
                     bootstrapQ.msg({
-							msg : '密钥备份成功！',
+							msg : _Lang('密钥备份成功'),
 							type : 'success',
 							time : 2000,
 					});
@@ -326,7 +326,7 @@ function backupReposEncryptConfig(reposId)
                 else
                 {
                     bootstrapQ.msg({
-							msg : '密钥备份失败:' + ret.msgInfo,
+							msg : _Lang('密钥备份失败', ' : ', ret.msgInfo),
 							type : 'warning',
 							time : 2000,
 					});
@@ -334,7 +334,7 @@ function backupReposEncryptConfig(reposId)
             },
             error : function () {
                 bootstrapQ.msg({
-						msg : '密钥备份失败:服务器异常',
+						msg : _Lang('密钥备份失败', ' : ', '服务器异常'),
 						type : 'warning',
 						time : 2000,
 				});
@@ -687,7 +687,7 @@ function zTreeContextMenuInit()
 	
 	//zTree上的右键管理菜单
 	context.attach('#tree', [
-		{text: '仓库设置', action: function(e){
+		{text: _Lang('仓库设置'), action: function(e){
 				e.preventDefault();
 				var treeObj = $.fn.zTree.getZTreeObj("doctree");
 				if(curRightClickedTreeNode !== null)
@@ -698,101 +698,101 @@ function zTreeContextMenuInit()
 			}
 		},
 		{divider: true},
-		{text: '版本管理', subMenu: [
-			{text: '关闭版本管理',  action: function(e){
+		{text: _Lang('版本管理'), subMenu: [
+			{text: _Lang('关闭版本管理'),  action: function(e){
 					e.preventDefault();
 					addDocToVersionIgnoreListConfirm(curRightClickedTreeNode);
 				}
 			},
-			{text: '开启版本管理',  action: function(e){
+			{text: _Lang('开启版本管理'),  action: function(e){
 					e.preventDefault();
 					removeDocFromVersionIgnoreListConfirm(curRightClickedTreeNode);
 				}
 			},
-			{text: '忽略列表管理',  action: function(e){
+			{text: _Lang('忽略列表管理'),  action: function(e){
 					e.preventDefault();
 					showReposVersionIgnoreListManagePanel();
 				}
 			},
 			]
 		},
-		{text: '远程存储', subMenu: [
-			{text: '关闭远程存储',  action: function(e){
+		{text: _Lang('远程存储'), subMenu: [
+			{text: _Lang('关闭远程存储'),  action: function(e){
 					e.preventDefault();
 					addDocToRemoteStorageIgnoreListConfirm(curRightClickedTreeNode);
 				}
 			},
-			{text: '开启远程存储',  action: function(e){
+			{text: _Lang('开启远程存储'),  action: function(e){
 					e.preventDefault();
 					removeDocFromRemoteStorageIgnoreListConfirm(curRightClickedTreeNode);
 				}
 			},
-			{text: '忽略列表管理',  action: function(e){
+			{text: _Lang('忽略列表管理'),  action: function(e){
 					e.preventDefault();
 					showReposRemoteStorageIgnoreListManagePanel();
 				}
 			},
 			]
 		},
-		{text: '全文搜索', subMenu: [
-			{text: '关闭全文搜索',  action: function(e){
+		{text: _Lang('全文搜索'), subMenu: [
+			{text: _Lang('关闭全文搜索'),  action: function(e){
 					e.preventDefault();
 					addDocToTextSearchIgnoreListConfirm(curRightClickedTreeNode);
 				}
 			},
-			{text: '开启全文搜索',  action: function(e){
+			{text: _Lang('开启全文搜索'),  action: function(e){
 					e.preventDefault();
 					removeDocFromTextSearchIgnoreListConfirm(curRightClickedTreeNode);
 				}
 			},
-			{text: '忽略列表管理',  action: function(e){
+			{text: _Lang('忽略列表管理'),  action: function(e){
 					e.preventDefault();
 					showReposTextSearchIgnoreListManagePanel();
 				}
 			},
 			]
 		},			
-		{text: '自动备份', subMenu: [
-			{text: '本地备份', subMenu: [
-					{text: '关闭本地备份',  action: function(e){
+		{text: _Lang('自动备份'), subMenu: [
+			{text: _Lang('本地备份'), subMenu: [
+					{text: _Lang('关闭本地备份'),  action: function(e){
 							e.preventDefault();
 							addDocToLocalBackupIgnoreListConfirm(curRightClickedTreeNode);
 						}
 					},
-					{text: '开启本地备份',  action: function(e){
+					{text: _Lang('开启本地备份'),  action: function(e){
 							e.preventDefault();
 							removeDocFromLocalBackupIgnoreListConfirm(curRightClickedTreeNode);
 						}
 					},
-					{text: '忽略列表管理',  action: function(e){
+					{text: _Lang('忽略列表管理'),  action: function(e){
 							e.preventDefault();
 							showReposLocalBackupIgnoreListManagePanel();
 						}
 					},
-					{text: '立即本地备份',  action: function(e){
+					{text: _Lang('立即本地备份'),  action: function(e){
 							e.preventDefault();
 							reposAutoBackupConfirm(1, 1); 
 						}		
 					},			
 				]
 			},
-			{text: '异地备份', subMenu: [
-					{text: '关闭异地备份',  action: function(e){
+			{text: _Lang('异地备份'), subMenu: [
+					{text: _Lang('关闭异地备份'),  action: function(e){
 							e.preventDefault();
 							addDocToRemoteBackupIgnoreListConfirm(curRightClickedTreeNode);
 						}
 					},
-					{text: '开启异地备份',  action: function(e){
+					{text: _Lang('开启异地备份'),  action: function(e){
 							e.preventDefault();
 							removeDocFromRemoteBackupIgnoreListConfirm(curRightClickedTreeNode);
 						}
 					},
-					{text: '忽略列表管理',  action: function(e){
+					{text: _Lang('忽略列表管理'),  action: function(e){
 							e.preventDefault();
 							showReposRemoteBackupIgnoreListManagePanel();
 						}
 					},
-					{text: '立即异地备份',  action: function(e){
+					{text: _Lang('立即异地备份'),  action: function(e){
 							e.preventDefault();
 							reposAutoBackupConfirm(2, 1); 
 						}	
@@ -802,39 +802,39 @@ function zTreeContextMenuInit()
 			]
 		},
 		{divider: true},
-		{text: '删除仓库', action: function(e){
+		{text: _Lang('删除仓库'), action: function(e){
 					var vid = getQueryString("vid");
 					console.log("删除仓库：" + vid);	
 					deleteReposConfirm(vid);
 				}
 		},
 		{divider: true},
-		{text: '清除缓存', action: function(e){
+		{text: _Lang('清除缓存'), action: function(e){
 				e.preventDefault();
 				//显示清除缓存确认
 				clearReposCacheConfirm(curRightClickedTreeNode);
 			}
 		},
 		{divider: true},
-		{text: '强制刷新', action: function(e){
+		{text: _Lang('强制刷新'), action: function(e){
 				e.preventDefault();
 				refreshDocConfirm(curRightClickedTreeNode);
 			}
 		},
 		/*{divider: true},
-		{text: '全文搜索', action: function(e){
+		{text: _Lang('全文搜索'), action: function(e){
 					e.preventDefault();
         			showTextSearchSetPanel();
 				}
 		},*/
 		{divider: true},
-		{text: '设置密码', action: function(e){
+		{text: _Lang('设置密码'), action: function(e){
 					e.preventDefault();
         			showDocPwdSetPanel();
 				}
 		},
 		{divider: true},
-		{text: '备份密钥', action: function(e){
+		{text: _Lang('备份密钥'), action: function(e){
 					var vid = getQueryString("vid");
 					console.log("备份仓库密钥：" + vid);	
 					backupReposEncryptConfigConfirm(vid);
@@ -874,9 +874,9 @@ if(isRemoteStorageEnabled(gReposInfo) == false)
 
 bootstrapQ.dialog({
 	id: 'reposRemoteStorageIgnoreManage',
-	title: '远程存储忽略管理',
+	title: _Lang('远程存储忽略管理'),
 	url: 'reposRemoteStorageIgnoreManage' + langExt + '.html',
-	msg: '页面正在加载，请稍等...',
+	msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: true,
 		callback: function(){
