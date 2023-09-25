@@ -64,11 +64,21 @@ var ReposConfig = (function () {
 	               		console.log("gCurReposInfo", gCurReposInfo);
 	               		showReposBasicSetting(ret.data);
 	               }else {
-						showErrorMessage(ret.msgInfo);
+	            	   showErrorMessage({
+	               		id: "idAlertDialog",	
+	               		title: _Lang("提示"),
+	               		okbtn: _Lang("确定"),
+		           		msg: _Lang("获取仓库信息失败", " : ", ret.msgInfo),
+		           	});
 	               }
 	           },
 	           error : function () {
-	               showErrorMessage("服务器异常:获取仓库信息失败");
+	        	   showErrorMessage({
+	           		id: "idAlertDialog",	
+	           		title: _Lang("提示"),
+	           		okbtn: _Lang("确定"),
+	           		msg: _Lang("获取仓库信息失败", " : ", "服务器异常"),
+		           });
 	           }
 	    });
 	}   
@@ -977,7 +987,7 @@ var ReposConfig = (function () {
 	                		console.log("更新仓库设置成功");
 	                		// 普通消息提示条
 							bootstrapQ.msg({
-							msg : '设置成功！',
+							msg : _Lang('设置成功') + '!',
 							type : 'success',
 							time : 2000,
 						    });
@@ -986,11 +996,21 @@ var ReposConfig = (function () {
 		                }
 	                    else
 	                    {
-	                    	showErrorMessage("设置失败:" + ret.msgInfo);
+	                    	showErrorMessage({
+	                    		id: "idAlertDialog",	
+	                    		title: _Lang("提示"),
+	                    		okbtn: _Lang("确定"),
+	                    		msg: _Lang("获取仓库信息失败", " : ", ret.msgInfo),
+	    		           	});
 	                    }
 	                },
 	                error : function () {
-	                	showErrorMessage('设置失败:服务器异常');
+	                	showErrorMessage({
+	                		id: "idAlertDialog",	
+	                		title: _Lang("提示"),
+	                		okbtn: _Lang("确定"),
+                    		msg: _Lang("更新仓库配置失败", " : ", "服务器异常"),
+                    	});
 	                }
 	            });
 	            return true;
@@ -1010,7 +1030,7 @@ var ReposConfig = (function () {
 	       		
 	       		if(oldSetting.type != newSetting.type)
 	       		{
-	       			alert("仓库类型不能修改");
+	       			alert(_Lang("仓库类型不能修改"));
 	       			return false;
 	       		}
 	       		
@@ -1099,7 +1119,7 @@ var ReposConfig = (function () {
 	       		{
 	       			return true;
 	       		}
-	       		alert("仓库信息未变化！");
+	       		alert(_Lang("仓库信息未变化") + "!");
 	       		return false;
 	       }  
 	}
@@ -1183,17 +1203,17 @@ var ReposConfig = (function () {
 	    //alert("仓库名："+ name + " 仓库类型：" + type + " 仓库路径：" + path + " 仓库描述：" + info + " svnPath:" + svnPath + " svnUser:" + svnUser + " 创建时间：" + createTime);
 		if(!name)
 		{
-	    	alert("仓库名不能为空！");
+	    	alert(_Lang("仓库名不能为空") + "!");
 	    	return false;
 		}
 		if(!info)
 		{
-	    	alert("仓库简介不能为空！");
+	    	alert(_Lang("仓库简介不能为空") + "!");
 	    	return false;
 		}
 		if(!path)
 		{
-	    	alert("仓库存储路径不能为空！");
+	    	alert(_Lang("仓库存储路径不能为空") + "!");
 	    	return false;
 		}
 		
@@ -1233,7 +1253,7 @@ var ReposConfig = (function () {
 	            		console.log("创建仓库成功");
 	            		
 	        			bootstrapQ.msg({
-	    					msg : "新建仓库成功",
+	    					msg : _Lang("新建仓库成功"),
 	    					type : 'success',
 	    					time : 2000,
 	    				    });
@@ -1243,11 +1263,21 @@ var ReposConfig = (function () {
 	                }
 	                else
 	                {
-	                	showErrorMessage(ret.msgInfo);
+	                	showErrorMessage({
+	                		id: "idAlertDialog",	
+	                		title: _Lang("提示"),
+	                		okbtn: _Lang("确定"),
+	                		msg: _Lang('创建仓库失败', ' : ', ret.msgInfo),
+	                	});
 	                }
 	            },
 	            error : function () {
-	            	showErrorMessage('服务器异常: 创建仓库失败');
+	            	showErrorMessage({
+	            		id: "idAlertDialog",	
+	            		title: _Lang("提示"),
+	            		okbtn: _Lang("确定"),
+	            		msg: _Lang('创建仓库失败', ' : ', '服务器异常'),
+	            	});
 	            }
 	        });
 	    
@@ -1312,13 +1342,13 @@ var ReposConfig = (function () {
 		if(showVerCtrlConfig == 0)
 		{
 			MyJquery.setValue("showVerCtrlConfig", 1);
-			MyJquery.setText("showVerCtrlConfig", "隐藏高级选项");
+			MyJquery.setText("showVerCtrlConfig", _Lang("隐藏高级选项"));
 			MyJquery.show("verCtrlConfigDiv");			
 		}
 		else
 		{
 			MyJquery.setValue("showVerCtrlConfig", 0);
-			MyJquery.setText("showVerCtrlConfig", "显示高级选项");
+			MyJquery.setText("showVerCtrlConfig", _Lang("显示高级选项"));
 			MyJquery.hide("verCtrlConfigDiv");
 		}
 		doSelectVerCtrl();
@@ -2056,15 +2086,30 @@ var ReposConfig = (function () {
 	        success : function (ret) {
 	            if( "ok" == ret.status )
 	            {
-	            	showErrorMessage("<font color='green'><strong>测试成功</strong></font><br/><br/>" + ret.msgInfo);
+	            	showErrorMessage({
+	            		id: "idAlertDialog",	
+	            		title: _Lang("提示"),
+	            		okbtn: _Lang("确定"),
+	            		msg: "<font color='green'><strong>" + _lang("测试成功") + "</strong></font><br/><br/>" + ret.msgInfo,
+	            	});
 	            }
 	            else
 	            {
-	            	showErrorMessage("<font color='red'><strong>测试失败</strong></font><br/><br/>" + ret.msgInfo);
+	            	showErrorMessage({
+	            		id: "idAlertDialog",	
+	            		title: _Lang("提示"),
+	            		okbtn: _Lang("确定"),
+	            		msg: "<font color='red'><strong>" + _Lang("测试失败") + "</strong></font><br/><br/>" + ret.msgInfo,
+	            	});
 	            }
 	        },
 	        error : function () {
-	           	showErrorMessage('测试失败:服务器异常！');
+	        	showErrorMessage({
+	        		id: "idAlertDialog",	
+	        		title: _Lang("提示"),
+	        		okbtn: _Lang("确定"),
+	        		msg: _Lang('测试失败', ' : ', '服务器异常'),
+	        	});
 	        }
 		});
 	}

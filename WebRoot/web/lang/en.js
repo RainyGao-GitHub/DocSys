@@ -105,7 +105,19 @@ function lang(str)
 		"普通用户无权修改仓库存储位置，请联系管理员！" : "You can not change the storage folder, please contact System Administrator",
 		"版本仓库初始化失败！" : "Failed to init history storage repository",
 		"仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？" : "Do you want to encrypt files in this repository?",
-			
+		"更新仓库配置失败" : "Failed to update repoistory configuration",
+		"仓库类型不能修改" : "Repository Type can not be changed",
+		"仓库信息未变化" : "Repository configuration was not changed",
+		"仓库名不能为空" : "Name is empty",
+		"仓库简介不能为空" : "Description is empty",
+		"仓库存储路径不能为空" : "Path is empty",
+		"新建仓库成功" : "Repoistory was created",
+		"创建仓库失败" : "Failed to create new repoistory",
+		"显示高级选项" : "Show Advanced Options",
+		"隐藏高级选项" : "Hide Advanced Options",
+		"测试成功" : "Test Success",
+		"测试失败" : "Test Failed",
+		
 		//文件操作与右键菜单选项
 		"刷新" : "Refresh",
 		"分享" : "Share",
