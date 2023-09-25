@@ -14,8 +14,8 @@
         	<div style="margin-top:10px">            
 	        	<label>Type</label>
             	<select class="form-control" id="repos-type" onchange="ReposConfig.doSelectFS();" style="width: 100%">   
-            		<option value="1" selected="selected">Document Storage</option>   
-            		<option value="5">Server Preface</option>
+            		<option value="1" selected="selected">Storage</option>   
+            		<option value="5">Front-End</option>
             	</select>
 			</div> 
 
@@ -30,7 +30,7 @@
 			            <option value="git">GIT</option>  
 			            <option value="mxsdoc">MXSDOC</option>  
 			        </select>
-			        <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteSeverTest()" style="position: relative;top:-33px;left:90%">测试</button>
+			        <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteSeverTest()" style="position: relative;top:-33px;left:90%">Test</button>
 				</div>
 				<input class="form-control" type="text" id="remoteServer"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
 			</div>  
@@ -56,7 +56,7 @@
 		            		<input type="checkbox" id="verCtrlEnable" value="0" onclick="ReposConfig.doSelectVerCtrlEnable()">
 		            	</span>
 		            </label>
-		            <span id="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="ReposConfig.doSelectShowVerCtrlConfig()">Options</span>
+		            <span id="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="ReposConfig.doSelectShowVerCtrlConfig()">Advanced Options</span>
 				</div>
 				
 				<div id="verCtrlConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
@@ -153,22 +153,22 @@
 	            		<label style="margin-left:15px">AutoPush <span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPush" value="0"></span></label>
 	            		<label style="margin-left:10px">ForcePush <span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPushForce" value="0"></span></label>
 					</div>
-	            	<label style="margin-top:10px">Options
+	            	<label style="margin-top:10px">Advanced Options
 	            		<span style="margin-left:5px">
 	            			<input type="checkbox" id="remoteStorageFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageFilterEnable()">
 	            		</span>
 	            	</label>
 					<div id="remoteStorageFilterConfig" style="margin-top:5px; display:none">
 						<div style="height:60px;">
-							<span style="margin-top:5px">Not allowed file type</span>
+							<span style="margin-top:5px">Not Allowed Type</span>
 							<textarea class="form-control" id="remoteStorage-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
 						</div>  
 						<div style="height:60px;">
-							<span style="margin-top:5px">Not allowed file</span>
+							<span style="margin-top:5px">Not Allowed File</span>
 							<textarea class="form-control" id="remoteStorage-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
 						</div>  
 						<div style="height:60px;">
-							<span style="margin-top:5px">Allowed max file size</span>
+							<span style="margin-top:5px">Allowed Max Size</span>
 							<select class="form-control" id="remoteStorage-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:70%">  
 						        <option value="10485760">10M</option>   
 						        <option value="20971520">20M</option>   
@@ -183,7 +183,7 @@
 						    </select>
 						</div>
 						<div style="height:60px;">
-							<span>Allow unknown file<input type="checkbox" id="remoteStorage-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
+							<span>Unknown File Allowed<input type="checkbox" id="remoteStorage-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
 						</div> 
 						 
 					</div>
@@ -198,7 +198,7 @@
 	            </label>
 			</div>
 			<div id="autoSyncupConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
-	            <label>History
+	            <label>History AutoSync
 	            	<span style="margin-left:5px">
 	            		<input type="checkbox" id="verReposSyncupEnable" value="0">
 	            	</span>
@@ -206,7 +206,7 @@
 	
 				<br>
 
-	            <label style="margin-top:10px">RemoteStorage 
+	            <label style="margin-top:10px">RemoteStorage AutoSync
 	            	<span style="margin-left:5px;">
 	            		<input type="checkbox" id="remoteStorageSyncupEnable" value="0">
 	            	</span>
@@ -214,14 +214,14 @@
 
 				<br>
 
-	            <label style="margin-top:10px">TextSearch 
+	            <label style="margin-top:10px">TextSearch AutoSync
 	            	<span style="margin-left:5px;">
 	            		<input type="checkbox" id="searchIndexSyncupEnable" value="0">
 	            	</span>
 	            </label>
 	            
 	            <br>
-	            <label style="margin-top:10px">Options
+	            <label style="margin-top:10px">Advanced Options
             		<span style="margin-left:5px">
             			<input type="checkbox" id="autoSyncupExtConfigEnable" value="0" onclick="ReposConfig.doSelectAutoSyncupExtConfigEnable()">
             		</span>
@@ -393,22 +393,22 @@
 							<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay7" value="0">Sunday</span>
 						</div>
 		            	
-		            	<label style="margin-top:10px">Options
+		            	<label style="margin-top:10px">Advanced Options
 		            		<span style="margin-left:5px">
 		            			<input type="checkbox" id="remoteBackupFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteBackupFilterEnable()">
 		            		</span>
 		            	</label>
 						<div id="remoteBackupFilterConfig" style="margin-top:5px; display:none">
 							<div style="height:60px;">
-								<span style="margin-top:5px">Not allowed file type</span>
+								<span style="margin-top:5px">Not Allowed Type</span>
 								<textarea class="form-control" id="remoteBackup-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
 							</div>  
 							<div style="height:60px;">
-								<span style="margin-top:5px">Not allowed file</span>
+								<span style="margin-top:5px">Not Allowed File</span>
 								<textarea class="form-control" id="remoteBackup-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
 							</div>  
 							<div style="height:60px;">
-								<span style="margin-top:5px">Allowed max file size</span>
+								<span style="margin-top:5px">Allowed Max Size</span>
 								<select class="form-control" id="remoteBackup-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:70%">  
 							        <option value="10485760">10M</option>   
 							        <option value="20971520">20M</option>   
@@ -423,7 +423,7 @@
 							    </select>
 							</div> 
 							<div style="height:60px;">
-								<span>Allow unknown file<input type="checkbox" id="remoteBackup-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
+								<span>Unknown File Allowed<input type="checkbox" id="remoteBackup-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
 							</div> 
 						</div>
 						<div></div>

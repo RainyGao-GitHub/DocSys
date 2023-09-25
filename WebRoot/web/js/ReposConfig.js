@@ -1434,7 +1434,10 @@ var ReposConfig = (function () {
 		{
 			qiao.bs.confirm({
 		        id: 'setEncryptConfirm',
-		        msg: '仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？',
+		        title : _Lang("确认操作"),
+		        okbtn : _Lang("确定"),
+		        qubtn : _Lang("取消"),
+		        msg: _Lang('仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？'),
 		    },function(){
 		    	//确认
 		    	$("#isEncryptEnabled").attr("checked","checked");
