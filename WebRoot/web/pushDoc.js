@@ -88,7 +88,7 @@ function showAddUserPreferServerPanel()
 	console.log("showAddUserPreferServerPanel");
 	bootstrapQ.dialog({
 		id: 'addUserPreferServer',
-		url: 'addUserPreferServer.html',
+		url: 'addUserPreferServer' + langExt + '.html',
 		title: _Lang('添加常用服务器'),
 		msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
@@ -487,7 +487,7 @@ var DocPush = (function () {
 		var c = $("#dialog-push-doc select[name='targetRepos']").children();
 		$(c).remove();
 						
-		var selectListHtml = "<option>暂无数据</option>";
+		var selectListHtml = "<option>" + _Lang("暂无数据") + "</option>";
 		$("#dialog-push-doc select[name='targetRepos']").append(selectListHtml);
 	}
 	
@@ -497,7 +497,7 @@ var DocPush = (function () {
 		var c = $("#dialog-push-doc select[name='targetDiskPath']").children();
 		$(c).remove();
 						
-		var selectListHtml = "<option>暂无数据</option>";
+		var selectListHtml = "<option>" + _Lang("暂无数据") + "</option>";
 		$("#dialog-push-doc select[name='targetDiskPath']").append(selectListHtml);
 	}
 	

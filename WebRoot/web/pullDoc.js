@@ -31,7 +31,10 @@ function doSelectRecurciveConfirm()
 	{
 		qiao.bs.confirm({
 	        id: 'recurcivePullConfirm',
-	        msg: '该操作将拉取目录下的所有文件，是否允许？',
+	        title: _Lang("确认操作"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),	        
+	        msg: _Lang('该操作将拉取目录下的所有文件，是否允许？'),
 	    },function(){
 	    	//确认
 	    	$("#dialog-pull-doc input[name='recurciveEn']").attr("checked","checked");
@@ -50,7 +53,10 @@ function doSelectForceConfirm()
 	{
 		qiao.bs.confirm({
 	        id: 'forcePullConfirm',
-	        msg: '文件改动将被强制覆盖，是否强制拉取？',
+	        title: _Lang("确认操作"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
+	        msg: _Lang('文件改动将被强制覆盖，是否强制拉取？'),
 	    },function(){
 	    	//确认
 	    	$("#dialog-pull-doc input[name='forceEn']").attr("checked","checked");
@@ -82,9 +88,9 @@ function showAddUserPreferServerPanel()
 	console.log("showAddUserPreferServerPanel");
 	bootstrapQ.dialog({
 		id: 'addUserPreferServer',
-		url: 'addUserPreferServer.html',
-		title: '添加常用服务器',
-		msg: '页面正在加载，请稍等...',
+		url: 'addUserPreferServer' + langExt + '.html',
+		title: _Lang('添加常用服务器'),
+		msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: false,
 		callback: function(){
@@ -144,15 +150,15 @@ var DocPull = (function () {
 		console.log("showEditUserPreferServerPanel");
 		if(_selectedServer.isLocal)
 		{
-			showErrorMessage("无法修改本地服务器！");
+			showErrorMessage(_Lang("无法修改本地服务器！"));
 			return;
 		}
 		
 		bootstrapQ.dialog({
 			id: 'editUserPreferServer',
-			url: 'editUserPreferServer.html',
-			title: '设置常用服务器',
-			msg: '页面正在加载，请稍等...',
+			url: 'editUserPreferServer' + langExt + '.html',
+			title: _Lang('设置常用服务器'),
+			msg: _Lang('页面正在加载，请稍等') + '...',
 			foot: false,
 			big: false,
 			callback: function(){
@@ -167,7 +173,7 @@ var DocPull = (function () {
 		
 		if(_selectedServer.isLocal)
 		{			
-			showErrorMessage("无法删除本地服务器！");
+			showErrorMessage(_Lang("无法删除本地服务器！"));
 			return;
 		}
 		
@@ -179,8 +185,8 @@ var DocPull = (function () {
 		bootstrapQ.confirm(
 				{
 					id: "deleteTargetServerConfirm",
-					title: "删除确认",
-					msg : "是否删除 " + showName,
+					title: _Lang("删除确认"),
+					msg : _Lang("是否删除") + " [" + showName + "]",
 				},
 				function () {
 			    	//alert("点击了确定");
@@ -203,7 +209,7 @@ var DocPull = (function () {
                 if( "ok" == ret.status ){
              		// 普通消息提示条
 					bootstrapQ.msg({
-								msg : "删除成功！",
+								msg : _Lang("删除成功") + "!",
 								type : 'success',
 								time : 2000,
 					});
@@ -230,7 +236,7 @@ var DocPull = (function () {
 		var serverUrl = protocol + host;
 		_localServer.serverUrl = serverUrl;
 		_localServer.serverType = "mxsdoc";
-		_localServer.serverName = "本地服务器";	
+		_localServer.serverName = _Lang("本地服务器");	
 		_localServer.isLocal = true;				
 		_targetServerList.push(_localServer);
 		
@@ -471,7 +477,7 @@ var DocPull = (function () {
 		var c = $("#dialog-pull-doc select[name='targetRepos']").children();
 		$(c).remove();
 						
-		var selectListHtml = "<option>暂无数据</option>";
+		var selectListHtml = "<option>" + _Lang("暂无数据") + "</option>";
 		$("#dialog-pull-doc select[name='targetRepos']").append(selectListHtml);
 	}
 	
@@ -481,7 +487,7 @@ var DocPull = (function () {
 		var c = $("#dialog-pull-doc select[name='targetDiskPath']").children();
 		$(c).remove();
 						
-		var selectListHtml = "<option>暂无数据</option>";
+		var selectListHtml = "<option>" + _Lang("暂无数据") + "</option>";
 		$("#dialog-pull-doc select[name='targetDiskPath']").append(selectListHtml);
 	}
 	
@@ -517,7 +523,7 @@ var DocPull = (function () {
 		}
 		else
 		{
-	    	alert("服务器地址不能为空");
+	    	alert(_Lang("服务器地址不能为空"));
 	        return false;
 	    }
 	}
@@ -553,11 +559,11 @@ var DocPull = (function () {
                 }
                 else
                 {
-                	showErrorMessage("拉取失败:" + ret.msgInfo);
+                	showErrorMessage(_Lang("拉取失败", " : ", ret.msgInfo));
                 }
             },
             error : function () {
-                showErrorMessage("拉取失败:服务器异常！");
+                showErrorMessage(_Lang("拉取失败", " : ", "服务器异常"));
             }
         });
     }
@@ -566,11 +572,29 @@ var DocPull = (function () {
    	{
    		var totalNum = ret.dataEx.totalCount;
    		var successNum = ret.dataEx.successCount;
-		var pullResultInfo = "拉取成功(共" + totalNum +"个)";
+		var pushResultInfo = "";
+		switch(langType)
+		{
+		case "en":
+			pullResultInfo = "Pull Completed(Total : " + totalNum + ")";	
+			break;
+		default:
+			pullResultInfo = "拉取成功(共" + totalNum +"个)";
+			break;
+		}
+		
   		if(successNum != totalNum)
   		{
-  			pullResultInfo = "拉取完成 (共" + totalNum +"个)"+",成功 " + successNum + "个: " + ret.dataEx.msgInfo;
-            // 普通消息提示条
+  			switch(langType)
+  			{
+  			case "en":
+  				pullResultInfo = "Pull Completed(Total : " + totalNum + ", Failed : " + (totalNum - successNum) + ")";
+  				break;
+  			default:
+  				pullResultInfo = "拉取完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+  				break;
+  			}
+  			// 普通消息提示条
 			bootstrapQ.msg({
 					msg : pullResultInfo,
 					type : 'warning',
@@ -663,9 +687,9 @@ var DocPull = (function () {
 
 		bootstrapQ.dialog({
 			id: 'fileSelector',
-			url: 'fileSelector.html',
-			title: '文件选择',
-			msg: '页面正在加载，请稍等...',
+			url: 'fileSelector' + langExt + '.html',
+			title: _Lang('文件选择'),
+			msg: _Lagn('页面正在加载，请稍等') + '...',
 			foot: false,
 			big: false,
 			callback: function(){
