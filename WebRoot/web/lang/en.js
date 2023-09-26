@@ -318,6 +318,10 @@ function lang(str)
 		"请选择需要设置访问密码的文件" : "No any file or folder was selected to set access password",
 		"目标节点不存在" : "Target node not exists",
 		
+		"推送失败" : "Push Failed",
+		"该操作将推送目录下的所有文件，是否允许？" : "All files under this folder will be pushed, please confirm",
+		"远程文件可能被删除或覆盖，是否强制推送？" : "Remote file will be replaced forcely, please confirm",
+		
 		"文件搜索失败" : "Failed to search",
 		"标准模式" : "Standard Mode",
 		"电子书模式" : "E-Book Mode",

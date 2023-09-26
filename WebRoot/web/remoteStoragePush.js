@@ -27,7 +27,7 @@ function doSelectRecurciveConfirm()
 	{
 		qiao.bs.confirm({
 	        id: 'recurcivePullConfirm',
-	        msg: '该操作将推送目录下的所有文件，是否允许？',
+	        msg: _Lang('该操作将推送目录下的所有文件，是否允许？'),
 	    },function(){
 	    	//确认
 	    	$("#dialog-remoteStoragePush input[name='recurciveEn']").attr("checked","checked");
@@ -46,7 +46,7 @@ function doSelectForceConfirm()
 	{
 		qiao.bs.confirm({
 	        id: 'forcePullConfirm',
-	        msg: '远程文件可能被删除或覆盖，是否强制推送？',
+	        msg: _Lang('远程文件可能被删除或覆盖，是否强制推送？'),
 	    },function(){
 	    	//确认
 	    	$("#dialog-remoteStoragePush input[name='forceEn']").attr("checked","checked");
@@ -120,11 +120,11 @@ var RemoteStoragePush = (function () {
                 }
                 else
                 {
-                	showErrorMessage("推送失败:" + ret.msgInfo);
+                	showErrorMessage(_Lang("推送失败", " : ", ret.msgInfo));
                 }
             },
             error : function () {
-                showErrorMessage("推送失败:服务器异常！");
+                showErrorMessage(_Lang("推送失败", " : ", "服务器异常"));
             }
         });
     }
@@ -133,11 +133,29 @@ var RemoteStoragePush = (function () {
    	{
    		var totalNum = ret.dataEx.totalCount;
    		var successNum = ret.dataEx.successCount;
-		var pushResultInfo = "推送成功(共" + totalNum +"个)";
+		var pushResultInfo = "";
+		switch(langType)
+		{
+		case "en":
+			pushResultInfo = "Push Completed(Total : " + totalNum + ")";	
+			break;
+		default:
+			pushResultInfo = "推送成功(共" + totalNum +"个)";
+			break;
+		}
   		if(successNum != totalNum)
   		{
-  			pushResultInfo = "推送完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
-            // 普通消息提示条
+  			switch(langType)
+  			{
+  			case "en":
+  				pushResultInfo = "Push Completed(Total : " + totalNum + ", Failed : " + (totalNum - successNum) + ")";
+  				break;
+  			default:
+  	  			pushResultInfo = "推送完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+  				break;
+  			}
+
+  			// 普通消息提示条
 			bootstrapQ.msg({
 					msg : pushResultInfo,
 					type : 'warning',
