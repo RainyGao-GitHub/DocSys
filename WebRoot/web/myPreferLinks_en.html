@@ -9,8 +9,9 @@
     <link rel="shortcut icon" href="static/SmartWiki/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
     
-    <title>常用网站 - MxsDoc</title>
-	<script type="text/javascript" src="lang/ch.js"></script>    
+    <title>Prefer WebSite - MxsDoc</title>
+	<script type="text/javascript" src="lang/en.js"></script>    
+    <script src="static/scripts/jquery.min.js"></script>
     <link href="css/logo/logo.css" rel="stylesheet">
     <!-- CSS: Bootstrap、font-awesome、boostrapQ、 -->
     <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -67,7 +68,7 @@
                 </a>
                 <div class="searchbar pull-left visible-lg-inline-block visible-md-inline-block">
                     <div class="form-inline">
-                        <input class="form-control" id="searchWord" name="searchWord" type="search" placeholder="请输入网站关键词..." oninput="$('[id=\'searchWord\']:eq(1)').val(this.value)">
+                        <input class="form-control" id="searchWord" name="searchWord" type="search" placeholder="WebSite keywords..." oninput="$('[id=\'searchWord\']:eq(1)').val(this.value)">
                         <button class="search-btn" onclick="searchPreferLink();">
                             <i class="fa fa-search"></i>
                         </button>
@@ -77,18 +78,18 @@
                     <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                     <ul class="dropdown-menu" role="menu">
                     	<li id="mobileNewReposBtn"  style="display:none">
-							<a href="#" title="添加网站" onclick="addPreferLink()">添加网站</a>
+							<a href="#" title="Add WebSite" onclick="addPreferLink()">Add WebSite</a>
 						</li>
                         <li id="mobileLoginBtn">
-                            <a onclick="showLoginPanel()" title="用户登录">登录</a>
+                            <a onclick="showLoginPanel()" title="Sign In">Sign In</a>
                         </li>
                         
                         <li id="mobileLogoutBtn"  style="display:none">
-                            <a onclick="userLogout()" title="退出登录">退出登录</a>
+                            <a onclick="userLogout()" title="Log Out">Log Out</a>
                         </li>
                         
                         <li id="mobileSwitchDisplayBtn" style="display:none">
-                            <a  class="display-style" onclick="switchDisplayStyle()" title="切换显示模式">设置</a>
+                            <a  class="display-style" onclick="switchDisplayStyle()" title="Enter Edit Mode">Edit</a>
                         </li>
                         
                     </ul>
@@ -101,20 +102,20 @@
 					<li id="userInfoDiv" style="display:none">
 							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
-								<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
-								<li><a href="/DocSystem/web/shareManager.html">我的分享</a></li>
-								<li id="logoutBtn"><a onclick="userLogout()">退出登录</a></li>
+								<li><a href="/DocSystem/web/myHostPage_en.html">User Center</a></li>
+								<li><a href="/DocSystem/web/shareManager_en.html">My Sharing</a></li>
+								<li id="logoutBtn"><a onclick="userLogout()">Log Out</a></li>
 							</ul>
 					</li>
                     <li id="loginBtn">
-                        <a onclick="showLoginPanel()"  title="用户登录">登录</a>
+                        <a onclick="showLoginPanel()"  title="Sign In">Sign In</a>
                     </li>
                     <li id="newReposBtn" style="display:none">
-						<a href="#" title="添加网站" onclick="addPreferLink()">添加网站</a>
+						<a href="#" title="Add WebSite" onclick="addPreferLink()">Add WebSite</a>
 					</li>
 					
 					<li id="switchDisplayBtn" style="display:none">
-                        <a class="display-style" onclick="switchDisplayStyle()" title="切换显示模式">设置</a>
+                        <a class="display-style" onclick="switchDisplayStyle()" title="Enter EditMode">Edit</a>
                     </li>                 
                 </ul>
             </nav>
@@ -125,7 +126,7 @@
         <div class="row">
             <div class="searchbar visible-sm-inline-block visible-xs-inline-block" style="width: 95%; margin-left: 10px;">
                 <div class="form-inline">
-                    <input class="form-control line-search-input" id="searchWord" name="keyword" type="search" placeholder="请输入网站关键词..." oninput="$('[id=\'searchWord\']:eq(0)').val(this.value)">
+                    <input class="form-control line-search-input" id="searchWord" name="keyword" type="search" placeholder="WebSite keywords..." oninput="$('[id=\'searchWord\']:eq(0)').val(this.value)">
                     <button class="line-search-btn" onclick="searchPreferLink();">
                         <i class="fa fa-search"></i>
                     </button>
@@ -151,7 +152,7 @@
                 <ul>
                     <li><a href="#">MxsDoc</a></li>
                     <li>&nbsp;·&nbsp;</li>
-                    <li><a onclick="showFeebackPanel()">意见反馈</a> </li>
+                    <li><a onclick="showFeebackPanel()">Report A Problem</a> </li>
                 </ul>
             </div>
         </div>
@@ -173,13 +174,13 @@
                     <a href="{{preferLink.url}}" title="{{preferLink.url}}" target="_blank">{{preferLink.showName}}</a>
 					<ul class="pull-right">
 				    	<li>
-           					<span class="btn" title="分享" onclick="sharePreferLink({{i}});">
+           					<span class="btn" title="Share" onclick="sharePreferLink({{i}});">
 								<i class="icons share {{preferLink.btnIconStyle}}"></i>
 							</span>
-           					<span class="btn" title="修改" onclick="editPreferLink({{i}});">
+           					<span class="btn" title="Edit" onclick="editPreferLink({{i}});">
 								<i class="icons set {{preferLink.btnIconStyle}}"></i>
 							</span>
-           					<span class="btn" title="删除" onclick="deletePreferLink({{i}});">
+           					<span class="btn" title="Delete" onclick="deletePreferLink({{i}});">
 								<i class="icons delete {{preferLink.btnIconStyle}}"></i>
 							</span>                    	
 						</li>

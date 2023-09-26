@@ -196,7 +196,7 @@ var EditUserPreferServer = (function () {
 		}
 		else
 		{
-	    	alert("服务器设置未改动！");
+	    	alert(_Lang("服务器设置未改动") + "!");
 	        return false;
 	    }
 	}
@@ -221,7 +221,7 @@ var EditUserPreferServer = (function () {
              	if( "ok" == ret.status){             		
              		// 普通消息提示条
 					bootstrapQ.msg({
-								msg : "修改成功！",
+								msg : _Lang("修改成功") + "!",
 								type : 'success',
 								time : 2000,
 					});
@@ -230,11 +230,21 @@ var EditUserPreferServer = (function () {
                 }
                 else
                 {
-                	showErrorMessage("修改失败:" + ret.msgInfo);
+                	showErrorMessage({
+                		id: "idAlertDialog",	
+                		title: _Lang("提示"),
+                		okbtn: _Lang("确定"),
+                		msg: _Lang("修改失败", " : ", ret.msgInfo),
+                	});
                 }
             },
             error : function () {
-                showErrorMessage("修改失败:服务器异常！");
+            	showErrorMessage({
+            		id: "idAlertDialog",	
+            		title: _Lang("提示"),
+            		okbtn: _Lang("确定"),
+            		msg: _Lang("修改失败", " : ", "服务器异常"),
+            	});
             }
         });
     }

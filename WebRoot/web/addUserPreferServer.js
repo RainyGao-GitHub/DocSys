@@ -85,7 +85,7 @@ var AddUerPreferServer = (function () {
 		}
 		else
 		{
-	    	alert("服务器地址不能为空");
+	    	alert(_Lang("服务器地址不能为空"));
 	        return false;
 	    }
 	}
@@ -109,7 +109,7 @@ var AddUerPreferServer = (function () {
              	if( "ok" == ret.status){             		
              		// 普通消息提示条
 					bootstrapQ.msg({
-								msg : "添加成功！",
+								msg : _Lang("添加成功") + "!",
 								type : 'success',
 								time : 2000,
 					});
@@ -119,11 +119,21 @@ var AddUerPreferServer = (function () {
                 }
                 else
                 {
-                	showErrorMessage("添加失败:" + ret.msgInfo);
+                	showErrorMessage({
+                		id: "idAlertDialog",	
+                		title: _Lang("提示"),
+                		okbtn: _Lang("确定"),
+                		msg: _Lang("添加失败", " : ", ret.msgInfo),
+                	});
                 }
             },
             error : function () {
-                showErrorMessage("添加失败:服务器异常！");
+            	showErrorMessage({
+            		id: "idAlertDialog",	
+            		title: _Lang("提示"),
+            		okbtn: _Lang("确定"),
+            		msg: _Lang("添加失败", " : ", "服务器异常"),
+            	});
             }
         });
     }

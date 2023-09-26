@@ -334,10 +334,14 @@ function lang(str)
 		"无法修改本地服务器！" : "Unable to configure Local Server",
 		"设置常用服务器" : "Prefer Server Config",
 		"无法删除本地服务器！" : "Unable to remove Local Server",
-		"网站地址不能为空" : "Server Link is empty",
+		"网站地址不能为空" : "WebSite Link is empty",
 		"服务器地址不能为空" : "Server URL is empty",
-		"添加成功" : "Add Success",
+		"添加成功" : "Add Ok",
 		"添加失败" : "Add Failed",		
+		"服务器设置未改动" : "Server Config not changed",
+		"修改成功" : "Modify Ok",
+		"修改失败" : "Modify Failed",
+		"设置未改动" : "Config not changed",
 		
 		"文件选择" : "Select File",
 				
