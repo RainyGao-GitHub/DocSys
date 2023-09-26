@@ -323,22 +323,24 @@ function lang(str)
 		"远程文件改动将被强制覆盖，是否强制推送？" : "Remote files will be replaced forcely, please confirm",
 		"该操作将推送目录下的所有文件，是否允许？" : "All files under this folder will be pushed, please confirm",
 		
+		"拉取失败" : "Pull Failed",
+		"文件改动将被强制覆盖，是否强制拉取？" : "Local files will be replaced forcely, please confirm",
+		"文件可能被删除或覆盖，是否强制拉取？" : "Local files will be replaced forcely, please confirm",
+		"该操作将拉取目录下的所有文件，是否允许？" : "All files under this folder will be pulled, please confirm",
+		
 		"本地服务器" : "Local Server",
 		"获取常用服务器列表失败" : "Failed to get server list",		
 		"添加常用服务器" : "Add Prefer Server",
 		"无法修改本地服务器！" : "Unable to configure Local Server",
 		"设置常用服务器" : "Prefer Server Config",
 		"无法删除本地服务器！" : "Unable to remove Local Server",
-
-		"拉取失败" : "Pull Failed",
-		"文件改动将被强制覆盖，是否强制拉取？" : "Local files will be replaced forcely, please confirm",
-		"文件可能被删除或覆盖，是否强制拉取？" : "Local files will be replaced forcely, please confirm",
-		"该操作将拉取目录下的所有文件，是否允许？" : "All files under this folder will be pulled, please confirm",
-		
+		"网站地址不能为空" : "Server Link is empty",
 		"服务器地址不能为空" : "Server URL is empty",
+		"添加成功" : "Add Success",
+		"添加失败" : "Add Failed",		
 		
 		"文件选择" : "Select File",
-		
+				
 		"文件搜索失败" : "Failed to search",
 		"标准模式" : "Standard Mode",
 		"电子书模式" : "E-Book Mode",
