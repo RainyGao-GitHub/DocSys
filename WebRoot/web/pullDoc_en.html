@@ -1,8 +1,8 @@
-<div id="dialog-push-doc" class="form-horizontal">
+<div id="dialog-pull-doc" class="form-horizontal">
     <div class="form-group">
        <label class="col-sm-2 control-label">Server</label>
        <div class="col-sm-7" style="padding-right:0;">
-       	    <select class="form-control" name="targetServer"  onchange="DocPush.doSelectTargetSever();" style="width: 100%;">   
+       	    <select class="form-control" name="targetServer"  onchange="DocPull.doSelectTargetSever();" style="width: 100%;">   
             	<option value="" selected="selected">No Data</option>
             </select>
        </div>
@@ -22,7 +22,7 @@
 	<div class="form-group"  name="targetStorageDiv">
 		<label class="col-sm-2 control-label"></label>
 		<div class="col-sm-3" style="padding-right:0;">
-			<select class="form-control" name="targetStorageType"  onchange="DocPush.doSelectTargetStorageType();" style="width: 100%;">   
+			<select class="form-control" name="targetStorageType"  onchange="DocPull.doSelectTargetStorageType();" style="width: 100%;">   
 				<option value="1" selected="selected">Repository</option>
 				<option value="2">Disk</option>
 			</select>
@@ -38,17 +38,20 @@
 	</div>
 	<div class="modal-footer"></div>
 	<div class="form-group">
-	        <label class="col-sm-2 control-label">Push</label>
-	        <div class="col-sm-10">
-	            <input type="text" name="pushEntryPath" class="form-control"  maxlength="400"></input>
-	        </div>
-		    <div name="pushControlDiv" style="margin-left:90px; margin-top:30px">
-			   <label>
-			   	   <span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="doSelectRecurciveConfirm()">Push All Files</span>
-			   	   <span name="forceEnSpan" style="margin-left:20px"><input type="checkbox" name="forceEn" value="0" onclick="doSelectForceConfirm()">Force</span>
-			   </label>
-		    </div>	
+		<label class="col-sm-2 control-label">Pull</label>
+		<div class="col-sm-9">
+			<input type="text" name="pullEntryPath" class="form-control"  maxlength="400"></input>
+		</div>
+		<div class="col-sm-1">
+			<button id="btnFileSelector" class="btn btn-default" type="button" onclick="DocPull.openFileSelector()">...</button>		    	
+		</div>
 	</div>
+	<div name="pullControlDiv" style="margin-left:80px; margin-top:0px">
+			<label>
+				<span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="doSelectRecurciveConfirm()">Pull All Files</span>
+			   	<span name="forceEnSpan" style="margin-left:20px"><input type="checkbox" name="forceEn" value="0" onclick="doSelectForceConfirm()">Force</span>
+			</label>
+	</div>	
 	<div class="form-group" style="display:none;">
 	        <label class="col-sm-2 control-label">Path</label>
 	        <div class="col-sm-10">
@@ -58,12 +61,13 @@
 	<div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
-		        <button  type="button" class="btn btnPrimary" onclick="doPushDoc();" style="width: 100px;height: 42px;">Push</button>
-		        <button  type="button" class="btn btnPrimary" onclick="cancelPushDoc();" style="width: 100px;height: 42px;">Cancel</button>
+		        <button  type="button" class="btn btnPrimary" onclick="doPullDoc();" style="width: 100px;height: 42px;">Pull</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelPullDoc();" style="width: 100px;height: 42px;">Cancel</button>
 			</div>
 		</div>
 	</div>
 </div>
 
 <script src="js/md5.js"></script>
-<script type="text/javascript" src="pushDoc.js"></script>
+<script type="text/javascript" src="pullDoc.js"></script>
+
