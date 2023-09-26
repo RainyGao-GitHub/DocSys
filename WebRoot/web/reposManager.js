@@ -901,25 +901,26 @@ function addDocToRemoteStorageIgnoreListConfirm(node)
 {
    	console.log("addDocToRemoteStorageIgnoreListConfirm()");
 
-if(isRemoteStorageEnabled(gReposInfo) == false)
-{
-	showErrorMessage({
-		id: "idAlertDialog",	
-		title: _Lang("提示"),
-		okbtn: _Lang("确定"),
-		msg: _Lang("该仓库未设置远程存储，请联系管理员！"),
-	});
-	return;
-}	
+	if(isRemoteStorageEnabled(gReposInfo) == false)
+	{
+		showErrorMessage({
+			id: "idAlertDialog",	
+			title: _Lang("提示"),
+			okbtn: _Lang("确定"),
+			msg: _Lang("该仓库未设置远程存储，请联系管理员！"),
+		});
+		return;
+	}	
 
-var msg = _Lang("关闭远程存储") + " [" + node.path + node.name + "]"
-if(node.docId == 0)
-{
-   msg = _Lang("关闭仓库所有文件的远程存储") + "?";
-}
-
-qiao.bs.confirm({
+	var msg = _Lang("关闭远程存储") + " [" + node.path + node.name + "]"
+	if(node.docId == 0)
+	{
+	   msg = _Lang("关闭仓库所有文件的远程存储") + "?";
+	}
+	
+	qiao.bs.confirm({
     	id: 'addRemoteStorageIgnoreConfirm',
+        title: _Lang("确认操作"),
         msg: msg,
         close: false,		
         okbtn: "确定",
@@ -936,25 +937,26 @@ function removeDocFromRemoteStorageIgnoreListConfirm(node)
 {
    	console.log("removeDocFromRemoteStorageIgnoreListConfirm()");
 
-if(isRemoteStorageEnabled(gReposInfo) == false)
-{
-	showErrorMessage({
-		id: "idAlertDialog",	
-		title: _Lang("提示"),
-		okbtn: _Lang("确定"),
-		msg: _Lang("该仓库未设置远程存储，请联系管理员！"),
-	});
-	return;
-}
-
-var msg = _Lang("开启远程存储") + " [" + node.path + node.name + "]"
-if(node.docId == 0)
-{
-   msg = _Lang("开启仓库所有文件的远程存储") + "?";
-}
-
-qiao.bs.confirm({
+	if(isRemoteStorageEnabled(gReposInfo) == false)
+	{
+		showErrorMessage({
+			id: "idAlertDialog",	
+			title: _Lang("提示"),
+			okbtn: _Lang("确定"),
+			msg: _Lang("该仓库未设置远程存储，请联系管理员！"),
+		});
+		return;
+	}
+	
+	var msg = _Lang("开启远程存储") + " [" + node.path + node.name + "]"
+	if(node.docId == 0)
+	{
+	   msg = _Lang("开启仓库所有文件的远程存储") + "?";
+	}
+	
+	qiao.bs.confirm({
     	id: 'removeRemoteStorageIgnoreConfirm',
+        title: _Lang("确认操作"),
         msg: msg,
         close: false,		
         okbtn: _Lang("确定"),
@@ -1056,25 +1058,26 @@ function addDocToRemoteBackupIgnoreListConfirm(node)
 {
    	console.log("addDocToRemoteBackupIgnoreListConfirm()");
 
-if(isRemoteBackupEnabled(gReposInfo) == false)
-{
-	showErrorMessage({
-		id: "idAlertDialog",	
-		title: _Lang("提示"),
-		okbtn: _Lang("确定"),
-		msg: _Lang("该仓库未设置异地备份，请联系管理员！"),
-	});
-	return;
-}	
-
-var msg = _Lang("关闭异地备份") + " [" + node.path + node.name + "]"
-if(node.docId == 0)
-{
-   msg = _Lang("关闭仓库所有文件的异地备份") + "?";
-}
-
-qiao.bs.confirm({
+	if(isRemoteBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage({
+			id: "idAlertDialog",	
+			title: _Lang("提示"),
+			okbtn: _Lang("确定"),
+			msg: _Lang("该仓库未设置异地备份，请联系管理员！"),
+		});
+		return;
+	}	
+	
+	var msg = _Lang("关闭异地备份") + " [" + node.path + node.name + "]"
+	if(node.docId == 0)
+	{
+	   msg = _Lang("关闭仓库所有文件的异地备份") + "?";
+	}
+	
+	qiao.bs.confirm({
     	id: 'addRemoteBackupIgnoreConfirm',
+        title: _Lang("确认操作"),
         msg: msg,
         close: false,		
         okbtn: _Lang("确定"),
@@ -1091,25 +1094,26 @@ function removeDocFromRemoteBackupIgnoreListConfirm(node)
 {
    	console.log("removeDocFromRemoteBackupIgnoreListConfirm()");
 
-if(isRemoteBackupEnabled(gReposInfo) == false)
-{
-	showErrorMessage({
-		id: "idAlertDialog",	
-		title: _Lang("提示"),
-		okbtn: _Lang("确定"),
-		msg: _Lang("该仓库未设置异地备份，请联系管理员！"),
-	});
-	return;
-}	
-
-var msg = _Lang("开启异地备份") + " [" + node.path + node.name + "]"
-if(node.docId == 0)
-{
-   msg = _Lang("开启仓库所有文件的异地备份") + "?";
-}
-
-qiao.bs.confirm({
+	if(isRemoteBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage({
+			id: "idAlertDialog",	
+			title: _Lang("提示"),
+			okbtn: _Lang("确定"),
+			msg: _Lang("该仓库未设置异地备份，请联系管理员！"),
+		});
+		return;
+	}	
+	
+	var msg = _Lang("开启异地备份") + " [" + node.path + node.name + "]"
+	if(node.docId == 0)
+	{
+	   msg = _Lang("开启仓库所有文件的异地备份") + "?";
+	}
+	
+	qiao.bs.confirm({
     	id: 'removeRemoteBackupIgnoreConfirm',
+        title: _Lang("确认操作"),
         msg: msg,
         close: false,		
         okbtn: _Lang("确定"),
@@ -1207,39 +1211,40 @@ function reposAutoBackupConfirm(type, fullBackup)
 {
    	console.log("reposAutoBackupConfirm() type:" + type + " fullBackup:" + fullBackup);
 
-var msg = _Lang("是否立即执行仓库自动备份？");
-if(type == 1)
-{
-	if(isLocalBackupEnabled(gReposInfo) == false)
+	var msg = _Lang("是否立即执行仓库自动备份？");
+	if(type == 1)
 	{
-		showErrorMessage({
-    		id: "idAlertDialog",	
-    		title: _Lang("提示"),
-    		okbtn: _Lang("确定"),
-    		msg: _Lang("该仓库未设置本地自动备份，请联系管理员！"),
-    	});
-		return;
+		if(isLocalBackupEnabled(gReposInfo) == false)
+		{
+			showErrorMessage({
+	    		id: "idAlertDialog",	
+	    		title: _Lang("提示"),
+	    		okbtn: _Lang("确定"),
+	    		msg: _Lang("该仓库未设置本地自动备份，请联系管理员！"),
+	    	});
+			return;
+		}
+		msg = _Lang("是否立即执行仓库本地自动备份？");
 	}
-	msg = _Lang("是否立即执行仓库本地自动备份？");
-}
-else
-{
-	if(isRemoteBackupEnabled(gReposInfo) == false)
+	else
 	{
-		showErrorMessage({
-    		id: "idAlertDialog",	
-    		title: _Lang("提示"),
-    		okbtn: _Lang("确定"),
-    		msg: _Lang("该仓库未设置异地自动备份，请联系管理员！"),
-    	});
-		return;
+		if(isRemoteBackupEnabled(gReposInfo) == false)
+		{
+			showErrorMessage({
+	    		id: "idAlertDialog",	
+	    		title: _Lang("提示"),
+	    		okbtn: _Lang("确定"),
+	    		msg: _Lang("该仓库未设置异地自动备份，请联系管理员！"),
+	    	});
+			return;
+		}
+		msg = _Lang("是否立即执行仓库异地自动备份？");
 	}
-	msg = _Lang("是否立即执行仓库异地自动备份？");
-}
-
-
-qiao.bs.confirm({
+	
+	
+	qiao.bs.confirm({
     	id: 'reposAutoBackupConfirm',
+        title: _Lang("确认操作"),
         msg: msg,
         close: false,		
         okbtn: _Lang("开始"),
@@ -1426,6 +1431,7 @@ function addDocToLocalBackupIgnoreListConfirm(node)
 	
 	qiao.bs.confirm({
 	    	id: 'addLocalBackupIgnoreConfirm',
+	        title: _Lang("确认操作"),
 	        msg: msg,
 	        close: false,		
 	        okbtn: _Lang("确定"),
@@ -1442,25 +1448,26 @@ function removeDocFromLocalBackupIgnoreListConfirm(node)
 {
    	console.log("removeDocFromLocalBackupIgnoreListConfirm()");
 
-if(isLocalBackupEnabled(gReposInfo) == false)
-{
-	showErrorMessage({
-		id: "idAlertDialog",	
-		title: _Lang("提示"),
-		okbtn: _Lang("确定"),
-		msg: _Lang("该仓库未设置本地备份，请联系管理员！"),
-	});
-	return;
-}	
-
-var msg = _Lang("开启本地备份") + " [" + node.path + node.name + "]"
-if(node.docId == 0)
-{
-   msg = _Lang("开启仓库所有文件的本地备份") + "?";
-}
-
-qiao.bs.confirm({
+	if(isLocalBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage({
+			id: "idAlertDialog",	
+			title: _Lang("提示"),
+			okbtn: _Lang("确定"),
+			msg: _Lang("该仓库未设置本地备份，请联系管理员！"),
+		});
+		return;
+	}	
+	
+	var msg = _Lang("开启本地备份") + " [" + node.path + node.name + "]"
+	if(node.docId == 0)
+	{
+	   msg = _Lang("开启仓库所有文件的本地备份") + "?";
+	}
+	
+	qiao.bs.confirm({
     	id: 'removeLocalBackupIgnoreConfirm',
+        title: _Lang("确认操作"),
         msg: msg,
         close: false,		
         okbtn: _Lang("确定"),
@@ -1584,6 +1591,7 @@ if(isTextSearchEnabled(gReposInfo) == false)
 	
 	qiao.bs.confirm({
 	    	id: 'addTextSearchIgnoreConfirm',
+	        title: _Lang("确认操作"),
 	        msg: msg,
 	        close: false,		
 	        okbtn: _Lang("确定"),
@@ -1619,6 +1627,7 @@ function removeDocFromTextSearchIgnoreListConfirm(node)
 	
 	qiao.bs.confirm({
 	    	id: 'removeTextSearchIgnoreConfirm',
+	        title: _Lang("确认操作"),
 	        msg: msg,
 	        close: false,		
 	        okbtn: _Lang("确定"),
@@ -1700,21 +1709,22 @@ bootstrapQ.dialog({
 function addDocToVersionIgnoreListConfirm(node)
 {
    	console.log("addDocToVersionIgnoreListConfirm()");
-
-//if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
-//{
-//	showErrorMessage("该仓库未开通版本管理，请联系管理员！");
-//	return;
-//}
-
-var msg = _Lang("关闭历史版本管理") + " [" + node.path + node.name + "]"
-if(node.docId == 0)
-{
-   msg = _Lang("关闭仓库所有文件的历史版本管理") + "?";
-}
-
-qiao.bs.confirm({
+	
+	//if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	//{
+	//	showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+	//	return;
+	//}
+	
+	var msg = _Lang("关闭历史版本管理") + " [" + node.path + node.name + "]"
+	if(node.docId == 0)
+	{
+	   msg = _Lang("关闭仓库所有文件的历史版本管理") + "?";
+	}
+	
+	qiao.bs.confirm({
     	id: 'addVersionIgnoreConfirm',
+        title: _Lang("确认操作"),
         msg: msg,
         close: false,		
         okbtn: _Lang("确定"),
@@ -1745,6 +1755,7 @@ function removeDocFromVersionIgnoreListConfirm(node)
 	
 	qiao.bs.confirm({
     	id: 'removeVersionIgnoreConfirm',
+        title: _Lang("确认操作"),
         msg: msg,
         close: false,		
         okbtn: _Lang("确定"),
@@ -1806,6 +1817,7 @@ function clearReposCacheConfirm(node)
    	console.log("clearReposCacheConfirm()");
 	qiao.bs.confirm({
     	id: 'clearReposCacheConfirm',
+        title: _Lang("确认操作"),
         msg: _Lang("是否清除仓库缓存") + "?",
         close: false,		
         okbtn: _Lang("清除"),
@@ -2022,21 +2034,19 @@ function showUserList(data){
 		if(d.id > 0) //docAuthId > 0 表示这不是继承的权限
 		{
 			docAuthId = d.id;
-			//opBtn = "<a href='javascript:void(0)' onclick='deleteDocAuthConfirm("+docAuthId+");' class='mybtn-primary'>删除</a>";
-			//var opBtn = "<a href='javascript:void(0)' onclick='configDocAuth("+docAuthId+");' class='mybtn'>设置</a>";
 		}
 		
 		var userId = "";
 		if(d.userId >= 0)
 		{
 			userId = d.userId;
-			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteUserReposAuthConfirm("+d.reposAuthId+ "," +userId+");'>删除</a>";
+			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteUserReposAuthConfirm("+d.reposAuthId+ "," +userId+");'>" + _Lang('删除') + "</a>";
 		}
 		var groupId = "";
 		if(d.groupId > 0)
 		{
 			groupId = d.groupId;
-			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteGroupReposAuthConfirm("+d.reposAuthId+ "," +groupId+");'>删除</a>";				
+			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteGroupReposAuthConfirm("+d.reposAuthId+ "," +groupId+");'>" + _Lang("删除") + "</a>";				
 		}
 		var se = "<li value="+ i +">"
 			+"	<i class='cell select w5'>"
@@ -2138,17 +2148,18 @@ function deleteGroupReposAuthConfirm(reposAuthId,groupId)
 {
 		qiao.bs.confirm({
  	    	id: 'deleteGroupReposAuthConfirm',
-        msg: _Lang("是否删除该用户组的仓库权限") + "?",
-        close: false,		
-        okbtn: _Lang("删除"),
-        qubtn: _Lang("取消"),
-    },function () {
-    	
-    	//alert("点击了确定");
-    	deleteGroupReposAuth(reposAuthId,groupId);
-    	return true;   
-    },function(){
-    	//alert("点击了取消");
+ 	        title: _Lang("确认操作"),
+	        msg: _Lang("是否删除该用户组的仓库权限") + "?",
+	        close: false,		
+	        okbtn: _Lang("删除"),
+	        qubtn: _Lang("取消"),
+	    },function () {
+	    	
+	    	//alert("点击了确定");
+	    	deleteGroupReposAuth(reposAuthId,groupId);
+	    	return true;   
+	    },function(){
+	    	//alert("点击了取消");
  	    	return true;
  	    }); 
 }
@@ -2196,17 +2207,18 @@ function deleteUserReposAuthConfirm(reposAuthId,userId)
 {
 		qiao.bs.confirm({
  	    	id: 'deleteUserReposAuthConfirm',
-        msg: _Lang("是否删除该用户的仓库权限") + "?",
-        close: false,		
-        okbtn: _Lang("删除"),
-        qubtn: _Lang("取消"),
-    },function () {
-    	
-    	//alert("点击了确定");
-    	deleteUserReposAuth(reposAuthId,userId);
-    	return true;   
-    },function(){
-    	//alert("点击了取消");
+	        title: _Lang("确认操作"),
+ 	    	msg: _Lang("是否删除该用户的仓库权限") + "?",
+	        close: false,		
+	        okbtn: _Lang("删除"),
+	        qubtn: _Lang("取消"),
+	    },function () {
+	    	
+	    	//alert("点击了确定");
+	    	deleteUserReposAuth(reposAuthId,userId);
+	    	return true;   
+	    },function(){
+	    	//alert("点击了取消");
  	    	return true;
  	    }); 
 }
@@ -2295,6 +2307,7 @@ function deleteDocAuthConfirm(docAuthId)
    	console.log("deleteDocAuthAuthConfirm()");
 	qiao.bs.confirm({
     	id: 'deleteDocAuthConfirm',
+        title: _Lang("确认操作"),
         msg: _Lang("是否删除该用户的目录权限设置") + "?",
         close: false,		
         okbtn: "删除",
@@ -2530,14 +2543,15 @@ bootstrapQ.dialog({
 function refreshDocConfirm(node)
 {
    	console.log("refreshDocConfirm()");
-var msg = _Lang("强制刷新") + " [" + node.path + node.name + "]？"
-if(node.docId == 0)
-{
-   msg = _Lang("强制刷新整个仓库") + "?";
-}
-
-qiao.bs.confirm({
+	var msg = _Lang("强制刷新") + " [" + node.path + node.name + "]？"
+	if(node.docId == 0)
+	{
+	   msg = _Lang("强制刷新整个仓库") + "?";
+	}
+	
+	qiao.bs.confirm({
     	id: 'refreshDocConfirm',
+        title: _Lang("确认操作"),
         msg: msg,
         close: false,		
         okbtn: _Lang("确定"),
@@ -2811,6 +2825,7 @@ var ConfigUserAuth = (function () {
 		//弹出用户确认窗口
   		qiao.bs.confirm({
 	    	id: 'configErrorConfirm',
+	        title: _Lang("确认操作"),
 	        msg: UserName + " " + _Lang("权限设置失败") + "("+errMsg+")," + _Lang("是否继续设置其他用户") + "？",
 	        close: false,		
 	        okbtn: _Lang("继续"),
@@ -2829,6 +2844,7 @@ var ConfigUserAuth = (function () {
 	 			
  	    	    qiao.bs.confirm({
  	    	    	id: 'takeSameActionConfirm3',
+ 	    	        title: _Lang("确认操作"),
  	    	        msg: _Lang("后续错误是否执行此操作") + "？",
  	    	        close: false,		
  	    	        okbtn: _Lang("是"),
