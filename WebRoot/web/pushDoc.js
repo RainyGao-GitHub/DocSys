@@ -229,7 +229,7 @@ var DocPush = (function () {
 		var serverUrl = protocol + host;
 		localServer.serverUrl = serverUrl;
 		localServer.serverType = "mxsdoc";
-		localServer.serverName = "本地服务器";	
+		localServer.serverName = _Lang("本地服务器");	
 		localServer.isLocal = true;				
 		targetServerList.push(localServer);
 		
@@ -269,12 +269,12 @@ var DocPush = (function () {
 	                    }
 	                    else
 	                    {
-	                    	console.log("获取常用服务器列表失败:" + ret.msgInfo);
+	                    	console.log(_Lang("获取常用服务器列表失败", " : ", ret.msgInfo));
 	                    	callback && callback();
 	                    }
 	                },
 	                error : function () {
-                       console.log('获取常用服务器列表失败：服务器异常！');
+                       console.log('获取常用服务器列表失败', ' : ', '服务器异常');
                        callback && callback();
 	                }
 	    });
@@ -552,11 +552,11 @@ var DocPush = (function () {
                 }
                 else
                 {
-                	showErrorMessage("推送失败:" + ret.msgInfo);
+                	showErrorMessage(_Lang("推送失败", " : ", ret.msgInfo));
                 }
             },
             error : function () {
-                showErrorMessage("推送失败:服务器异常！");
+                showErrorMessage(_Lang("推送失败", " : ", "服务器异常"));
             }
         });
     }
@@ -565,10 +565,28 @@ var DocPush = (function () {
    	{
    		var totalNum = ret.dataEx.totalCount;
    		var successNum = ret.dataEx.successCount;
-		var pushResultInfo = "推送成功(共" + totalNum +"个)";
+		var pushResultInfo = "";
+		switch(langType)
+		{
+		case "en":
+			pushResultInfo = "Push Completed(Total : " + totalNum + ")";	
+			break;
+		default:
+			pushResultInfo = "推送成功(共" + totalNum +"个)";
+			break;
+		}
   		if(successNum != totalNum)
   		{
-  			pushResultInfo = "推送完成 (共" + totalNum +"个)"+",成功 " + successNum + "个: " + ret.dataEx.msgInfo;
+  			switch(langType)
+  			{
+  			case "en":
+  				pushResultInfo = "Push Completed(Total : " + totalNum + ", Failed : " + (totalNum - successNum) + ")";
+  				break;
+  			default:
+  	  			pushResultInfo = "推送完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+  				break;
+  			}
+  			
             // 普通消息提示条
 			bootstrapQ.msg({
 					msg : pushResultInfo,

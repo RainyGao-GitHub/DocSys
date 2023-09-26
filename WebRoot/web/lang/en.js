@@ -322,6 +322,10 @@ function lang(str)
 		"该操作将推送目录下的所有文件，是否允许？" : "All files under this folder will be pushed, please confirm",
 		"远程文件可能被删除或覆盖，是否强制推送？" : "Remote file will be replaced forcely, please confirm",
 		
+		"本地服务器" : "Local Server",
+		"获取常用服务器列表失败" : "Failed to get server list",
+		
+		
 		"文件搜索失败" : "Failed to search",
 		"标准模式" : "Standard Mode",
 		"电子书模式" : "E-Book Mode",
