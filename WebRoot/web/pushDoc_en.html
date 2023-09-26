@@ -21,13 +21,13 @@
     </div>
 	<div class="form-group"  name="targetStorageDiv">
 		<label class="col-sm-2 control-label"></label>
-		<div class="col-sm-2" style="padding-right:0;">
+		<div class="col-sm-3" style="padding-right:0;">
 			<select class="form-control" name="targetStorageType"  onchange="DocPush.doSelectTargetStorageType();" style="width: 100%;">   
 				<option value="1" selected="selected">Repository</option>
 				<option value="2">Disk</option>
 			</select>
 		</div>
-	    <div class="col-sm-8">
+	    <div class="col-sm-7">
 	    	<select class="form-control" name="targetRepos" style="width: 100%">   
 	        	<option value="" selected="selected">No Data</option>
 	        </select>
@@ -44,13 +44,13 @@
 	        </div>
 		    <div name="pushControlDiv" style="margin-left:90px; margin-top:30px">
 			   <label>
-			   	   <span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="doSelectRecurciveConfirm()">Push All Entries</span>
+			   	   <span name="recurciveEnSpan" style="margin-left:20px;display:none;"><input type="checkbox" name="recurciveEn" value="0" onclick="doSelectRecurciveConfirm()">Push All Files</span>
 			   	   <span name="forceEnSpan" style="margin-left:20px"><input type="checkbox" name="forceEn" value="0" onclick="doSelectForceConfirm()">Force</span>
 			   </label>
 		    </div>	
 	</div>
 	<div class="form-group" style="display:none;">
-	        <label class="col-sm-2 control-label">目录</label>
+	        <label class="col-sm-2 control-label">Folder</label>
 	        <div class="col-sm-10">
 	            <input type="text" name="targetPath" class="form-control"  maxlength="400"></input>
 	        </div>
@@ -58,8 +58,8 @@
 	<div class="modal-footer">
 	    <div class="form-group">
 		    <div class="col-sm-12 text-right">
-		        <button  type="button" class="btn btnPrimary" onclick="doPushDoc();" style="width: 100px;height: 42px;">确定</button>
-		        <button  type="button" class="btn btnPrimary" onclick="cancelPushDoc();" style="width: 100px;height: 42px;">取消</button>
+		        <button  type="button" class="btn btnPrimary" onclick="doPushDoc();" style="width: 100px;height: 42px;">Push</button>
+		        <button  type="button" class="btn btnPrimary" onclick="cancelPushDoc();" style="width: 100px;height: 42px;">Cancel</button>
 			</div>
 		</div>
 	</div>

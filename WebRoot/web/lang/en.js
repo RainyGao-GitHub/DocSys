@@ -320,11 +320,16 @@ function lang(str)
 		
 		"推送失败" : "Push Failed",
 		"该操作将推送目录下的所有文件，是否允许？" : "All files under this folder will be pushed, please confirm",
-		"远程文件可能被删除或覆盖，是否强制推送？" : "Remote file will be replaced forcely, please confirm",
+		"远程文件可能被删除或覆盖，是否强制推送？" : "Remote files will be replaced forcely, please confirm",
 		
 		"本地服务器" : "Local Server",
-		"获取常用服务器列表失败" : "Failed to get server list",
-		
+		"获取常用服务器列表失败" : "Failed to get server list",		
+		"添加常用服务器" : "Add Prefer Server",
+		"无法修改本地服务器！" : "Unable to configure Local Server",
+		"设置常用服务器" : "Prefer Server Config",
+		"无法删除本地服务器！" : "Unable to remove Local Server",
+		"远程文件改动将被强制覆盖，是否强制推送？" : "Remote files will be replaced forcely, please confirm",
+		"该操作将推送目录下的所有文件，是否允许？" : "All files under this folder will be pushed, please confirm",
 		
 		"文件搜索失败" : "Failed to search",
 		"标准模式" : "Standard Mode",

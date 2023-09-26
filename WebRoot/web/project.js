@@ -5654,7 +5654,7 @@ function showRemoteStoragePushPanel(node)
 	bootstrapQ.dialog({
 		id: 'remoteStoragePush',
 		url: 'remoteStoragePush' + langExt + '.html',
-		title: '文件推送',
+		title: _Lang('文件推送'),
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: false,

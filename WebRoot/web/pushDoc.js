@@ -31,8 +31,11 @@ function doSelectRecurciveConfirm()
 	{
 		qiao.bs.confirm({
 	        id: 'recurcivePushConfirm',
-	        msg: '该操作将推送目录下的所有文件，是否允许？',
-	    },function(){
+	        title: _Lang("确认操作"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
+	        msg: _Lang('该操作将推送目录下的所有文件，是否允许？'),
+		},function(){
 	    	//确认
 	    	$("#dialog-push-doc input[name='recurciveEn']").attr("checked","checked");
 	    },function(){
@@ -50,7 +53,10 @@ function doSelectForceConfirm()
 	{
 		qiao.bs.confirm({
 	        id: 'forcePushConfirm',
-	        msg: '远程文件改动将被强制覆盖，是否强制推送？',
+	        title: _Lang("确认操作"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
+	        msg: _Lang('远程文件改动将被强制覆盖，是否强制推送？'),
 	    },function(){
 	    	//确认
 	    	$("#dialog-push-doc input[name='forceEn']").attr("checked","checked");
@@ -83,8 +89,8 @@ function showAddUserPreferServerPanel()
 	bootstrapQ.dialog({
 		id: 'addUserPreferServer',
 		url: 'addUserPreferServer.html',
-		title: '添加常用服务器',
-		msg: '页面正在加载，请稍等...',
+		title: _Lang('添加常用服务器'),
+		msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: false,
 		callback: function(){
@@ -143,15 +149,20 @@ var DocPush = (function () {
 		console.log("showEditUserPreferServerPanel");
 		if(selectedServer.isLocal)
 		{
-			showErrorMessage("无法修改本地服务器！");
+			showErrorMessage({
+	    		id: "idAlertDialog",	
+	    		title: _Lang("提示"),
+	    		okbtn: _Lang("确定"),
+	    		msg: _Lang("无法修改本地服务器！"),
+	    	});
 			return;
 		}
 		
 		bootstrapQ.dialog({
 			id: 'editUserPreferServer',
-			url: 'editUserPreferServer.html',
-			title: '设置常用服务器',
-			msg: '页面正在加载，请稍等...',
+			url: 'editUserPreferServer' + langExt + '.html',
+			title: _Lang('设置常用服务器'),
+			msg: _Lang('页面正在加载，请稍等') + '...',
 			foot: false,
 			big: false,
 			callback: function(){
@@ -166,7 +177,12 @@ var DocPush = (function () {
 		
 		if(selectedServer.isLocal)
 		{			
-			showErrorMessage("无法删除本地服务器！");
+			showErrorMessage({
+	    		id: "idAlertDialog",	
+	    		title: _Lang("提示"),
+	    		okbtn: _Lang("确定"),
+	    		msg: _Lang("无法删除本地服务器！"),
+	    	});
 			return;
 		}
 		
@@ -178,8 +194,8 @@ var DocPush = (function () {
 		bootstrapQ.confirm(
 				{
 					id: "deleteTargetServerConfirm",
-					title: "删除确认",
-					msg : "是否删除 " + showName,
+					title: _Lang("删除确认"),
+					msg : _Lang("是否删除") + " [" + showName + "]",
 				},
 				function () {
 			    	//alert("点击了确定");
@@ -202,7 +218,7 @@ var DocPush = (function () {
                 if( "ok" == ret.status ){
              		// 普通消息提示条
 					bootstrapQ.msg({
-								msg : "删除成功！",
+								msg : _Lang("删除成功") + "!",
 								type : 'success',
 								time : 2000,
 					});

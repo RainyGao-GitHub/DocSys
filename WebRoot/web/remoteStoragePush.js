@@ -27,6 +27,9 @@ function doSelectRecurciveConfirm()
 	{
 		qiao.bs.confirm({
 	        id: 'recurcivePullConfirm',
+	        title: _Lang("确认操作"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
 	        msg: _Lang('该操作将推送目录下的所有文件，是否允许？'),
 	    },function(){
 	    	//确认
@@ -46,6 +49,9 @@ function doSelectForceConfirm()
 	{
 		qiao.bs.confirm({
 	        id: 'forcePullConfirm',
+	        title: _Lang("确认操作"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
 	        msg: _Lang('远程文件可能被删除或覆盖，是否强制推送？'),
 	    },function(){
 	    	//确认
