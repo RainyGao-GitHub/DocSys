@@ -1,56 +1,55 @@
-<div id="dialog-new-repos" class="form-horizontal">
-	<div class="modal-body">
+<!-- Share Modal -->
+<div id="reposBasicSetting">
         <div class="form-group">
-        	<div>
-	        	<label>Name</label>
-            	<input class="form-control" type="text" id="repos-name" style="width: 100%"/>
+        	<div style="margin-top:10px">
+            	<label>Name</label>
+            	<input class="form-control" type="text" id="repos-name" value="" style="width: 100%"></input>
             </div>
-
-        	<div style="margin-top:10px">            
-	            <label>Description</label>
-    	        <textarea class="form-control" id="repos-info" style="width: 100%"></textarea>
-        	</div>
-
-        	<div style="margin-top:10px">            
-	        	<label>Type</label>
+            
+            <div style="margin-top:10px">
+            	<label>Description</label>
+            	<textarea class="form-control" id="repos-info" style="width: 100%"></textarea>
+            </div>
+            
+            <div style="margin-top:10px">
+            	<label>Type</label>
             	<select class="form-control" id="repos-type" onchange="ReposConfig.doSelectFS();" style="width: 100%">   
             		<option value="1" selected="selected">Storage</option>   
             		<option value="5">Front-End</option>
             	</select>
-			</div> 
+            </div>
 
-			<div id="remoteServerDiv" style="margin-top:10px"  style="display:none">
-				<label>Server</label>
-				<div style="height: 40px">
-					<select class="form-control" id="remoteServerProtocol" onchange="ReposConfig.doSelectRemoteServerProtocol();" style="width:87%">   
-			        	<option value="ftp">FTP</option>   
+			<div id="remoteServerDiv" style="margin-top:20px; display:none">
+                <label style="margin-top:10px">Server</label>
+                <div style="height: 40px">
+					<select class="form-control" id="remoteServerProtocol" onchange="ReposConfig.doSelectremoteServerProtocol();" style="width:87%">   
+			            <option value="ftp">FTP</option>   
 			            <option value="sftp">SFTP</option>   
 			            <option value="smb">SMB</option>  
 			            <option value="svn">SVN</option>  
 			            <option value="git">GIT</option>  
-			            <option value="mxsdoc">MXSDOC</option>  
-			        </select>
+			        </select>	
 			        <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteSeverTest()" style="position: relative;top:-33px;left:90%">Test</button>
-				</div>
-				<input class="form-control" type="text" id="remoteServer"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
-			</div>  
+		       	</div>	
+				<input class="form-control" type="text" id="remoteServer"  placeholder="ftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
+			</div>
 			
-	        <div id="reposStorageConfig" style="margin-top:10px">
-				<label>Path</label>
-				<input class="form-control" type="text" id="repos-path"  value="" style="width: 100%" disabled="disabled"/>
-			    
-			    <label style="margin-top:10px">Storage Path
-			    	<span style="margin-left:20px">
-						<input type="checkbox" id="reposStorageRealDocPathEnable" value="0" onclick="ReposConfig.doSelectReposStorageRealDocPathEnable()">Customize 
+            <div id="reposStorageConfig" style="margin-top:20px">
+            	<label>Path</label>
+				<input class="form-control" type="text" id="repos-path"  value="" style="width: 100%"></input>
+               	
+               	<label style="margin-top:10px">Storage Path
+               		<span style="margin-left:20px">
+						<input type="checkbox" id="reposStorageRealDocPathEnable" value="0" onclick="ReposConfig.doSelectReposStorageRealDocPathEnable()">Customize
 					</span> 
-			    </label>
-				<div id="reposStorageRealDocPathConfig" style="display:none">
+               	</label>
+               	<div id="reposStorageRealDocPathConfig" style="display:none">
 					<input class="form-control" type="text" id="repos-realDocPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width: 100%"/>
 				</div>
 			</div>
-        	
-        	<div id="verCtrlDiv">
-	        	<div id="verCtrlEnablelDiv" style="margin-top:10px">
+
+            <div id="verCtrlDiv"  style="margin-top:20px;">
+	        	<div id="verCtrlEnablelDiv" style="margin-top:20px">
 		            <label>History
 		            	<span style="margin-left:5px">
 		            		<input type="checkbox" id="verCtrlEnable" value="0" onclick="ReposConfig.doSelectVerCtrlEnable()">
@@ -58,21 +57,21 @@
 		            </label>
 		            <span id="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="ReposConfig.doSelectShowVerCtrlConfig()">Advanced Options</span>
 				</div>
-				
-				<div id="verCtrlConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
-		            <label>
+
+	            <div id="verCtrlConfigDiv" style="display:none">
+		            <label style="margin-left:20px">
 		            	Type
 		            	<span id="verCtrl-isRemoteSetting" style="margin-left:20px">
 		            		<input type="checkbox" id="verCtrl-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl()">
 		            		Customize
 		            	</span>
 		            </label>
-		            <select class="form-control" id="repos-verCtrl" onchange="ReposConfig.doSelectVerCtrl();" style="width: 100%">   
+		            <select class="form-control" id="repos-verCtrl" onchange="ReposConfig.doSelectVerCtrl();" style="margin-left:20px; width: 96%">   
 		            	<option value="0">None</option>   
 		            	<option value="1">SVN</option>   
-		            	<option value="2">GIT</option>   
+		            	<option value="2">GIT</option> 
 		            </select>
-		            <div id="verCtrl-verReposSetting">
+		            <div id="verCtrl-verReposSetting" style="margin-left:20px">
 			            <div id="verCtrl-localVerRepos">
 				            <label>History Storage Path</label>
 				            <input class="form-control" type="text" id="verCtrl-localSvnPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width: 100%"/>
@@ -80,59 +79,59 @@
 			            <div id="verCtrl-remoteVerRepos">
 				            <label>History Repository Link</label>
 				            <div style="height:40px;">
-				            	<input class="form-control" type="text" id="verCtrl-svnPath"  placeholder="History Repository Link" value="" style="width: 87%"/>
-				            	<button  type="button" class="btn btnPrimary" onclick="ReposConfig.doVerReposTest()" style="position: relative;top:-33px;left:90%">Test</button>
-				            </div>
+					            <input class="form-control" type="text" id="verCtrl-svnPath"  placeholder="History Repository Link" value="" style="width: 87%"></input>
+					            <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doVerReposTest()" style="position: relative;top:-33px;left:90%">Test</button>
+					        </div>     
 				            <label>Account</label>
-				            <input class="form-control" type="text" id="verCtrl-svnUser"  value="" style="width: 100%"/>
+				            <input class="form-control" type="text" id="verCtrl-svnUser" value="" style="width: 100%"></input>
 				            <label>Password</label>
-			            	<input class="form-control" type="password" id="verCtrl-svnPwd" value="" style="width: 100%"/>           
-			            </div>
-		            </div>
-		        </div>
-		   	</div>
-	        
-	        <div id="virtualDocVerCtrlConfigDiv" style="display:none">
-		    	<label>History of Note<span id="verCtrl1-isRemoteSetting" style="margin-left:20px"><input  type="checkbox" id="verCtrl1-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl1()">Customize</span></label>
-		        <select class="form-control" id="repos-verCtrl1" onchange="ReposConfig.doSelectVerCtrl1();" style="width: 100%">   
+				            <input class="form-control" type="password" id="verCtrl-svnPwd" value="" style="width: 100%"></input>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div id="virtualDocVerCtrlConfigDiv" style="margin-left:20px; display:none">
+				<label>History of Note<span id="verCtrl1-isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="verCtrl1-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl1()">Customize</span></label>
+	            <select class="form-control" id="repos-verCtrl1" onchange="ReposConfig.doSelectVerCtrl1()" style="width: 100%">   
 	            	<option value="0">None</option>   
 	            	<option value="1">SVN</option>   
 	            	<option value="2">GIT</option>  
-		        </select>
-		        <div id="verCtrl1-verReposSetting">
-		            <div id="verCtrl1-localVerRepos">            
+	            </select>
+	            <div id="verCtrl1-verReposSetting">
+		            <div id="verCtrl1-localVerRepos">
 			            <label>History Storage Path</label>
-			            <input class="form-control" type="text" id="verCtrl1-localSvnPath"  placeholder="Keep empty if you want to use the default path" value="" style="width: 100%"/>
-	            	</div>
-	            	<div id="verCtrl1-remoteVerRepos">
+			            <input class="form-control" type="text" id="verCtrl1-localSvnPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width: 100%"/>
+		            </div>
+					<div id="verCtrl1-remoteVerRepos">
 			            <label>History Repository Link</label>
 			            <div style="height:40px;">
-			            	<input class="form-control" type="text" id="verCtrl1-svnPath"  placeholder="History Repository Link value="" style="width: 87%"/>
-			        		<button  type="button" class="btn btnPrimary" onclick="doVerReposTest1()" style="position: relative;top:-33px;left:90%">Test</button>
-			            </div>
+			            	<input class="form-control" type="text" id="verCtrl1-svnPath"  placeholder="History Repository Link" value="" style="width: 87%"></input>
+			            	<button  type="button" class="btn btnPrimary" onclick="doVerReposTest1()" style="position: relative;top:-33px;left:90%">Test</button>
+			            </div>			            
 			            <label>Account</label>
-			            <input class="form-control" type="text" id="verCtrl1-svnUser"  value="" style="width: 100%"/>
+			            <input class="form-control" type="text" id="verCtrl1-svnUser" value="" style="width: 100%"></input>
 			            <label>Password</label>
-			            <input class="form-control" type="password" id="verCtrl1-svnPwd" value="" style="width: 100%"/>          
-			        </div>
+			            <input class="form-control" type="password" id="verCtrl1-svnPwd" value="" style="width: 100%"></input>              
+					</div>
 				</div>
 			</div>
-					
-			<div id="textSearchEnablelDiv" style="margin-top:10px">
+			
+			<div id="textSearchEnablelDiv" style="margin-top:20px">
 	            <label>TextSearch<span style="margin-left:5px"><input type="checkbox" id="isTextSearchEnabled" value="0"></span></label>
 			</div>
 			
-			<div id="encryptEnablelDiv" style="margin-top:10px">
+			<div id="encryptEnablelDiv" style="margin-top:20px">
 	            <label>Encrypt<span style="margin-left:5px"><input type="checkbox" id="isEncryptEnabled" value="0" onclick="ReposConfig.doSetEncryptConfirm()"></span></label>
 			</div>
-			
-        	<div id="remoteStorageDiv" style="margin-top:10px">
-	        	<label>RemoteStorage
-	        		<span style="margin-left:5px">
+
+			<div id="remoteStorageDiv" style="margin-top:20px">
+                <label>RemoteStorage
+                	<span style="margin-left:5px">
 	            		<input type="checkbox" id="remoteStorageConfigEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageConfigEnable()">
 	            	</span>
-				</label>
-				
+                </label>
+                
 				<div id="remoteStorageConfigDiv" style="margin-left:20px; display:none">
 					<div style="height: 40px">
 						<select class="form-control" id="remoteStorageProtocol" onchange="ReposConfig.doSelectRemoteStorageProtocol();" style="width:87%">   
@@ -142,17 +141,16 @@
 				            <option value="smb">SMB</option>  
 				            <option value="svn">SVN</option>  
 				            <option value="git">GIT</option>  
-				            <option value="mxsdoc">MXSDOC</option>  
 				        </select>
-	            		<button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteStorageTest()" style="position: relative;top:-33px;left:90%">Test</button>
-				    </div>
-					<div id="remoteStorageProtocolConfig" style="margin-top:10px; display:none">
-			           	<input class="form-control" type="text" id="remoteStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
-	            		<label style="margin-left:1px">AutoPull <span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPull" value="0"></span></label>
-	            		<label style="margin-left:10px">ForcePull <span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPullForce" value="0"></span></label>
-	            		<label style="margin-left:15px">AutoPush <span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPush" value="0"></span></label>
-	            		<label style="margin-left:10px">ForcePush <span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPushForce" value="0"></span></label>
-					</div>
+				        <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteStorageTest()" style="position: relative;top:-33px;left:90%">Test</button>
+				    </div>    			
+					<div id="remoteStorageProtocolConfig"  style="margin-top:10px; display:none">
+						<input class="form-control" type="text" id="remoteStorage"  placeholder="ftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="width: 100%"/>
+			        	<label style="margin-left:1px">AutoPull<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPull" value="0"></span></label>
+			            <label style="margin-left:10px">ForcePull<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPullForce" value="0"></span></label>
+			            <label style="margin-left:15px">AutoPush<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPush" value="0"></span></label>
+			            <label style="margin-left:10px">ForcePush<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPushForce" value="0"></span></label>
+			        </div>
 	            	<label style="margin-top:10px">Advanced Options
 	            		<span style="margin-left:5px">
 	            			<input type="checkbox" id="remoteStorageFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageFilterEnable()">
@@ -181,29 +179,29 @@
 						        <option value="4294967296">4G</option>  
 						        <option value="0" selected>NoLimit</option>  
 						    </select>
-						</div>
+						</div> 
 						<div style="height:60px;">
 							<span>Unknown File Allowed<input type="checkbox" id="remoteStorage-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
 						</div> 
-						 
 					</div>
 				</div>
-			</div>        	
+			</div>
 
-			<div id="autoSyncupEnablelDiv" style="margin-top:10px">
+			<div id="autoSyncupEnablelDiv" style="margin-top:20px">
 	            <label>AutoSync
 	            	<span style="margin-left:5px">
 	            		<input type="checkbox" id="autoSyncupEnable" value="0" onclick="ReposConfig.doSelectAutoSyncupConfigEnable()">
 	            	</span>
 	            </label>
 			</div>
+			
 			<div id="autoSyncupConfigDiv" style="margin-left:20px;margin-top:10px;display:none">
 	            <label>History AutoSync
 	            	<span style="margin-left:5px">
 	            		<input type="checkbox" id="verReposSyncupEnable" value="0">
 	            	</span>
 	            </label>
-	
+	       
 				<br>
 
 	            <label style="margin-top:10px">RemoteStorage AutoSync
@@ -211,7 +209,7 @@
 	            		<input type="checkbox" id="remoteStorageSyncupEnable" value="0">
 	            	</span>
 	            </label>
-
+	       
 				<br>
 
 	            <label style="margin-top:10px">TextSearch AutoSync
@@ -219,8 +217,9 @@
 	            		<input type="checkbox" id="searchIndexSyncupEnable" value="0">
 	            	</span>
 	            </label>
+
+				<br>
 	            
-	            <br>
 	            <label style="margin-top:10px">Advanced Options
             		<span style="margin-left:5px">
             			<input type="checkbox" id="autoSyncupExtConfigEnable" value="0" onclick="ReposConfig.doSelectAutoSyncupExtConfigEnable()">
@@ -271,10 +270,10 @@
 					
 					<div></div>
 				</div>
-			</div>
-			
-			<div id="autoBackupEnablelDiv" style="margin-top:10px">
-	            <label>AutoBackup
+	        </div>
+	       
+			<div id="autoBackupEnablelDiv" style="margin-top:20px">
+	            <label>AutoBackup 
 	            	<span style="margin-left:5px">
 	            		<input type="checkbox" id="autoBackupEnable" value="0" onclick="ReposConfig.doSelectAutoBackupConfigEnable()">
 	            	</span>
@@ -287,7 +286,7 @@
 	            		<input type="checkbox" id="localBackupEnable" value="0" onclick="ReposConfig.doSelectLocalBackupEnable()">
 	            	</span>
 	            </label>
-	            <div id="localBackupConfig" style="margin-left:20px; display:none">
+	            <div id="localBackupConfig" style="display:none">
 				    <input class="form-control" type="text" id="localBackupRootPath"  placeholder="Local backup storage path" value="" style="width: 100%"/>
     				<label style="margin-top:5px">BackupTime</label>
 		        	<select class="form-control" id="localBackupTime" style="width:100%">   
@@ -340,8 +339,8 @@
 	            		<input type="checkbox" id="remoteBackupEnable" value="0" onclick="ReposConfig.doSelectRemoteBackupEnable()">
 	            	</span>
 	            </label>
-	            <div id="remoteBackupConfig" style="margin-left:20px; display:none">
-	            	<div style="height:40px;">
+	            <div id="remoteBackupConfig" style="display:none">
+					<div style="height:40px;">
 			        	<select class="form-control" id="remoteBackupStorageProtocol" onchange="ReposConfig.doSelectRemoteBackupStorageProtocol();" style="width:87%">   
 					        <option value="">None</option>
 					        <option value="ftp">FTP</option>   
@@ -355,7 +354,7 @@
 				    </div>
 				    <div id="remoteBackupStorageConfig" style="margin-top:10px; display:none">
 		           		<input class="form-control" type="text" id="remoteBackupStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:100%"/>
-	    				<label style="margin-top:5px">BacupTime</label>
+	    				<label style="margin-top:5px">BackupTime</label>
 			        	<select class="form-control" id="remoteBackupTime" style="width:100%">   
 					        <option value="0">0:00</option>   
 					        <option value="60">1:00</option>   
@@ -382,7 +381,7 @@
 					        <option value="1320">22:00</option>
 					        <option value="1380">23:00</option>
 					    </select>
-						<label style="margin-top:5px">Repeat At</label>
+						<label style="margin-top:5px">RepeatAt</label>
 						<div>
 							<span><input type="checkbox" id="remoteBackupWeekDay1" value="0">Monday</span>
 							<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay2" value="0">Tuesday</span>
@@ -392,7 +391,7 @@
 							<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay6" value="0">Saturday</span>
 							<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay7" value="0">Sunday</span>
 						</div>
-		            	
+
 		            	<label style="margin-top:10px">Advanced Options
 		            		<span style="margin-left:5px">
 		            			<input type="checkbox" id="remoteBackupFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteBackupFilterEnable()">
@@ -421,32 +420,23 @@
 							        <option value="4294967296">4G</option>  
 							        <option value="0" selected>NoLimit</option>  
 							    </select>
-							</div> 
+							</div>  
 							<div style="height:60px;">
 								<span>Unknown File Allowed<input type="checkbox" id="remoteBackup-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
-							</div> 
+							</div>    
 						</div>
 						<div></div>
-						
-			            <label style="margin-top:10px">RealTime Backup
+	
+			            <label style="margin-top:5px">RealTime Backup
 			            	<span style="margin-left:5px">
 		            			<input type="checkbox" id="remoteBackup-realTimeBackupEnable" value="0">
 		            		</span>
-		            	</label>		
+		            	</label>		      
 		            </div>      
 	            </div>
-			</div>
-        </div>
-    </div>
-    
-    <div class="modal-footer">
-	    <div class="form-group">
-		    <div class="col-sm-12 text-right">
-		        <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doAddRepos();" style="width: 100px;height: 42px;">Confirm</button>
-		        <button  type="button" class="btn btnPrimary" onclick="ReposConfig.cancelAddRepos();" style="width: 100px;height: 42px;">Cancel</button>
-			</div>
-		</div>
-	</div>
+	    	</div>
+		</div>	
+        <a href='javascript:void(0)' onclick="ReposConfig.saveReposBasicSetting();" class='mybtn-primary'>Save</a>
 </div>
 
 <script type="text/javascript" src="js/MyJquery.js"></script>
