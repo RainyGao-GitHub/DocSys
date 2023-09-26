@@ -34,6 +34,7 @@ function lang(str)
 		"页面正在加载，请稍侯" : "Loading",
 		"文件" : "File",
 		"文件夹" : "Folder",		
+		"用户未登录" : "User not Signed In",
 		
 		//注册
 		"注册失败"	: "Sign Up Failed",			
