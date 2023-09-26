@@ -912,10 +912,10 @@ if(isRemoteStorageEnabled(gReposInfo) == false)
 	return;
 }	
 
-var msg = "关闭 [" + node.path + node.name + "] 的远程存储？"
+var msg = _Lang("关闭远程存储") + " [" + node.path + node.name + "]"
 if(node.docId == 0)
 {
-   msg = "关闭仓库所有文件的远程存储?";
+   msg = _Lang("关闭仓库所有文件的远程存储") + "?";
 }
 
 qiao.bs.confirm({
@@ -947,18 +947,18 @@ if(isRemoteStorageEnabled(gReposInfo) == false)
 	return;
 }
 
-var msg = "开启 [" + node.path + node.name + "] 的远程存储？"
+var msg = _Lang("开启远程存储") + " [" + node.path + node.name + "]"
 if(node.docId == 0)
 {
-   msg = "开启仓库所有文件的远程存储?";
+   msg = _Lang("开启仓库所有文件的远程存储") + "?";
 }
 
 qiao.bs.confirm({
     	id: 'removeRemoteStorageIgnoreConfirm',
         msg: msg,
         close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
+        okbtn: _Lang("确定"),
+        qubtn: _Lang("取消"),
  	    },function () {
  	    	setRemoteStorageIgnore(node, 0);
  	    	return true;   
@@ -985,7 +985,7 @@ $.ajax({
         	// 普通消息提示条
         	docRemoteStorageIgnore[node.docId] = ignore;
         	bootstrapQ.msg({
-					msg : '设置成功！',
+					msg : _Lang('设置成功') + '!',
 					type : 'success',
 					time : 2000,
 				    });
@@ -996,7 +996,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("设置失败:" + ret.msgInfo),
+        		msg: _Lang("设置失败", " : ", ret.msgInfo),
         	});
         }
     },
@@ -1005,7 +1005,7 @@ $.ajax({
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang('设置失败:服务器异常！'),
+    		msg: _Lang('设置失败', ' : ', '服务器异常'),
     	});
         }
 	});
@@ -1029,9 +1029,9 @@ if(isRemoteBackupEnabled(gReposInfo) == false)
 
 bootstrapQ.dialog({
 	id: 'reposRemoteBackupIgnoreManage',
-	title: '异地备份忽略管理',
+	title: _Lang('异地备份忽略管理'),
 	url: 'reposRemoteBackupIgnoreManage' + langExt + '.html',
-	msg: '页面正在加载，请稍等...',
+	msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: true,
 		callback: function(){
@@ -1067,18 +1067,18 @@ if(isRemoteBackupEnabled(gReposInfo) == false)
 	return;
 }	
 
-var msg = "关闭 [" + node.path + node.name + "] 的异地备份？"
+var msg = _Lang("关闭异地备份") + " [" + node.path + node.name + "]"
 if(node.docId == 0)
 {
-   msg = "关闭仓库所有文件的异地备份?";
+   msg = _Lang("关闭仓库所有文件的异地备份") + "?";
 }
 
 qiao.bs.confirm({
     	id: 'addRemoteBackupIgnoreConfirm',
         msg: msg,
         close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
+        okbtn: _Lang("确定"),
+        qubtn: _Lang("取消"),
  	    },function () {
  	    	setRemoteBackupIgnore(node, 1);
  	    	return true;   
@@ -1102,18 +1102,18 @@ if(isRemoteBackupEnabled(gReposInfo) == false)
 	return;
 }	
 
-var msg = "开启 [" + node.path + node.name + "] 的异地备份？"
+var msg = _Lang("开启异地备份") + " [" + node.path + node.name + "]"
 if(node.docId == 0)
 {
-   msg = "开启仓库所有文件的异地备份?";
+   msg = _Lang("开启仓库所有文件的异地备份") + "?";
 }
 
 qiao.bs.confirm({
     	id: 'removeRemoteBackupIgnoreConfirm',
         msg: msg,
         close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
+        okbtn: _Lang("确定"),
+        qubtn: _Lang("取消"),
  	    },function () {
  	    	setRemoteBackupIgnore(node, 0);
  	    	return true;   
@@ -1138,7 +1138,7 @@ $.ajax({
     success : function (ret) {
         if( "ok" == ret.status ){
         	bootstrapQ.msg({
-					msg : '设置成功！',
+					msg : _Lang('设置成功') + '!',
 					type : 'success',
 					time : 2000,
 				    });
@@ -1149,7 +1149,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("设置失败:" + ret.msgInfo),
+        		msg: _Lang("设置失败", " : ", ret.msgInfo),
         	});
         }
     },
@@ -1158,7 +1158,7 @@ $.ajax({
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang('设置失败:服务器异常！'),
+    		msg: _Lang('设置失败', ' : ', '服务器异常'),
     	});
         }
 	});
@@ -1181,9 +1181,9 @@ if(isLocalBackupEnabled(gReposInfo) == false)
 
 bootstrapQ.dialog({
 	id: 'reposLocalBackupIgnoreManage',
-	title: '本地备份忽略管理',
+	title: _Lang('本地备份忽略管理'),
 	url: 'reposLocalBackupIgnoreManage' + langExt + '.html',
-	msg: '页面正在加载，请稍等...',
+	msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: true,
 		callback: function(){
@@ -1207,7 +1207,7 @@ function reposAutoBackupConfirm(type, fullBackup)
 {
    	console.log("reposAutoBackupConfirm() type:" + type + " fullBackup:" + fullBackup);
 
-var msg = "是否立即执行仓库自动备份？"
+var msg = _Lang("是否立即执行仓库自动备份？");
 if(type == 1)
 {
 	if(isLocalBackupEnabled(gReposInfo) == false)
@@ -1220,7 +1220,7 @@ if(type == 1)
     	});
 		return;
 	}
-	msg = "是否立即执行仓库本地自动备份？"
+	msg = _Lang("是否立即执行仓库本地自动备份？");
 }
 else
 {
@@ -1234,7 +1234,7 @@ else
     	});
 		return;
 	}
-	msg = "是否立即执行仓库异地自动备份？"
+	msg = _Lang("是否立即执行仓库异地自动备份？");
 }
 
 
@@ -1242,8 +1242,8 @@ qiao.bs.confirm({
     	id: 'reposAutoBackupConfirm',
         msg: msg,
         close: false,		
-        okbtn: "备份",
-        qubtn: "取消",
+        okbtn: _Lang("开始"),
+        qubtn: _Lang("取消"),
  	    },function () {
  	    	reposAutoBackup(type, fullBackup);
  	    	return true;   
@@ -1295,7 +1295,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("备份失败:" + ret.msgInfo),
+        		msg: _Lang("备份失败", " : ", ret.msgInfo),
         	});
         }
     },
@@ -1304,7 +1304,7 @@ $.ajax({
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang('备份失败:服务器异常！'),
+    		msg: _Lang('备份失败', ' : ', '服务器异常'),
     	});
         }
 	});
@@ -1359,7 +1359,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("仓库自动备份失败:" + ret.msgInfo),
+        		msg: _Lang("仓库自动备份失败", " : ", ret.msgInfo),
        	});
        }
     },
@@ -1368,7 +1368,7 @@ $.ajax({
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("仓库自动备份失败:服务器异常"),
+    		msg: _Lang("仓库自动备份失败", " : ", "服务器异常"),
     	});
         }
 	});	
@@ -1389,7 +1389,7 @@ if(SubContext.type == 1)
 		id: "idAlertDialog",	
 		title: _Lang("提示"),
 		okbtn: _Lang("确定"),
-		msg: _Lang("本地自动备份成功！"),
+		msg: _Lang("本地自动备份成功") + "!",
 	});
 }
 else
@@ -1398,7 +1398,7 @@ else
 		id: "idAlertDialog",	
 		title: _Lang("提示"),
 		okbtn: _Lang("确定"),
-		msg: _Lang("异地自动备份成功！"),
+		msg: _Lang("异地自动备份成功") + "!",
 	});		
 	}
 }
@@ -1407,35 +1407,35 @@ function addDocToLocalBackupIgnoreListConfirm(node)
 {
    	console.log("addDocToLocalBackupIgnoreListConfirm()");
 
-if(isLocalBackupEnabled(gReposInfo) == false)
-{
-	showErrorMessage({
-		id: "idAlertDialog",	
-		title: _Lang("提示"),
-		okbtn: _Lang("确定"),
-		msg: _Lang("该仓库未设置本地备份，请联系管理员！"),
-	});
-	return;
-}	
-
-var msg = "关闭 [" + node.path + node.name + "] 的本地备份？"
-if(node.docId == 0)
-{
-   msg = "关闭仓库所有文件的本地备份?";
-}
-
-qiao.bs.confirm({
-    	id: 'addLocalBackupIgnoreConfirm',
-        msg: msg,
-        close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
- 	    },function () {
- 	    	setLocalBackupIgnore(node, 1);
- 	    	return true;   
- 	    },function(){
- 	    	return true;
- 	    }); 
+	if(isLocalBackupEnabled(gReposInfo) == false)
+	{
+		showErrorMessage({
+			id: "idAlertDialog",	
+			title: _Lang("提示"),
+			okbtn: _Lang("确定"),
+			msg: _Lang("该仓库未设置本地备份，请联系管理员！"),
+		});
+		return;
+	}	
+	
+	var msg = _Lang("关闭本地备份") + " [" + node.path + node.name + "]"
+	if(node.docId == 0)
+	{
+	   msg = _Lang("关闭仓库所有文件的本地备份") + "?";
+	}
+	
+	qiao.bs.confirm({
+	    	id: 'addLocalBackupIgnoreConfirm',
+	        msg: msg,
+	        close: false,		
+	        okbtn: _Lang("确定"),
+	        qubtn: _Lang("取消"),
+	 	    },function () {
+	 	    	setLocalBackupIgnore(node, 1);
+	 	    	return true;   
+	 	    },function(){
+	 	    	return true;
+	 	    }); 
 }
 
 function removeDocFromLocalBackupIgnoreListConfirm(node)
@@ -1453,18 +1453,18 @@ if(isLocalBackupEnabled(gReposInfo) == false)
 	return;
 }	
 
-var msg = "开启 [" + node.path + node.name + "] 的本地备份？"
+var msg = _Lang("开启本地备份") + " [" + node.path + node.name + "]"
 if(node.docId == 0)
 {
-   msg = "开启仓库所有文件的本地备份?";
+   msg = _Lang("开启仓库所有文件的本地备份") + "?";
 }
 
 qiao.bs.confirm({
     	id: 'removeLocalBackupIgnoreConfirm',
         msg: msg,
         close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
+        okbtn: _Lang("确定"),
+        qubtn: _Lang("取消"),
  	    },function () {
  	    	setLocalBackupIgnore(node, 0);
  	    	return true;   
@@ -1489,7 +1489,7 @@ $.ajax({
     success : function (ret) {
         if( "ok" == ret.status ){
         	bootstrapQ.msg({
-					msg : '设置成功！',
+					msg : _Lang('设置成功') + '!',
 					type : 'success',
 					time : 2000,
 				    });
@@ -1500,7 +1500,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("设置失败:" + ret.msgInfo),
+        		msg: _Lang("设置失败", " : ", ret.msgInfo),
         	});
         }
     },
@@ -1509,7 +1509,7 @@ $.ajax({
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang('设置失败:服务器异常！'),
+    		msg: _Lang('设置失败', ' : ', '服务器异常'),
     	});
         }
 	});
@@ -1532,9 +1532,9 @@ if(isTextSearchEnabled(gReposInfo) == false)
 
 bootstrapQ.dialog({
 	id: 'reposTextSearchIgnoreManage',
-	title: '远程存储忽略管理',
+	title: _Lang('全文搜索忽略管理'),
 	url: 'reposTextSearchIgnoreManage' + langExt + '.html',
-	msg: '页面正在加载，请稍等...',
+	msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: true,
 		callback: function(){
@@ -1576,59 +1576,59 @@ if(isTextSearchEnabled(gReposInfo) == false)
 	return;
 }	
 
-var msg = "关闭 [" + node.path + node.name + "] 的全文搜索？"
-if(node.docId == 0)
-{
-   msg = "关闭仓库所有文件的全文搜索?";
-}
-
-qiao.bs.confirm({
-    	id: 'addTextSearchIgnoreConfirm',
-        msg: msg,
-        close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
- 	    },function () {
- 	    	setTextSearchIgnore(node, 1);
- 	    	return true;   
- 	    },function(){
- 	    	return true;
- 	    }); 
+	var msg = _Lang("关闭全文搜索") + " [" + node.path + node.name + "]";
+	if(node.docId == 0)
+	{
+	   msg = _Lang("关闭仓库所有文件的全文搜索") + "?";
+	}
+	
+	qiao.bs.confirm({
+	    	id: 'addTextSearchIgnoreConfirm',
+	        msg: msg,
+	        close: false,		
+	        okbtn: _Lang("确定"),
+	        qubtn: _Lang("取消"),
+	 	    },function () {
+	 	    	setTextSearchIgnore(node, 1);
+	 	    	return true;   
+	 	    },function(){
+	 	    	return true;
+	 	    }); 
 }
 
 function removeDocFromTextSearchIgnoreListConfirm(node)
 {
    	console.log("removeDocFromTextSearchIgnoreListConfirm()");
 
-if(isTextSearchEnabled(gReposInfo) == false)
-{
-	showErrorMessage({
-		id: "idAlertDialog",	
-		title: _Lang("提示"),
-		okbtn: _Lang("确定"),
-		msg: _Lang("该仓库未开启全文搜索，请联系管理员！"),
-	});
-	return;
-}	
+	if(isTextSearchEnabled(gReposInfo) == false)
+	{
+		showErrorMessage({
+			id: "idAlertDialog",	
+			title: _Lang("提示"),
+			okbtn: _Lang("确定"),
+			msg: _Lang("该仓库未开启全文搜索，请联系管理员！"),
+		});
+		return;
+	}	
 
-var msg = "开启 [" + node.path + node.name + "] 的全文搜索？"
-if(node.docId == 0)
-{
-   msg = "开启仓库所有文件的全文搜索?";
-}
-
-qiao.bs.confirm({
-    	id: 'removeTextSearchIgnoreConfirm',
-        msg: msg,
-        close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
- 	    },function () {
- 	    	setTextSearchIgnore(node, 0);
- 	    	return true;   
- 	    },function(){
- 	    	return true;
- 	    }); 
+	var msg = _Lang("开启全文搜索") + " [" + node.path + node.name + "]"
+	if(node.docId == 0)
+	{
+	   msg = _Lang("开启仓库所有文件的全文搜索") + "?";
+	}
+	
+	qiao.bs.confirm({
+	    	id: 'removeTextSearchIgnoreConfirm',
+	        msg: msg,
+	        close: false,		
+	        okbtn: _Lang("确定"),
+	        qubtn: _Lang("取消"),
+	 	    },function () {
+	 	    	setTextSearchIgnore(node, 0);
+	 	    	return true;   
+	 	    },function(){
+	 	    	return true;
+	 	    }); 
 }
 
 function setTextSearchIgnore(node, ignore)
@@ -1647,7 +1647,7 @@ $.ajax({
     success : function (ret) {
         if( "ok" == ret.status ){
         	bootstrapQ.msg({
-					msg : '设置成功！',
+					msg : _Lang('设置成功') + '！',
 					type : 'success',
 					time : 2000,
 				    });
@@ -1658,7 +1658,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("设置失败:" + ret.msgInfo),
+        		msg: _Lang("设置失败", " : ", ret.msgInfo),
         	});
         }
     },
@@ -1667,7 +1667,7 @@ $.ajax({
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang('设置失败:服务器异常！'),
+    		msg: _Lang('设置失败', ' : ', '服务器异常！'),
     	});
         }
 	});
@@ -1685,9 +1685,9 @@ function showReposVersionIgnoreListManagePanel()
 
 bootstrapQ.dialog({
 	id: 'reposVersionIgnoreManage',
-	title: '版本忽略管理',
+	title: _Lang('版本忽略管理'),
 	url: 'reposVersionIgnoreManage' + langExt + '.html',
-	msg: '页面正在加载，请稍等...',
+	msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: true,
 		callback: function(){
@@ -1707,18 +1707,18 @@ function addDocToVersionIgnoreListConfirm(node)
 //	return;
 //}
 
-var msg = "关闭 [" + node.path + node.name + "] 的历史版本管理？"
+var msg = _Lang("关闭历史版本管理") + " [" + node.path + node.name + "]"
 if(node.docId == 0)
 {
-   msg = "关闭仓库所有文件的历史版本管理?";
+   msg = _Lang("关闭仓库所有文件的历史版本管理") + "?";
 }
 
 qiao.bs.confirm({
     	id: 'addVersionIgnoreConfirm',
         msg: msg,
         close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
+        okbtn: _Lang("确定"),
+        qubtn: _Lang("取消"),
  	    },function () {
  	    	setVersionIgnore(node, 1);
  	    	return true;   
@@ -1731,24 +1731,24 @@ function removeDocFromVersionIgnoreListConfirm(node)
 {
    	console.log("removeDocFromVersionIgnoreListConfirm()");
 
-//if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
-//{
-//	showErrorMessage("该仓库未开通版本管理，请联系管理员！");
-//	return;
-//}
+	//if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
+	//{
+	//	showErrorMessage("该仓库未开通版本管理，请联系管理员！");
+	//	return;
+	//}
 
-var msg = "开启 [" + node.path + node.name + "] 的历史版本管理？"
-if(node.docId == 0)
-{
-   msg = "开启仓库所有文件的历史版本管理?";
-}
-
-qiao.bs.confirm({
+   	var msg = _Lang("开启历史版本管理") + " [" + node.path + node.name + "]";
+	if(node.docId == 0)
+	{
+	   msg = _Lang("开启仓库所有文件的历史版本管理") + "?";
+	}
+	
+	qiao.bs.confirm({
     	id: 'removeVersionIgnoreConfirm',
         msg: msg,
         close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
+        okbtn: _Lang("确定"),
+        qubtn: _Lang("取消"),
  	    },function () {
  	    	setVersionIgnore(node, 0);
  	    	return true;   
@@ -1775,7 +1775,7 @@ $.ajax({
         	// 普通消息提示条
         	docVersionIgnore[node.docId] = ignore;
         	bootstrapQ.msg({
-					msg : '设置成功！',
+					msg : _Lang('设置成功') + '!',
 					type : 'success',
 					time : 2000,
 				    });
@@ -1786,7 +1786,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("设置失败:" + ret.msgInfo),
+        		msg: _Lang("设置失败", " : ", ret.msgInfo),
         	});
         }
     },
@@ -1795,7 +1795,7 @@ $.ajax({
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang('设置失败:服务器异常！'),
+    		msg: _Lang('设置失败', ' : ', '服务器异常'),
     	});
         }
 	});
@@ -1806,10 +1806,10 @@ function clearReposCacheConfirm(node)
    	console.log("clearReposCacheConfirm()");
 	qiao.bs.confirm({
     	id: 'clearReposCacheConfirm',
-        msg: "是否清除仓库缓存?",
+        msg: _Lang("是否清除仓库缓存") + "?",
         close: false,		
-        okbtn: "清除",
-        qubtn: "取消",
+        okbtn: _Lang("清除"),
+        qubtn: _Lang("取消"),
     },function () {
     	//alert("点击了确定");
     	clearReposCache(node);
@@ -1837,7 +1837,7 @@ $.ajax({
         if( "ok" == ret.status ){
         	// 普通消息提示条
 			bootstrapQ.msg({
-					msg : '清除成功！',
+					msg : _Lang('清除成功') + '!',
 					type : 'success',
 					time : 2000,
 				    });
@@ -1848,7 +1848,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("清除失败:" + ret.msgInfo),
+        		msg: _Lang("清除失败", " : ", ret.msgInfo),
         	});
         }
     },
@@ -1857,7 +1857,7 @@ $.ajax({
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang('清除失败:服务器异常！'),
+    		msg: _Lang('清除失败', ' : ', '服务器异常'),
     	});
         }
 });
@@ -1867,21 +1867,21 @@ $.ajax({
 function getCurDocVersionIgnore()
 {
 	console.log("getCurDocVersionIgnore()");
-var docId = curDoc;
-console.log("docId:" + docId);
-
-var parentPath = "";
-var docName = "";
-var node = getNodeByNodeId(docId);
-if(node && node != null)
-{
-	parentPath = node.path;
-	docName = node.name;
-}
-console.log("docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
-var vid = getQueryString("vid");
-
-$.ajax({
+	var docId = curDoc;
+	console.log("docId:" + docId);
+	
+	var parentPath = "";
+	var docName = "";
+	var node = getNodeByNodeId(docId);
+	if(node && node != null)
+	{
+		parentPath = node.path;
+		docName = node.name;
+	}
+	console.log("docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
+	var vid = getQueryString("vid");
+	
+	$.ajax({
             url : "/DocSystem/Doc/getVersionIgnore.do",
             type : "post",
             dataType : "json",
@@ -1901,7 +1901,7 @@ $.ajax({
     	        		id: "idAlertDialog",	
     	        		title: _Lang("提示"),
     	        		okbtn: _Lang("确定"),
-    	        		msg: _Lang('获取文件版本管理设置失败:' + ret.msgInfo),
+    	        		msg: _Lang('获取文件版本管理设置失败', ' : ', ret.msgInfo),
                 	});
                 }
             },
@@ -1910,7 +1910,7 @@ $.ajax({
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang('获取文件版本管理设置失败: 服务器异常'),
+	        		msg: _Lang('获取文件版本管理设置失败', ' : ', '服务器异常'),
             	});
                 }
     });
@@ -1927,20 +1927,20 @@ console.log("docId:" + docId);
 
 function showDocAuthList(){
    	console.log("showDocAuthList()");
-var docId = curDoc;
-var parentPath = "";
-var docName = "";
-var node = getNodeByNodeId(docId);
-if(node && node != null)
-{
-	parentPath = node.path;
-	docName = node.name;
-}
-console.log("docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
-
-var vid = getQueryString("vid");
-
-$.ajax({
+	var docId = curDoc;
+	var parentPath = "";
+	var docName = "";
+	var node = getNodeByNodeId(docId);
+	if(node && node != null)
+	{
+		parentPath = node.path;
+		docName = node.name;
+	}
+	console.log("docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
+	
+	var vid = getQueryString("vid");
+	
+	$.ajax({
             url : "/DocSystem/Repos/getDocAuthList.do",
             type : "post",
             dataType : "json",
@@ -1970,7 +1970,7 @@ $.ajax({
 		        		id: "idAlertDialog",	
 		        		title: _Lang("提示"),
 		        		okbtn: _Lang("确定"),
-		        		msg: _Lang("Error:" + ret.msgInfo),
+		        		msg: _Lang("获取仓库用户列表失败", " : ", ret.msgInfo),
 		        	});
                 }
             },
@@ -1984,7 +1984,7 @@ $.ajax({
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang('服务器异常：获取仓库用户列表失败！'),
+	        		msg: _Lang("获取仓库用户列表失败", " : ", "服务器异常"),
 	        	});
             }
 });
