@@ -150,7 +150,12 @@ var DocPull = (function () {
 		console.log("showEditUserPreferServerPanel");
 		if(_selectedServer.isLocal)
 		{
-			showErrorMessage(_Lang("无法修改本地服务器！"));
+			showErrorMessage({
+	    		id: "idAlertDialog",	
+	    		title: _Lang("提示"),
+	    		okbtn: _Lang("确定"),
+	    		msg: _Lang("无法修改本地服务器！"),
+	    	});
 			return;
 		}
 		
@@ -173,7 +178,12 @@ var DocPull = (function () {
 		
 		if(_selectedServer.isLocal)
 		{			
-			showErrorMessage(_Lang("无法删除本地服务器！"));
+			showErrorMessage({
+	    		id: "idAlertDialog",	
+	    		title: _Lang("提示"),
+	    		okbtn: _Lang("确定"),
+	    		msg: _Lang("无法删除本地服务器！"),
+	    	});
 			return;
 		}
 		
@@ -559,11 +569,21 @@ var DocPull = (function () {
                 }
                 else
                 {
-                	showErrorMessage(_Lang("拉取失败", " : ", ret.msgInfo));
+                	showErrorMessage({
+        	    		id: "idAlertDialog",	
+        	    		title: _Lang("提示"),
+        	    		okbtn: _Lang("确定"),
+        	    		msg: _Lang("拉取失败", " : ", ret.msgInfo),
+        	    	});
                 }
             },
             error : function () {
-                showErrorMessage(_Lang("拉取失败", " : ", "服务器异常"));
+            	showErrorMessage({
+    	    		id: "idAlertDialog",	
+    	    		title: _Lang("提示"),
+    	    		okbtn: _Lang("确定"),
+    	    		msg: _Lang("拉取失败", " : ", "服务器异常"),
+    	    	});
             }
         });
     }
