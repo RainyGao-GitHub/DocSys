@@ -342,6 +342,8 @@ function lang(str)
 		"修改成功" : "Modify Ok",
 		"修改失败" : "Modify Failed",
 		"设置未改动" : "Config not changed",
+		"设置" : "Edit",
+		"退出设置" : "Exit Edit",	
 		
 		"文件选择" : "Select File",
 				
