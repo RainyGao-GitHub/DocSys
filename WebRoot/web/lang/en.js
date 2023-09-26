@@ -237,7 +237,6 @@ function lang(str)
 		"否" : "No",
 		"设置完成" : "Configure Completed",
 		
- 		
 		//文件操作与右键菜单选项
 		"刷新" : "Refresh",
 		"分享" : "Share",
@@ -332,7 +331,7 @@ function lang(str)
 		"获取常用服务器列表失败" : "Failed to get server list",		
 		"添加常用服务器" : "Add Prefer Server",
 		"无法修改本地服务器！" : "Unable to configure Local Server",
-		"设置常用服务器" : "Prefer Server Config",
+		"设置常用服务器" : "Edit Prefer Server",
 		"无法删除本地服务器！" : "Unable to remove Local Server",
 		"网站地址不能为空" : "WebSite Link is empty",
 		"服务器地址不能为空" : "Server URL is empty",
@@ -344,6 +343,10 @@ function lang(str)
 		"设置未改动" : "Config not changed",
 		"设置" : "Edit",
 		"退出设置" : "Exit Edit",	
+		"是否删除该用户的访问权限" : "Do you want to remove the user to access",
+		"移除失败" : "Remove Failed",
+		"添加" : "Add",
+		"移除" : "Remove",
 		
 		"文件选择" : "Select File",
 				

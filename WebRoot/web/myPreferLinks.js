@@ -306,7 +306,9 @@ function deletePreferLinkConfirm(index)
 			{
 				id: "deletePreferLinkConfirm",
 				title: _Lang("删除确认"),
-				msg : _Lang("是否删除") + " " + showName,
+				msg: _Lang("是否删除") + " [" + showName + "]",
+				okbtn: _Lang("删除"),
+				qubtn: _Lang("取消"),
 			},
 			function () {
 		    	//alert("点击了确定");
