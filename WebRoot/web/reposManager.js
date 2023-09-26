@@ -2811,10 +2811,10 @@ var ConfigUserAuth = (function () {
 		//弹出用户确认窗口
   		qiao.bs.confirm({
 	    	id: 'configErrorConfirm',
-	        msg: UserName + "权限设置失败（"+errMsg+"）,是否继续设置其他用户？",
+	        msg: UserName + " " + _Lang("权限设置失败") + "("+errMsg+")," + _Lang("是否继续设置其他用户") + "？",
 	        close: false,		
-	        okbtn: "继续",
-	        qubtn: "退出",
+	        okbtn: _Lang("继续"),
+	        qubtn: _Lang("退出"),
 	    },function () {
 	    	//alert("点击了确定");
 			clearTimeout(configErrorTimer);			
@@ -2829,10 +2829,10 @@ var ConfigUserAuth = (function () {
 	 			
  	    	    qiao.bs.confirm({
  	    	    	id: 'takeSameActionConfirm3',
- 	    	        msg: "后续错误是否执行此操作？",
+ 	    	        msg: _Lang("后续错误是否执行此操作") + "？",
  	    	        close: false,		
- 	    	        okbtn: "是",
- 	    	        qubtn: "否",
+ 	    	        okbtn: _Lang("是"),
+ 	    	        qubtn: _Lang("否"),
  	    	    },function () {
  	    	    	//后续错误将不再弹出窗口
  	    	    	clearTimeout(configErrorTimer1);
@@ -2906,7 +2906,7 @@ var ConfigUserAuth = (function () {
   		console.log("设置结束，共"+ totalNum +"，成功"+successNum+"个，失败"+failNum+"个！");
   		// 普通消息提示条
 		bootstrapQ.msg({
-				msg : '设置完成！',
+				msg : _Lang('设置完成') + '!',
 				type : 'success',
 				time : 2000,
 			    });

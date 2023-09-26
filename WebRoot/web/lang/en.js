@@ -228,7 +228,14 @@ function lang(str)
 		"密码设置" : "Set Password",
 		"强制刷新整个仓库" : "Force Refresh whole repository",
 		
+		"权限设置失败" : "Access Configure Failed",
+		"是否继续设置其他用户" : "Continue to configure other users",
+		"后续错误是否执行此操作" : "Take the same action for this failure",
+		"是" : "Yes",
+		"否" : "No",
+		"设置完成" : "Configure Completed",
 		
+ 		
 		//文件操作与右键菜单选项
 		"刷新" : "Refresh",
 		"分享" : "Share",
