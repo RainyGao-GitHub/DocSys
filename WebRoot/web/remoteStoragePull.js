@@ -29,11 +29,21 @@ var RemoteStoragePull = (function () {
                 }
                 else
                 {
-                	showErrorMessage("拉取失败:" + ret.msgInfo);
+                	showErrorMessage({
+        	    		id: "idAlertDialog",	
+        	    		title: _Lang("提示"),
+        	    		okbtn: _Lang("确定"),
+        	    		msg: _Lang("拉取失败", " : ", ret.msgInfo),
+        	    	});
                 }
             },
             error : function () {
-                showErrorMessage("拉取失败:服务器异常！");
+            	showErrorMessage({
+    	    		id: "idAlertDialog",	
+    	    		title: _Lang("提示"),
+    	    		okbtn: _Lang("确定"),
+    	    		msg: _Lang("拉取失败", " : ", "服务器异常"),
+    	    	});
             }
         });
     }
@@ -42,10 +52,29 @@ var RemoteStoragePull = (function () {
    	{
    		var totalNum = ret.dataEx.totalCount;
    		var successNum = ret.dataEx.successCount;
-		var pushResultInfo = "拉取成功(共" + totalNum +"个)";
+		var pushResultInfo = "";
+		switch(langType)
+		{
+		case "en":
+			pullResultInfo = "Pull Completed(Total : " + totalNum + ")";	
+			break;
+		default:
+			pullResultInfo = "拉取成功(共" + totalNum +"个)";
+			break;
+		}
+		
   		if(successNum != totalNum)
   		{
-  			pushResultInfo = "拉取完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+  			switch(langType)
+  			{
+  			case "en":
+  				pullResultInfo = "Pull Completed(Total : " + totalNum + ", Failed : " + (totalNum - successNum) + ")";
+  				break;
+  			default:
+  				pullResultInfo = "拉取完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+  				break;
+  			}
+  			
             // 普通消息提示条
 			bootstrapQ.msg({
 					msg : pushResultInfo,
@@ -118,8 +147,8 @@ var RemoteStoragePull = (function () {
 		bootstrapQ.dialog({
 			id: 'fileSelector',
 			url: 'fileSelector.html',
-			title: '文件选择',
-			msg: '页面正在加载，请稍等...',
+			title: _Lang('文件选择'),
+			msg: _Lang('页面正在加载，请稍等') + '...',
 			foot: false,
 			big: false,
 			callback: function(){
@@ -180,7 +209,10 @@ var RemoteStoragePull = (function () {
 		{
 			qiao.bs.confirm({
 		        id: 'recurcivePullConfirm',
-		        msg: '该操作将拉取目录下的所有文件，是否允许？',
+		        title: _Lang("确认操作"),
+		        okbtn: _Lang("确认"),
+		        qubtn: _Lang("取消"),		        
+		        msg: _Lang('该操作将拉取目录下的所有文件，是否允许？'),
 		    },function(){
 		    	//确认
 		    	$("#dialog-remoteStoragePull input[name='recurciveEn']").attr("checked","checked");
@@ -199,7 +231,10 @@ var RemoteStoragePull = (function () {
 		{
 			qiao.bs.confirm({
 		        id: 'forcePullConfirm',
-		        msg: '文件可能被删除或覆盖，是否强制拉取？',
+		        title: _Lang("确认操作"),
+		        okbtn: _Lang("确认"),
+		        qubtn: _Lang("取消"),
+		        msg: _Lang('文件可能被删除或覆盖，是否强制拉取？'),
 		    },function(){
 		    	//确认
 		    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked","checked");
