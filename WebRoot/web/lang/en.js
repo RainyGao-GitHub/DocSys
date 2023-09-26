@@ -161,7 +161,7 @@ function lang(str)
 		"开启仓库所有文件的远程存储" : "Enable RemoteStorage for all documents",
 		"设置成功" : "Config Ok",
 		"设置失败" : "Config Failed",
-		
+				
 		"该仓库未设置异地备份，请联系管理员！" : "RemoteBackup was not configured, Please contact System Administrator",
 		"该仓库未设置异地自动备份，请联系管理员！" : "RemoteBackup was not configured, Please contact System Administrator",
 		"异地备份忽略管理" : "RemoteBackup Ignore List",
@@ -184,6 +184,7 @@ function lang(str)
 		"本地自动备份成功" : "LocalBackup OK",
 		"异地自动备份成功" : "RemoteBackup OK",		
 		
+		"该仓库未开启全文搜索，请联系管理员！" : "TextSearch was not configured, Please contact System Administrator",
 		"全文搜索忽略管理" : "TextSearch Ignore List",
 		"该仓库未设置全文搜索，请联系管理员！" : "TextSearch was not configured, Please contact System Administrator",
 		"关闭仓库所有文件的全文搜索" : "Disable TextSearch for all documents",
@@ -196,7 +197,7 @@ function lang(str)
 		"开启仓库所有文件的历史版本管理" : "Enable History for all documents",		
 		"获取文件版本管理设置失败" : "Failed to get History ignore setting",
 		
-		"是否清除仓库缓存" : "Do you want to clean repository's cache",
+		"是否清除仓库缓存" : "Do you want to clean cache",
 		"清除" : "Clean",
 		"清除成功" : "Clean Ok",
 		"清除失败" : "Clean Failed",
