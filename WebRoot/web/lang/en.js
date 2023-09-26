@@ -202,6 +202,33 @@ function lang(str)
 		
 		"获取仓库用户列表失败" : "Failed to get user list",
 		
+		"暂无数据" : "No Data",
+		"管理员" : "Admin",
+		"读" : "Read",
+		"写" : "Write",
+		"增加" : "Add",
+		"删除" : "Delete",
+		"全部" : "All",
+		"可继承" : "Inherit",
+		"下载/分享" : "Download/Share",
+		"不限" : "NoLimit",
+		
+		"是否删除该用户组的仓库权限" : "Do you want to remove Group on this repository",
+		"删除用户组的仓库权限失败" : "Failed to remove Group on repository",
+		"是否删除该用户的仓库权限" : "Do you want to remove User on this repository",
+		"删除用户的仓库权限失败" : "Failed to remove User on repository",
+		"是否删除该用户的目录权限设置" :  "Do you want to remove User on this folder",		
+		"删除用户的目录权限设置失败" : "Failed to remove User on folder",
+
+		"获取仓库列表失败" : "Failed to get repository's file list",
+		"添加访问用户" : "Add Access User",
+		"添加访问组" : "Add Access Group",
+		
+		"高级设置" : "Advanced Options",
+		"密码设置" : "Set Password",
+		"强制刷新整个仓库" : "Force Refresh whole repository",
+		
+		
 		//文件操作与右键菜单选项
 		"刷新" : "Refresh",
 		"分享" : "Share",

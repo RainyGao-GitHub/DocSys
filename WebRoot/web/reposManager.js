@@ -1999,7 +1999,7 @@ function showUserList(data){
 	$(c).remove();
 	if(data.length==0)
 	{
-		$("#reposAuthArea").append("<p>暂无数据</p>");
+		$("#reposAuthArea").append("<p>" + _Lang("暂无数据") + "</p>");
 	}
 	
 	var vid = getQueryString("vid");
@@ -2058,25 +2058,25 @@ function showUserList(data){
 //				+"			<a id='Doc"+i+"' value='"+d.docId+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
 			+"		</span>"
 			+"	</i>"
-			+"	<i class='cell access w6'>"
-			+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " onchange='EnableUserConfig("+i+");'>管理员</input>"
+			+"	<i class='cell access w5'>"
+			+"		<input class='IsAdmin"+i+"' value='"+ d.isAdmin+"' type='checkbox' " + adminChecked + " onchange='EnableUserConfig("+i+");'>" + _Lang("管理员") + "</input>"
 			+"	</i>"
 			+"	<i class='cell  read w5'>"
-			+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " onchange='EnableUserConfig("+i+");'>读</input>"
+			+"		<input id='Access"+i+"' value='"+ d.access+"' type='checkbox' " + readChecked + " onchange='EnableUserConfig("+i+");'>" + _Lang("读") + "</input>"
 			+"	</i>"
 			+"	<i class='cell edit w5'>"
-			+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " onchange='EnableUserConfig("+i+");'>写</input>"
+			+"		<input id='EditEn"+i+"' value='"+ d.editEn+"' type='checkbox' " + editChecked + " onchange='EnableUserConfig("+i+");'>" + _Lang("写") + "</input>"
 			+"	</i>"
-			+"	<i class='cell add w6'>"
-			+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " onchange='EnableUserConfig("+i+");'>增加</input>"
+			+"	<i class='cell add w5'>"
+			+"		<input id='AddEn"+i+"'  value='"+ d.addEn+"' type='checkbox' " + addChecked + " onchange='EnableUserConfig("+i+");'>" + _Lang("增加") + "</input>"
 			+"	</i>"
-			+"	<i class='cell delete w6'>"
-			+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " onchange='EnableUserConfig("+i+");'>删除</input>"
+			+"	<i class='cell delete w5'>"
+			+"		<input id='DeleteEn"+i+"' value='"+ d.deleteEn+"' type='checkbox' " + deleteChecked + " onchange='EnableUserConfig("+i+");'>" + _Lang("删除") + "</input>"
 			+"	</i>"
-			+"	<i class='cell download w8'>"
-			+"		<input id='DownloadEn"+i+"' value='"+ d.downloadEn+"' type='checkbox' " + downloadChecked + " onchange='EnableUserConfig("+i+");'>下载/分享</input>"
+			+"	<i class='cell download w10'>"
+			+"		<input id='DownloadEn"+i+"' value='"+ d.downloadEn+"' type='checkbox' " + downloadChecked + " onchange='EnableUserConfig("+i+");'>" + _Lang("下载/分享") + "</input>"
 			+"	</i>"
-			+"	<i class='cell uploadSize w8'>"
+			+"	<i class='cell uploadSize w10'>"
 			+"      <select class='form-control' id='UploadSize" + i +"' style='width:90%' onchange='EnableUserConfig("+i+");'>"
             +"			<option value='10485760' "  + uploadSizeSelected["10485760"] + ">10M</option>"
             +"			<option value='20971520' "  + uploadSizeSelected["20971520"] + ">20M</option>"
@@ -2087,14 +2087,14 @@ function showUserList(data){
             +"			<option value='1073741824' " + uploadSizeSelected["1073741824"] + ">1G</option>"
             +"			<option value='2147483648' " + uploadSizeSelected["2147483648"] + ">2G</option>"
             +"			<option value='4294967296' " + uploadSizeSelected["4294967296"] + ">4G</option>"
-            +"			<option value='NoLimit' " + uploadSizeSelected["NoLimit"] + ">不限</option>"
+            +"			<option value='NoLimit' " + uploadSizeSelected["NoLimit"] + ">" + _Lang("不限") + "</option>"
           	+"		</select>"
 			+"	</i>"
-			+"	<i class='cell heritable w6'>"
-			+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " onchange='EnableUserConfig("+i+");'>可继承</input>"
+			+"	<i class='cell heritable w5'>"
+			+"		<input id='Heritable"+i+"' value='"+ d.heritable+"' type='checkbox' " + heritableChecked + " onchange='EnableUserConfig("+i+");'>" + _Lang("可继承") + "</input>"
 			+"	</i>"
-			+"	<i class='cell selectAll w6'>"
-			+"		<input id='SelectAll"+i+"' value='"+ d.selectAll+"' type='checkbox' " + selectAllChecked + " onclick='selectAllAuth(" +i+")' onchange='EnableUserConfig("+i+");'>全部</input>"
+			+"	<i class='cell selectAll w5'>"
+			+"		<input id='SelectAll"+i+"' value='"+ d.selectAll+"' type='checkbox' " + selectAllChecked + " onclick='selectAllAuth(" +i+")' onchange='EnableUserConfig("+i+");'>" + _Lang("全部") + "</input>"
 			+"	</i>"
 			+"	<i class='cell operation w10'>"
 			+ 		opBtn
@@ -2138,10 +2138,10 @@ function deleteGroupReposAuthConfirm(reposAuthId,groupId)
 {
 		qiao.bs.confirm({
  	    	id: 'deleteGroupReposAuthConfirm',
-        msg: "是否删除该用户组的仓库权限?",
+        msg: _Lang("是否删除该用户组的仓库权限") + "?",
         close: false,		
-        okbtn: "删除",
-        qubtn: "取消",
+        okbtn: _Lang("删除"),
+        qubtn: _Lang("取消"),
     },function () {
     	
     	//alert("点击了确定");
@@ -2177,7 +2177,7 @@ $.ajax({
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang("删除用户组的仓库权限失败：" + ret.msgInfo),
+	        		msg: _Lang("删除用户组的仓库权限失败", " : ", ret.msgInfo),
             	});
             }
         },
@@ -2186,7 +2186,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang('删除用户组的仓库权限失败：服务器异常'),
+        		msg: _Lang("删除用户组的仓库权限失败", " : ", "服务器异常"),
         	});
             }
     });
@@ -2196,10 +2196,10 @@ function deleteUserReposAuthConfirm(reposAuthId,userId)
 {
 		qiao.bs.confirm({
  	    	id: 'deleteUserReposAuthConfirm',
-        msg: "是否删除该用户的仓库权限?",
+        msg: _Lang("是否删除该用户的仓库权限") + "?",
         close: false,		
-        okbtn: "删除",
-        qubtn: "取消",
+        okbtn: _Lang("删除"),
+        qubtn: _Lang("取消"),
     },function () {
     	
     	//alert("点击了确定");
@@ -2235,7 +2235,7 @@ $.ajax({
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang("删除用户的仓库权限失败:" + ret.msgInfo),
+	        		msg: _Lang("删除用户的仓库权限失败", " : ", ret.msgInfo),
             	});
             }
         },
@@ -2244,7 +2244,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang('删除用户的仓库权限失败：服务器异常！'),
+        		msg: _Lang("删除用户的仓库权限失败", " : ", "服务器异常"),
         	});
             }
     });
@@ -2295,7 +2295,7 @@ function deleteDocAuthConfirm(docAuthId)
    	console.log("deleteDocAuthAuthConfirm()");
 	qiao.bs.confirm({
     	id: 'deleteDocAuthConfirm',
-        msg: "是否删除该用户的目录权限设置?",
+        msg: _Lang("是否删除该用户的目录权限设置") + "?",
         close: false,		
         okbtn: "删除",
         qubtn: "取消",
@@ -2334,7 +2334,7 @@ $.ajax({
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang("删除用户的目录权限设置失败: " + ret.msgInfo),
+	        		msg: _Lang("删除用户的目录权限设置失败", " : ", ret.msgInfo),
             	});
             }
         },
@@ -2343,7 +2343,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang('删除用户的目录权限设置失败: 服务器异常！'),
+        		msg: _Lang("删除用户的目录权限设置失败", " : ", "服务器异常"),
         	});
             }
     });
@@ -2398,7 +2398,7 @@ $.ajax({
     	        		id: "idAlertDialog",	
     	        		title: _Lang("提示"),
     	        		okbtn: _Lang("确定"),
-    	        		msg: _Lang("获取仓库列表失败:" + ret.msgInfo),
+    	        		msg: _Lang("获取仓库列表失败", " : ", ret.msgInfo),
                 	});
                 }
             },
@@ -2407,7 +2407,7 @@ $.ajax({
 	        		id: "idAlertDialog",	
 	        		title: _Lang("提示"),
 	        		okbtn: _Lang("确定"),
-	        		msg: _Lang('获取仓库列表失败:服务器异常'),
+	        		msg: _Lang('获取仓库列表失败', ' : ', '服务器异常'),
             	});
             }
 });
@@ -2418,7 +2418,7 @@ function showReposList(data){
 	var c = $("#reposList").children();
 	$(c).remove();
 	if(data.length==0){
-		$("#reposList").append("<p>暂无数据</p>");
+		$("#reposList").append("<p>" + _Lang("暂无数据") + "</p>");
 	}
 	
 	for(var i=0;i<data.length;i++){
@@ -2437,9 +2437,9 @@ function showAddReposUserPanel(){
 	console.log("showAddReposUserPanel");
 bootstrapQ.dialog({
 	id: 'addReposUser',
-	title: '添加访问用户',
+	title: _Lang('添加访问用户'),
 	url: 'addReposUser' + langExt + '.html',
-	msg: '页面正在加载，请稍等...',
+	msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: true,
 	}, null);
@@ -2449,9 +2449,9 @@ function showAddReposGroupPanel(){
 	console.log("showAddReposGroupPanel");
 bootstrapQ.dialog({
 	id: 'addReposGroup',
-	title: '添加访问组',
+	title: _Lang('添加访问组'),
 	url: 'addReposGroup' + langExt + '.html',
-	msg: '页面正在加载，请稍等...',
+	msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: true,
 	}, null);
@@ -2469,9 +2469,9 @@ function showReposBasicSettingPanel(){
 	console.log("showReposBasicSettingPanel");
 bootstrapQ.dialog({
 	id: 'editRepos',
-	title: '仓库设置',
+	title: _Lang('仓库设置'),
 	url: 'reposBasicSetting' + langExt + '.html',
-	msg: '页面正在加载，请稍等...',
+	msg: _Lang('页面正在加载，请稍等') + '...',
 	foot: false,
 	big: true,
 	callback: function(){
@@ -2485,9 +2485,9 @@ function showReposSettingPanel(){
 	console.log("showReposSettingPanel");
 bootstrapQ.dialog({
 	id: 'reposAdvancedSetting',
-	title: '高级设置',
+	title: _Lang('高级设置'),
 	url: 'reposAdvancedSetting' + langExt + '.html',
-	msg: '页面正在加载，请稍等...',
+	msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: true,
 	}, null);
@@ -2499,8 +2499,8 @@ function showDocPwdSetPanel()
 bootstrapQ.dialog({
 	id: 'docPwdSet',
 	url: 'docPwdSet' + langExt + '.html',
-	title: '密码设置',
-	msg: '页面正在加载，请稍等...',
+	title: _Lang('密码设置'),
+	msg: _Lang('页面正在加载，请稍等') + '...',
 	foot: false,
 	big: true,
 	//okbtn: "确定",
@@ -2516,8 +2516,8 @@ function showTextSearchSetPanel()
 bootstrapQ.dialog({
 	id: 'reposTextSearchSetting',
 	url: 'reposTextSearchSetting' + langExt + '.html',
-	title: '全文搜索:' + curRightClickedTreeNode.name,
-	msg: '页面正在加载，请稍等...',
+	title: _Lang('全文搜索') + ' : ' + curRightClickedTreeNode.name,
+	msg: _Lang('页面正在加载，请稍等') + '...',
 	foot: false,
 	big: true,
 	//okbtn: "确定",
@@ -2530,18 +2530,18 @@ bootstrapQ.dialog({
 function refreshDocConfirm(node)
 {
    	console.log("refreshDocConfirm()");
-var msg = "强制刷新 [" + node.path + node.name + "]？"
+var msg = _Lang("强制刷新") + " [" + node.path + node.name + "]？"
 if(node.docId == 0)
 {
-   msg = "强制刷新整个仓库?";
+   msg = _Lang("强制刷新整个仓库") + "?";
 }
 
 qiao.bs.confirm({
     	id: 'refreshDocConfirm',
         msg: msg,
         close: false,		
-        okbtn: "确定",
-        qubtn: "取消",
+        okbtn: _Lang("确定"),
+        qubtn: _Lang("取消"),
     },function () {
     	refreshDoc(node, 1);	//强制刷新
  	    	return true;   
@@ -2601,7 +2601,7 @@ $.ajax({
         		id: "idAlertDialog",	
         		title: _Lang("提示"),
         		okbtn: _Lang("确定"),
-        		msg: _Lang("刷新失败:" + ret.msgInfo),
+        		msg: _Lang("刷新失败", " : ", ret.msgInfo),
         	});
         }
     },
@@ -2610,7 +2610,7 @@ $.ajax({
     		id: "idAlertDialog",	
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("刷新失败:服务器异常！"),
+    		msg: _Lang("刷新失败", " : ", "服务器异常"),
     	});
         }
 	});
@@ -2773,20 +2773,20 @@ var ConfigUserAuth = (function () {
 				                showAuthList();
 		                    	// 普通消息提示条
 								bootstrapQ.msg({
-										msg : '设置完成！',
+										msg : _Lang('设置完成') + '!',
 										type : 'success',
 										time : 2000,
 									    });
 			                }
 			          }else{
 							//设置失败
-							configErrorConfirmHandler(docAuth.userName, ret.msgInfo);
+							configErrorConfirmHandler(docAuth.userName, _Lang("设置失败", " : ", ret.msgInfo));
 							return;
 			            }
 			      },
 			      error : function () {
 					  		//设置失败
-					  		configErrorConfirmHandler(docAuth.userName, "设置异常");
+					  		configErrorConfirmHandler(docAuth.userName, _Lang("设置失败", " : ", "服务器异常"));
 							return;
 				 }	
 			});				
