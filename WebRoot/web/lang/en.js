@@ -35,6 +35,7 @@ function lang(str)
 		"文件" : "File",
 		"文件夹" : "Folder",		
 		"用户未登录" : "User not Signed In",
+		"任意用户" : "Everyone",
 		
 		//注册
 		"注册失败"	: "Sign Up Failed",			

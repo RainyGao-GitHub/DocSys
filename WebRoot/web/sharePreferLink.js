@@ -117,6 +117,13 @@ var SharePreferLink = (function () {
 
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
+				//任意用户需要翻译
+				if(d.id == 0)
+				{
+					d.name = _Lang(d.name);
+					d.realName = _Lang(d.realName);
+				}
+				
 				var opBtn = "		<a href='javascript:void(0)' onclick='SharePreferLink.addPreferLinkAccessUser(" + d.id + ");' class='mybtn-primary'>" + _Lang("添加") + "</a>";
 				if(isAccessUser(d.id)) //已是访问用户的，操作按键显示为，已添加
 				{

@@ -308,9 +308,9 @@ public class BaseFunction{
 			anyUser.setNickName("CoEditUser");
 			//任意用户
 			anyUser.setId(0);
-			anyUser.setName("EveryOne");
-			anyUser.setRealName("EveryOne");
-			anyUser.setNickName("EveryOne");		
+			anyUser.setName("Everyone");
+			anyUser.setRealName("Everyone");
+			anyUser.setNickName("Everyone");		
 			break;
 		default:
 			//系统用户
