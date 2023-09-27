@@ -163,7 +163,7 @@ function lang(str)
 		"开启异地备份" : "Enable RemoteBackup",
 		"清除缓存" : "Clean Cache",
 		"强制刷新" : "Force Refresh",
-		
+		"仓库不存在！" : "Repository not exists",
 		"该仓库未设置远程存储，请联系管理员！" : "RemoteStorage was not configured, Please contact System Administrator",
 		"远程存储忽略管理" : "RemoteStorage Ignore List",
 		"关闭仓库所有文件的远程存储" : "Disable RemoteStorage for all documents",
