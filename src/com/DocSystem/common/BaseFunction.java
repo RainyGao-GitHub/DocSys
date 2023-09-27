@@ -189,6 +189,8 @@ public class BaseFunction{
 	//系统默认用户
 	protected static User coEditUser = new User();
     protected static User systemUser = new User();
+    protected static User anyUser = new User();	//EveryOne
+    
 
 	public static boolean redisEn = false;
 	public static String redisUrl = null;
@@ -272,14 +274,15 @@ public class BaseFunction{
     	{
     		defaultLogFilePath = Path.getParentPath(docSysWebPath, 2, OSType) + "logs/docsys.log";
     	}
-    	
+    	    	
     	if(Log.logFile == null)
     	{
     		Log.logFile = defaultLogFilePath;
     	}
     	
 		docSysIniPath = webappsPath + "docSys.ini/";   
-    	initSystemLicenseInfo();
+    	initSystemLanguage();
+		initSystemLicenseInfo();
     	initOfficeLicenseInfo();
     	initLdapConfig();
 		serverHost = getServerHost();
@@ -289,14 +292,55 @@ public class BaseFunction{
 	}
 	
 	private static void initSystemUsers() {
-		//系统用户
-		systemUser.setId(0);
-		systemUser.setType(2);	//virtual admin user
-		systemUser.setName("System");		
-		
-		//协同编辑用户
-		coEditUser.setId(-1);
-		coEditUser.setName("CoEditUser");		
+		switch(lang)
+		{
+		case "en":
+			//系统用户
+			systemUser.setId(0);
+			systemUser.setType(2);	//virtual admin user
+			systemUser.setName("System");	
+			anyUser.setRealName("System");
+			anyUser.setNickName("System");			
+			//协同编辑用户
+			coEditUser.setId(-1);
+			coEditUser.setName("CoEditUser");
+			anyUser.setRealName("CoEditUser");
+			anyUser.setNickName("CoEditUser");
+			//任意用户
+			anyUser.setId(0);
+			anyUser.setName("EveryOne");
+			anyUser.setRealName("EveryOne");
+			anyUser.setNickName("EveryOne");		
+			break;
+		default:
+			//系统用户
+			systemUser.setId(0);
+			systemUser.setType(2);	//virtual admin user
+			systemUser.setName("System");	
+			anyUser.setRealName("系统");
+			anyUser.setNickName("系统");	
+			//协同编辑用户
+			coEditUser.setId(-1);
+			coEditUser.setName("CoEditUser");
+			anyUser.setRealName("协同编辑");
+			anyUser.setNickName("协同编辑");
+			//任意用户
+			anyUser.setId(0);
+			anyUser.setName("任意用户");
+			anyUser.setRealName("任意用户");
+			anyUser.setNickName("任意用户");		
+			break;
+		}		
+	}
+
+	private static void initSystemLanguage() {
+		Log.debug("initSystemLanguage() ");
+		lang = "ch";
+		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "language");
+		if(value != null)
+		{
+			lang = value;
+		}	
 	}
 
 	//*** 集群相关接口 ***
