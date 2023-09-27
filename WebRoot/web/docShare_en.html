@@ -1,0 +1,61 @@
+<div class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-3 control-label">ShareLink</label>
+        <div class="col-sm-5" style="padding-right:0;">
+            <input type="text" id="shareLink" name="shareLink" class="form-control"  maxlength="400"></input>
+        </div>
+        <div class="col-sm-4">
+           <span class="btn" title="Open Share Link" onclick="DocShare.openShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px; color:#ccc; border:1px solid #ccc; border-radius:4px 0 0 4px;">
+				<i class="icons open"></i>
+			</span>
+           <span class="btn" title="Send Eamil" onclick="DocShare.showDocShareSendMail();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
+				<i class="icons mail"></i>
+		   </span>
+           <span class="btn" title="Copy Link" onclick="DocShare.copyShareLink();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0px; ">
+				<i class="icons copy"></i>
+		   </span>
+           <span class="btn" title="QR Code" onclick="DocShare.showShareLinkQRCode();" style="margin:0px -5px 3px 0px; width:38px;height:34px;color:#ccc; border:1px solid #ccc; border-radius:0 4px 4px 0;">
+				<i class="icons qrcode"></i>
+		   </span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Password</label>
+        <div class="col-sm-5"  style="padding-right:0;">
+            <input type="text" id="sharePwd" name="sharePwd" class="form-control"  maxlength="40" placeholder="Access Password"/>
+        </div>
+        <div class="col-sm-4">
+           <span class="btn" onclick="DocShare.generateSharePwd();" style="border:1px solid #ccc; border-radius:4px;">
+				Generate
+			</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-3 control-label">ValidPeriod</label>
+        <div class="col-sm-5">
+            <select class="form-control" id="shareHours" name="shareHours" style="width: 100%">   
+            	<option value="1000000" >Permanent</option>
+            	<option value="720" selected="selected">One Month</option>
+            	<option value="168" selected="selected">One Week</option>
+            	<option value="24">One Day</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Permission</label>
+        <div class="col-sm-9" style="margin-top:0.5em;margin-right:0;">
+	        <input id="downloadEn" name="downloadEn" type="checkbox" /><span class="p5" style="padding-right:20px;">Download</span>
+			<input id="addEn" name="addEn" type="checkbox" /><span class="p5"  style="padding-right:20px;">Upload</span>
+	    	<input id="editEn" name="editEn" type="checkbox" /><span class="p5" style="padding-right:20px;">Modify</span>
+	    	<input id="deleteEn" name="deleteEn" type="checkbox" /><span class="p5"  style="padding-right:20px;">Delete</span>
+		</div>
+    </div>    
+	<div class="form-group">
+	    <div class="col-sm-12 text-center">
+	        <button  type="button" class="btn btnPrimary" onclick="DocShare.deleteDocShare();" style="width: 100px;height: 42px;">Cancel</button>
+	        <button  type="button" class="btn btnPrimary" onclick="DocShare.updateDocShare();" style="width: 100px;height: 42px;">Save</button>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript" src="docShare.js"></script>

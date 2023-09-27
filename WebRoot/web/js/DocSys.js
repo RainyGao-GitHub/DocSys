@@ -655,7 +655,7 @@ function getDocLink(doc)
 
 function getDocShareLink(reposId, docShare, IpAddress)
 {
-	var href = "/DocSystem/web/project.html?vid="+ reposId + "&shareId=" + docShare.shareId;        			
+	var href = "/DocSystem/web/project" + langExt + ".html?vid="+ reposId + "&shareId=" + docShare.shareId;        			
  	console.log(href);
 	
 	var protocol = window.location.protocol + '//';

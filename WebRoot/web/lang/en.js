@@ -374,8 +374,16 @@ function lang(str)
 		
 		"是否删除该分享" : "Do you want to delete this sharing",
 		"文件分享列表获取失败" : "Failed to get sharing list",
+		"文件分享已过期" : "Document Share is out of date",
+		"分享链接已复制" : "ShareLink was copied",
+		"分享二维码" : "Document Share QR Code",
+		"发送分享链接" : "Mail ShareLink",
+		"来自MxsDoc的邮件" : "From MxsDoc",
+		"请填写接收人信息" : "Please enter the Email",
+		"验证失败" : "Verify Failed",
+		"密码错误！" : "Password Error !",
 		
-	};
+ 	};
 	
 	var newStr = translateMap[str];
 	if ( undefined == newStr )
