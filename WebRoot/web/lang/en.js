@@ -59,6 +59,11 @@ function lang(str)
 		"验证码错误！" : "Incorrect verification code!",
 		"密码不能为空！" : "Password is empty!",
 		"两次密码不一致，请重试！" : "Re-enter password error!",
+		"保存成功" : "Save Ok",
+		"保存失败" : "Save Failed",		
+		"不能预览" : "Unable to preview",
+		"文件必须小于" : "File is larger than",
+		"请选择头像" : "Please select a profile picture",
 		
 		//登录
 		"登录失败"	: "Sign In Failed",

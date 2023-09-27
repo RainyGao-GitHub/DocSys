@@ -23,17 +23,16 @@ function UpdateUserInfo(){
             if( "ok" == ret.status ){
             	console.log("UpdateUserInfo 成功");
     			bootstrapQ.msg({
-					msg : '保存成功！', 
+					msg : _Lang("保存成功") + "!", 
 					type : 'success',
 					time : 2000,
 				    });
             }else {
-            	showErrorMessage("错误："+ret.msgInfo);
-            	//showError(ret.msgInfo);
+            	showErrorMessage(_Lang("保存失败", " : ", ret.msgInfo));
             }
         },
         error : function () {
-            showErrorMessage("服务器异常:保存失败");
+            showErrorMessage(_Lang("保存失败", " : ", "服务器异常"));
         }
     });
 }
@@ -56,17 +55,17 @@ function ModifyPassword(){
             if( "ok" == ret.status ){
             	console.log("ModifyPassword 成功");
     			bootstrapQ.msg({
-					msg : '修改成功！', 
+					msg : _Lang('修改成功') + '!', 
 					type : 'success',
 					time : 2000,
 				    });
             }else {
-            	showErrorMessage("错误："+ret.msgInfo);
+            	showErrorMessage(_Lang("修改失败", " : ", ret.msgInfo));
             	//showError(ret.msgInfo);
             }
         },
         error : function () {
-            showErrorMessage("服务器异常:修改失败");
+            showErrorMessage(_Lang("修改失败", " : ", "服务器异常"));
         }
     });
 }
@@ -119,7 +118,7 @@ function pageInit()
             }
         },
         error : function () {
-            alert("服务器异常:获取用户信息失败");
+            alert(_Lang("获取用户信息失败", " : ", "服务器异常"));
         }
     });
 }
@@ -204,7 +203,7 @@ function MyInfoPageInit()
             uploader.makeThumb( file, function( error, src ) {
                 $img = '<img src="' + src +'" style="max-width: 360px;max-height: 360px;">';
                 if ( error ) {
-                    $img.replaceWith('<span>不能预览</span>');
+                    $img.replaceWith('<span>' + _Lang('不能预览') + '</span>');
                     return;
                 }
 
@@ -221,7 +220,7 @@ function MyInfoPageInit()
         uploader.on("uploadError",function (file,reason) {
         	console.log("uploadError");
         	console.log(reason);
-            $("#error-message").text("上传失败:" + reason);
+            $("#error-message").text(_Lang("上传失败", " : ", reason));
 
         });
         
@@ -243,7 +242,7 @@ function MyInfoPageInit()
             if(file.size > 1024*1024*2){
                 uploader.removeFile(file);
                 uploader.reset();
-                alert("文件必须小于2MB");
+                alert(_Lang("文件必须小于") + " 2MB");
                 return false;
             }
         })
@@ -263,7 +262,7 @@ function MyInfoPageInit()
 
                 uploader.upload();
             }else{
-                alert("请选择头像");
+                alert(_Lang("请选择头像"));
             }
         });
     }catch(e){

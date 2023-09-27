@@ -1385,7 +1385,16 @@ function closeBootstrapDialog(id){
 //提示对话框
 function showErrorMessage($msg) {
 	console.log("showErrorMessage() ", $msg);
-	qiao.bs.alert($msg);
+	if(typeof $msg == 'string'){
+		qiao.bs.alert({
+			id: "idAlertDialog",	
+			title: _Lang("提示"),
+			okbtn: _Lang("确定"),
+			msg: $msg,
+		});
+	}else{
+		qiao.bs.alert($msg);
+	}
 }
 
 //提示框
