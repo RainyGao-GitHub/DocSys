@@ -592,7 +592,7 @@ var DocPull = (function () {
    	{
    		var totalNum = ret.dataEx.totalCount;
    		var successNum = ret.dataEx.successCount;
-		var pushResultInfo = "";
+		var pullResultInfo = "";
 		switch(langType)
 		{
 		case "en":

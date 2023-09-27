@@ -52,7 +52,7 @@ var RemoteStoragePull = (function () {
    	{
    		var totalNum = ret.dataEx.totalCount;
    		var successNum = ret.dataEx.successCount;
-		var pushResultInfo = "";
+		var pullResultInfo = "";
 		switch(langType)
 		{
 		case "en":
@@ -77,7 +77,7 @@ var RemoteStoragePull = (function () {
   			
             // 普通消息提示条
 			bootstrapQ.msg({
-					msg : pushResultInfo,
+					msg : pullResultInfo,
 					type : 'warning',
 					time : 2000,
 				    }); 
@@ -86,7 +86,7 @@ var RemoteStoragePull = (function () {
   		{
             // 普通消息提示条
 			bootstrapQ.msg({
-					msg : pushResultInfo,
+					msg : pullResultInfo,
 					type : 'success',
 					time : 2000,
 				    }); 
