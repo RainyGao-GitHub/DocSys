@@ -282,6 +282,11 @@ function lang(str)
 		"全选" : "Select All",
 		"更多" : "More",
 		
+		"已存在" : "already exists",
+		"文件名不能为空" : "FileName is empty",
+		"新建完成" : "Create Ok",
+		"新建失败" : "Create Failed",		
+		
 		"刷新失败" : "Failed to refresh",		
 		
 		"删除确认" : "Delete Confirm",
