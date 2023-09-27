@@ -8,9 +8,55 @@ var preferLinkList = [];
 var sharedPreferLinkList = [];
 var showStyle = 1; //icon style
 
+//根据参数列表构造Url请求
+function makeUrl(params) {
+    var href = window.location.href;
+    var i = href.indexOf("?");
+    if ( i< 0 ){
+        i = href.length;
+    }
+
+    href = href.substring(0,i);
+
+    var str = ""
+    for( k in params ){
+        if ( params[k]){ //params[k]
+          str += "&" + k + "=" + params[k];
+        }
+    }
+
+    return href + "?" + str.substr(1);
+}
+
+function updateUrl()
+{
+	console.log("updateUrl() showStyle:" + showStyle);
+    var param = {
+    		showStyle :showStyle,
+        };
+    var url = makeUrl(param);
+	window.history.pushState({}, "wiki", url);
+}
+
+//从 url 中获取参数
+function getQueryString(name) {
+    var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) {
+        return unescape(r[2]);
+    }
+    return null;
+}
+
 function pageInit()
 {
 	console.log("pageInit");
+	showStyle = getQueryString("showStyle");
+	if(showStyle == undefined)
+	{
+		showStyle = 1; //非编辑模式
+	}
+	
 	document.onkeydown=function(event)
 	{
 		//浏览器兼容性处理
@@ -201,7 +247,7 @@ function userLogout()
 
 function switchDisplayStyle()
 {
-	if(showStyle == 0)	//list
+	if(showStyle == 2)	//list
 	{
 		showStyle = 1;  //icon
 		$('.display-style').text(_Lang("设置"));
@@ -209,10 +255,11 @@ function switchDisplayStyle()
 	}
 	else
 	{
-		showStyle = 0;	//list
+		showStyle = 2;	//list
 		$('.display-style').text(_Lang("退出设置"));
         $("#sharedPreferLink-box").hide();
 	}
+	updateUrl();
 	
 	if(showStyle == 1)
 	{
@@ -227,7 +274,7 @@ function switchDisplayStyle()
         });        		
 	}
     
-    $("#preferLink-box").html(html);        
+    $("#preferLink-box").html(html);  
 }
 
 function loginBtnCtrl(user)

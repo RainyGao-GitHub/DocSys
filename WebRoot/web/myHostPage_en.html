@@ -4,8 +4,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>用户中心 - MxsDoc</title>
-	<script type="text/javascript" src="lang/ch.js"></script>
+    <title>User Center - MxsDoc</title>
+	<script type="text/javascript" src="lang/en.js"></script>
 	<link href="css/logo/logo.css" rel="stylesheet">    
     <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
@@ -46,9 +46,9 @@
             <div class="btn-group dropdown-menu-right pull-right slidebar visible-xs-inline-block visible-sm-inline-block">
                 <button class="btn btn-default dropdown-toggle hidden-lg" type="button" data-toggle="dropdown"><i class="fa fa-align-justify"></i></button>
                 <ul class="dropdown-menu" role="menu">
-                    <li><a href="/DocSystem/web/myHostPage.html" title="个人中心"> 个人中心</a></li>
-					<li><a href="/DocSystem/web/reposManager.html" title="管理后台"> 管理后台</a></li>
-                    <li><a onclick="logout()" title="退出登录"> 退出登录</a></li>
+                    <li><a href="/DocSystem/web/myHostPage_en.html" title="User Center">User Center</a></li>
+					<li><a href="/DocSystem/web/reposManager_en.html" title="Repository Management">Repository Management</a></li>
+                    <li><a onclick="logout()" title="Log Out">Log Out</a></li>
                 </ul>
             </div>
         </div>
@@ -59,13 +59,13 @@
 				<li id="userInfoDiv" style="display:none">
 					<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>Rainy</span><span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu">
-						<li><a href="/DocSystem/web/myHostPage.html">个人中心</a></li>
-						<li><a href="/DocSystem/web/reposManager.html">仓库管理</a></li>
-						<li><a onclick="logout()">退出登录</a></li>
+						<li><a href="/DocSystem/web/myHostPage_en.html">User Center</a></li>
+						<li><a href="/DocSystem/web/reposManager_en.html">Repository Management</a></li>
+						<li><a onclick="logout()">Log Out</a></li>
 					</ul>
 				</li>
 				<li id="loginBtn">
-                     <a onclick="showLoginPanel()"  title="用户登录">登录</a>
+                     <a onclick="showLoginPanel()"  title="Sign In">Sign In</a>
                 </li>          
             </ul>
         </nav>
@@ -76,38 +76,38 @@
         <div class="row">
             <div id="menu" class="page-left"  style="display:none">
                 <ul class="menu">
-                    <li id="myInfoTag" class="active"><a href="/DocSystem/web/myHostPage.html" class="item"> 基本信息</a> </li>
-                    <li id="passwordTag"><a href="/DocSystem/web/myHostPage.html?toHref=password" class="item"> 修改密码</a> </li>  
+                    <li id="myInfoTag" class="active"><a href="/DocSystem/web/myHostPage_en.html" class="item">Basic Information</a> </li>
+                    <li id="passwordTag"><a href="/DocSystem/web/myHostPage_en.html?toHref=password" class="item">Change Password</a> </li>  
                 </ul>
             </div>
             <div id="myInfo" class="page-right" style="display:none">
                 <div class="m-box">
                     <div class="box-head">
-                        <strong class="box-title">基本信息</strong>
+                        <strong class="box-title">Basic Information</strong>
                     </div>
                 </div>
                 <div class="box-body" style="padding-right: 200px;">
                     <div class="form-left">
                         <div id="memberInfoForm">
                             <div class="form-group">
-                                <label>用户名</label>
-                                <input type="text" class="form-control disabled" value="" id="name" name="name" disabled="" placeholder="用户名">
+                                <label>Name</label>
+                                <input type="text" class="form-control disabled" value="" id="name" name="name" disabled="" placeholder="Account Name">
                             </div>
                             <div class="form-group">
-                                <label>昵称<strong class="text-danger">*</strong></label>
-                                <input type="text" class="form-control" value="" id="nickName" name="nickName" max="100" placeholder="昵称">
+                                <label>NickName<strong class="text-danger">*</strong></label>
+                                <input type="text" class="form-control" value="" id="nickName" name="nickName" max="100" placeholder="NickName">
                             </div>
                             <div class="form-group">
-                                <label>真实姓名</label>
-                                <input type="text" id="realName" name="realName" class="form-control" value="" placeholder="真实姓名">
+                                <label>RealName</label>
+                                <input type="text" id="realName" name="realName" class="form-control" value="" placeholder="RealName">
                             </div>
                             <div class="form-group">
-                                <label class="description">描述</label>
-                                <textarea class="form-control" rows="3" title="描述" name="userIntro" id="userIntro" maxlength="500"></textarea>
-                                <p style="color: #999;font-size: 12px;">描述不能超过500字</p>
+                                <label class="description">Description</label>
+                                <textarea class="form-control" rows="3" title="User Description" name="userIntro" id="userIntro" maxlength="500"></textarea>
+                                <p style="color: #999;font-size: 12px;">Should less than 500 characters</p>
                             </div>
                             <div class="form-group">
-                                <button onclick="UpdateUserInfo();" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
+                                <button onclick="UpdateUserInfo();" class="btn btn-success" data-loading-text="Save...">Save</button>
                                 <span id="form-error-message" class="error-message"></span>
                             </div>
                         </div>
@@ -124,25 +124,25 @@
             <div id="password" class="page-right"   style="display:none">
                 <div class="m-box">
                     <div class="box-head">
-                        <strong class="box-title">修改密码</strong>
+                        <strong class="box-title">Change Password</strong>
                     </div>
                 </div>
                 <div class="box-body" style="width: 300px;">
                     <div id="securityForm">
                         <div class="form-group">
-                            <label for="password1">原始密码</label>
-                            <input type="password" name="password1" id="password1" class="form-control disabled" placeholder="原始密码">
+                            <label for="password1">Password</label>
+                            <input type="password" name="password1" id="password1" class="form-control disabled" placeholder="Old Password">
                         </div>
                         <div class="form-group">
-                            <label for="password2">新密码</label>
-                            <input type="password" class="form-control" name="password2" id="password2" max="50" placeholder="新密码">
+                            <label for="password2">New Password</label>
+                            <input type="password" class="form-control" name="password2" id="password2" max="50" placeholder="New Password">
                         </div>
                         <div class="form-group">
-                            <label for="password3">确认密码</label>
-                            <input type="password" class="form-control" id="password3" name="password3" placeholder="确认密码">
+                            <label for="password3">Re-enter Password</label>
+                            <input type="password" class="form-control" id="password3" name="password3" placeholder="Re-enter New Password">
                         </div>
                         <div class="form-group">
-                            <button onclick="ModifyPassword();" class="btn btn-success" data-loading-text="保存中...">保存修改</button>
+                            <button onclick="ModifyPassword();" class="btn btn-success" data-loading-text="Save...">Save</button>
                             <span id="form-error-message" class="error-message"></span>
                         </div>
                     </div>
@@ -154,12 +154,12 @@
 </div>
 </div>
 
-<div class="modal fade" id="upload-logo-panel" tabindex="-1" role="dialog" aria-labelledby="修改头像" aria-hidden="true">
+<div class="modal fade" id="upload-logo-panel" tabindex="-1" role="dialog" aria-labelledby="change profile picture " aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title">修改头像</h4>
+                <h4 class="modal-title">Change Profile Picture</h4>
             </div>
             <div class="modal-body">
                 <div class="wraper">
@@ -168,7 +168,7 @@
                     </div>
                 </div>
                 <div class="watch-crop-list">
-                    <div class="preview-title">预览</div>
+                    <div class="preview-title">Preview</div>
                     <ul>
                         <li>
                             <div class="img-preview preview-lg"></div>
@@ -183,13 +183,13 @@
             <div class="modal-footer">
                 <span id="error-message"></span>
                 <div id="filePicker" class="btn webuploader-container">
-                	<span>选择</span>
+                	<span>Select</span>
                 	<div id="rt_rt_1cb9565paje91c8s4b9hid14sr1" style="position: absolute; top: 0px; left: 0px; width: 77px; height: 40px; overflow: hidden; bottom: auto; right: auto;">
                 		<input type="file" capture="camera" name="file" class="webuploader-element-invisible" multiple="multiple" accept="image/jpg,image/jpeg,image/png">
                 		<label style="opacity: 0; width: 100%; height: 100%; display: block; cursor: pointer; background: rgb(255, 255, 255);"></label>
                 	</div>
                 </div>
-                <button type="button" id="saveImage" class="btn btn-success" style="height: 40px;width: 77px;" data-loading-text="上传中...">上传</button>
+                <button type="button" id="saveImage" class="btn btn-success" style="height: 40px;width: 77px;" data-loading-text="Upload...">Upload</button>
             </div>
         </div>
     </div>
