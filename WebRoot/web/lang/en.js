@@ -36,6 +36,9 @@ function lang(str)
 		"文件夹" : "Folder",		
 		"用户未登录" : "User not Signed In",
 		"任意用户" : "Everyone",
+		"继续" : "Continue",
+		"退出" : "Exit",
+		"编辑" : "Edit",
 		
 		//注册
 		"注册失败"	: "Sign Up Failed",			
@@ -368,6 +371,9 @@ function lang(str)
 		"当前为分享链接，无法再次分享！" : "Shared Link can not be shared again",
 		"创建文件分享失败" : "Failed to share",
 		"该仓库未设置远程存储" : "Remote Storage was not configured for this repository",
+		
+		"是否删除该分享" : "Do you want to delete this sharing",
+		"文件分享列表获取失败" : "Failed to get sharing list",
 		
 	};
 	
