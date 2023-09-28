@@ -24,7 +24,7 @@ function login(){
 				else
 				{
                 	console.log("登录成功");
-                	window.location.href = "main.html";
+                	window.location.href = "main" + langExt + ".html";
 				}
             }else {
                 alert("错误："+ret.msgInfo);
@@ -81,7 +81,7 @@ function pageInit()
 				}
 				else
 				{
-            		window.location.href="main.html";
+            		window.location.href="main" + langExt + ".html";
 				}
             }
             else 
