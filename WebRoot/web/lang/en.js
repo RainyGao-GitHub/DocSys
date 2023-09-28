@@ -395,6 +395,7 @@ function lang(str)
 		"用户组管理" : "Group Management",
 		"仓库管理" : "Repository Management",
 		"系统日志管理" : "SystemLog Management",
+		"日志管理" : "SystemLog Management",
 		"系统管理" : "System Management",
 		"证书管理" : "License Management",
 		"订单管理" : "Order Management",
