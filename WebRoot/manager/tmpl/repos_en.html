@@ -1,0 +1,70 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">Repository List</div>
+              <div class="widget-icons pull-right">
+                <!-- <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                <a href="#" class="wclose"><i class="icon-remove"></i></a>  
+                -->
+                <button onclick="showAddReposPanel()" class="btn btn-lg btn-success examine_ban">Add Repository</button>
+                <button onclick="clearAllReposCacheConfirm()" class="btn btn-lg btn-warning examine_ban">Clean Cache</button>
+                </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+
+              <table class="table table-striped table-bordered table-hover" id="repos_list">
+                <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Path</th>
+                  <th>Type</th>
+                  <th>Operation</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {{each list as value i}}
+                  <tr>
+                    <td>{{value.id}}</td>
+                    <td>{{value.name}}</td>
+                    <td>{{value.info}}</td>
+                    <td>{{value.path}}</td>
+                    <td>{{value.formatedType}}</td>
+                    <td class="edit">
+                      <button onclick="delReposConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>Delete</button>
+                      <button onclick="showEditReposPanel(event, {{value.id}}, {{value.type}}, {{i}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">Edit</button>
+                      <button onclick="showManageReposMemberPanel(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">Member Management</button>
+                      <button onclick="showReposManagerPage(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">Permission</button>
+                      <button onclick="showBackupReposConfirmPanel(event, {{value.id}}, {{value.type}}, {{i}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">Backup</button>
+                      <button onclick="showReposManagerPage(event, {{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">Advanced</button>
+                      <button onclick="convertReposHistoryConfirm({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">HistoryConvert</button>
+	                  {{if value.isBusy}}
+	                  <button id="btnEnableRepos{{value.id}}" onclick="enableRepos({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban">Enable</button>
+		              <button id="btnDisableRepos{{value.id}}" onclick="disableRepos({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban" style="display:none;">Disable</button>
+	                  {{else}}
+	                  <button id="btnEnableRepos{{value.id}}" onclick="enableRepos({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-success examine_ban" style="display:none;">Enable</button>
+		              <button id="btnDisableRepos{{value.id}}"  onclick="disableRepos({{value.id}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban">Disable</button>
+		              {{/if}}
+                    </td>
+                  </tr>
+                {{/each}}
+
+                </tbody>
+              </table>
+
+              <div class="widget-foot">
+
+                <div class="clearfix"></div>
+
+              </div>
+
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+      </div>

@@ -2,13 +2,13 @@
         <div class="col-md-12">
           <div class="widget">
             <div class="widget-head">
-              <div class="pull-left">SystemLog</div>
+              <div class="pull-left">系统日志</div>
               <div class="widget-icons pull-right">
                   <div class="form-inline">
                       <div class="form-group">
-                          <input type="input" class="form-control" id="search-systemLog" placeholder="search log...">
+                          <input type="input" class="form-control" id="search-systemLog" placeholder="请输入关键字">
                       </div>
-                      <button onclick="searchSystemLog()" class="btn btn-md btn-primary" style="margin-left: 0px;">Search</button>
+                      <button onclick="searchSystemLog()" class="btn btn-md btn-primary" style="margin-left: 0px;">搜索</button>
                   </div>
               </div>
               <div class="clearfix"></div>
@@ -20,13 +20,13 @@
                 <thead>
                 <tr>
                   <th>#</th>
-                  <th>User</th>
-                  <th>Action</th>
-                  <th>Result</th>
-                  <th>IP</th>
-                  <th>Time</th>
-                  <th>Detail</th>
-                  <th>Operation</th>
+                  <th>用户</th>
+                  <th>操作</th>
+                  <th>操作结果</th>
+                  <th>IP地址</th>
+                  <th>时间</th>
+                  <th>详情</th>
+                  <th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -41,7 +41,7 @@
                     <td>{{value.formatedTime}}</td>
                     <td style="max-width:500px;">{{value.formatedContent}}</td>
                     <td class="edit">
-                      <button onclick="delSystemLogConfirm('{{value.id}}','{{value.time}}',{{value.pageIndex}},{{i}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>Delete</button>
+                      <button onclick="delSystemLogConfirm('{{value.id}}','{{value.time}}',{{value.pageIndex}},{{i}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除</button>
                     </td>
                   </tr>
                 {{/each}}
