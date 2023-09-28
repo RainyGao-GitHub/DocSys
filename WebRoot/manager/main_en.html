@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <!-- Title and other stuffs -->
+  <title>Management Platform</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="keywords" content="MxsDoc" />
+  <meta name="description" content="MxsDoc Management Platform" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Rainy">
+  
+  <script type="text/javascript" src="/DocSystem/web/lang/en.js"></script>	
+  	
+  <!-- Stylesheets -->
+  <link href="./static/style/bootstrap.css" rel="stylesheet">
+  <!-- Font awesome icon -->
+  <link rel="stylesheet" href="./static/style/font-awesome.css">
+  <!-- jQuery UI -->
+  <link rel="stylesheet" href="./static/style/jquery-ui.css">
+  <!-- Calendar -->
+  <link rel="stylesheet" href="./static/style/fullcalendar.css">
+  <!-- prettyPhoto -->
+  <link rel="stylesheet" href="./static/style/prettyPhoto.css">
+  <!-- Star rating -->
+  <link rel="stylesheet" href="./static/style/rateit.css">
+  <!-- Date picker -->
+  <link rel="stylesheet" href="./static/style/bootstrap-datetimepicker.min.css">
+  <!-- CLEditor -->
+  <link rel="stylesheet" href="./static/style/jquery.cleditor.css">
+  <!-- Bootstrap toggle -->
+  <link rel="stylesheet" href="./static/style/bootstrap-switch.css">
+  <!-- Main stylesheet -->
+  <link href="./static/style/style.css" rel="stylesheet">
+  <!-- Widgets stylesheet -->
+  <link href="./static/style/widgets.css" rel="stylesheet">
+  <!-- upload stylesheet -->
+  <link href="/DocSystem/web/static/fonts/font.css" rel="stylesheet">
+  <style type="text/css">
+        .el-upload-list{
+		    position: absolute;
+		    bottom: 0;
+		    top:31px;
+		    left: 0;
+		    right: 0;
+		    background:white;
+		    z-index:22;
+		     margin: 0;
+		    padding: 25px 5px;
+		    list-style: none;
+		}
+		.el-upload-list__item, .el-download-list__item {
+		    transition: all .5s cubic-bezier(.55,0,.1,1);
+		    font-size: 14px;
+		    color: #48576a;
+		    margin-top: 18px;
+		    box-sizing: border-box;
+		    border-radius: 4px;
+		    width: 100%;
+		    line-height:1.8;
+		    
+		    position: relative;
+		}
+		.el-upload-list__item:first-child, .el-download-list__item:first-child {
+		    margin-top: 10px;
+		}
+		.el-upload-list__item-name, .el-download-list__item-name {
+		    color: #48576a;
+		    display: block;
+		    margin-right: 40px;
+		    overflow: hidden;
+		    padding-left: 4px;
+		    text-overflow: ellipsis;
+		    transition: color .3s;
+		    white-space: nowrap;
+		}
+		.el-upload-list__item.is-success .el-upload-list__item-status-label, .el-download-list__item.is-success .el-download-list__item-status-label {
+		    display: block;
+		}
+		
+		.el-upload-list__item.is-success .el-progress__text, .el-download-list__item.is-success .el-progress__text{
+			display:none;
+		}
+		.el-upload-list__item-status-label, .el-download-list__item-status-label {
+		    position: absolute;
+		    right: 5px;
+		    top: 0;
+		    line-height: inherit;
+		    display: none;
+		}
+		.el-progress {
+		    position: relative;
+		    line-height: 1;
+		}
+		.el-upload-list__item .el-progress, .el-download-list__item .el-progress {
+		    position: absolute;
+		    /* top: 20px; */
+		    width: 100%;
+		}
+		.el-progress-bar {
+		    padding-right: 50px;
+		    display: inline-block;
+		    vertical-align: middle;
+		    width: 100%;
+		    margin-right: -55px;
+		    box-sizing: border-box;
+		}
+		.el-upload-list__item .el-progress-bar, .el-download-list__item .el-progress-bar {
+		    margin-right: 0;
+		    padding-right: 0;
+		}
+		.el-progress__text {
+		    font-size: 14px;
+		    color: #48576a;
+		    display: inline-block;
+		    vertical-align: middle;
+		    margin-left: 10px;
+		    line-height: 1;
+		}
+		.el-upload-list__item .el-progress__text, .el-download-list__item .el-progress__text {
+		    position: absolute;
+		    top: -16px;
+		    right: 0;
+		}
+		.el-progress-bar__outer {
+		    height: 4px;
+		    border-radius: 100px;
+		    background-color: #e4e8f1;
+		    overflow: hidden;
+		    position: relative;
+		    vertical-align: middle;
+		}
+		.el-progress-bar__inner {
+		    position: absolute;
+		    left: 0;
+		    top: 0;
+		    height: 100%;
+		    border-radius: 2px 0 0 2px;
+		    background-color: #20a0ff;
+		    text-align: right;
+		    border-radius: 100px;
+		    line-height: 1;
+		    white-space: nowrap;
+		}
+		.el-upload-list__item .el-icon-upload-success, .el-download-list__item .el-icon-download-success {
+		    color: #13ce66;
+		}
+		.el-upload-list__item.is-uploading:hover .el-icon-close, .el-download-list__item.is-downloading:hover .el-icon-close {
+		    display: inline-block;
+		}
+		.el-upload-list__item .el-icon-close, .el-download-list__item .el-icon-close {
+		    display: none;
+		    position: absolute;
+		    top: 7px;
+		    right: 5px;
+		    cursor: pointer;
+		    opacity: .75;
+		    color: #48576a;
+		    transform: scale(.7);
+		}
+		.el-upload-list__item:hover, .el-download-list__item:hover {
+		    background-color: #eef1f6;
+		}
+		.el-upload-list__item-name, .el-download-list__item-name{
+			text-decoration:none;
+			text-align:left;
+		}
+		.el-upload-list__item.is-success .el-upload-list__item-name:hover, .el-download-list__item.is-success .el-download-list__item-name:hover {
+		    color: #20a0ff;
+		    cursor: pointer;
+		    text-decoration:none;
+		}
+		
+		.el-upload-list__item.is-uploading .el-upload-list__item .el-icon-close:hover, .el-download-list__item.is-uploading .el-download-list__item .el-icon-close:hover {
+		    opacity: 1;
+		}
+		
+		.el-upload-list__item:hover .el-progress__text, .el-download-list__item:hover .el-progress__text {
+		    display: none;
+		}
+		.el-icon-document{
+			margin-right:10px;
+		}
+		.el-progress-bar__inner {
+		    position: absolute;
+		    left: 0;
+		    top: 0;
+		    height: 100%;
+		    border-radius: 2px 0 0 2px;
+		    background-color: #20a0ff;
+		    text-align: right;
+		    border-radius: 100px;
+		    line-height: 1;
+		    white-space: nowrap;
+		}
+		.el-upload-list {
+		    border: 1px solid #e3e3e3;
+		    border-radius: 5px;
+		    position: fixed;
+		    max-height: 200px;
+		    bottom: 0;
+		    top: auto;
+		    min-width: 320px;
+		    width: 25%;
+		    left: auto;
+		    right: 0;
+		    background: white;
+		    z-index: 999;
+		    margin: 5px;
+		    padding: 10px 15px 25px 15px;
+		    list-style: none;
+		}
+		.upload-list-title{
+		    display: inline-block;
+		    padding: 10px 0px;
+		    margin-top: -5px;
+		    width: 270px;
+		}
+		.uploadedFileList{
+			border-top: 1px solid #eee;
+			border-bottom: 1px solid #eee;
+			max-height: 155px;
+		    min-height: 100px;
+		    overflow-y: auto;
+		    padding-right: 10px;
+		    margin-right: -5px;
+		}
+		.uploadCloseBtn{
+			position:absolute;
+			top:20px;
+			right:15px;
+			font-size:13px;
+			cursor: pointer;
+		}
+		        .uploadFileName, .downloadFileName{
+        	cursor: text;
+        }
+        .reuploadAllBtn, .redownloadAllBtn{
+        	position:absolute;
+        	top:15px;
+        	right:50px;
+        	font-size:13px;
+        	cursor: pointer;
+        }
+
+        .reuploadBtn, .redownloadBtn{
+        	position:absolute;
+        	top:0px;
+        	right:50px;
+        	font-size:13px;
+        	cursor: pointer;
+        }
+  </style>
+    
+  <!-- jQuery -->
+  <script src="./static/js/jquery.js"></script>
+  <script src="./static/js/bootstrap.js"></script> <!-- Bootstrap -->
+  <script src="./static/js/jquery-ui-1.9.2.custom.min.js"></script> <!-- jQuery UI -->
+  <script src="./static/js/fullcalendar.min.js"></script> <!-- Full Google Calendar - Calendar -->
+  <script src="./static/js/jquery.rateit.min.js"></script> <!-- RateIt - Star rating -->
+  <script src="./static/js/jquery.prettyPhoto.js"></script> <!-- prettyPhoto -->
+  <script src="./static/js/ajaxfileupload.js"></script>
+
+  <!-- jQuery Flot -->
+  <script src="./static/js/excanvas.min.js"></script>
+  <script src="./static/js/jquery.flot.js"></script>
+  <script src="./static/js/jquery.flot.resize.js"></script>
+  <script src="./static/js/jquery.flot.pie.js"></script>
+  <script src="./static/js/jquery.flot.stack.js"></script>
+
+  <!-- jQuery Notification - Noty -->
+  <script src="./static/js/jquery.noty.js"></script> <!-- jQuery Notify -->
+  <script src="./static/js/themes/default.js"></script> <!-- jQuery Notify -->
+  <script src="./static/js/layouts/bottom.js"></script> <!-- jQuery Notify -->
+  <script src="./static/js/layouts/topRight.js"></script> <!-- jQuery Notify -->
+  <script src="./static/js/layouts/top.js"></script> <!-- jQuery Notify -->
+  <!-- jQuery Notification ends -->
+
+
+  <script src="./static/js/sparklines.js"></script> <!-- Sparklines -->
+  <script src="./static/js/jquery.cleditor.min.js"></script> <!-- CLEditor -->
+  <script src="./static/js/bootstrap-datetimepicker.min.js"></script> <!-- Date picker -->
+  <script src="./static/js/bootstrap-switch.min.js"></script> <!-- Bootstrap Toggle -->
+
+  <script src="./static/js/jquery.raty.js"></script>
+  <script src="./static/js/jquery.toastmessage-min.js"></script>
+  <script src="./static/js/filter.js"></script> <!-- Filter for support page -->
+  <script src="./static/js/custom.js"></script> <!-- Custom codes -->
+  <script src="./static/js/config.js"></script>
+  <script src="./static/js/tmpl.js"></script>
+
+  <!-- js in web -->
+  <script type="text/javascript" src="../web/js/DocUpload.js"></script>
+  <script type="text/javascript" src="../web/static/js-spark-md5/spark-md5.min.js"></script>
+  
+  <!-- bootstrapQ based on jquery and bootstrap-->
+  <link href="./static/bootstrapQ/qiao.css" rel="stylesheet">
+  <script type="text/javascript" src="./static/bootstrapQ/qiao.js"></script>
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="./static/img/icons/metro.png">
+
+    <!-- pagination -->
+    <link rel="stylesheet" href="./static/pagination/pagination.css"/>
+    <script type="text/javascript" src="./static/pagination/jquery.pagination.js"></script>
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top bs-docs-nav" role="banner">
+
+  <div class="conjtainer">
+    <!-- Menu button for smallar screens -->
+    <div class="navbar-header">
+      <button class="navbar-toggle btn-navbar" type="button" data-toggle="collapse" data-target=".bs-navbar-collapse">
+        <span>Menu</span>
+      </button>
+      <!-- Site name for smallar screens -->
+      <a href="./" class="navbar-brand hidden-lg">Main</a>
+    </div>
+    <!-- Navigation starts -->
+    <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
+      <!-- Links -->
+      <ul class="nav navbar-nav pull-right" id="headbar" data-tmpl="headbar">
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Header starts -->
+<header>
+  <div class="container">
+    <div class="row">
+      <!-- Logo section -->
+      <div class="col-md-4">
+        <!-- Logo. -->
+        <div class="logo">
+          <h1><a href="/DocSystem/index.jsp">MxsDoc<span class="bold"></span></a></h1>
+          <p class="meta">Management Platform</p>
+        </div>
+        <!-- Logo ends -->
+      </div>
+
+      <!-- Data section -->
+
+      <div class="col-md-1" style="float: right" id="metainfo">
+			<select class="form-control" id="UserLanguage" style="width: 100%" onSelect="onSelectUserLanguage()">   
+			    <option value="ch">中文</option>
+			    <option value="en" selected="selected">English</option>   
+			</select>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- Header ends -->
+
+<!-- Main content starts -->
+
+<div class="content">
+	<div class="sidebar" id="sidebar" data-tmpl="sidebar_en">
+	</div>
+
+	<!-- Main bar -->
+	<div class="mainbar" >
+	    <!-- Page heading -->
+	    <div class="page-head" id="pagehead">
+	    </div>
+	    <!-- Page heading ends -->
+	
+	
+	  <!-- Matter -->
+	  <div class="matter">
+	    	<div class="container" id="container">
+	    	</div>
+	  </div>
+	  <!-- Matter ends -->
+	
+	</div>
+	<!-- Mainbar ends -->
+	
+	<div id="uploadBox" class="uploadBox ">
+		<ul id="uploadList" style="display:none" class="el-upload-list el-upload-list--text"></ul>
+	</div>
+	
+	<div class="clearfix"></div>
+</div>
+<!-- Content ends -->
+
+<!-- Footer starts -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <!-- Copyright info -->
+        <p class="copy">Copyright &copy; 2017 | <a href="http://dw.gofreeteam.com/DocSystem">MxsDoc</a> </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Footer ends -->
+
+<!-- Scroll to top -->
+<span class="totop"><a href="#"><i class="icon-chevron-up"></i></a></span>
+
+<div style="display:none">
+	<input id="importDBFiles" name="importDBFiles" type="file" onchange="importDBDataConfirm(event)" multiple="multiple"/>
+	<input id="upgradeFiles" name="upgradeFiles" type="file" onchange="upgradeSystemConfirm(event)" multiple="multiple"/>
+	<input id="importLicenseFiles" name="importLicenseFiles" type="file" onchange="importLicenseConfirm(event)" multiple="multiple"/>
+	<input id="installSystemLicense" name="installSystemLicense" type="file" onchange="installSystemLicenseConfirm(event)" multiple="multiple"/>
+	<input id="installOffice" name="installOffice" type="file" onchange="installOfficeConfirm(event)" multiple="multiple"/>
+</div>
+
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript">
+	pageInit("en");
+</script>
+</body>
+</html>
