@@ -28,7 +28,7 @@ $(function () {
 });
 
 var langType = "ch";
-var langExt = "_ch";
+var langExt = "";
 function getBrowserLang() 
 {
 	var language = "ch";

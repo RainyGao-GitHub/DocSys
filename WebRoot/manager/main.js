@@ -14,9 +14,24 @@ function onSelectUserLanguage()
 	}
 	
 	langType = lang;
-	langExt = "_" + langType;
-	Setcookie("UserLanguage", lang);	//设置用户的语言类型	
+	langExt = getLangExt(langType);
+	//Setcookie("UserLanguage", lang);	//注意Cookie在新页面里设置，这里不要设置	
 	window.location.href='/DocSystem/manager/main' + langExt + '.html';
+}
+
+function getLangExt(langType)
+{
+	if(langType == undefined)
+	{
+		return "";
+	}
+	
+	switch(langType)
+	{
+	case "en":
+		return "_en";
+	}
+	return "";
 }
 
 //通用函数接口

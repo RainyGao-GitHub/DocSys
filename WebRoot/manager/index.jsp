@@ -84,8 +84,23 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	  	return ""
 	  }
 	  
+	  function getLangExt(langType)
+	  {
+	  	if(langType == undefined)
+	  	{
+	  		return "";
+	  	}
+	  	
+	  	switch(langType)
+	  	{
+	  	case "en":
+	  		return "_en";
+	  	}
+	  	return "";
+	  }
+	  
 	  var langType = getBrowserLang();
-	  var langExt = "_" + langType;
+	  var langExt = getLangExt(langType);
 	  window.location.href='/DocSystem/manager/login' + langExt + '.html';
 </script>
 </html>
