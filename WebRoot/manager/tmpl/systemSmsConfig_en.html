@@ -1,0 +1,42 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">SMS Service</div>
+              <div class="widget-icons pull-right">
+                <button id="btnEnableSystemSmsSet" onclick="enableSystemSmsSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
+                <button id="btnSaveSystemSmsSet" onclick="saveSystemSmsSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">Save</button>                
+                <button id="btnCancelSystemSmsSet" onclick="cancelSystemSmsSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+                  <div class="form-horizontal" style="margin-top: 20px;">
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">Server</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemSmsServer" name="systemSmsServer" value="{{value.server}}" disabled="disabled" placeholder="http://yunpian.com/v1/sms/tpl_send.json">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">AuthCode</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemSmsApikey" name="systemSmsApikey" value="{{value.apikey}}" disabled="disabled" >
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">Template</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemSmsTplid" name="systemSmsTplid" value="{{value.tplid}}" disabled="disabled" >
+                      </div>
+                    </div>
+                  </div>
+              <div class="widget-foot">
+                <div class="clearfix"></div>
+              </div>
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+      </div>

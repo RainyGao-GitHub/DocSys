@@ -5037,7 +5037,7 @@ function exit(){
         success : function (ret) {
             if( "ok" == ret.status ){
             	console.log("已退出登录");
-            	window.location.href = "login.html";
+            	window.location.href = "login" + langExt + ".html";
             }else {
                 showErrorMessage("错误："+ret.msgInfo);
             }

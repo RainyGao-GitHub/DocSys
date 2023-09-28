@@ -1,0 +1,45 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">Email Service</div>
+              <div class="widget-icons pull-right">
+                <button id="btnEnableSystemEmailSet" onclick="enableSystemEmailSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
+                <button id="btnSaveSystemEmailSet" onclick="saveSystemEmailSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">Save</button>                
+                <button id="btnCancelSystemEmailSet" onclick="cancelSystemEmailSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+                  <div class="form-horizontal" style="margin-top: 20px;">
+                    <!-- Host -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">Server</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemEmailHost" name="systemEmailHost" value="{{value.host}}" disabled="disabled" >
+                      </div>
+                    </div>
+                    <!-- Email -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">Email</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemEmailUser" name="systemEmailUser" value="{{value.email}}" disabled="disabled" >
+                      </div>
+                    </div>
+                    <!-- info -->
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="info">Password</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemEmailPwd" name="systemEmailPwd" value="{{value.pwd}}" disabled="disabled" >
+                      </div>
+                    </div>
+                  </div>
+              <div class="widget-foot">
+                <div class="clearfix"></div>
+              </div>
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+      </div>

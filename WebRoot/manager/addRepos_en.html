@@ -1,0 +1,469 @@
+<div class="form-horizontal">
+	<!-- ReposName -->
+    <div class="form-group">
+    	<label class="control-label col-lg-3" for="name">Name</label>
+        <div class="col-lg-9">
+        	<input type="text" class="form-control" id="repos-name">
+        </div>
+    </div>
+    
+    <!-- info -->
+    <div class="form-group">
+    	<label class="control-label col-lg-3" for="info">Description</label>
+        <div class="col-lg-9">
+        	<textarea class="form-control" id="repos-info"></textarea>
+        </div>
+    </div>
+
+    <div class="form-group">
+    	<label class="control-label col-lg-3" for="type">Type</label>
+        <div class="col-lg-9">
+			<select class="form-control"  id="repos-type" onchange="ReposConfig.doSelectFS();" style="width: 100%">   
+				<option value="1" selected="selected">Storage</option>   
+			    <option value="5">Front-End</option>
+			</select>
+     	</div>
+    </div>
+
+    <div class="form-group">
+		<div id="remoteServerDiv" style="margin-top:10px;padding-left:30px; display:none">
+	    	<label>Server</label>
+	    	<div style="height: 40px">
+		    	<select class="form-control" id="remoteServerProtocol" onchange="ReposConfig.doSelectRemoteServerProtocol();" style="width:75%">   
+		            <option value="ftp">FTP</option>   
+		            <option value="sftp">SFTP</option>   
+		            <option value="smb">SMB</option>  
+		            <option value="svn">SVN</option>  
+		            <option value="git">GIT</option>  
+			        <option value="mxsdoc">MXSDOC</option>  
+			    </select>
+			    <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteSeverTest()" style="position: relative;top:-33px;left:77%">Test</button>
+		    </div>
+	        <input class="form-control" type="text" id="remoteServer"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="margin-top:10px;width: 86%"/>
+	     </div>
+    </div>
+    
+    <div class="form-group" style="margin-top:10px;">
+    	<label class="control-label col-lg-3" for="path">Path</label>
+        <div class="col-lg-9">
+        	<input type="text" class="form-control" id="repos-path">
+        </div>
+    </div>
+
+   	<div class="form-group">
+        <label style="margin-top:10px;padding-left:30px">Storage Path
+        	<span style="margin-left:20px">
+				<input type="checkbox" id="reposStorageRealDocPathEnable" value="0" onclick="ReposConfig.doSelectReposStorageRealDocPathEnable()">自定义
+			</span> 
+        </label>
+		<div id="reposStorageRealDocPathConfig" style="padding-left:30px; display:none">
+        	<input class="form-control" type="text" id="repos-realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 86%"/>
+        </div>
+    </div>
+        
+    <div class="form-group">
+		<div id="verCtrlDiv" style="margin-top:10px;padding-left:30px">
+    		<div id="verCtrlEnablelDiv" style="margin-top:20px">
+	            <label>版本管理 
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox" id="verCtrlEnable" value="0" onclick="ReposConfig.doSelectVerCtrlEnable()">
+	            	</span>
+	            </label>
+	            <span id="showVerCtrlConfig" value="0" style="margin-left:20px;display:none" onclick="ReposConfig.doSelectShowVerCtrlConfig()">显示高级选项</span>
+			</div>
+
+	    	<div id="verCtrlConfigDiv" style="display:none">
+		    	<label style="margin-left:20px">版本仓库类型<span id="verCtrl-isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="verCtrl-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl()">自定义</span></label>
+		       	<select class="form-control" id="repos-verCtrl" onchange="ReposConfig.doSelectVerCtrl();" style="margin-left:20px; width: 86%">   
+		        	<option value="0">无</option>   
+		            <option value="1">SVN</option>   
+		            <option value="2">GIT</option>   
+		        </select>
+			    <div id="verCtrl-verReposSetting" style="padding-left:45px;display:none">
+					<div id="verCtrl-localVerRepos">
+						<label>版本仓库所在目录</label>
+					    <input class="form-control" type="text" id="verCtrl-localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width: 85%"/>
+				    </div>
+				   	<div id="verCtrl-remoteVerRepos">
+						<label>版本仓库链接</label>
+					    <div style="height:40px;">
+						    <input class="form-control" type="text" id="verCtrl-svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 75%"/>
+						    <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doVerReposTest()" style="position: relative;top:-33px;left:77%">测试</button>
+						</div>					    
+					    <label>用户名</label>
+					    <input class="form-control" type="text" id="verCtrl-svnUser"  value="" style="width: 85%"/>
+					    <label>密码</label>
+				        <input class="form-control" type="password" id="verCtrl-svnPwd" value="" style="width: 85%"/>           
+				    </div>	
+				</div>
+			</div>
+	     </div>
+	       	
+	     <div id="virtualDocVerCtrlDiv"  style="margin-top:10px;padding-left:30px;display:none">
+	     	<label >备注版本管理<span id="verCtrl1-isRemoteSetting" style="margin-left:20px"><input  type="checkbox" id="verCtrl1-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl1()">自定义</span></label>
+		    <select class="form-control" id="repos-verCtrl1" onchange="ReposConfig.doSelectVerCtrl1();" style="width: 86%">   
+		    	<option value="0">无</option>   
+		        <option value="1">SVN</option>   
+		        <option value="2">GIT</option>  
+		    </select>
+		    <div id="verCtrl1-verReposSetting" style="padding-left:45px;display:none">
+				<div id="verCtrl1-localVerRepos">            
+					<label>版本仓库所在目录</label>
+				    <input class="form-control" type="text" id="verCtrl1-localSvnPath"  placeholder="如使用系统默认位置，请留空！" value="" style="width: 85%"/>
+		        </div>
+		        <div id="verCtrl1-remoteVerRepos">
+					<label>版本仓库链接</label>
+					<div style="height:40px;">
+					    <input class="form-control" type="text" id="verCtrl1-svnPath"  placeholder="请填写版本仓库链接！" value="" style="width: 75%"/>
+			        	<button  type="button" class="btn btnPrimary" onclick="doVerReposTest1()" style="position: relative;top:-33px;left:77%">测试</button>
+			        </div>	
+				    <label>用户名</label>
+				    <input class="form-control" type="text" id="verCtrl1-svnUser"  value="" style="width: 85%"/>
+				    <label>密码</label>
+				    <input class="form-control" type="password" id="verCtrl1-svnPwd" value="" style="width: 85%"/>          
+				</div>
+			</div>
+		</div>
+	</div>        
+	
+	<div class="form-group">
+		<div id="textSearchEnablelDiv" style="margin-top:10px;padding-left:30px;">
+	            <label>全文搜索 <span style="margin-left:5px"><input type="checkbox" id="isTextSearchEnabled" value="0"></span></label>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div id="encryptEnablelDiv" style="margin-top:10px;padding-left:30px;">
+	            <label>文件加密 <span style="margin-left:5px"><input type="checkbox" id="isEncryptEnabled" value="0" onclick="ReposConfig.doSetEncryptConfirm()"></span></label>
+		</div>
+	</div>
+
+    <div class="form-group">
+		<div id="remoteStorageDiv" style="margin-top:10px;padding-left:30px">
+	    	<label>远程存储
+	    		<span style="margin-left:5px">
+	            	<input type="checkbox" id="remoteStorageConfigEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageConfigEnable()">
+	            </span>
+	    	</label>
+	    	
+	    	<div id="remoteStorageConfigDiv" style="margin-left:20px; display:none">
+		    	<div style="height: 40px">
+			    	<select class="form-control" id="remoteStorageProtocol" onchange="ReposConfig.doSelectRemoteStorageProtocol();" style="width:75%">   
+			            <option value="">无</option>  
+			            <option value="ftp">FTP</option>   
+			            <option value="sftp">SFTP</option>   
+			            <option value="smb">SMB</option>  
+			            <option value="svn">SVN</option>  
+			            <option value="git">GIT</option>  
+				        <option value="mxsdoc">MXSDOC</option>  
+				    </select>
+				    <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteStorageTest()" style="position: relative;top:-33px;left:77%">测试</button>
+				</div>			    
+		 	    <div id="remoteStorageProtocolConfig" style="margin-top:10px; display:none">
+		        	<input class="form-control" type="text" id="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="margin-top:10px;width: 86%"/>
+		    		<label style="margin-left:1px">自动拉取<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPull" value="0"></span></label>
+			        <label style="margin-left:10px">强制拉取<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPullForce" value="0"></span></label>
+			        <label style="margin-left:15px">自动推送<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPush" value="0"></span></label>
+			        <label style="margin-left:10px">强制推送<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPushForce" value="0"></span></label>	    		
+				</div>
+            	<label style="margin-top:10px">高级选项
+            		<span style="margin-left:5px">
+            			<input type="checkbox" id="remoteStorageFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageFilterEnable()">
+            		</span>
+            	</label>
+				<div id="remoteStorageFilterConfig" style="margin-top:5px; display:none">
+					<div style="height:60px;">
+						<span style="margin-top:5px">不允许的文件类型</span>
+						<textarea class="form-control" id="remoteStorage-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
+					</div>  
+					<div style="height:60px;">
+						<span style="margin-top:5px">不允许的文件</span>
+						<textarea class="form-control" id="remoteStorage-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
+					</div>  
+					<div style="height:60px;">
+						<span style="margin-top:5px">允许的最大文件</span>
+						<select class="form-control" id="remoteStorage-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:70%">  
+					        <option value="10485760">10M</option>   
+					        <option value="20971520">20M</option>   
+					        <option value="52428800">50M</option>   
+					        <option value="104857600">100M</option>  
+					        <option value="209715200">200M</option>  
+					        <option value="524288000">500M</option>  
+					        <option value="1073741824">1G</option>  
+					        <option value="2147483648">2G</option>  
+					        <option value="4294967296">4G</option>  
+					        <option value="0" selected>不限</option>  
+					    </select>
+					</div> 
+					<div style="height:60px;">
+						<span>允许未知文件类型<input type="checkbox" id="remoteStorage-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
+					</div> 
+				</div>
+			</div>
+	     </div>
+    </div>
+
+	<div class="form-group">
+		<div id="autoSyncupEnablelDiv" style="margin-top:10px;padding-left:30px;">
+	    	<label>自动同步 
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox"id="autoSyncupEnable" value="0" onclick="ReposConfig.doSelectAutoSyncupConfigEnable()">
+	            	</span>
+	        </label>
+		</div>
+			
+		<div id="autoSyncupConfigDiv" style="padding-left:45px;margin-top:10px;display:none">
+            <label>版本管理
+            	<span style="margin-left:5px">
+            		<input type="checkbox" id="verReposSyncupEnable" value="0">
+            	</span>
+            </label>
+
+			<br>
+
+            <label style="margin-top:10px">远程存储
+            	<span style="margin-left:5px;">
+            		<input type="checkbox" id="remoteStorageSyncupEnable" value="0">
+            	</span>
+            </label>
+
+			<br>
+
+            <label style="margin-top:10px">文件搜索
+            	<span style="margin-left:5px;">
+            		<input type="checkbox" id="searchIndexSyncupEnable" value="0">
+            	</span>
+            </label>
+
+            <br>
+
+            <label style="margin-top:10px">高级选项
+           		<span style="margin-left:5px">
+           			<input type="checkbox" id="autoSyncupExtConfigEnable" value="0" onclick="ReposConfig.doSelectAutoSyncupExtConfigEnable()">
+           		</span>
+           	</label>
+           	<div id="autoSyncupExtConfig" style="margin-top:5px; display:none">
+				<div style="height:60px;">
+					<span>同步时间</span>
+					<select class="form-control" id="autoSyncupTime" style="width:100%">   
+				        <option value="0">0:00</option>   
+				        <option value="60">1:00</option>   
+				        <option value="120">2:00</option>   
+				        <option value="180">3:00</option>  
+				        <option value="240">4:00</option>  
+				        <option value="300">5:00</option>  
+				        <option value="360">6:00</option>  
+				        <option value="420">7:00</option>  
+				        <option value="480">8:00</option>  
+				        <option value="540">9:00</option>  
+				        <option value="600">10:00</option>
+				        <option value="660">11:00</option>
+				        <option value="720">12:00</option>
+				        <option value="780">13:00</option>
+				        <option value="840">14:00</option>
+				        <option value="900">15:00</option>
+				        <option value="960">16:00</option>
+				        <option value="1020">17:00</option>
+				        <option value="1080">18:00</option>
+				        <option value="1140">19:00</option>
+				        <option value="1200">20:00</option>
+				        <option value="1260">21:00</option>
+				        <option value="1320">22:00</option>
+				        <option value="1380">23:00</option>
+				    </select>
+				</div>
+				<div style="height:60px;">
+					<span style="margin-top:5px">同步周期</span>
+					<div>
+						<span><input type="checkbox" id="autoSyncupWeekDay1" value="0">周一</span>
+						<span style="margin-left:20px"><input type="checkbox" id="autoSyncupWeekDay2" value="0">周二</span>
+						<span style="margin-left:20px"><input type="checkbox" id="autoSyncupWeekDay3" value="0">周三</span>
+						<span style="margin-left:20px"><input type="checkbox" id="autoSyncupWeekDay4" value="0">周四</span>
+						<span style="margin-left:20px"><input type="checkbox" id="autoSyncupWeekDay5" value="0">周五</span>
+						<span style="margin-left:20px"><input type="checkbox" id="autoSyncupWeekDay6" value="0">周六</span>
+						<span style="margin-left:20px"><input type="checkbox" id="autoSyncupWeekDay7" value="0">周日</span>
+					</div>
+				</div>  
+				
+				<div></div>
+			</div>
+		</div>
+	</div>	
+
+	<div class="form-group">
+		<div id="autoBackupEnablelDiv" style="margin-top:10px;padding-left:30px;">
+	    	<label>自动备份 
+	            	<span style="margin-left:5px">
+	            		<input type="checkbox"id="autoBackupEnable" value="0" onclick="ReposConfig.doSelectAutoBackupConfigEnable()">
+	            	</span>
+	        </label>
+		</div>
+			
+		<div id="autoBackupConfigDiv" style="padding-left:45px;margin-top:10px;display:none">
+            <label>本地备份
+            	<span style="margin-left:5px">
+            		<input type="checkbox" id="localBackupEnable" value="0" onclick="ReposConfig.doSelectLocalBackupEnable()">
+            	</span>
+            </label>
+            <div id="localBackupConfig" style="display:none">
+			    <input class="form-control" type="text" id="localBackupRootPath"  placeholder="请填写备份存储路径！" value="" style="width: 85%"/>
+   				<label style="margin-top:5px">备份时间</label>
+	        	<select class="form-control" id="localBackupTime" style="width:85%">   
+			        <option value="0">0:00</option>   
+			        <option value="60">1:00</option>   
+			        <option value="120">2:00</option>   
+			        <option value="180">3:00</option>  
+			        <option value="240">4:00</option>  
+			        <option value="300">5:00</option>  
+			        <option value="360">6:00</option>  
+			        <option value="420">7:00</option>  
+			        <option value="480">8:00</option>  
+			        <option value="540">9:00</option>  
+			        <option value="600">10:00</option>
+			        <option value="660">11:00</option>
+			        <option value="720">12:00</option>
+			        <option value="780">13:00</option>
+			        <option value="840">14:00</option>
+			        <option value="900">15:00</option>
+			        <option value="960">16:00</option>
+			        <option value="1020">17:00</option>
+			        <option value="1080">18:00</option>
+			        <option value="1140">19:00</option>
+			        <option value="1200">20:00</option>
+			        <option value="1260">21:00</option>
+			        <option value="1320">22:00</option>
+			        <option value="1380">23:00</option>
+			    </select>
+				<label style="margin-top:5px">备份周期</label>
+				<div>
+					<span><input type="checkbox" id="localBackupWeekDay1" value="0">周一</span>
+					<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay2" value="0">周二</span>
+					<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay3" value="0">周三</span>
+					<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay4" value="0">周四</span>
+					<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay5" value="0">周五</span>
+					<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay6" value="0">周六</span>
+					<span style="margin-left:20px"><input type="checkbox" id="localBackupWeekDay7" value="0">周日</span>
+				</div>				    
+	            <label style="margin-top:5px">本地实时备份		            	
+	            	<span style="margin-left:5px">
+            			<input type="checkbox" id="localBackup-realTimeBackupEnable" value="0">
+            		</span>
+	            </label>		            
+            </div>
+
+			<br>
+
+            <label style="margin-top:10px">异地备份 
+            	<span style="margin-left:5px;">
+            		<input type="checkbox" id="remoteBackupEnable" value="0" onclick="ReposConfig.doSelectRemoteBackupEnable()">
+            	</span>
+            </label>
+            <div id="remoteBackupConfig" style="display:none">
+	        	<div style="height:40px;">
+		        	<select class="form-control" id="remoteBackupStorageProtocol" onchange="ReposConfig.doSelectRemoteBackupStorageProtocol();" style="width:75%">   
+				        <option value="">无</option>
+				        <option value="ftp">FTP</option>   
+				        <option value="sftp">SFTP</option>   
+				        <option value="smb">SMB</option>  
+				        <option value="svn">SVN</option>  
+				        <option value="git">GIT</option>  
+				        <option value="mxsdoc">MXSDOC</option>  
+				    </select>
+				    <button  type="button" class="btn btnPrimary" onclick="ReposConfig.doRemoteBackupStorageTest()" style="position: relative;top:-33px;left:77%">测试</button>
+				</div>			    
+			    <div id="remoteBackupStorageConfig" style="margin-top:10px; display:none">
+	           		<input class="form-control" type="text" id="remoteBackupStorage"  placeholder="ftp://192.168.0.1:21;userName=test;pwd=123456"  value="" style="width:85%"/>
+    				<label style="margin-top:5px">备份时间</label>
+		        	<select class="form-control" id="remoteBackupTime" style="width:85%">   
+				        <option value="0">0:00</option>   
+				        <option value="60">1:00</option>   
+				        <option value="120">2:00</option>   
+				        <option value="180">3:00</option>  
+				        <option value="240">4:00</option>  
+				        <option value="300">5:00</option>  
+				        <option value="360">6:00</option>  
+				        <option value="420">7:00</option>  
+				        <option value="480">8:00</option>  
+				        <option value="540">9:00</option>  
+				        <option value="600">10:00</option>
+				        <option value="660">11:00</option>
+				        <option value="720">12:00</option>
+				        <option value="780">13:00</option>
+				        <option value="840">14:00</option>
+				        <option value="900">15:00</option>
+				        <option value="960">16:00</option>
+				        <option value="1020">17:00</option>
+				        <option value="1080">18:00</option>
+				        <option value="1140">19:00</option>
+				        <option value="1200">20:00</option>
+				        <option value="1260">21:00</option>
+				        <option value="1320">22:00</option>
+				        <option value="1380">23:00</option>
+				    </select>
+					<label style="margin-top:5px">备份周期</label>
+					<div>
+						<span><input type="checkbox" id="remoteBackupWeekDay1" value="0">周一</span>
+						<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay2" value="0">周二</span>
+						<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay3" value="0">周三</span>
+						<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay4" value="0">周四</span>
+						<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay5" value="0">周五</span>
+						<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay6" value="0">周六</span>
+						<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay7" value="0">周日</span>
+					</div>
+
+	            	<label style="margin-top:10px">高级选项
+	            		<span style="margin-left:5px">
+	            			<input type="checkbox" id="remoteBackupFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteBackupFilterEnable()">
+	            		</span>
+	            	</label>
+					<div id="remoteBackupFilterConfig" style="margin-top:5px; display:none">
+						<div style="height:60px;">
+							<span style="margin-top:5px">不允许的文件类型</span>
+							<textarea class="form-control" id="remoteBackup-notAllowedFileTypeList" placeholder="bin; exe; log; tmp;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
+						</div>  
+						<div style="height:60px;">
+							<span style="margin-top:5px">不允许的文件</span>
+							<textarea class="form-control" id="remoteBackup-notAllowedFileList" placeholder=".git; ignore;" style="position: relative;top:-33px;left:25%; width:70%"></textarea>
+						</div>  
+						<div style="height:60px;">
+							<span style="margin-top:5px">允许的最大文件</span>
+							<select class="form-control" id="remoteBackup-allowedMaxFile" style="position: relative;top:-33px;left:25%; width:70%">  
+						        <option value="10485760">10M</option>   
+						        <option value="20971520">20M</option>   
+						        <option value="52428800">50M</option>   
+						        <option value="104857600">100M</option>  
+						        <option value="209715200">200M</option>  
+						        <option value="524288000">500M</option>  
+						        <option value="1073741824">1G</option>  
+						        <option value="2147483648">2G</option>  
+						        <option value="4294967296">4G</option>  
+						        <option value="0" selected>不限</option>  
+						    </select>
+						</div>  
+						<div style="height:60px;">
+							<span>允许未知文件类型<input type="checkbox" id="remoteBackup-isUnkownFileAllowed" value="1" checked style="margin-left:25px"></span>
+						</div>    
+					</div>
+					<div></div>
+
+		            <label style="margin-top:5px">异地实时备份
+		            	<span style="margin-left:5px">
+	            			<input type="checkbox" id="remoteBackup-realTimeBackupEnable" value="0">
+	            		</span>
+	            	</label>		      
+	            </div>      
+            </div>
+		</div>
+	</div>	
+	        
+    <!-- Buttons -->
+    <div class="form-group">
+        	<div class="col-lg-offset-9 col-lg-2">
+            	<button type="submit" class="btn btn-success" id="btn_addRepos" onclick="ReposConfig.doAddRepos()">添加</button>
+            </div>
+    </div>
+ </div>
+ 
+<script type="text/javascript" src="/DocSystem/web/js/MyJquery.js"></script>
+<script type="text/javascript" src="/DocSystem/web/js/remoteStorageCommon.js"></script>
+<script type="text/javascript" src="/DocSystem/web/js/ReposConfig.js"></script>

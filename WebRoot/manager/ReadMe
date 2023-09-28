@@ -8,7 +8,7 @@ main.html的具体工作流程如下:
 （3）调用 $Func.render($("#sidebar"),"sidebar");	加载菜单栏
 （4）调用 showContentPage("user"); 在内容区域显示内容	           
 
-如果事件就这么简单也就算了，你会发现菜单并没有对应的点击等处理事件，所以事件总线请了解一下，去你妈的！
+如果事件就这么简单也就算了，你会发现菜单并没有对应的点击等处理事件，所以事件总线请了解一下！
 虽然某位大神极力推荐我继续使用所谓的event-bus（eb4js.js），但我还是拒绝了，我决定还是使用人类该用的技术，我并没有让event-bus走的太远，当然还是用了一点点的。
 
 main.html中注册了data-eb-event / .has_sub / li.has_sublist的click事件，这是我为event-bus保留的一点点的入口，后面我就截断了。

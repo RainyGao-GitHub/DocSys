@@ -1,37 +1,37 @@
 <div class="form-horizontal">
   <!-- type -->
   <div class="form-group">
-    <label class="control-label col-lg-3">证书类型</label>
+    <label class="control-label col-lg-3">Type</label>
     <div class="col-lg-9">
       <select class="form-control" id="lienceType" name="lienceType">
-        <option value="2">专业版</option>
-        <option value="1">企业版</option>
+        <option value="2">Professional Edition</option>
+        <option value="1">Enterprise Edition</option>
       </select>
     </div>
   </div>
   <!-- serverSN -->
   <div class="form-group">
-    <label class="control-label col-lg-3" for="serverSN">设备号</label>
+    <label class="control-label col-lg-3" for="serverSN">ServerSN</label>
     <div class="col-lg-9">
       <textarea class="form-control" id="serverSN" name="serverSN"></textarea>
     </div>
   </div>
   <!-- customer -->
   <div class="form-group">
-    <label class="control-label col-lg-3" for="customer">客户信息</label>
+    <label class="control-label col-lg-3" for="customer">Customer</label>
     <div class="col-lg-9">
       <input type="text" class="form-control" id="customer" name="customer">
     </div>
   </div>
   <!-- payInfo -->
   <div class="form-group">
-    <label class="control-label col-lg-3" for="payInfo">支付信息</label>
+    <label class="control-label col-lg-3" for="payInfo">PayInfo</label>
     <div class="col-lg-9">
       <input type="text" class="form-control" id="payInfo" name="payInfo">
     </div>
   </div>
   <div class="form-group">
-    <label class="control-label col-lg-3">用户数量</label>
+    <label class="control-label col-lg-3">UserCount</label>
     <div class="col-lg-9">
       <select class="form-control" id="usersCount" name="usersCount">
         <option value="20">20人</option>
@@ -61,44 +61,44 @@
     </div>
   </div>
   <div class="form-group">
-    <label class="control-label col-lg-3">有效时间</label>
+    <label class="control-label col-lg-3">ValidTime</label>
     <div class="col-lg-9">
       <select class="form-control" id="validMonths" name="validMonths">
-        <option value="1">1个月</option>
-        <option value="2">2个月</option>
-        <option value="3">3个月</option>
-        <option value="4">4个月</option>
-        <option value="5">5个月</option>
-        <option value="6">6个月</option>
-        <option value="7">7个月</option>
-        <option value="8">8个月</option>
-        <option value="9">9个月</option>
-        <option value="10">10个月</option>
-        <option value="11">11个月</option>
-        <option value="12">1年</option>
-        <option value="24">2年</option>
-        <option value="36">3年</option>
-        <option value="240" selected="selected">长期</option>
+        <option value="1">1 Month</option>
+        <option value="2">2 Months</option>
+        <option value="3">3 Months</option>
+        <option value="4">4 Months</option>
+        <option value="5">5 Months</option>
+        <option value="6">6 Months</option>
+        <option value="7">7 Months</option>
+        <option value="8">8 Months</option>
+        <option value="9">9 Months</option>
+        <option value="10">10 Months</option>
+        <option value="11">11 Months</option>
+        <option value="12">1 Year</option>
+        <option value="24">2 Years</option>
+        <option value="36">3 Years</option>
+        <option value="240" selected="selected">NoLimit</option>
       </select>
     </div>
   </div>
   <div class="form-group">
-    <label class="control-label col-lg-3">高级选项</label>
+    <label class="control-label col-lg-3">Advanced</label>
     <div class="col-lg-9" style="margin-top:10px">
                 <span>
-<input type="checkbox" id="getAuthCodeEnable" value="0" onclick="doSelectGetAuthCodeEnable(this,event)">第三方接入
+<input type="checkbox" id="getAuthCodeEnable" value="0" onclick="doSelectGetAuthCodeEnable(this,event)">OpenAPI
 </span> 	
                <span style="margin-left:20px">
-<input type="checkbox" id="resetHistoryEnable" value="0" onclick="doSelectResetHistoryEnable(this,event)">历史回退
+<input type="checkbox" id="resetHistoryEnable" value="0" onclick="doSelectResetHistoryEnable(this,event)">HistoryRevert
 </span> 	
                <span style="margin-left:20px">
-<input type="checkbox" id="recoverBackupEnable" value="0" onclick="doSelectRecoverBackupEnable(this,event)">备份恢复
+<input type="checkbox" id="recoverBackupEnable" value="0" onclick="doSelectRecoverBackupEnable(this,event)">BackupRecover
 </span> 							  
                <span style="margin-left:20px">
-<input type="checkbox" id="recycleBinEnable" value="0" onclick="doSelectRecycleBinEnable(this,event)">回收站
+<input type="checkbox" id="recycleBinEnable" value="0" onclick="doSelectRecycleBinEnable(this,event)">Recycle
 </span> 							  
                <span style="margin-left:20px">
-<input type="checkbox" id="allowAllActionEnable" value="0" onclick="doSelectAllowAllActionEnable(this,event)">全选
+<input type="checkbox" id="allowAllActionEnable" value="0" onclick="doSelectAllowAllActionEnable(this,event)">All
 </span> 	
               </div>
             </div>
@@ -106,7 +106,7 @@
   <div class="form-group">
     <!-- Buttons -->
     <div class="col-lg-offset-9 col-lg-2">
-      <button type="submit" class="btn btn-success" id="btn_addLicense" onclick="addLicense(this,event)">添加</button>
+      <button type="submit" class="btn btn-success" id="btn_addLicense" onclick="addLicense(this,event)">Add</button>
     </div>
   </div>
 </div>

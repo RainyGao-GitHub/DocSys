@@ -4,9 +4,9 @@
             <div class="widget-head">
               <div class="pull-left">System Management</div>
               <div class="widget-icons pull-right">
-                <button id="btnEnableSystemInfoSet" onclick="enableSystemInfoSet()" class="btn btn-lg btn-success examine_ban">编辑</button>
-                <button id="btnSaveSystemInfoSet" onclick="saveSystemInfoSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">保存</button>                
-                <button id="btnCancelSystemInfoSet" onclick="cancelSystemInfoSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
+                <button id="btnEnableSystemInfoSet" onclick="enableSystemInfoSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
+                <button id="btnSaveSystemInfoSet" onclick="saveSystemInfoSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">Save</button>                
+                <button id="btnCancelSystemInfoSet" onclick="cancelSystemInfoSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -15,31 +15,31 @@
 	          <table class="table table-striped table-bordered table-hover">
 	                <thead>
 	                <tr>
-	                  <th>系统信息</th>
-	                  <th>详情</th>
-	                  <th>操作</th>
+	                  <th>System Info</th>
+	                  <th>Detail</th>
+	                  <th>Operation</th>
 	                </tr>
 	                </thead>
 	                <tbody>
 	                  <tr>
-	                    <td>当前版本</td>
+	                    <td>Version</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="systemVersion" name="systemVersion" value="{{value.version}}" disabled="disabled" >
 	                    </td>
 	                    <td class="edit">
-	                      	<button onclick="upgradeSystem()" data-id="" class="btn btn-lg btn-warning examine_ban">系统升级</button>	                      	
-	                      	<button id="btnDisableSystem" onclick="disableSystem()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.systemDisabled == 1}} style="display:none" {{/if}}>禁用系统</button>
-	                      	<button id="btnEnableSystem" onclick="enableSystem()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.systemDisabled == 0}} style="display:none" {{/if}}>启用系统</button>
-	                      	<button onclick="cleanSystemLocks()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>清除锁定</button>
+	                      	<button onclick="upgradeSystem()" data-id="" class="btn btn-lg btn-warning examine_ban">System Upgrade</button>	                      	
+	                      	<button id="btnDisableSystem" onclick="disableSystem()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.systemDisabled == 1}} style="display:none" {{/if}}>Disable MxsDoc</button>
+	                      	<button id="btnEnableSystem" onclick="enableSystem()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.systemDisabled == 0}} style="display:none" {{/if}}>Enable MxsDoc</button>
+	                      	<button onclick="cleanSystemLocks()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>Clean Locks</button>
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>服务器</td>
+	                    <td>Server</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="tomcatPath" name="tomcatPath" value="{{value.tomcatPath}}" disabled="disabled" >
 	                    </td>
 	                    <td class="edit">
-	                      	<button onclick="restartTomcat()" data-id="" class="btn btn-lg btn-warning examine_ban">重启服务</button>
+	                      	<button onclick="restartTomcat()" data-id="" class="btn btn-lg btn-warning examine_ban">Restart</button>
 	                    </td>
 	                  </tr>
 	                  <tr style="display:none">
@@ -56,14 +56,14 @@
 	                    	<input type="text" class="form-control" id="officeEditorApi" name="officeEditorApi" value="{{value.officeEditorApi}}" disabled="disabled" placeholder="http://localhost:88\web-apps\apps\api\documents\api.js">
 	                    </td>
 	                    <td class="edit">
-	                      	<button onclick="installOffice()" data-id="" class="btn btn-lg btn-warning examine_ban">安装...</button>	                      	
-	                      	<button onclick="onlineInstallOfficeConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">在线安装</button>
-	                      	<button id="btnDisableOffice" onclick="disableOffice()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.officeDisabled == 1}} style="display:none" {{/if}}>禁用</button>
-	                      	<button id="btnEnableOffice" onclick="enableOffice()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.officeDisabled == 0}} style="display:none" {{/if}}>启用</button>
+	                      	<button onclick="installOffice()" data-id="" class="btn btn-lg btn-warning examine_ban">Install...</button>	                      	
+	                      	<button onclick="onlineInstallOfficeConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">Online Install</button>
+	                      	<button id="btnDisableOffice" onclick="disableOffice()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.officeDisabled == 1}} style="display:none" {{/if}}>Disable</button>
+	                      	<button id="btnEnableOffice" onclick="enableOffice()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.officeDisabled == 0}} style="display:none" {{/if}}>Enable</button>
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>仓库默认存储位置</td>
+	                    <td>Repository's Default Path</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="defaultReposStorePath" name="defaultReposStorePath" value="{{value.defaultReposStorePath}}" disabled="disabled">
 	                    </td>
@@ -71,7 +71,7 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>系统数据存储位置</td>
+	                    <td>System Data Storage Path</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="indexDBStorePath" name="indexDBStorePath" value="{{value.indexDBStorePath}}" disabled="disabled">
 	                    </td>
@@ -80,7 +80,7 @@
 	                  </tr>
 	                  {{if value.isSalesServer == 1}}
 	                  <tr>
-	                    <td>销售数据存储位置</td>
+	                    <td>Sales Data Storage Path</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="salesDataStorePath" name="salesDataStorePath" value="{{value.salesDataStorePath}}" disabled="disabled">
 	                    </td>
@@ -89,7 +89,7 @@
 	                  </tr>
 	                  {{/if}}
 	                  <tr>
-	                    <td>系统日志存储位置</td>
+	                    <td>SystemLog Storage Path</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="systemLogStorePath" name="systemLogStorePath" value="{{value.systemLogStorePath}}" disabled="disabled">
 	                    </td>
@@ -97,16 +97,16 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>LDAP设置</td>
+	                    <td>LDAP Settings</td>
 	                    <td>
 							<input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx">
 	                    </td>
 	                    <td class="edit">
-	                      	<button onclick="ldapTest()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
+	                      	<button onclick="ldapTest()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>最大上传线程数</td>
+	                    <td>Max Upload Thread</td>
 	                    <td>
 			            	<select class="form-control" id="maxThreadCount" style="width: 100%" disabled="disabled">   
 			            		<option value="1" {{if value.maxThreadCount == 1}} selected="selected" {{/if}}>1</option>
@@ -130,20 +130,20 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>集群部署</td>
+	                    <td>Cluster Deployment</td>
 	                    <td>
-			            	<div><span style="margin-right:5px"><input type="checkbox" id="redisEn" {{if value.redisEn == 1}} checked="checked" {{/if}}  onclick="selectRedisEn()" disabled="disabled"/></span>启用</div>
-	                    	<input type="text" class="form-control" id="redisUrl" value="{{value.redisUrl}}" placeholder="请填写redis服务器地址,例如：redis://localhost:6379" disabled="disabled">			            		                    
-	                    	<input type="text" class="form-control" id="clusterServerUrl" value="{{value.clusterServerUrl}}" placeholder="请填写集群服务器地址,例如：http://localhost:8100" disabled="disabled">			            		                    
+			            	<div><span style="margin-right:5px"><input type="checkbox" id="redisEn" {{if value.redisEn == 1}} checked="checked" {{/if}}  onclick="selectRedisEn()" disabled="disabled"/></span>Enable</div>
+	                    	<input type="text" class="form-control" id="redisUrl" value="{{value.redisUrl}}" placeholder="redis server url, For example : redis://localhost:6379" disabled="disabled">			            		                    
+	                    	<input type="text" class="form-control" id="clusterServerUrl" value="{{value.clusterServerUrl}}" placeholder="cluster server url, For Example : http://localhost:8100" disabled="disabled">			            		                    
 							<textarea class="form-control" id="clusterInfo" disabled="disabled">{{value.clusterInfo}}</textarea>
 			            </td>
 	                    <td class="edit">
-	                      	<button onclick="testCluster()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
-	                      	<button onclick="resetClusterConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">重置</button>
+	                      	<button onclick="testCluster()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
+	                      	<button onclick="resetClusterConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">Reset</button>
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>调试日志</td>
+	                    <td>Debug Log</td>
 	                    <td>
 			            	<select class="form-control" id="logLevel" style="width: 100%" disabled="disabled">   
 			            		<option value="0" {{if value.logLevel == 0}} selected="selected" {{/if}}>debug</option>
@@ -151,31 +151,31 @@
 			            		<option value="2" {{if value.logLevel == 2}} selected="selected" {{/if}}>warn</option>   
 			            		<option value="2" {{if value.logLevel == 3}} selected="selected" {{/if}}>error</option> 
 			            	</select>
-			            	<div><span style="margin-right:5px"><input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}}  onclick="selectOutputToFileEn()" disabled="disabled"/></span>输出到指定文件</div>
-	                    	<input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="如需输出到指定文件，请指定日志文件路径" disabled="disabled">			            		                    
+			            	<div><span style="margin-right:5px"><input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}}  onclick="selectOutputToFileEn()" disabled="disabled"/></span>Output to file</div>
+	                    	<input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="You can specify a dedicated file path for debug log" disabled="disabled">			            		                    
 			            </td>
 	                    <td class="edit">
-	                      	<button onclick="downloadLogFile()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
-	                    	<button onclick="cleanLogFile()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>清除</button>
+	                      	<button onclick="downloadLogFile()" data-id="" class="btn btn-lg btn-warning examine_ban">Download</button>
+	                    	<button onclick="cleanLogFile()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>Clean</button>
 	                    </td>
 	                  </tr>
 	                  {{if value.isSalesServer == 1}}
 	                  <tr>
-	                    <td>系统密钥</td>
+	                    <td>System RootKey</td>
 	                    <td></td>
 	                    <td class="edit">
-	                      	<button onclick="generateRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">生成</button>
-	                      	<button onclick="exportRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
-	                    	<button onclick="deleteRootKey()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+	                      	<button onclick="generateRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">Generate</button>
+	                      	<button onclick="exportRootKey()" data-id="" class="btn btn-lg btn-warning examine_ban">Download</button>
+	                    	<button onclick="deleteRootKey()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>Delete</button>
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>证书密钥</td>
+	                    <td>License KeyPair</td>
 	                    <td></td>
 	                    <td class="edit">
-	                      	<button onclick="generateLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">生成</button>
-	                      	<button onclick="exportLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">下载</button>
-	                    	<button onclick="deleteLicenseKeyPair()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>删除 </button>
+	                      	<button onclick="generateLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">Generate</button>
+	                      	<button onclick="exportLicenseKeyPair()" data-id="" class="btn btn-lg btn-warning examine_ban">Download</button>
+	                    	<button onclick="deleteLicenseKeyPair()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>Delete</button>
 	                    </td>
 	                  </tr>
 	                  {{/if}}

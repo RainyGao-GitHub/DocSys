@@ -1,0 +1,63 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">Data Source</div>
+              <div class="widget-icons pull-right">
+                <button id="btnEnableSystemDBSet" onclick="enableSystemDBSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
+                <button id="btnSaveSystemDBSet" onclick="saveSystemDBSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">Save</button>                
+                <button id="btnCancelSystemDBSet" onclick="cancelSystemDBSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+                  <div class="form-horizontal" style="margin-top: 20px;">
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">DB Type</label>
+                      <div class="col-lg-9">
+			            <select class="form-control" id="systemDbType" onchange="doSelectDbType();" disabled="disabled" >   
+				            <option value="mysql" {{if value.type == "mysql"}}selected="selected"{{/if}}>mysql</option>   
+				            <option value="sqlite" {{if value.type == "sqlite"}}selected="selected"{{/if}}>sqlite</option>   
+				         </select>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">DB URL</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemDbUrl" name="systemDbUrl" value="{{value.url}}" disabled="disabled" >
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="name">Account</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemDbUser" name="systemDbUser" value="{{value.user}}" disabled="disabled" >
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="pwd">Password</label>
+                      <div class="col-lg-9">
+                        <input type="text" class="form-control" id="systemDbPwd" name="systemDbPwd" value="{{value.pwd}}" disabled="disabled" >
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-lg-3" for="op"></label>
+                      <div class="col-lg-9">
+                      	<button onclick="testDatabase()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
+                      	<button onclick="exportDBData()" data-id="" class="btn btn-lg btn-warning examine_ban">Export</button>
+                      	<button onclick="importDBData()" data-id="" class="btn btn-lg btn-warning examine_ban">Import</button>
+                      	<button onclick="resetDatabaseConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">Reset</button>
+                      	<button onclick="deleteDatabaseConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">Delete</button>
+                      </div>
+                    </div>
+                  </div>
+            </div>
+            
+            <div class="widget-foot">
+                <div class="clearfix"></div>
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+</div>
+      
