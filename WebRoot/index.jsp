@@ -28,6 +28,7 @@ $(function () {
 });
 
 var langType = "ch";
+var langExt = "_ch";
 function getBrowserLang() 
 {
 	var language = "ch";
@@ -129,6 +130,7 @@ function pageInit()
 {
 	console.log("pageInit");
 	langType = getBrowserLang();
+	langExt = "_" + langType;
 	
 	if(docSysInitState == null || docSysInitState == 0)
 	{
