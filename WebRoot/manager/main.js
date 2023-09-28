@@ -494,7 +494,7 @@ function showSystemEmailConfig(){
             	systemEmailConfig.email = config.email;
             	systemEmailConfig.pwd = config.pwd;
             	console.log("getSystemEmailConfig systemEmailConfig",systemEmailConfig);
-            	$Func.render($("#container"),"systemEmailConfig",{"value":systemEmailConfig});
+            	$Func.render($("#container"),"systemEmailConfig" + langExt,{"value":systemEmailConfig});
             }
             else 
             {
@@ -606,7 +606,7 @@ function showSystemSmsConfig(){
             	systemSmsConfig.apikey = config.apikey;
             	systemSmsConfig.tplid = config.tplid;
             	console.log("getSystemSmsConfig systemSmsConfig",systemSmsConfig);
-            	$Func.render($("#container"),"systemSmsConfig",{"value":systemSmsConfig});
+            	$Func.render($("#container"),"systemSmsConfig" + langExt,{"value":systemSmsConfig});
             }
             else 
             {
@@ -676,7 +676,7 @@ function showSystemMigrate(){
         	       	node.formatedType = formateReposType(node.type);
              	}
         		gMigrateReposList = reposList;
-            	$Func.render($("#container"),"systemMigrate",{"list":reposList});
+            	$Func.render($("#container"),"systemMigrate" + langExt,{"list":reposList});
             }
             else 
             {
@@ -832,7 +832,7 @@ function showSystemDbConfig(){
 				systemDbSetting.url = config.url;
 				systemDbSetting.user = config.user;
 				systemDbSetting.pwd = config.pwd;
-            	$Func.render($("#container"),"systemDbConfig",{"value":systemDbSetting});
+            	$Func.render($("#container"),"systemDbConfig" + langExt,{"value":systemDbSetting});
             }
             else 
             {
@@ -3314,7 +3314,7 @@ function SystemLogListDisplay(list, pageIndex, pageSize, callback)
 		formatSystemLogContent(node);
     }
    	console.log("SystemLogListDisplay list", list);
-    $Func.render($("#container"),"systemLog",{"list":list}, callback);
+    $Func.render($("#container"),"systemLog" + langExt,{"list":list}, callback);
 }
 
 function formatSystemLogContent(node)
@@ -3552,7 +3552,7 @@ function OrderListDisplay(list, pageIndex, pageSize, callback)
 		node.formatedPayType = formatePayType(node);
 		node.showRefund = needShowRefundBtn(node);
     }		
-	$Func.render($("#container"),"order",{"list":list}, callback);
+	$Func.render($("#container"),"order" + langExt,{"list":list}, callback);
 }
 
 function needShowRefundBtn(node)
@@ -3747,7 +3747,7 @@ function LicenseListDisplay(list, pageIndex, pageSize, callback)
 			node.formatedInstallInfo = "已安装" + node.installedCount + "次, [" + node.installedMacList + "]";
 		}
     }		
-	$Func.render($("#container"),"license",{"list":list}, callback);
+	$Func.render($("#container"),"license" + langExt,{"list":list}, callback);
 }
 
 function downloadLicenseConfirm(id)
@@ -3948,7 +3948,7 @@ function UserListDisplay(list, pageIndex, pageSize, callback)
        	node.pageIndex = pageIndex;
   		node.index = i + offset;
  	}
-	$Func.render($("#container"),"user",{"list":list}, callback);
+	$Func.render($("#container"),"user" + langExt,{"list":list}, callback);
 }
 
 function exportUserConfirm()
@@ -4394,7 +4394,7 @@ function SystemLicensesDisplay(systemLicenses)
 		}
 	}
 	
-	$Func.render($("#container"),"systemLicenses",{"value":systemLicenses});
+	$Func.render($("#container"),"systemLicenses" + langExt, {"value":systemLicenses});
 }
 
 //仓库管理
@@ -4430,7 +4430,7 @@ function ReposListDisplay(list)
        	node.formatedType = formateReposType(node.type);
  	}
 	console.log("ReposListDisplay", list);
-	$Func.render($("#container"),"repos",{"list":list});
+	$Func.render($("#container"),"repos" + langExt, {"list":list});
 }
 
 function formateReposType(type)
@@ -4910,7 +4910,7 @@ function showGroupList(){
 function GroupListDisplay(list)
 {
 	console.log("GroupListDisplay", list);
-	$Func.render($("#container"),"group",{"list":list});
+	$Func.render($("#container"),"group" + langExt,{"list":list});
 }
 	
 

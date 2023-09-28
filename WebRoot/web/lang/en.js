@@ -428,6 +428,11 @@ function lang(str)
 		"启用系统" : "Enable System",
 		"是否启用系统" : "Do you want to enable system access",
 		"启用系统失败" : "Failed to enable system access",
+		
+		"首页" : "First",
+		"尾页" : "Last",
+		"上一页" : "Pre",
+		"下一页" : "Next",		
  	};
 	
 	var newStr = translateMap[str];
