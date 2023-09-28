@@ -410,8 +410,11 @@ function lang(str)
 		"重置失败" : "Reset Failed",
 		"生成密钥成功" : "Key Generate Ok",
 		"生成密钥失败" : "Key Generate Failed",
-		
-		
+		"密钥导出失败" : "Export Key Failed",
+		"删除密钥" : "Delete Key",
+		"是否删除系统密钥" : "Do you want to delete System Key",
+		"删除密钥成功" : "Delete Key Success",		
+		"删除密钥失败" : "Failed to delete Key",		
  	};
 	
 	var newStr = translateMap[str];

@@ -1748,11 +1748,11 @@ function exportRootKey(){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("密钥导出失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("密钥导出失败", " : ", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("密钥导出失败:服务器异常");
+        	showErrorMessage(_Lang("密钥导出失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1767,10 +1767,10 @@ function deleteRootKeyConfirm()
 	console.log("deleteRootKeyConfirm()");
     qiao.bs.confirm({
     		id: "deleteRootKeyConfirmDialog",
-	        title: "删除密钥",
-	        msg: "是否删除系统密钥？",
-	        okbtn: "是",
-	        qubtn: "否",
+	        title: _Lang("删除密钥"),
+	        msg: _Lang("是否删除系统密钥") + "？",
+	        okbtn: _Lang("是"),
+	        qubtn: _Lang("否"),
     	},function () {
     		startDeleteRootKey();
 	    	return true;   //close dialog
@@ -1791,13 +1791,13 @@ function startDeleteRootKey()
         },
         success : function (ret) {
             if( "ok" == ret.status ){
-               	showErrorMessage("删除密钥成功");
+               	showErrorMessage(_Lang("删除密钥成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("删除密钥失败", " : ", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("删除密钥失败:服务器异常");
+        	showErrorMessage(_Lang("删除密钥失败", " : ", "服务器异常"));
         }
     });
 }
