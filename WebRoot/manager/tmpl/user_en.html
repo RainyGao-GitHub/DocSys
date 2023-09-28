@@ -1,0 +1,70 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">User List</div>
+              <div class="widget-icons pull-right">
+                <!-- <a href="#" class="wminimize"><i class="icon-chevron-up"></i></a>
+                <a href="#" class="wclose"><i class="icon-remove"></i></a>  -->
+                  <div class="form-inline">
+                      <button onclick="showAddUserPanel()" class="btn btn-md btn-success examine_ban">New User</button>
+                      <div class="form-group">
+                          <input type="input" class="form-control" id="search-userName" placeholder="Search User...">
+                      </div>
+                      <button onclick="searchUser()" class="btn btn-md btn-primary" style="margin-left: 0px;">Search</button>
+                      <button onclick="exportUserConfirm()" class="btn btn-md btn-primary" style="margin-left: 3px;">Export</button>
+                  </div>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+
+              <table class="table table-striped table-bordered table-hover" id="user_list">
+                <thead>
+                <tr>
+                  <th>#</th>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>NickName</th>
+                  <th>RealName</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Operation</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {{each list as value i}}
+                  <tr index="{{i}}">
+                    <td>{{value.index}}</td>
+                    <td>{{value.id}}</td>
+                    <td>{{value.name}}</td>
+                    <td>{{value.type}}</td>
+                    <td>{{value.nickName}}</td>
+                    <td>{{value.realName}}</td>
+                    <td>{{value.tel}}</td>
+                    <td>{{value.email}}</td>
+                    <td class="edit">
+                      <button onclick="delUserConfirm({{value.id}},{{value.pageIndex}},{{i}})" data-id="{{value.id}}" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>Delete</button>
+                      <button onclick="showEditUserPanel(event, {{value.id}},{{value.pageIndex}},{{i}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">Edit</button>
+                      <button onclick="showResetPwdPanel(event, {{value.id}},{{value.pageIndex}},{{i}})" data-id="{{value.id}}" class="btn btn-lg btn-warning examine_ban">Reset Password</button>
+                    </td>
+                  </tr>
+                {{/each}}
+
+                </tbody>
+              </table>
+
+              <div class="widget-foot">
+                  <!-- 组件footer，渲染分页插件 -->
+                  <div id="userList-pagination" class="l-page"></div>
+
+              </div>
+
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+      </div>

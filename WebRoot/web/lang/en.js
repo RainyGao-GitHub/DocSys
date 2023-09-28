@@ -388,6 +388,30 @@ function lang(str)
 		"验证失败" : "Verify Failed",
 		"密码错误！" : "Password Error !",
 		
+		//管理后台
+		"非管理员用户，请联系系统管理员" : "You are not Administrator, Please contact System Adminstrator",
+		"载入中..." : "Loading...",
+		"用户管理" : "User Management",
+		"用户组管理" : "Group Management",
+		"仓库管理" : "Repository Management",
+		"系统日志管理" : "SystemLog Management",
+		"系统管理" : "System Management",
+		"证书管理" : "License Management",
+		"订单管理" : "Order Management",
+		"重启服务" : "Restart Server",
+		"是否重启服务" : "Do you want to restart server",
+		"系统重启中，请稍候..." : "System is restarting...",
+		"重启失败" : "Restart Failed",
+		"测试成功" : "Test Success",
+		"测试失败" : "Test Failed",
+		"重置" : "Reset",
+		"是否重置" : "Do you want to reset",
+		"重置成功" : "Reset Success",
+		"重置失败" : "Reset Failed",
+		"生成密钥成功" : "Key Generate Ok",
+		"生成密钥失败" : "Key Generate Failed",
+		
+		
  	};
 	
 	var newStr = translateMap[str];

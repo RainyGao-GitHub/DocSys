@@ -44,7 +44,17 @@ function Setcookie(name, value)
 }
 
 function showErrorMessage($msg) {
-	 qiao.bs.alert($msg);
+	console.log("showErrorMessage() ", $msg);
+	if(typeof $msg == 'string'){
+		qiao.bs.alert({
+			id: "idAlertDialog",	
+			title: _Lang("提示"),
+			okbtn: _Lang("确定"),
+			msg: $msg,
+		});
+	}else{
+		qiao.bs.alert($msg);
+	}
 }
   
 //弹出对话框操作接口
@@ -115,7 +125,7 @@ function pageInit(lang)
             	loginUser = user;
 				if(!user.type || user.type < 1)
 				{
-	        		showErrorMessage("非管理员用户，请联系系统管理员");
+	        		showErrorMessage(_Lang("非管理员用户，请联系系统管理员"));
 				}
 				else
 				{
@@ -136,7 +146,7 @@ function pageInit(lang)
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取用户信息失败");
+        	showErrorMessage(_Lang("获取用户信息失败", " : ", "服务器异常"));
         }
     });
 }
@@ -221,33 +231,33 @@ function stopBubble(e) {
 //显示对应菜单
 function showContentPage(curPath) {
     console.log("showContentPage() " + curPath);
-	var title = "载入中...";
-    var subtitle = "载入中...";
+	var title = _Lang("载入中...");
+    var subtitle = _Lang("载入中...");
 	
-    $("#container").html("载入中...");
+    $("#container").html(_Lang("载入中..."));
 
     $("#nav li>a").removeClass("open");
     $("ul.sublist").hide();
 
     switch ( curPath ){
         case "user":
-            title = "用户管理";
+            title = _Lang("用户管理");
             userSearchWord = "";	//清除搜索关键字
             showUserList();
             $("#nav li[data-eb-params=user]>a").addClass("open");
             break;
         case "group":
-            title = "用户组管理";
+            title = _Lang("用户组管理");
             showGroupList();
             $("#nav li[data-eb-params=group]>a").addClass("open");
             break;
         case "repos":
-            title = "仓库管理";
+            title = _Lang("仓库管理");
             showReposList();
             $("#nav li[data-eb-params=repos]>a").addClass("open");
             break;  
         case "systemLog":
-            title = "日志管理";
+            title = _Lang("日志管理");
             $("#nav li[data-eb-params=systemLog]>a").addClass("open");
             systemLogSearchWord = "";	//清除搜索关键字
             showSystemLogList();
@@ -259,19 +269,19 @@ function showContentPage(curPath) {
         case "systemUpgrade":
         case "systemLicenses":
         case "systemMigrate":
-        	title = "系统管理";
+        	title = _Lang("系统管理");
             $("#nav li[data-eb-params=system]>a").addClass("open");
             $("ul.sublist").show();	        	
             showSystemPage(curPath);
         	break;
         case "license":
-            title = "证书管理";
+            title = _Lang("证书管理");
             $("#nav li[data-eb-params=license]>a").addClass("open");
             licenseSearchWord = "";
             showLicenseList();
             break;
         case "order":
-            title = "订单管理";
+            title = _Lang("订单管理");
             $("#nav li[data-eb-params=order]>a").addClass("open");
             orderSearchWord = "";
             showOrderList();
@@ -1534,16 +1544,16 @@ function showSystemUpgrade(){
             		systemInfo.redisEn = 0;	//defulat info
             	}
         		
-            	$Func.render($("#container"),"systemUpgrade",{"value":systemInfo});
+            	$Func.render($("#container"),"systemUpgrade" + langExt,{"value":systemInfo});
             }
             else 
             {
-	        	showErrorMessage("获取系统信息失败:" + ret.msgInfo);
+	        	showErrorMessage(_Lang("获取系统信息失败", " : ", ret.msgInfo));
             	console.log(ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取系统信息失败");
+        	showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1552,10 +1562,10 @@ function restartTomcat(){
 	console.log("restartTomcat()");
     qiao.bs.confirm({
     		id: "restartTomcatConfirmDialog",
-	        title: "重启服务",
-	        msg: "是否重启服务？",
-	        okbtn: "确认",
-	        qubtn: "取消",
+	        title: _Lang("重启服务"),
+	        msg: _Lang("是否重启服务") + "？",
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
     	},function () {
 	    	//showErrorMessage("点击了确定");
 			//开始上传
@@ -1585,16 +1595,16 @@ function doRestartTomcat(tomcatPath, javaHome)
         success : function (ret) {
             if( "ok" == ret.status )
             {
-            	showErrorMessage("系统重启中，请稍候...");
+            	showErrorMessage(_Lang("系统重启中，请稍候..."));
         	}
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("重启失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("重启失败", " : ", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("重启失败:服务器异常");
+        	showErrorMessage(_Lang("重启失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1614,15 +1624,15 @@ function ldapTest()
         success : function (ret) {
             if( "ok" == ret.status )
             {
-            	showErrorMessage("<font color='green'><strong>测试成功</strong></font><br/><br/>" + ret.msgInfo);
+            	showErrorMessage("<font color='green'><strong>" + _Lang("测试成功") + "</strong></font><br/><br/>" + ret.msgInfo);
             }
             else
             {
-            	showErrorMessage("<font color='red'><strong>测试失败</strong></font><br/><br/>" + ret.msgInfo);
+            	showErrorMessage("<font color='red'><strong>" + _Lang("测试失败") + "</strong></font><br/><br/>" + ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage("测试失败:服务器异常");
+        	showErrorMessage(_Lang("测试失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1644,15 +1654,15 @@ function testCluster()
         success : function (ret) {
             if( "ok" == ret.status )
             {
-            	showErrorMessage("<font color='green'><strong>测试成功</strong></font><br/><br/>" + ret.msgInfo);
+            	showErrorMessage("<font color='green'><strong>" + _Lang("测试成功") + "</strong></font><br/><br/>" + ret.msgInfo);
             }
             else
             {
-            	showErrorMessage("<font color='red'><strong>测试失败</strong></font><br/><br/>" + ret.msgInfo);
+            	showErrorMessage("<font color='red'><strong>" + _Lang("测试失败") + "</strong></font><br/><br/>" + ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage("测试失败:服务器异常");
+        	showErrorMessage(_Lang("测试失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1662,10 +1672,10 @@ function resetClusterConfirm()
 	console.log("resetClusterConfirm()");	    
     qiao.bs.confirm({
     		id: "resetClusterConfirmDialog",
-	        title: "重置",
-	        msg: "是否重置",
-	        okbtn: "确认",
-	        qubtn: "取消",
+	        title: _Lang("重置"),
+	        msg: _Lang("是否重置"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
     	},function () {
     		resetCluster();
 	    	return true;   //close dialog
@@ -1688,15 +1698,15 @@ function resetCluster()
         success : function (ret) {
             if( "ok" == ret.status )
             {
-            	showErrorMessage("<font color='green'><strong>重置成功</strong></font>");
+            	showErrorMessage("<font color='green'><strong>" + _Lang("重置成功") + "</strong></font>");
             }
             else
             {
-            	showErrorMessage("<font color='red'><strong>重置失败</strong></font><br/><br/>" + ret.msgInfo);
+            	showErrorMessage("<font color='red'><strong>" + _Lang("重置失败") + "</strong></font><br/><br/>" + ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage("重置失败:服务器异常");
+        	showErrorMessage(_Lang("重置失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1711,13 +1721,13 @@ function generateRootKey()
         },
         success : function (ret) {
             if( "ok" == ret.status ){
-               	showErrorMessage("生成密钥成功");
+               	showErrorMessage(_Lang("生成密钥成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("生成密钥失败", " : ", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("生成密钥失败:服务器异常");
+        	showErrorMessage(_Lang("生成密钥失败", " : ", "服务器异常"));
         }
     });
 }
@@ -3901,13 +3911,13 @@ function showUserList(pageIndex){
                         /*分页条显示可见页码数量*/
                         count:5,
                         /*第一页显示文字*/
-                        homePageText:'首页',
+                        homePageText:_Lang('首页'),
                         /*最后一页显示文字*/
-                        endPageText:'尾页',
+                        endPageText: _Lang('尾页'),
                         /*上一页显示文字*/
-                        prevPageText:'上一页',
+                        prevPageText: _Lang('上一页'),
                         /* 下一页显示文字*/
-                        nextPageText:'下一页',
+                        nextPageText: _Lang('下一页'),
                         /*点击翻页绑定事件*/
                         callback: function(newPageIndex) {
                             // 分页插件的页码从1开始，减1处理
@@ -3922,7 +3932,7 @@ function showUserList(pageIndex){
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取用户列表失败");
+        	showErrorMessage(_Lang("获取用户列表失败", " : ", "服务器异常"));
         }
     });
 }
