@@ -414,7 +414,20 @@ function lang(str)
 		"删除密钥" : "Delete Key",
 		"是否删除系统密钥" : "Do you want to delete System Key",
 		"删除密钥成功" : "Delete Key Success",		
-		"删除密钥失败" : "Failed to delete Key",		
+		"删除密钥失败" : "Failed to delete Key",	
+		"请选择证书文件" : "Please select a license file",
+		"清除锁定" : "Clean Locks",
+		"是否清除系统所有锁定" : "Do you want to clean all locks",
+		"安装成功" : "Install Success",
+		"安装失败" : "Install Failed",
+		"清除成功" : "Clean Success",
+		"清除失败" : "Clean Failed",
+		"禁用系统" : "Disable System",
+		"是否禁用系统" : "Do you want to disable system access",
+		"禁用系统失败" : "Failed to disable system access",
+		"启用系统" : "Enable System",
+		"是否启用系统" : "Do you want to enable system access",
+		"启用系统失败" : "Failed to enable system access",
  	};
 	
 	var newStr = translateMap[str];

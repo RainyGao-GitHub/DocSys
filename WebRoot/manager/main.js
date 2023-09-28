@@ -1812,13 +1812,13 @@ function generateLicenseKeyPair()
         },
         success : function (ret) {
             if( "ok" == ret.status ){
-               	showErrorMessage("生成密钥成功");
+               	showErrorMessage(_Lang("生成密钥成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("生成密钥失败", " : ", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("生成密钥失败:服务器异常");
+        	showErrorMessage(_Lang("生成密钥失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1839,11 +1839,11 @@ function exportLicenseKeyPair(){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("密钥导出失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("密钥导出失败", " : ", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("密钥导出失败:服务器异常");
+        	showErrorMessage(_Lang("密钥导出失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1858,10 +1858,10 @@ function deleteLicenseKeyPairConfirm()
 	console.log("deleteLicenseKeyPairConfirm()");
     qiao.bs.confirm({
     		id: "deleteLicenseKeyPairConfirm",
-	        title: "删除密钥",
-	        msg: "是否删除证书密钥？",
-	        okbtn: "是",
-	        qubtn: "否",
+	        title: _Lang("删除密钥"),
+	        msg: _Lang("是否删除证书密钥") + "?",
+	        okbtn: _Lang("是"),
+	        qubtn: _Lang("否"),
     	},function () {
 			startDeleteLicenseKeyPair();
 	    	return true;   //close dialog
@@ -1882,13 +1882,13 @@ function startDeleteLicenseKeyPair()
         },
         success : function (ret) {
             if( "ok" == ret.status ){
-               	showErrorMessage("删除密钥成功");
+               	showErrorMessage(_Lang("删除密钥成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("删除密钥失败", " : ", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("删除密钥失败:服务器异常");
+        	showErrorMessage(_Lang("删除密钥失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1909,10 +1909,10 @@ function deleteSystemLicenseConfirm()
 	console.log("deleteSystemLicenseConfirm()");
     qiao.bs.confirm({
     		id: "deleteSystemLicenseConfirmDialog",
-	        title: "删除证书",
-	        msg: "是否删除证书？",
-	        okbtn: "是",
-	        qubtn: "否",
+	        title: _Lang("删除证书"),
+	        msg: _Lang("是否删除证书") + "?",
+	        okbtn: _Lang("是"),
+	        qubtn: _Lang("否"),
     	},function () {
 			startDeleteSystemLicense();
 	    	return true;   //close dialog
@@ -1935,13 +1935,13 @@ function startDeleteSystemLicense()
             if( "ok" == ret.status ){
 				updateSystemLicenseInfo(ret.data);
 				showSystemLicenses(systemLicenses);
-               	showErrorMessage("删除成功");
+               	showErrorMessage(_Lang("删除成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("删除失败", " : ", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:删除失败");
+        	showErrorMessage(_Lang("删除失败", " : ", "服务器异常"));
         }
     });
 }
@@ -1981,7 +1981,7 @@ function installSystemLicenseConfirm(e)
     }
     else
    	{
-   		showErrorMessage("请选择文件");
+   		showErrorMessage(_Lang("请选择证书文件"));
       	return false;
    	}  
 	
@@ -1990,10 +1990,10 @@ function installSystemLicenseConfirm(e)
 
     qiao.bs.confirm({
     		id: "installSystemLicenseConfirmDialog",
-	        title: "安装证书",
-	        msg: "是否安装证书？",
-	        okbtn: "是",
-	        qubtn: "否",
+	        title: _Lang("安装证书"),
+	        msg: _Lang("是否安装证书") + "?",
+	        okbtn: _Lang("是"),
+	        qubtn: _Lang("否"),
     	},function () {
 	    	//showErrorMessage("点击了确定");
 			//开始上传
@@ -2031,7 +2031,7 @@ function startInstallSystemLicense(file)
 			//上传成功！
 			var ret = JSON.parse(xhr.responseText);
 			if("ok" == ret.status){
-				showErrorMessage("安装成功");
+				showErrorMessage(_Lang("安装成功"));
 				updateSystemLicenseInfo(ret.data);
 				showSystemLicenses(systemLicenses);
 			 }
@@ -2039,7 +2039,7 @@ function startInstallSystemLicense(file)
 			 {
 				//上传失败
 				console.log("安装失败：" + ret.msgInfo);
-				showErrorMessage("安装失败:" + ret.msgInfo);
+				showErrorMessage(_Lang("安装失败", " : ", ret.msgInfo));
 				return;
              }
 		}else{
@@ -2050,7 +2050,7 @@ function startInstallSystemLicense(file)
 			}
 			//上传失败
 			console.log("安装失败: " + file.name + " 上传异常！");
-			showErrorMessage("安装失败: 上传异常");
+			showErrorMessage(_Lang("安装失败", " : ", "上传异常"));
 			return;
 		}
 	};
@@ -2081,10 +2081,10 @@ function cleanSystemLocksConfirm()
 	console.log("cleanSystemLocksConfirm()");
     qiao.bs.confirm({
     		id: "cleanSystemLocksConfirmDialog",
-	        title: "清除锁定",
-	        msg: "是否清除系统所有锁定？",
-	        okbtn: "清除",
-	        qubtn: "取消",
+	        title: _Lang("清除锁定"),
+	        msg: _Lang("是否清除系统所有锁定") + "？",
+	        okbtn: _Lang("清除"),
+	        qubtn: _Lang("取消"),
     	},function () {
     		doCleanSystemLocks();
 	    	return true;   //close dialog
@@ -2105,16 +2105,16 @@ function doCleanSystemLocks(){
         	console.log("doCleanSystemLocks ret:",ret);
             if( "ok" == ret.status )
             {
-                showErrorMessage("清除成功");	            	
+                showErrorMessage(_Lang("清除成功"));	            	
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("清除失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("清除失败", " : ", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("清除失败:服务器异常");
+        	showErrorMessage(_Lang("清除失败", " : ", "服务器异常"));
         }
     });
 }
@@ -2134,10 +2134,10 @@ function disableSystemConfirm()
 	console.log("disableSystemConfirm()");
     qiao.bs.confirm({
     		id: "disableSystemConfirmDialog",
-	        title: "禁用系统",
-	        msg: "是否禁用系统？",
-	        okbtn: "禁用",
-	        qubtn: "取消",
+	        title: _Lang("禁用系统"),
+	        msg: _Lang("是否禁用系统") + "?",
+	        okbtn: _Lang("禁用"),
+	        qubtn: _Lang("取消"),
     	},function () {
 			doDisableSystem();
 	    	return true;   //close dialog
@@ -2153,10 +2153,10 @@ function enableSystemConfirm()
 	console.log("enableSystemConfirm()");
     qiao.bs.confirm({
     		id: "enableSystemConfirmConfirmDialog",
-	        title: "启用系统",
-	        msg: "是否启用系统？",
-	        okbtn: "启用",
-	        qubtn: "取消",
+	        title: _Lang("启用系统"),
+	        msg: _Lang("是否启用系统") + "?",
+	        okbtn: _Lang("启用"),
+	        qubtn: _Lang("取消"),
     	},function () {
 			doEnableSystem();
 	    	return true;   //close dialog
@@ -2184,11 +2184,11 @@ function doDisableSystem(){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("禁用系统失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("禁用系统失败", " : ", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("禁用系统失败::服务器异常");
+        	showErrorMessage(_Lang("禁用系统失败", " : ", "服务器异常"));
         }
     });
 }
@@ -2210,11 +2210,11 @@ function doEnableSystem(){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("启用系统失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("启用系统失败", " : ", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("启用系统失败::服务器异常");
+        	showErrorMessage(_Lang("启用系统失败", " : ", "服务器异常"));
         }
     });
 }
