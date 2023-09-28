@@ -126,11 +126,26 @@ function translateToEnglish(str)
 	return newStr;
 }
 
+function getLangExt(langType)
+{
+	if(langType == undefined)
+	{
+		return "";
+	}
+	
+	switch(langType)
+	{
+	case "en":
+		return "_en";
+	}
+	return "";
+}
+
 function pageInit()
 {
 	console.log("pageInit");
 	langType = getBrowserLang();
-	langExt = "_" + langType;
+	langExt = getLangExt(langType);
 	
 	if(docSysInitState == null || docSysInitState == 0)
 	{
