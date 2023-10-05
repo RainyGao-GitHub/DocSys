@@ -1,5 +1,8 @@
 # MxsDoc
 
+[中文 ](README.md) | [English](README_EN.md)
+
+## Introduction
 MxsDoc is a web based document storage and management system, It support Permission Management, View and Recover History, Office Edit and Preview, WPS Edit and Preview, ZIP/RAR/7z/tar/tgz Preview and Download, Sharing Management, Remote Storage, Remote Document Push and Pull, Smart Search, Document Note with markdown format, Local/Remote Auto Backup, System Migration, Cluster Deployment.
 
 ## Usage 
