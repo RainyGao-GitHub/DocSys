@@ -450,9 +450,9 @@ Configure nginx's client_max_body_size as 100M
 
 Set the content of docsys\tomcat\webapps\docSys.ini\debugLogLevel as 0
 
-2. For Windows: Use startWithLog.bat to start MxsDoc, debug log is under folder [docsys/logs]
+(2) For Windows: Use startWithLog.bat to start MxsDoc, debug log is under folder [docsys/logs]
 
-3. For Linux: start.sh > docSys.log
+(3) For Linux: start.sh > docSys.log
 
 # Contact
 Author QQ: 652055239
