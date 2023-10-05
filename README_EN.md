@@ -3,19 +3,21 @@
 MxsDoc is a web based document storage and management system, It support Permission Management, View and Recover History, Office Edit and Preview, WPS Edit and Preview, ZIP/RAR/7z/tar/tgz Preview and Download, Sharing Management, Remote Storage, Remote Document Push and Pull, Smart Search, Document Note with markdown format, Local/Remote Auto Backup, System Migration, Cluster Deployment.
 
 ## Usage 
-File Storage System
-Document Storage and Management System
-Distributed File Server
-E-Book System
-Software API Document Management System
-Auto-Backup Tools
-Web-Based SVN Repository
-Web-Based GIT Repository
-Front-End of FTP/SFTP/SMB Server
-Remote Log Management System
+
+- File Storage System
+- Document Storage and Management System
+- Distributed File Server
+- E-Book System
+- Software API Document Management System
+- Auto-Backup Tools
+- Web-Based SVN Repository
+- Web-Based GIT Repository
+- Front-End of FTP/SFTP/SMB Server
+- Remote Log Management System
 
 
-## [OneKey Installation]
+
+## [OneKey Installation](https://github.com/RainyGao-GitHub/DocSys/releases)
 One key click to install and start without any dependencies
 
 ### [Try it](http://dw.gofreeteam.com) [Account/Password: guest/guest]
@@ -33,7 +35,7 @@ Support to define repository's dedicated rules for storage, history, permission,
 Documents was stored on local disk, so that there is no impact from system incident crash.
 ![Safe to store](https://images.gitee.com/uploads/images/2020/0613/105650_d4a010aa_1558129.png "docsys_仓库主页1.png")
 
-### History采
+### History
 History data was stored in SVN/GIT Repository, You can access the SVN/GIT Repository with your local tools.
 ![History](https://images.gitee.com/uploads/images/2020/0613/105708_0888bd30_1558129.png "docsys_仓库主页3.png")
 
