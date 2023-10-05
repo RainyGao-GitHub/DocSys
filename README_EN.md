@@ -2,10 +2,10 @@
 
 [中文 ](README.md) | [English](README_EN.md)
 
-## Introduction
+### Introduction
 MxsDoc is a web based document storage and management system, It support Permission Management, View and Recover History, Office Edit and Preview, WPS Edit and Preview, ZIP/RAR/7z/tar/tgz Preview and Download, Sharing Management, Remote Storage, Remote Document Push and Pull, Smart Search, Document Note with markdown format, Local/Remote Auto Backup, System Migration, Cluster Deployment.
 
-## Usage 
+### Usage 
 
 - File Storage System
 - Document Storage and Management System
@@ -20,7 +20,7 @@ MxsDoc is a web based document storage and management system, It support Permiss
 
 
 
-## [OneKey Installation](https://github.com/RainyGao-GitHub/DocSys/releases)
+### [OneKey Installation](https://github.com/RainyGao-GitHub/DocSys/releases)
 One key click to install and start without any dependencies
 
 ### [Try it](http://dw.gofreeteam.com) [Account/Password: guest/guest]
