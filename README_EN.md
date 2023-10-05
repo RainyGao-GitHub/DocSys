@@ -26,13 +26,15 @@ One key click to install and start without any dependencies
 ### [Try it](http://dw.gofreeteam.com) [Account/Password: guest/guest]
 
 
-### Suppored Platform: Linux, Windows, Mac.
+### Supported Platform: Linux, Windows, Mac.
+![](https://images.gitee.com/uploads/images/2020/0614/223719_03bd18e1_1558129.png "docsys_首页1.png")
 
-
-### OpenSource: GPL 2.0
+### Open Source: GPL 2.0
+![](https://images.gitee.com/uploads/images/2020/0613/105551_20a8ac4f_1558129.png "docsys_首页2.png")
 
 ### Customizable Storage Solution
 Support to define repository's dedicated rules for storage, history, permission, text-search and encryption. 
+![](https://images.gitee.com/uploads/images/2020/0613/105615_5aa90a26_1558129.png "docsys_仓库列表1.png")
 
 ### Safe To Store
 Documents was stored on local disk, so that there is no impact from system incident crash.
