@@ -23,7 +23,8 @@ MxsDoc is a web based document storage and management system, It support Permiss
 ### [OneKey Installation](https://github.com/RainyGao-GitHub/DocSys/releases)
 One key click to install and start without any dependencies
 
-### [Try it](http://dw.gofreeteam.com) [Account/Password: guest/guest]
+### [Try it](http://dw.gofreeteam.com) 
+[Account/Password: guest/guest]
 
 
 ### Supported Platform: Linux, Windows, Mac.
