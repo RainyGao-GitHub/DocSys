@@ -24,7 +24,7 @@ MxsDoc is a web based document storage and management system, It support Permiss
 One key click to install and start without any dependencies
 
 ### [Try It Immediately](http://dw.gofreeteam.com) 
-[Account/Password: guest/guest]
+ **Account/Password:**  guest/guest
 
 
 ### Supported Platform: Linux, Windows, Mac.
@@ -77,7 +77,7 @@ GLOBAL : [GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
 1.1.2 Run start script to install
 
- **Attention: ** Local path should have not space and Chinese characters
+ **Attention:**  Local path should have not space and Chinese characters
 
 #### 1.3 Access MxsDoc
 Local Access : http://localhost:8100/DocSystem
