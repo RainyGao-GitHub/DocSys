@@ -20,7 +20,7 @@ function _LangStats(totalNum, successNum)
 	{
 		return "Total: "+ totalNum;		
 	}
-	return "Total: "+ totalNum +", Failed: " + (totalNum - failNum);
+	return "Total: "+ totalNum +", Failed: " + (totalNum - successNum);
 }
 
 function lang(str)
@@ -312,6 +312,8 @@ function lang(str)
 		"已存在，自动跳过" : "already exists, skip",
 		"替换" : "Replace",
 		"跳过" : "Skip",
+		"继续" : "Continue",
+		"结束" : "Stop",		
 		
 		//新建文件
 		"文件名不能为空" : "FileName is empty",
@@ -368,11 +370,19 @@ function lang(str)
 		"复制失败,是否继续复制其他文件？" : "Copy failed, Continue to copy other files ?",
 		"是否继续复制其他文件？" : "Continue to copy other files ?",
 		"复制完成" : "Copy completed",
+		"复制失败" : "Copy failed",
 		
 		//移动文件
 		"是否移动文件" : "Do you want to move the file or folder",	
 		"请选择需要移动的文件" : "No any file or folder was selected to move",
-		
+		"待移动" : "Move pendding...",
+		"无法在同一个目录下移动" : "Unable to move under same folder",
+		"文件移动超时" : "Move timeout",
+		"移动失败,是否继续移动其他文件？" : "Move failed, Continue to move other files ?",
+		"是否继续移动其他文件？" : "Continue to move other files ?",
+		"移动完成" : "Move completed",
+		"移动失败" : "Move failed",
+			
 		//下载文件
 		"是否下载" : "Do you want to download",
 		"请选择需要下载的文件" : "No any file or folder was selected to download",

@@ -71,7 +71,7 @@
 			if(!treeNodes)
 			{
 				console.log("DocMoveInit() treeNodes is null");
-				showErrorMessage("请选择文件！");
+				showErrorMessage(_Lang("请选择文件！"));
 				return;
 			}
 			
@@ -80,7 +80,7 @@
 			if(fileNum <= 0)
 			{
 				console.log("DocMoveInit() fileNum <= 0");
-				showErrorMessage("请选择文件！");
+				showErrorMessage(_Lang("请选择文件！"));
 				return;
 			}
 			
@@ -234,7 +234,7 @@
 			    	//Status Info
 		    		SubContext.index = i;
 		    	   	SubContext.state = 0;	//未开始移动
-		    	   	SubContext.status = "待移动";	//未开始移动
+		    	   	SubContext.status = _Lang("待移动");	//未开始移动
 		    	   	
 		    	   	//thread Status
 		    	   	SubContext.threadState = 0; //0:线程未启动, 1:线程已启动, 2:线程已终止
@@ -313,8 +313,8 @@
   	    	if(SubContext.pid == SubContext.dstPid)
   			{
 				console.log("[" + SubContext.index + "] moveDoc() 无法在同一个目录下移动");
-				moveErrorHandler(SubContext, "无法在同一个目录下移动");
-				moveErrorConfirm(SubContext, "无法在同一个目录下移动");
+				moveErrorHandler(SubContext, _Lang("无法在同一个目录下移动"));
+				moveErrorConfirm(SubContext, _Lang("无法在同一个目录下移动"));
   	    		moveNextDoc();
   	    		return; 
   			}
@@ -329,7 +329,7 @@
 					 console.log("[" + SubContext.index + "] moveDoc() timerForMove triggered!");
 					 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
 					 {
-				         moveErrorHandler(SubContext, "文件复制超时");
+				         moveErrorHandler(SubContext, _Lang("文件移动超时"));
 				         moveNextDoc();
 					 }
 			    },timeOut);			
@@ -379,8 +379,8 @@
 	                },
 	                error : function () {	//后台异常
 	            	   console.log("[" + SubContext.index + "] moveDoc() 服务器异常：move failed");
-	            	   moveErrorHandler(SubContext, "服务器异常");
-	            	   moveErrorConfirm(SubContext,"服务器异常");            	   
+	            	   moveErrorHandler(SubContext, _Lang("服务器异常"));
+	            	   moveErrorConfirm(SubContext, _Lang("服务器异常"));            	   
 	            	   return;
 	                }
 	        	});
@@ -508,18 +508,19 @@
       		confirmDialogState = 1;
 
       		var FileName = SubContext.name;
-      		var msg = FileName + "移动失败,是否继续移动其他文件？";
+      		var msg = FileName + " " + _Lang("移动失败,是否继续移动其他文件？");
       		if(errMsg != undefined)
       		{
-      			msg = FileName + "移动失败(" + errMsg + "),是否继续移动其他文件？";
+      			msg = FileName + " " + _Lang("移动失败") + "(" + errMsg + ")," + _Lang("是否继续移动其他文件？");
       		}
       		//弹出用户确认窗口
       		qiao.bs.confirm({
     	    	id: "moveErrorConfirm"  +  SubContext.index,
     	        msg: msg,
-    	        close: false,		
-    	        okbtn: "继续",
-    	        qubtn: "结束",
+    	        close: false,
+    	        title: _Lang("确认"),
+    	        okbtn: _Lang("继续"),
+    	        qubtn: _Lang("结束"),
     	    },function () {
     	    	//继续后续的移动
     	    	//alert("点击了确认");
@@ -548,12 +549,12 @@
       		{
 	      		if(totalNum > (successNum + failNum))
 	      		{
-	      			console.log("moveEndHandler() 复制未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+	      			console.log("moveEndHandler() 移动结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 	      			return;
 	      		}
       		}
       		
-      		console.log("moveEndHandler() 复制结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+      		console.log("moveEndHandler() 移动结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 			
       		showMoveEndInfo();
 
@@ -562,10 +563,10 @@
       	
   		function showMoveEndInfo()
   		{
-  			var moveEndInfo = "移动完成(共" + totalNum +"个)";
+  			var moveEndInfo = _Lang("移动完成") + "(" + _LangStats(totalNum) + ")";
       		if(successNum != totalNum)
       		{
-      			moveEndInfo = "移动完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			moveEndInfo = _Lang("移动完成") + "(" + _LangStats(totalNum, successNum) + ")";
       		    bootstrapQ.msg({
 					msg : moveEndInfo,
 					type : 'warning',
