@@ -300,7 +300,7 @@
 
 			    	//Status Info
 		    	   	SubContext.state = 0;	//未开始下载
-		    	   	SubContext.status = "待下载";	//未开始下载
+		    	   	SubContext.status = _Lang("待下载");	//未开始下载
 		    	   	SubContext.stopFlag = false; //停止标记false
 		    	   	
 		    	   	//threadState

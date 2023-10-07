@@ -549,7 +549,7 @@
       		{
 	      		if(totalNum > (successNum + failNum))
 	      		{
-	      			console.log("moveEndHandler() 移动结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+	      			console.log("moveEndHandler() 移动未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 	      			return;
 	      		}
       		}
