@@ -1356,8 +1356,8 @@ function showDocDetailPanel(node)
 	console.log("showDocDetailPanel()");
 	bootstrapQ.dialog({
 			id: 'docDetail',
-			url: 'docDetail.html',
-			title: '详细信息',
+			url: 'docDetail' + langExt + '.html',
+			title: _Lang('属性'),
 			msg: _Lang('页面正在加载，请稍等...'),
             okbtn: _Lang("确定"),
               callback: function () {

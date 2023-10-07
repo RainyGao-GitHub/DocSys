@@ -1,0 +1,61 @@
+<div id="dialog-doc-detail">
+	<div class="modal-body">
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">Name</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="name" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">Size</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="size" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">Path</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="position" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">CreateTime</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="createTime" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	   <div class="form-group">
+	       <label class="col-sm-3 control-label">ModifiedTime</label>
+	       <div class="col-sm-9">
+ 	           <input class="form-control" type="text" name="latestEditTime" style="width: 100%"/>
+	       </div>
+	       <div class="clearfix"></div>
+	   </div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	function docDetailPageInit(node)
+	{
+		console.log("docDetailPageInit()");
+        var path = "::/" + node.path;
+        var lastEditTime = formatTime(node.latestEditTime);  
+        var createTime = lastEditTime;
+        if(node.createTime)
+        {
+        	console.log("docDetailPageInit() node.createTime:", node.createTime);
+        	createTime = formatTime(node.createTime);
+        }
+		
+        $("#dialog-doc-detail input[name='name']").val(node.name);
+        $("#dialog-doc-detail input[name='size']").val(node.size);               
+        $("#dialog-doc-detail input[name='position']").val(path);        
+        $("#dialog-doc-detail input[name='createTime']").val(createTime);
+        $("#dialog-doc-detail input[name='latestEditTime']").val(lastEditTime);    
+	}
+</script>
+
