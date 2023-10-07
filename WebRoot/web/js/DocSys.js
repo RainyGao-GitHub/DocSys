@@ -1365,8 +1365,8 @@ function showDocDetailPanel(node)
 			id: 'docDetail',
 			url: 'docDetail.html',
 			title: '详细信息',
-			msg: '页面正在加载，请稍等...',
-            okbtn: "确定",
+			msg: _Lang('页面正在加载，请稍等...'),
+            okbtn: _Lang("确定"),
               callback: function () {
             	  docDetailPageInit(node);
               }
@@ -1666,19 +1666,18 @@ function openCad(docInfo, openInNewPage)
                 }
             	else
             	{
-            		showErrorMessage("文件打开失败:" + ret.msgInfo);
+            		showErrorMessage(_Lang("文件打开失败", ":", ret.msgInfo));
             	}
             }
             else
             {
             	console.log("openCad getDocCadLink Failed");
-        		showErrorMessage("文件打开失败:" + ret.msgInfo);
+        		showErrorMessage(_Lang("文件打开失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-            //showErrorMessage("文件预览失败：服务器异常");
             console.log("openCad getDocCadLink Failed 服务器异常");
-    		showErrorMessage("文件打开失败:" + ret.msgInfo);
+    		showErrorMessage(_Lang("文件打开失败", ":", "服务器异常"));
         }
     });
 }
@@ -2021,7 +2020,7 @@ function showImgInDialog(docInfo)
 		id: "ImgListViewer",
 		title: docInfo.name,
 		url: 'imgListViewerForBootstrap.html',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: getDialogStyle(),
@@ -2045,7 +2044,7 @@ function showImgInArtDialog(docInfo) {
 		title: docInfo.name,
 		url: url,
 		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="' + url + '?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		padding: 0,
@@ -2067,7 +2066,7 @@ function showVideoInDialog(docInfo){
 		id: "VideoViewer",
 		title: docInfo.name,
 		url: 'videoViewerForBootstrap.html',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: getDialogStyle(),
@@ -2086,7 +2085,7 @@ function showVideoInArtDialog(docInfo) {
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
 		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="videoViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		padding: 0,
@@ -2111,7 +2110,7 @@ function showAudioInArtDialog(docInfo) {
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
 		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="audioForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		padding: 0,
@@ -2133,7 +2132,7 @@ function showZipInDialog(docInfo)
 		id: "ZipViewer",
 		title: docInfo.name,
 		url: 'zipViewerForBootstrap.html',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: getZipDialogStyle(),
@@ -2151,7 +2150,7 @@ function showZipInArtDialog(docInfo) {
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
 		content: '<iframe frameborder="0" scrolling="auto" name="ArtDialog' + docInfo.docId + '" src="zipViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		padding: 0,
@@ -2173,7 +2172,7 @@ function showPdfInDialog(docInfo)
 		id: "PdfViewer",
 		title: docInfo.name,
 		url: 'pdfViewerForBootstrap.html',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: "width:95%;height:95%;",
@@ -2191,7 +2190,7 @@ function showPdfInArtDialog(docInfo) {
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
 		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		padding: 0,
@@ -2213,7 +2212,7 @@ function showPdfInDialog(docInfo)
 		id: "PdfViewer",
 		title: docInfo.name,
 		url: 'pdfViewerForBootstrap.html',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: "width:95%;height:95%;",
@@ -2231,7 +2230,7 @@ function showMarkdownInDialog(docInfo, docText, tmpSavedDocText)
 		id: "StackeidtEditor",
 		title: docInfo.name,
 		url: 'stackeditForBootstrap.html',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: getDialogStyle(),
@@ -2252,7 +2251,7 @@ function showMarkdownInArtDialog(docInfo)
 		title: docInfo.name,
 		content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="stackeditForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		//content:'<iframe frameborder="0" name="ArtDialog'+docInfo.docId+'" src="editormdForArt.html?docid='+docInfo.docId+'" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		padding: 0,
@@ -2277,7 +2276,7 @@ function showTextInDialog(docInfo, openType)
 			id: "textViewer",
 			title: docInfo.name,
 			url: 'textViewerForBootstrap.html',
-			msg: '页面正在加载，请稍等...',
+			msg: _Lang('页面正在加载，请稍等...'),
 			foot: false,
 			big: true,
 			mstyle: getDialogStyle(),
@@ -2292,7 +2291,7 @@ function showTextInDialog(docInfo, openType)
 			id: "AceEditor",
 			title: docInfo.name,
 			url: 'aceForBootstrap.html',
-			msg: '页面正在加载，请稍等...',
+			msg: _Lang('页面正在加载，请稍等...'),
 			foot: false,
 			big: true,
 			mstyle: getDialogStyle(),
@@ -2312,7 +2311,7 @@ function showTextInArtDialog(docInfo) {
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
 		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="aceForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		padding: 0,
@@ -2389,7 +2388,7 @@ function showOfficeInDialog(docInfo)
 		id: "OfficeEditor",
 		title: docInfo.name,
 		url: 'officeForBootstrap.jsp',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: "width:95%;height:95%;",
@@ -2409,7 +2408,7 @@ function showOfficeInArtDialog(docInfo) {
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
 		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeForArt.jsp?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		padding: 0,

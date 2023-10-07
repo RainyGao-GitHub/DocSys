@@ -136,7 +136,7 @@
 			
 			if(!files || files.length <= 0)
 			{
-				showErrorMessage("请选择需要上传的文件!");
+				showErrorMessage(_Lang("请选择需要上传的文件") + "!");
 				return;
 			}
 			
@@ -171,13 +171,13 @@
 			if(!files)
 			{
 				console.log("DocUploadInit() files undefined");		
-				showErrorMessage("请选择文件!");
+				showErrorMessage(_Lang("请选择文件") + "!");
 				return;
 			}
 			
 			if(files.length <= 0)
 			{
-				showErrorMessage("请选择文件!");
+				showErrorMessage(_Lang("请选择文件") + "!");
 				return;
 			}
 
@@ -388,7 +388,7 @@
 			    	
 			    	//Status Info
 		    	   	SubContext.state = 0;	//未开始上传
-		    	   	SubContext.status = "待上传";	//未开始上传
+		    	   	SubContext.status = _Lang("待上传");	//未开始上传
 		    	   	
 		    	   	//上传速度信息
 					SubContext.speed = "";
@@ -704,7 +704,7 @@
       	//文件覆盖处理接口
       	function fileCoverConfirm(SubContext)
       	{
-      		var msgInfo = "文件 " + SubContext.name + "已存在";
+      		var msgInfo = _Lang("文件") + " " + SubContext.name + " " + _Lang("已存在");
       		if(confirmDialogState == 1)
       		{
 				console.log("[" + SubContext.index + "] fileCoverConfirm() add to penndingList");
@@ -728,7 +728,7 @@
 	  	 	
 	  	 	if(confirm == 2)
 	  	 	{
-	  	 		uploadErrorHandler(SubContext, "文件" + docName + " 已存在，自动跳过");
+	  	 		uploadErrorHandler(SubContext, _Lang("文件") + " " + docName + " " + _Lang("已存在，自动跳过"));
 	  	 		resumePenddingConfirm();
 	  	 		uploadNextDoc();
 	  	 		return;
@@ -746,10 +746,11 @@
 		        
     	    qiao.bs.confirm({
     	    	id: 'fileCoverConfirm',
-    	        msg: docName + "已存在,是否覆盖?",
+    	        msg: docName + " " + _Lang("已存在,是否覆盖") + "?",
     	        close: false,		
-    	        okbtn: "替换",
-    	        qubtn: "跳过",
+    	        title: _Lang("确认"),
+    	        okbtn: _Lang("替换"),
+    	        qubtn: _Lang("跳过"),
     	    },function () {
                	console.log("fileCoverConfirm() 用户选择覆盖 " + docName);
        		 	clearTimeout(fileCoverTimer);
@@ -768,10 +769,11 @@
 	 	            
   	 	    	    qiao.bs.confirm({
   	 	    	    	id: 'takeSameActionConfirm1',
-  	 	    	        msg: "后续已存在文件是否自动覆盖？",
+  	 	    	        msg: _Lang("后续已存在文件是否自动覆盖？"),
   	 	    	        close: false,		
-  	 	    	        okbtn: "是",
-  	 	    	        qubtn: "否",
+  	 	    	        title: _Lang("确认"),
+  	 	    	        okbtn: _Lang("是"),
+  	 	    	        qubtn: _Lang("否"),
   	 	    	    },function () {
   	 	           		console.log("fileCoverConfirm() 后续已存在文件将自动覆盖");
   			 	    	clearTimeout(fileCoverTimer1);
@@ -817,15 +819,16 @@
   	 				
   	 	    	    qiao.bs.confirm({
   	 	    	    	id: 'takeSameActionConfirm2',
-  	 	    	        msg: "后续已存在文件是否自动跳过？",
+  	 	    	        msg: _Lang("后续已存在文件是否自动跳过？"),
   	 	    	        close: false,		
-  	 	    	        okbtn: "是",
-  	 	    	        qubtn: "否",
+  	 	    	        title: _Lang("确认"),
+  	 	    	        okbtn: _Lang("是"),
+  	 	    	        qubtn: _Lang("否"),
   	 	    	    },function () {
   	 	    	    	console.log("fileCoverConfirm() 后续已存在文件自动跳过！");
   	 	    	    	clearTimeout(fileCoverTimer2);
   	 					fileCoverConfirmSet = 2;	//全局覆盖
-  	 					uploadErrorHandler(SubContext, "文件已存在，跳过且后续自动跳过");
+  	 					uploadErrorHandler(SubContext, _Lang("文件已存在，跳过且后续自动跳过"));
   	 					closeBootstrapDialog("takeSameActionConfirm2");	
   	 					resumePenddingConfirm();
   	 					uploadNextDoc();
@@ -833,7 +836,7 @@
   	 				},function(){
   	 					console.log("fileCoverConfirm() 后续已存在文件不自动跳过！");
   	 	    	    	clearTimeout(fileCoverTimer2);
-  						uploadErrorHandler(SubContext, "文件已存在，跳过但后续不自动跳过");
+  						uploadErrorHandler(SubContext, _Lang("文件已存在，跳过但后续不自动跳过"));
   						closeBootstrapDialog("takeSameActionConfirm2");	
   						resumePenddingConfirm();
   						uploadNextDoc();
@@ -842,7 +845,7 @@
   	 			}
   	 			else
   	 			{
-  	 				uploadErrorHandler(SubContext, "文件已存在，跳过");
+  	 				uploadErrorHandler(SubContext, _Lang("文件已存在，跳过"));
   		  	 		resumePenddingConfirm();
   	 				uploadNextDoc();
   	 			}
@@ -891,10 +894,11 @@
 			//弹出用户确认窗口
       		qiao.bs.confirm({
     	    	id: 'uploadErrorConfirm',
-    	        msg: FileName + "上传失败（"+errMsg+"）,是否继续上传其他文件？",
+    	        msg: FileName + " " +Lang("上传失败") + "("+ _Lang(errMsg) + ")," + _Lang("是否继续上传其他文件？"),
     	        close: false,		
-    	        okbtn: "继续",
-    	        qubtn: "结束上传",
+    	        title: _Lang("确认"),
+    	        okbtn: _Lang("继续"),
+    	        qubtn: _Lang("结束上传"),
     	    },function () {
     	    	//继续后续的上传
 				clearTimeout(uploadErrorTimer);			
@@ -913,10 +917,11 @@
     	 			
   	 	    	    qiao.bs.confirm({
   	 	    	    	id: 'takeSameActionConfirm3',
-  	 	    	        msg: "后续错误是否执行此操作？",
-  	 	    	        close: false,		
-  	 	    	        okbtn: "是",
-  	 	    	        qubtn: "否",
+  	 	    	        msg: _Lang("后续错误是否执行此操作？"),
+  	 	    	        close: false,
+  	 	    	        title: _Lang("确认"),
+  	 	    	        okbtn: _Lang("是"),
+  	 	    	        qubtn: _Lang("否"),
   	 	    	    },function () {
   	 	    	    	//后续错误将不再弹出窗口
   	 	    	    	clearTimeout(uploadErrorTimer1);
@@ -983,10 +988,11 @@
 			//弹出用户确认窗口
       		qiao.bs.confirm({
     	    	id: 'uploadWarningConfirm',
-    	        msg: FileName + "警告（"+msgInfo+"）,是否继续上传其他文件？",
-    	        close: false,		
-    	        okbtn: "继续",
-    	        qubtn: "结束上传",
+    	        msg: FileName + " " + _Lang("警告") + "("+msgInfo+")," + _Lang("是否继续上传其他文件？"),
+    	        close: false,	
+    	        title: _Lang("确认"),
+    	        okbtn: _Lang("继续"),
+    	        qubtn: _Lang("结束上传"),
     	    },function () {
     	    	//alert("点击了确定");
 				clearTimeout(uploadWarningTimer);			
@@ -1003,10 +1009,11 @@
     	 			
   	 	    	    qiao.bs.confirm({
   	 	    	    	id: 'takeSameActionConfirm4',
-  	 	    	        msg: "后续错误是否执行此操作？",
-  	 	    	        close: false,		
-  	 	    	        okbtn: "是",
-  	 	    	        qubtn: "否",
+  	 	    	        msg: _Lang("后续错误是否执行此操作？"),
+  	 	    	        close: false,
+  	 	    	        title: _Lang("确认"),
+  	 	    	        okbtn: _Lang("是"),
+  	 	    	        qubtn: _Lang("否"),
   	 	    	    },function () {
   	 	    	    	//后续错误将不再弹出窗口
   	 	    	    	clearTimeout(uploadWarningTimer1);
@@ -1578,7 +1585,7 @@
 		            console.log("[" + SubContext.index + "] getFileCheckSum() caculate() fileReader.onerror() checksum caculate failed"); // computed hash
  		        	SubContext.checkSumState = 3;
 
- 		        	uploadErrorHandler(SubContext, "校验码计算失败");
+ 		        	uploadErrorHandler(SubContext, _Lang("校验码计算失败"));
  		        	uploadNextDoc();
  		        };
  		        
@@ -1594,7 +1601,7 @@
 	            	SubContext.checkSumState = 4;
 	            	SubContext.checkSum = "";
 	            	
- 		        	uploadErrorHandler(SubContext, "校验码计算失败:当前浏览器不支持读取文件");
+ 		        	uploadErrorHandler(SubContext, _Lang("校验码计算失败:当前浏览器不支持读取文件"));
  		        	uploadNextDoc();
  		        }		        
  	      	}
@@ -1641,7 +1648,7 @@
 	             		if(ret.msgData == "0")	//文件存在但checkSum不同，等待用户确认是否覆盖
 	             		{
 	             			SubContext.docId = ret.data.docId;
-	             			fileCoverConfirm(SubContext,"文件" + name + " 已存在");
+	             			fileCoverConfirm(SubContext, _Lang("文件") + " " + name + " " + _Lang("已存在"));
 	             			return;
 	             		}
 	             		else if(ret.msgData == "1")	//文件存在且checkSum相同，直接标记成功
@@ -1675,7 +1682,7 @@
 	                }
 	            },
 	            error : function () {
-				 	uploadErrorConfirmHandler(SubContext, "checkDocInfo "+ SubContext.name + " 异常");
+				 	uploadErrorConfirmHandler(SubContext, "checkDocInfo "+ SubContext.name + " " + _Lang("异常"));
 		            return;
 	            }
 	        });
@@ -1977,8 +1984,8 @@
 	                }
 	            },
 	            error : function () {
-	            	uploadErrorHandler(SubContext, "checkChunkUploaded "+name+ " 异常");
-		            uploadErrorConfirmHandler(SubContext, "checkChunkUploaded "+name+ " 异常");
+	            	uploadErrorHandler(SubContext, "checkChunkUploaded "+name+ " " + _Lang("异常"));
+		            uploadErrorConfirmHandler(SubContext, "checkChunkUploaded "+name+ " " + _Lang("异常"));
 		            return;
 	            }
 	        });
@@ -2038,8 +2045,8 @@
 	                }
 	            },
 	            error : function () {
-	            	uploadErrorHandler(SubContext, "combineChunks for "+ SubContext.name + " 异常");
-		            uploadErrorConfirmHandler(SubContext, "combineChunks for "+ SubContext.name + " 异常");
+	            	uploadErrorHandler(SubContext, "combineChunks for "+ SubContext.name + " " + _Lang("异常"));
+		            uploadErrorConfirmHandler(SubContext, "combineChunks for "+ SubContext.name + " " + _Lang("异常"));
 		            return;
 	            }
 	        });
@@ -2116,7 +2123,7 @@
     			var file = SubContext.file;
 				if(!file) 
 				{
-					uploadErrorHandler(SubContext, SubContext.name + " 不是文件");
+					uploadErrorHandler(SubContext, SubContext.name + " " + _Lang("不是文件"));
 					uploadNextDoc();
 					return; 
 				}
@@ -2141,7 +2148,7 @@
 					 console.log("[" + SubContext.index + "] uploadDoc() timerForUpload triggered!");
 					 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
 					 {
-				         uploadErrorHandler(SubContext, "文件上传超时");
+				         uploadErrorHandler(SubContext, _Lang("文件上传超时"));
 				         uploadNextDoc();
 					 }
 			    },timeOut);	//check it 50ms later	
@@ -2438,8 +2445,8 @@
 					}
 					//上传失败
 					console.log("[" + SubContext.index + "] startUpload() 系统异常: " + name + " 上传异常！");
-					uploadErrorHandler(SubContext, name + " 上传异常！");
-					uploadErrorConfirmHandler(SubContext, name + " 上传异常！");
+					uploadErrorHandler(SubContext, name + " " + _Lang("上传异常！"));
+					uploadErrorConfirmHandler(SubContext, name + " " + _Lang("上传异常！"));
 					return;
 				}
 			};
@@ -2469,8 +2476,8 @@
 				if(tot <= 0)
 				{
 					xhr.abort(); //结束当前上传	
-					uploadErrorHandler(SubContext, "文件读取失败！");
-					uploadErrorConfirmHandler(SubContext, "文件读取失败！");
+					uploadErrorHandler(SubContext, _Lang("文件读取失败！"));
+					uploadErrorConfirmHandler(SubContext, _Lang("文件读取失败！"));
 					return;
 				}
 				
@@ -2578,7 +2585,7 @@
 			console.log("stopUpload(" + index + ")",SubContext);
 			if(SubContext.stopFlag == false)
 			{
-				uploadErrorHandler(SubContext, "用户取消了上传");
+				uploadErrorHandler(SubContext, _Lang("用户取消了上传"));
 				uploadNextDoc();
 			}
 		}
@@ -2593,7 +2600,7 @@
 					var SubContext = SubContextList[i];
 					if(SubContext.state != 4 && SubContext.state != 5)	//处理未成功也未失败的文件
 					{
-						uploadErrorHandler(SubContext, "用户取消了上传");
+						uploadErrorHandler(SubContext, _Lang("用户取消了上传"));
 					}
 				}
   			}	

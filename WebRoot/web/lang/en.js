@@ -32,6 +32,7 @@ function lang(str)
 		"服务器异常" : "Server exception",
 		"页面正在加载，请稍等" : "Loading",
 		"页面正在加载，请稍侯" : "Loading",
+		"页面正在加载，请稍等..." : "Loading...",
 		"文件" : "File",
 		"文件夹" : "Folder",		
 		"用户未登录" : "User not Signed In",
@@ -105,7 +106,7 @@ function lang(str)
 		"导入失败" : "Failed to import",
 		"上传异常" : "Upload exception",
 
-		//仓库访问
+		//仓库新增与设置
 		"新建仓库" : "New Repository",
 		"用户未登录，请先登录！" : "Please login system firstly!",
 		"您无权修改该仓库!" : "You have no right to modify this repository!",
@@ -247,6 +248,8 @@ function lang(str)
 		"设置完成" : "Configure Completed",
 		
 		//文件操作与右键菜单选项
+		"新建目录" : "New Folder",
+		"新建文件" : "New File",	
 		"刷新" : "Refresh",
 		"分享" : "Share",
 		"打开" : "Open",
@@ -282,65 +285,110 @@ function lang(str)
 		"全选" : "Select All",
 		"更多" : "More",
 		
+		//通用
 		"已存在" : "already exists",
-		"文件名不能为空" : "FileName is empty",
-		"新建完成" : "Create Ok",
-		"新建失败" : "Create Failed",		
-		
-		"刷新失败" : "Failed to refresh",		
-		
-		"删除确认" : "Delete Confirm",
-		"是否删除" : "Do you want to delete",
-		"是否删除文件" : "Do you want to delete the file",
-		"是否删除目录" : "Do you want to delete the folder",
+		"请选择文件" : "No any file was selected",
+		"请选择文件或目录" : "No any file or folder was selected",	
 		"等" : "...",
 		"个文件" : "files",
-		"清选择需要删除的文件或目录" : "No any file or folder was selected to delete",
-
-		"是否移动文件" : "Do you want to move the file or folder",	
-		"请选择需要复制的文件" : "No any file or folder was selected to copy",
-		"请选择需要移动的文件" : "No any file or folder was selected to move",
-		"请选择文件或目录" : "No any file or folder was selected",
-		"复制成功" : "Copy Ok",
-		
-		"是否下载" : "Do you want to download",
-		"请选择需要下载的文件" : "No any file or folder was selected to download",
-		"的备注" : "'s Note",
-		" 备注"  : "'s Note",
-		
-		"正在上传" : "Uploading",
-		"正在重传" : "Reuploading",
-		"上传完成" : "Upload Completed",
-		
 		"您没有新增或修改权限" : "You have no right to add or modify",
-		"下载还未结束，是否终止下载" : "Download not completed, do you want to cancel",
-		"上传还未结束，是否终止上传" : "Upload not completed, do you want to cancel",
 		"获取仓库信息失败" : "Failed to get repository information",
 		"获取仓库目录失败" : "Failed to get repository's file list",
 		"获取文件列表失败" : "Failed to get file list",
 		"获取文件信息失败" : "Failed to get document information",
+		"的备注" : "'s Note",
+		" 备注"  : "'s Note",
+		"目标节点不存在" : "Target node not exists",
+		"已存在，自动跳过" : "already exists, skip",
+		"替换" : "Replace",
+		"跳过" : "Skip",
+		
+		//新建文件
+		"文件名不能为空" : "FileName is empty",
+		"新建完成" : "Create Ok",
+		"新建失败" : "Create Failed",		
+		
+		//上传文件
+		"正在上传" : "Uploading",
+		"正在重传" : "Reuploading",
+		"上传完成" : "Upload Completed",
+		"请选择需要上传的文件" : "No any file or folder was selected to upload",
+		"待上传" : "Pennding...",
+		"上传还未结束，是否终止上传" : "Upload not completed, do you want to cancel",
+		"已存在,是否覆盖" : "already exists, do you want to replace",
+		"后续已存在文件是否自动覆盖？" : "Do you want to replace existed files automatically?",
+		"后续已存在文件是否自动跳过？" : "Do you want to skip existed files automatically?",
+		"文件已存在，跳过且后续自动跳过" : "File already exist, Skip existed files automatically",
+		"文件已存在，跳过但后续不自动跳过" : "File already exists and skip, do not skip existed files automatically",
+		"文件已存在，跳过" : "File already exsits, skip",
+		"是否继续上传其他文件？" : "Do you want to continue for other files ?",
+		"继续" : "Continue",
+		"结束上传" : "Stop Upload",		
+		"后续错误是否执行此操作？" : "Do you want to take the same action ?",
+		"警告" : "Warning",
+		"校验码计算失败" : "File checksum caculate failed",
+		"校验码计算失败:当前浏览器不支持读取文件" : "File checksum caculate failed : Current browser does not support to read file",
+		"不是文件" : "is not a file",
+		"文件上传超时" : "File upload timeout",
+		"上传异常！" : "Upload Exception!",
+		"文件读取失败！" : "Failed to read file",
+		"用户取消了上传" : "Upload was canceled",
+		
+		//文件编辑
+		"文件打开失败" : "Failed to open file",
+			
+		//刷新
+		"刷新失败" : "Failed to refresh",		
+		
+		//删除文件
+		"删除确认" : "Delete Confirm",
+		"是否删除" : "Do you want to delete",
+		"是否删除文件" : "Do you want to delete the file",
+		"是否删除目录" : "Do you want to delete the folder",
+		"清选择需要删除的文件或目录" : "No any file or folder was selected to delete",
+
+		//复制文件
+		"请选择需要复制的文件" : "No any file or folder was selected to copy",
+		"复制成功" : "Copy Ok",
+		
+		//移动文件
+		"是否移动文件" : "Do you want to move the file or folder",	
+		"请选择需要移动的文件" : "No any file or folder was selected to move",
+		
+		//下载文件
+		"是否下载" : "Do you want to download",
+		"请选择需要下载的文件" : "No any file or folder was selected to download",
+		"下载还未结束，是否终止下载" : "Download not completed, do you want to cancel",
+		
+		//文件访问密码
 		"密码验证" : "Verify Password",
+		"访问密码设置" : "Set Access Password",
+		"请选择需要设置访问密码的文件" : "No any file or folder was selected to set access password",
+		
+		//文件版本管理
 		"该仓库未开通版本管理，请联系管理员" : "History was not configured for this repository, please contact System Administrator",
 		"历史版本" : "History",
 		"备注历史" : "Note's History",
+		
+		//文件锁定与解锁
 		"请选择需要锁定的文件" : "No any file or folder was selected to lock",
 		"请选择需要解锁的文件" : "No any file or folder was selected to unlock",
 		"锁定失败" : "Lock Failed",
 		"解锁定败" : "Unlock Failed",
-		"访问密码设置" : "Set Access Password",
-		"请选择需要设置访问密码的文件" : "No any file or folder was selected to set access password",
-		"目标节点不存在" : "Target node not exists",
 		
+		//文件推送
 		"推送失败" : "Push Failed",
 		"远程文件可能被删除或覆盖，是否强制推送？" : "Remote files will be replaced forcely, please confirm",
 		"远程文件改动将被强制覆盖，是否强制推送？" : "Remote files will be replaced forcely, please confirm",
 		"该操作将推送目录下的所有文件，是否允许？" : "All files under this folder will be pushed, please confirm",
 		
+		//文件拉取
 		"拉取失败" : "Pull Failed",
 		"文件改动将被强制覆盖，是否强制拉取？" : "Local files will be replaced forcely, please confirm",
 		"文件可能被删除或覆盖，是否强制拉取？" : "Local files will be replaced forcely, please confirm",
 		"该操作将拉取目录下的所有文件，是否允许？" : "All files under this folder will be pulled, please confirm",
 		
+		//常用服务器管理
 		"本地服务器" : "Local Server",
 		"获取常用服务器列表失败" : "Failed to get server list",		
 		"添加常用服务器" : "Add Prefer Server",
@@ -362,21 +410,21 @@ function lang(str)
 		"添加" : "Add",
 		"移除" : "Remove",
 		
+		//文件搜索
 		"文件选择" : "Select File",
-				
 		"文件搜索失败" : "Failed to search",
+		
+		//仓库显示模式
 		"标准模式" : "Standard Mode",
 		"电子书模式" : "E-Book Mode",
-		"新建目录" : "New Folder",
-		"新建文件" : "New File",
-		"请选择需要检出文件" : "No any file was selected to check out",
-		"获取文件分享信息失败" : "Failed to get document share information",
-		"密码验证" : "Verify Password",
 		
+		//文件Checkout/CheckIn
+		"请选择需要检出文件" : "No any file was selected to check out",
+		
+		//文件分享
+		"获取文件分享信息失败" : "Failed to get document share information",		
 		"当前为分享链接，无法再次分享！" : "Shared Link can not be shared again",
 		"创建文件分享失败" : "Failed to share",
-		"该仓库未设置远程存储" : "Remote Storage was not configured for this repository",
-		
 		"是否删除该分享" : "Do you want to delete this sharing",
 		"文件分享列表获取失败" : "Failed to get sharing list",
 		"文件分享已过期" : "Document Share is out of date",
@@ -387,6 +435,9 @@ function lang(str)
 		"请填写接收人信息" : "Please enter the Email",
 		"验证失败" : "Verify Failed",
 		"密码错误！" : "Password Error !",
+		
+		//远程存储
+		"该仓库未设置远程存储" : "Remote Storage was not configured for this repository",		
 		
 		//管理后台
 		"非管理员用户，请联系系统管理员" : "You are not Administrator, Please contact System Adminstrator",
@@ -430,6 +481,7 @@ function lang(str)
 		"是否启用系统" : "Do you want to enable system access",
 		"启用系统失败" : "Failed to enable system access",
 		
+		//分页显示
 		"首页" : "First",
 		"尾页" : "Last",
 		"上一页" : "Pre",
