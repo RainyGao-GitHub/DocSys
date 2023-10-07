@@ -390,7 +390,6 @@ function lang(str)
 		//重命名文件
 		"重命名完成！" : "Rename completed",
 		
-		
 		//下载文件
 		"是否下载" : "Do you want to download",
 		"请选择需要下载的文件" : "No any file or folder was selected to download",
@@ -416,7 +415,28 @@ function lang(str)
 		"该仓库未开通版本管理，请联系管理员" : "History was not configured for this repository, please contact System Administrator",
 		"历史版本" : "History",
 		"备注历史" : "Note's History",
+		"历史详情" : "History Details",
+		"下载仓库的历史版本" : "Download Repository's History",
+		"的历史版本" : "'s History",
+		"下载仓库的备注历史版本" : "Download Repository's Note History",
+		"的备注历史版本" : "'s Note History",
+		"历史版本下载准备中，可能需要花费较长时间，您可先关闭当前窗口！" : "History download preparing...",
+		"历史版本恢复成功！" : "History recover success !",
+		"历史版本恢复失败" : "Failed to recover history",
+		"历史版本回退成功！" : "History revert success !",
+		"历史版本回退失败" : "Failed to revert History",
+		"获取历史信息失败" : "Failed to get history",
+		"查看" : "View",
+		"详情" : "Detail",
+		"恢复" : "Recover",
+		"回退" : "Revert",
 		
+		
+		//文件编辑
+		"临时保存文件内容获取失败" : "Faied to get temp saved file content",
+		"获取文件内容失败" : "Failed to get file content",
+		
+			
 		//文件锁定与解锁
 		"请选择需要锁定的文件" : "No any file or folder was selected to lock",
 		"请选择需要解锁的文件" : "No any file or folder was selected to unlock",

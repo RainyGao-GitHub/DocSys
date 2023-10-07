@@ -493,9 +493,8 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
     if(!docInfo || docInfo == null || docInfo.id == 0)
     {
     	//未定义需要显示的文件
-    	errorInfo = "请选择文件";
+    	errorInfo = _Lang("请选择文件");
     	errorCallback && errorCallback(errorInfo, docInfo);
-    	//showErrorMessage("请选择文件");
     	return;
     }
       	
@@ -547,24 +546,21 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
 		            	            error : function () {	            	            	
 		            	            	successCallback &&successCallback(docText, tmpSavedDocText, docInfo);
 	
-		            	            	errorInfo = "临时保存文件内容获取失败：服务器异常";
+		            	            	errorInfo = _Lang("临时保存文件内容获取失败", ":", "服务器异常");
 		            	            	errorCallback && errorCallback(errorInfo, docInfo);
-		            	                //showErrorMessage("临时保存文件内容失败：服务器异常");
 		            	            }
 		            	        });
 	            	}
             	}
             	else
             	{
-            		errorInfo = "获取文件内容失败：" + ret1
+            		errorInfo = _Lang("获取文件内容失败", ":" ,ret1);
             		errorCallback && errorCallback(errorInfo, docInfo);
-            		//showErrorMessage("获取文件内容失败：" + ret1);
             	}
             },
             error : function () {
-            	errorInfo = "获取文件内容失败：服务器异常";
+            	errorInfo = _Lang("获取文件内容失败", ":", "服务器异常");
         		errorCallback && errorCallback(errorInfo, docInfo);
-                //showErrorMessage("获取文件内容失败：服务器异常");
             }
         });
 }
@@ -579,9 +575,8 @@ function getZipDocText(docInfo, successCallback, errorCallback)
     if(!docInfo || docInfo == null || docInfo.id == 0)
     {
     	//未定义需要显示的文件
-    	errorInfo = "请选择文件";
+    	errorInfo = _Lang("请选择文件");
     	errorCallback && errorCallback(errorInfo, docInfo);
-    	//showErrorMessage("请选择文件");
     	return;
     }
       	
@@ -611,15 +606,13 @@ function getZipDocText(docInfo, successCallback, errorCallback)
             	}
             	else
             	{
-            		errorInfo = "获取文件内容失败：" + ret1
+            		errorInfo = _Lang("获取文件内容失败", ":", ret1);
             		errorCallback && errorCallback(errorInfo, docInfo);
-            		//showErrorMessage("获取文件内容失败：" + ret1);
             	}
             },
             error : function () {
-            	errorInfo = "获取文件内容失败：服务器异常";
+            	errorInfo = _Lang("获取文件内容失败", ":", "服务器异常");
         		errorCallback && errorCallback(errorInfo, docInfo);
-                //showErrorMessage("获取文件内容失败：服务器异常");
             }
         });
 }
@@ -1351,7 +1344,7 @@ function showDocDetail(node)
 
 	if(!node || node == null)
 	{
-		showErrorMessage("请选择文件！");
+		showErrorMessage(_Lang("请选择文件！"));
 		return;
 	}
 	
@@ -1627,7 +1620,6 @@ function openOffice(docInfo, openInNewPage, preview)
             }
         },
         error : function () {
-            //showErrorMessage("文件预览失败：服务器异常");
             console.log("previewOfficeInDialog getDocOfficeLink Failed 服务器异常");
             showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
         }

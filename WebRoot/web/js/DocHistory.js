@@ -41,14 +41,14 @@
 			var commitId = $("#commitId" + index).attr("value");
 		   	console.log("showHistoryDetail() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
 
-			var title = "历史详情";
+			var title = _Lang("历史详情");
 
 		   	//show historyDetails page
 			bootstrapQ.dialog({
 				id: "historyDetailPage",
 				title: title,
-				url: 'historyDetails.html',
-				msg: '页面正在加载，请稍等...',
+				url: 'historyDetails' + langExt + '.html',
+				msg: _Lang('页面正在加载，请稍等...'),
 				foot: false,
 				big: true,
 				callback: function(){
@@ -92,11 +92,11 @@
 		   		entryPath = docPath;
 		   		if(docId == 0)
 		   		{
-		   			msg = "下载仓库的历史版本:" + version + "?";
+		   			msg = _Lang("下载仓库的历史版本") + ":" + version + "?";
 		   		}
 		   		else
 		   		{
-		   			msg = "下载 " + entryPath + " 的历史版本:" + version + "?";
+		   			msg = _Lang("下载") + " " + entryPath + " " + _Lang("的历史版本") + ":" + version + "?";
 		   		}
             }
             else
@@ -104,12 +104,12 @@
             	if(docId == 0)
             	{
             		entryPath = "/";
-    		   		msg = "下载仓库备注的历史版本:" + version + "?";
+    		   		msg = _Lang("下载仓库的备注历史版本") + ":" + version + "?";
             	}
             	else
             	{
             		entryPath = "/"+docId + "_" + docName;             		                		
-		   			msg = "下载 " + docPath + " 备注的历史版本:" + version + "?";
+		   			msg = _Lang("下载") + " " + docPath + " " + "的备注历史版本" + ":" + version + "?";
             	}
             }	
             
@@ -171,7 +171,7 @@
                	        	SubContext.needDeletedEntry = 1;
                	        	SubContext.shareId = gShareId;	
                	        	
-                	        showErrorMessage("历史版本下载准备中，可能需要花费较长时间，您可先关闭当前窗口！");
+                	        showErrorMessage(_Lang("历史版本下载准备中，可能需要花费较长时间，您可先关闭当前窗口！"));
                	        	startDownloadPrepareQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
                	        	return;
                 	    }
@@ -191,7 +191,7 @@
                 	   	console.log("downloadHistoryDocPrepare Error:" + ret.msgInfo);
 	                   	bootstrapQ.alert({
 		      			    //id: "downloadHistoryDocPrepareError",
-							msg : "下载失败:" + ret.msgInfo,
+							msg : _Lang("下载失败", ":", ret.msgInfo),
 						    }); 
 	                	return;
                    }
@@ -200,7 +200,7 @@
                 	console.log("downloadHistoryDocPrepare 下载失败：服务器异常！");
 	               	bootstrapQ.alert({
 	      			    //id: "downloadHistoryDocPrepareError",
-						msg : "下载失败:服务器异常",
+						msg : _Lang("下载失败", ":", "服务器异常"),
 					    }); 
 	            	return;
                 }
@@ -243,7 +243,7 @@
                	        	var info = prepareTask.info;
                	        	if(prepareTask.targetSize)
                	        	{
-               	        		info = "目录压缩中(" + getFileDisplaySize(prepareTask.targetSize) + ")...";
+               	        		info = _Lang("目录压缩中") + "(" + getFileDisplaySize(prepareTask.targetSize) + ")...";
                	        	}
                	        	console.log("doQueryDownloadPrepareTask info:" + info);
                	        	startDownloadPrepareQueryTask(SubContext, prepareTask.id, nextDelayTime);
@@ -264,19 +264,13 @@
                    else	//后台报错，结束下载
                    {
 	               	   	console.log("doQueryDownloadPrepareTask Error:" + ret.msgInfo);
-	                   	bootstrapQ.alert({
-		      			    //id: "downloadHistoryDocPrepareError",
-							msg : "下载失败:" + ret.msgInfo,
-						    }); 
+	               	    showErrorMessage(_Lang("下载失败", ":", ret.msgInfo)); 
 	                	return;
                    }
                 },
                 error : function () {	//后台异常
                 	console.log("doQueryDownloadPrepareTask 下载失败：服务器异常！");
-	               	bootstrapQ.alert({
-	      			    //id: "downloadHistoryDocPrepareError",
-						msg : "下载失败:服务器异常",
-					    }); 
+	               	showErrorMessage(_Lang("下载失败", ":", "服务器异常")); 
 	            	return;
                 }
         	});		
@@ -314,11 +308,27 @@
 		   		entryPath = docPath;
 		   		if(docId == 0)
 		   		{
-		   			msg = "是否恢复仓库在版本:" + version + "上的改动?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Recover Repository's changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+		   				msg = "是否恢复仓库在版本" + ":" + version + "上的改动?";
+		   				break;
+		   			}
 		   		}
 		   		else
 		   		{
-		   			msg = "是否恢复 " + entryPath + " 在版本:" + version + " 上的改动?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Recover [" + entryPath + "]'s changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = "是否恢复 " + entryPath + " 在版本:" + version + " 上的改动?";
+		   				break;
+		   			}
 		   		}
             }
             else
@@ -326,12 +336,29 @@
             	if(docId == 0)
             	{
             		entryPath = "/";
-    		   		msg = "是否恢复仓库备注在版本:" + version + " 上的改动?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Recover Repository's Note change on version" + ":" + version + " ?";
+		   				break;
+		   			default:
+	            		msg = "是否恢复仓库备注在版本:" + version + " 上的改动?";
+		   				break;
+		   			}
             	}
             	else
             	{
             		entryPath = "/"+docId + "_" + docName;             		                		
-		   			msg = "是否恢复 " + docPath + " 的备注在版本:" + version + " 上的改动?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Recover [" + docPath + "]'s Note change on version" + ":" + version + " ?";
+		   				break;
+		   			default:
+	            		msg = "是否恢复 " + docPath + " 的备注在版本:" + version + " 上的改动?";
+		   				break;
+		   			}
+
             	}
             }	
             
@@ -360,11 +387,27 @@
 		   		entryPath = docPath;
 		   		if(docId == 0)
 		   		{
-		   			msg = "是否将仓库回退到版本:" + version + "?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Revert Repository to version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = "是否将仓库回退到版本:" + version + "?";
+		   				break;
+		   			}
 		   		}
 		   		else
 		   		{
-		   			msg = "是否将 " + entryPath + " 回退到版本:" + version + "?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Revert [" + entryPath + "] to version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = "是否将 " + entryPath + " 回退到版本:" + version + "?";
+		   				break;
+		   			}
 		   		}
             }
             else
@@ -372,13 +415,30 @@
             	if(docId == 0)
             	{
             		entryPath = "/";
-    		   		msg = "是否将仓库备注回退到版本:" + version + "?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Revert Repository's Note to version" + ":" + version + " ?";
+			   			break;
+		   			default:		           		
+	            		msg = "是否将仓库备注回退到版本:" + version + "?";	
+			   			break;
+		   			}
+
             	}
             	else
             	{
-            		entryPath = "/"+docId + "_" + docName;             		                		
-		   			msg = "是否将 " + docPath + " 的备注回退到版本:" + version + "?";
-            	}
+            		entryPath = "/"+docId + "_" + docName;           		
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Revert [" + entryPath + "]'s Note to version" + ":" + version + " ?";
+			   			break;
+		   			default:		           		
+			   			msg = "是否将 " + docPath + " 的备注回退到版本:" + version + "?";
+		   				break;
+		   			}
+             	}
             }	
             
 		   	qiao.bs.confirm({
@@ -416,15 +476,15 @@
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
 	        		  	console.log(ret.data);
-	        		  	bootstrapQ.alert("历史版本恢复成功！");
+	        		  	showErrorMessage(_Lang("历史版本恢复成功！"));
 	                }
 	                else
 	                {
-	                	showErrorMessage("历史版本恢复失败:" + ret.msgInfo);
+	                	showErrorMessage(_Lang("历史版本恢复失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {
-	                showErrorMessage("历史版本恢复失败:服务器异常");
+	                showErrorMessage(_Lang("历史版本恢复失败", ":", "服务器异常"));
 	            }
 	        });
 		}
@@ -453,15 +513,15 @@
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
 	        		  	console.log(ret.data);
-	        		  	bootstrapQ.alert("历史版本回退成功！");
+	        		  	bootstrapQ.alert(_Lang("历史版本回退成功！"));
 	                }
 	                else
 	                {
-	                	showErrorMessage("历史版本回退失败:" + ret.msgInfo);
+	                	showErrorMessage(_Lang("历史版本回退失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {
-	                showErrorMessage("历史版本回退失败:服务器异常");
+	                showErrorMessage(_Lang("历史版本回退失败", ":", "服务器异常"));
 	            }
 	        });
 		}
@@ -491,11 +551,11 @@
 	                }
 	                else
 	                {
-	                	showErrorMessage("获取历史信息失败:" + ret.msgInfo);
+	                	showErrorMessage(_Lang("获取历史信息失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {
-	                showErrorMessage("获取历史信息失败:服务器异常");
+	                showErrorMessage(_Lang("获取历史信息失败", ":", "服务器异常"));
 	            }
 	        });
 	
@@ -515,7 +575,7 @@
 				}
 				
 				if(!data || data.length==0){
-					$("#historyLogs").append("<p>暂无数据</p>");
+					$("#historyLogs").append("<p>" + _Lang("暂无数据") + "</p>");
 					return;
 				}
 								
@@ -543,15 +603,15 @@
 					var opBtn = "";
 					if(historyType == 1) //VDOC
 					{
-						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.viewVDocHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>查看</a>";	
+						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.viewVDocHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("查看") + "</a>";	
 					}
 					else
 					{
-						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>详情</a>";							
+						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("详情") + "</a>";							
 					}
-					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
-					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>恢复</a>";
-					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>回退</a>";
+					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
+					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("恢复") + "</a>";
+					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("回退") + "</a>";
 					var se = "<li>"
 						+"	<i class='cell commitId w10'>"
 						+"		<span class='name  breakAll'>"
