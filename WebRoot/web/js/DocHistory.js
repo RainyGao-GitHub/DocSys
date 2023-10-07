@@ -92,11 +92,27 @@
 		   		entryPath = docPath;
 		   		if(docId == 0)
 		   		{
-		   			msg = _Lang("下载仓库的历史版本") + ":" + version + "?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Download Repository's changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = _Lang("下载仓库的历史版本") + ":" + version + "?";
+		   				break;
+		   			}
 		   		}
 		   		else
 		   		{
-		   			msg = _Lang("下载") + " " + entryPath + " " + _Lang("的历史版本") + ":" + version + "?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Download [" + entryPath + "]'s changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = "下载" + " " + entryPath + " " + "的历史版本" + ":" + version + "?";
+		   				break;
+		   			}
 		   		}
             }
             else
@@ -104,12 +120,28 @@
             	if(docId == 0)
             	{
             		entryPath = "/";
-    		   		msg = _Lang("下载仓库的备注历史版本") + ":" + version + "?";
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Download Repository's Note changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+	            		msg = _Lang("下载仓库的备注历史版本") + ":" + version + "?";
+		   				break;
+		   			}
             	}
             	else
             	{
-            		entryPath = "/"+docId + "_" + docName;             		                		
-		   			msg = _Lang("下载") + " " + docPath + " " + "的备注历史版本" + ":" + version + "?";
+            		entryPath = "/"+docId + "_" + docName;  
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Download [" + docPath + "]'s Note changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = "下载" + " " + docPath + " " + "的备注历史版本" + ":" + version + "?";
+		   				break;
+		   			}            		
             	}
             }	
             
@@ -339,7 +371,7 @@
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Recover Repository's Note change on version" + ":" + version + " ?";
+		   				msg = "Recover Repository's Note changes on version" + ":" + version + " ?";
 		   				break;
 		   			default:
 	            		msg = "是否恢复仓库备注在版本:" + version + " 上的改动?";
@@ -352,7 +384,7 @@
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Recover [" + docPath + "]'s Note change on version" + ":" + version + " ?";
+		   				msg = "Recover [" + docPath + "]'s Note changes on version" + ":" + version + " ?";
 		   				break;
 		   			default:
 	            		msg = "是否恢复 " + docPath + " 的备注在版本:" + version + " 上的改动?";

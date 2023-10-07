@@ -96,7 +96,7 @@
                	        	SubContext.needDeletedEntry = 1;
                	        	SubContext.shareId = gShareId;	
                	        	
-                	        showErrorMessage("历史版本下载准备中，可能需要花费较长时间，您可先关闭当前窗口！");
+                	        showErrorMessage(_Lang("历史版本下载准备中，可能需要花费较长时间，您可先关闭当前窗口！"));
                	        	startDownloadPrepareQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
                	        	return;
                 	    }
@@ -114,19 +114,13 @@
                    else	//后台报错，结束下载
                    {
                 	   console.log("downloadHistoryDocPrepare Error:" + ret.msgInfo);
-     	      		   bootstrapQ.alert({
-     	      			    //id: "downloadHistoryDocPrepareError",
-    						msg : "下载失败:" + ret.msgInfo,
-    					    }); 
+     	      		   showErrorMessage(_Lang("下载失败", ":", ret.msgInfo)); 
                        return;
                    }
                 },
                 error : function () {	//后台异常
                 	console.log("downloadHistoryDocPrepare 下载失败：服务器异常！");
-                	bootstrapQ.alert({
-	      			    //id: "downloadHistoryDocPrepareError",
-						msg : "下载失败:服务器异常",
-					    }); 
+                	showErrorMessage(_Lang("下载失败", ":", "服务器异常")); 
                 	return;
                 }
         	});		   	
@@ -168,7 +162,7 @@
                	        	var info = prepareTask.info;
                	        	if(prepareTask.targetSize)
                	        	{
-               	        		info = "目录压缩中(" + getFileDisplaySize(prepareTask.targetSize) + ")...";
+               	        		info = _Lang("目录压缩中") + "(" + getFileDisplaySize(prepareTask.targetSize) + ")...";
                	        	}
                	        	console.log("doQueryDownloadPrepareTask info:" + info);
                	        	startDownloadPrepareQueryTask(SubContext, prepareTask.id, nextDelayTime);
@@ -189,19 +183,13 @@
                    else	//后台报错，结束下载
                    {
 	               	   	console.log("doQueryDownloadPrepareTask Error:" + ret.msgInfo);
-	                   	bootstrapQ.alert({
-		      			    //id: "downloadHistoryDocPrepareError",
-							msg : "下载失败:" + ret.msgInfo,
-						    }); 
+	                   	showErrorMessage(_Lang("下载失败", ":", ret.msgInfo)); 
 	                	return;
                    }
                 },
                 error : function () {	//后台异常
                 	console.log("doQueryDownloadPrepareTask 下载失败：服务器异常！");
-	               	bootstrapQ.alert({
-	      			    //id: "downloadHistoryDocPrepareError",
-						msg : "下载失败:服务器异常",
-					    }); 
+	               	showErrorMessage(_Lang("下载失败", ":", "服务器异常")); 
 	            	return;
                 }
         	});		
@@ -239,17 +227,41 @@
 		   	var docPath = "/" + parentPath + docName;
 		   	if(historyType == 0)
             {
-		   		msg = "是否恢复 " + entryPath + " 在版本:" + commitId + " 上的改动?";
+	   			switch(langType)
+	   			{
+	   			case "en":
+	   				msg = "Recover [" + entryPath + "]'s changes on version" + ":" + commitId + " ?";
+	   				break;
+	   			default:
+			   		msg = "是否恢复 " + entryPath + " 在版本:" + commitId + " 上的改动?";
+	   				break;
+	   			}
             }
             else
             {
             	if(docId == 0)
             	{
-    		   		msg = "是否恢复仓库备注在版本:" + commitId + " 上的改动?";
+    	   			switch(langType)
+    	   			{
+    	   			case "en":
+    	   				msg = "Recover Repository's Note changes on version" + ":" + commitId + " ?";
+    	   				break;
+    	   			default:
+        		   		msg = "是否恢复仓库备注在版本:" + commitId + " 上的改动?";
+    	   				break;
+    	   			}
             	}
             	else
             	{
-		   			msg = "是否恢复 " + docPath + " 的备注在版本:" + commitId + " 上的改动?";
+    	   			switch(langType)
+    	   			{
+    	   			case "en":
+    	   				msg = "Recover [" + docPath + "]'s Note changes on version" + ":" + commitId + " ?";
+    	   				break;
+    	   			default:
+    		   			msg = "是否恢复 " + docPath + " 的备注在版本:" + commitId + " 上的改动?";
+    	   				break;
+    	   			}            		
             	}
             }	
             
@@ -294,15 +306,15 @@
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
 	        		  	console.log(ret.data);
-	        		  	bootstrapQ.alert("恢复成功！");
+	        		  	showErrorMessage(_Lang("恢复成功！"));
 	                }
 	                else
 	                {
-	                	showErrorMessage(ret.msgInfo);
+	                	showErrorMessage(_Lang("历史版本恢复失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {
-	                showErrorMessage("历史版本恢复失败:服务器异常");
+	                showErrorMessage(_Lang("历史版本恢复失败", ":", "服务器异常"));
 	            }
 	        });
 		}
@@ -331,12 +343,12 @@
 	                else
 	                {
 		                closeBootstrapDialog("historyDetailPage");
-	                	showErrorMessage("获取历史详情失败:" + ret.msgInfo);
+	                	showErrorMessage(_Lang("获取历史详情失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {
 	                closeBootstrapDialog("historyDetailPage");
-	                showErrorMessage("获取历史详情失败:服务器异常");
+	                showErrorMessage(_Lang("获取历史详情失败", ":", "服务器异常"));
 	            }
 	        });
 	
@@ -346,7 +358,7 @@
 				var c = $("#historyDetails").children();
 				$(c).remove();
 				if(!data || data.length==0){
-					$("#historyDetails").append("<p>暂无数据</p>");
+					$("#historyDetails").append("<p>" + _Lang("暂无数据") + "</p>");
 					return;
 				}
 				
@@ -364,9 +376,9 @@
 						changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+entryPath+ " from " + srcEntryPath + "</a>";
 					}
 					
-					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.viewHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>查看</a>";
-					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>下载</a>";
-					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.showRevertConfirm("+i+ ")' class='mybtn-primary'>恢复</a>";
+					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.viewHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("查看") + "</a>";
+					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
+					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.showRevertConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("恢复") + "</a>";
 					
 					var se = "<li>" 
 						+"	<i class='cell changeType w10'>"
@@ -395,17 +407,17 @@
 				switch(changeItem.changeType)
 				{
 				case 1:
-					return "增加";
+					return _Lang("增加");
 				case 2:
-					return "删除";
+					return _Lang("删除");
 				case 3:
-					return "修改";
+					return _Lang("修改");
 				case 4:
-					return "移动";
+					return _Lang("移动");
 				case 5:
-					return "复制";
+					return _Lang("复制");
 				}
-				return "未知操作";
+				return _Lang("未知操作");
 			}
 		}
 		
