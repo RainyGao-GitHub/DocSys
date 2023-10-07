@@ -401,7 +401,7 @@ function downloadDoc(treeNodes,needConfirm,downloadType)
 	  	var downloadDispInfo = fileName;
 	  	if(treeNodes.length > 1)
 	  	{
-	  		downloadDispInfo = downloadDispInfo + " " + _Lang("等") + treeNodes.length + _Lang("个文件");
+	  		downloadDispInfo = downloadDispInfo + " " + _Lang("等") + treeNodes.length + " " +_Lang("个文件");
 	  	}
 
 		if(downloadType && downloadType == 2)

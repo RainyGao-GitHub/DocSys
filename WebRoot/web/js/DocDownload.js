@@ -48,7 +48,7 @@
 			console.log("downloadDocs reposId:" + vid + " downloadType:" + downloadType + " treeNodes:", treeNodes);
 			if(!treeNodes || treeNodes.length <= 0)
 			{
-				showErrorMessage("请选择需要下载的文件!");
+				showErrorMessage(_Lang("请选择需要下载的文件!"));
 				return;
 			}
 			
@@ -142,7 +142,7 @@
 			if(SubContextList.length > 0)
 		   	{
 		   		//初始化上传进度显示
-				var str="<div><span class='download-list-title'>下载列表  (共 " + totalNum + " 个) </span><i class='el-icon-close downloadCloseBtn'></i></div>";
+				var str="<div><span class='download-list-title'>" + _Lang("下载列表") + " " + "(" + _LangStats(totalNum) + ")</span><i class='el-icon-close downloadCloseBtn'></i></div>";
 				str +="<div id='downloadedFileList' class='downloadedFileList'></div>";
 				$(".el-download-list").show();
 				$('.el-download-list').html(str);
@@ -166,7 +166,7 @@
 		    		var SubContext = SubContextList[i];
 					str+="<li class='el-download-list__item downloadFile"+i+" is-downloading' value="+i+">"+
 		    				"<a class='el-download-list__item-name downloadFileName'><i class='el-icon-document'></i><span class='downloadFileName' >"+SubContext.name+"</span></a>"+
-		    				"<a class='downloadStatus downloadInfo"+i+"' >待下载...</a>"+
+		    				"<a class='downloadStatus downloadInfo"+i+"' >" + _Lang("待下载...") + "</a>"+
 		    				"<label class='el-download-list__item-status-label'><i class='el-icon-download-success el-icon-circle-check'></i></label>"+
 		    				"<i class='el-icon-close stopDownload'  value="+i+" onclick='DocDownload.stopDownload("+i+")'></i>"+
 		    				"<div class='el-progress el-progress--line'>"+
@@ -231,7 +231,7 @@
 			//绘制文件下载列表
 			drawDownloadItems(SubContextList);
 			
-			$(".download-list-title").text("下载列表 (共   " + totalNum + " 个)");			
+			$(".download-list-title").text(_Lang("下载列表") + " (" + _LangStats(totalNum) + ")");			
 		}
       	
       	//并将需要下载的文件加入到SubContextList中
@@ -354,7 +354,7 @@
     			return;
     		}
     		
-    		$(".downloadInfo"+index).text("下载准备中...");
+    		$(".downloadInfo"+index).text(_Lang("下载准备中..."));
     		
     		IncThreadCount(SubContext);
     		
@@ -452,7 +452,7 @@
                 	   
                 	   $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
    					   $('.downloadFile'+SubContextIndex).addClass('is-fail');
-   					   $(".downloadInfo"+SubContextIndex).text("下载失败");
+   					   $(".downloadInfo"+SubContextIndex).text(_Lang("下载失败"));
                        downloadErrorConfirm(SubContext,ret.msgInfo);
                        return;
                    }
@@ -476,8 +476,8 @@
                    console.log("downloadDocPrepare 服务器异常：文件[" + SubContext.name + "]下载异常！");
  	               $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
 				   $('.downloadFile'+SubContextIndex).addClass('is-fail');
-				   $(".downloadInfo"+SubContextIndex).text("下载失败");
-				   downloadErrorConfirm(SubContext,"服务器异常");
+				   $(".downloadInfo"+SubContextIndex).text(_Lang("下载失败"));
+				   downloadErrorConfirm(SubContext, _Lang("服务器异常"));
             	   return;
                 }
         	});
@@ -538,7 +538,7 @@
                	        	var info = compressTask.info;
                	        	if(compressTask.targetSize)
                	        	{
-               	        		info = "目录压缩中(" + getFileDisplaySize(compressTask.targetSize) + ")...";
+               	        		info = _Lang("目录压缩中") + "(" + getFileDisplaySize(compressTask.targetSize) + ")...";
                	        	}
                	        	$(".downloadInfo"+SubContextIndex).text(info);
                	        	
@@ -588,7 +588,7 @@
             		   		$('.downloadFile'+SubContextIndex).removeClass('is-downloading');
     						$('.downloadFile'+SubContextIndex).addClass('is-success');
     						$(".downloadInfo"+SubContextIndex).hide();
-            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
+            		   		downloadSuccessHandler(SubContext, _Lang(ret.msgInfo));
             		   	}
                 	   	return;
                    }
@@ -599,8 +599,8 @@
                 	   
                 	   $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
    					   $('.downloadFile'+SubContextIndex).addClass('is-fail');
-   					   $(".downloadInfo"+SubContextIndex).text("下载失败");
-                       downloadErrorConfirm(SubContext,ret.msgInfo);
+   					   $(".downloadInfo"+SubContextIndex).text(_Lang("下载失败"));
+                       downloadErrorConfirm(SubContext, _Lang(ret.msgInfo));
                        return;
                    }
                 },
@@ -623,8 +623,8 @@
                    console.log("doQueryDownloadPrepareTask 服务器异常：文件[" + SubContext.name + "]下载异常！");
  	               $('.downloadFile'+SubContextIndex).removeClass('is-uploading');
 				   $('.downloadFile'+SubContextIndex).addClass('is-fail');
-				   $(".downloadInfo"+SubContextIndex).text("下载失败");
-				   downloadErrorConfirm(SubContext,"服务器异常");
+				   $(".downloadInfo"+SubContextIndex).text(_Lang("下载失败"));
+				   downloadErrorConfirm(SubContext, _Lang("服务器异常"));
             	   return;
                 }
         	});
@@ -718,18 +718,19 @@
       	function downloadErrorConfirm(SubContext,errMsg)
       	{
       		var FileName = SubContext.name; 
-      		var msg = FileName + "下载失败,是否继续下载其他文件？";
+      		var msg = FileName + " " + _Lang("下载失败,是否继续下载其他文件？");
       		if(errMsg != undefined)
       		{
-      			msg = FileName + "下载失败(" + errMsg + "),是否继续下载其他文件？";
+      			msg = FileName + " " + _Lang("下载失败") + "(" + errMsg + ")," + _Lang("是否继续下载其他文件？");
       		}
       		//弹出用户确认窗口
       		qiao.bs.confirm({
     	    	id: "downloadErrorConfirm",
     	        msg: msg,
     	        close: false,		
-    	        okbtn: "继续",
-    	        qubtn: "结束",
+    	        title: _Lang("确认"),
+    	        okbtn: _Lang("继续"),
+    	        qubtn: _Lang("结束"),
     	    },function () {
     	    	downloadErrorHandler(SubContext, errMsg);
     	    	return true;
@@ -810,10 +811,10 @@
       	
   		function showDownloadEndInfo()
   		{
-  			var downloadEndInfo = "下载准备完成(共" + totalNum +"个)";
+  			var downloadEndInfo = _Lang("下载准备完成") + "(" + _LangStats(totalNum) +")";
       		if(successNum != totalNum)
       		{
-      			downloadEndInfo = "下载准备完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			downloadEndInfo = _Lang("下载准备完成") + "(" + _LangStats(totalNum, successNum) + ")";
       		    bootstrapQ.msg({
 					msg : downloadEndInfo,
 					type : 'warning',
@@ -837,7 +838,7 @@
 			if(SubContext.stopFlag == false)
 			{
 				SubContext.stopFlag = true;
-				$(".downloadInfo"+index).text("已取消");
+				$(".downloadInfo"+index).text(_Lang("已取消"));
 				
 				//停止的当做失败处理
 				failNum++;
@@ -858,7 +859,7 @@
 			{
 				var SubContext = SubContextList[index];
 				SubContext.stopFlag = true;
-				$(".downloadInfo"+i).text("已取消");
+				$(".downloadInfo"+i).text(_Lang("已取消"));
 
 				//停止的当做失败处理
 				failNum++;

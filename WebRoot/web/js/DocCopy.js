@@ -663,10 +663,10 @@
       	
   		function showCopyEndInfo()
   		{
-  			var copyEndInfo = _Lang("复制完成") +  "(" + buildStatistics(totalNum) + ")";
+  			var copyEndInfo = _Lang("复制完成") +  "(" + _LangStats(totalNum) + ")";
       		if(successNum != totalNum)
       		{
-      			copyEndInfo = _Lang("复制完成") +  "(" + buildStatistics(totalNum, successNum) + ")";
+      			copyEndInfo = _Lang("复制完成") +  "(" + _LangStats(totalNum, successNum) + ")";
       		    bootstrapQ.msg({
 					msg : copyEndInfo,
 					type : 'warning',

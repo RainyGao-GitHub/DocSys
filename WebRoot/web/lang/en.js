@@ -14,7 +14,7 @@ function _Lang(str1, connectStr , str2)
 	return lang(str1) + connectStr + lang(str2);
 }
 
-function buildStatistics(totalNum, successNum)
+function _LangStats(totalNum, successNum)
 {
 	if(successNum == undefined)
 	{
@@ -376,7 +376,18 @@ function lang(str)
 		//下载文件
 		"是否下载" : "Do you want to download",
 		"请选择需要下载的文件" : "No any file or folder was selected to download",
+		"请选择需要下载的文件!" : "No any file or folder was selected to download !",
 		"下载还未结束，是否终止下载" : "Download not completed, do you want to cancel",
+		"下载准备完成" : "Download is ready",
+		"下载列表" : "Download List",
+		"待下载..." : "Download Pennding...",
+		"下载失败" : "Download failed",
+		"目录压缩中" : "Compressing the folder",
+		"下载失败,是否继续下载其他文件？" : "Download failed, Continue to download other files",
+		"是否继续下载其他文件？" : "Continue to download other files",
+		"已取消" : "Cancled",
+		"下载准备中..." : "Download preparing...",
+		
 		
 		//文件访问密码
 		"密码验证" : "Verify Password",

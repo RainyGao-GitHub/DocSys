@@ -14,7 +14,7 @@ function _Lang(str1, connectStr , str2)
 	return str1 + connectStr + str2;
 }
 
-function buildStatistics(totalNum, successNum)
+function _LangStats(totalNum, successNum)
 {
 	if(successNum == undefined)
 	{
