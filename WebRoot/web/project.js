@@ -406,7 +406,7 @@ function downloadDoc(treeNodes,needConfirm,downloadType)
 
 		if(downloadType && downloadType == 2)
 		{
-  			downloadDispInfo = downloadDispInfo + _Lang(" 备注");
+  			downloadDispInfo = downloadDispInfo + _Lang("的备注");
 		}
 
 		qiao.bs.confirm({
@@ -4464,7 +4464,7 @@ function contextMenuInit()
 			        			showDocHistory(gRootDoc, 1);
 		        			}
 						},	
-						{text: _Lang('下载备注'), action: function(e){
+						{text: _Lang('下载'), action: function(e){
 								e.preventDefault();
 								var treeNodes = [];
 								treeNodes.push(gRootDoc);
@@ -4673,7 +4673,7 @@ function contextMenuInit()
 										showDocHistory(curRightClickedTreeNode,1);
 									}
 								},						
-								{text: _Lang('下载备注'), action: function(e){
+								{text: _Lang('下载'), action: function(e){
 										e.preventDefault();
 										var treeNodes = [];
 										treeNodes.push(curRightClickedTreeNode);
@@ -4853,7 +4853,7 @@ function contextMenuInit()
    				        			showDocHistory(parentNode, 1);
    			        			}
    							},						
-   							{text: _Lang('下载备注'), action: function(e){
+   							{text: _Lang('下载'), action: function(e){
 									e.preventDefault();
 									var parentNode = getParentNodeEx(gDocInfo);
 									var treeNodes = [];
@@ -5049,7 +5049,7 @@ function contextMenuInit()
 							    showDocHistory(curRightClickedDocListNode,1);
 							}
 						},						
-						{text: _Lang('下载备注'), action: function(e){
+						{text: _Lang('下载'), action: function(e){
 								e.preventDefault();
 								var treeNodes = [];
 								treeNodes.push(curRightClickedDocListNode);
@@ -5260,7 +5260,7 @@ function contextMenuInit()
 										    showDocHistory(curRightClickedDocListNode,1);
 										}						
 									},							
-									{text: _Lang('下载备注'), action: function(e){
+									{text: _Lang('下载'), action: function(e){
 											e.preventDefault();
 											var treeNodes = [];
 											treeNodes.push(curRightClickedDocListNode);
@@ -5422,7 +5422,7 @@ function contextMenuInit()
 							    showDocHistory(gDocInfo,1);
 							}
 						},	
-						{text: _Lang('下载备注'), action: function(e){
+						{text: _Lang('下载'), action: function(e){
 								e.preventDefault();
 								var treeNodes = [];
 								treeNodes.push(gDocInfo);

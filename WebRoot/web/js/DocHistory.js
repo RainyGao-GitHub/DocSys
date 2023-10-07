@@ -148,6 +148,9 @@
 		   	qiao.bs.confirm({
 		        id: 'downloadHistoryConfirm',
 		        msg: msg,
+	    		title: _Lang("确认"),
+	    		okbtn: _Lang("下载"),
+	    		qubtn: _Lang("取消"),
 		    },function(){
 		    	console.log("showDownloadConfirm() download commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
 		    	downloadHistory(index, entryPath);
@@ -397,7 +400,10 @@
 		   	qiao.bs.confirm({
 		        id: 'revertHistoryConfirm',
 		        msg: msg,
-		    },function(){
+	    		title: _Lang("确认"),
+	    		okbtn: _Lang("恢复"),
+	    		qubtn: _Lang("取消"),
+		   	},function(){
 		    	console.log("showRevertConfirm() revert commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
 				revertHistory(index, entryPath);
 		    },function(){
@@ -476,7 +482,10 @@
 		   	qiao.bs.confirm({
 		        id: 'resetHistoryConfirm',
 		        msg: msg,
-		    },function(){
+	    		title: _Lang("确认"),
+	    		okbtn: _Lang("回退"),
+	    		qubtn: _Lang("取消"),
+		   	},function(){
 		    	console.log("showResetConfirm() reset commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
 				resetHistory(index, entryPath);
 		    },function(){

@@ -268,7 +268,10 @@
 		   	qiao.bs.confirm({
 		        id: 'revertHistoryConfirm',
 		        msg: msg,
-		    },function(){
+		        title: _Lang("确认"),
+	    		okbtn: _Lang("恢复"),
+	    		qubtn: _Lang("取消"),
+		   	},function(){
 		    	console.log("showRevertConfirm() revert commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
 		    	revertHistory(index);
 		    },function(){

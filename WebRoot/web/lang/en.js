@@ -307,7 +307,6 @@ function lang(str)
 		"获取文件列表失败" : "Failed to get file list",
 		"获取文件信息失败" : "Failed to get document information",
 		"的备注" : "'s Note",
-		" 备注"  : "'s Note",
 		"目标节点不存在" : "Target node not exists",
 		"已存在，自动跳过" : "already exists, skip",
 		"替换" : "Replace",
