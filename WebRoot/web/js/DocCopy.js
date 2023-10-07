@@ -35,7 +35,7 @@
 
 			if(!treeNodes || treeNodes.length <= 0)
 			{
-				showErrorMessage("请选择需要复制的文件!");
+				showErrorMessage(_Lang("请选择需要复制的文件!"));
 				return;
 			}
 			
@@ -78,7 +78,7 @@
 			if(!treeNodes)
 			{
 				console.log("DocCopyInit() treeNodes is null");
-				showErrorMessage("请选择文件！");
+				showErrorMessage(_Lang("请选择文件！"));
 				return;
 			}
 			
@@ -87,7 +87,7 @@
 			if(fileNum <= 0)
 			{
 				console.log("DocCopyInit() fileNum <= 0");
-				showErrorMessage("请选择文件！");
+				showErrorMessage(_Lang("请选择文件！"));
 				return;
 			}
 			
@@ -241,7 +241,7 @@
 			    	//Status Info
 		    		SubContext.index = i;
 		    	   	SubContext.state = 0;	//未开始复制
-		    	   	SubContext.status = "待复制";	//未开始复制
+		    	   	SubContext.status = _Lang("待复制");	//未开始复制
 		    	   	
 		    	   	//thread Status
 		    	   	SubContext.threadState = 0; //0:线程未启动, 1:线程已启动, 2:线程已终止
@@ -321,8 +321,8 @@
 			if(SubContext.docId == SubContext.dstPid)
 			{
 				console.log("[" + SubContext.index + "] copyDoc() 禁止将上级目录复制到子目录");
-				copyErrorHandler(SubContext, "禁止将上级目录复制到子目录");
-				copyErrorConfirm(SubContext, "禁止将上级目录复制到子目录");
+				copyErrorHandler(SubContext, _Lang("禁止将上级目录复制到子目录"));
+				copyErrorConfirm(SubContext, _Lang("禁止将上级目录复制到子目录"));
 				copyNextDoc();
 				return;
 			}
@@ -351,7 +351,7 @@
 					 console.log("[" + SubContext.index + "] copyDoc() timerForCopy triggered!");
 					 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
 					 {
-				         copyErrorHandler(SubContext, "文件复制超时");
+				         copyErrorHandler(SubContext, _Lang("文件复制超时"));
 				         copyNextDoc();
 					 }
 			    },timeOut);			    
@@ -398,8 +398,8 @@
 		            },
 		            error : function () {
 		            	console.log("[" + SubContext.index + "] copyDoc() 服务器异常：copy failed");
-		             	copyErrorHandler(SubContext, "服务器异常");
-	                	copyErrorConfirm(SubContext,"服务器异常");
+		             	copyErrorHandler(SubContext, _Lang("服务器异常"));
+	                	copyErrorConfirm(SubContext, _Lang("服务器异常"));
 	                	return;
 		            }
 		    	});
@@ -561,13 +561,13 @@
 			var dialogId = 'copyConflictConfirm' + SubContext.index;
 			bootstrapQ.dialog({
 					id: dialogId,
-					url: 'copyConflictConfirm.html',
-					title: copiedNodeName + '已存在',
-					msg: '页面正在加载，请稍等...',
+					url: 'copyConflictConfirm' + langExt + '.html',
+					title: copiedNodeName + ' ' + _Lang('已存在'),
+					msg: _Lang('页面正在加载，请稍等...'),
 					close: false, //hide close btn
 					btn: true, //show cancel btn
-			        okbtn: "确定",
-	    	        qubtn: "取消",
+			        okbtn: _Lang("确定"),
+	    	        qubtn: _Lang("取消"),
 		            callback: function () {
 		            	//copyConflictConfirmPageInit(copiedNodeName);
 		            	$("#" + dialogId + " input[name='newDocName']").val("Copy of " + copiedNodeName);
@@ -587,7 +587,7 @@
 		        }, function(){ //取消
 		        	confirmDialogState = 0;
 		        	console.log("[" + SubContext.index + "] showCopyConflictConfirmPanel() 取消复制:", SubContext);					
-		        	copyErrorHandler(SubContext, "文件已存在，用户放弃修改名字并取消了复制！");
+		        	copyErrorHandler(SubContext, _Lang("文件已存在，用户放弃修改名字并取消了复制！"));
 		        	//关闭对话框(该接口会删除该对话框,避免无法再次打开对话框)
             		closeBootstrapDialog("copyConflictConfirm"  + SubContext.index);
 		        	resumePenddingConfirm();
@@ -607,18 +607,19 @@
       		confirmDialogState = 1;
 	      	
   			var FileName = SubContext.name;
-      		var msg = FileName + "复制失败,是否继续复制其他文件？";
+      		var msg = FileName + " " + _Lang("复制失败,是否继续复制其他文件？");
       		if(errMsg != undefined)
       		{
-      			msg = FileName + "复制失败(" + errMsg + "),是否继续复制其他文件？";
+      			msg = FileName + _Lang("复制失败") + "(" + _Lang(errMsg) + ")," + _Lang("是否继续复制其他文件？");
       		}
       		//弹出用户确认窗口
       		qiao.bs.confirm({
     	    	id: "copyErrorConfirm" +  SubContext.index,
     	        msg: msg,
-    	        close: false,		
-    	        okbtn: "继续",
-    	        qubtn: "结束",
+    	        close: false,
+    	        title: _Lang("确认"),
+    	        okbtn: _Lang("继续"),
+    	        qubtn: _Lang("结束"),
     	    },function () {
     	    	//继续后续的复制
     	    	confirmDialogState = 0;
@@ -662,10 +663,10 @@
       	
   		function showCopyEndInfo()
   		{
-  			var copyEndInfo = "复制完成(共" + totalNum +"个)";
+  			var copyEndInfo = _Lang("复制完成") +  "(" + buildStatistics(totalNum) + ")";
       		if(successNum != totalNum)
       		{
-      			deleteEndInfo = "复制完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			copyEndInfo = _Lang("复制完成") +  "(" + buildStatistics(totalNum, successNum) + ")";
       		    bootstrapQ.msg({
 					msg : copyEndInfo,
 					type : 'warning',

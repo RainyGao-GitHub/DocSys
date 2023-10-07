@@ -14,6 +14,15 @@ function _Lang(str1, connectStr , str2)
 	return lang(str1) + connectStr + lang(str2);
 }
 
+function buildStatistics(totalNum, successNum)
+{
+	if(successNum == undefined)
+	{
+		return "Total: "+ totalNum;		
+	}
+	return "Total: "+ totalNum +", Failed: " + (totalNum - failNum);
+}
+
 function lang(str)
 {
 	var translateMap = 
@@ -288,6 +297,7 @@ function lang(str)
 		//通用
 		"已存在" : "already exists",
 		"请选择文件" : "No any file was selected",
+		"请选择文件！" : "No any file was selected !",
 		"请选择文件或目录" : "No any file or folder was selected",	
 		"等" : "...",
 		"个文件" : "files",
@@ -313,7 +323,7 @@ function lang(str)
 		"正在重传" : "Reuploading",
 		"上传完成" : "Upload Completed",
 		"请选择需要上传的文件" : "No any file or folder was selected to upload",
-		"待上传" : "Pennding...",
+		"待上传" : "Upload Pennding...",
 		"上传还未结束，是否终止上传" : "Upload not completed, do you want to cancel",
 		"已存在,是否覆盖" : "already exists, do you want to replace",
 		"后续已存在文件是否自动覆盖？" : "Do you want to replace existed files automatically?",
@@ -349,7 +359,15 @@ function lang(str)
 
 		//复制文件
 		"请选择需要复制的文件" : "No any file or folder was selected to copy",
+		"请选择需要复制的文件!" : "No any file or folder was selected to copy !",
 		"复制成功" : "Copy Ok",
+		"待复制" : "Copy Pendding...",
+		"禁止将上级目录复制到子目录" : "Parent folder can not be copied to Sub folder",
+		"文件复制超时" : "File Copy timeout",
+		"文件已存在，用户放弃修改名字并取消了复制！" : "File already exists, User have gave up to change name and cancled the copy action",
+		"复制失败,是否继续复制其他文件？" : "Copy failed, Continue to copy other files ?",
+		"是否继续复制其他文件？" : "Continue to copy other files ?",
+		"复制完成" : "Copy completed",
 		
 		//移动文件
 		"是否移动文件" : "Do you want to move the file or folder",	
