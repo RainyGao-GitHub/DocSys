@@ -79,7 +79,7 @@ var RenameDocConfirm = (function () {
               		addDocListNode(ret.data);
 		            
 			     	bootstrapQ.msg({
-							msg : "重命名完成！",
+							msg : _Lang("重命名完成！"),
 							type : 'success',
 							time : 2000,
 					});

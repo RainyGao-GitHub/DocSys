@@ -358,7 +358,11 @@ function lang(str)
 		"是否删除文件" : "Do you want to delete the file",
 		"是否删除目录" : "Do you want to delete the folder",
 		"清选择需要删除的文件或目录" : "No any file or folder was selected to delete",
-
+		"待删除" : "Delete pendding...",
+		"文件删除超时" : "Delete timeout",
+		"删除失败,是否继续删除其他文件？" : "Delete failed, Continue to delete other files ?",
+		"是否继续删除其他文件？" : "Continue to delete other files ?",
+		
 		//复制文件
 		"请选择需要复制的文件" : "No any file or folder was selected to copy",
 		"请选择需要复制的文件!" : "No any file or folder was selected to copy !",
@@ -382,7 +386,11 @@ function lang(str)
 		"是否继续移动其他文件？" : "Continue to move other files ?",
 		"移动完成" : "Move completed",
 		"移动失败" : "Move failed",
-			
+
+		//重命名文件
+		"重命名完成！" : "Rename completed",
+		
+		
 		//下载文件
 		"是否下载" : "Do you want to download",
 		"请选择需要下载的文件" : "No any file or folder was selected to download",

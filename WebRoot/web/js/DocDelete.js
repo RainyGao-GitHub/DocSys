@@ -49,7 +49,7 @@
 			if(!treeNodes)
 			{
 				console.log("DocDeleteInit() treeNodes is null");
-				showErrorMessage("请选择文件！");
+				showErrorMessage(_Lang("请选择文件！"));
 				return;
 			}
 	        
@@ -57,7 +57,7 @@
 			if(fileNum <= 0)
 			{
 				console.log("DocDeleteInit() fileNum <= 0");
-				showErrorMessage("请选择文件！");
+				showErrorMessage(_Lang("请选择文件！"));
 				return;
 			}
 			
@@ -106,7 +106,7 @@
 			if(!treeNodes)
 			{
 				console.log("DocDeleteAppend() treeNodes is null");
-				showErrorMessage("请选择文件！");
+				showErrorMessage(_Lang("请选择文件！"));
 				return;
 			}
 
@@ -114,7 +114,7 @@
 			console.log("DocDeleteAppend() fileNum:" + fileNum);
 			if(fileNum <= 0)
 			{
-				showErrorMessage("请选择文件！");
+				showErrorMessage(_Lang("请选择文件！"));
 				return;
 			}
 
@@ -192,7 +192,7 @@
 			    	//Status Info
 		    		SubContext.index = i;
 		    	   	SubContext.state = 0;	//未开始删除
-		    	   	SubContext.status = "待删除";	//未开始删除
+		    	   	SubContext.status = _Lang("待删除");	//未开始删除
 		    	   	
 		    	   	//thread Status
 		    	   	SubContext.threadState = 0; //0:线程未启动, 1:线程已启动, 2:线程已终止
@@ -279,7 +279,7 @@
 					 console.log("[" + SubContext.index + "] deleteDoc() timerForDelete triggered!");
 					 if(SubContext.state != 4 || SubContext.state != 5) //没有成功或失败的文件超时都当失败处理
 					 {
-				         deleteErrorHandler(SubContext, "文件删除超时");
+				         deleteErrorHandler(SubContext, _Lang("文件删除超时"));
 				         deleteNextDoc();
 					 }
 			    },timeOut);
@@ -334,8 +334,8 @@
 		            },
 		            error : function () {
 		             	console.log("[" + SubContext.index + "] deleteDoc() 服务器异常：Delete failed");
-		             	deleteErrorHandler(SubContext, "服务器异常");
-	                	deleteErrorConfirm(SubContext, "服务器异常");
+		             	deleteErrorHandler(SubContext, _Lang("服务器异常"));
+	                	deleteErrorConfirm(SubContext, _Lang("服务器异常"));
 		            	return;
 		            }
 		    	});
@@ -435,7 +435,7 @@
       		deleteErrorConfirmState = 1;
       			
       		FileName = SubContext.name;
-      		var msg = FileName + "删除失败,是否继续删除其他文件？";
+      		var msg = FileName + " " + _Lang("删除失败,是否继续删除其他文件？");
       		if(errMsg)
       		{
       			msg = FileName + "删除失败(" + errMsg + "),是否继续删除其他文件？";
@@ -445,9 +445,10 @@
       		qiao.bs.confirm({
     	    	id: "deleteErrorConfirm",
     	        msg: msg,
-    	        close: false,		
-    	        okbtn: "继续",
-    	        qubtn: "结束",
+    	        close: false,
+    	        title: _Lang("确认"),
+    	        okbtn: _Lang("继续"),
+    	        qubtn: _Lang("结束"),
     	    },function () {
     	    	//继续后续的删除
     	    	deleteErrorConfirmState = 0;
@@ -488,7 +489,7 @@
       		{
 	      		if(totalNum > (successNum + failNum))
 	      		{
-	      			console.log("DeleteEndHandler() 删除未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+	      			console.log("DeleteEndHandler() 删除结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 	      			return;
 	      		}
       		}
@@ -504,10 +505,10 @@
       	
   		function showDeleteEndInfo()
   		{
-  			var deleteEndInfo = "删除完成(共" + totalNum +"个)";
+  			var deleteEndInfo = _Lang("删除完成") + "(" + _LangStats(totalNum) +")";
       		if(successNum != totalNum)
       		{
-      			deleteEndInfo = "删除完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			deleteEndInfo = _Lang("删除完成") + "(" + _LangStats(totalNum, successNum) + ")";
       		    bootstrapQ.msg({
 					msg : deleteEndInfo,
 					type : 'warning',
@@ -531,7 +532,7 @@
       		{
 	      		if(totalNum > (successNum + failNum))
 	      		{
-	      			console.log("deleteEndHandler() 删除未结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
+	      			console.log("deleteEndHandler() 删除结束，共"+ totalNum +"文件，成功"+successNum+"个，失败"+failNum+"个！");
 	      			return;
 	      		}
       		}
@@ -548,10 +549,10 @@
       	
   		function showDeleteEndInfo()
   		{
-  			var deleteEndInfo = "删除完成(共" + totalNum +"个)";
+  			var deleteEndInfo = _Lang("删除完成") + "(" + _LangStats(totalNum) +")";
       		if(successNum != totalNum)
       		{
-      			deleteEndInfo = "删除完成 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			deleteEndInfo = _Lang("删除完成") + "(" + _LangStats(totalNum, successNum) + ")";
       			// 普通消息提示条
     			bootstrapQ.msg({
     					msg : deleteEndInfo,
