@@ -411,7 +411,10 @@ function downloadDoc(treeNodes,needConfirm,downloadType)
 
 		qiao.bs.confirm({
 	        id: 'downloadConfirm',
-	        msg: _Lang('是否下载') + ' ' + downloadDispInfo,
+	        msg: _Lang('是否下载') + ' ' + downloadDispInfo + ' ?',
+	        title: _Lang("确认"),
+	        okbtn: _Lang("下载"),
+	        qubtn: _Lang("取消"),
 	    },function(){
 	        //alert('点击了确定！');
 			DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType);
@@ -725,8 +728,11 @@ $(".el-download-list").delegate(".downloadCloseBtn","click",function(){
     {
 		qiao.bs.confirm({
 	        id: 'downloadCloseConfirm',
-	        msg: _Lang('下载还未结束，是否终止下载') + "!",
-	    },function(){
+	        msg: _Lang('下载还未结束，是否终止下载') + " ?",
+	        title: _Lang("确认"),
+	        okbtn: _Lang("是"),
+	        qubtn: _Lang("否"),
+		},function(){
 	        //alert('点击了确定！');
 	    	DocDownload.stopAllDownload();
 	    },function(){
@@ -796,8 +802,11 @@ $(".el-upload-list").delegate(".uploadCloseBtn","click",function(){
     {
 		qiao.bs.confirm({
 	        id: 'bsconfirm',
-	        msg: _Lang('上传还未结束，是否终止上传') + "!",
-	    },function(){
+	        msg: _Lang('上传还未结束，是否终止上传') + " ?",
+	        title: _Lang("确认"),
+	        okbtn: _Lang("是"),
+	        qubtn: _Lang("否"),
+		},function(){
 	        //alert('点击了确定！');
 	    	FileUpload.stopAllUpload();
 	    },function(){
@@ -2217,7 +2226,10 @@ function dropInner(treeId, nodes, targetNode) {
 
 		qiao.bs.confirm({
 		        id: 'bsconfirm',
-		        msg: _Lang('是否移动文件') + "!",
+		        msg: _Lang('是否移动文件') + " ?",
+		        title: _Lang("确认"),
+		        okbtn: _Lang("是"),
+		        qubtn: _Lang("否"),
 		},function(){
 		        //alert('点击了确定！');
 	      		DocMove.moveDocs(treeNodes,parentNode,vid);
