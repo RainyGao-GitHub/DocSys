@@ -1722,18 +1722,18 @@ function showDocHistory(node, historyType)
 	}
 	console.log("docId:" + docId + "parentPath:" + parentPath + " docName:"+docName);
 
-	var title = "历史版本" + " [" + docName + "]";
+	var title = _Lang("历史版本") + " [" + docName + "]";
 	if(historyType == 0)
 	{
 		if(docId == 0)
 		{
-			title = "历史版本 [/]";
+			title = _Lang("历史版本") + " [/]";
 		}
 		else
 		{
 			if(docType == 2)
 			{
-				title = "历史版本" + " [" + docName + "/]";
+				title = _Lang("历史版本") + " [" + docName + "/]";
 			}
 		}
 	}
@@ -1741,11 +1741,11 @@ function showDocHistory(node, historyType)
 	{
 		if(docId == 0)
 		{
-			title = "备注历史" + " [/]";
+			title = _Lang("备注历史") + " [/]";
 		}
 		else
 		{
-			var title = "备注历史" + " [" + docName + "]";
+			var title = _Lang("备注历史") + " [" + docName + "]";
 		}
 	}
 

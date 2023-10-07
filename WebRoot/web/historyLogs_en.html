@@ -1,0 +1,22 @@
+<script type="text/javascript" src="js/DocHistory.js"></script>
+<div style="height:550px;overflow-y:auto">
+        <div class="manual-right width:80%" >
+            <div class="manual-article">
+               <div class="article-body editor-content"  id="history" style="min-height: 650px">
+               		<div class="panel-body eventset-list" >	
+	               		<li class="eventset-tit" style="margin-top: 0px;">
+							<i class="cell commitId w10">Version</i>
+							<i class="cell commitMsg w30">CommitMsg</i>
+							<i class="cell commitUser w13">Author</i>
+							<i class="cell commitTime w10">CommitTime</i>
+							<i class="cell operation w10">Operation</i>						
+						</li>
+					</div>
+               		<div class="panel-body eventset-list" id="historyLogs">
+			 			<!-- 列表区域-->
+					</div>
+               		<div id="loadMoreHistoryBtn" onclick="DocHistory.loadMoreHistory();" style="margin-left:40%;display:none;">More History...</div>
+			 </div>
+			</div>
+		</div>
+</div>
