@@ -84,16 +84,16 @@ function DoDelete(treeNodes)
 	else
 	{
 		var treeNode = treeNodes[0];
-		var msg =  _Lang("是否删除文件") + " [" + treeNode.name + "]";
+		var msg =  _Lang("是否删除文件") + " [" + treeNode.name + "] ?";
 		if(treeNodes.length > 1)
 	  	{
-			msg = _Lang("是否删除") + " " + treeNode.name + " " + _Lang("等") + treeNodes.length  + _Lang("个文件");
+			msg = _Lang("是否删除") + " " + treeNode.name + " " + _Lang("等") + treeNodes.length  + " " + _Lang("个文件") + " ?";
 	  	}
 		else
 		{
 			if(treeNode.type == 2)
 			{
-				msg =  _Lang("是否删除目录") + " [" + treeNode.name + "]";
+				msg =  _Lang("是否删除目录") + " [" + treeNode.name + "] ?";
 			}
 		}
 
