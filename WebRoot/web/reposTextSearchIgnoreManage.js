@@ -84,7 +84,7 @@ var TextSearchIgnoreMange = (function () {
 	                }
 	                else
 	                {
-	                	alert("Error:" + ret.msgInfo);
+	                	alert(_Lang("获取全文搜索忽略列表失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {

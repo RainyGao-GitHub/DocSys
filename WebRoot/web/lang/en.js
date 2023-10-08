@@ -187,7 +187,10 @@ function lang(str)
 		"全文搜索已关闭" : "TextSearch Disabled",
 		"获取远程存储忽略列表失败" : "Failed to get ignore list",
 		"远程存储已关闭" : "RemoteStorage Disabled",
-		
+		"获取异地备份忽略列表失败" : "Failed to get ignore list",
+		"异地备份已关闭" : "RemoteBackUp Disabled",
+		"获取本地备份忽略列表失败" : "Failed to get ignore list",
+		"本地备份已关闭" : "LocalBackUp Disabled",
 		
 		"该仓库未设置异地备份，请联系管理员！" : "RemoteBackup was not configured, Please contact System Administrator",
 		"该仓库未设置异地自动备份，请联系管理员！" : "RemoteBackup was not configured, Please contact System Administrator",

@@ -1,39 +1,39 @@
-var RemoteStorageIgnoreMange = (function () {
+var LocalBackupIgnoreMange = (function () {
     /*全局变量*/
     var reposId;
 	
-	function reposRemoteStorageIgnoreMangePageInit(_reposId)
+	function reposLocalBackupIgnoreMangePageInit(_reposId)
 	{
-		console.log("reposRemoteStorageIgnoreMangePageInit _reposId:" + _reposId);
+		console.log("reposLocalBackupIgnoreMangePageInit _reposId:" + _reposId);
 		reposId = _reposId;
-		showReposRemoteStorageIngoreList();		
+		showReposLocalBackupIngoreList();		
 	}
 	
-	function addDocToRemoteStorageIgnoreList()
+	function addDocToLocalBackupIgnoreList()
 	{
-		console.log("addDocToRemoteStorageIgnoreList() ignorePath:" + ignorePath);
+		console.log("addDocToLocalBackupIgnoreList() ignorePath:" + ignorePath);
 		var node = {};
 		node.path =  $("#ignorePath").val();
 		node.name = "";
-		console.log("addDocToRemoteStorageIgnoreList() path:" + node.path + "name:" + node.name);
-		setRemoteStorageIgnore(node, 1);
+		console.log("addDocToLocalBackupIgnoreList() path:" + node.path + "name:" + node.name);
+		setLocalBackupIgnore(node, 1);
 	}
 	
-	function removeDocFromRemoteStorageIgnoreList(index)
+	function removeDocFromLocalBackupIgnoreList(index)
 	{
-		console.log("removeDocFromRemoteStorageIgnoreList() index:" + index);
+		console.log("removeDocFromLocalBackupIgnoreList() index:" + index);
 		var node = {};
 		node.path = $("#IgnoreEntrySelect" + index).val();
 		node.name = "";
-		console.log("removeDocFromRemoteStorageIgnoreList() path:" + node.path + "name:" + node.name);
-		setRemoteStorageIgnore(node, 0);
+		console.log("removeDocFromLocalBackupIgnoreList() path:" + node.path + "name:" + node.name);
+		setLocalBackupIgnore(node, 0);
 	}
 
-	function setRemoteStorageIgnore(node, ignore)
+	function setLocalBackupIgnore(node, ignore)
 	{
-		console.log("setRemoteStorageIgnore()");
+		console.log("setLocalBackupIgnore()");
 	    $.ajax({
-	        url : "/DocSystem/Doc/setRemoteStorageIgnore.do",
+	        url : "/DocSystem/Doc/setLocalBackupIgnore.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
@@ -45,7 +45,7 @@ var RemoteStorageIgnoreMange = (function () {
 	        success : function (ret) {
 	            if( "ok" == ret.status ){
 					//刷新列表
-					showReposRemoteStorageIngoreList();
+					showReposLocalBackupIngoreList();
 	            	bootstrapQ.msg({
 							msg : _Lang('设置成功！'),
 							type : 'success',
@@ -63,13 +63,13 @@ var RemoteStorageIgnoreMange = (function () {
 		});
 	}
 	
-	function showReposRemoteStorageIngoreList(){
-	   	console.log("showReposRemoteStorageIngoreList() reposId:" + reposId);
+	function showReposLocalBackupIngoreList(){
+	   	console.log("showReposLocalBackupIngoreList() reposId:" + reposId);
 	   	var path = "";
 	   	var name = "";
 	   	
 	    $.ajax({
-	            url : "/DocSystem/Doc/getRemoteStorageIgnoreList.do",
+	            url : "/DocSystem/Doc/getLocalBackupIgnoreList.do",
 	            type : "post",
 	            dataType : "json",
 	            data : {
@@ -78,32 +78,32 @@ var RemoteStorageIgnoreMange = (function () {
 	                name : name,
 	            },
 	            success : function (ret) {
-	            	console.log("getRemoteStorageIgnoreList ret:", ret);
+	            	console.log("getLocalBackupIgnoreList ret:", ret);
 	                if( "ok" == ret.status ){
 	                    showList(ret.data);
 	                }
 	                else
 	                {
-	                	alert(_Lang("获取远程存储忽略列表失败", ":", ret.msgInfo));
+	                	alert(_Lang("获取本地备份忽略列表失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {
-	               alert(_Lang('获取远程存储忽略列表失败', ':', '服务器异常'));
+	               alert(_Lang("获取本地备份忽略列表失败", ":", "服务器异常"));
 	            }
     	});
 
 		//绘制列表
 		function showList(data){
 			console.log(data);
-			var c = $("#reposRemoteStorageIgnoreList").children();
+			var c = $("#reposLocalBackupIgnoreList").children();
 			$(c).remove();
 			if(data.length==0){
-				$("#reposRemoteStorageIgnoreList").append("<p>" + _Lang("暂无数据") + "</p>");
+				$("#reposLocalBackupIgnoreList").append("<p>" + _Lang("暂无数据") + "</p>");
 			}
 			
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
-				var opBtn = "		<a href='javascript:void(0)' onclick='RemoteStorageIgnoreMange.removeDocFromRemoteStorageIgnoreList(" + i + ");' class='mybtn-primary'>" + _Lang("移除")+ "</a>";
+				var opBtn = "		<a href='javascript:void(0)' onclick='LocalBackupIgnoreMange.removeDocFromLocalBackupIgnoreList(" + i + ");' class='mybtn-primary'>" + _Lang("移除") + "</a>";
 													
 				var se = "<li value="+ i +">"
 					+"	<i class='cell select w5'>"
@@ -116,27 +116,27 @@ var RemoteStorageIgnoreMange = (function () {
 					+"	</i>"
 					+"	<i class='cell status w15'>"
 					+"		<span class='status'>"
-					+"			<a id='IgnoreEntryStatus"+i+"' href='javascript:void(0)'>" + _Lang("远程存储已关闭") + "</a>"
+					+"			<a id='IgnoreEntryStatus"+i+"' href='javascript:void(0)'>" + _Lang("本地备份已关闭") + "</a>"
 					+"		</span>"
 					+"	</i>"
 					+"	<i class='cell operation w10'>"
 					+		opBtn
 					+"	</i>"
 					+"</li>";				
-				$("#reposRemoteStorageIgnoreList").append(se);
+				$("#reposLocalBackupIgnoreList").append(se);
 			}
 		}
 	}
 	//开放给外部的调用接口
     return {
         init: function(_reposId){
-        	reposRemoteStorageIgnoreMangePageInit(_reposId);
+        	reposLocalBackupIgnoreMangePageInit(_reposId);
         },
-        addDocToRemoteStorageIgnoreList: function(){
-        	addDocToRemoteStorageIgnoreList();
+        addDocToLocalBackupIgnoreList: function(){
+        	addDocToLocalBackupIgnoreList();
         },
-        removeDocFromRemoteStorageIgnoreList: function(index){
-        	removeDocFromRemoteStorageIgnoreList(index);
+        removeDocFromLocalBackupIgnoreList: function(index){
+        	removeDocFromLocalBackupIgnoreList(index);
         },
     };
 })();

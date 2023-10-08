@@ -84,7 +84,7 @@ var VersionIgnoreMange = (function () {
 	                }
 	                else
 	                {
-	                	alert("Error:" + ret.msgInfo);
+	                	alert(_Lang('获取版本忽略列表失败', ':', ret.msgInfo));
 	                }
 	            },
 	            error : function () {

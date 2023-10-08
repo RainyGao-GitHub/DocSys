@@ -115,7 +115,7 @@ var ReposConfig = (function () {
 	   		$("#verCtrlConfigDiv").hide();		//隐藏 高级选项
 	   		$("#showVerCtrlConfig").hide();	//隐藏 高级选项提示
 	   		$("#showVerCtrlConfig").val(0);
-	   		$("#showVerCtrlConfig").text("显示高级选项");
+	   		$("#showVerCtrlConfig").text(_Lang("显示高级选项"));
 	   		//清除版本管理的信息，避免对后面的逻辑造成影响
 	   		reposInfo.isRemote = 0;
 		   	reposInfo.localSvnPath = "";
@@ -129,7 +129,7 @@ var ReposConfig = (function () {
 	   		$("#verCtrlConfigDiv").hide();			//隐藏 高级选项
 	   		$("#showVerCtrlConfig").show();		//显示 高级选项提示
 	   		$("#showVerCtrlConfig").val(0);
-	   		$("#showVerCtrlConfig").text("显示高级选项");						
+	   		$("#showVerCtrlConfig").text(_Lang("显示高级选项"));						
 	   	}
 	   	$("#repos-verCtrl option[value='"+reposInfo.verCtrl+"']").attr("selected","selected");
 	   	if(reposInfo.isRemote == 0)
