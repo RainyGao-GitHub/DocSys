@@ -325,6 +325,10 @@ function lang(str)
 		"继续" : "Continue",
 		"结束" : "Stop",		
 		
+		//访问密码验证
+		"验证成功！" : "Verify Ok !",
+		"验证失败" : "Verify Failed",
+		
 		//新建文件
 		"文件名不能为空" : "FileName is empty",
 		"新建完成" : "Create Ok",
