@@ -336,7 +336,7 @@ public class LuceneUtil2   extends BaseFunction
         
         if(doc.commitTime != null)
         {
-            document.add(new LongField("commitTime", doc.getLatestEditTime(), Store.YES));
+            document.add(new LongField("commitTime", doc.commitTime, Store.YES));
         }
         
         //Content
