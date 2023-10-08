@@ -3959,8 +3959,9 @@ public class BaseController  extends BaseFunction{
 						context);
 			}
 			
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			if(isRemoteActionEnabled(repos, repos.remoteStorageConfig))
 			{
+				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
 				CommonAction.insertCommonActionEx(asyncActionList, 
 						repos, doc, null, null, 
 						commitMsg, commitUser, 
@@ -3968,20 +3969,21 @@ public class BaseController  extends BaseFunction{
 						null, 
 						login_user, 
 						false);
-				CommonAction.insertCommonActionEx(asyncActionList, 
-						repos, doc, null, null, 
-						commitMsg, commitUser, 
-						ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "addDoc", 
-						null, 
-						login_user, 
-						false);
-				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
-				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
 			}
+			
+			//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
+			CommonAction.insertCommonActionEx(asyncActionList, 
+					repos, doc, null, null, 
+					commitMsg, commitUser, 
+					ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "addDoc", 
+					null, 
+					login_user, 
+					false);
+				
 		}
 		else
 		{
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction)
+			if(isRemoteActionEnabled(repos, repos.remoteServerConfig))
 			{
 				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 				{
@@ -4300,8 +4302,9 @@ public class BaseController  extends BaseFunction{
 						context);
 			}
 			
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			if(isRemoteActionEnabled(repos, repos.remoteStorageConfig))
 			{
+				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
 				CommonAction.insertCommonActionEx(asyncActionList, 
 						repos, doc, null, null, 
 						commitMsg, commitUser, 
@@ -4309,20 +4312,20 @@ public class BaseController  extends BaseFunction{
 						null, 
 						login_user, 
 						false);
-				CommonAction.insertCommonActionEx(asyncActionList, 
-						repos, doc, null, null, 
-						commitMsg, commitUser, 
-						ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "saveDoc", 
-						null, 
-						login_user, 
-						false);
-				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "addDoc");
-				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
 			}
+			//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "addDoc");
+			CommonAction.insertCommonActionEx(asyncActionList, 
+					repos, doc, null, null, 
+					commitMsg, commitUser, 
+					ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "saveDoc", 
+					null, 
+					login_user, 
+					false);
+				
 		}
 		else
 		{
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction)
+			if(isRemoteActionEnabled(repos, repos.remoteServerConfig))
 			{
 				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 				{
@@ -4543,8 +4546,9 @@ public class BaseController  extends BaseFunction{
 						context);
 			}
 			
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			if(isRemoteActionEnabled(repos, repos.remoteStorageConfig))
 			{
+				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
 				CommonAction.insertCommonActionEx(asyncActionList, 
 						repos, doc, null, null, 
 						commitMsg, commitUser, 
@@ -4552,20 +4556,20 @@ public class BaseController  extends BaseFunction{
 						null, 
 						login_user, 
 						false);
-				CommonAction.insertCommonActionEx(asyncActionList, 
-						repos, doc, null, null, 
-						commitMsg, commitUser, 
-						ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "deleteDoc", 
-						null, 
-						login_user, 
-						false);
-				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
-				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
 			}
+			//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
+			CommonAction.insertCommonActionEx(asyncActionList, 
+					repos, doc, null, null, 
+					commitMsg, commitUser, 
+					ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "deleteDoc", 
+					null, 
+					login_user, 
+					false);
+
 		}
 		else
 		{
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			if(isRemoteActionEnabled(repos, repos.remoteServerConfig))
 			{	
 				if(channel != null)
 				{
@@ -8630,8 +8634,9 @@ public class BaseController  extends BaseFunction{
 						context);
 			}
 			
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			if(isRemoteActionEnabled(repos, repos.remoteStorageConfig))
 			{	
+				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 				CommonAction.insertCommonActionEx(asyncActionList, 
 						repos, doc, null, null, 
 						commitMsg, commitUser, 
@@ -8639,20 +8644,20 @@ public class BaseController  extends BaseFunction{
 						null, 
 						login_user, 
 						false);
-				CommonAction.insertCommonActionEx(asyncActionList, 
-						repos, doc, null, null, 
-						commitMsg, commitUser, 
-						ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", 
-						null, 
-						login_user, 
-						false);
-				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
-				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 			}
+			//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+			CommonAction.insertCommonActionEx(asyncActionList, 
+					repos, doc, null, null, 
+					commitMsg, commitUser, 
+					ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", 
+					null, 
+					login_user, 
+					false);
+
 		}
 		else
 		{
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			if(isRemoteActionEnabled(repos, repos.remoteServerConfig))
 			{	
 				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 				{
@@ -8868,18 +8873,30 @@ public class BaseController  extends BaseFunction{
 						context);
 			}
 			
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			if(isRemoteActionEnabled(repos, repos.remoteStorageConfig))
 			{
-				CommonAction.insertCommonActionEx(asyncActionList, repos, srcDoc, dstDoc, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "moveDoc", null, login_user, false);
-				CommonAction.insertCommonActionEx(asyncActionList, repos, srcDoc, dstDoc, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "moveDoc", null, login_user, false);
 				//realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
-				//realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
+				CommonAction.insertCommonActionEx(asyncActionList, 
+						repos, srcDoc, dstDoc, null, 
+						commitMsg, commitUser, 
+						ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "moveDoc", 
+						null, 
+						login_user, 
+						false);
 			}
+			//realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "moveDoc");
+			CommonAction.insertCommonActionEx(asyncActionList, 
+					repos, srcDoc, dstDoc, null, 
+					commitMsg, commitUser, 
+					ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "moveDoc", 
+					null, 
+					login_user, 
+					false);
 		}
 		else
 		{
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
-			{	
+			if(isRemoteActionEnabled(repos, repos.remoteServerConfig))
+			{
 				if(channel.remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, true) == null)
 				{
 					unlockDoc(srcDoc, lockType, login_user);
@@ -8997,17 +9014,30 @@ public class BaseController  extends BaseFunction{
 						context);
 			}
 			
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			if(isRemoteActionEnabled(repos, repos.remoteStorageConfig))
 			{
-				CommonAction.insertCommonActionEx(asyncActionList, repos, srcDoc, dstDoc, null, commitMsg, commitUser, ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "copyDoc", null, login_user, false);
-				CommonAction.insertCommonActionEx(asyncActionList, repos, srcDoc, dstDoc, null, commitMsg, commitUser, ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "copyDoc", null, login_user, false);
 				//realTimeRemoteStoragePush(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
-				//realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
+				CommonAction.insertCommonActionEx(asyncActionList, 
+						repos, srcDoc, dstDoc, null, 
+						commitMsg, commitUser, 
+						ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "copyDoc", 
+						null, 
+						login_user, 
+						false);
 			}
+			//realTimeBackup(repos, srcDoc, dstDoc, login_user, commitMsg, rt, "copyDoc");
+			CommonAction.insertCommonActionEx(asyncActionList, 
+					repos, srcDoc, dstDoc, null, 
+					commitMsg, commitUser, 
+					ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "copyDoc", 
+					null, 
+					login_user, 
+					false);
+
 		}
 		else
 		{
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+			if(isRemoteActionEnabled(repos, repos.remoteServerConfig))
 			{	
 				Log.debug("copyDoc_FSM() remoteServerDocCopy");		
 				if(channel.remoteServerDocCopy(repos, srcDoc, dstDoc, commitMsg, login_user, rt, false) == null)
@@ -9155,8 +9185,9 @@ public class BaseController  extends BaseFunction{
 						context);
 			}
 			
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
-			{	
+			if(isRemoteActionEnabled(repos, repos.remoteStorageConfig))
+			{
+				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 				CommonAction.insertCommonActionEx(asyncActionList, 
 						repos, doc, null, null, 
 						commitMsg, commitUser, 
@@ -9164,21 +9195,20 @@ public class BaseController  extends BaseFunction{
 						null, 
 						login_user, 
 						false);
-				CommonAction.insertCommonActionEx(asyncActionList, 
-						repos, doc, null, null, 
-						commitMsg, commitUser, 
-						ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", 
-						null, 
-						login_user, 
-						false);
-				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
-				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
 			}
+			//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDoc");
+			CommonAction.insertCommonActionEx(asyncActionList, 
+					repos, doc, null, null, 
+					commitMsg, commitUser, 
+					ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDoc", 
+					null, 
+					login_user, 
+					false);
 		}
 		else
 		{
-			if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
-			{	
+			if(isRemoteActionEnabled(repos, repos.remoteServerConfig))
+			{
 				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 				{
 					unlockDoc(doc, lockType, login_user);
@@ -9281,30 +9311,30 @@ public class BaseController  extends BaseFunction{
 							context);
 				}
 				
-				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
-				{	
+				if(isRemoteActionEnabled(repos, repos.remoteStorageConfig))
+				{
+					//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
 					CommonAction.insertCommonActionEx(asyncActionList, 
 							repos, doc, null, null, 
 							commitMsg, commitUser, 
 							ActionType.RemoteStorage, Action.PUSH, DocType.REALDOC, "updateDocContent", 
 							null, 
 							login_user, 
-							false);
-					CommonAction.insertCommonActionEx(asyncActionList, 
-							repos, doc, null, null, 
-							commitMsg, commitUser, 
-							ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDocContent", 
-							null, 
-							login_user, 
-							false);
-					//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
-					//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
+							false);					
 				}
+				//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "updateDocContent");
+				CommonAction.insertCommonActionEx(asyncActionList, 
+						repos, doc, null, null, 
+						commitMsg, commitUser, 
+						ActionType.AutoBackup, Action.PUSH, DocType.REALDOC, "updateDocContent", 
+						null, 
+						login_user, 
+						false);
 			}
 			else
 			{
-				if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
-				{	
+				if(isRemoteActionEnabled(repos, repos.remoteServerConfig))
+				{
 					if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
 					{
 						docSysDebugLog("updateRealDocContent_FSM() remoteServerDocCommit Failed", rt);
@@ -14769,6 +14799,12 @@ public class BaseController  extends BaseFunction{
 			return false;
 	    }
 		
+		if(isRemoteActionEnabled(repos, remote) == false)
+		{
+			docSysErrorLog("realTimeRemoteStoragPush() 当前远程存储推送存在回环风险，已取消！", rt);
+			return false;
+		}
+		
 		Log.info("********* realTimeRemoteStoragPush() [" + doc.getPath() + doc.getName() + "] ***********");
 		
 		//push Options
@@ -14807,6 +14843,39 @@ public class BaseController  extends BaseFunction{
 			break;
 		}			
 		return ret;
+	}
+
+	private boolean isRemoteActionEnabled(Repos repos, RemoteStorageConfig remote) {
+		//TODO: 回环风险只会发生在远程推送接口上, disableRemoteAction 准确的名字应该叫 isRemoteOpenAPITrigger会更贴切一点
+		if(repos.disableRemoteAction == null || repos.disableRemoteAction == false)
+		{
+			return true;
+		}
+		
+		if(remote == null)
+		{
+			Log.info("isRemoteActionEnabled() remote is null");
+			return false;
+		}
+		
+		if(remote.protocol == null)
+		{
+			Log.info("isRemoteActionEnabled() remote.protocol is null");
+			return false;
+		}
+		
+		//如果远程存储是本地磁盘或者MxsDoc服务器是存在回环风险的
+		//1. 本地磁盘可能是仓库的存储磁盘，从而导致不停的检测到有改动
+		//2. MxsDoc服务器的存储位置也可能回环到自己的存储位置上
+		switch(remote.protocol)
+		{
+		case "file":
+		case "mxsdoc":
+			Log.info("isRemoteActionEnabled() remote.protocol is " + remote.protocol);
+			return false;
+		}
+		
+		return true;
 	}
 
 	protected boolean realTimeBackup(Repos repos, Doc doc, Doc dstDoc, User accessUser, String commitMsg, ReturnAjax rt, String action) 
@@ -14850,6 +14919,12 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("realTimeRemoteBackup 非商业版本不支持远程备份", rt);
 			return false;
 	    }
+		
+		if(isRemoteActionEnabled(repos, remote) == false)
+		{
+			docSysErrorLog("realTimeRemoteBackup() 当前异地自动备份存在回环风险，已取消！", rt);
+			return false;
+		}
 		
 		Log.info("********* realTimeRemoteBackup() [" + doc.getPath() + doc.getName() + "] ***********");
 		//实时备份是不备份备注文件的
@@ -14927,6 +15002,12 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("realTimeLocalBackup 非商业版本不支持本地备份", rt);
 			return false;
 	    }
+		
+		if(isRemoteActionEnabled(repos, remote) == false)
+		{
+			docSysErrorLog("realTimeLocalBackup() 当前本地自动备份存在回环风险，已取消！", rt);
+			return false;
+		}
 		
 		Log.info("********* realTimeLocalBackup() [" + doc.getPath() + doc.getName() + "] ***********");
 		remote.remoteStorageIndexLib = getRealTimeBackupIndexLibForRealDoc(localBackupConfig, remote);		
