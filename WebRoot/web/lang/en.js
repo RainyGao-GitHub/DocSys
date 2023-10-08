@@ -178,9 +178,13 @@ function lang(str)
 		"远程存储忽略管理" : "RemoteStorage Ignore List",
 		"关闭仓库所有文件的远程存储" : "Disable RemoteStorage for all documents",
 		"开启仓库所有文件的远程存储" : "Enable RemoteStorage for all documents",
-		"设置成功" : "Config Ok",
-		"设置失败" : "Config Failed",
-				
+		"设置成功" : "Configure Ok",
+		"设置失败" : "Configure Failed",
+		"设置成功！" : "Configure Ok !",
+		"获取版本忽略列表失败" : "Failed to get ignore list",
+		"版本已忽略" : "Ignored",
+		
+		
 		"该仓库未设置异地备份，请联系管理员！" : "RemoteBackup was not configured, Please contact System Administrator",
 		"该仓库未设置异地自动备份，请联系管理员！" : "RemoteBackup was not configured, Please contact System Administrator",
 		"异地备份忽略管理" : "RemoteBackup Ignore List",
@@ -215,7 +219,7 @@ function lang(str)
 		"关闭仓库所有文件的历史版本管理" : "Disable History for all documents",
 		"开启仓库所有文件的历史版本管理" : "Enable History for all documents",		
 		"获取文件版本管理设置失败" : "Failed to get History ignore setting",
-		
+				
 		"是否清除仓库缓存" : "Do you want to clean cache",
 		"清除" : "Clean",
 		"清除成功" : "Clean Ok",
