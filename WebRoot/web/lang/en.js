@@ -182,7 +182,11 @@ function lang(str)
 		"设置失败" : "Configure Failed",
 		"设置成功！" : "Configure Ok !",
 		"获取版本忽略列表失败" : "Failed to get ignore list",
-		"版本已忽略" : "Ignored",
+		"版本已忽略" : "History Disabled",
+		"获取全文搜索忽略列表失败" : "Failed to get ignore list",
+		"全文搜索已关闭" : "TextSearch Disabled",
+		"获取远程存储忽略列表失败" : "Failed to get ignore list",
+		"远程存储已关闭" : "RemoteStorage Disabled",
 		
 		
 		"该仓库未设置异地备份，请联系管理员！" : "RemoteBackup was not configured, Please contact System Administrator",
