@@ -13616,17 +13616,32 @@ public class BaseController  extends BaseFunction{
 		Integer isRedisEn = getRedisEn();
 		if(isRedisEn == 0)
 		{
+			switch(lang)
+			{
+			case "en":
+				return "Cluster not configured";
+			}
 			return "集群未开启";
 		}
 		
 		if(redisEn == false)
 		{
+			switch(lang)
+			{
+			case "en":
+				return "Cluster deploy failed:" + globalClusterDeployCheckResultInfo;
+			}
 			return "集群失败:" + globalClusterDeployCheckResultInfo;
 		}
 		
 		//Go throuhg clusterServersMap
 		if(globalClusterDeployCheckResult == false)
 		{
+			switch(lang)
+			{
+			case "en":
+				return "[" + clusterServerUrl + "] Cluster deploy failed:" + globalClusterDeployCheckResultInfo + "\n";
+			}
 			return "[" + clusterServerUrl + "] 集群失败:" + globalClusterDeployCheckResultInfo + "\n";
 		}
 		
@@ -13646,23 +13661,55 @@ public class BaseController  extends BaseFunction{
 	        	if(beatTime == null)
 	            {
 	            	Log.debug("clearRedisCache() clusterServer:" + clusterServerUrl + " beatTime is null");
-	            	clusterInfo += "[" + clusterServerUrl + "] 已停止，无效激活时间\n";	            	
-	            }
+	            	switch(lang)
+	            	{
+	            	case "en":
+	            		clusterInfo += "[" + clusterServerUrl + "] stopped, beatTime is null\n";	            	
+	            		break;
+	            	default:
+	            		clusterInfo += "[" + clusterServerUrl + "] 已停止，无效激活时间\n";	            	
+	            		break;	
+	            	}
+	            }	
 	        	else
 	        	{
 		            if((curTime - beatTime) > clusterHeartBeatStopTime)	//heart beating have stopped for 30 minutes
 		            {
 		            	Log.info("clearRedisCache() clusterServer:" + clusterServerUrl + " heart beating have stopped " + (curTime - beatTime)/1000 + " minutes");
-		            	clusterInfo += "[" + clusterServerUrl + "] 已停止，上次激活时间 [" + DateFormat.dateTimeFormat(new Date(beatTime)) + "]\n";
+		            	switch(lang)
+		            	{
+		            	case "en":
+		            		clusterInfo += "[" + clusterServerUrl + "] stopped, latest beatTime [" + DateFormat.dateTimeFormat(new Date(beatTime)) + "]\n";            	
+		            		break;
+		            	default:
+			            	clusterInfo += "[" + clusterServerUrl + "] 已停止，上次激活时间 [" + DateFormat.dateTimeFormat(new Date(beatTime)) + "]\n";
+		            		break;	
+		            	}
 		            }
 		            else
 		            {
-		            	clusterInfo += "[" + clusterServerUrl + "] 已激活，上次激活时间 [" + DateFormat.dateTimeFormat(new Date(beatTime)) + "]\n";	            
+		            	switch(lang)
+		            	{
+		            	case "en":
+			            	clusterInfo += "[" + clusterServerUrl + "] is active, latest beatTime [" + DateFormat.dateTimeFormat(new Date(beatTime)) + "]\n";	            
+		            		break;
+		            	default:
+			            	clusterInfo += "[" + clusterServerUrl + "] 已激活，上次激活时间 [" + DateFormat.dateTimeFormat(new Date(beatTime)) + "]\n";	            
+		            		break;	
+		            	}
 		            }
 	        	}
 	        }
 	    }
-	    Log.debug("集群信息:");
+	    switch(lang)
+	    {
+	    case "en":
+	    	Log.debug("Cluster Deployment Information:");
+	    	break;
+	    default:
+	    	Log.debug("集群信息:");
+	    	break;
+	    }
 	    Log.debug(clusterInfo);
 	    return clusterInfo;
 	}
