@@ -23004,10 +23004,19 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				//远程自动推送
-				realTimeRemoteStoragePush(repos, doc, null, user, commitMsg, rt, action.event);
+				if(isRemoteStoragePushEnabled(repos))
+				{
+					realTimeRemoteStoragePush(repos, doc, null, user, commitMsg, rt, action.event);
+				}
 				//仓库自动备份
-				realTimeBackup(repos, doc, null, user, commitMsg, rt, action.event);
-						
+				if(isLocalBackupPushEnabled(repos))
+				{
+					realTimeLocalBackup(repos, doc, null, user, commitMsg, rt, action.event);
+				}
+				if(isRemoteBackupPushEnabled(repos))
+				{
+					realTimeRemoteBackup(repos, doc, null, user, commitMsg, rt, action.event);					
+				}
 				//解锁目录
 				unlockDoc(doc, lockType, user);
 				
