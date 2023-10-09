@@ -9,5 +9,7 @@ public enum ActionType {
 	VerRepos,	 		//Doc的RealDoc和VritualDoc的版本的Commit(add/delete/update)/Copy/Move/Push
 	RemoteStorage,	  	//RemoteStorage push	
 	AutoBackup, 	  	//AutoBackup push
+	LocalAutoBackup,	//LocalAutoBackup push
+	RemoteAutoBackup,	//RemoteAutoBackup push
 	AutoSyncup;	 	  	//Doc的同步（版本仓库同步、远程存储同步、搜索索引刷新）
 }
