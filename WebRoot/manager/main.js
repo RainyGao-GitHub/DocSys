@@ -4832,9 +4832,9 @@ function showEditReposPanel(e, reposId, type, index)
 	var repos = gReposList[index];		
 	qiao.bs.dialog({
 		id: 'editRepos',
-		url: 'editRepos.html',
-		title: '编辑仓库',
-		msg: '页面正在加载，请稍等...',
+		url: 'editRepos' + langExt + '.html',
+		title: _Lang('编辑仓库'),
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: false,
 		callback: function(){

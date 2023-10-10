@@ -117,6 +117,7 @@ function lang(str)
 
 		//仓库新增与设置
 		"新建仓库" : "New Repository",
+		"编辑仓库" : "Repository Settings",
 		"用户未登录，请先登录！" : "Please login system firstly!",
 		"您无权修改该仓库!" : "You have no right to modify this repository!",
 		"仓库信息更新失败！" : "Failed to update the repository configuration",
