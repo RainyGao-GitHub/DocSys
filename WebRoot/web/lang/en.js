@@ -733,6 +733,9 @@ function lang(str)
 		"备份仓库可能需要占用服务器较大的磁盘空间，是否备份仓库？" : "Repoistory Backup may need a lot of disk storage space, Do you want to continue ?",
 		"备份" : "Backup",
 		"仓库备份中，可能需要花费较长时间，您可先关闭当前窗口！" : "Repository Backup...",
+		"备份仓库失败" : "Repository Backup Failed",
+		"仓库备份成功" : "Repository Backup Success",
+		"仓库备份成功，是否下载仓库备份文件？" : "Repository Backup Success, Do you want to download the backup ?",
 		
 		//分页显示
 		"首页" : "FirstPage",
