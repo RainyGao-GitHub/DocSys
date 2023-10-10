@@ -4872,7 +4872,7 @@ function showManageReposMemberPanel(e,reposId){
 	
 	qiao.bs.dialog({
 		title: _Lang('成员管理') + '-'+ ReposName,
-		url: 'manageReposMember' + langExt + '.html',
+		url: 'manageReposMember.html',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
@@ -5005,7 +5005,7 @@ function showManageGroupMemberPanel(e,groupId){
 	
 	qiao.bs.dialog({
 		title: _Lang('成员管理') + '-'+ groupName,
-		url: 'manageGroupMember' + langExt + '.html',
+		url: 'manageGroupMember.html',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
