@@ -380,11 +380,11 @@ function downloadLogFile(){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("日志下载失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("日志下载失败", ":", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("日志下载失败:服务器异常");
+        	showErrorMessage(_Lang("日志下载失败", ":", "服务器异常"));
         }
     });
 }
@@ -399,10 +399,10 @@ function cleanLogFileConfirm()
 	console.log("cleanLogFileConfirm()");
     qiao.bs.confirm({
     		id: "cleanLogFileConfirm",
-	        title: "清除日志",
-	        msg: "是否清除调试日志？",
-	        okbtn: "是",
-	        qubtn: "否",
+	        title: _Lang("清除日志"),
+	        msg: _Lang("是否清除调试日志？"),
+	        okbtn: _Lang("是"),
+	        qubtn: _Lang("否"),
     	},function () {
 			startCleanLogFile();
 	    	return true;   //close dialog
@@ -423,13 +423,13 @@ function startCleanLogFile()
         },
         success : function (ret) {
             if( "ok" == ret.status ){
-               	showErrorMessage("清除日志成功");
+               	showErrorMessage(_Lang("清除日志成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("清除日志失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("删除日志失败:服务器异常");
+        	showErrorMessage(_Lang("清除日志失败", ":", "服务器异常"));
         }
     });
 }
@@ -498,12 +498,12 @@ function showSystemEmailConfig(){
             }
             else 
             {
-            	showErrorMessage("获取邮件服务配置信息失败:" + ret.msgInfo);
+            	showErrorMessage(_Lang("获取邮件服务配置信息失败", ":", ret.msgInfo));
             	console.log(ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取邮件服务配置信息失败");
+        	showErrorMessage(_Lang("获取邮件服务配置信息失败", ":", "服务器异常"));
         }
     });
 }
@@ -524,12 +524,12 @@ function updateSystemEmailConfig(host, email, pwd){
         		systemEmailConfig.host = host;
             	systemEmailConfig.email = email;
         		systemEmailConfig.pwd = pwd;
-        		showErrorMessage("更新邮件服务配置成功");
+        		showErrorMessage(_Lang("更新邮件服务配置成功"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("更新邮件服务配置失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("更新邮件服务配置失败", ":", ret.msgInfo));
         		//restore the setting
         		$("#systemEmailHost").val(systemEmailConfig.host);
         		$("#systemEmailUser").val(systemEmailConfig.email);
@@ -537,7 +537,7 @@ function updateSystemEmailConfig(host, email, pwd){
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:更新邮件服务配置失败");
+        	showErrorMessage(_Lang("更新邮件服务配置失败", ":", "服务器异常"));
     		//restore the setting
         	$("#systemEmailHost").val(systemEmailConfig.host);
     		$("#systemEmailUser").val(systemEmailConfig.email);
@@ -610,12 +610,12 @@ function showSystemSmsConfig(){
             }
             else 
             {
-            	showErrorMessage("获取短信服务配置信息失败:" + ret.msgInfo);
+            	showErrorMessage(_Lang("获取短信服务配置信息失败", ":", ret.msgInfo));
             	console.log(ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取短信服务配置信息失败");
+        	showErrorMessage(_Lang("获取短信服务配置信息失败", ":", "服务器异常"));
         }
     });
 }
@@ -636,12 +636,12 @@ function updateSystemSmsConfig(server, apikey, tplid){
         		systemSmsConfig.server = server;
             	systemSmsConfig.apikey = apikey;
         		systemSmsConfig.tplid = tplid;
-        		showErrorMessage("更新短信服务配置成功");
+        		showErrorMessage(_Lang("更新短信服务配置成功"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("更新短信服务配置失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("更新短信服务配置失败", ":", ret.msgInfo));
         		//restore the setting
         		$("#systemSmsServer").val(systemSmsConfig.server);
         		$("#systemSmsApikey").val(systemSmsConfig.apikey);
@@ -649,7 +649,7 @@ function updateSystemSmsConfig(server, apikey, tplid){
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:更新短信服务配置失败");
+        	showErrorMessage(_Lang("更新短信服务配置失败", ":", "服务器异常"));
     		//restore the setting
         	$("#systemSmsServer").val(systemSmsConfig.server);
     		$("#systemSmsApikey").val(systemSmsConfig.apikey);
@@ -684,7 +684,7 @@ function showSystemMigrate(){
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取仓库列表失败");
+        	showErrorMessage(_Lang("获取仓库列表失败", ":", "服务器异常"));
         }
     });		
 }
@@ -728,14 +728,14 @@ function showSystemMigrateConfirmPanel(){
 	console.log("showSystemMigrateConfirmPanel selectedMigrateReposList.length :" + selectedMigrateReposList.length);
 	if(selectedMigrateReposList.length == 0)
 	{
-		showErrorMessage("请选择需要迁移的仓库！");
+		showErrorMessage(_Lang("请选择需要迁移的仓库！"));
 		return;
 	}
 	
 	qiao.bs.dialog({
 		url: 'systemMigrateConfirm' + langExt + '.html',
-		title: '系统迁移',
-		msg: '页面正在加载，请稍等...',
+		title: _Lang('系统迁移'),
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: false,
 		callback: function(){
@@ -836,12 +836,12 @@ function showSystemDbConfig(){
             }
             else 
             {
-	        	showErrorMessage("获取数据库信息失败:" + ret.msgInfo);
+	        	showErrorMessage(_Lang("获取数据库配置信息失败", ":", ret.msgInfo));
             	console.log(ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取数据库信息失败");
+        	showErrorMessage(_Lang("获取数据库配置信息失败", ":", "服务器异常"));
         }
     });
 }
@@ -864,12 +864,12 @@ function updateSystemDBConfig(type, url, user, pwd){
         		systemDbSetting.url = url;
         		systemDbSetting.user = user;
         		systemDbSetting.pwd = pwd;
-        		showErrorMessage("更新成功,重启服务后生效！");
+        		showErrorMessage(_Lang("更新成功,重启服务后生效！"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("更新数据库配置信息失败", ":", ret.msgInfo));
         		//restore the setting
         		$("#systemDbType").val(systemDbSetting.type);
         		$("#systemDbUrl").val(systemDbSetting.url);
@@ -878,7 +878,7 @@ function updateSystemDBConfig(type, url, user, pwd){
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:更新数据库配置信息失败");
+        	showErrorMessage(_Lang("更新数据库配置信息失败", ":", "服务器异常"));
     		//restore the setting
     		$("#systemDbType").val(systemDbSetting.type);
     		$("#systemDbUrl").val(systemDbSetting.url);
@@ -908,16 +908,16 @@ function testDatabase(){
             if( "ok" == ret.status )
             {	        		
             	//设置成功
-            	showErrorMessage("数据库连接成功");
+            	showErrorMessage(_Lang("数据库连接成功"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("数据库连接失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("数据库连接失败", ":", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:数据库连接失败");
+        	showErrorMessage(_Lang("数据库连接失败", ":", "服务器异常"));
         }
     });
 }
@@ -928,10 +928,10 @@ function deleteDatabaseConfirm()
 	
     qiao.bs.confirm({
     		id: "deleteDatabaseConfirmDialog",
-	        title: "删除数据库",
-	        msg: "是否删除数据库？",
-	        okbtn: "确认",
-	        qubtn: "取消",
+	        title: _Lang("删除数据库"),
+	        msg: _Lang("是否删除数据库？"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
     	},function () {
 	    	//showErrorMessage("点击了确定");
 			deleteDatabase();
@@ -964,16 +964,16 @@ function deleteDatabase(){
             if( "ok" == ret.status )
             {	        		
             	//设置成功
-            	showErrorMessage("删除数据库成功");
+            	showErrorMessage(_Lang("删除数据库成功"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("删除数据库失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("删除数据库失败", ":", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:删除数据库失败");
+        	showErrorMessage(_Lang("删除数据库失败", ":", "服务器异常"));
         }
     });
 }
@@ -983,10 +983,10 @@ function resetDatabaseConfirm()
 	console.log("resetDatabaseConfirm()");
     qiao.bs.confirm({
     		id: "resetDatabaseConfirmDialog",
-	        title: "重置数据库",
-	        msg: "是否重置数据库？",
-	        okbtn: "确认",
-	        qubtn: "取消",
+	        title: _Lang("重置数据库"),
+	        msg: _Lang("是否重置数据库？"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
     	},function () {
 	    	//showErrorMessage("点击了确定");
 			resetDatabase();
@@ -1019,16 +1019,16 @@ function resetDatabase(){
             if( "ok" == ret.status )
             {	        		
             	//设置成功
-            	showErrorMessage("重置数据库成功");
+            	showErrorMessage(_Lang("重置数据库成功"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("重置数据库失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("重置数据库失败", ":", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:重置数据库失败");
+        	showErrorMessage(_Lang("重置数据库失败", ":", "服务器异常"));
         }
     });
 }
@@ -1059,11 +1059,11 @@ function exportDBData(){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("数据库导出失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("数据库导出失败", ":", ret.msgInfo));
 	        }
         },
         error : function () {
-        	showErrorMessage("服务器异常:数据库导出失败");
+        	showErrorMessage(_Lang("数据库导出失败", ":", "服务器异常"));
         }
     });
 }
@@ -1107,7 +1107,7 @@ function importDBDataConfirm(e)
     }
     else
    	{
-   		showErrorMessage("请选择文件");
+   		showErrorMessage(_Lang("请选择文件"));
       	return false;
    	}  
 	
@@ -1116,10 +1116,10 @@ function importDBDataConfirm(e)
     
     qiao.bs.confirm({
     		id: "importDBDataConfirmDialog",
-	        title: "导入数据",
-	        msg: "是否导入 " + fileName+ " ？",
-	        okbtn: "确认",
-	        qubtn: "取消",
+	        title: _Lang("导入数据"),
+	        msg: _Lang("是否导入") + " " + fileName+ " ？",
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
     	},function () {
 	    	//showErrorMessage("点击了确定");
 			//开始上传
@@ -1161,13 +1161,13 @@ function startImportDBData(file, dbType, dbUrl, dbUser, dbPwd)
 			//上传成功！
 			var ret = JSON.parse(xhr.responseText);
 			if("ok" == ret.status){
-				showErrorMessage("导入成功，建议重启服务！");
+				showErrorMessage(_Lang("导入成功，建议重启服务！"));
 			 }
 			 else	//上传失败
 			 {
 				//上传失败
 				console.log("上传失败：" + ret.msgInfo);
-				showErrorMessage("导入失败:" + ret.msgInfo);
+				showErrorMessage(_Lang("导入失败", ":", ret.msgInfo));
 				return;
              }
 		}else{
@@ -1178,7 +1178,7 @@ function startImportDBData(file, dbType, dbUrl, dbUser, dbPwd)
 			}
 			//上传失败
 			console.log("系统异常: " + file.name + " 上传异常！");
-			showErrorMessage("系统异常: 上传异常");
+			showErrorMessage(_Lang("导入失败", ":", "上传异常"));
 			return;
 		}
 	};
@@ -1434,12 +1434,12 @@ function updateSystemInfo(tomcatPath,
         		systemInfo.redisEn = redisEn;
         		systemInfo.redisUrl = redisUrl;
         		systemInfo.clusterServerUrl = clusterServerUrl;
-        		showErrorMessage("更新成功！");
+        		showErrorMessage(_Lang("更新成功！"));
             }
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("更新数据库配置信息失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("更新失败", ":", ret.msgInfo));
         		//restore the setting
         		$("#tomcatPath").val(systemInfo.tomcatPath);
         		$("#javaHome").val(systemInfo.javaHome);
@@ -1474,7 +1474,7 @@ function updateSystemInfo(tomcatPath,
             }
         },
         error : function () {
-        	showErrorMessage("更新数据库配置信息失败:服务器异常");
+        	showErrorMessage(_Lang("更新失败", ":", "服务器异常"));
     		//restore the setting
     		$("#tomcatPath").val(systemInfo.tomcatPath);
     		$("#javaHome").val(systemInfo.javaHome);
@@ -2227,13 +2227,13 @@ function upgradeSystem(){
 	switch(gStatus)
 	{
 	case 1:
-		showErrorMessage("系统升级中，请稍后重试!");
+		showErrorMessage(_Lang("系统升级中，请稍后重试!"));
 		return;
 	case 2:
-		showErrorMessage("正在安装Office，请稍后重试!");			
+		showErrorMessage(_Lang("正在安装Office，请稍后重试!"));			
 		return;
 	case 3:
-		showErrorMessage("正在在线安装Office，请稍后重试!");			
+		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
 		return;
 	}
 	
@@ -2270,7 +2270,7 @@ function upgradeSystemConfirm(e)
     }
     else
    	{
-   		showErrorMessage("请选择文件");
+   		showErrorMessage(_Lang("请选择文件"));
    		gStatus = 0;
       	return false;
    	}  
@@ -2279,17 +2279,17 @@ function upgradeSystemConfirm(e)
     console.log("firstFile:"+fileName);
     if(fileName.indexOf("DocSystem") == -1)
     {
-    	showErrorMessage("非法升级文件");
+    	showErrorMessage(_Lang("非法升级文件"));
     	gStatus = 0;
     	return false;
     }
     
     qiao.bs.confirm({
     		id: "upgradeSystemConfirmDialog",
-	        title: "系统升级",
-	        msg: "是否升级系统？",
-	        okbtn: "确认",
-	        qubtn: "取消",
+	        title: _Lang("系统升级"),
+	        msg: _Lang("是否升级系统？"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
     	},function () {
 	    	//showErrorMessage("点击了确定");
 			//开始上传
@@ -2336,7 +2336,7 @@ var SystemUpgrade = (function () {
 	{
 		var uploadDisplayInit = function(index, totalNum) {
 			console.log("uploadDisplayInit index:" + index + " totalNum:" + totalNum);
-			var str="<div><span class='upload-list-title'>[系统升级] 正在上传  " +index +" / " + totalNum +"</span><i class='el-icon-close uploadCloseBtn' onclick='stopUpgradeSystem()'></i></div>";
+			var str="<div><span class='upload-list-title'>[" + _Lang("系统升级") + "] " + _Lang("正在上传") + " " + index +" / " + totalNum +"</span><i class='el-icon-close uploadCloseBtn' onclick='stopUpgradeSystem()'></i></div>";
 			str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 			$(".el-upload-list").show();
 			$('.el-upload-list').html(str);
@@ -2346,11 +2346,11 @@ var SystemUpgrade = (function () {
       	{
       		if(reuploadFlag == false)
       		{
-      			$(".upload-list-title").text("[系统升级] 正在上传   " + uploadStartedNum + " / " + totalNum);
+      			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("正在上传") + " " + uploadStartedNum + " / " + totalNum);
       		}
       		else
       		{
-      			$(".upload-list-title").text("[系统升级] 正在重传   " + reuploadStartedNum + " / " + reuploadTotalNum);
+      			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("正在重传") + " " + reuploadStartedNum + " / " + reuploadTotalNum);
       		}
       	}
       	
@@ -2358,7 +2358,7 @@ var SystemUpgrade = (function () {
 			console.log("createUploadItem index:" + index + " fileName:" + fileName);
 			return "<li class='el-upload-list__item file" + index + " is-uploading' value=" + index + ">"+
 			"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+ fileName +"</span></a>"+
-			"<a class='reuploadBtn reupload" + index + "' onclick='SystemUpgrade.reuploadFailDocs("+ index +")'  style='display:none'>重传</a>"+
+			"<a class='reuploadBtn reupload" + index + "' onclick='SystemUpgrade.reuploadFailDocs("+ index +")'  style='display:none'>" + _Lang("重传") + "</a>"+
 			"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
 			"<i class='el-icon-close stopUpload'  value="+index+" onclick='SystemUpgrade.stopUpload("+ index +")'></i>"+
 			"<div class='el-progress el-progress--line'>"+
@@ -2420,10 +2420,10 @@ var SystemUpgrade = (function () {
   		
   		var uploadEndCallback = function(totalNum, successNum){  	  		
       		//显示上传完成 
-      		var uploadEndInfo = "[系统升级] 上传完成(共" + totalNum +"个)，解压安装文件...";
+      		var uploadEndInfo = "[" + _Lang("系统升级") + "] " + _Lang("上传完成") + "(" + _LangStats(totalNum) + ")," + _Lang("解压安装文件") + "...";
       		if(successNum != totalNum)
       		{
-      			uploadEndInfo = "[系统升级] 上传失败 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			uploadEndInfo = "[" + _Lang("系统升级") + "] " + _Lang("上传失败") + "(" + _LangStats(totalNum, successNum) + ")";
       			$(".reuploadAllBtn").show();
       		}
       		else
@@ -2517,7 +2517,7 @@ var SystemUpgrade = (function () {
            	       if(task.status == 200)
             	   {
 	           			console.log("SystemUpgradePrepareSuccessHandler() 升级准备工作已完成，等待升级");
-	           			$(".upload-list-title").text("[系统升级] 开始升级，请稍候...");
+	           			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " +  _Lang("开始升级，请稍候..."));
 	           			gStatus = 0;
            	        	return;
             	   }
@@ -2526,12 +2526,12 @@ var SystemUpgrade = (function () {
                else	//后台报错
                {
             	   	console.log("系统升级失败:" + ret.msgInfo);
-					$(".upload-list-title").text("[系统升级] 升级失败:" + ret.msgInfo);
+					$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级失败", ":", ret.msgInfo));
                }
             },
             error : function () {	//后台异常
         	   	console.log("系统升级失败:服务器异常");
-				$(".upload-list-title").text("[系统升级] 升级失败:服务器异常");
+				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + + _Lang("升级失败", ":", "服务器异常"));
             }
     	});	
 	}
@@ -2563,7 +2563,7 @@ var SystemUpgrade = (function () {
                if( "ok" == ret.status )
                {    
 	           		console.log("stopSystemUpgradePrepareTask() 升级任务已取消");
-	           		$(".upload-list-title").text("[系统升级] 升级任务已取消");
+	           		$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级任务已取消"));
 	           		gStatus = 0;
                }
                else
@@ -2574,7 +2574,7 @@ var SystemUpgrade = (function () {
             },
             error : function () {	//后台异常
         	   	console.log("stopSystemUpgradePrepareTask() 系统升级失败:服务器异常");
-        	   	showErrorMessage("升级任务取消失败:服务器异常");
+        	   	showErrorMessage(_Lang("升级任务取消失败", ":", "服务器异常"));
             }
     	});	
 	}
@@ -2618,20 +2618,20 @@ function startUpgradeSystem(file)
 				//showErrorMessage("系统升级中，请稍候...");
 				var task = ret.data;
 				SystemUpgrade.startSystemUpgradePrepareTask(task.id, 2000); //2秒后查询
-				$(".upload-list-title").text("[系统升级] 升级准备中:" + task.info);
+				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级准备中", ":" , task.info));
 			 }
 			 else	//上传失败
 			 {
 				//上传失败
 				console.log("升级失败：" + ret.msgInfo);
 				//showErrorMessage("升级失败:" + ret.msgInfo);
-				$(".upload-list-title").text("[系统升级] 升级失败:" + ret.msgInfo);
+				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级失败", ":", ret.msgInfo));
 				gStatus = 0;
 				return;
              }
         },
         error : function () {
-			$(".upload-list-title").text("[系统升级] 升级失败: 服务器异常");
+			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级失败", ":", "服务器异常"));
         	//showErrorMessage("升级失败: 服务器异常");
 			gStatus = 0;
         }
@@ -2648,9 +2648,10 @@ function stopUpgradeSystem()
 
 	qiao.bs.confirm({
         id: 'bsconfirm',
-        msg: '是否取消系统升级！',
-        okbtn: "取消升级",
-        qubtn: "继续",
+        title: _Lang("取消升级"),
+        msg: _Lang('是否取消系统升级！'),
+        okbtn: _Lang("取消升级"),
+        qubtn: _Lang("继续"),
     },function(){
     	SystemUpgrade.stop();
     },function(){
@@ -2674,10 +2675,10 @@ function disableOfficeConfirm()
 	console.log("disableOfficeConfirm()");
     qiao.bs.confirm({
     		id: "disableOfficeConfirmDialog",
-	        title: "禁用Office",
-	        msg: "是否禁用Office？",
-	        okbtn: "禁用",
-	        qubtn: "取消",
+	        title: _Lang("禁用Office"),
+	        msg: _Lang("是否禁用Office？"),
+	        okbtn: _Lang("禁用"),
+	        qubtn: _Lang("取消"),
     	},function () {
 			doDisableOffice();
 	    	return true;   //close dialog
@@ -2693,10 +2694,10 @@ function enableOfficeConfirm()
 	console.log("enableOfficeConfirm()");
     qiao.bs.confirm({
     		id: "enableOfficeConfirDialog",
-	        title: "启用Office",
-	        msg: "是否启用Office？",
-	        okbtn: "启用",
-	        qubtn: "取消",
+	        title: _Lang("启用Office"),
+	        msg: _Lang("是否启用Office？"),
+	        okbtn: _Lang("启用"),
+	        qubtn: _Lang("取消"),
     	},function () {
 			doEnableOffice();
 	    	return true;   //close dialog
@@ -2724,11 +2725,11 @@ function doDisableOffice(){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("禁用Office失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("禁用Office失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("禁用Office失败::服务器异常");
+        	showErrorMessage(_Lang("禁用Office失败", ":", "服务器异常"));
         }
     });
 }
@@ -2750,11 +2751,11 @@ function doEnableOffice(){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("启用Office失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("启用Office失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("启用Office失败::服务器异常");
+        	showErrorMessage(_Lang("启用Office失败", ":", "服务器异常"));
         }
     });
 }

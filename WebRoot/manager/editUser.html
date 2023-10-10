@@ -1,138 +1,67 @@
+<div class="form-horizontal">
+  <div class="form-group" hidden>
+    <label class="control-label col-lg-3" for="userId">用户ID</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="userId" name="userId">
+    </div>
+  </div>
+  <!-- userName -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="name">用户名</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="name" name="name">
+    </div>
+  </div>
+  <!-- realName -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="realName">名字</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="realName" name="realName">
+    </div>
+  </div>
+  <!-- tel -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="tel">手机</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="tel" name="tel">
+    </div>
+  </div>
+  <!-- email -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="email">邮箱</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="email" name="email">
+    </div>
+  </div>
+  
+  <!-- role -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">角色</label>
+    <div class="col-lg-9">
+      <select class="form-control" id="type" name="type">
+        <option value="0">普通用户</option>
+        <option value="1">管理员</option>
+        <option value="2">超级管理员</option>
+      </select>
+    </div>
+  </div>
+  <!-- 
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="password">密码</label>
+    <div class="col-lg-9">
+      <input type="password" class="form-control" id="pwd" name="pwd">
+    </div>
+  </div> 
+  -->
+
+  <!-- Buttons -->
+  <div class="form-group">
+    <!-- Buttons -->
+    <div class="col-lg-offset-9 col-lg-2">
+      <button type="submit" class="btn btn-success" id="btn_editUser" onclick="editUser()">保存</button>
+    </div>
+  </div>
+</div>
 <script src="js/md5.js"></script>
-<script type="text/javascript">
-	function EditUserPageInit()
-	{
-		console.log("EditUserPageInit()");
-		EnterKeyListenerForEditUser();
-	}
-	
-	function showEditUserModal(text){
-		$(".editUserModal").fadeIn("slow");
-		$("#name").focus();
-	}
-	
-	function closeEditUserModal(){
-		$(".editUserModal").fadeOut("slow");
-	}
-	
-	//回车键监听函数
-	function EnterKeyListenerForEditUser(){
-		console.log("start enter key listener");
-		var event=arguments.callee.caller.arguments[0]||window.event;//消除浏览器差异  
-	 	if (event.keyCode == 13){  
-	 		editUser();
-	 	}  
-	}
-	
-	function editUser(){
-		console.log("editUser()");
-
-		var id =  $("#userId").val();
-		var name = $("#name").val();
-	    var realName = $("#realName").val();
-	    var tel = $("#tel").val();
-	    var email = $("#email").val();
-	    //var pwd =  $("#pwd").val();
-	    var type =  $("#type").val();
-	    
-	    console.log("editUser()",id, name, realName, type);
-	    
-        $.ajax({
-            url : "/DocSystem/Manage/editUser.do",
-            type : "post",
-            dataType : "json",
-            data : {
-            	 id : id,
-                 name : name,
-                 realName : realName,
-                 tel : tel,
-                 email: email,
-                 type : type,
-                 //pwd : MD5(pwd),
-            },
-            success : function (ret) {
-                if( "ok" == ret.status ){
-                	showUserList(gPageIndex);	//刷新UserList
-                	alert("更新成功");
-                }else {
-                	alert("错误：" + ret.msgInfo);
-                }
-            },
-            error : function () {
-            	alert("服务器异常:更新失败");
-            }
-        });
-	}
-	
-	//页面初始化代码    
-    $(function(){
-    	console.log("editUser Page init");
-    	EditUserPageInit();
-		$("#name").click().focus();
-	});
-</script>
-                    
-                  <div class="form-horizontal">
-                    <div class="form-group" hidden>
-                      <label class="control-label col-lg-3" for="userId">用户ID</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="userId" name="userId">
-                      </div>
-                    </div>
-                    <!-- userName -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">用户名</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="name" name="name">
-                      </div>
-                    </div>
-                    <!-- realName -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="realName">名字</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="realName" name="realName">
-                      </div>
-                    </div>
-                    <!-- tel -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="tel">手机</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="tel" name="tel">
-                      </div>
-                    </div>
-                    <!-- email -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="email">邮箱</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="email" name="email">
-                      </div>
-                    </div>
-                    
-                    <!-- role -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3">角色</label>
-                      <div class="col-lg-9">
-                        <select class="form-control" id="type" name="type">
-                          <option value="0">普通用户</option>
-                          <option value="1">管理员</option>
-                          <option value="2">超级管理员</option>
-                        </select>
-                      </div>
-                    </div>
-                    <!-- 
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="password">密码</label>
-                      <div class="col-lg-9">
-                        <input type="password" class="form-control" id="pwd" name="pwd">
-                      </div>
-                    </div> 
-                    -->
-
-                    <!-- Buttons -->
-                    <div class="form-group">
-                      <!-- Buttons -->
-                      <div class="col-lg-offset-9 col-lg-2">
-                        <button type="submit" class="btn btn-success" id="btn_editUser" onclick="editUser()">保存</button>
-                      </div>
-                    </div>
-                  </div>
+<script type="text/javascript" src="editUser.js"></script>
+                   

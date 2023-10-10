@@ -563,10 +563,85 @@ function lang(str)
 		"是否启用系统" : "Do you want to enable system access",
 		"启用系统失败" : "Failed to enable system access",
 		
+		//Group 
+		"更新成功" : "Update Ok",
+		"更新失败" : "Update Failed",
+		
+		//Log
+		"日志下载失败" : "DebugLog Download Failed",
+		"清除日志" : "Clean DebugLog",
+		"是否清除调试日志？" : "Do you want to clean DebugLog ?",
+		"清除日志成功" : "DebugLog was cleaned",
+		"清除日志失败" : "Failed to clean DebugLog",
+		
+		//Email Service
+		"获取邮件服务配置信息失败" : "Failed to get Email Service Settings",
+		"更新邮件服务配置成功" : " Email Service Settings was updated",
+		"更新邮件服务配置失败" : "Failed to update Email Service Settings",
+		
+		//SMS Service
+		"获取短信服务配置信息失败" : "Failed to get SMS Service Settings",
+		"更新短信服务配置成功" : "SMS Service Settings was updated",
+		"更新短信服务配置失败" : "Failed to update SMS Service Settings",	
+		
+		//Migration
+		"请选择需要迁移的仓库！" : "No any repository was selected to migrate",
+		"系统迁移" : "System Migrate",
+		
+		//Data Source
+		"获取数据库配置信息失败" : "Failed to get Data Source Setttings",
+		"更新成功,重启服务后生效！" : "Configure Ok, Please restart MxsDoc !",
+		"更新数据库配置信息失败" : "Failed to update Data Source Setttings",
+		"数据库连接成功" : "DataBase Connect Ok",
+		"数据库连接失败" : "DataBase Connect Failed",
+		"删除数据库" : "Delete DataBase",
+		"是否删除数据库？" : "Do you  want to delete DataBase ?",				
+		"删除数据库成功" : "DataBase was deleted",
+		"删除数据库失败" : "Failed to delete DataBase",
+		"重置数据库" : "Reset DataBase",
+		"是否重置数据库？" : "Do you want to reset DataBase",
+		"重置数据库成功" : "DataBase reset Ok",
+		"重置数据库失败" : "DataBase reset Failed",
+		"数据库导出失败" : "Failed to export data from DataBase",		
+		"导入数据" : "Import Data",
+		"是否导入" : "Do you want to import",		
+		"导入成功，建议重启服务！" : "Import Ok, Please restart MxsDoc !",
+		"导入失败" : "Import Failed",
+		
+		//SystemInfo
+		"更新成功！" : "Update Ok !",
+		
+		//Upgrade System
+		"系统升级中，请稍后重试!" : "Upgrading MxsDoc, Please try later !",
+		"正在安装Office，请稍后重试!" : "Installing OfficeEditor, Please try later !",
+		"正在在线安装Office，请稍后重试!" : "Online Installing OfficeEditor, Please try later !",		
+		"非法升级文件" : "Illegal package",
+		"系统升级" : "System Upgrade",
+		"是否升级系统？" : "Do you want to upgrade System ?",
+		"正在上传" : "Uploading",
+		"正在重传" : "Re-Uploading",
+		"重传" : "Retry",
+		"解压安装文件" : "Unzip upgrade package",
+		"开始升级，请稍候..." : "Upgrading...",
+		"升级任务已取消" : "Upgrade task was canceled",
+		"升级任务取消失败" : "Failed to stop Upgrade task",
+		"升级准备中" : "Upgrade prepare",
+		"升级准备中" : "Upgrade prepare",
+		"取消升级" : "Cancel Upgrade",
+		"是否取消系统升级！" : "Do you want to cancel upgrade",
+		"禁用Office" : "Disable OfficeEditor",
+		"是否禁用Office？" : "Do you want to disable OfficeEditor",
+		"禁用" : "Disable",
+		"启用Office" : "Enable OfficeEditor",
+		"是否启用Office？" : "Do you want to enable OfficeEditor ?",
+		"启用" : "Enable",
+		"禁用Office失败" : "Failed to disable OfficeEditor",
+		"启用Office失败" : "Failed to enable OfficeEditor",		
+		
 		//分页显示
-		"首页" : "First",
-		"尾页" : "Last",
-		"上一页" : "Pre",
+		"首页" : "FirstPage",
+		"尾页" : "LastPage",
+		"上一页" : "Previous",
 		"下一页" : "Next",		
  	};
 	
