@@ -47,7 +47,7 @@ function showReposAllUserList(reposId){
 function ReposMemberListDisplay(reposId,list)
 {
 	console.log("ReposMemberListDisplay", reposId);	
-	$Func.render($("#reposMemberContainer"),"reposMember",{"list":list,"reposId":reposId});
+	$Func.render($("#reposMemberContainer"),"reposMember" + langExt,{"list":list,"reposId":reposId});
 }
 
 function addReposMember(userId,reposId)

@@ -4871,7 +4871,7 @@ function showManageReposMemberPanel(e,reposId){
 	var ReposName = trObj.children("td:eq(1)").text();
 	
 	qiao.bs.dialog({
-		title: _Lang('成员管理') + '-'+ ReposName,
+		title: _Lang('成员管理') + ' ['+ ReposName + ']',
 		url: 'manageReposMember.html',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
@@ -5004,7 +5004,7 @@ function showManageGroupMemberPanel(e,groupId){
 	var groupName = trObj.children("td:eq(1)").text();
 	
 	qiao.bs.dialog({
-		title: _Lang('成员管理') + '-'+ groupName,
+		title: _Lang('成员管理') + ' ['+ groupName + "]",
 		url: 'manageGroupMember.html',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,

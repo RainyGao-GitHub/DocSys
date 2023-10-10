@@ -45,7 +45,7 @@ function showGroupAllUserList(groupId){
 function GroupMemberListDisplay(groupId,list)
 {
 	console.log("GroupMemberListDisplay", groupId);	
-	$Func.render($("#groupMemberContainer"),"groupMember",{"list":list,"groupId":groupId});
+	$Func.render($("#groupMemberContainer"),"groupMember" + langExt,{"list":list,"groupId":groupId});
 }
 
 function addGroupMember(userId,groupId)
