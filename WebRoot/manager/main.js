@@ -2766,13 +2766,13 @@ function installOffice(){
 	switch(gStatus)
 	{
 	case 1:
-		showErrorMessage("系统升级中，请稍后重试!");
+		showErrorMessage(_Lang("系统升级中，请稍后重试!"));
 		return;
 	case 2:
-		showErrorMessage("正在安装Office，请稍后重试!");			
+		showErrorMessage(_Lang("正在安装Office，请稍后重试!"));			
 		return;
 	case 3:
-		showErrorMessage("正在在线安装Office，请稍后重试!");			
+		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
 		return;
 	}
 	
@@ -2811,14 +2811,14 @@ function installOfficeConfirm(e)
 	    console.log("firstFile:"+fileName);
 	    if(fileName.indexOf("office") == -1)
 	    {
-	    	showErrorMessage("请选择正确的Office安装文件!");
+	    	showErrorMessage(_Lang("非法Office安装文件!"));
 	    	gStatus = 0;
 	    	return false;
 	    }
     }
     else
    	{
-   		showErrorMessage("请选择文件");
+   		showErrorMessage(_Lang("请选择文件"));
     	gStatus = 0;
    		return false;
    	}  
@@ -2826,10 +2826,10 @@ function installOfficeConfirm(e)
     
     qiao.bs.confirm({
     		id: "installOfficeConfirmDialog",
-	        title: "安装Office",
-	        msg: "是否安装Office？",
-	        okbtn: "是",
-	        qubtn: "否",
+	        title: _Lang("安装Office"),
+	        msg: _Lang("是否安装Office？"),
+	        okbtn: _Lang("是"),
+	        qubtn: _Lang("否"),
     	},function () {
     		OfficeInstall.start(files, firstFile);
 	    	return true;   //close dialog
@@ -2852,7 +2852,7 @@ var OfficeInstall = (function () {
 	{
 		var uploadDisplayInit = function(index, totalNum) {
 			console.log("uploadDisplayInit index:" + index + " totalNum:" + totalNum);
-			var str="<div><span class='upload-list-title'>[安装Office] 正在上传  " +index +" / " + totalNum +"</span><i class='el-icon-close uploadCloseBtn' onclick='stopInstallOffice()'></i></div>";
+			var str="<div><span class='upload-list-title'>[" + _Lang("安装Office") + "] " + _Lang("正在上传") + "  " +index +" / " + totalNum +"</span><i class='el-icon-close uploadCloseBtn' onclick='stopInstallOffice()'></i></div>";
 			str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
 			$(".el-upload-list").show();
 			$('.el-upload-list').html(str);
@@ -2862,11 +2862,11 @@ var OfficeInstall = (function () {
       	{
       		if(reuploadFlag == false)
       		{
-      			$(".upload-list-title").text("[安装Office] 正在上传   " + uploadStartedNum + " / " + totalNum);
+      			$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("正在上传") + " " + uploadStartedNum + " / " + totalNum);
       		}
       		else
       		{
-      			$(".upload-list-title").text("[安装Office] 正在重传   " + reuploadStartedNum + " / " + reuploadTotalNum);
+      			$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("正在重传") + " " + reuploadStartedNum + " / " + reuploadTotalNum);
       		}
       	}
       	
@@ -2874,7 +2874,7 @@ var OfficeInstall = (function () {
 			console.log("createUploadItem index:" + index + " fileName:" + fileName);
 			return "<li class='el-upload-list__item file" + index + " is-uploading' value=" + index + ">"+
 			"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+ fileName +"</span></a>"+
-			"<a class='reuploadBtn reupload" + index + "' onclick='OfficeInstall.reuploadFailDocs("+ index +")'  style='display:none'>重传</a>"+
+			"<a class='reuploadBtn reupload" + index + "' onclick='OfficeInstall.reuploadFailDocs("+ index +")'  style='display:none'>" + _Lang("重传") + "</a>"+
 			"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
 			"<i class='el-icon-close stopUpload'  value="+index+" onclick='OfficeInstall.stopUpload("+ index +")'></i>"+
 			"<div class='el-progress el-progress--line'>"+
@@ -2934,12 +2934,13 @@ var OfficeInstall = (function () {
   			$(".reupload" + index).show();
   		};
   		
-  		var uploadEndCallback = function(totalNum, successNum){  	  		
+  		var uploadEndCallback = function(totalNum, successNum)
+  		{  	  		
       		//显示上传完成 
-      		var uploadEndInfo = "[Office安装] 上传完成(共" + totalNum +"个)，开始安装...";
+      		var uploadEndInfo = "[" + _Lang("安装Office") + "] " + _Lang("上传完成") + "(" + _LangStats(totalNum) + ")," + _Lang("开始安装...");
       		if(successNum != totalNum)
       		{
-      			uploadEndInfo = "[Office安装] 上传失败 (共" + totalNum +"个)"+",成功 " + successNum + "个";
+      			uploadEndInfo = "[" + _Lang("安装Office") + "] " + _Lang("上传失败") + "(" + _LangStats(totalNum, successNum) + ")";
       			$(".reuploadAllBtn").show();
       		}
       		else
@@ -3031,7 +3032,7 @@ var OfficeInstall = (function () {
            	       if(task.status == 200)
             	   {
 	           			console.log("OfficeInstallPrepareSuccessHandler() Off编辑器安装完成");
-	           			$(".upload-list-title").text("[Office安装] Office编辑器安装完成");
+	           			$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("Office编辑器安装完成"));
 	           			gStatus = 0;
            	        	return;
             	   }
@@ -3040,12 +3041,12 @@ var OfficeInstall = (function () {
                else	//后台报错
                {
             	   	console.log("Office安装失败:" + ret.msgInfo);
-					$(".upload-list-title").text("[Office安装] 安装失败:" + ret.msgInfo);
+					$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("安装失败", ":", ret.msgInfo));
                }
             },
             error : function () {	//后台异常
         	   	console.log("Office安装失败:服务器异常");
-				$(".upload-list-title").text("[Office安装] 安装失败:服务器异常");
+				$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("安装失败", ":", "服务器异常"));
             }
     	});	
 	}
@@ -3078,17 +3079,17 @@ var OfficeInstall = (function () {
                if( "ok" == ret.status )
                {    
 	           		console.log("stopOfficeInstallPrepareTask() Office安装任务已取消");
-	           		$(".upload-list-title").text("[Office安装] Office安装任务已取消");
+	           		$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("Office安装任务已取消"));
                }
                else
                {
             	   	console.log("stopSystemUpgradePrepareTask() Office安装任务取消失败:" + ret.msgInfo);
-            	   	showErrorMessage("Office安装任务取消失败:" + ret.msgInfo);
+            	   	showErrorMessage(_Lang("Office安装任务取消失败", ":", ret.msgInfo));
                }
             },
             error : function () {	//后台异常
         	   	console.log("stopSystemUpgradePrepareTask() Office安装任务取消失败:服务器异常");
-        	   	showErrorMessage("Office安装任务取消失败:服务器异常");
+        	   	showErrorMessage(_Lang("Office安装任务取消失败", ":", "服务器异常"));
             }
     	});	
 	}
@@ -3132,21 +3133,21 @@ function startInstalOffice(file)
 				//showErrorMessage("Office编辑器安装成功");
 				var task = ret.data;
 				OfficeInstall.startOfficeInstallPrepareTask(task.id, 2000); //2秒后查询
-				$(".upload-list-title").text("[Office安装] 安装准备中...");
+				$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("安装准备中..."));
 			 }
 			 else	//上传失败
 			 {
 				//上传失败
 				console.log("Office编辑器安装失败：" + ret.msgInfo);
 				//showErrorMessage("Office编辑器安装失败:" + ret.msgInfo);
-		    	$(".upload-list-title").text("[Office安装] 安装失败:" + ret.msgInfo);
+		    	$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("安装失败", ":", ret.msgInfo));
 				gStatus = 0;
 				return;
              }
         },
         error : function () {
 			//showErrorMessage("Office编辑器安装失败: 服务器异常");
-	    	$(".upload-list-title").text("[Office安装] 安装失败: 服务器异常");
+	    	$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("安装失败", ":", "服务器异常"));
 			gStatus = 0;
         }
     });
@@ -3161,9 +3162,10 @@ function stopInstallOffice(){
 	
 	qiao.bs.confirm({
         id: 'bsconfirm',
-        msg: '是否取消Office安装！',
-        okbtn: "取消安装",
-        qubtn: "继续",
+        msg: _Lang('是否取消Office安装！'),
+        title: _Lang("确认"),
+        okbtn: _Lang("取消安装"),
+        qubtn: _Lang("继续"),
     },function(){
     	OfficeInstall.stop();
     },function(){
@@ -3178,23 +3180,23 @@ function onlineInstallOfficeConfirm()
 	switch(gStatus)
 	{
 	case 1:
-		showErrorMessage("系统升级中，请稍后重试!");
+		showErrorMessage(_Lang("系统升级中，请稍后重试!"));
 		return;
 	case 2:
-		showErrorMessage("正在安装Office，请稍后重试!");			
+		showErrorMessage(_Lang("正在安装Office，请稍后重试!"));			
 		return;
 	case 3:
-		showErrorMessage("正在在线安装Office，请稍后重试!");			
+		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
 		return;
 	}
 	
 	gStatus = 3;
     qiao.bs.confirm({
     		id: "onlineInstallOfficeConfirmDialog",
-	        title: "安装Office",
-	        msg: "是否安装Office？",
-	        okbtn: "确认",
-	        qubtn: "取消",
+	        title: _Lang("安装Office"),
+	        msg: _Lang("是否安装Office？"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
     	},function () {
 			startOnlineInstallOffice();
 	    	return true;   //close dialog
@@ -3219,18 +3221,18 @@ function startOnlineInstallOffice()
         	console.log("startOnlineInstallOffice ret",ret);
             if( "ok" == ret.status )
             {
-            	showErrorMessage("安装成功");
+            	showErrorMessage(_Lang("安装成功"));
             	gStatus = 0;
             }
             else 
             {
                 console.log(ret.msgInfo);
-	        	showErrorMessage("安装失败:" + ret.msgInfo);	               
+	        	showErrorMessage(_Lang("安装失败", ":", ret.msgInfo));	               
 	        	gStatus = 0;
             }
         },
         error : function () {
-        	showErrorMessage("安装失败:服务器异常");
+        	showErrorMessage(_Lang("安装失败", ":", "服务器异常"));
         	gStatus = 0;
         }
     });
@@ -3275,13 +3277,13 @@ function showSystemLogList(pageIndex){
                         /*分页条显示可见页码数量*/
                         count:5,
                         /*第一页显示文字*/
-                        homePageText:'首页',
+                        homePageText: _Lang('首页'),
                         /*最后一页显示文字*/
-                        endPageText:'尾页',
+                        endPageText: _Lang('尾页'),
                         /*上一页显示文字*/
-                        prevPageText:'上一页',
+                        prevPageText: _Lang('上一页'),
                         /* 下一页显示文字*/
-                        nextPageText:'下一页',
+                        nextPageText: _Lang('下一页'),
                         /*点击翻页绑定事件*/
                         callback: function(newPageIndex) {
                             // 分页插件的页码从1开始，减1处理
@@ -3293,11 +3295,11 @@ function showSystemLogList(pageIndex){
             else 
             {
                 console.log(ret.msgInfo);
-	        	showErrorMessage("查询失败:" + ret.msgInfo);	                
+	        	showErrorMessage(_Lang("查询失败", ":", ret.msgInfo));	                
             }
         },
         error : function () {
-        	showErrorMessage("查询失败:服务器异常");
+        	showErrorMessage(_Lang("查询失败", ":", "服务器异常"));
         }
     });
 }
@@ -3324,94 +3326,94 @@ function formatSystemLogContent(node)
 	switch(node.event)
 	{
 	case "addRepos":
-		node.formatedContent = "[新建仓库 " + node.event + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("新建仓库") + " " + node.event + "] [" + node.reposName + "]";
 		break;
 	case "deleteRepos":
-		node.formatedContent = "[删除仓库 " + node.event + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("删除仓库") + " " + node.event + "] [" + node.reposName + "]";
 		break;
 	case "updateReposInfo":
-		node.formatedContent = "[修改仓库 " + node.event + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("修改仓库") + " " + node.event + "] [" + node.reposName + "]";
 		break;
 	case "configReposAuth":
-		node.formatedContent = "[设置仓库权限 " + node.event + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("设置仓库权限") + " " + node.event + "] [" + node.reposName + "]";
 		break;
 	case "deleteReposAuth":
-		node.formatedContent = "[删除仓库权限 " + node.event + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("删除仓库权限") + " " + node.event + "] [" + node.reposName + "]";
 		break;
 	case "pushDoc":
-		node.formatedContent = "[文件推送 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("文件推送") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "saveDocEx":
-		node.formatedContent = "[上传文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("上传文件") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "addDoc":
-		node.formatedContent = "[新增文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("新增文件") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "deleteDoc":
-		node.formatedContent = "[删除文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("删除文件") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "uploadDoc":
-		node.formatedContent = "[上传文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("上传文件") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "downloadDocPrepare":
-		node.formatedContent = "[下载文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("下载文件") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "downloadDoc":
-		node.formatedContent = "[下载文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("下载文件") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "copyDoc":
-		node.formatedContent = "[复制文件 " + node.event + "] [" + node.path + node.name + "] 到 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("复制文件") + " " + node.event + "] [" + node.path + node.name + "] 到 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
 		break;
 	case "moveDoc":
-		node.formatedContent = "[移动文件 " + node.event + "] [" + node.path + node.name + "] 到 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("移动文件") + " " + node.event + "] [" + node.path + node.name + "] 到 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
 		break;
 	case "renameDoc":
-		node.formatedContent = "[重命名文件 " + node.event + "] [" + node.path + node.name + "] 为 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("重命名文件") + " " + node.event + "] [" + node.path + node.name + "] 为 [" + node.newPath + node.newName + "] [" + node.reposName + "]";
 		break;
 	case "updateDocContent":
-		node.formatedContent = "[更新文件内容 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("更新文件内容") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "uploadMarkdownPic":
-		node.formatedContent = "[上传备注图片 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("上传备注图片") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;	
 	case "lockDoc":
-		node.formatedContent = "[锁定文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("锁定文件") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "unlockDoc":
-		node.formatedContent = "[解锁文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("解锁文件") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "setDocPwd":
-		node.formatedContent = "[设置文件访问密码 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("设置文件访问密码") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "downloadHistoryDocPrepare":
-		node.formatedContent = "[下载历史文件 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("下载历史文件") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "revertDocHistory":
-		node.formatedContent = "[恢复文件历史版本 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("恢复文件历史版本") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "addDocShare":
-		node.formatedContent = "[新建文件分享 " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("新建文件分享") + " " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "updateDocShare":
-		node.formatedContent = "[修改文件分享 " + node.event + "] ";
+		node.formatedContent = "[" + _Lang("修改文件分享") + " " + node.event + "] ";
 		break;
 	case "deleteDocShare":
-		node.formatedContent = "[删除文件分享 " + node.event + "]";
+		node.formatedContent = "[" + _Lang("删除文件分享") + " " + node.event + "]";
 		break;
 	case "configDocAuth":
-		node.formatedContent = "[设置文件权限  " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("设置文件权限") + "  " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "deleteDocAuth":
-		node.formatedContent = "[删除文件权限  " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
+		node.formatedContent = "[" + _Lang("删除文件权限") + "  " + node.event + "] [" + node.path + node.name + "] [" + node.reposName + "]";
 		break;
 	case "login":
-		node.formatedContent = "[登录系统 " + node.event + "]";
+		node.formatedContent = "[" + _Lang("登录系统") + " " + node.event + "]";
 		break;
 	case "logout":
-		node.formatedContent = "[退出登录 " + node.event + "]";
+		node.formatedContent = "[" + _Lang("退出登录") + " " + node.event + "]";
 		break;
 	case "register":
-		node.formatedContent = "[用户注册 " + node.event + "]";
+		node.formatedContent = "[" + _Lang("用户注册") + " " + node.event + "]";
 		break;
 	default:
 		node.formatedContent = "[" + node.action + " " + node.event + "] ";
@@ -3436,10 +3438,10 @@ function delSystemLogConfirm(id, time, pageIndex, index)
 	console.log("delSystemLogConfirm pageIndex:" + pageIndex);
 	qiao.bs.confirm({
 		id: "delSystemLogConfirm",
-        title: "删除日志",
-        msg: "是否删除日志？",
-        okbtn: "删除",
-        qubtn: "取消",
+        title: _Lang("删除系统日志"),
+        msg: _Lang("是否删除系统日志？"),
+        okbtn: _Lang("删除"),
+        qubtn: _Lang("取消"),
     },function () {
     	deleteSystemLog(id, time, pageIndex, index);
     	return true;   
@@ -3463,13 +3465,13 @@ function deleteSystemLog(id, time, pageIndex, index){
             	//	pageIndex -= 1;
             	//}
             	showSystemLogList(pageIndex);	//刷新list
-                showErrorMessage("删除成功");
+                showErrorMessage(_Lang("删除成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("删除失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:删除失败");
+        	showErrorMessage(_Lang("删除失败", ":", "服务器异常"));
         }
     });
 }
@@ -3512,13 +3514,13 @@ function showOrderList(pageIndex){
                         /*分页条显示可见页码数量*/
                         count:5,
                         /*第一页显示文字*/
-                        homePageText:'首页',
+                        homePageText: _Lang('首页'),
                         /*最后一页显示文字*/
-                        endPageText:'尾页',
+                        endPageText: _Lang('尾页'),
                         /*上一页显示文字*/
-                        prevPageText:'上一页',
+                        prevPageText: _Lang('上一页'),
                         /* 下一页显示文字*/
-                        nextPageText:'下一页',
+                        nextPageText: _Lang('下一页'),
                         /*点击翻页绑定事件*/
                         callback: function(newPageIndex) {
                             // 分页插件的页码从1开始，减1处理
@@ -3533,7 +3535,7 @@ function showOrderList(pageIndex){
             }
         },
         error : function () {
-        	showErrorMessage("获取订单列表失败:服务器异常");
+        	showErrorMessage(_Lang("获取订单列表失败", ":", "服务器异常"));
         }
     });
 }
@@ -3589,9 +3591,9 @@ function formatePayType(node)
 	switch(node.payType)
 	{
 	case "Pay":
-		return "付款";
+		return _Lang("付款");
 	case "Refund":
-		return "退款";
+		return _Lang("退款");
 	}
 	return node.payType;
 }
@@ -3601,14 +3603,14 @@ function formateOrderSatus(node)
 	switch(node.orderStatus)
 	{
 	case "Processing":
-			return "未完成";
+			return _Lang("未完成");
 	case "Paid":
 	case "Success":
-			return "成功";
+			return _Lang("成功");
 	case "Failed":
-			return "失败";
+			return _Lang("失败");
 	case "Refunded":
-			return "已全额退款";		
+			return _Lang("已全额退款");		
 	}
 	return node.orderStatus;
 }
@@ -3618,10 +3620,10 @@ function refundOrderConfirm(orderNo, pageIndex, index)
 	console.log("refundLicenseConfirm pageIndex:" + pageIndex);
 	qiao.bs.confirm({
 		id: "refundLicenseConfirm",
-        title: "退款",
-        msg: "是否退款？",
-        okbtn: "退款",
-        qubtn: "取消",
+        title: _Lang("退款"),
+        msg: _Lang("是否退款？"),
+        okbtn: _Lang("退款"),
+        qubtn: _Lang("取消"),
     },function () {
     	refundOrder(orderNo, pageIndex, index);
     	return true;   
@@ -3638,14 +3640,14 @@ function refundOrder(orderNo, pageIndex, index){
         success : function (ret) {
             if( "ok" == ret.status ){
                	showOrderList(pageIndex);
-                showErrorMessage("退款成功");
+                showErrorMessage(_Lang("退款成功"));
             }else {
                	showOrderList(pageIndex);
-            	showErrorMessage("退款失败：" + ret.msgInfo);
+            	showErrorMessage(_Lang("退款失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("退款失败：服务器异常");
+        	showErrorMessage(_Lang("退款失败", ":", "服务器异常"));
         }
     });
 }
@@ -3690,13 +3692,13 @@ function showLicenseList(pageIndex){
                         /*分页条显示可见页码数量*/
                         count:5,
                         /*第一页显示文字*/
-                        homePageText:'首页',
+                        homePageText: _Lang('首页'),
                         /*最后一页显示文字*/
-                        endPageText:'尾页',
+                        endPageText: _Lang('尾页'),
                         /*上一页显示文字*/
-                        prevPageText:'上一页',
+                        prevPageText: _Lang('上一页'),
                         /* 下一页显示文字*/
-                        nextPageText:'下一页',
+                        nextPageText: _Lang('下一页'),
                         /*点击翻页绑定事件*/
                         callback: function(newPageIndex) {
                             // 分页插件的页码从1开始，减1处理
@@ -3711,7 +3713,7 @@ function showLicenseList(pageIndex){
             }
         },
         error : function () {
-        	showErrorMessage("获取证书列表失败:服务器异常");
+        	showErrorMessage(_Lang("获取证书列表失败", ":", "服务器异常"));
         }
     });
 }
@@ -3957,10 +3959,10 @@ function exportUserConfirm()
 	console.log("exportUserConfirm userSearchWord:" + userSearchWord);
 	qiao.bs.confirm({
 		id: "exportUserConfirmDialog",
-        title: "导出用户",
-        msg: "是否导出用户？",
-        okbtn: "导出",
-        qubtn: "取消",
+        title: _Lang("导出用户"),
+        msg: _Lang("是否导出用户？"),
+        okbtn: _Lang("导出"),
+        qubtn: _Lang("取消"),
     },function () {
     	exportUserList(userSearchWord);
     	return true;   
@@ -3988,11 +3990,11 @@ function exportUserList(userSearchWord){
             else 
             {
                 console.log(ret.msgInfo);
-	        	showErrorMessage("导出用户列表失败：" + ret.msgInfo);
+	        	showErrorMessage(_Lang("导出用户列表失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("导出用户列表失败：服务器异常");
+        	showErrorMessage(_Lang("导出用户列表失败", ":", "服务器异常"));
         }
     });
 }
@@ -4003,10 +4005,10 @@ function delUserConfirm(userId, pageIndex, index)
 	console.log("delUserConfirm userId:" + userId + " pageIndex:" + pageIndex);
 	qiao.bs.confirm({
 		id: "delUserConfirmDialog",
-        title: "删除用户",
-        msg: "是否删除用户？",
-        okbtn: "删除",
-        qubtn: "取消",
+        title: _Lang("删除用户"),
+        msg: _Lang("是否删除用户？"),
+        okbtn: _Lang("删除"),
+        qubtn: _Lang("取消"),
     },function () {
     	delUser(userId, pageIndex, index);
     	return true;   
@@ -4025,13 +4027,13 @@ function delUser(userId, pageIndex, index){
         success : function (ret) {
             if( "ok" == ret.status ){
             	showUserList(pageIndex);	//刷新UserList
-                showErrorMessage("删除成功");
+                showErrorMessage(_Lang("删除成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("删除失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:删除失败");
+        	showErrorMessage(_Lang("删除失败", ":", "服务器异常"));
         }
     });
 }
@@ -4042,8 +4044,8 @@ function showAddUserPanel(){
 	qiao.bs.dialog({
 		id: 'addUser',
 		url: 'addUser' + langExt + '.html',
-		title: '新增用户',
-		msg: '页面正在加载，请稍等...',
+		title: _Lang('新增用户'),
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: false
 	});
@@ -4055,8 +4057,8 @@ function showAddOfficeLicensePanel(){
 	qiao.bs.dialog({
 		id: 'addOfficeLicense',
 		url: 'addOfficeLicense' + langExt + '.html',
-		title: '新增Office证书',
-		msg: '页面正在加载，请稍等...',
+		title: _Lang('新增Office证书'),
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: false
 	});
@@ -4275,8 +4277,8 @@ function showEditUserPanel(e, userId, pageIndex, index)
 	
 	qiao.bs.dialog({
 		url: 'editUser' + langExt + '.html',
-		title: '编辑用户',
-		msg: '页面正在加载，请稍等...',
+		title: _Lang('编辑用户'),
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: false,
 		callback: function(){
@@ -4320,8 +4322,8 @@ function showResetPwdPanel(e, userId, pageIndex, index)
 	
 	qiao.bs.dialog({
 		url: 'resetPwd' + langExt + '.html',
-		title: '重置密码',
-		msg: '页面正在加载，请稍等...',
+		title: _Lang('重置密码'),
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: false,
 		callback: function(){
@@ -4354,7 +4356,7 @@ function showSystemLicenses(){
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取证书列表失败");
+        	showErrorMessage(_Lang("获取证书列表失败", ":", "服务器异常"));
         }
     });
 }
@@ -4418,7 +4420,7 @@ function showReposList(){
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取仓库列表失败");
+        	showErrorMessage(_Lang("获取仓库列表失败", ":", "服务器异常"));
         }
     });
 }
@@ -4440,9 +4442,9 @@ function formateReposType(type)
 	{
 	case 1:
 	case 2:
-		return "文件管理系统";
+		return _Lang("文件管理系统");
 	default:
-		return "文件服务器前置";
+		return _Lang("文件服务器前置");
 	}
 	return type;
 }
@@ -4453,8 +4455,8 @@ function showAddReposPanel(){
 	qiao.bs.dialog({
 		id: 'addRepos',
 		url: 'addRepos' + langExt + '.html',
-		title: '新增仓库',
-		msg: '页面正在加载，请稍等...',
+		title: _Lang('新增仓库'),
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: false,
 		callback: function(){
@@ -4481,10 +4483,10 @@ function clearAllReposCacheConfirm()
 	console.log("clearAllReposCacheConfirm");
 	qiao.bs.confirm({
 		id: "clearAllReposCacheConfirmDialog",
-        title: "清除缓存",
-        msg: "是否清除所有仓库缓存？",
-        okbtn: "确定",
-        qubtn: "取消",
+        title: _Lang("清除缓存"),
+        msg: _Lang("是否清除所有仓库缓存？"),
+        okbtn: _Lang("确定"),
+        qubtn: _Lang("取消"),
     },function () {
     	clearAllReposCache();
     	return true;   
@@ -4503,18 +4505,18 @@ function clearAllReposCache()
             if( "ok" == ret.status ){
             	// 普通消息提示条
 				bootstrapQ.msg({
-						msg : '清除成功！',
+						msg : _Lang('清除成功！'),
 						type : 'success',
 						time : 2000,
 					    });
             }
             else
             {
-            	showErrorMessage("清除失败:" + ret.msgInfo);
+            	showErrorMessage(_Lang("清除失败", ":" ,ret.msgInfo));
             }
         },
         error : function () {
-           	showErrorMessage('清除失败:服务器异常！');
+           	showErrorMessage(_Lang("清除失败", ":", "服务器异常"));
         }
 	});
 }
@@ -4524,10 +4526,10 @@ function delReposConfirm(id)
 	console.log("delReposConfirm");
 	qiao.bs.confirm({
 		id: "delReposConfirmDialog",
-        title: "删除仓库",
-        msg: "是否删除仓库，仓库数据将无法恢复？",
-        okbtn: "删除",
-        qubtn: "取消",
+        title: _Lang("删除仓库"),
+        msg: _Lang("是否删除仓库，仓库数据将无法恢复？"),
+        okbtn: _Lang("删除"),
+        qubtn: _Lang("取消"),
     },function () {
     	delRepos(id);
     	return true;   
@@ -4545,13 +4547,13 @@ function delRepos(reposId){
         success : function (ret) {
             if( "ok" == ret.status ){
                	showReposList();	//刷新ReposList
-                showErrorMessage("删除成功");
+                showErrorMessage(_Lang("删除成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("删除失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:删除失败");
+        	showErrorMessage(_Lang("删除失败", ":", "服务器异常"));
         }
     });
 }
@@ -4561,10 +4563,10 @@ function convertReposHistoryConfirm(id)
 	console.log("convertReposHistoryConfirm");
 	qiao.bs.confirm({
 		id: "convertReposHistoryConfirmDialog",
-        title: "转换仓库历史",
-        msg: "是否将仓库历史转换成最新格式？",
-        okbtn: "确定",
-        qubtn: "取消",
+        title: _Lang("转换仓库历史"),
+        msg: _Lang("是否将仓库历史转换成最新格式？"),
+        okbtn: _Lang("确定"),
+        qubtn: _Lang("取消"),
     },function () {
     	convertReposHistory(id);
     	return true;   
@@ -4581,13 +4583,13 @@ function convertReposHistory(reposId){
         },
         success : function (ret) {
             if( "ok" == ret.status ){
-                showErrorMessage("仓库历史转换成功");
+                showErrorMessage(_Lang("仓库历史转换成功"));
             }else {
-            	showErrorMessage("仓库历史转换失败：" + ret.msgInfo);
+            	showErrorMessage(_Lang("仓库历史转换失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("仓库历史转换失败:服务器异常");
+        	showErrorMessage(_Lang("仓库历史转换失败", ":", "服务器异常"));
         }
     });
 }
@@ -4607,10 +4609,10 @@ function disableReposConfirm(reposId)
 	console.log("disableReposConfirm() " + reposId);
     qiao.bs.confirm({
     		id: "disableReposConfirmDialog",
-	        title: "禁用仓库",
-	        msg: "是否禁用仓库？",
-	        okbtn: "禁用",
-	        qubtn: "取消",
+	        title: _Lang("禁用仓库"),
+	        msg: _Lang("是否禁用仓库？"),
+	        okbtn: _Lang("禁用"),
+	        qubtn: _Lang("取消"),
     	},function () {
 			doDisableRepos(reposId);
 	    	return true;   //close dialog
@@ -4626,10 +4628,10 @@ function enableReposConfirm(reposId)
 	console.log("enableReposConfirm() " + reposId);
     qiao.bs.confirm({
     		id: "enableReposConfirmDialog",
-	        title: "启用仓库",
-	        msg: "是否启用仓库？",
-	        okbtn: "启用",
-	        qubtn: "取消",
+	        title: _Lang("启用仓库"),
+	        msg: _Lang("是否启用仓库？"),
+	        okbtn: _Lang("启用"),
+	        qubtn: _Lang("取消"),
     	},function () {
 			doEnableRepos(reposId);
 	    	return true;   //close dialog
@@ -4658,11 +4660,11 @@ function doDisableRepos(reposId){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("禁用仓库失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("禁用仓库失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("禁用仓库失败::服务器异常");
+        	showErrorMessage(_Lang("禁用仓库失败", ":", "服务器异常"));
         }
     });
 }
@@ -4685,11 +4687,11 @@ function doEnableRepos(reposId){
             else 
             {
                 console.log(ret.msgInfo);
-                showErrorMessage("启用仓库失败:" + ret.msgInfo);
+                showErrorMessage(_Lang("启用仓库失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("启用仓库失败::服务器异常");
+        	showErrorMessage(_Lang("启用仓库失败", ":", "服务器异常"));
         }
     });
 }
@@ -4701,10 +4703,10 @@ function showBackupReposConfirmPanel(e, reposId, type, index)
 	var repos = gReposList[index];
 	qiao.bs.confirm({
 		id: "backupReposConfirmDialog",
-        title: "备份仓库 [" +repos.name+ "]",
-        msg: "备份仓库可能需要占用服务器较大的磁盘空间，是否备份仓库？",
-        okbtn: "备份",
-        qubtn: "取消",
+        title: _Lang("备份仓库") + " [" +repos.name+ "]",
+        msg: _Lang("备份仓库可能需要占用服务器较大的磁盘空间，是否备份仓库？"),
+        okbtn: _Lang("备份"),
+        qubtn: _Lang("取消"),
     },function () {
     	backupRepos(reposId, repos);
     	return true;   
@@ -4729,7 +4731,7 @@ function backupRepos(reposId, repos){
            	        SubContext.reposId = reposId;
            	        SubContext.repos = repos;
            	        
-        	        showErrorMessage("仓库备份中，可能需要花费较长时间，您可先关闭当前窗口！");
+        	        showErrorMessage(_Lang("仓库备份中，可能需要花费较长时间，您可先关闭当前窗口！"));
 					startReposFullBackupQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
         	        return;
         	    }
@@ -4737,11 +4739,11 @@ function backupRepos(reposId, repos){
         	    reposFullBackupSuccessHandler(SubContext, ret);
         	   	return;
             }else {
-            	showErrorMessage("备份仓库失败:" + ret.msgInfo);
+            	showErrorMessage(_Lang("备份仓库失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("备份仓库失败:服务器异常");
+        	showErrorMessage(_Lang("备份仓库失败", ":", "服务器异常"));
         }
     });
 }
@@ -4765,10 +4767,10 @@ function reposFullBackupSuccessHandler(SubContext, ret)
 	   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag + "&encryptEn=0";
 		qiao.bs.confirm({
 			id: "downloadReposFullBackupConfirmDialog",
-	        title: "仓库备份成功[" + repos.name + "]",
-	        msg: "仓库备份成功，是否下载仓库备份文件？",
-	        okbtn: "下载",
-	        qubtn: "取消",
+	        title: _Lang("仓库备份成功") +  "[" + repos.name + "]",
+	        msg: _Lang("仓库备份成功，是否下载仓库备份文件？"),
+	        okbtn: _Lang("下载"),
+	        qubtn: _Lang("取消"),
 	    },function () {
 	    	window.location.href = url;
 	    	return true;   
@@ -4817,11 +4819,11 @@ function doQueryReposFullBackupTask(SubContext, reposFullBackupTaskId, nextDelay
                }
                else	//后台报错
            {
-        	   showErrorMessage("备份仓库失败:" + ret.msgInfo);
+        	   showErrorMessage(_Lang("备份仓库失败", ":", ret.msgInfo));
            }
         },
         error : function () {	//后台异常
-        	showErrorMessage("备份仓库失败:服务器异常");
+        	showErrorMessage(_Lang("备份仓库失败", ":", "服务器异常"));
         }
 	});	
 }
@@ -4869,9 +4871,9 @@ function showManageReposMemberPanel(e,reposId){
 	var ReposName = trObj.children("td:eq(1)").text();
 	
 	qiao.bs.dialog({
-		title: '成员管理 -'+ ReposName,
+		title: _Lang('成员管理') + '-'+ ReposName,
 		url: 'manageReposMember' + langExt + '.html',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		callback: function(){
@@ -4903,7 +4905,7 @@ function showGroupList(){
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:获取用户组列表失败");
+        	showErrorMessage(_Lang("获取用户组列表失败", ":", "服务器异常"));
         }
     });
 }
@@ -4921,8 +4923,8 @@ function showAddGroupPanel(){
 	qiao.bs.dialog({
 		id: 'addGroup',
 		url: 'addGroup' + langExt + '.html',
-		title: '新增用户组',
-		msg: '页面正在加载，请稍等...',
+		title: _Lang('新增用户组'),
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: false
 	}, null);
@@ -4933,10 +4935,10 @@ function delGroupConfirm(id)
 	console.log("delGroupConfirm");
 	qiao.bs.confirm({
 		id: "delGroupConfirmDialog",
-        title: "删除用户组",
-        msg: "是否删除用户组？",
-        okbtn: "删除",
-        qubtn: "取消",
+        title: _Lang("删除用户组"),
+        msg: _Lang("是否删除用户组？"),
+        okbtn: _Lang("删除"),
+        qubtn: _Lang("取消"),
     },function () {
     	delGroup(id);
     	return true;   
@@ -4954,13 +4956,13 @@ function delGroup(id){
         success : function (ret) {
             if( "ok" == ret.status ){
                	showGroupList();	//刷新GroupList
-                showErrorMessage("删除成功");
+                showErrorMessage(_Lang("删除成功"));
             }else {
-            	showErrorMessage("错误：" + ret.msgInfo);
+            	showErrorMessage(_Lang("删除失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage("服务器异常:删除失败");
+        	showErrorMessage(_Lang("删除失败", ":", "服务器异常"));
         }
     });
 }
@@ -4976,8 +4978,8 @@ function showEditGroupPanel(e, id)
 	
 	qiao.bs.dialog({
 		url: 'editGroup' + langExt + '.html',
-		title: '编辑用户组',
-		msg: '页面正在加载，请稍等...',
+		title: _Lang('编辑用户组'),
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: false,
 		callback: function(){
@@ -5002,9 +5004,9 @@ function showManageGroupMemberPanel(e,groupId){
 	var groupName = trObj.children("td:eq(1)").text();
 	
 	qiao.bs.dialog({
-		title: '成员管理 -'+ groupName,
+		title: _Lang('成员管理') + '-'+ groupName,
 		url: 'manageGroupMember' + langExt + '.html',
-		msg: '页面正在加载，请稍等...',
+		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		callback: function(){
@@ -5040,11 +5042,11 @@ function exit(){
             	console.log("已退出登录");
             	window.location.href = "login" + langExt + ".html";
             }else {
-                showErrorMessage("错误："+ret.msgInfo);
+                showErrorMessage(_Lang("退出登录失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-            showErrorMessage("服务器异常:退出登录失败");
+            showErrorMessage(_Lang("退出登录失败", ":", "服务器异常"));
         }
     });
 }
