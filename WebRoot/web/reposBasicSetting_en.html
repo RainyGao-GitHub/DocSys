@@ -92,7 +92,7 @@
 			</div>
 			
 			<div id="virtualDocVerCtrlConfigDiv" style="margin-left:20px; display:none">
-				<label>History of Note<span id="verCtrl1-isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="verCtrl1-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl1()">Customize</span></label>
+				<label>Note's History<span id="verCtrl1-isRemoteSetting" style="margin-left:20px"><input type="checkbox" id="verCtrl1-isRemote" value="0" onclick="ReposConfig.doSelectVerCtrl1()">Customize</span></label>
 	            <select class="form-control" id="repos-verCtrl1" onchange="ReposConfig.doSelectVerCtrl1()" style="width: 100%">   
 	            	<option value="0">None</option>   
 	            	<option value="1">SVN</option>   
@@ -383,7 +383,7 @@
 					        <option value="1320">22:00</option>
 					        <option value="1380">23:00</option>
 					    </select>
-						<label style="margin-top:5px">RepeatAt</label>
+						<label style="margin-top:5px">Repeat At</label>
 						<div>
 							<span><input type="checkbox" id="remoteBackupWeekDay1" value="0">Monday</span>
 							<span style="margin-left:20px"><input type="checkbox" id="remoteBackupWeekDay2" value="0">Tuesday</span>
@@ -438,6 +438,11 @@
 		            </div>      
 	            </div>
 	    	</div>
+	    	
+	    	<div id="recycleBinEnablelDiv" style="margin-top:10px">
+	            <label>RecycleBin<span style="margin-left:5px"><input type="checkbox" id="isRecycleBinEnabled" value="0" onclick="ReposConfig.doSetRecycleBinConfirm()"></span></label>
+			</div>
+			
 		</div>	
         <a href='javascript:void(0)' onclick="ReposConfig.saveReposBasicSetting();" class='mybtn-primary'>Save</a>
 </div>
