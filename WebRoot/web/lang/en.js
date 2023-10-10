@@ -56,11 +56,18 @@ function lang(str)
 		"新增用户组" : "Add Group",
 		"编辑用户组" : "Edit Group",
 		"删除用户组" : "Delete Group",
-		"导出" : "Export",
+		"新增仓库" : "Add Repository",
+		"编辑仓库" : "Edit Repository",
+		"删除仓库" : "Delete Repository",
 		"删除成功" : "Delete Success",
 		"删除失败" : "Delete Failed",
 		"更新成功" : "Update Success",
 		"更新失败" : "Update Failed",
+		"导出" : "Export",
+		"导入" : "Import",
+		"备份" : "Backup",
+		"成功" : "Success",
+		"失败" : "Failed",
 		
 		//注册
 		"注册失败"	: "Sign Up Failed",			
@@ -159,7 +166,7 @@ function lang(str)
 		"密钥备份成功" : "Encrypt-Key backup Success",
 		"密钥备份失败" : "Failed to backup Encrypt-Key",
 		"删除仓库" : "Delete Repository",
-		"仓库删除后数据将无法恢复，是否删除" : "All data will be deleted, Please confirm you have backuped data",
+		"仓库删除后数据将无法恢复，是否删除" : "All data will be deleted, Please confirm you have backuped the data",
 		"删除成功" : "Delete Ok",
 		"删除失败" : "Failed to delete",
 		"仓库设置" : "Repository Config",
@@ -585,6 +592,8 @@ function lang(str)
 		"是否删除用户组？" : "Do you want to delete this group ?",
 		"成员管理" : "Member Management",
 		
+		//Repository
+		"是否删除仓库，仓库数据将无法恢复？" : "All data will be deleted, Please confirm you have backuped the data ?",
 		
 		//Log
 		"日志下载失败" : "DebugLog Download Failed",
@@ -734,13 +743,12 @@ function lang(str)
 		"仓库历史转换失败" : "History Format Convert Failed",
 		"禁用仓库" : "Disable Repository",
 		"是否禁用仓库？" : "Do you want to enable Repository ?",
-		"启用仓库" : "Disable Repository",
+		"启用仓库" : "Enable Repository",
 		"是否启用仓库？" : "Do you want to enable Repository ?",	
 		"禁用仓库失败" : "Disable Repository Failed",
 		"启用仓库失败" : "Enable Repository Failed",
 		"备份仓库" : "Backup Repository",
-		"备份仓库可能需要占用服务器较大的磁盘空间，是否备份仓库？" : "Repoistory Backup may need a lot of disk storage space, Do you want to continue ?",
-		"备份" : "Backup",
+		"备份仓库可能需要占用服务器较大的磁盘空间，是否备份仓库？" : "Repoistory Backup may need huge storage space, Do you want to continue ?",
 		"仓库备份中，可能需要花费较长时间，您可先关闭当前窗口！" : "Repository Backup...",
 		"备份仓库失败" : "Repository Backup Failed",
 		"仓库备份成功" : "Repository Backup Success",
