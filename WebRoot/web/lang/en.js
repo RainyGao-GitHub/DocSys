@@ -702,10 +702,13 @@ function lang(str)
 		
 		//User
 		"新增用户" : "Add User",
+		"编辑用户" : "Edit User",
+		"删除用户" : "Delete User",
+		"重置密码" : "Reset Password",
 		"导出用户" : "Export Users",
 		"是否导出用户？" : "Do you want to export users ?",
 		"导出用户列表失败" : "Failed to export users",
-		"删除用户" : "Delete User",
+		"导出" : "Export",
 		"是否删除用户？" : "Do you want to delete user ?",
 		"删除成功" : "Delete Success",
 		"删除失败" : "Delete Failed",
