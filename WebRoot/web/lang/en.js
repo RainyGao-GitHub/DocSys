@@ -755,9 +755,9 @@ function lang(str)
 		"仓库备份成功，是否下载仓库备份文件？" : "Repository Backup Success, Do you want to download the backup ?",
 		
 		//分页显示
-		"首页" : "FirstPage",
-		"尾页" : "LastPage",
-		"上一页" : "Previous",
+		"首页" : "Top",
+		"尾页" : "End",
+		"上一页" : "Prev",
 		"下一页" : "Next",		
  	};
 	
