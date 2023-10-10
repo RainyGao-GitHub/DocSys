@@ -733,7 +733,7 @@ function showSystemMigrateConfirmPanel(){
 	}
 	
 	qiao.bs.dialog({
-		url: 'systemMigrateConfirm.html',
+		url: 'systemMigrateConfirm' + langExt + '.html',
 		title: '系统迁移',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4040,7 +4040,7 @@ function showAddUserPanel(){
 	console.log("showAddUserPanel");
 	qiao.bs.dialog({
 		id: 'addUser',
-		url: 'addUser.html',
+		url: 'addUser' + langExt + '.html',
 		title: '新增用户',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4053,7 +4053,7 @@ function showAddOfficeLicensePanel(){
 	console.log("showAddOfficeLicensePanel");
 	qiao.bs.dialog({
 		id: 'addOfficeLicense',
-		url: 'addOfficeLicense.html',
+		url: 'addOfficeLicense' + langExt + '.html',
 		title: '新增Office证书',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4175,7 +4175,7 @@ function showAddLicensePanel(){
 	console.log("showAddLicensePanel");
 	qiao.bs.dialog({
 		id: 'addLicense',
-		url: 'addLicense.html',
+		url: 'addLicense' + langExt + '.html',
 		title: '新增证书',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4188,7 +4188,7 @@ function showSystemLicenseInfoPanel(){
 	console.log("showSystemLicenseInfoPanel");
 	qiao.bs.dialog({
 		id: 'systemLicenseInfo',
-		url: 'systemLicenseInfo.html',
+		url: 'systemLicenseInfo' + langExt + '.html',
 		title: '系统证书',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4245,7 +4245,7 @@ function showOfficeLicenseInfoPanel(){
 	//后台管理页面的对话框都需要指定id
 	qiao.bs.dialog({
 		id: 'officeLicenseInfo',
-		url: 'officeLicenseInfo.html',
+		url: 'officeLicenseInfo' + langExt + '.html',
 		title: 'Office证书',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4273,7 +4273,7 @@ function showEditUserPanel(e, userId, pageIndex, index)
 	var email = trObj.children("td:eq(7)").text();
 	
 	qiao.bs.dialog({
-		url: 'editUser.html',
+		url: 'editUser' + langExt + '.html',
 		title: '编辑用户',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4318,7 +4318,7 @@ function showResetPwdPanel(e, userId, pageIndex, index)
 	var pwd = randomPassword(8);
 	
 	qiao.bs.dialog({
-		url: 'resetPwd.html',
+		url: 'resetPwd' + langExt + '.html',
 		title: '重置密码',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4451,7 +4451,7 @@ function showAddReposPanel(){
 	console.log("showAddReposPanel");
 	qiao.bs.dialog({
 		id: 'addRepos',
-		url: 'addRepos.html',
+		url: 'addRepos' + langExt + '.html',
 		title: '新增仓库',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4869,7 +4869,7 @@ function showManageReposMemberPanel(e,reposId){
 	
 	qiao.bs.dialog({
 		title: '成员管理 -'+ ReposName,
-		url: 'manageReposMember.html',
+		url: 'manageReposMember' + langExt + '.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
@@ -4881,7 +4881,7 @@ function showManageReposMemberPanel(e,reposId){
 
 function showReposManagerPage(e, reposId){
 	//open reposManager in new page
-	window.open("/DocSystem/web/reposManager.html?vid=" + reposId);
+	window.open("/DocSystem/web/reposManager" + langExt + ".html?vid=" + reposId);
 }
 
 //用户组管理
@@ -4919,7 +4919,7 @@ function showAddGroupPanel(){
 	console.log("showAddGroupPanel");
 	qiao.bs.dialog({
 		id: 'addGroup',
-		url: 'addGroup.html',
+		url: 'addGroup' + langExt + '.html',
 		title: '新增用户组',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -4974,7 +4974,7 @@ function showEditGroupPanel(e, id)
 	var info = trObj.children("td:eq(2)").text();		
 	
 	qiao.bs.dialog({
-		url: 'editGroup.html',
+		url: 'editGroup' + langExt + '.html',
 		title: '编辑用户组',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
@@ -5002,7 +5002,7 @@ function showManageGroupMemberPanel(e,groupId){
 	
 	qiao.bs.dialog({
 		title: '成员管理 -'+ groupName,
-		url: 'manageGroupMember.html',
+		url: 'manageGroupMember' + langExt + '.html',
 		msg: '页面正在加载，请稍等...',
 		foot: false,
 		big: true,
