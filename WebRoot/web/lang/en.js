@@ -49,6 +49,15 @@ function lang(str)
 		"继续" : "Continue",
 		"退出" : "Exit",
 		"编辑" : "Edit",
+		"新增用户" : "Add User",
+		"编辑用户" : "Edit User",
+		"删除用户" : "Delete User",
+		"重置密码" : "Reset Password",
+		"导出" : "Export",
+		"删除成功" : "Delete Success",
+		"删除失败" : "Delete Failed",
+		"更新成功" : "Update Success",
+		"更新失败" : "Update Failed",
 		
 		//注册
 		"注册失败"	: "Sign Up Failed",			
@@ -563,9 +572,13 @@ function lang(str)
 		"是否启用系统" : "Do you want to enable system access",
 		"启用系统失败" : "Failed to enable system access",
 		
+		//User
+		"导出用户" : "Export Users",
+		"是否导出用户？" : "Do you want to export users ?",
+		"导出用户列表失败" : "Failed to export users",
+		"是否删除用户？" : "Do you want to delete user ?",
+		
 		//Group 
-		"更新成功" : "Update Ok",
-		"更新失败" : "Update Failed",
 		
 		//Log
 		"日志下载失败" : "DebugLog Download Failed",
@@ -699,19 +712,6 @@ function lang(str)
 		
 		//License
 		"获取证书列表失败" : "Failed to get License List",
-		
-		//User
-		"新增用户" : "Add User",
-		"编辑用户" : "Edit User",
-		"删除用户" : "Delete User",
-		"重置密码" : "Reset Password",
-		"导出用户" : "Export Users",
-		"是否导出用户？" : "Do you want to export users ?",
-		"导出用户列表失败" : "Failed to export users",
-		"导出" : "Export",
-		"是否删除用户？" : "Do you want to delete user ?",
-		"删除成功" : "Delete Success",
-		"删除失败" : "Delete Failed",
 		
 		//Office License
 		"新增Office证书" : "Add OfficeEidtor License",
