@@ -172,6 +172,7 @@ public class ReposController extends BaseController{
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1, 
 			Long createTime,
 			String textSearch,
+			String recycleBin,
 			Integer encryptType,
 			String autoSyncup,
 			String autoBackup,
@@ -185,7 +186,7 @@ public class ReposController extends BaseController{
 				+ " remoteStorage: " + remoteStorage 
 				+ " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
-				+ "textSearch:" + textSearch + " autoSyncup:" + autoSyncup + " autoBackup:" + autoBackup);
+				+ "textSearch:" + textSearch + " recycleBin:" + recycleBin + " autoSyncup:" + autoSyncup + " autoBackup:" + autoBackup);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
@@ -263,6 +264,7 @@ public class ReposController extends BaseController{
 		repos.setAutoSyncup(autoSyncup);
 		repos.setAutoBackup(autoBackup);
 		repos.setTextSearch(textSearch);
+		repos.setRecycleBin(recycleBin);
 		
 		//以下这段代码是为了避免有用户同时发起addRepos(前端快速点击添加操作也会引起该行为)，导致两个仓库的文件存储路径信息相同
 		String lockInfo = "addRepos() syncLockForRepos [" + repos.getName() + "]";
@@ -387,6 +389,12 @@ public class ReposController extends BaseController{
 			initReposTextSearchConfig(repos, textSearch);
 		}
 		
+		if(recycleBin != null)
+		{
+			setReposRecycleBin(repos, recycleBin);			
+			initReposRecycleBinConfig(repos, recycleBin);
+		}
+
 		//初始化仓库的版本管理忽略配置
 		initReposVersionIgnoreConfig(repos);
 		
@@ -442,6 +450,17 @@ public class ReposController extends BaseController{
 		}
 		
 		return FileUtil.saveDocContentToFile(config, configPath, "textSearch.conf", "UTF-8");
+	}
+	
+	private boolean setReposRecycleBin(Repos repos, String config) {
+		String configPath = Path.getReposRecycleBinConfigPath(repos);
+		
+		if(config == null || config.isEmpty())
+		{
+			return FileUtil.delFile(configPath + "recycleBin.conf");
+		}
+		
+		return FileUtil.saveDocContentToFile(config, configPath, "recycleBin.conf", "UTF-8");
 	}
 
 	private void setReposEncrypt(Repos repos, Integer encryptType) {
@@ -1082,6 +1101,7 @@ public class ReposController extends BaseController{
 			Integer verCtrl, Integer isRemote, String localSvnPath, String svnPath,String svnUser,String svnPwd,
 			Integer verCtrl1, Integer isRemote1, String localSvnPath1, String svnPath1,String svnUser1,String svnPwd1,
 			String textSearch,
+			String recycleBin,
 			Integer encryptType,
 			String autoSyncup,
 			String autoBackup,
@@ -1095,7 +1115,7 @@ public class ReposController extends BaseController{
 				+ " remoteStorage:" + remoteStorage 
 				+" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
-				+ " textSearch:" + textSearch + " encryptType:" + encryptType + " autoSyncup:" + autoSyncup+ " autoBackup:" + autoBackup);
+				+ " textSearch:" + textSearch + " recycleBin:" + recycleBin + " encryptType:" + encryptType + " autoSyncup:" + autoSyncup+ " autoBackup:" + autoBackup);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1146,6 +1166,8 @@ public class ReposController extends BaseController{
 		newReposInfo.setAutoSyncup(autoSyncup);
 		newReposInfo.setAutoBackup(autoBackup);
 		newReposInfo.setTextSearch(textSearch);
+		newReposInfo.setRecycleBin(recycleBin);
+
 		formatReposInfo(newReposInfo);
 		
 		//Get reposInfo (It will be used to revert the reposInfo)
@@ -1191,6 +1213,12 @@ public class ReposController extends BaseController{
 		{
 			setReposTextSearch(reposInfo, textSearch);
 			initReposTextSearchConfig(reposInfo, textSearch);
+		}
+		
+		if(recycleBin != null)
+		{
+			setReposRecycleBin(reposInfo, recycleBin);			
+			initReposRecycleBinConfig(reposInfo, recycleBin);
 		}
 			
 		boolean encryptTypeChanged = false;

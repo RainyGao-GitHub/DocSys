@@ -4535,14 +4535,26 @@ public class BaseController  extends BaseFunction{
 		
 		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
-		//get RealDoc Full ParentPath
-		if(deleteRealDocEx(repos, doc, context, rt) == false)
+		if(isReposRecycleBinEnabled(repos) == 0)	//RecycelBin disabled
 		{
-			unlockDoc(doc, lockType, login_user);
-
-			docSysErrorLog(doc.getName() + " 删除失败！", rt);
-			docSysDebugLog("deleteDoc_FSM() deleteRealDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
-			return 0;
+			if(deleteRealDocEx(repos, doc, context, rt) == false)
+			{
+				unlockDoc(doc, lockType, login_user);
+	
+				docSysErrorLog(doc.getName() + " 删除失败！", rt);
+				docSysDebugLog("deleteDoc_FSM() deleteRealDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
+				return 0;
+			}
+		}
+		else
+		{
+			if(moveRealDocToRecycleBin(repos, doc, context, rt) == false)
+			{
+				unlockDoc(doc, lockType, login_user);
+				docSysErrorLog(doc.getName() + " 删除失败！", rt);
+				docSysDebugLog("deleteDoc_FSM() moveRealDocToRecycleBin [" + doc.getPath() + doc.getName() + "] Failed", rt);
+				return 0;
+			}			
 		}
 				
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
@@ -4646,6 +4658,86 @@ public class BaseController  extends BaseFunction{
 		return 1;
 	}
 	
+	protected boolean moveRealDocToRecycleBin(Repos repos, Doc srcDoc, ActionContext context, ReturnAjax rt)
+	{
+		String localRootPath = Path.getRecycleBinRootPath(repos) + context.startTime + "/";
+		Doc dstDoc = buildBasicDoc(repos.getId(), null, null, srcDoc.getReposPath(), 
+				srcDoc.getPath(), srcDoc.getName(), null, srcDoc.getType(), true, localRootPath, null, null, null);
+		
+		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
+		{
+			return moveRealDoc(repos, srcDoc, dstDoc, rt);
+		}
+		
+		//检查srcEntry和dstEntry
+		String srcDocPath = srcDoc.getLocalRootPath() + srcDoc.getPath() + srcDoc.getName();
+		String dstDocPath = dstDoc.getLocalRootPath() + dstDoc.getPath() + dstDoc.getName();
+    	if(FileUtil.isFileExist(srcDocPath) == false)
+		{
+			docSysDebugLog("moveRealDocToRecycleBin() 文件: " + srcDocPath + " 不存在", rt);
+			return false;
+		}
+		
+		if(FileUtil.isFileExist(dstDocPath) == true)
+		{
+			docSysDebugLog("moveRealDocToRecycleBin() 文件: " + dstDocPath + " 已存在", rt);
+			return false;
+		}
+		
+		if(false == FileUtil.moveFileOrDir(srcDoc.getLocalRootPath() + srcDoc.getPath(), srcDoc.getName(), 
+				dstDoc.getLocalRootPath() + dstDoc.getPath(), dstDoc.getName(), true))	//强制覆盖
+		{
+			docSysDebugLog("moveRealDocToRecycleBin() move " + srcDocPath + " to "+ dstDocPath + " Failed", rt);
+			return false;
+		}
+		
+		//Build ComitEntryList
+		context.commitEntryList = new ArrayList<CommitEntry>();
+		buildCommitEntryListForDocDeleteWithRecycleBin(
+				srcDoc.getLevel(), srcDoc.getLocalRootPath(), srcDoc.getPath(), srcDoc.getName(), 
+				dstDoc.getLevel(), dstDoc.getLocalRootPath(), dstDoc.getPath(), dstDoc.getName(),
+				context.commitEntryList);
+
+		return true;
+	}
+	
+	private void buildCommitEntryListForDocDeleteWithRecycleBin(
+			int level, String localRootPath, String path, String name, 
+    		int dstLevel, String dstLocalRootPath, String dstPath, String dstName,     		
+    		List<CommitEntry> commitEntryList) 
+	{
+    	String dstFilePath = dstLocalRootPath + dstPath + dstName;
+        
+    	File dstFile = new File(dstFilePath); 
+        if(dstFile.exists())
+        {
+        	CommitEntry commitEntry = new CommitEntry();
+            commitEntry.realCommitAction = "delete";
+            commitEntry.docId = Path.getDocId(level, path + name);
+            commitEntry.path = path;
+            commitEntry.name = name;
+            commitEntry.entryType = dstFile.isFile()? 1:2;
+            commitEntryList.add(commitEntry);
+            
+            if(dstFile.isFile())        		
+        	{
+				return;
+            }
+            
+        	//SubEntries under folder	              	
+        	String subDirPath = path + name + "/";
+        	String dstSubDirPath = dstPath + dstName + "/";
+        	File[] tmp=dstFile.listFiles();
+            for(int i=0;i<tmp.length;i++)
+            {
+            	buildCommitEntryListForDocDeleteWithRecycleBin(
+            			level+1, localRootPath, subDirPath, tmp[i].getName(),
+            			dstLevel+1, dstLocalRootPath, dstSubDirPath, tmp[i].getName(),
+            			commitEntryList);
+            }
+        }
+ 	}
+
 	//TODO: MxsDoc版本管理机制是先写入commitEntryInfo，然后最后再写入commitInfo，如果有版本管理的话，则在版本仓库提交后更新commitInfo
 	//由于commitEntryInfo里已经包含了commitMsg和commitUser信息，所以即使后面的commitInfo没有写入，系统仍然可以获取到文件和目录的改动历史
 	//除了前置仓库外，其他仓库未来将都是使用commitEntry和commitInfo来获取历史版本信息
@@ -13364,6 +13456,14 @@ public class BaseController  extends BaseFunction{
 		return 0;
 	}
 	
+	protected static Integer isReposRecycleBinEnabled(Repos repos) {
+		if(repos.recycleBinConfig != null && repos.recycleBinConfig.enable != null && repos.recycleBinConfig.enable == true)
+		{
+			return 1;
+		}
+		return 0;
+	}
+	
 	private static boolean isRealDocTextSearchIgnored(Repos repos, Doc doc, boolean parentCheck) {
 		//版本倉庫和索引倉庫禁止建立索引
 		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
@@ -14701,6 +14801,13 @@ public class BaseController  extends BaseFunction{
 		initReposTextSearchConfigEx(repos, textSearch, updateRedis);					
 		Log.debug("----------- initReposExtentionConfigEx() initReposTextSearchConfigEx End ------");
 		
+		//Init ReposRecycleBinConfig
+		Log.debug("++++++++++ initReposExtentionConfigEx() initReposRecycleBinConfigEx Start +++++");
+		String recycleBin = getReposRecycleBin(repos);
+		repos.setRecycleBin(recycleBin);
+		initReposRecycleBinConfigEx(repos, textSearch, updateRedis);					
+		Log.debug("----------- initReposExtentionConfigEx() initReposRecycleBinConfigEx End ------");
+		
 		//Init ReposVersionIgnoreConfig
 		Log.debug("++++++++++ initReposExtentionConfigEx() initReposVersionIgnoreConfigEx Start +++++");
 		initReposVersionIgnoreConfigEx(repos, updateRedis);
@@ -14860,6 +14967,11 @@ public class BaseController  extends BaseFunction{
 				String textSearch = getReposTextSearch(repos);
 				repos.setTextSearch(textSearch);
 				initReposTextSearchConfig(repos, textSearch);
+				
+				//Init ReposRecycleBinConfig
+				String recycleBin = getReposRecycleBin(repos);
+				repos.setRecycleBin(recycleBin);
+				initReposRecycleBinConfig(repos, recycleBin);
 				
 				//Init ReposVersionIgnoreConfig
 				initReposVersionIgnoreConfig(repos);
@@ -18773,6 +18885,9 @@ public class BaseController  extends BaseFunction{
 				}
 				
 				repos.textSearchConfig = getReposTextSearchConfig(repos);
+				
+				repos.recycleBinConfig = getReposRecycleBinConfig(repos);
+				
 				repos.versionIgnoreConfig = getReposVersionIgnoreConfig(repos);			
 				repos.encryptType = 0;
 				EncryptConfig encryptConfig = getReposEncryptConfig(repos);

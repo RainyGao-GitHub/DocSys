@@ -792,6 +792,11 @@ public class Path {
 		return path;
 	}
 	
+	public static String getReposRecycleBinConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/recycleBinSetting/";
+		return path;
+	}
+	
 	public static String getReposTextSearchConfigPathForRealDoc(Repos repos) {
 		String path = getReposPath(repos) + "data/textSearchSetting/RealDoc/";
 		return path;
@@ -875,6 +880,11 @@ public class Path {
 	public static String getRepsFolderUploadLocalChangesRootPath(Repos repos, long startTime) {
 		// TODO Auto-generated method stub
 		String path = getReposPath(repos) + "tmp/FolderUpload/" + startTime + "/localChangedEntry/";
+		return path;
+	}
+
+	public static String getRecycleBinRootPath(Repos repos) {
+		String path = getReposPath(repos) + "RecycleBin/";
 		return path;
 	}
 }

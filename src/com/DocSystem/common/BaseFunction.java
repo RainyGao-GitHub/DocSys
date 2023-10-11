@@ -241,6 +241,8 @@ public class BaseFunction{
 	protected static ConcurrentHashMap<Integer, ReposBackupConfig> reposBackupConfigHashMap = new ConcurrentHashMap<Integer, ReposBackupConfig>();
 	//仓库全文搜索配置HashMap
 	protected static ConcurrentHashMap<Integer, TextSearchConfig> reposTextSearchConfigHashMap = new ConcurrentHashMap<Integer, TextSearchConfig>();	
+	//仓库回收站配置HashMap
+	protected static ConcurrentHashMap<Integer, RecycleBinConfig> reposRecycleBinConfigHashMap = new ConcurrentHashMap<Integer, RecycleBinConfig>();	
 	//仓库版本忽略配置HashMap
 	protected static ConcurrentHashMap<Integer, VersionIgnoreConfig> reposVersionIgnoreConfigHashMap = new ConcurrentHashMap<Integer, VersionIgnoreConfig>();		
 	//仓库加密配置HashMap
@@ -701,6 +703,8 @@ public class BaseFunction{
 			return ((ReposBackupConfig) config).checkSum;
 		case ReposExtConfigDigest.TextSearchConfig:
 			return ((TextSearchConfig) config).checkSum;	
+		case ReposExtConfigDigest.RecycleBinConfig:
+			return ((RecycleBinConfig) config).checkSum;			
 		case ReposExtConfigDigest.VersionIgnoreConfig:
 			return ((VersionIgnoreConfig) config).checkSum;			
 		case ReposExtConfigDigest.EncryptConfig:
@@ -1028,6 +1032,72 @@ public class BaseFunction{
 	{
 		RMap<Object, Object> reposTextSearchConfigHashMap = redisClient.getMap("reposTextSearchConfigHashMap");
 		return (TextSearchConfig) reposTextSearchConfigHashMap.get(repos.getId());
+	}
+	
+	//*** reposRecycleBinConfigHashMap
+	protected RecycleBinConfig getReposRecycleBinConfig(Repos repos) 
+	{
+		RecycleBinConfig config = reposRecycleBinConfigHashMap.get(repos.getId());
+		if(isReposExtConfigDigestChanged(repos,  ReposExtConfigDigest.RecycleBinConfig, config) == false)
+		{
+			return config;
+		}
+		
+		config = getReposRecycleBinConfigRedis(repos);
+		reposRecycleBinConfigHashMap.put(repos.getId(), config);
+		return config;
+	}
+
+	private RecycleBinConfig getReposRecycleBinConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposRecycleBinConfigHashMap = redisClient.getMap("reposRecycleBinConfigHashMap");
+		return (RecycleBinConfig) reposRecycleBinConfigHashMap.get(repos.getId());
+	}
+	
+	protected void setReposRecycleBinConfig(Repos repos, RecycleBinConfig config) 
+	{
+		reposRecycleBinConfigHashMap.put(repos.getId(), config);
+		if(redisEn)
+		{
+			String lockInfo = "setReposRecycleBinConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			setReposRecycleBinConfigRedis(repos, config);
+
+			redisSyncUnlock(lockName, lockInfo);
+		}
+	}
+
+	private void setReposRecycleBinConfigRedis(Repos repos, RecycleBinConfig config) 
+	{
+		RMap<Object, Object> reposRecycleBinConfigHashMap = redisClient.getMap("reposRecycleBinConfigHashMap");
+		config.checkSum = new Date().getTime() + "";
+		reposRecycleBinConfigHashMap.put(repos.getId(), config);
+		
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RecycleBinConfig, config.checkSum);	
+	}
+	
+	private void deleteReposRecycleBinConfig(Repos repos) 
+	{
+		reposRecycleBinConfigHashMap.remove(repos.getId());
+		if(redisEn)
+		{
+			String lockInfo = "deleteReposRecycleBinConfig for repos [" + repos.getId() + " " + repos.getName() + "]";
+			String lockName = "reposExtConfigSyncLock" + repos.getId();
+			redisSyncLock(lockName, lockInfo);
+			
+			deleteReposRecycleBinConfigRedis(repos);
+
+			redisSyncUnlock(lockName, lockInfo);
+		}		
+	}
+	
+	private void deleteReposRecycleBinConfigRedis(Repos repos) 
+	{
+		RMap<Object, Object> reposRecycleBinConfigHashMap = redisClient.getMap("reposRecycleBinConfigHashMap");
+		reposRecycleBinConfigHashMap.remove(repos.getId());
+		updateReposExtConfigDigest(repos, ReposExtConfigDigest.RecycleBinConfig, "");	
 	}
 	
 	//*** reposVersionIgnoreConfigHashMap
@@ -4015,9 +4085,99 @@ public class BaseFunction{
 		return textSearch;		
 	}
 	
+	//*** 仓库回收站配置  ***
+	protected void initReposRecycleBinConfig(Repos repos, String config) {
+		Log.debug("initReposRecycleBinConfigEx() config:" + config);
+
+		RecycleBinConfig recycleBinConfig = parseRecycleBinConfig(repos, config);
+		repos.recycleBinConfig = recycleBinConfig;
+
+		if(recycleBinConfig == null)
+		{
+			deleteReposRecycleBinConfig(repos);
+		}
+		else
+		{
+			setReposRecycleBinConfig(repos, recycleBinConfig);
+		}
+	}
+	
+	protected void initReposRecycleBinConfigEx(Repos repos, String config, boolean updateRedis) {
+		Log.debug("initReposRecycleBinConfigEx() config:" + config);
+
+		RecycleBinConfig recycleBinConfig = parseRecycleBinConfig(repos, config);
+		repos.recycleBinConfig = recycleBinConfig;
+		if(recycleBinConfig == null)
+		{
+			reposRecycleBinConfigHashMap.remove(repos.getId());
+		}
+		else
+		{
+			reposRecycleBinConfigHashMap.put(repos.getId(), recycleBinConfig);
+		}
+		
+		if(updateRedis)
+		{
+			if(recycleBinConfig == null)
+			{
+				deleteReposRecycleBinConfig(repos);
+			}
+			else
+			{
+				setReposRecycleBinConfig(repos, recycleBinConfig);
+			}			
+		}
+	}
+	
+	protected static RecycleBinConfig parseRecycleBinConfig(Repos repos, String config) {
+		try {
+			//config中不允许出现转义字符 \ ,否则会导致JSON解析错误
+			if(config == null || config.isEmpty())
+			{
+				return null;
+			}
+			
+			config = config.replace('\\', '/');	
+			
+			JSONObject jsonObj = JSON.parseObject(config);
+			if(jsonObj == null)
+			{
+				return null;
+			}
+			
+			Log.printObject("parseRecycleBinConfig() ", jsonObj);
+			
+			RecycleBinConfig recycleBinConfig = new RecycleBinConfig();
+			recycleBinConfig.enable = false;
+			
+			Integer enable = jsonObj.getInteger("enable");
+			if(enable != null && enable == 1)
+			{
+				recycleBinConfig.enable = true;
+			}
+			Log.debug("parseRecycleBinConfig recycleBinConfig.enable:" + recycleBinConfig.enable);
+			
+			return recycleBinConfig;
+		}
+		catch(Exception e) {
+			errorLog(e);
+			return null;
+		}
+	}
+	
+	protected String getReposRecycleBin(Repos repos) {
+		String configPath = Path.getReposRecycleBinConfigPath(repos);		
+		String recycleBin =  FileUtil.readDocContentFromFile(configPath, "recycleBin.conf", "UTF-8");
+		if(recycleBin == null || recycleBin.isEmpty())
+		{
+			recycleBin = "{enable:0}";
+		}
+		return recycleBin;		
+	}
+	
 	//*** 仓库版本忽略配置 ***
 	protected void initReposVersionIgnoreConfig(Repos repos) {
-		//add TextSearchConfig For repos
+		//add VersionIgnoreConfig For repos
 		VersionIgnoreConfig versionIgnoreConfig = new VersionIgnoreConfig();
 		versionIgnoreConfig.versionIgnoreHashMap = new ConcurrentHashMap<String, Integer>(); 
 		

@@ -1,5 +1,6 @@
 package com.DocSystem.entity;
 
+import com.DocSystem.common.RecycleBinConfig;
 import com.DocSystem.common.TextSearchConfig;
 import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.entity.EncryptConfig;
@@ -31,6 +32,8 @@ public class Repos {
 	private String autoBackup;
 	
 	private String textSearch;
+	
+	private String recycleBin;
 
     private Integer verCtrl;
 
@@ -95,6 +98,7 @@ public class Repos {
 	public ReposBackupConfig autoBackupConfig;
 	public VersionIgnoreConfig versionIgnoreConfig;
 	public TextSearchConfig textSearchConfig;
+	public RecycleBinConfig recycleBinConfig;
 	public Integer encryptType;
 	public EncryptConfig encryptConfig;
 	public Boolean disableRemoteAction;	//用于禁用远程操作（在远程接口中设置成true）
@@ -338,5 +342,13 @@ public class Repos {
     
 	public void setTextSearch(String textSearch) {
         this.textSearch = textSearch;		
+	}
+
+    public String getRecycleBin() {
+        return recycleBin;
+    }
+    
+	public void setRecycleBin(String recycleBin) {
+        this.recycleBin = recycleBin;		
 	}
 }
