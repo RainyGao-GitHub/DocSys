@@ -388,6 +388,31 @@ var ReposConfig = (function () {
 		reposInfo.textSearch = getTextSearchConfig();
 		console.log("reposInfo.textSearch:" + reposInfo.textSearch);
 	}
+	
+	/****** 回收站  *****/
+	function showRecycleBinConfig(reposInfo)
+	{	
+		console.log("showRecycleBinConfig recyleBinConfig:", reposInfo.recyleBinConfig);
+		if(reposInfo.recyleBinConfig == undefined)
+	   	{
+			$("#isRecycleBinEnabled").attr("checked",false);
+	   	}
+		else
+		{
+			var enable = reposInfo.recyleBinConfig.enable;
+			if(enable == undefined || enable == false)
+			{
+				$("#isRecycleBinEnabled").attr("checked",false);
+			}
+			else
+			{
+				$("#isRecycleBinEnabled").attr("checked","checked");
+			}
+		}
+		
+		reposInfo.recyleBin = getRecyleBinConfig();
+		console.log("reposInfo.recyleBin:" + reposInfo.recyleBin);
+	}
 
 	/******* 自动同步 *************/
 	function showAutoSyncupConfig(reposInfo)
@@ -929,6 +954,10 @@ var ReposConfig = (function () {
 		var textSearch = getTextSearchConfig();
 		newReposSetting.textSearch = textSearch;
 		console.log("newReposSetting.textSearch:" + textSearch);
+
+		var recycleBin = getRecycleBinConfig();
+		newReposSetting.recycleBin = recycleBin;
+		console.log("newReposSetting.recycleBin:" + recycleBin);
 		
 		newReposSetting.encryptType =  $("#isEncryptEnabled").is(':checked')? 1: 0;
 	    //default to set VirtualDoc VersionControl as GIT
@@ -977,6 +1006,7 @@ var ReposConfig = (function () {
 	                    svnUser1 : newReposSetting.svnUser1,
 	                    svnPwd1 : newReposSetting.svnPwd1,
 	                    textSearch: newReposSetting.textSearch,
+	                    recycleBin: newReposSetting.recycleBin,
 	                    encryptType: newReposSetting.encryptType,
 	                    autoSyncup : newReposSetting.autoSyncup,                    
 	                    autoBackup : newReposSetting.autoBackup,                    
@@ -1110,6 +1140,10 @@ var ReposConfig = (function () {
 	       		{
 	       			return true;
 	       		}
+	       		if(oldSetting.recycleBin != newSetting.recycleBin)
+	       		{
+	       			return true;
+	       		}
 	       		if(oldSetting.encryptType != newSetting.encryptType)
 	       		{
 	       			return true;
@@ -1137,6 +1171,7 @@ var ReposConfig = (function () {
 	    var realDocPath = MyJquery.getValue("repos-realDocPath");
 	    
 	    var textSearch = getTextSearchConfig();
+		var recycleBin = getRecycleBinConfig();
 	    var encryptType = MyJquery.isChecked("isEncryptEnabled");
 	    
 	    var autoSyncupConfig = getAutoSyncupConfig();	//autoSyncupConfig
@@ -1243,6 +1278,7 @@ var ReposConfig = (function () {
 	                svnPwd1: svnPwd1,
 	                createTime:createTime,
 	                textSearch: textSearch,
+	                recyleBin: recyleBin,
 	                encryptType : encryptType,
 	                autoSyncup : autoSyncupConfig,	                
 	                autoBackup : autoBackupConfig,	                
@@ -1766,6 +1802,14 @@ var ReposConfig = (function () {
 	    var isTextSearchEnabled = MyJquery.isChecked("isTextSearchEnabled");
 		console.log("getTextSearchConfig isTextSearchEnabled:" + isTextSearchEnabled);
 		var config = "{enable:" + isTextSearchEnabled + "}";
+		return config;
+	}
+	
+	function getRecycleBinConfig()
+	{   
+	    var isRecycleBinEnabled = MyJquery.isChecked("isRecycleBinEnabled");
+		console.log("getRecycleBinConfig isRecycleBinEnabled:" + isRecycleBinEnabled);
+		var config = "{enable:" + isRecycleBinEnabled + "}";
 		return config;
 	}
 	
