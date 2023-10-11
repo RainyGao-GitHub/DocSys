@@ -161,7 +161,10 @@ var ReposConfig = (function () {
 		
 	   	//全文搜索
 	    showTextSearchConfig(reposInfo);
-	   	
+	    
+	    //全文搜索
+	    showRecycleBinConfig(reposInfo);
+	    
 	   	//文件加密
 	   	if(reposInfo.encryptType == 0)
 	   	{
@@ -392,14 +395,14 @@ var ReposConfig = (function () {
 	/****** 回收站  *****/
 	function showRecycleBinConfig(reposInfo)
 	{	
-		console.log("showRecycleBinConfig recyleBinConfig:", reposInfo.recyleBinConfig);
-		if(reposInfo.recyleBinConfig == undefined)
+		console.log("showRecycleBinConfig recycleBinConfig:", reposInfo.recycleBinConfig);
+		if(reposInfo.recycleBinConfig == undefined)
 	   	{
 			$("#isRecycleBinEnabled").attr("checked",false);
 	   	}
 		else
 		{
-			var enable = reposInfo.recyleBinConfig.enable;
+			var enable = reposInfo.recycleBinConfig.enable;
 			if(enable == undefined || enable == false)
 			{
 				$("#isRecycleBinEnabled").attr("checked",false);
@@ -410,8 +413,8 @@ var ReposConfig = (function () {
 			}
 		}
 		
-		reposInfo.recyleBin = getRecyleBinConfig();
-		console.log("reposInfo.recyleBin:" + reposInfo.recyleBin);
+		reposInfo.recycleBin = getRecycleBinConfig();
+		console.log("reposInfo.recycleBin:" + reposInfo.recycleBin);
 	}
 
 	/******* 自动同步 *************/
@@ -1278,7 +1281,7 @@ var ReposConfig = (function () {
 	                svnPwd1: svnPwd1,
 	                createTime:createTime,
 	                textSearch: textSearch,
-	                recyleBin: recyleBin,
+	                recycleBin: recycleBin,
 	                encryptType : encryptType,
 	                autoSyncup : autoSyncupConfig,	                
 	                autoBackup : autoBackupConfig,	                
