@@ -18,6 +18,10 @@ public class CommitLog {
 	public Integer reposId;		//reposId 
 	public String reposName;	//reposName
 	
+	//path/name用于标记此次commit的根目录(例如:回收站/实时备份)
+	public String path;			//doc's path
+	public String name;			//doc's name
+	
 	public String verReposInfo;			//verReposInfo (url/user/pwd)
 	public Integer verReposStatus;	//status for verReposCommit: 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息
 	public String verReposRevision;		//revision of this verReposCommit

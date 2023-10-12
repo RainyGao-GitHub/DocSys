@@ -464,7 +464,7 @@
 		   	return msg;
     	}
     	
-    	function getEntryPath(historyType, docId, docPath)
+    	function getEntryPath(historyType, docId, docName, docPath)
     	{
     		var entryPath = docPath;
     	  	if(historyType == 1)
@@ -489,7 +489,7 @@
 
 		   	
 		   	var docPath = "/"+parentPath + docName;
-            var entryPath = getEntryPath(historyType, docId, docPath);			
+            var entryPath = getEntryPath(historyType, docId, docName, docPath);			
 		   	var msg = buildRevertConfirmMsg(historyType, docId, docPath, version);
 		 	
 		   	qiao.bs.confirm({
@@ -513,7 +513,7 @@
 		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
 
 		   	var docPath = "/"+parentPath + docName;
-		   	var entryPath = getEntryPath(historyType, docId, docPath);
+		   	var entryPath = getEntryPath(historyType, docId, docName, docPath);
 		   	var msg = buildResetConfirmMsg(historyType, docId, docPath, version);
 		    
 		   	qiao.bs.confirm({
