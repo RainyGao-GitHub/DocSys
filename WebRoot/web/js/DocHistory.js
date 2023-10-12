@@ -328,19 +328,13 @@
 			showSize = Math.round(showSize) + units;
 			return showSize;
     	}
-		
-		function showRevertConfirm(index)
-		{
-			var commitId = $("#commitId" + index).attr("value");
-			var version = $("#commitId" + index).text();
-		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
-
-		   	var entryPath = "";
-		   	var docPath = "/"+parentPath + docName;
+    	
+    	function buildRevertConfirmMsg(historyType, docId, docPath, version)
+    	{
 		   	var msg = "";				
-		   	if(historyType == 0)
+		   	switch(historyType)
             {
-		   		entryPath = docPath;
+            case 0:	//History
 		   		if(docId == 0)
 		   		{
 		   			switch(langType)
@@ -358,16 +352,15 @@
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Recover [" + entryPath + "]'s changes on version" + ":" + version + " ?";
+		   				msg = "Recover [" + docPath + "]'s changes on version" + ":" + version + " ?";
 			   			break;
 		   			default:
-			   			msg = "是否恢复 " + entryPath + " 在版本:" + version + " 上的改动?";
+			   			msg = "是否恢复 " + docPath + " 在版本:" + version + " 上的改动?";
 		   				break;
 		   			}
 		   		}
-            }
-            else
-            {
+		   		break;
+            case 1: //Note's History
             	if(docId == 0)
             	{
             		entryPath = "/";
@@ -383,8 +376,7 @@
             	}
             	else
             	{
-            		entryPath = "/"+docId + "_" + docName;             		                		
-		   			switch(langType)
+            		switch(langType)
 		   			{
 		   			case "en":
 		   				msg = "Recover [" + docPath + "]'s Note changes on version" + ":" + version + " ?";
@@ -395,34 +387,22 @@
 		   			}
 
             	}
+            	break;
+            case 2:	//LocalBackup History
+            	break;
+            case 3: //RemoteBackup History
+            	break;
             }	
-            
-		   	qiao.bs.confirm({
-		        id: 'revertHistoryConfirm',
-		        msg: msg,
-	    		title: _Lang("确认"),
-	    		okbtn: _Lang("恢复"),
-	    		qubtn: _Lang("取消"),
-		   	},function(){
-		    	console.log("showRevertConfirm() revert commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
-				revertHistory(index, entryPath);
-		    },function(){
-		        //alert('点击了取消！');
-		    });
-		}
-		
-		function showResetConfirm(index)
-		{
-			var commitId = $("#commitId" + index).attr("value");
-			var version = $("#commitId" + index).text();
-		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
-
-		   	var entryPath = "";
-		   	var docPath = "/"+parentPath + docName;
+		   
+		   	return msg;
+    	}
+    	
+    	function buildResetConfirmMsg(historyType, docId, docPath, version)
+    	{
 		   	var msg = "";				
-		   	if(historyType == 0)
+		   	switch(historyType)
             {
-		   		entryPath = docPath;
+            case 0:	//History
 		   		if(docId == 0)
 		   		{
 		   			switch(langType)
@@ -440,19 +420,17 @@
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Revert [" + entryPath + "] to version" + ":" + version + " ?";
+		   				msg = "Revert [" + docPath + "] to version" + ":" + version + " ?";
 			   			break;
 		   			default:
-			   			msg = "是否将 " + entryPath + " 回退到版本:" + version + "?";
+			   			msg = "是否将 " + docPath + " 回退到版本:" + version + "?";
 		   				break;
 		   			}
 		   		}
-            }
-            else
-            {
+		   		break;
+            case 1: //Note's History
             	if(docId == 0)
             	{
-            		entryPath = "/";
 		   			switch(langType)
 		   			{
 		   			case "en":
@@ -466,19 +444,78 @@
             	}
             	else
             	{
-            		entryPath = "/"+docId + "_" + docName;           		
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Revert [" + entryPath + "]'s Note to version" + ":" + version + " ?";
+		   				msg = "Revert [" + docPath + "]'s Note to version" + ":" + version + " ?";
 			   			break;
 		   			default:		           		
 			   			msg = "是否将 " + docPath + " 的备注回退到版本:" + version + "?";
 		   				break;
 		   			}
              	}
+            	break;
+            case 2:	//LocalBackup History
+            	break;
+            case 3: //RemoteBackup History
+            	break;
             }	
-            
+		   
+		   	return msg;
+    	}
+    	
+    	function getEntryPath(historyType, docId, docPath)
+    	{
+    		var entryPath = docPath;
+    	  	if(historyType == 1)
+            {
+            	if(docId == 0)
+            	{
+            		entryPath = "/";
+		   		}
+            	else
+            	{
+            		entryPath = "/"+docId + "_" + docName;             		                		
+            	}
+            }
+    	  	return entryPath;
+    	}
+    	
+		function showRevertConfirm(index)
+		{
+			var commitId = $("#commitId" + index).attr("value");
+			var version = $("#commitId" + index).text();
+		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
+
+		   	
+		   	var docPath = "/"+parentPath + docName;
+            var entryPath = getEntryPath(historyType, docId, docPath);			
+		   	var msg = buildRevertConfirmMsg(historyType, docId, docPath, version);
+		 	
+		   	qiao.bs.confirm({
+		        id: 'revertHistoryConfirm',
+		        msg: msg,
+	    		title: _Lang("确认"),
+	    		okbtn: _Lang("恢复"),
+	    		qubtn: _Lang("取消"),
+		   	},function(){
+		    	console.log("showRevertConfirm() revert commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
+				revertHistory(index, entryPath);
+		    },function(){
+		        //alert('点击了取消！');
+		    });
+		}
+    	
+		function showResetConfirm(index)
+		{
+			var commitId = $("#commitId" + index).attr("value");
+			var version = $("#commitId" + index).text();
+		   	console.log("showRevertConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
+
+		   	var docPath = "/"+parentPath + docName;
+		   	var entryPath = getEntryPath(historyType, docId, docPath);
+		   	var msg = buildResetConfirmMsg(historyType, docId, docPath, version);
+		    
 		   	qiao.bs.confirm({
 		        id: 'resetHistoryConfirm',
 		        msg: msg,
