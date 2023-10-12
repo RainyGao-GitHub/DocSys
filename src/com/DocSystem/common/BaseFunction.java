@@ -4087,7 +4087,7 @@ public class BaseFunction{
 	
 	//*** 仓库回收站配置  ***
 	protected void initReposRecycleBinConfig(Repos repos, String config) {
-		Log.debug("initReposRecycleBinConfigEx() config:" + config);
+		Log.debug("initReposRecycleBinConfig() config:" + config);
 
 		RecycleBinConfig recycleBinConfig = parseRecycleBinConfig(repos, config);
 		repos.recycleBinConfig = recycleBinConfig;

@@ -11534,14 +11534,13 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}	
 		
-		String reposRPath = Path.getReposRealPath(repos);
 		String srcParentPath = srcDoc.getPath();
 		String srcName = srcDoc.getName();
 		String dstParentPath = dstDoc.getPath();
 		String dstName = dstDoc.getName();
 		
-		String srcDocPath = reposRPath + srcParentPath + srcName;
-		String dstDocPath = reposRPath + dstParentPath + dstName;
+		String srcDocPath = srcDoc.getLocalRootPath() + srcParentPath + srcName;
+		String dstDocPath = dstDoc.getLocalRootPath() + dstParentPath + dstName;
 
 		if(FileUtil.isFileExist(srcDocPath) == false)
 		{
@@ -11555,7 +11554,7 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		if(FileUtil.moveFileOrDir(reposRPath + srcParentPath,srcName,reposRPath + dstParentPath,dstName,true) == false)	//强制覆盖
+		if(FileUtil.moveFileOrDir(srcDoc.getLocalRootPath() + srcParentPath,srcName,dstDoc.getLocalRootPath() + dstParentPath,dstName,true) == false)	//强制覆盖
 		{
 			docSysDebugLog("moveRealDoc() move " + srcDocPath + " to "+ dstDocPath + " Failed", rt);
 			return false;
@@ -14805,7 +14804,7 @@ public class BaseController  extends BaseFunction{
 		Log.debug("++++++++++ initReposExtentionConfigEx() initReposRecycleBinConfigEx Start +++++");
 		String recycleBin = getReposRecycleBin(repos);
 		repos.setRecycleBin(recycleBin);
-		initReposRecycleBinConfigEx(repos, textSearch, updateRedis);					
+		initReposRecycleBinConfigEx(repos, recycleBin, updateRedis);					
 		Log.debug("----------- initReposExtentionConfigEx() initReposRecycleBinConfigEx End ------");
 		
 		//Init ReposVersionIgnoreConfig
