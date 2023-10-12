@@ -4541,7 +4541,7 @@ public class BaseController  extends BaseFunction{
 			{
 				unlockDoc(doc, lockType, login_user);
 	
-				docSysErrorLog(doc.getName() + " 删除失败！", rt);
+				docSysErrorLog("删除失败！", rt);
 				docSysDebugLog("deleteDoc_FSM() deleteRealDoc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 				return 0;
 			}
@@ -4551,7 +4551,7 @@ public class BaseController  extends BaseFunction{
 			if(moveRealDocToRecycleBin(repos, doc, context, rt) == false)
 			{
 				unlockDoc(doc, lockType, login_user);
-				docSysErrorLog(doc.getName() + " 移动至回收站失败！", rt);
+				docSysErrorLog("移动至回收站失败！", rt);
 				docSysDebugLog("deleteDoc_FSM() moveRealDocToRecycleBin [" + doc.getPath() + doc.getName() + "] Failed", rt);
 				return 0;
 			}			
@@ -4660,10 +4660,21 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean moveRealDocToRecycleBin(Repos repos, Doc srcDoc, ActionContext context, ReturnAjax rt)
 	{
-		String localRootPath = Path.getRecycleBinRootPath(repos) + context.startTime + "/";
+		String recycleBinLocalRootPath = Path.getRecycleBinRootPath(repos) + context.startTime + "/";
+		Log.debug("moveRealDocToRecycleBin() recycleBinLocalRootPath:" + recycleBinLocalRootPath);
+
 		Doc dstDoc = buildBasicDoc(repos.getId(), null, null, srcDoc.getReposPath(), 
-				srcDoc.getPath(), srcDoc.getName(), null, srcDoc.getType(), true, localRootPath, null, null, null);
+				srcDoc.getPath(), srcDoc.getName(), null, srcDoc.getType(), true, recycleBinLocalRootPath, null, null, null);
 		
+		//创建上级目录，否则移动会失败
+		Log.debug("moveRealDocToRecycleBin() dstParentPath:" + dstDoc.getLocalRootPath() + dstDoc.getPath());
+		File parentDir = new File(dstDoc.getLocalRootPath() + dstDoc.getPath());
+		if(false == parentDir.mkdirs())
+		{
+			docSysDebugLog("moveRealDocToRecycleBin() 创建 " + dstDoc.getLocalRootPath() + dstDoc.getPath() + " 失败", rt);
+			return false;
+		}
+
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
 			return moveRealDoc(repos, srcDoc, dstDoc, rt);
@@ -4683,11 +4694,7 @@ public class BaseController  extends BaseFunction{
 			docSysDebugLog("moveRealDocToRecycleBin() 文件: " + dstDocPath + " 已存在", rt);
 			return false;
 		}
-		
-		//创建上级目录，否则移动会失败
-		File parentDir = new File(dstDoc.getLocalRootPath() + dstDoc.getPath());
-		parentDir.mkdirs();
-		
+				
 		if(false == FileUtil.moveFileOrDir(srcDoc.getLocalRootPath() + srcDoc.getPath(), srcDoc.getName(), 
 				dstDoc.getLocalRootPath() + dstDoc.getPath(), dstDoc.getName(), true))	//强制覆盖
 		{
