@@ -4551,7 +4551,7 @@ public class BaseController  extends BaseFunction{
 			if(moveRealDocToRecycleBin(repos, doc, context, rt) == false)
 			{
 				unlockDoc(doc, lockType, login_user);
-				docSysErrorLog(doc.getName() + " 删除失败！", rt);
+				docSysErrorLog(doc.getName() + " 移动至回收站失败！", rt);
 				docSysDebugLog("deleteDoc_FSM() moveRealDocToRecycleBin [" + doc.getPath() + doc.getName() + "] Failed", rt);
 				return 0;
 			}			
@@ -4684,12 +4684,9 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		//创建存储根目录，否则移动会失败
-		File rootDir = new File(localRootPath);
-		if(rootDir.exists() == false)
-		{
-			rootDir.mkdirs();
-		}
+		//创建上级目录，否则移动会失败
+		File parentDir = new File(dstDoc.getLocalRootPath() + dstDoc.getPath());
+		parentDir.mkdirs();
 		
 		if(false == FileUtil.moveFileOrDir(srcDoc.getLocalRootPath() + srcDoc.getPath(), srcDoc.getName(), 
 				dstDoc.getLocalRootPath() + dstDoc.getPath(), dstDoc.getName(), true))	//强制覆盖
