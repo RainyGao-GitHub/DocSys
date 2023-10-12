@@ -4684,6 +4684,13 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		//创建存储根目录，否则移动会失败
+		File rootDir = new File(localRootPath);
+		if(rootDir.exists() == false)
+		{
+			rootDir.mkdirs();
+		}
+		
 		if(false == FileUtil.moveFileOrDir(srcDoc.getLocalRootPath() + srcDoc.getPath(), srcDoc.getName(), 
 				dstDoc.getLocalRootPath() + dstDoc.getPath(), dstDoc.getName(), true))	//强制覆盖
 		{
