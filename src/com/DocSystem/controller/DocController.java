@@ -3439,7 +3439,7 @@ public class DocController extends BaseController{
 		Doc remoteDoc = null;
 		if(isFSM(repos))
 		{
-			remoteDoc = verReposGetDocEx(repos, doc, commitId);
+			remoteDoc = verReposGetDocEx(repos, doc, commitId, HistoryType_RealDoc);
 		}
 		else
 		{
@@ -4162,7 +4162,7 @@ public class DocController extends BaseController{
 			Doc remoteDoc = null;
 			if(isFSM(repos))
 			{
-				remoteDoc = verReposGetDocEx(repos, doc, commitId);
+				remoteDoc = verReposGetDocEx(repos, doc, commitId, HistoryType_RealDoc);
 			}
 			else
 			{
@@ -4298,7 +4298,7 @@ public class DocController extends BaseController{
 			Doc remoteDoc = null;
 			if(isFSM(repos))
 			{
-				remoteDoc = verReposGetDocEx(repos, doc, commitId);
+				remoteDoc = verReposGetDocEx(repos, doc, commitId, HistoryType_RealDoc);
 			}
 			else
 			{
@@ -4707,7 +4707,7 @@ public class DocController extends BaseController{
 		
 		if(isFSM(repos))
 		{
-			logList = getCommitHistoryEx(repos, inputDoc, num, commitId);
+			logList = getCommitHistoryEx(repos, inputDoc, num, commitId, HistoryType_RealDoc);
 		}
 		else
 		{
@@ -4819,7 +4819,7 @@ public class DocController extends BaseController{
 		
 		if(commitId == null || commitId.isEmpty())
 		{
-			commitId = verReposGetLatestReposCommitIdEx(repos);
+			commitId = verReposGetLatestReposCommitIdEx(repos, HistoryType_RealDoc);
 			if(commitId == null)
 			{
 				docSysErrorLog("该仓库暂无历史数据", rt);
@@ -4853,7 +4853,7 @@ public class DocController extends BaseController{
 		List<ChangedItem> changedItemList = null;
 		if(isFSM(repos))
 		{
-			changedItemList = verReposGetHistoryDetailEx(repos, doc, commitId);				
+			changedItemList = verReposGetHistoryDetailEx(repos, doc, commitId, HistoryType_RealDoc);				
 		}
 		else
 		{
@@ -4885,7 +4885,7 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
 		Doc inputDoc = buildVDoc(doc);
 		
-		List<ChangedItem> changedItemList = verReposGetHistoryDetailLegacy(repos, false, inputDoc, commitId);
+		List<ChangedItem> changedItemList = verReposGetHistoryDetailLegacy(repos, false, inputDoc, commitId, HistoryType_VirtualDoc);
 		
 		if(changedItemList == null)
 		{

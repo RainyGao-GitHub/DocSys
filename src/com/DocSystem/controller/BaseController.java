@@ -3675,7 +3675,7 @@ public class BaseController  extends BaseFunction{
 		{	
 			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, downloadAll, needDeletedEntry, true);
 
-			insertCommit(repos, context, null, null);
+			insertCommit(repos, context, null, null, HistoryType_RealDoc);
 			//TODO: revert操作的commitEntry会在updateCommit时写入
 			//insertCommitEntry(repos, doc, context, "revert", null, login_user);
 		}
@@ -3701,7 +3701,7 @@ public class BaseController  extends BaseFunction{
 			{
 				ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
 				revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, commitActionList, null);
-				updateCommit(repos, context, revision, rt.getDebugLog(), commitActionList);
+				updateCommit(repos, context, revision, rt.getDebugLog(), commitActionList, HistoryType_RealDoc);
 				
 				if(revision != null)
 				{
@@ -3933,15 +3933,15 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
-			insertCommitEntry(repos, doc, context.folderUploadAction, "add", null, login_user);
+			insertCommitEntry(repos, doc, context.folderUploadAction, "add", null, login_user, HistoryType_RealDoc);
 
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
 			return 1;
 		}
 		
-		insertCommit(repos, context, null, null);
-		insertCommitEntry(repos, doc, context, "add", null, login_user);
+		insertCommit(repos, context, null, null, HistoryType_RealDoc);
+		insertCommitEntry(repos, doc, context, "add", null, login_user, HistoryType_RealDoc);
 
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -4287,7 +4287,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
-			insertCommitEntry(repos, doc, context.folderUploadAction, realCommitAction, null, login_user);
+			insertCommitEntry(repos, doc, context.folderUploadAction, realCommitAction, null, login_user, HistoryType_RealDoc);
 			
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
@@ -4295,8 +4295,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
-		insertCommit(repos, context, null, null);
-		insertCommitEntry(repos, doc, context, realCommitAction, null, login_user);
+		insertCommit(repos, context, null, null, HistoryType_RealDoc);
+		insertCommitEntry(repos, doc, context, realCommitAction, null, login_user, HistoryType_RealDoc);
 
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
 		if(isFSM(repos))
@@ -4558,7 +4558,7 @@ public class BaseController  extends BaseFunction{
 		}
 				
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
-		insertCommit(repos, context, null, null);
+		insertCommit(repos, context, null, null, HistoryType_RealDoc);
 		//TODO: delete操作的commitEntry会在updateCommit时写入
 		//insertCommitEntry(repos, doc, context, "delete", null, login_user);
 
@@ -4757,7 +4757,7 @@ public class BaseController  extends BaseFunction{
 			String action, String realAction, Integer isSrcEntry, 
 			Long commitId, String commitMsg, String commitUsers, 
 			Long startTime, Long endTime,
-			User user) 
+			User user, int historyType) 
 	{
 		Log.debug("insertCommitEntry() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers
 					+ " action:" + action + " realAction:" + realAction + " [" + doc.getPath() + doc.getName() + "]");
@@ -4784,46 +4784,46 @@ public class BaseController  extends BaseFunction{
 		entry.isSrcEntry = isSrcEntry;	//only for copyDoc/moveDoc/renameDoc
 
 		entry.id = LuceneUtil2.buildUniqueIdForCommitEntry(entry);
-		channel.insertCommitEntry(repos, entry);
+		channel.insertCommitEntry(repos, entry, historyType);
 	}
 	
-	private void insertCommitEntry(Repos repos, Doc doc, ActionContext context, String realCommitAction, Integer isSrcEntry, User user) {
+	private void insertCommitEntry(Repos repos, Doc doc, ActionContext context, String realCommitAction, Integer isSrcEntry, User user, int historyType) {
 		insertCommitEntry(
 				repos, doc, 
 				context.event, realCommitAction, isSrcEntry, 
 				context.commitId, context.commitMsg, context.commitUser,
 				context.startTime, context.endTime,
-				user);				
+				user, historyType);				
 	}
 
-	private void insertCommitEntry(Repos repos, Doc doc, FolderUploadAction action, String realCommitAction, Integer isSrcEntry, User user) {
+	private void insertCommitEntry(Repos repos, Doc doc, FolderUploadAction action, String realCommitAction, Integer isSrcEntry, User user, int historyType) {
 		insertCommitEntry(
 				repos, doc, 
 				action.event, realCommitAction, isSrcEntry, 
 				action.commitId, action.commitMsg, action.commitUser,
 				action.startTime, action.stopTime,
-				user);		
+				user, historyType);		
 	}
 
-	protected void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList) {
+	protected void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList, int historyType) {
 		Log.debug("insertCommitEntries() commitId:" + action.commitId + " commitMsg:" + action.commitMsg + " commitUsers:" + action.commitUser
 				+ " action:" + action.event + " [" + action.doc.getPath() + action.doc.getName() + "]");
 		
-		channel.insertCommitEntries(repos, action, commitEntryList);
+		channel.insertCommitEntries(repos, action, commitEntryList, historyType);
 	}
 	
-	protected void insertCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList) 
+	protected void insertCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList, int historyType) 
 	{
 		Log.debug("insertCommitEntries() commitId:" + context.commitId + " commitMsg:" + context.commitMsg + " commitUsers:" + context.commitUser
 				+ " action:" + context.event + " [" + context.doc.getPath() + context.doc.getName() + "]");
-		channel.insertCommitEntries(repos, context, commitEntryList);
+		channel.insertCommitEntries(repos, context, commitEntryList, historyType);
 	}
 	
-	protected void insertCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList) 
+	protected void insertCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType) 
 	{
 		Log.debug("insertCommitEntries() commitId:" + context.commitId + " commitMsg:" + context.commitMsg + " commitUsers:" + context.commitUser
 				+ " action:" + context.event + " [" + context.doc.getPath() + context.doc.getName() + "]");
-		channel.insertCommitEntriesEx(repos, context, commitActionList);
+		channel.insertCommitEntriesEx(repos, context, commitActionList, historyType);
 	}
 	
 	//CommitLog Insert and Update
@@ -4891,7 +4891,8 @@ public class BaseController  extends BaseFunction{
 			Long startTime, Long endTime, 
 			Integer userId, String userName,
 			Long commitId, String commitMsg, String commitUsers,
-			String revision, String errorInfo) 
+			String revision, String errorInfo, int historyType
+			) 
 	{
 		Log.debug("insertCommit() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers + " revision:" + revision + " errorInfo:" + errorInfo);
 
@@ -4922,7 +4923,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		commit.id = buildUniqueIdForCommitLog(commit);
-		channel.insertCommit(repos, commit);
+		channel.insertCommit(repos, commit, historyType);
 	}
 	
 	private void updateCommit(
@@ -4930,7 +4931,7 @@ public class BaseController  extends BaseFunction{
 			Long startTime, Long endTime, 
 			Integer userId, String userName,
 			Long commitId, String commitMsg, String commitUsers,
-			String revision, String errorInfo) 
+			String revision, String errorInfo, int historyType) 
 	{
 		Log.debug("updateCommit() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers 
 					+ " revision:" + revision + " errorInfo:" + errorInfo);
@@ -4962,53 +4963,53 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		commit.id = buildUniqueIdForCommitLog(commit);
-		channel.updateCommit(repos, commit);
+		channel.updateCommit(repos, commit, historyType);
 	}
 	
-	private void insertCommit(Repos repos, ActionContext context, String revision, String errorInfo) {
+	private void insertCommit(Repos repos, ActionContext context, String revision, String errorInfo, int historyType) {
 		insertCommit(
 				repos,  
 				context.startTime, null,
 				context.user.getId(), context.user.getName(),
 				context.commitId, context.commitMsg, context.commitUser,
-				revision, errorInfo);	
+				revision, errorInfo, historyType);	
 	}
 	
-	private void insertCommit(Repos repos, FolderUploadAction action) {
+	private void insertCommit(Repos repos, FolderUploadAction action, int historyType) {
 		insertCommit(
 				repos,  
 				action.startTime, null,
 				action.user.getId(), action.user.getName(),
 				action.commitId, action.commitMsg, action.commitUser,
-				null, null);	
+				null, null, historyType);	
 	}
 	
-	protected void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo, ArrayList<CommitAction> commitActionList) {		
+	protected void updateCommit(Repos repos, ActionContext context, String revision, String errorInfo, ArrayList<CommitAction> commitActionList, int historyType) {		
 		updateCommit(
 				repos,
 				context.startTime, context.endTime,
 				context.user.getId(), context.user.getName(),
 				context.commitId, context.commitMsg, context.commitUser,
-				revision, errorInfo);
+				revision, errorInfo, historyType);
 		
 		if(context.commitEntryList != null)
 		{
-			insertCommitEntries(repos, context,  context.commitEntryList);
+			insertCommitEntries(repos, context,  context.commitEntryList, historyType);
 		}
 		
 		if(commitActionList != null && commitActionList.size() > 0)
 		{
-			insertCommitEntriesEx(repos, context,  commitActionList);			
+			insertCommitEntriesEx(repos, context,  commitActionList, historyType);			
 		}		
 	}
 	
-	private void updateCommit(Repos repos, FolderUploadAction action, String revision, String errorInfo) {
+	private void updateCommit(Repos repos, FolderUploadAction action, String revision, String errorInfo, int historyType) {
 		updateCommit(
 				repos,
 				action.startTime, action.stopTime,
 				action.user.getId(), action.user.getName(),
 				action.commitId, action.commitMsg, action.commitUser,
-				revision, errorInfo);
+				revision, errorInfo, historyType);
 		
 		//insertCommitEntries(repos, action,  action.commitEntryList);
 	}
@@ -5982,7 +5983,7 @@ public class BaseController  extends BaseFunction{
 			Log.info("syncUpLocalWithVerRepos() ************************ 结束版本管理同步 ****************************");
 			return false;
 		}
-		Doc remoteEntry = verReposGetDocLegacy(repos, doc, null);
+		Doc remoteEntry = verReposGetDocLegacy(repos, doc, null, HistoryType_RealDoc);
 		if(remoteEntry == null)
 		{
 			Log.info("syncUpLocalWithVerRepos() 远程文件信息获取异常:" + doc.getDocId() + " " + doc.getPath() + doc.getName());
@@ -6207,13 +6208,13 @@ public class BaseController  extends BaseFunction{
 		
 		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
-		insertCommit(repos, context, null, null);
+		insertCommit(repos, context, null, null, HistoryType_RealDoc);
 		//TODO: syncup操作的commitEntry会在updateCommit时写入
 		//insertCommitEntry(repos, doc, context, "syncup", null, login_user);
 		
 		ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
 		String revision = verReposDocCommit(repos, false, doc, context.commitMsg, context.commitUser, rt, localChangesRootPath, subDocSyncupFlag, commitActionList, null);
-		updateCommit(repos, context, revision, rt.getDebugLog(), commitActionList);
+		updateCommit(repos, context, revision, rt.getDebugLog(), commitActionList, HistoryType_RealDoc);
 		
 		if(revision == null)
 		{
@@ -6233,7 +6234,7 @@ public class BaseController  extends BaseFunction{
 
 	private boolean syncupForDocChange_NoFS(Repos repos, Doc doc, User login_user, ReturnAjax rt, int subDocSyncFlag) 
 	{
-		Doc remoteEntry = verReposGetDocLegacy(repos, doc, null);
+		Doc remoteEntry = verReposGetDocLegacy(repos, doc, null, HistoryType_RealDoc);
 		if(remoteEntry == null)
 		{
 			docSysDebugLog("syncupForDocChange_NoFS() remoteEntry is null for " + doc.getPath()+doc.getName() + ", 无法同步！", rt);
@@ -7502,16 +7503,16 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private String verReposGetPreviousReposCommitIdEx(Repos repos, String commitId) {
+	private String verReposGetPreviousReposCommitIdEx(Repos repos, String commitId, int historyType) {
 		if(isLegacyReposHistory(repos))
 		{
-			return verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
+			return verReposGetPreviousReposCommitIdLegacy(repos, true, commitId, historyType);
 		}
-		return verReposGetPreviousReposCommitId(repos, commitId);
+		return verReposGetPreviousReposCommitId(repos, commitId, historyType);
 	}
 
-	private String verReposGetPreviousReposCommitId(Repos repos, String commitId) {
-		CommitLog commit = verReposGetPreviousCommit(repos, null, commitId);
+	private String verReposGetPreviousReposCommitId(Repos repos, String commitId, int historyType) {
+		CommitLog commit = verReposGetPreviousCommit(repos, null, commitId, historyType);
 		if(commit == null)
 		{
 			return null;
@@ -7519,9 +7520,9 @@ public class BaseController  extends BaseFunction{
 		return commit.commitId + "";
 	}
 	
-	protected CommitLog verReposGetPreviousCommit(Repos repos, Doc doc, String commitId)
+	protected CommitLog verReposGetPreviousCommit(Repos repos, Doc doc, String commitId, int historyType)
 	{
-		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 2, null, commitId);
+		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 2, null, commitId, historyType);
 		if(list == null || list.size() < 2)
 		{
 			Log.debug("getLatestCommitId() failed to get the previous commitLog");
@@ -7531,7 +7532,7 @@ public class BaseController  extends BaseFunction{
 		return list.get(1);
 	}
 
-	private String verReposGetPreviousReposCommitIdLegacy(Repos repos, boolean isRealDoc, String commitId) {
+	private String verReposGetPreviousReposCommitIdLegacy(Repos repos, boolean isRealDoc, String commitId, int historyType) {
 		int verCtrl = repos.getVerCtrl();
 		if(isRealDoc == false)
 		{
@@ -7573,17 +7574,17 @@ public class BaseController  extends BaseFunction{
 		return svnUtil.getReposPreviousCommmitId(commitId);
 	}
 
-	protected String verReposGetLatestReposCommitIdEx(Repos repos) 
+	protected String verReposGetLatestReposCommitIdEx(Repos repos, int historyType) 
 	{
 		if(isLegacyReposHistory(repos))
 		{
-			return verReposGetLatestReposCommitIdLegacy(repos, true);
+			return verReposGetLatestReposCommitIdLegacy(repos, true, historyType);
 		}
-		return verReposGetLatestReposCommitId(repos);
+		return verReposGetLatestReposCommitId(repos, historyType);
 	}
 	
-	protected String verReposGetLatestReposCommitId(Repos repos) {
-		CommitLog commit = getLatestReposCommit(repos);
+	protected String verReposGetLatestReposCommitId(Repos repos, int historyType) {
+		CommitLog commit = getLatestReposCommit(repos, historyType);
 		if(commit == null)
 		{
 			return null;
@@ -7591,19 +7592,19 @@ public class BaseController  extends BaseFunction{
 		return commit.commitId + "";
 	}
 	
-	protected CommitLog getCommitLogById(Repos repos, String commitId)
+	protected CommitLog getCommitLogById(Repos repos, String commitId, int historyType)
 	{
 		Log.debug("getCommitLogById() commitId:" + commitId);
 
 		if(commitId == null)
 		{
-			return getLatestReposCommit(repos);
+			return getLatestReposCommit(repos, historyType);
 		}
 		
 		//根据commitId
 		CommitLog qCommit = new CommitLog();
 		qCommit.commitId = Long.parseLong(commitId);
-		List<CommitLog> list = channel.queryCommitLog(repos, qCommit);
+		List<CommitLog> list = channel.queryCommitLog(repos, qCommit, historyType);
 		if(list == null || list.size() == 0)
 		{
 			Log.debug("getCommitLogById() there is not commitLog for commitId:" + commitId);
@@ -7615,9 +7616,9 @@ public class BaseController  extends BaseFunction{
 		return commit;
 	}
 
-	protected CommitLog getLatestReposCommit(Repos repos)
+	protected CommitLog getLatestReposCommit(Repos repos, int historyType)
 	{
-		List<CommitLog> list = channel.queryCommitLog(repos, null, 1, null, null);
+		List<CommitLog> list = channel.queryCommitLog(repos, null, 1, null, null, historyType);
 		if(list == null || list.size() == 0)
 		{
 			Log.debug("getLatestCommitId() failed to get the latest commitLog");
@@ -7627,9 +7628,9 @@ public class BaseController  extends BaseFunction{
 		return list.get(0);
 	}
 	
-	protected CommitLog getLatestDocCommit(Repos repos, Doc doc)
+	protected CommitLog getLatestDocCommit(Repos repos, Doc doc, int  historyType)
 	{
-		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 1, null, null);
+		List<CommitLog> list = channel.queryCommitLogForDoc(repos, doc, 1, null, null, historyType);
 		if(list == null || list.size() == 0)
 		{
 			Log.debug("getLatestCommitId() failed to get the latest commitLog");
@@ -7639,7 +7640,7 @@ public class BaseController  extends BaseFunction{
 		return list.get(0);
 	}
 
-	protected String verReposGetLatestReposCommitIdLegacy(Repos repos, boolean isRealDoc) 
+	protected String verReposGetLatestReposCommitIdLegacy(Repos repos, boolean isRealDoc, int historyType) 
 	{
 		int verCtrl = repos.getVerCtrl();
 		if(isRealDoc == false)
@@ -7764,26 +7765,26 @@ public class BaseController  extends BaseFunction{
 		return localVerReposPath;
 	}
 	
-	protected Doc verReposGetDocEx(Repos repos, Doc doc, String commitId)
+	protected Doc verReposGetDocEx(Repos repos, Doc doc, String commitId, int historyType)
 	{
 		if(isLegacyReposHistory(repos))
 		{
-			return verReposGetDocLegacy(repos, doc, commitId);
+			return verReposGetDocLegacy(repos, doc, commitId, historyType);
 		}
 		
-		return verReposGetDoc(repos, doc, commitId);
+		return verReposGetDoc(repos, doc, commitId, historyType);
 	}
 	
-	private Doc verReposGetDoc(Repos repos, Doc doc, String commitId) {
+	private Doc verReposGetDoc(Repos repos, Doc doc, String commitId, int historyType) {
 		if(commitId == null)
 		{
-			commitId = verReposGetLatestReposCommitId(repos);
+			commitId = verReposGetLatestReposCommitId(repos, historyType);
 		}
 		
-		return channel.getHistoryDoc(repos, doc, commitId);
+		return channel.getHistoryDoc(repos, doc, commitId, historyType);
 	}
 
-	protected Doc verReposGetDocLegacy(Repos repos, Doc doc, String revision)
+	protected Doc verReposGetDocLegacy(Repos repos, Doc doc, String revision, int historyType)
 	{
 		if(repos.getVerCtrl() == 1)
 		{
@@ -8553,7 +8554,7 @@ public class BaseController  extends BaseFunction{
 			case ADD: //add
 			case UPDATE: //update
 				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, commitActionList, null);				
-				updateCommit(repos, action.context, revision, rt.getDebugLog(), null);
+				updateCommit(repos, action.context, revision, rt.getDebugLog(), null, HistoryType_RealDoc);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -8566,7 +8567,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case DELETE:	//delete
 				revision = verReposDocCommit(repos, false, doc, action.getCommitMsg(), action.getCommitUser(), rt, null, 2, commitActionList, null);				
-				updateCommit(repos, action.context, revision, rt.getDebugLog(), null);
+				updateCommit(repos, action.context, revision, rt.getDebugLog(), null, HistoryType_RealDoc);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -8579,7 +8580,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case MOVE:	//move
 				revision = verReposDocMove(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
-				updateCommit(repos, action.context, revision, rt.getDebugLog(), null);
+				updateCommit(repos, action.context, revision, rt.getDebugLog(), null, HistoryType_RealDoc);
 				if(revision == null)
 				{
 					docSysWarningLog("executeVerReposAction() verReposRealDocMove Failed", rt);
@@ -8597,7 +8598,7 @@ public class BaseController  extends BaseFunction{
 				break;
 			case COPY: //copy
 				revision = verReposDocCopy(repos, false, doc, newDoc, action.getCommitMsg(), action.getCommitUser(), rt, commitActionList);
-				updateCommit(repos, action.context, revision, rt.getDebugLog(), null);
+				updateCommit(repos, action.context, revision, rt.getDebugLog(), null, HistoryType_RealDoc);
 				if(revision == null)
 				{
 					docSysDebugLog("executeVerReposAction() verReposRealDocCopy srcDoc [" + doc.getPath() + doc.getName()+ "] to dstDoc [" + newDoc.getPath() + newDoc.getName() + "] Failed", rt);
@@ -8760,7 +8761,7 @@ public class BaseController  extends BaseFunction{
 		
 		if(context.folderUploadAction != null)
 		{
-			insertCommitEntry(repos, doc, context.folderUploadAction, "modify", null, login_user);
+			insertCommitEntry(repos, doc, context.folderUploadAction, "modify", null, login_user, HistoryType_RealDoc);
 
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
@@ -8768,8 +8769,8 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
-		insertCommit(repos, context, null, null);
-		insertCommitEntry(repos, doc, context, "modify", null, login_user);
+		insertCommit(repos, context, null, null, HistoryType_RealDoc);
+		insertCommitEntry(repos, doc, context, "modify", null, login_user, HistoryType_RealDoc);
 
 		//需要将文件Commit到版本仓库上去
 		List<CommonAction> asyncActionList = new ArrayList<CommonAction>();
@@ -9020,7 +9021,7 @@ public class BaseController  extends BaseFunction{
 			return 0;
 		}
 		
-		insertCommit(repos, context, null, null);
+		insertCommit(repos, context, null, null, HistoryType_RealDoc);
 		//TODO: move操作的commitEntry会在updateCommit时写入
 		//insertCommitEntry(repos, srcDoc, context, "delete", 1, login_user);
 		//insertCommitEntry(repos, dstDoc, context, "add", 0, login_user);
@@ -9172,7 +9173,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//TODO: insertCommitEntry
-		insertCommit(repos, context, null, null);
+		insertCommit(repos, context, null, null, HistoryType_RealDoc);
 		//TODO: copy操作的commitEntry会在updateCommit时写入
 		//insertCommitEntry(repos, srcDoc, context, "noChange", 1, login_user);
 		//insertCommitEntry(repos, dstDoc, context, "add", 0, login_user);
@@ -9350,7 +9351,7 @@ public class BaseController  extends BaseFunction{
 				
 		if(context.folderUploadAction != null)
 		{
-			insertCommitEntry(repos, doc, context.folderUploadAction, "add", null, login_user);
+			insertCommitEntry(repos, doc, context.folderUploadAction, "add", null, login_user, HistoryType_RealDoc);
 			
 			insertLocalChange(doc, context.folderUploadAction.localChangesRootPath);
 			//TODO: 目录上传，必须返回1或0，外部函数需要该值决定成功还是失败
@@ -9358,8 +9359,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//注意: 这里commitInfo里还没有版本提交的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
-		insertCommit(repos, context, null, null);
-		insertCommitEntry(repos, doc, context, "add", null, login_user);
+		insertCommit(repos, context, null, null, HistoryType_RealDoc);
+		insertCommitEntry(repos, doc, context, "add", null, login_user, HistoryType_RealDoc);
 		
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);		
@@ -9490,8 +9491,8 @@ public class BaseController  extends BaseFunction{
 		
 		if(saveRealDocContentEx(repos, doc, rt) == true)
 		{
-			insertCommit(repos, context, null, null);
-			insertCommitEntry(repos, doc, context, "modify", null, login_user);
+			insertCommit(repos, context, null, null, HistoryType_RealDoc);
+			insertCommitEntry(repos, doc, context, "modify", null, login_user, HistoryType_RealDoc);
 			
 			doc.setLatestEditor(login_user.getId());
 			doc.setLatestEditorName(login_user.getName());
@@ -12090,24 +12091,24 @@ public class BaseController  extends BaseFunction{
 	/*************** DocSys verRepos操作接口 *********************/	
 	//获取文件的提交历史: 该接口是基于IndexLib实现的通用版本管理接口
 	//目前只针对RealDoc
-	protected List<LogEntry> getCommitHistoryEx(Repos repos, Doc doc, int maxLogNum, String endCommitId) 
+	protected List<LogEntry> getCommitHistoryEx(Repos repos, Doc doc, int maxLogNum, String endCommitId, int historyType) 
 	{
 		Log.debug("getCommitHistoryEx() maxLogNum:" + maxLogNum + " endCommitId:" + endCommitId);
 		if(isLegacyReposHistory(repos))
 		{
 			return verReposGetHistoryLegacy(repos, false, doc, maxLogNum, endCommitId);
 		}
-		return verReposGetHistory(repos, doc, maxLogNum, endCommitId);
+		return verReposGetHistory(repos, doc, maxLogNum, endCommitId, historyType);
 	}
 	
-	protected List<ChangedItem> verReposGetHistoryDetailEx(Repos repos, Doc doc, String commitId) 
+	protected List<ChangedItem> verReposGetHistoryDetailEx(Repos repos, Doc doc, String commitId, int historyType) 
 	{
 		Log.debug("verReposGetHistoryDetailEx() [" + doc.getPath() + doc.getName() + "] commitId:" + commitId);
 		if(isLegacyReposHistory(repos))
 		{
-			return verReposGetHistoryDetailLegacy(repos, false, doc, commitId);
+			return verReposGetHistoryDetailLegacy(repos, false, doc, commitId, historyType);
 		}
-		return verReposGetHistoryDetail(repos, doc, commitId);
+		return verReposGetHistoryDetail(repos, doc, commitId, historyType);
 	}
 	
 	protected boolean isLegacyReposHistory(Repos repos) {
@@ -12127,10 +12128,10 @@ public class BaseController  extends BaseFunction{
 		return file.mkdirs();
 	}
 
-	protected List<LogEntry> verReposGetHistory(Repos repos, Doc doc, int maxLogNum, String endCommitId) 
+	protected List<LogEntry> verReposGetHistory(Repos repos, Doc doc, int maxLogNum, String endCommitId, int historyType) 
 	{
 		Log.debug("getCommitHistory() maxLogNum:" + maxLogNum + " endCommitId:" + endCommitId);
-		List<LogEntry> commitHistory = channel.queryCommitHistory(repos, doc, maxLogNum, null, endCommitId);
+		List<LogEntry> commitHistory = channel.queryCommitHistory(repos, doc, maxLogNum, null, endCommitId, historyType);
 		return commitHistory;
 	}
 	
@@ -12179,13 +12180,13 @@ public class BaseController  extends BaseFunction{
 	}
 
 	//Get History Detail
-	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos, Doc doc, String commitId) 
+	protected List<ChangedItem> verReposGetHistoryDetail(Repos repos, Doc doc, String commitId, int historyType) 
 	{
-		List<ChangedItem> commitEntryList = channel.queryCommitHistoryDetailForLegacy(repos, doc, commitId);
+		List<ChangedItem> commitEntryList = channel.queryCommitHistoryDetailForLegacy(repos, doc, commitId, historyType);
 		return commitEntryList;
 	}
 
-	protected List<ChangedItem> verReposGetHistoryDetailLegacy(Repos repos,boolean convert, Doc doc, String commitId) 
+	protected List<ChangedItem> verReposGetHistoryDetailLegacy(Repos repos,boolean convert, Doc doc, String commitId, int historyType) 
 	{
 		doc = docConvert(doc, convert);
 
@@ -12478,7 +12479,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("verReposCheckOutEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
+				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId, HistoryType_RealDoc);
 				Log.debug("verReposCheckOutEx() to get deletedEntryList from preCommit:" + preCommitId);
 				successList1 = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
@@ -12500,7 +12501,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("verReposCheckOutEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousReposCommitId(repos, commitId);
+				preCommitId = verReposGetPreviousReposCommitId(repos, commitId, HistoryType_RealDoc);
 				Log.debug("verReposCheckOutEx() to get deletedEntryList from preCommit:" + preCommitId);				
 				successList1 = verReposCheckOut(repos, doc, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
@@ -12576,7 +12577,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("verReposCheckOutForDownloadEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId);
+				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId, HistoryType_RealDoc);
 				Log.debug("verReposCheckOutForDownloadEx() to get deletedEntryList from preCommit:" + preCommitId);
 				successList1 = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
@@ -12598,7 +12599,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("verReposCheckOutForDownloadEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousReposCommitId(repos, commitId);
+				preCommitId = verReposGetPreviousReposCommitId(repos, commitId, HistoryType_RealDoc);
 				Log.debug("verReposCheckOutForDownloadEx() to get deletedEntryList from preCommit:" + preCommitId);
 				successList1 = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList);
 			}
@@ -12645,7 +12646,7 @@ public class BaseController  extends BaseFunction{
 			boolean force, 
 			HashMap<String, String> downloadList) 
 	{
-		CommitLog commit = getCommitLogById(repos, commitId);
+		CommitLog commit = getCommitLogById(repos, commitId, HistoryType_RealDoc);
 		if(commit == null)
 		{
 			Log.debug("verReposCheckOutEx() failed to get commitLog for commitId:" + commitId);			
@@ -12703,7 +12704,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		CommitLog commit = getCommitLogById(repos, commitId);
+		CommitLog commit = getCommitLogById(repos, commitId, HistoryType_RealDoc);
 		if(commit == null)
 		{
 			Log.debug("verReposCheckOutForDownload() failed to get commitLog for commitId:" + commitId);			
@@ -13037,44 +13038,78 @@ public class BaseController  extends BaseFunction{
 	
     /************************* DocSys全文搜索操作接口 ***********************************/
 	/**************** IndexLib For CommitHistory *******/
-	protected static String getIndexLibPathForCommitEntry(Repos repos, Date date)
+	protected static String getIndexLibPathForCommitEntry(Repos repos, Date date, int historyType)
 	{
-		return getIndexLibPathForCommitEntry(repos, date.getYear());
+		return getIndexLibPathForCommitEntry(repos, date.getYear(), historyType);
 	}
 	
-	protected static String getIndexLibPathForCommitLog(Repos repos, Date date)
+	protected static String getIndexLibPathForCommitLog(Repos repos, Date date, int historyType)
 	{
-		return getIndexLibPathForCommitLog(repos, date.getYear());
+		return getIndexLibPathForCommitLog(repos, date.getYear(), historyType);
 	}
 	
-	protected static String getIndexLibPathForCommitEntry(Repos repos, int year)
+	protected static String getIndexLibPathForCommitEntry(Repos repos, int year, int historyType)
 	{
 		String indexLib = repos.getPath() + repos.getId() + "/ReposHistory/CommitEntry_" + year;	
+		switch(historyType)
+		{
+		case 0:
+			break;
+		case 1:
+			indexLib = repos.getPath() + repos.getId() + "/ReposNoteHistory/CommitEntry_" + year;	
+			break;
+		case 2:
+			indexLib = repos.getPath() + repos.getId() + "/ReposLocalBackupHistory/CommitEntry_" + year;	
+			break;
+		case 3:
+			indexLib = repos.getPath() + repos.getId() + "/ReposRemoteBackupHistory/CommitEntry_" + year;	
+			break;
+		case 4:
+			indexLib = repos.getPath() + repos.getId() + "/ReposRecycleBinHistory/CommitEntry_" + year;	
+			break;
+		}
 		return indexLib;
 	}
 	
-	protected static String getIndexLibPathForCommitLog(Repos repos, int year)
+	protected static String getIndexLibPathForCommitLog(Repos repos, int year, int historyType)
 	{
 		String indexLib = repos.getPath() + repos.getId() + "/ReposHistory/CommitLog_" + year;	
+		switch(historyType)
+		{
+		case 0:
+			break;
+		case 1:
+			indexLib = repos.getPath() + repos.getId() + "/ReposNoteHistory/CommitLog_" + year;	
+			break;
+		case 2:
+			indexLib = repos.getPath() + repos.getId() + "/ReposLocalBackupHistory/CommitLog_" + year;	
+			break;
+		case 3:
+			indexLib = repos.getPath() + repos.getId() + "/ReposRemoteBackupHistory/CommitLog_" + year;	
+			break;
+		case 4:
+			indexLib = repos.getPath() + repos.getId() + "/ReposRecycleBinHistory/CommitLog_" + year;	
+			break;
+		}
 		return indexLib;
 	}
 	
 	//Add Index For CommitEntry
-	public boolean addIndexForCommitEntry(Repos repos, CommitEntry entry)
+	public boolean addIndexForCommitEntry(Repos repos, CommitEntry entry, int historyType)
 	{
 		Log.debug("addIndexForCommitEntry() id:" + entry.id);
 		Date date = new Date(entry.startTime);
-		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
 		boolean ret = false;
 		ret = LuceneUtil2.addIndexForCommitEntry(entry, indexLib);
 		return ret;
 	}
 
-	public boolean addIndexForCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList)
+	public boolean addIndexForCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList, int historyType)
 	{
 		Log.debug("addIndexForCommitEntries() action:" + action.event);
 		Date date = new Date(action.commitId);
-		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
 		boolean ret = false;
 		
 		ret = LuceneUtil2.addIndexForCommitEntries(repos, action, commitEntryList, indexLib);
@@ -13082,7 +13117,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	public boolean addIndexForCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList)
+	public boolean addIndexForCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList, int historyType)
 	{
 		Log.debug("addIndexForCommitEntries() context:" + context.event);
 		if(commitEntryList == null || commitEntryList.size() == 0)
@@ -13092,7 +13127,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Date date = new Date(context.commitId);
-		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
 		boolean ret = false;
 		
 		ret = LuceneUtil2.addIndexForCommitEntries(repos, context, commitEntryList, indexLib);
@@ -13100,7 +13135,7 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	public boolean addIndexForCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList)
+	public boolean addIndexForCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType)
 	{
 		Log.debug("addIndexForCommitEntriesEx() context:" + context.event);
 		if(commitActionList == null || commitActionList.size() == 0)
@@ -13110,7 +13145,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Date date = new Date(context.commitId);
-		String indexLib = getIndexLibPathForCommitEntry(repos, date);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
 		boolean ret = false;
 		
 		ret = LuceneUtil2.addIndexForCommitEntriesEx(repos, context, commitActionList, indexLib);
@@ -13118,21 +13153,21 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
-	public boolean addIndexForCommitLog(Repos repos, CommitLog commit)
+	public boolean addIndexForCommitLog(Repos repos, CommitLog commit, int historyType)
 	{
 		Log.debug("addIndexForCommitLog() id:" + commit.id);
 		Date date = new Date(commit.commitId);
-		String indexLib = getIndexLibPathForCommitLog(repos, date);
+		String indexLib = getIndexLibPathForCommitLog(repos, date, historyType);
 		boolean ret = false;
 		ret = LuceneUtil2.addCommitLogIndex(commit, indexLib);
 		return ret;
 	}
 	
-	public boolean updateIndexForCommitLog(Repos repos, CommitLog commit)
+	public boolean updateIndexForCommitLog(Repos repos, CommitLog commit, int historyType)
 	{
 		Log.debug("updateIndexForCommitLog() id:" + commit.id);
 		Date date = new Date(commit.commitId);
-		String indexLib = getIndexLibPathForCommitLog(repos, date);
+		String indexLib = getIndexLibPathForCommitLog(repos, date, historyType);
 		boolean ret = false;
 		ret = LuceneUtil2.updateCommitLogIndex(commit, indexLib);
 		return ret;
@@ -22189,7 +22224,7 @@ public class BaseController  extends BaseFunction{
 	
 	private void getEntryListForCheckOut(Repos repos, Doc doc, String commitId, HashMap<String, String> changedEntries, HashMap<String, String> deletedEntries) 
 	{
-		List<CommitEntry> changedItemList = channel.queryCommitHistoryDetail(repos, doc, commitId);
+		List<CommitEntry> changedItemList = channel.queryCommitHistoryDetail(repos, doc, commitId, HistoryType_RealDoc);
 		String docEntryPath = doc.getPath() + doc.getName();
 		//过滤掉不在doc目录下的ChangeItems
 		for(int i=0; i< changedItemList.size(); i++)
@@ -22254,7 +22289,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//根据commitId获取ChangeItemsList
-		List<ChangedItem> changedItemList = verReposGetHistoryDetailLegacy(repos, isRealDoc, doc, commitId);
+		List<ChangedItem> changedItemList = verReposGetHistoryDetailLegacy(repos, isRealDoc, doc, commitId, HistoryType_RealDoc);
 		if(changedItemList == null)
 		{
 			Log.debug("getEntryListForCheckOut() verReposGetHistoryDetail Failed");
@@ -23099,7 +23134,7 @@ public class BaseController  extends BaseFunction{
 
 		//TODO: insertCommit
 		//注意: 这里commitInfo里还没有版本仓库的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
-		insertCommit(repos, action);
+		insertCommit(repos, action, HistoryType_RealDoc);
 		
 		if(isLocalChanged(action.localChangesRootPath) == false)
 		{
@@ -23122,7 +23157,7 @@ public class BaseController  extends BaseFunction{
 				List<CommitAction> commitActionListFake = new ArrayList<CommitAction>();			
 				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, commitActionList, commitActionListFake);
 				//更新commitInfo的版本提交信息: 将revision写入commitInfo中
-				updateCommit(repos, action, revision, rt.getDebugLog());
+				updateCommit(repos, action, revision, rt.getDebugLog(), HistoryType_RealDoc);
 				if(revision != null)
 				{
 					verReposPullPush(repos, true, rt);
@@ -23791,7 +23826,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(isLatestCommitEx(repos, doc, commitId, rt) == true)
+			if(isLatestCommitEx(repos, doc, commitId, rt, HistoryType_RealDoc) == true)
 			{
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
 
@@ -23842,27 +23877,27 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
-	private boolean isLatestCommitEx(Repos repos, Doc doc, String commitId, ReturnAjax rt) 
+	private boolean isLatestCommitEx(Repos repos, Doc doc, String commitId, ReturnAjax rt, int historyType) 
 	{
 		if(isLegacyReposHistory(repos))
 		{
 			if(isLatestVerReposCommitLegacy(repos, doc, commitId, rt))
 			{
-				return !isAnyEntryWasDeletedInCommitLegacy(repos, doc, commitId);
+				return !isAnyEntryWasDeletedInCommitLegacy(repos, doc, commitId, historyType);
 			}
 			return false;
 		}
 		
-		if(isLatestVerReposCommit(repos, doc, commitId, rt))
+		if(isLatestVerReposCommit(repos, doc, commitId, rt, historyType))
 		{
-			return !isAnyEntryWasDeletedInCommit(repos, doc, commitId);
+			return !isAnyEntryWasDeletedInCommit(repos, doc, commitId, historyType);
 		}
 		return false;
 	}
 	
-	private boolean isLatestVerReposCommit(Repos repos, Doc doc, String commitId, ReturnAjax rt) {
-		CommitLog commit = getCommitLogById(repos, commitId);
-		CommitLog latestDocCommit = getLatestDocCommit(repos, doc);
+	private boolean isLatestVerReposCommit(Repos repos, Doc doc, String commitId, ReturnAjax rt, int historyType) {
+		CommitLog commit = getCommitLogById(repos, commitId, historyType);
+		CommitLog latestDocCommit = getLatestDocCommit(repos, doc, historyType);
 		if(latestDocCommit == null || commit == null)
 		{
 			return false;
@@ -23877,10 +23912,10 @@ public class BaseController  extends BaseFunction{
 		return false;		
 	}
 	
-	private boolean isAnyEntryWasDeletedInCommit(Repos repos, Doc doc, String commitId)
+	private boolean isAnyEntryWasDeletedInCommit(Repos repos, Doc doc, String commitId, int historyType)
 	{		
 		//需要检查detail里是否有删除操作
-		List<CommitEntry> list = channel.queryCommitHistoryDetail(repos, doc, commitId);
+		List<CommitEntry> list = channel.queryCommitHistoryDetail(repos, doc, commitId, historyType);
 		if(list == null || list.size() == 0)
 		{
 			return false;
@@ -23932,10 +23967,10 @@ public class BaseController  extends BaseFunction{
 		return false;		
 	}
 	
-	private boolean isAnyEntryWasDeletedInCommitLegacy(Repos repos, Doc doc, String commitId)
+	private boolean isAnyEntryWasDeletedInCommitLegacy(Repos repos, Doc doc, String commitId, int historyType)
 	{
 		//需要检查detail里是否有删除操作
-		List<ChangedItem> list = verReposGetHistoryDetailLegacy(repos, false, doc, commitId);
+		List<ChangedItem> list = verReposGetHistoryDetailLegacy(repos, false, doc, commitId, historyType);
 		if(list == null || list.size() == 0)
 		{
 			return false;
@@ -23990,7 +24025,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//TODO: 注意remoteEntry是指在版本仓库里的信息，所以要直接用verReposGetDoc
-		Doc remoteEntry = verReposGetDocLegacy(repos, doc, null);
+		Doc remoteEntry = verReposGetDocLegacy(repos, doc, null, HistoryType_RealDoc);
 		if(remoteEntry == null)
 		{
 			docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 获取远程文件信息失败!",rt);
@@ -24026,7 +24061,7 @@ public class BaseController  extends BaseFunction{
 			
 			ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
 			String revision = verReposDocCommit(repos, false, doc, contextSyncup.commitMsg, contextSyncup.commitUser, rt, scanOption.localChangesRootPath, 2, commitActionList, null);
-			updateCommit(repos, contextSyncup, revision, rt.getDebugLog(), commitActionList);
+			updateCommit(repos, contextSyncup, revision, rt.getDebugLog(), commitActionList, HistoryType_RealDoc);
 			if(revision == null)
 			{
 				docSysDebugLog("localChangeSyncupBeforRevert() verReposDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);

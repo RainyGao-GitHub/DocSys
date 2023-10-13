@@ -166,34 +166,34 @@ public interface Channel {
 
 	List<SystemLog> getSystemLogList(SystemLog queryLog, Long startTime, Long endTime);
 
-	void insertCommitEntry(Repos repos, CommitEntry entry);
+	void insertCommitEntry(Repos repos, CommitEntry entry, int historyType);
 	
-	void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList);
+	void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList, int historyType);
 
-	void insertCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList);
+	void insertCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList, int historyType);
 
-	void insertCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList);
+	void insertCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType);
 
-	void insertCommit(Repos repos, CommitLog commit);
+	void insertCommit(Repos repos, CommitLog commit, int historyType);
 
-	void updateCommit(Repos repos, CommitLog commit);
+	void updateCommit(Repos repos, CommitLog commit, int historyType);
 	
 	//精确查询提交历史: 通常指定commitId，来获取详细的commitLog信息
-	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit);
+	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit, int historyType);
 	
 	//查询仓库提交历史: 只支持仓库commitLog索引数据库，因此不支持查询指定文件或目录
-	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit, int maxLogNum, String startCommitId, String endCommitId);
+	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit, int maxLogNum, String startCommitId, String endCommitId, int historyType);
 	
 	//查询文件/目录/仓库提交历史: 不指定文件或目录信息，则查询到的时仓库的提交历史
-	List<CommitLog> queryCommitLogForDoc(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId); 
+	List<CommitLog> queryCommitLogForDoc(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId, int historyType); 
 
-	List<LogEntry> queryCommitHistory(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId);
+	List<LogEntry> queryCommitHistory(Repos repos, Doc doc, int maxLogNum, String startCommitId, String endCommitId, int historyType);
 
-	List<CommitEntry> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId);
+	List<CommitEntry> queryCommitHistoryDetail(Repos repos, Doc doc, String commitId, int historyType);
 	
-	List<ChangedItem> queryCommitHistoryDetailForLegacy(Repos repos, Doc doc, String commitId);
+	List<ChangedItem> queryCommitHistoryDetailForLegacy(Repos repos, Doc doc, String commitId, int historyType);
 
-	boolean convertReposHistory(Repos repos, Integer maxNum, ReturnAjax rt);
+	boolean convertReposHistory(Repos repos, Integer maxNum, ReturnAjax rt, int historyType);
 
-	Doc getHistoryDoc(Repos repos, Doc doc, String commitId);
+	Doc getHistoryDoc(Repos repos, Doc doc, String commitId, int historyType);
 }

@@ -619,7 +619,7 @@ public class ReposController extends BaseController{
 		
 		setReposIsBusy(repos.getId(), true);
 		
-		channel.convertReposHistory(repos, null, rt);
+		channel.convertReposHistory(repos, null, rt, HistoryType_RealDoc);
 		
 		writeJson(rt, response);	
 		setReposIsBusy(repos.getId(), false);			

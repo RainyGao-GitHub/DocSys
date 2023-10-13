@@ -127,6 +127,13 @@ public class BaseFunction{
 	protected static final int GetDocList_RemoteStorage = 2;
 	protected static final int GetDocList_LocalEntryAndRemoteStorage = 3;
 	
+	//HistoryType for CommitLog and CommitEntry
+	protected static final int HistoryType_RealDoc = 0;
+	protected static final int HistoryType_VirtualDoc = 1;
+	protected static final int HistoryType_LocalBackup = 2;
+	protected static final int HistoryType_RemoteBackup = 3;
+	protected static final int HistoryType_RecycleBin = 4;
+	
 	//应用路径
     protected static String docSysIniPath = null;
     protected static String docSysWebPath = null;
