@@ -13053,18 +13053,18 @@ public class BaseController  extends BaseFunction{
 		String indexLib = repos.getPath() + repos.getId() + "/ReposHistory/CommitEntry_" + year;	
 		switch(historyType)
 		{
-		case 0:
+		case HistoryType_RealDoc:
 			break;
-		case 1:
+		case HistoryType_VirtualDoc:
 			indexLib = repos.getPath() + repos.getId() + "/ReposNoteHistory/CommitEntry_" + year;	
 			break;
-		case 2:
+		case HistoryType_LocalBackup:
 			indexLib = repos.getPath() + repos.getId() + "/ReposLocalBackupHistory/CommitEntry_" + year;	
 			break;
-		case 3:
+		case HistoryType_RemoteBackup:
 			indexLib = repos.getPath() + repos.getId() + "/ReposRemoteBackupHistory/CommitEntry_" + year;	
 			break;
-		case 4:
+		case HistoryType_RecycleBin:
 			indexLib = repos.getPath() + repos.getId() + "/ReposRecycleBinHistory/CommitEntry_" + year;	
 			break;
 		}
@@ -13076,18 +13076,18 @@ public class BaseController  extends BaseFunction{
 		String indexLib = repos.getPath() + repos.getId() + "/ReposHistory/CommitLog_" + year;	
 		switch(historyType)
 		{
-		case 0:
+		case HistoryType_RealDoc:
 			break;
-		case 1:
+		case HistoryType_VirtualDoc:
 			indexLib = repos.getPath() + repos.getId() + "/ReposNoteHistory/CommitLog_" + year;	
 			break;
-		case 2:
+		case HistoryType_LocalBackup:
 			indexLib = repos.getPath() + repos.getId() + "/ReposLocalBackupHistory/CommitLog_" + year;	
 			break;
-		case 3:
+		case HistoryType_RemoteBackup:
 			indexLib = repos.getPath() + repos.getId() + "/ReposRemoteBackupHistory/CommitLog_" + year;	
 			break;
-		case 4:
+		case HistoryType_RecycleBin:
 			indexLib = repos.getPath() + repos.getId() + "/ReposRecycleBinHistory/CommitLog_" + year;	
 			break;
 		}
