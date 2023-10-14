@@ -30,12 +30,12 @@ public class ActionContext {
 	public FolderUploadAction folderUploadAction;
 
 	//MxsDoc系统的commitId
-	
 	public Long commitId;
 	public String commitMsg;
 	public String commitUser;
 	public Long startTime;
 	public Long endTime;
+	public String offsetPath; //历史存放的偏移位置
 	
 	//TODO: 主要用于保存文件删除、复制、移动、重命名的操作记录
 	//目录下文件特别多的情况下，可能存在内存风险

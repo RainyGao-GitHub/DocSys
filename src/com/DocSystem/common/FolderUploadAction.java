@@ -50,6 +50,7 @@ public class FolderUploadAction {
 	public Long commitId;
 	public String commitMsg;
 	public String commitUser;
+	public String offsetPath; //历史数据存放的偏移位置
 
 	public List<CommitEntry> commitEntryList;	
 }

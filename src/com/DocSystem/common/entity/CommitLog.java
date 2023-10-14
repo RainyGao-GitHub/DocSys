@@ -26,8 +26,11 @@ public class CommitLog {
 	public Integer docType;			//1: File 2: Folder
 	public Long docSize;			//Folder size is 0	
 	
-	public String verReposInfo;			//verReposInfo (url/user/pwd)
-	public Integer verReposStatus;	//status for verReposCommit: 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息
-	public String verReposRevision;		//revision of this verReposCommit
+	//History Storage Info
+	public String verReposInfo;			//verReposInfo (url/user/pwd)/Disk/FTP/SFTP/SMB/MxsDoc
+	public Integer verReposStatus;		//status for verReposCommit: 200:成功, -1:失败，0:没有提交  revision:成功时写入, errorInfo:提交失败的信息
+	public String verReposOffsetPath;	//OffsetPath for History (历史可以不放在根目录)
+	public String verReposRevision;		//revision of this verReposCommit (如果不是verRepos可以是空)
 	public String verReposErrorInfo;	//errorInfo of this verReposCommit
+
 }

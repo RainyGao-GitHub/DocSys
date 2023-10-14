@@ -4922,7 +4922,7 @@ public class BaseController  extends BaseFunction{
 			Long startTime, Long endTime, 
 			Integer userId, String userName,
 			Long commitId, String commitMsg, String commitUsers,
-			String revision, String errorInfo, 
+			String offsetPath, String revision, String errorInfo, 
 			int historyType
 			) 
 	{
@@ -4950,6 +4950,10 @@ public class BaseController  extends BaseFunction{
 			commit.docSize = doc.getSize();
 		}
 		
+		//TODO: 准确的说，未来verReposInfo应该改名叫historyStorageInfo
+		//verRepos可以是历史存储的一种类型，也可以是磁盘\ftp\sftp\smb
+		//而且verRepos也可以不是根目录
+		//因此需要增加offsetPath来表示历史存放的根目录
 		commit.verReposInfo = buildVerReposInfoEx(repos, historyType);
 		if(revision == null)
 		{
@@ -4959,6 +4963,7 @@ public class BaseController  extends BaseFunction{
 		else
 		{
 			commit.verReposStatus = 200;	
+			commit.verReposOffsetPath = offsetPath;
 			commit.verReposRevision = revision;
 		}
 		
@@ -4971,7 +4976,7 @@ public class BaseController  extends BaseFunction{
 			Long startTime, Long endTime, 
 			Integer userId, String userName,
 			Long commitId, String commitMsg, String commitUsers,
-			String revision, String errorInfo, int historyType) 
+			String offsetPath,String revision, String errorInfo, int historyType) 
 	{
 		Log.debug("updateCommit() commitId:" + commitId + " commitMsg:" + commitMsg + " commitUsers:" + commitUsers 
 					+ " revision:" + revision + " errorInfo:" + errorInfo);
@@ -5006,7 +5011,8 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			commit.verReposStatus = 200;	
+			commit.verReposStatus = 200;
+			commit.verReposOffsetPath = offsetPath;
 			commit.verReposRevision = revision;
 		}
 		
@@ -5020,7 +5026,7 @@ public class BaseController  extends BaseFunction{
 				context.startTime, null,
 				context.user.getId(), context.user.getName(),
 				context.commitId, context.commitMsg, context.commitUser,
-				revision, errorInfo, historyType);	
+				context.offsetPath, revision, errorInfo, historyType);	
 	}
 	
 	private void insertCommit(Repos repos, Doc doc, FolderUploadAction action, int historyType) {
@@ -5029,7 +5035,7 @@ public class BaseController  extends BaseFunction{
 				action.startTime, null,
 				action.user.getId(), action.user.getName(),
 				action.commitId, action.commitMsg, action.commitUser,
-				null, null, historyType);	
+				action.offsetPath, null, null, historyType);	
 	}
 	
 	protected void updateCommit(Repos repos, Doc doc,
@@ -5043,7 +5049,7 @@ public class BaseController  extends BaseFunction{
 				context.startTime, context.endTime,
 				context.user.getId(), context.user.getName(),
 				context.commitId, context.commitMsg, context.commitUser,
-				revision, errorInfo, historyType);
+				context.offsetPath, revision, errorInfo, historyType);
 		
 		if(context.commitEntryList != null)
 		{
@@ -5062,7 +5068,7 @@ public class BaseController  extends BaseFunction{
 				action.startTime, action.stopTime,
 				action.user.getId(), action.user.getName(),
 				action.commitId, action.commitMsg, action.commitUser,
-				revision, errorInfo, historyType);
+				action.offsetPath, revision, errorInfo, historyType);
 		
 		//insertCommitEntries(repos, action,  action.commitEntryList);
 	}
@@ -15336,6 +15342,7 @@ public class BaseController  extends BaseFunction{
 		context.info = "仓库异地实时备份 [" + doc.getPath() + doc.getName() + "]";
 		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = accessUser.getName();
+		context.offsetPath = offsetPath;
 		insertCommit(repos, doc, context, null, null, HistoryType_RemoteBackup);
 
 		switch(action)
@@ -15432,6 +15439,7 @@ public class BaseController  extends BaseFunction{
 		context.info = "仓库本地实时备份 [" + doc.getPath() + doc.getName() + "]";
 		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = accessUser.getName();
+		context.offsetPath = offsetPath;
 		insertCommit(repos, doc, context, null, null, HistoryType_LocalBackup);
 		
 		switch(action)
