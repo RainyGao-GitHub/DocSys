@@ -106,7 +106,8 @@ public interface Channel {
 			User accessUser, 
 			String commitMsg, 
 			boolean recurcive, boolean force, 
-			ReturnAjax rt);
+			ReturnAjax rt,
+			int historyType);
 
 	//Repos FullBackUp
 	boolean reposFullBackUp(ReposFullBackupTask task);

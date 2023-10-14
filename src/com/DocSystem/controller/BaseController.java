@@ -170,6 +170,7 @@ import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.websocket.entity.DocPullContext;
+import com.DocSystem.websocket.entity.DocPushContext;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -5013,7 +5014,7 @@ public class BaseController  extends BaseFunction{
 		channel.updateCommit(repos, commit, historyType);
 	}
 	
-	private void insertCommit(Repos repos, Doc doc, ActionContext context, String revision, String errorInfo, int historyType) {
+	protected void insertCommit(Repos repos, Doc doc, ActionContext context, String revision, String errorInfo, int historyType) {
 		insertCommit(
 				repos, doc, 
 				context.startTime, null,
@@ -5034,7 +5035,7 @@ public class BaseController  extends BaseFunction{
 	protected void updateCommit(Repos repos, Doc doc,
 			ActionContext context, 
 			String revision, String errorInfo, 
-			ArrayList<CommitAction> commitActionList, 
+			List<CommitAction> commitActionList, 
 			int historyType) 
 	{		
 		updateCommit(
@@ -15329,6 +15330,13 @@ public class BaseController  extends BaseFunction{
 		{
 			pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;
 		}
+		
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(null, accessUser, "reposBackup", "reposBackup", "仓库异地实时备份", null, repos, doc, null, null);
+		context.info = "仓库异地实时备份 [" + doc.getPath() + doc.getName() + "]";
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
+		context.commitUser = accessUser.getName();
+		insertCommit(repos, doc, context, null, null, HistoryType_RemoteBackup);
 
 		switch(action)
 		{
@@ -15358,7 +15366,13 @@ public class BaseController  extends BaseFunction{
 			Log.info("********* realTimeRemoteBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
 			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
-		}	
+		}
+		
+		DocPushContext pushResult = (DocPushContext) rt.getDataEx();
+	    if(pushResult != null && pushResult.successCount > 0)
+		{
+			updateCommit(repos, doc, context, pushResult.revision, pushResult.msgInfo, pushResult.actionList, HistoryType_RemoteBackup);
+		}
 		return ret;
 	}
 
@@ -15412,6 +15426,13 @@ public class BaseController  extends BaseFunction{
 		{
 			pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;	//localChanged or remoteChanged
 		}
+
+		//Build ActionContext
+		ActionContext context = buildBasicActionContext(null, accessUser, "reposBackup", "reposBackup", "仓库本地实时备份", null, repos, doc, null, null);
+		context.info = "仓库本地实时备份 [" + doc.getPath() + doc.getName() + "]";
+		context.commitMsg = commitMsg == null? context.info : commitMsg;
+		context.commitUser = accessUser.getName();
+		insertCommit(repos, doc, context, null, null, HistoryType_LocalBackup);
 		
 		switch(action)
 		{
@@ -15439,7 +15460,13 @@ public class BaseController  extends BaseFunction{
 			Log.info("********* realTimeLocalBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
 			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
 			break;
-		}			
+		}
+		
+		DocPushContext pushResult = (DocPushContext) rt.getDataEx();
+	    if(pushResult != null && pushResult.successCount > 0)
+		{
+			updateCommit(repos, doc, context, pushResult.revision, pushResult.msgInfo, pushResult.actionList, HistoryType_LocalBackup);
+		}
 		return ret;
 	}
 	
@@ -15852,14 +15879,14 @@ public class BaseController  extends BaseFunction{
 			        				if(uniqueTask != null)
 			        				{
 			        					//执行仓库本地备份
-			        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
+			        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt, HistoryType_LocalBackup);
 			        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
 			        				}
 	        					}
 		        				else
 		        				{
 		        					//执行仓库本地备份
-		        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt );
+		        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt, HistoryType_LocalBackup);
 		        				}
 	        					unlockDoc(rootDoc, lockType,  systemUser);
         					}
@@ -16049,13 +16076,13 @@ public class BaseController  extends BaseFunction{
 		        					JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
 			        				if(uniqueTask != null)
 			        				{			        				
-				        				channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+				        				channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt, HistoryType_RemoteBackup);
 				            			stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
 			        				}
 	        					}
 		        				else
 		        				{
-			                    	channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt );
+			                    	channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt, HistoryType_RemoteBackup);
 		        				}
 		        				unlockDoc(rootDoc, lockType,  systemUser);
         					}
