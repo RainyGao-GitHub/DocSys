@@ -4810,7 +4810,11 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(historyType != null && historyType == 1)
+		if(historyType == null)
+		{
+			historyType = HistoryType_RealDoc;
+		}
+		if(historyType == HistoryType_VirtualDoc)
 		{
 			getVirtualDocHistoryDetail(
 					repos, 
@@ -4824,7 +4828,7 @@ public class DocController extends BaseController{
 		
 		if(commitId == null || commitId.isEmpty())
 		{
-			commitId = verReposGetLatestReposCommitIdEx(repos, HistoryType_RealDoc);
+			commitId = verReposGetLatestReposCommitIdEx(repos, historyType);
 			if(commitId == null)
 			{
 				docSysErrorLog("该仓库暂无历史数据", rt);
@@ -4838,7 +4842,7 @@ public class DocController extends BaseController{
 				commitId,
 				shareId, 
 				rt, 
-				session, request, response);
+				session, request, response, historyType);
 	}
 
 	private void getRealDocHistoryDetail(
@@ -4847,7 +4851,8 @@ public class DocController extends BaseController{
 			String commitId, 
 			Integer shareId, 
 			ReturnAjax rt, 
-			HttpSession session, HttpServletRequest request, HttpServletResponse response) 
+			HttpSession session, HttpServletRequest request, HttpServletResponse response,
+			int histortyType) 
 	{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
@@ -4858,7 +4863,7 @@ public class DocController extends BaseController{
 		List<ChangedItem> changedItemList = null;
 		if(isFSM(repos))
 		{
-			changedItemList = verReposGetHistoryDetailEx(repos, doc, commitId, HistoryType_RealDoc);				
+			changedItemList = verReposGetHistoryDetailEx(repos, doc, commitId, histortyType);				
 		}
 		else
 		{
