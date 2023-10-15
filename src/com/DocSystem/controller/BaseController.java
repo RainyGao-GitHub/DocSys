@@ -4663,11 +4663,12 @@ public class BaseController  extends BaseFunction{
 	{
 		boolean ret = false;
 		String recycleBinRevision =  context.startTime + "";
-		String recycleBinLocalRootPath = Path.getRecycleBinRootPath(repos) + recycleBinRevision + "/";
+		String recycleBinLocalRootPath = Path.getRecycleBinRootPath(repos);
+		String offsetPath =  recycleBinRevision + "/";
 		Log.debug("moveRealDocToRecycleBin() recycleBinLocalRootPath:" + recycleBinLocalRootPath);
 
 		Doc dstDoc = buildBasicDoc(repos.getId(), null, null, srcDoc.getReposPath(), 
-				srcDoc.getPath(), srcDoc.getName(), null, srcDoc.getType(), true, recycleBinLocalRootPath, null, null, null);
+				srcDoc.getPath(), srcDoc.getName(), null, srcDoc.getType(), true, recycleBinLocalRootPath + offsetPath, null, null, null);
 		
 		//创建上级目录，否则移动会失败
 		Log.debug("moveRealDocToRecycleBin() dstParentPath:" + dstDoc.getLocalRootPath() + dstDoc.getPath());
@@ -4683,7 +4684,12 @@ public class BaseController  extends BaseFunction{
 			ret = moveRealDoc(repos, srcDoc, dstDoc, rt);
 			if(ret == true)
 			{
-				insertCommit(repos, srcDoc, context, recycleBinRevision, null, HistoryType_RecycleBin);
+				insertCommit(
+						repos, srcDoc, 
+						context.startTime, null,
+						context.user.getId(), context.user.getName(),
+						context.commitId, context.commitMsg, context.commitUser,
+						offsetPath, recycleBinRevision, null, HistoryType_RecycleBin);	
 			}
 			return ret;
 		}
@@ -4847,21 +4853,52 @@ public class BaseController  extends BaseFunction{
 		switch(historyType)
 		{
 		case HistoryType_RealDoc:
-			ret =  buildVerReposInfo(repos);
+			ret =  buildVerReposInfoForRealDoc(repos);
 			break;
 		case HistoryType_VirtualDoc:
+			ret =  buildVerReposInfoForVirtualDoc(repos);
 			break;
 		case HistoryType_LocalBackup:
+			ret =  buildVerReposInfoForLocalBackup(repos);
 			break;
 		case HistoryType_RemoteBackup:
+			ret =  buildVerReposInfoForRemoteBackup(repos);
 			break;
 		case HistoryType_RecycleBin:
+			ret =  buildVerReposInfoForRecycleBin(repos);
 			break;
 		}
 		return ret;			
 	}
 		
-	protected String buildVerReposInfo(Repos repos) {
+	private String buildVerReposInfoForRecycleBin(Repos repos) {
+		return "file://" + Path.getRecycleBinRootPath(repos);
+	}
+
+	private String buildVerReposInfoForRemoteBackup(Repos repos) {
+		if(repos.autoBackupConfig == null || repos.autoBackupConfig.remoteBackupConfig == null)
+		{
+			return null;
+		}
+		
+		return buildRemoteStorageStr(repos.autoBackupConfig.remoteBackupConfig.remoteStorageConfig);
+	}
+
+	private String buildVerReposInfoForLocalBackup(Repos repos) {
+		if(repos.autoBackupConfig == null || repos.autoBackupConfig.localBackupConfig == null)
+		{
+			return null;
+		}
+		
+		return buildRemoteStorageStr(repos.autoBackupConfig.localBackupConfig.remoteStorageConfig);
+	}
+
+	private String buildVerReposInfoForVirtualDoc(Repos repos) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	protected String buildVerReposInfoForRealDoc(Repos repos) {
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
 			return null;

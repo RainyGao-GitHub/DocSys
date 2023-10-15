@@ -2962,6 +2962,40 @@ public class BaseFunction{
 		return remoteStorage;
 	}
 	
+	protected static String buildRemoteStorageStr(RemoteStorageConfig remote) {
+		String remoteStorage = null;
+		if(remote == null || remote.protocol == null)
+		{
+			return null;
+		}
+		
+		switch(remote.protocol)
+		{
+		case "file":
+			remoteStorage = buildRemoteStorageStrForDisk(remote);
+			break;
+		case "mxsdoc":
+			remoteStorage = buildRemoteStorageStrForMxsDoc(remote);
+			break;
+		case "ftp":
+			remoteStorage = buildRemoteStorageStrForFtp(remote);
+			break;
+		case "sftp":
+			remoteStorage = buildRemoteStorageStrForSftp(remote);
+			break;
+		case "smb":
+			remoteStorage = buildRemoteStorageStrForSmb(remote);
+			break;
+		case "git":
+			remoteStorage = buildRemoteStorageStrForGit(remote);
+			break;
+		case "svn":
+			remoteStorage = buildRemoteStorageStrForSvn(remote);
+			break;
+		}
+		return remoteStorage;
+	}
+
 	protected static RemoteStorageConfig parseRemoteStorageConfig(Repos repos, String remoteStorage, String type) {
 		if(remoteStorage == null)
 		{
@@ -3056,6 +3090,10 @@ public class BaseFunction{
 		{
 			protocol = "mxsdoc";
 		}
+		else if(remoteStorage.indexOf("file://") == 0)
+		{
+			protocol = "file";
+		}
 		
 		
 		if(protocol == null)
@@ -3066,6 +3104,8 @@ public class BaseFunction{
 		
 		switch(protocol)
 		{
+		case "file":
+			return parseRemoteStorageConfigForDisk(remoteStorage);
 		case "sftp":
 			return parseRemoteStorageConfigForSftp(remoteStorage);
 		case "ftp":
@@ -3081,7 +3121,7 @@ public class BaseFunction{
 		}
 		return null;
 	}
-	
+
 	private static String getLocalVerReposPathForGit(Repos repos, String type)
 	{
 		//GIT的远程仓库需要本地仓库存放路径（这个仓库放在和版本仓库相同的位置）
@@ -3102,6 +3142,38 @@ public class BaseFunction{
 		}
 		String localVerReposPath = localGitReposRootPath + verReposName + "/";
 		return localVerReposPath;
+	}
+	
+	private static String buildRemoteStorageStrForMxsDoc(RemoteStorageConfig remote) {
+		String remoteStorage = null;
+		if(remote == null || remote.MXSDOC == null)
+		{
+			return null;
+		}
+		
+		remoteStorage = "mxsdoc://" + remote.MXSDOC.url;
+		if(remote.MXSDOC.userName != null)
+		{
+			remoteStorage += ";userName=" + remote.MXSDOC.userName;
+			if(remote.MXSDOC.pwd != null)
+			{
+				remoteStorage += ";pwd=" + remote.MXSDOC.pwd;
+			}
+		}
+		if(remote.MXSDOC.reposId != null)
+		{
+			remoteStorage += ";reposId=" + remote.MXSDOC.reposId;
+			
+		}
+		else if(remote.MXSDOC.remoteDirectory != null)
+		{
+			remoteStorage += ";remoteDirectory=" + remote.MXSDOC.remoteDirectory;				
+		}
+		if(remote.MXSDOC.authCode != null)
+		{
+			remoteStorage += ";authCode=" + remote.MXSDOC.authCode;								
+		}
+		return remoteStorage;
 	}
 	
 	private static RemoteStorageConfig parseRemoteStorageConfigForMxsDoc(String remoteStorage) {
@@ -3149,6 +3221,31 @@ public class BaseFunction{
 		remote.MXSDOC.url = realUrl;
 		remote.rootPath = "";
 	}
+	
+	private static String buildRemoteStorageStrForGit(RemoteStorageConfig remote) {
+		String remoteStorage = null;
+		if(remote == null || remote.GIT == null)
+		{
+			return null;
+		}
+		
+		remoteStorage = "git://" + remote.GIT.url;
+			
+		if(remote.GIT.userName != null)
+		{
+			remoteStorage += ";userName=" + remote.GIT.userName;
+			if(remote.GIT.pwd != null)
+			{
+				remoteStorage += ";pwd=" + remote.GIT.pwd;
+			}
+		}
+		
+		if(remote.GIT.privateKey != null)		
+		{
+			remoteStorage += ";privateKey=" + remote.GIT.pwd;
+		}
+		return remoteStorage;
+	}
 
 	private static RemoteStorageConfig parseRemoteStorageConfigForGit(String remoteStorage, String localVerReposPath) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
@@ -3191,6 +3288,27 @@ public class BaseFunction{
 		return remote;
 	}
 
+	private static String buildRemoteStorageStrForSvn(RemoteStorageConfig remote) {
+		String remoteStorage = null;
+		if(remote == null || remote.SVN == null)
+		{
+			return null;
+		}
+		
+		remoteStorage = "svn://" + remote.SVN.url;
+			
+		if(remote.SVN.userName != null)
+		{
+			remoteStorage += ";userName=" + remote.SVN.userName;
+			if(remote.SVN.pwd != null)
+			{
+				remoteStorage += ";pwd=" + remote.SVN.pwd;
+			}
+		}
+		
+		return remoteStorage;
+	}
+	
 	private static RemoteStorageConfig parseRemoteStorageConfigForSvn(String remoteStorage) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "svn";
@@ -3224,6 +3342,57 @@ public class BaseFunction{
 		}
 		
 		return remote;
+	}
+	
+	private static String buildRemoteStorageStrForDisk(RemoteStorageConfig remote) 
+	{		
+		String remoteStorage = null;
+		if(remote == null || remote.FILE == null)
+		{
+			return null;
+		}
+		
+		remoteStorage = "file://" + remote.FILE.localRootPath;
+		return remoteStorage;
+	}
+	
+	private static RemoteStorageConfig parseRemoteStorageConfigForDisk(String remoteStorage) {
+		RemoteStorageConfig remote = new RemoteStorageConfig();
+		remote.protocol = "file";
+		remote.FILE = new LocalConfig();
+		remote.FILE.localRootPath = Path.dirPathFormat(remoteStorage.substring("file://".length()));
+		return remote;
+	}
+	
+	private static String buildRemoteStorageStrForSftp(RemoteStorageConfig remote) 
+	{		
+		String remoteStorage = null;
+		if(remote == null || remote.SFTP == null)
+		{
+			return null;
+		}
+		
+		remoteStorage = "sftp://" + remote.SFTP.host;
+		if(remote.SFTP.port != null)
+		{
+			remoteStorage += ":" + remote.SFTP.port;
+		}
+		
+		if(remote.rootPath != null)
+		{
+			remoteStorage += "/" + remote.rootPath;
+		}
+		
+		if(remote.SFTP.userName != null)
+		{
+			remoteStorage += ";userName=" + remote.SFTP.userName;
+			if(remote.SFTP.pwd != null)
+			{
+				remoteStorage += ";pwd=" + remote.SFTP.pwd;
+			}
+		}
+		
+		return remoteStorage;
 	}
 
 	private static RemoteStorageConfig parseRemoteStorageConfigForSftp(String remoteStorage) {
@@ -3260,6 +3429,47 @@ public class BaseFunction{
 		return remote;
 	}
 	
+	private static String buildRemoteStorageStrForFtp(RemoteStorageConfig remote) {
+		String remoteStorage = null;
+		if(remote == null || remote.FTP == null)
+		{
+			return null;
+		}
+		
+		remoteStorage = "ftp://" + remote.FTP.host;
+		if(remote.FTP.port != null)
+		{
+			remoteStorage += ":" + remote.FTP.port;
+		}
+		
+		if(remote.rootPath != null)
+		{
+			remoteStorage += "/" + remote.rootPath;
+		}
+		
+		if(remote.FTP.userName != null)
+		{
+			remoteStorage += ";userName=" + remote.FTP.userName;
+			if(remote.FTP.pwd != null)
+			{
+				remoteStorage += ";pwd=" + remote.FTP.pwd;
+			}
+		}
+		
+		if(remote.FTP.charset != null)
+		{
+			remoteStorage += ";charset=" + remote.FTP.charset;
+			
+		}
+		
+		if(remote.FTP.isPassive != null)
+		{
+			remoteStorage += ";isPassive=" + remote.FTP.isPassive;
+		}
+		
+		return remoteStorage;
+	}
+
 	private static RemoteStorageConfig parseRemoteStorageConfigForFtp(String remoteStorage) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "ftp";
@@ -3303,6 +3513,41 @@ public class BaseFunction{
 		}
 		
 		return remote;
+	}
+	
+	private static String buildRemoteStorageStrForSmb(RemoteStorageConfig remote) {
+		String remoteStorage = null;
+		if(remote == null || remote.SMB == null)
+		{
+			return null;
+		}
+		
+		remoteStorage = "smb://" + remote.SMB.host;
+		if(remote.SMB.port != null)
+		{
+			remoteStorage += ":" + remote.SMB.port;
+		}
+		
+		if(remote.rootPath != null)
+		{
+			remoteStorage += "/" + remote.rootPath;
+		}
+		
+		if(remote.SMB.userDomain != null)
+		{
+			remoteStorage += ":" + remote.SMB.userDomain;
+		}
+		
+		if(remote.SMB.userName != null)
+		{
+			remoteStorage += ";userName=" + remote.SMB.userName;
+			if(remote.SMB.pwd != null)
+			{
+				remoteStorage += ";pwd=" + remote.SMB.pwd;
+			}
+		}
+		
+		return remoteStorage;
 	}
 	
 	private static RemoteStorageConfig parseRemoteStorageConfigForSmb(String remoteStorage) {
