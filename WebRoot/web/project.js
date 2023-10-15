@@ -1684,6 +1684,64 @@ function parseDocContent(content)
     return content;
 }
 
+function getDocHistoryTitle(docName, docType, historyType)
+{
+	var title = _Lang("历史版本") + " [" + docName + "]";
+	switch(historyType)
+	{
+	case 0:
+		if(docId == 0)
+		{
+			title = _Lang("历史版本") + " [/]";
+		}
+		else
+		{
+			if(docType == 2)
+			{
+				title = _Lang("历史版本") + " [" + docName + "/]";
+			}
+		}
+		break;
+	case 1:
+		if(docId == 0)
+		{
+			title = _Lang("备注历史") + " [/]";
+		}
+		else
+		{
+			var title = _Lang("备注历史") + " [" + docName + "]";
+		}
+		break;
+	case 2:
+		if(docId == 0)
+		{
+			title = _Lang("本地备份历史") + " [/]";
+		}
+		else
+		{
+			if(docType == 2)
+			{
+				title = _Lang("本地备份历史") + " [" + docName + "/]";
+			}
+		}
+		break;
+	case 3:
+		if(docId == 0)
+		{
+			title = _Lang("异地备份历史") + " [/]";
+		}
+		else
+		{
+			if(docType == 2)
+			{
+				title = _Lang("异地备份历史") + " [" + docName + "/]";
+			}
+		}
+		break;
+	}
+	return title;
+}
+
 function showDocHistory(node, historyType)
 {
 	console.log("showDocHistory() historyType:" + historyType);
@@ -1722,32 +1780,7 @@ function showDocHistory(node, historyType)
 	}
 	console.log("docId:" + docId + "parentPath:" + parentPath + " docName:"+docName);
 
-	var title = _Lang("历史版本") + " [" + docName + "]";
-	if(historyType == 0)
-	{
-		if(docId == 0)
-		{
-			title = _Lang("历史版本") + " [/]";
-		}
-		else
-		{
-			if(docType == 2)
-			{
-				title = _Lang("历史版本") + " [" + docName + "/]";
-			}
-		}
-	}
-	else
-	{
-		if(docId == 0)
-		{
-			title = _Lang("备注历史") + " [/]";
-		}
-		else
-		{
-			var title = _Lang("备注历史") + " [" + docName + "]";
-		}
-	}
+	var title = getDocHistoryTitle(docName, docType, historyType);
 
 	//show HistoryLogs page
 	bootstrapQ.dialog({
@@ -4442,6 +4475,22 @@ function contextMenuInit()
 				}
 		},
 		{divider: true},
+		{text: _Lang('查看备份'), subMenu: [
+			{text: _Lang('本地备份'), action: function(e){
+					e.preventDefault();
+					curRightClickedTreeNode = null;
+        			showDocHistory(gRootDoc, 2);
+    			}
+			},	
+			{text: _Lang('异地备份'), action: function(e){
+					e.preventDefault();
+					curRightClickedTreeNode = null;
+        			showDocHistory(gRootDoc, 3);
+				}
+			},
+			]
+		},
+		{divider: true},		
 		{text: _Lang('远程存储'), subMenu: [
 			{text: _Lang('推送'),  action: function(e){
 					e.preventDefault();

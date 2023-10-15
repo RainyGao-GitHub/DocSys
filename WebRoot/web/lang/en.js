@@ -315,6 +315,7 @@ function lang(str)
 		"在新窗口打开" : "Open In New Page",
 		"属性" : "Properties",
 		"查看历史" : "View History",		
+		"查看备份" : "View Backup",		
 		"备注" : "Note",
 		"下载备注" : "Download Note",
 		"本地路径" : "Local File Path",
@@ -344,6 +345,8 @@ function lang(str)
 		"跳过" : "Skip",
 		"继续" : "Continue",
 		"结束" : "Stop",		
+		"本地备份历史" : "LocalBackup History",
+		"异地备份历史" : "RemoteBackup History",
 		
 		//访问密码验证
 		"验证成功！" : "Verify Ok !",

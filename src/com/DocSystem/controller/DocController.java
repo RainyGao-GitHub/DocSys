@@ -4654,7 +4654,12 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		if(historyType != null && historyType == 1)
+		if(historyType == null)
+		{
+			historyType = HistoryType_RealDoc;
+		}
+		
+		if(historyType == HistoryType_VirtualDoc)
 		{
 			getVirtualDocHistory(
 					repos, 
@@ -4674,7 +4679,7 @@ public class DocController extends BaseController{
 				commitId,
 				shareId, 
 				rt, 
-				session, request, response);
+				session, request, response, historyType);
 		
 	}
 
@@ -4685,7 +4690,7 @@ public class DocController extends BaseController{
 			String commitId,	//获取该commitId更早的历史
 			Integer shareId,
 			ReturnAjax rt,
-			HttpSession session, HttpServletRequest request,HttpServletResponse response)
+			HttpSession session, HttpServletRequest request,HttpServletResponse response, int historyType)
 	{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
@@ -4707,7 +4712,7 @@ public class DocController extends BaseController{
 		
 		if(isFSM(repos))
 		{
-			logList = getCommitHistoryEx(repos, inputDoc, num, commitId, HistoryType_RealDoc);
+			logList = getCommitHistoryEx(repos, inputDoc, num, commitId, historyType);
 		}
 		else
 		{
