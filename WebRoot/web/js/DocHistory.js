@@ -84,66 +84,9 @@
 			var version = $("#commitId" + index).text();
 		   	console.log("showDownloadConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
 
-		   	var entryPath = "";
 		   	var docPath = "/"+parentPath + docName;
-		   	var msg = "";				
-		   	if(historyType == 0)
-            {
-		   		entryPath = docPath;
-		   		if(docId == 0)
-		   		{
-		   			switch(langType)
-		   			{
-		   			case "en":
-		   				msg = "Download Repository's changes on version" + ":" + version + " ?";
-			   			break;
-		   			default:
-			   			msg = _Lang("下载仓库的历史版本") + ":" + version + "?";
-		   				break;
-		   			}
-		   		}
-		   		else
-		   		{
-		   			switch(langType)
-		   			{
-		   			case "en":
-		   				msg = "Download [" + entryPath + "]'s changes on version" + ":" + version + " ?";
-			   			break;
-		   			default:
-			   			msg = "下载" + " " + entryPath + " " + "的历史版本" + ":" + version + "?";
-		   				break;
-		   			}
-		   		}
-            }
-            else
-            {
-            	if(docId == 0)
-            	{
-            		entryPath = "/";
-		   			switch(langType)
-		   			{
-		   			case "en":
-		   				msg = "Download Repository's Note changes on version" + ":" + version + " ?";
-			   			break;
-		   			default:
-	            		msg = _Lang("下载仓库的备注历史版本") + ":" + version + "?";
-		   				break;
-		   			}
-            	}
-            	else
-            	{
-            		entryPath = "/"+docId + "_" + docName;  
-		   			switch(langType)
-		   			{
-		   			case "en":
-		   				msg = "Download [" + docPath + "]'s Note changes on version" + ":" + version + " ?";
-			   			break;
-		   			default:
-			   			msg = "下载" + " " + docPath + " " + "的备注历史版本" + ":" + version + "?";
-		   				break;
-		   			}            		
-            	}
-            }	
+		   	var msg = getDownloadConfirmMsg(historyType, docId, docPath, version)			
+		   	var entryPath = getEntryPath(historyType, docId, docName, docPath);
             
 		   	qiao.bs.confirm({
 		        id: 'downloadHistoryConfirm',
@@ -335,6 +278,8 @@
 		   	switch(historyType)
             {
             case 0:	//History
+            case 2: //LocalBackup
+            case 3: //RemoteBackup
 		   		if(docId == 0)
 		   		{
 		   			switch(langType)
@@ -388,10 +333,6 @@
 
             	}
             	break;
-            case 2:	//LocalBackup History
-            	break;
-            case 3: //RemoteBackup History
-            	break;
             }	
 		   
 		   	return msg;
@@ -403,6 +344,8 @@
 		   	switch(historyType)
             {
             case 0:	//History
+            case 2: //LocalBackup
+            case 3: //RemoteBackup
 		   		if(docId == 0)
 		   		{
 		   			switch(langType)
@@ -455,14 +398,73 @@
 		   			}
              	}
             	break;
-            case 2:	//LocalBackup History
-            	break;
-            case 3: //RemoteBackup History
-            	break;
             }	
 		   
 		   	return msg;
     	}
+    	
+		function getDownloadConfirmMsg(historyType, docId, docPath, version)
+		{
+		   	var msg = "";				
+		   	switch(historyType)
+            {
+            case 0:	//History
+            case 2: //LocalBackup
+            case 3: //RemoteBackup
+		   		if(docId == 0)
+		   		{
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Download Repository's changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = _Lang("下载仓库的历史版本") + ":" + version + "?";
+		   				break;
+		   			}
+		   		}
+		   		else
+		   		{
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Download [" + docPath + "]'s changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = "下载" + " " + docPath + " " + "的历史版本" + ":" + version + "?";
+		   				break;
+		   			}
+		   		}
+		   		break;
+		   	case 1: //VirtualDoc
+            	if(docId == 0)
+            	{
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Download Repository's Note changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+	            		msg = _Lang("下载仓库的备注历史版本") + ":" + version + "?";
+		   				break;
+		   			}
+            	}
+            	else
+            	{
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Download [" + docPath + "]'s Note changes on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = "下载" + " " + docPath + " " + "的备注历史版本" + ":" + version + "?";
+		   				break;
+		   			}            		
+            	}
+            	break;
+            }	
+		   	return msg;
+		}
     	
     	function getEntryPath(historyType, docId, docName, docPath)
     	{
