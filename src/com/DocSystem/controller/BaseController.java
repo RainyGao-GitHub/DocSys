@@ -15343,6 +15343,7 @@ public class BaseController  extends BaseFunction{
 		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = accessUser.getName();
 		context.offsetPath = offsetPath;
+		context.commitId = generateCommitId(repos, doc, context.startTime);
 		insertCommit(repos, doc, context, null, null, HistoryType_RemoteBackup);
 
 		switch(action)
@@ -15440,6 +15441,7 @@ public class BaseController  extends BaseFunction{
 		context.commitMsg = commitMsg == null? context.info : commitMsg;
 		context.commitUser = accessUser.getName();
 		context.offsetPath = offsetPath;
+		context.commitId = generateCommitId(repos, doc, context.startTime);
 		insertCommit(repos, doc, context, null, null, HistoryType_LocalBackup);
 		
 		switch(action)
