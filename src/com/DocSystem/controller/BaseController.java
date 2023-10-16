@@ -22961,7 +22961,7 @@ public class BaseController  extends BaseFunction{
 				action.uploadLogPath = Path.getRepsFolderUploadLogPath(repos, action.startTime);
 				action.localChangesRootPath = Path.getRepsFolderUploadLocalChangesRootPath(repos, action.startTime);
 				
-				action.commitMsg = commitMsg == null? "上传目录 [" + doc.getPath() + doc.getName() + "]" : commitMsg;
+				action.commitMsg = "上传目录 [" + doc.getPath() + doc.getName() + "]";
 				action.commitUser = accessUser.getName(); 
 				
 				gFolderUploadActionHashMap.put(actionId, action);		
