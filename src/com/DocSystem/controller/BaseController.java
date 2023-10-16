@@ -12776,7 +12776,9 @@ public class BaseController  extends BaseFunction{
 			Log.debug("verReposCheckOutEx() failed to get historyVerReposConfig from commitLog");			
 			return null;
 		}
-		
+				
+		//基于commitLog的历史的文件可以存储在任意偏移的位置，因此历史版本里可能包含offsetPath，需要指定给doc
+		doc.offsetPath = commit.verReposOffsetPath;
 		return channel.remoteStorageCheckOut(
 				historyVerReposConfig, 
 				repos, doc, 
