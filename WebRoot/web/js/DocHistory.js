@@ -73,7 +73,9 @@
 		    docInfo.type = 1;
 		    docInfo.isHistory = 1;
 		    docInfo.commitId = commitId;
-		    docInfo.docType = historyType == 0? 1:2;
+		    docInfo.docType = historyType == 1? 2:1;
+		    docInfo.historyType = historyType;
+		    
 		    //openDoc(docInfo, false, "openInArtDialog", "office", gShareId);
 		    openDoc(docInfo, false, "openInDialog", "office", gShareId);
 		}

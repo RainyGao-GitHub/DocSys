@@ -226,7 +226,7 @@
 
 		   	var msg = "";	
 		   	var docPath = "/" + parentPath + docName;
-		   	if(historyType == 0)
+		   	if(historyType != 1)
             {
 	   			switch(langType)
 	   			{

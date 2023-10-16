@@ -3287,7 +3287,9 @@ public class DocController extends BaseController{
 	{
 
 		Log.infoHead("************** getDocContent [" + path + name + "] ************");
-		Log.info("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType+ " shareId:" + shareId + " commitId:" + commitId  + " needDeletedEntry:" + needDeletedEntry);
+		Log.info("getDocContent reposId:" + reposId + " path:" + path + " name:" + name + " docType:" + docType 
+				+ " shareId:" + shareId 
+				+ " commitId:" + commitId  + " needDeletedEntry:" + needDeletedEntry + " historyType:" + historyType);
 
 		//注意该接口支持name是空的的情况
 		if(path == null)
@@ -3428,7 +3430,9 @@ public class DocController extends BaseController{
 			ReturnAjax rt,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session, int historyType) 
 	{
-		Log.info("getRealDocHistoryContent reposId:" + repos.getId() + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId  + " needDeletedEntry:" + needDeletedEntry);
+		Log.info("getRealDocHistoryContent reposId:" + repos.getId() + " path:" + path + " name:" + name 
+				+ " shareId:" + shareId 
+				+ " commitId:" + commitId  + " needDeletedEntry:" + needDeletedEntry + " historyType:" + historyType);
 		
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
