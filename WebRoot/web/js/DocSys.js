@@ -1556,6 +1556,7 @@ function copyDocInfo(doc, shareId)
 		if(docInfo.isHistory && docInfo.isHistory == 1)
 		{
 			docInfo.commitId = doc.commitId;
+			docInfo.historyType = doc.historyType;
 			docInfo.needDeletedEntry = doc.needDeletedEntry;
 		}
 		
