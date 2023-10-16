@@ -155,7 +155,8 @@ public interface Channel {
 			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
 			boolean force,
-			HashMap<String,String> downloadList);
+			HashMap<String,String> downloadList,
+			int historyType);
 
 	String buildMailContent(String content, String lang);
 	

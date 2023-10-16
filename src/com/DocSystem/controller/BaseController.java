@@ -12699,14 +12699,20 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		
-			successList = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, commitId, force, downloadList, historyType);
+			successList = verReposCheckOutForDownload(repos, doc, reposAccess, 
+					tmpLocalRootPath, localParentPath, targetName, 
+					commitId, force, downloadList, 
+					historyType);
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
 				Log.debug("verReposCheckOutForDownloadEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitId(repos, commitId, historyType);
 				Log.debug("verReposCheckOutForDownloadEx() to get deletedEntryList from preCommit:" + preCommitId);
-				successList1 = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList, historyType);
+				successList1 = verReposCheckOutForDownload(repos, doc, reposAccess, 
+						tmpLocalRootPath, localParentPath, targetName, 
+						preCommitId, force, deletedEntryList, 
+						historyType);
 			}
 		}
 		
@@ -12832,6 +12838,9 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
+		//基于commitLog的历史的文件可以存储在任意偏移的位置，因此历史版本里可能包含offsetPath，需要指定给doc
+		doc.offsetPath = commit.verReposOffsetPath;
+		
 		return channel.remoteStorageCheckOutForDownload(
 				historyVerReposConfig, 
 				repos, doc, 
@@ -12839,7 +12848,8 @@ public class BaseController  extends BaseFunction{
 				tmpLocalRootPath, localParentPath, targetName, 
 				commit.verReposRevision, 
 				force, 
-				downloadList);
+				downloadList,
+				historyType);
 	}
 	
 	protected Doc docConvert(Doc doc, boolean convert) 
