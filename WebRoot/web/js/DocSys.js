@@ -135,6 +135,11 @@ function buildRequestParamStrForDoc(docInfo)
 			urlParamStr += andFlag + "commitId=" + docInfo.commitId;
 			andFlag = "&";		
 		}
+		if(docInfo.historyType)
+		{
+			urlParamStr += andFlag + "historyType=" + docInfo.historyType;
+			andFlag = "&";		
+		}
 		if(docInfo.needDeletedEntry)
 		{
 			urlParamStr += andFlag + "needDeletedEntry=" + docInfo.needDeletedEntry;
@@ -230,6 +235,12 @@ function getDocInfoFromRequestParamStr()
 		{
 			docInfo.commitId = commitId;
 		}
+		
+		var historyType = getQueryString("historyType");
+		if(historyType && historyType != null)
+		{
+			docInfo.historyType = historyType;
+		}
 
 		var needDeletedEntry = getQueryString("needDeletedEntry");
 		if(needDeletedEntry && needDeletedEntry != null)
@@ -281,6 +292,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
             path: docInfo.path,
             name: docInfo.name,
             commitId: docInfo.commitId,
+            historyType: docInfo.historyType,
             shareId: docInfo.shareId,
             urlStyle: urlStyle,
         },
@@ -393,6 +405,7 @@ function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle
             path: docInfo.path,
             name: docInfo.name,
             commitId: docInfo.commitId,
+            historyType: docInfo.historyType,
             isZip: docInfo.isZip,
             rootPath: docInfo.rootPath,
             rootName: docInfo.rootName,
@@ -508,6 +521,7 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
                 name: docInfo.name,
                 docType: docInfo.docType, //取回文件内容
                 commitId: docInfo.commitId,
+                historyType: docInfo.historyType,
                 needDeletedEntry: docInfo.needDeletedEntry,
                 shareId: docInfo.shareId,
             },
@@ -1588,6 +1602,7 @@ function openOffice(docInfo, openInNewPage, preview)
             rootPath: docInfo.rootPath,
             rootName: docInfo.rootName,
             commitId: docInfo.commitId,
+            historyType: docInfo.historyType,
             shareId: docInfo.shareId,
             preview: preview,  //preview表示是否是预览，预览则是转成pdf
         },
@@ -1645,6 +1660,7 @@ function openCad(docInfo, openInNewPage)
             rootPath: docInfo.rootPath,
             rootName: docInfo.rootName,
             commitId: docInfo.commitId,
+            historyType: docInfo.historyType,
             shareId: docInfo.shareId,
             //preview: preview,  //cad总是预览，无法编辑
         },
