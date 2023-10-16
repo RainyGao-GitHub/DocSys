@@ -7833,7 +7833,8 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		if(remote.GIT.isRemote == 1)
+		//历史存储如果使用的是GIT且是远程仓库，需要指定一个本地位置用于clone
+		if(remote.GIT != null && remote.GIT.isRemote == 1)
 		{
 			//需要指定本地的clone目录，检查repos当前的localGitPath是否一致
 			String verReposUrl = repos.getSvnPath();
