@@ -3281,6 +3281,7 @@ public class DocController extends BaseController{
 			Integer docType, //1: RealDoc 2: VirtualDoc	
 			String commitId,
 			Integer needDeletedEntry,	//0:不获取被删除文件的内容  1:获取被删除文件的内容
+			Integer historyType,
 			Integer shareId,
 			HttpServletRequest request,HttpServletResponse response,HttpSession session)
 	{
@@ -3348,6 +3349,10 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		if(historyType == null)
+		{
+			historyType = HistoryType_RealDoc;
+		}
 		getRealDocHistoryContent(
 				repos, 
 				path, name, 
@@ -3355,7 +3360,7 @@ public class DocController extends BaseController{
 				needDeletedEntry,
 				shareId,
 				rt,
-				request, response, session);
+				request, response, session, historyType);
 	}
 
 	private void getRealDocContent(
@@ -3421,7 +3426,7 @@ public class DocController extends BaseController{
 			Integer needDeletedEntry,
 			Integer shareId,
 			ReturnAjax rt,
-			HttpServletRequest request,HttpServletResponse response,HttpSession session) 
+			HttpServletRequest request,HttpServletResponse response,HttpSession session, int historyType) 
 	{
 		Log.info("getRealDocHistoryContent reposId:" + repos.getId() + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId  + " needDeletedEntry:" + needDeletedEntry);
 		
@@ -3439,7 +3444,7 @@ public class DocController extends BaseController{
 		Doc remoteDoc = null;
 		if(isFSM(repos))
 		{
-			remoteDoc = verReposGetDocEx(repos, doc, commitId, HistoryType_RealDoc);
+			remoteDoc = verReposGetDocEx(repos, doc, commitId, historyType);
 		}
 		else
 		{
@@ -3472,7 +3477,7 @@ public class DocController extends BaseController{
 		{
 			if(isFSM(repos))
 			{						
-				verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, null, needDeletedEntry, true);
+				verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, null, needDeletedEntry, true, historyType);
 			}
 			else
 			{
@@ -3538,7 +3543,7 @@ public class DocController extends BaseController{
 		if(dir.exists() == false)
 		{
 			dir.mkdirs();
-			verReposCheckOutLegacy(repos, true, doc, tempLocalRootPath + path, name, commitId, true, null);
+			verReposCheckOutLegacy(repos, true, doc, tempLocalRootPath + path, name, commitId, true, null, HistoryType_VirtualDoc);
 		}
 
 		Doc tmpDoc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, 1, true, tempLocalRootPath, localVRootPath, null, null);
@@ -4096,7 +4101,7 @@ public class DocController extends BaseController{
 
 	@RequestMapping("/getDocFileLink.do")
 	public void getDocFileLink(Integer reposId, String path, String name, 
-			String commitId, Integer needDeletedEntry,
+			String commitId, Integer needDeletedEntry, Integer historyType,
 			Integer shareId,
 			String urlStyle,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -4140,6 +4145,11 @@ public class DocController extends BaseController{
 		path = doc.getPath();
 		name = doc.getName();
 		
+		if(historyType == null)
+		{
+			historyType = HistoryType_RealDoc;
+		}
+		
 		Doc tmpDoc = doc;
 		if(commitId == null)
 		{
@@ -4162,7 +4172,7 @@ public class DocController extends BaseController{
 			Doc remoteDoc = null;
 			if(isFSM(repos))
 			{
-				remoteDoc = verReposGetDocEx(repos, doc, commitId, HistoryType_RealDoc);
+				remoteDoc = verReposGetDocEx(repos, doc, commitId, historyType);
 			}
 			else
 			{
@@ -4195,7 +4205,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, null, needDeletedEntry, true);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, null, needDeletedEntry, true, historyType);
 				}
 				else
 				{
@@ -4223,7 +4233,7 @@ public class DocController extends BaseController{
 	
 	@RequestMapping("/getDocFileLinkRS.do")
 	public void getDocFileLink(Integer reposId, String path, String name, 
-			String commitId, Integer needDeletedEntry,
+			String commitId, Integer needDeletedEntry, Integer historyType,
 			Integer shareId,
 			String authCode,
 			String urlStyle,
@@ -4331,7 +4341,7 @@ public class DocController extends BaseController{
 			{
 				if(isFSM(repos))
 				{
-					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, null, needDeletedEntry, true);
+					verReposCheckOutEx(repos, doc, tempLocalRootPath, null, null, commitId, null, needDeletedEntry, true, historyType);
 				}
 				else
 				{
@@ -4912,10 +4922,10 @@ public class DocController extends BaseController{
 			String taskId,
 			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			String commitId, 
-			Integer historyType, 
 			String entryPath,
 			Integer downloadAll,
 			Integer needDeletedEntry,	//0: 不下载被删除的文件  1: 需要下载被删除的文件
+			Integer historyType, 
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
@@ -5033,6 +5043,7 @@ public class DocController extends BaseController{
 			downloadPrepareTask.downloadAll = downloadAll;
 			downloadPrepareTask.needDeletedEntry = needDeletedEntry;
 			downloadPrepareTask.commitId = commitId;
+			downloadPrepareTask.historyType = historyType;
 			rt.setData(downloadPrepareTask);
 			rt.setMsgData(5);
 			writeJson(rt, response);
@@ -5076,7 +5087,7 @@ public class DocController extends BaseController{
 		{
 			downloadList  = new HashMap<String,String>();
 		}
-		getEntryListForCheckOutLegacy(repos, false, vDoc, commitId, downloadList, null);
+		getEntryListForCheckOutLegacy(repos, false, vDoc, commitId, downloadList, null, HistoryType_VirtualDoc);
 		if(downloadList != null && downloadList.size() == 0)
 		{
 			docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 未改动",rt);
@@ -5084,7 +5095,7 @@ public class DocController extends BaseController{
 			return;
 		}
 			
-		successDocList = verReposCheckOutLegacy(repos, false, vDoc, userTmpDir, targetName, commitId, true, downloadList);
+		successDocList = verReposCheckOutLegacy(repos, false, vDoc, userTmpDir, targetName, commitId, true, downloadList, HistoryType_VirtualDoc);
 		if(successDocList == null)
 		{
 			docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);

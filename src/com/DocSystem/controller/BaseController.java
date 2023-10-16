@@ -3674,7 +3674,7 @@ public class BaseController  extends BaseFunction{
 		List<Doc> successDocList = null;
 		if(isFSM(repos)) //文件管理系统
 		{	
-			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, downloadAll, needDeletedEntry, true);
+			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, downloadAll, needDeletedEntry, true, HistoryType_RealDoc);
 
 			insertCommit(repos, doc, context, null, null, HistoryType_RealDoc);
 			//TODO: revert操作的commitEntry会在updateCommit时写入
@@ -3745,7 +3745,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		//将历史版本CheckOut到本地
-		List<Doc> successDocList = verReposCheckOutLegacy(repos, true, doc, null, null, commitId, true, downloadList);		
+		List<Doc> successDocList = verReposCheckOutLegacy(repos, true, doc, null, null, commitId, true, downloadList, HistoryType_VirtualDoc);		
 		if(successDocList == null || successDocList.size() == 0)
 		{
 			docSysDebugLog("未找到需要恢复的文件！",rt);
@@ -12526,7 +12526,8 @@ public class BaseController  extends BaseFunction{
 			String commitId, 
 			Integer downloadAll,
 			Integer needDeletedEntry,
-			boolean force)
+			boolean force,
+			int historyType)
 	{		
 		List<Doc> successList = null;
 		List<Doc> successList1 = null;
@@ -12560,7 +12561,7 @@ public class BaseController  extends BaseFunction{
 				targetName = doc.getName();
 			}
 
-			getEntryListForCheckOutLegacy(repos, false, doc, commitId, downloadList, deletedEntryList);
+			getEntryListForCheckOutLegacy(repos, false, doc, commitId, downloadList, deletedEntryList, historyType);
 			if(downloadList != null && downloadList.size() == 0)
 			{
 				if(deletedEntryList == null || deletedEntryList.size() == 0)
@@ -12570,19 +12571,19 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			
-			successList = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, commitId, force, downloadList);
+			successList = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, commitId, force, downloadList, historyType);
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
 				Log.debug("verReposCheckOutEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId, HistoryType_RealDoc);
 				Log.debug("verReposCheckOutEx() to get deletedEntryList from preCommit:" + preCommitId);
-				successList1 = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList);
+				successList1 = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList, historyType);
 			}
 		}
 		else
 		{
-			getEntryListForCheckOut(repos, doc, commitId, downloadList, deletedEntryList);
+			getEntryListForCheckOut(repos, doc, commitId, downloadList, deletedEntryList, historyType);
 			if(downloadList != null && downloadList.size() == 0)
 			{
 				if(deletedEntryList == null || deletedEntryList.size() == 0)
@@ -12592,14 +12593,14 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			
-			successList = verReposCheckOut(repos, doc, tmpLocalRootPath, localParentPath, targetName, commitId, force, downloadList);
+			successList = verReposCheckOut(repos, doc, tmpLocalRootPath, localParentPath, targetName, commitId, force, downloadList, historyType);
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
 				Log.debug("verReposCheckOutEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
 				preCommitId = verReposGetPreviousReposCommitId(repos, commitId, HistoryType_RealDoc);
 				Log.debug("verReposCheckOutEx() to get deletedEntryList from preCommit:" + preCommitId);				
-				successList1 = verReposCheckOut(repos, doc, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList);
+				successList1 = verReposCheckOut(repos, doc, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList, historyType);
 			}
 		}
 		
@@ -12624,7 +12625,8 @@ public class BaseController  extends BaseFunction{
 			String tmpLocalRootPath, String localParentPath, String targetName, 
 			String commitId,
 			Integer downloadAll, Integer needDeletedEntry,
-			boolean force) 
+			boolean force, 
+			int historyType) 
 	{
 		List<Doc> successList = null;
 		List<Doc> successList1 = null;
@@ -12658,7 +12660,7 @@ public class BaseController  extends BaseFunction{
 				targetName = doc.getName();
 			}
 			
-			getEntryListForCheckOutLegacy(repos, false, doc, commitId, downloadList, deletedEntryList);
+			getEntryListForCheckOutLegacy(repos, false, doc, commitId, downloadList, deletedEntryList, historyType);
 			if(downloadList != null && downloadList.size() == 0)
 			{
 				if(deletedEntryList == null || deletedEntryList.size() == 0)
@@ -12668,19 +12670,26 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 			
-			successList = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, tmpLocalRootPath + localParentPath, targetName, commitId, force, downloadList);
+			successList = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, 
+					tmpLocalRootPath + localParentPath, targetName, 
+					commitId, force, downloadList, 
+					historyType);
+			
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
 				Log.debug("verReposCheckOutForDownloadEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId, HistoryType_RealDoc);
+				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId, historyType);
 				Log.debug("verReposCheckOutForDownloadEx() to get deletedEntryList from preCommit:" + preCommitId);
-				successList1 = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList);
+				successList1 = verReposCheckOutForDownloadLegacy(repos, doc, reposAccess, 
+						tmpLocalRootPath + localParentPath, targetName, 
+						preCommitId, force, deletedEntryList, 
+						historyType);
 			}
 		}
 		else
 		{
-			getEntryListForCheckOut(repos, doc, commitId, downloadList, deletedEntryList);
+			getEntryListForCheckOut(repos, doc, commitId, downloadList, deletedEntryList, historyType);
 			if(downloadList != null && downloadList.size() == 0)
 			{
 				if(deletedEntryList == null || deletedEntryList.size() == 0)
@@ -12690,14 +12699,14 @@ public class BaseController  extends BaseFunction{
 				}
 			}
 		
-			successList = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, commitId, force, downloadList);
+			successList = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, commitId, force, downloadList, historyType);
 			if(deletedEntryList != null && deletedEntryList.size() > 0)
 			{
 				Log.debug("verReposCheckOutForDownloadEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousReposCommitId(repos, commitId, HistoryType_RealDoc);
+				preCommitId = verReposGetPreviousReposCommitId(repos, commitId, historyType);
 				Log.debug("verReposCheckOutForDownloadEx() to get deletedEntryList from preCommit:" + preCommitId);
-				successList1 = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList);
+				successList1 = verReposCheckOutForDownload(repos, doc, reposAccess, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList, historyType);
 			}
 		}
 		
@@ -12720,7 +12729,10 @@ public class BaseController  extends BaseFunction{
 	 * 参数：
 	 * 	force: 如果本地target文件存在，false则跳过，否则强制替换
 	 */
-	protected List<Doc> verReposCheckOutLegacy(Repos repos, boolean convert, Doc doc, String localParentPath, String targetName, String commitId, boolean force, HashMap<String,String> downloadList) 
+	protected List<Doc> verReposCheckOutLegacy(Repos repos, boolean convert, Doc doc, 
+			String localParentPath, String targetName, 
+			String commitId, boolean force, HashMap<String,String> downloadList, 
+			int historyType) 
 	{
 		doc = docConvert(doc, convert);
 		
@@ -12740,9 +12752,10 @@ public class BaseController  extends BaseFunction{
 			String tmpLocalRootPath, String localParentPath, String targetName, 
 			String commitId, 
 			boolean force, 
-			HashMap<String, String> downloadList) 
+			HashMap<String, String> downloadList,
+			int historyType) 
 	{
-		CommitLog commit = getCommitLogById(repos, commitId, HistoryType_RealDoc);
+		CommitLog commit = getCommitLogById(repos, commitId, historyType);
 		if(commit == null)
 		{
 			Log.debug("verReposCheckOutEx() failed to get commitLog for commitId:" + commitId);			
@@ -12766,7 +12779,9 @@ public class BaseController  extends BaseFunction{
 				downloadList);
 	}
 	
-	protected List<Doc> verReposCheckOutForDownloadLegacy(Repos repos, Doc doc, ReposAccess reposAccess, String localParentPath, String targetName, String commitId, boolean force, HashMap<String,String> downloadList) 
+	protected List<Doc> verReposCheckOutForDownloadLegacy(Repos repos, Doc doc, ReposAccess reposAccess, 
+			String localParentPath, String targetName, 
+			String commitId, boolean force, HashMap<String,String> downloadList, int historyType) 
 	{
 		Log.debug("verReposCheckOutForDownload() doc:[" + doc.getPath() + doc.getName() + "] commitId:" + commitId);
 		if(downloadList != null && downloadList.size() == 0)
@@ -12792,7 +12807,10 @@ public class BaseController  extends BaseFunction{
 		return null;
 	}
 	
-	private List<Doc> verReposCheckOutForDownload(Repos repos, Doc doc, ReposAccess reposAccess, String tmpLocalRootPath, String localParentPath, String targetName, String commitId, boolean force, HashMap<String,String> downloadList) 
+	private List<Doc> verReposCheckOutForDownload(Repos repos, Doc doc, ReposAccess reposAccess, 
+			String tmpLocalRootPath, String localParentPath, String targetName, 
+			String commitId, boolean force, HashMap<String,String> downloadList, 
+			int historyType) 
 	{
 		if(downloadList != null && downloadList.size() == 0)
 		{
@@ -12800,7 +12818,7 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		CommitLog commit = getCommitLogById(repos, commitId, HistoryType_RealDoc);
+		CommitLog commit = getCommitLogById(repos, commitId, historyType);
 		if(commit == null)
 		{
 			Log.debug("verReposCheckOutForDownload() failed to get commitLog for commitId:" + commitId);			
@@ -21983,9 +22001,10 @@ public class BaseController  extends BaseFunction{
 		Integer downloadAll = task.downloadAll;
 		Integer needDeletedEntry = task.needDeletedEntry;
 		String commitId = task.commitId;
+		int historyType = task.historyType == null? HistoryType_RealDoc : task.historyType;
 		
 		task.info = "版本检出中...";
-		if(verReposCheckOutForDownloadEx(repos, doc, reposAccess, tmpCheckoutPath, "", tmpCheckoutName, commitId, downloadAll, needDeletedEntry, true) == null)
+		if(verReposCheckOutForDownloadEx(repos, doc, reposAccess, tmpCheckoutPath, "", tmpCheckoutName, commitId, downloadAll, needDeletedEntry, true, historyType) == null)
 		{
 			Log.debug("executeDownloadPrepareTaskForVerReposEntry() verReposCheckOutForDownload result is null for commit:" + commitId);
 
@@ -22348,9 +22367,11 @@ public class BaseController  extends BaseFunction{
                 TimeUnit.SECONDS);
 	}
 	
-	private void getEntryListForCheckOut(Repos repos, Doc doc, String commitId, HashMap<String, String> changedEntries, HashMap<String, String> deletedEntries) 
+	private void getEntryListForCheckOut(Repos repos, Doc doc, 
+			String commitId, HashMap<String, String> changedEntries, HashMap<String, String> deletedEntries, 
+			int historyType) 
 	{
-		List<CommitEntry> changedItemList = channel.queryCommitHistoryDetail(repos, doc, commitId, HistoryType_RealDoc);
+		List<CommitEntry> changedItemList = channel.queryCommitHistoryDetail(repos, doc, commitId, historyType);
 		String docEntryPath = doc.getPath() + doc.getName();
 		//过滤掉不在doc目录下的ChangeItems
 		for(int i=0; i< changedItemList.size(); i++)
@@ -22406,7 +22427,9 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 
-	protected void getEntryListForCheckOutLegacy(Repos repos, boolean isRealDoc, Doc doc, String commitId, HashMap<String, String> changedEntries, HashMap<String, String> deletedEntries) 
+	protected void getEntryListForCheckOutLegacy(Repos repos, boolean isRealDoc, Doc doc, 
+			String commitId, HashMap<String, String> changedEntries, HashMap<String, String> deletedEntries, 
+			int historyType) 
 	{
 		if(changedEntries == null && deletedEntries == null)
 		{
