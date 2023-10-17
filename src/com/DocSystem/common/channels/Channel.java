@@ -98,7 +98,13 @@ public interface Channel {
 			boolean recurcive, 
 			int pushType, 
 			ReturnAjax rt);
-
+	boolean remoteStorageDeleteEntry(
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc, 
+			User accessUser, 
+			String commitMsg, 
+			ReturnAjax rt);
+		
 	//Repos AutoBackUp
 	void reposBackUp(
 			BackupConfig backupConfig, 
@@ -141,9 +147,6 @@ public interface Channel {
 			RemoteStorageConfig remote, 
 			Repos repos, Doc doc,
 			String commitId);
-	List<Doc> remoteStorageDeleteEntry(
-			RemoteStorageConfig remote, 
-			Repos repos, Doc doc);
 	List<Doc> remoteStorageCheckOut(
 			RemoteStorageConfig remote, 
 			Repos repos, Doc doc, 

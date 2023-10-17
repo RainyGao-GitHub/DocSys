@@ -348,6 +348,7 @@
             case 0:	//History
             case 2: //LocalBackup
             case 3: //RemoteBackup
+            case 4:
 		   		if(docId == 0)
 		   		{
 		   			switch(langType)
@@ -400,6 +401,42 @@
 		   			}
              	}
             	break;
+            }	
+		   
+		   	return msg;
+    	}
+    	
+    	function buildDeleteConfirmMsg(historyType, docId, docPath, version)
+    	{
+		   	var msg = "";				
+		   	switch(historyType)
+            {
+            case 4: //RecycleBin
+            	if(docId == 0)
+		   		{
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Delete Repository's change history on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+		   				msg = "是否删除仓库在版本" + ":" + version + "上的改动历史 ?";
+		   				break;
+		   			}
+		   		}
+		   		else
+		   		{
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Delete [" + docPath + "]'s change history on version" + ":" + version + " ?";
+			   			break;
+		   			default:
+			   			msg = "是否删除 [" + docPath + "] 在版本:" + version + " 上的改动历史 ?";
+		   				break;
+		   			}
+		   		}
+		   		break;
             }	
 		   
 		   	return msg;

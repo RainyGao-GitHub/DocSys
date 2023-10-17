@@ -4689,7 +4689,23 @@ public class BaseController  extends BaseFunction{
 						context.startTime, null,
 						context.user.getId(), context.user.getName(),
 						context.commitId, context.commitMsg, context.commitUser,
-						offsetPath, recycleBinRevision, null, HistoryType_RecycleBin);	
+						offsetPath, recycleBinRevision, null, HistoryType_RecycleBin);
+				
+				//insertCommitEntries
+				new Thread(new Runnable() {
+					public void run() {
+						Log.debug("executeCommonActionListAsync() executeCommonActionList in new thread");
+						context.commitEntryList = new ArrayList<CommitEntry>();
+						buildCommitEntryListForDocDeleteWithRecycleBin(
+								srcDoc.getLevel(), srcDoc.getLocalRootPath(), srcDoc.getPath(), srcDoc.getName(), 
+								dstDoc.getLevel(), dstDoc.getLocalRootPath(), dstDoc.getPath(), dstDoc.getName(),
+								context.commitEntryList);
+						insertCommitEntries(
+								repos,
+								context,
+								context.commitEntryList, 
+								HistoryType_RecycleBin);					}
+				}).start();
 			}
 			return ret;
 		}
@@ -12520,18 +12536,6 @@ public class BaseController  extends BaseFunction{
 		String entryPath = doc.getPath() + doc.getName();
 		return verReposUtil.checkPath(entryPath, commitId);
 	}
-
-	protected boolean verReposDeleteHistoryEx(Repos repos, Doc doc, 
-			String commitId, 
-			int historyType)
-	{		
-		if(isLegacyReposHistory(repos))
-		{
-			return false;
-		}
-		
-		return verReposDeleteHistory(repos, doc, commitId, historyType);
-	}
 	
 	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, 
 			String tmpLocalRootPath, String localParentPath, String targetName, 
@@ -12745,7 +12749,10 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean verReposDeleteHistory(Repos repos, Doc doc, 
 			String commitId, 
-			int historyType) 
+			User accessUser, 
+			String commitMsg, 
+			ReturnAjax rt, 
+			int historyType)
 	{
 		CommitLog commit = getCommitLogById(repos, commitId, historyType);
 		if(commit == null)
@@ -12763,7 +12770,10 @@ public class BaseController  extends BaseFunction{
 				doc.offsetPath = commit.verReposOffsetPath;
 				channel.remoteStorageDeleteEntry(
 						historyVerReposConfig, 
-						repos, doc);
+						repos, doc,
+						accessUser, 
+						commitMsg,
+						rt);
 			}	
 		}
 		
@@ -13276,7 +13286,7 @@ public class BaseController  extends BaseFunction{
 	public boolean deleteIndexForCommitEntry(Repos repos, CommitEntry entry, int historyType)
 	{
 		Log.debug("deleteIndexForCommitEntry() id:" + entry.id);
-		Date date = new Date(entry.startTime);
+		Date date = new Date(entry.commitId);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
 		boolean ret = false;
 		ret = LuceneUtil2.deleteIndexForCommitEntry(entry, indexLib);
@@ -13287,7 +13297,7 @@ public class BaseController  extends BaseFunction{
 	public boolean deleteIndexForCommitEntryAndSubEntries(Repos repos, CommitEntry entry, int historyType)
 	{
 		Log.debug("deleteIndexForCommitEntry() id:" + entry.id);
-		Date date = new Date(entry.startTime);
+		Date date = new Date(entry.commitId);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
 		boolean ret = false;
 		ret = LuceneUtil2.deleteCommitEntryForDocAndSubDocs(entry, entry.commitId, entry.commitId, indexLib);
@@ -13298,7 +13308,7 @@ public class BaseController  extends BaseFunction{
 	public boolean addIndexForCommitEntry(Repos repos, CommitEntry entry, int historyType)
 	{
 		Log.debug("addIndexForCommitEntry() id:" + entry.id);
-		Date date = new Date(entry.startTime);
+		Date date = new Date(entry.commitId);
 		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
 		boolean ret = false;
 		ret = LuceneUtil2.addIndexForCommitEntry(entry, indexLib);
@@ -13316,7 +13326,7 @@ public class BaseController  extends BaseFunction{
 		
 		return ret;
 	}
-	
+		
 	public boolean addIndexForCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList, int historyType)
 	{
 		Log.debug("addIndexForCommitEntries() context:" + context.event);
@@ -13333,9 +13343,7 @@ public class BaseController  extends BaseFunction{
 		ret = LuceneUtil2.addIndexForCommitEntries(repos, context, commitEntryList, indexLib);
 		
 		return ret;
-	}
-	
-	public boolean addIndexForCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType)
+	}	public boolean addIndexForCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType)
 	{
 		Log.debug("addIndexForCommitEntriesEx() context:" + context.event);
 		if(commitActionList == null || commitActionList.size() == 0)
@@ -24003,7 +24011,7 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
-		verReposDeleteHistory(repos, doc, commitId, historyType);
+		verReposDeleteHistory(repos, doc, commitId, reposAccess.getAccessUser(), "删除历史", rt, historyType);
 		writeJson(rt, response);	
 		return;
 	}
