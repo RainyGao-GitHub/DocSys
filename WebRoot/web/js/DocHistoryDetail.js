@@ -234,7 +234,7 @@
 	   				msg = "Recover [" + entryPath + "]'s changes on version" + ":" + commitId + " ?";
 	   				break;
 	   			default:
-			   		msg = "是否恢复 " + entryPath + " 在版本:" + commitId + " 上的改动?";
+			   		msg = "是否恢复 [" + entryPath + "] 在版本:" + commitId + " 上的改动?";
 	   				break;
 	   			}
             }

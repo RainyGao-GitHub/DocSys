@@ -534,6 +534,30 @@
 		    });
 		}
 		
+		function showDeleteConfirm(index)
+		{
+			var commitId = $("#commitId" + index).attr("value");
+			var version = $("#commitId" + index).text();
+		   	console.log("showDeleteConfirm() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
+
+		   	var docPath = "/"+parentPath + docName;
+		   	var entryPath = getEntryPath(historyType, docId, docName, docPath);
+		   	var msg = buildDeleteConfirmMsg(historyType, docId, docPath, version);
+		    
+		   	qiao.bs.confirm({
+		        id: 'deleteHistoryConfirm',
+		        msg: msg,
+	    		title: _Lang("确认"),
+	    		okbtn: _Lang("删除"),
+	    		qubtn: _Lang("取消"),
+		   	},function(){
+		    	console.log("showResetConfirm() reset commitId:" +  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);			         	
+				deleteHistory(index, entryPath);
+		    },function(){
+		        //alert('点击了取消！');
+		    });
+		}
+		
 		function revertHistory(index, entryPath)
 		{
 			//恢复本次提交被改动的文件
@@ -558,15 +582,15 @@
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
 	        		  	console.log(ret.data);
-	        		  	showErrorMessage(_Lang("历史版本恢复成功！"));
+	        		  	showErrorMessage(_Lang("恢复成功！"));
 	                }
 	                else
 	                {
-	                	showErrorMessage(_Lang("历史版本恢复失败", ":", ret.msgInfo));
+	                	showErrorMessage(_Lang("恢复失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {
-	                showErrorMessage(_Lang("历史版本恢复失败", ":", "服务器异常"));
+	                showErrorMessage(_Lang("恢复失败", ":", "服务器异常"));
 	            }
 	        });
 		}
@@ -595,15 +619,52 @@
 	             success : function (ret) {
 	             	if( "ok" == ret.status){
 	        		  	console.log(ret.data);
-	        		  	bootstrapQ.alert(_Lang("历史版本回退成功！"));
+	        		  	bootstrapQ.alert(_Lang("回退成功！"));
 	                }
 	                else
 	                {
-	                	showErrorMessage(_Lang("历史版本回退失败", ":", ret.msgInfo));
+	                	showErrorMessage(_Lang("回退失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {
-	                showErrorMessage(_Lang("历史版本回退失败", ":", "服务器异常"));
+	                showErrorMessage(_Lang("回退失败", ":", "服务器异常"));
+	            }
+	        });
+		}
+		
+		function deleteHistory(index, entryPath)
+		{
+			//回退所有文件到指定版本
+			var commitId = $("#commitId" + index).attr("value");
+		   	console.log("deleteHistory() commitId:" +commitId  + " reposId:" + reposId + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType + " entryPath:" + entryPath);
+	
+	   		$.ajax({
+	             url : "/DocSystem/Bussiness/deleteDocHistory.do",
+	             type : "post",
+	             dataType : "json",
+	             data : {
+	            	 commitId: commitId,
+	                 reposId : reposId,
+	                 pid: pid,
+	                 docId: docId,
+	            	 path : parentPath,
+	             	 name: docName,
+	             	 historyType: historyType,
+	             	 entryPath: entryPath,
+		             shareId: gShareId,
+	             },
+	             success : function (ret) {
+	             	if( "ok" == ret.status){
+	        		  	console.log(ret.data);
+	        		  	bootstrapQ.alert(_Lang("删除成功！"));
+	                }
+	                else
+	                {
+	                	showErrorMessage(_Lang("删除失败", ":", ret.msgInfo));
+	                }
+	            },
+	            error : function () {
+	                showErrorMessage(_Lang("删除失败", ":", "服务器异常"));
 	            }
 	        });
 		}
@@ -683,17 +744,33 @@
 					curCommitId = commitId;
 					
 					var opBtn = "";
-					if(historyType == 1) //VDOC
+					var opBtn1 = "";
+					var opBtn2 = "";
+					var opBtn3 = "";
+					switch(historyType)
 					{
+					case 1:
 						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.viewVDocHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("查看") + "</a>";	
-					}
-					else
-					{
+						opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
+						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("恢复") + "</a>";
+						opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("回退") + "</a>";
+						break;
+					case 0:
+					case 2:
+					case 3:
 						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("详情") + "</a>";							
+						opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
+						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("恢复") + "</a>";
+						opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("回退") + "</a>";
+						break;
+					case 4:
+						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("详情") + "</a>";							
+						opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
+						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("恢复") + "</a>";
+						opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showDeleteConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("删除") + "</a>";
+						break;
 					}
-					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
-					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("恢复") + "</a>";
-					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("回退") + "</a>";
+					
 					var se = "<li>"
 						+"	<i class='cell commitId w10'>"
 						+"		<span class='name  breakAll'>"
@@ -756,6 +833,10 @@
 	        showResetConfirm: function(index)
 			{
 	        	showResetConfirm(index);
-			}			
+			},
+	        showDeleteConfirm: function(index)
+			{
+	        	showDeleteConfirm(index);
+			}	
 	    };
 	})();
