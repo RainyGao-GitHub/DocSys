@@ -4690,16 +4690,17 @@ public class BaseController  extends BaseFunction{
 						context.user.getId(), context.user.getName(),
 						context.commitId, context.commitMsg, context.commitUser,
 						offsetPath, recycleBinRevision, null, HistoryType_RecycleBin);
-				
+
+				context.commitEntryList = new ArrayList<CommitEntry>();
+				buildCommitEntryListForDocDeleteWithRecycleBin(
+						srcDoc.getLevel(), srcDoc.getLocalRootPath(), srcDoc.getPath(), srcDoc.getName(), 
+						dstDoc.getLevel(), dstDoc.getLocalRootPath(), dstDoc.getPath(), dstDoc.getName(),
+						context.commitEntryList);
+
 				//insertCommitEntries
 				new Thread(new Runnable() {
 					public void run() {
-						Log.debug("executeCommonActionListAsync() executeCommonActionList in new thread");
-						context.commitEntryList = new ArrayList<CommitEntry>();
-						buildCommitEntryListForDocDeleteWithRecycleBin(
-								srcDoc.getLevel(), srcDoc.getLocalRootPath(), srcDoc.getPath(), srcDoc.getName(), 
-								dstDoc.getLevel(), dstDoc.getLocalRootPath(), dstDoc.getPath(), dstDoc.getName(),
-								context.commitEntryList);
+						Log.debug("moveRealDocToRecycleBin() insertCommitEntries in new thread");
 						insertCommitEntries(
 								repos,
 								context,
@@ -4741,6 +4742,15 @@ public class BaseController  extends BaseFunction{
 				dstDoc.getLevel(), dstDoc.getLocalRootPath(), dstDoc.getPath(), dstDoc.getName(),
 				context.commitEntryList);
 
+		new Thread(new Runnable() {
+			public void run() {
+				Log.debug("moveRealDocToRecycleBin() insertCommitEntries in new thread");
+				insertCommitEntries(
+						repos,
+						context,
+						context.commitEntryList, 
+						HistoryType_RecycleBin);					}
+		}).start();
 		return true;
 	}
 	
