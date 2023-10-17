@@ -1738,6 +1738,19 @@ function getDocHistoryTitle(docName, docType, historyType)
 			}
 		}
 		break;
+	case 4:
+		if(docId == 0)
+		{
+			title = _Lang("回收站") + " [/]";
+		}
+		else
+		{
+			if(docType == 2)
+			{
+				title = _Lang("回收站") + " [" + docName + "/]";
+			}
+		}
+		break;
 	}
 	return title;
 }
