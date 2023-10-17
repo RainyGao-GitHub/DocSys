@@ -4733,7 +4733,12 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		insertCommit(repos, srcDoc, context, recycleBinRevision, null, HistoryType_RecycleBin);
+		insertCommit(
+				repos, srcDoc, 
+				context.startTime, null,
+				context.user.getId(), context.user.getName(),
+				context.commitId, context.commitMsg, context.commitUser,
+				offsetPath, recycleBinRevision, null, HistoryType_RecycleBin);
 		
 		//Build ComitEntryList
 		context.commitEntryList = new ArrayList<CommitEntry>();
