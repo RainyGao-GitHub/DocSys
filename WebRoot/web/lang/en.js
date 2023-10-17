@@ -324,6 +324,7 @@ function lang(str)
 		"链接" : "Link",
 		"下载链接" : "Download Link",
 		"全选" : "Select All",
+		"回收站" : "RecycleBin",
 		"更多" : "More",
 		
 		//通用

@@ -4505,6 +4505,13 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
+		{text: _Lang('回收站'), action: function(e){
+					e.preventDefault();
+					curRightClickedTreeNode = null;
+					showDocHistory(gRootDoc,4);
+				}
+		},
+		{divider: true},		
 		{text: _Lang('更多') + '...', subMenu: [
 				{text: _Lang('备注'), subMenu: [
 						{text: _Lang('查看历史'), action: function(e){
