@@ -287,7 +287,7 @@
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Recover Repository's changes on version" + ":" + version + " ?";
+		   				msg = "Recover repository's changes on version" + ":" + version + " ?";
 			   			break;
 		   			default:
 		   				msg = "是否恢复仓库在版本" + ":" + version + "上的改动?";
@@ -302,7 +302,7 @@
 		   				msg = "Recover [" + docPath + "]'s changes on version" + ":" + version + " ?";
 			   			break;
 		   			default:
-			   			msg = "是否恢复 " + docPath + " 在版本:" + version + " 上的改动?";
+			   			msg = "是否恢复 [" + docPath + "] 在版本:" + version + " 上的改动?";
 		   				break;
 		   			}
 		   		}
@@ -314,7 +314,7 @@
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Recover Repository's Note changes on version" + ":" + version + " ?";
+		   				msg = "Recover repository's Note changes on version" + ":" + version + " ?";
 		   				break;
 		   			default:
 	            		msg = "是否恢复仓库备注在版本:" + version + " 上的改动?";
@@ -329,7 +329,7 @@
 		   				msg = "Recover [" + docPath + "]'s Note changes on version" + ":" + version + " ?";
 		   				break;
 		   			default:
-	            		msg = "是否恢复 " + docPath + " 的备注在版本:" + version + " 上的改动?";
+	            		msg = "是否恢复 [" + docPath + "] 的备注在版本:" + version + " 上的改动?";
 		   				break;
 		   			}
 
@@ -348,13 +348,13 @@
             case 0:	//History
             case 2: //LocalBackup
             case 3: //RemoteBackup
-            case 4:
+            case 4: //RecycleBin
 		   		if(docId == 0)
 		   		{
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Revert Repository to version" + ":" + version + " ?";
+		   				msg = "Revert repository to version" + ":" + version + " ?";
 			   			break;
 		   			default:
 			   			msg = "是否将仓库回退到版本:" + version + "?";
@@ -369,7 +369,7 @@
 		   				msg = "Revert [" + docPath + "] to version" + ":" + version + " ?";
 			   			break;
 		   			default:
-			   			msg = "是否将 " + docPath + " 回退到版本:" + version + "?";
+			   			msg = "是否将 [" + docPath + "] 回退到版本:" + version + "?";
 		   				break;
 		   			}
 		   		}
@@ -380,7 +380,7 @@
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Revert Repository's Note to version" + ":" + version + " ?";
+		   				msg = "Revert repository's Note to version" + ":" + version + " ?";
 			   			break;
 		   			default:		           		
 	            		msg = "是否将仓库备注回退到版本:" + version + "?";	
@@ -396,7 +396,7 @@
 		   				msg = "Revert [" + docPath + "]'s Note to version" + ":" + version + " ?";
 			   			break;
 		   			default:		           		
-			   			msg = "是否将 " + docPath + " 的备注回退到版本:" + version + "?";
+			   			msg = "是否将 [" + docPath + "] 的备注回退到版本:" + version + "?";
 		   				break;
 		   			}
              	}
@@ -411,13 +411,16 @@
 		   	var msg = "";				
 		   	switch(historyType)
             {
+            case 0:	//History
+            case 2: //LocalBackup
+            case 3: //RemoteBackup
             case 4: //RecycleBin
             	if(docId == 0)
 		   		{
 		   			switch(langType)
 		   			{
 		   			case "en":
-		   				msg = "Delete Repository's change history on version" + ":" + version + " ?";
+		   				msg = "Delete repository's change history on version" + ":" + version + " ?";
 			   			break;
 		   			default:
 		   				msg = "是否删除仓库在版本" + ":" + version + "上的改动历史 ?";
@@ -437,6 +440,32 @@
 		   			}
 		   		}
 		   		break;
+            case 1: //Note's History
+            	if(docId == 0)
+            	{
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Delete repository's Note change hisotry to version" + ":" + version + " ?";
+			   			break;
+		   			default:		           		
+		   				msg = "是否删除仓库备注在版本" + ":" + version + "上的改动历史 ?";
+			   			break;
+		   			}
+            	}
+            	else
+            	{
+		   			switch(langType)
+		   			{
+		   			case "en":
+		   				msg = "Delete [" + docPath + "]'s Note change history on version" + ":" + version + " ?";
+			   			break;
+		   			default:		           		
+			   			msg = "是否将 [" + docPath + "] 的备注到版本:" + version + "上的改动历史 ?";
+		   				break;
+		   			}
+             	}
+            	break;
             }	
 		   
 		   	return msg;
