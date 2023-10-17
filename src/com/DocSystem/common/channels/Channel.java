@@ -141,6 +141,9 @@ public interface Channel {
 			RemoteStorageConfig remote, 
 			Repos repos, Doc doc,
 			String commitId);
+	List<Doc> remoteStorageDeleteEntry(
+			RemoteStorageConfig remote, 
+			Repos repos, Doc doc);
 	List<Doc> remoteStorageCheckOut(
 			RemoteStorageConfig remote, 
 			Repos repos, Doc doc, 
@@ -176,10 +179,16 @@ public interface Channel {
 
 	void insertCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType);
 
+	void deleteCommitEntry(Repos repos, CommitEntry entry, int historyType);
+
+	void deleteCommitEntryAndSubEntries(Repos repos, CommitEntry entry, int historyType);
+	
 	void insertCommit(Repos repos, CommitLog commit, int historyType);
 
 	void updateCommit(Repos repos, CommitLog commit, int historyType);
-	
+
+	void deleteCommit(Repos repos, CommitLog commit, int historyType);
+
 	//精确查询提交历史: 通常指定commitId，来获取详细的commitLog信息
 	List<CommitLog> queryCommitLog(Repos repos, CommitLog qCommit, int historyType);
 	
@@ -198,4 +207,5 @@ public interface Channel {
 	boolean convertReposHistory(Repos repos, Integer maxNum, ReturnAjax rt, int historyType);
 
 	Doc getHistoryDoc(Repos repos, Doc doc, String commitId, int historyType);
+
 }

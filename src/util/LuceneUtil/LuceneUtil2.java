@@ -2040,6 +2040,38 @@ public class LuceneUtil2   extends BaseFunction
 		return ret;
     }   
 	
+	
+	protected static boolean deleteIndexForCommitEntryBasic(String id, String indexLib)
+	{
+    	Log.debug("deleteIndexForCommitEntryBasic() id:" + id + " indexLib:"+indexLib);
+    	boolean ret = false;
+    	
+    	Analyzer analyzer = null;
+    	Directory directory = null;
+    	IndexWriter indexWriter = null;    	
+		try {
+			directory = FSDirectory.open(new File(indexLib));
+		
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+	        indexWriter = new IndexWriter(directory, config);
+	        
+	        Query query = new TermQuery(new Term("id", id));
+	        indexWriter.deleteDocuments(query);
+	        indexWriter.commit();
+
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        ret = true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+			errorLog(e);
+		}
+		
+		return ret;
+    }
+	
 	public static boolean addIndexForCommitEntryBasic(CommitEntry entry, String indexLib)
     {	
     	Log.debug("addIndexForCommitEntryBasic() id:" + entry.id + " indexLib:"+indexLib);    	
@@ -2122,6 +2154,52 @@ public class LuceneUtil2   extends BaseFunction
     	}
 
     	return ret;
+    }
+	
+	public static boolean deleteCommitLogIndex(CommitLog commit, String indexLib)
+    {	
+    	Log.debug("deleteCommitLogIndex() id:" + commit.id + " indexLib:"+indexLib);    	
+    	Log.printObject("deleteCommitLogIndex() commit:", commit);
+
+    	boolean ret = false;
+		
+		Object synclock = getSyncLock(indexLib);
+		
+		String lockInfo = "LuceneUtil2 deleteCommitLogIndex synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
+    	{
+    		redisSyncLockEx(lockName, lockInfo);
+			
+    		ret = deleteCommitLogIndexBasic(commit.id, indexLib);
+    		
+    		redisSyncUnlockEx(lockName, lockInfo, synclock);
+    	}
+
+    	return ret;
+    }
+	
+	public static boolean deleteIndexForCommitEntry(CommitEntry entry, String indexLib)
+    {	
+    	Log.debug("deleteIndexForCommitEntry() id:" + entry.id + " indexLib:"+indexLib);    	
+    	Log.printObject("deleteIndexForCommitEntry() entry:", entry);
+    	
+		boolean ret = false;
+		
+		Object synclock = getSyncLock(indexLib);
+		
+		String lockInfo = "LuceneUtil2 deleteIndexForCommitEntry synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
+    	{
+    		redisSyncLockEx(lockName, lockInfo);
+    	
+    		ret = deleteIndexForCommitEntryBasic(entry.id, indexLib);
+			
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
+    	}
+		
+		return ret;
     }
 	
 	public static boolean addIndexForCommitEntry(CommitEntry entry, String indexLib)
@@ -2614,6 +2692,38 @@ public class LuceneUtil2   extends BaseFunction
 			
 		List<CommitEntry> list = multiQueryForCommitEntryForDocAndSubDocs(entry, startCommitId, endCommitId, maxNum, indexLib, sort);
 		return list;
+	}
+    
+	//For RecycleBin
+	public static boolean deleteCommitEntryForDocAndSubDocs(CommitEntry entry, Long startCommitId, Long endCommitId, String indexLib) {
+		Log.debug("deleteCommitEntryForDocAndSubDocs() indexLib:" + indexLib);
+		
+    	boolean ret = false;
+    	
+    	Analyzer analyzer = null;
+    	Directory directory = null;
+    	IndexWriter indexWriter = null;    	
+		try {
+			directory = FSDirectory.open(new File(indexLib));
+		
+	        IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_46, null);
+	        indexWriter = new IndexWriter(directory, config);
+	        
+	        BooleanQuery builder = buildBooleanQueryForCommitEntryForDocAndSubDocs(entry, startCommitId, endCommitId);
+	        indexWriter.deleteDocuments(builder);
+	        indexWriter.commit();
+
+	        indexWriter.close();
+	        indexWriter = null;
+	        directory.close();
+	        directory = null;
+	        ret = true;
+		} catch (Exception e) {
+			closeResource(indexWriter, directory, analyzer);
+			errorLog(e);
+		}
+		
+		return ret;
 	}
 	
 	public static List<CommitEntry> multiQueryForCommitEntryForDocAndSubDocs(CommitEntry qEntry, Long startCommitId, Long endCommitId, Integer maxNum, String indexLib, Sort sort)

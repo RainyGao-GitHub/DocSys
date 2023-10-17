@@ -12521,6 +12521,17 @@ public class BaseController  extends BaseFunction{
 		return verReposUtil.checkPath(entryPath, commitId);
 	}
 
+	protected boolean verReposDeleteHistoryEx(Repos repos, Doc doc, 
+			String commitId, 
+			int historyType)
+	{		
+		if(isLegacyReposHistory(repos))
+		{
+			return false;
+		}
+		
+		return verReposDeleteHistory(repos, doc, commitId, historyType);
+	}
 	
 	protected List<Doc> verReposCheckOutEx(Repos repos, Doc doc, 
 			String tmpLocalRootPath, String localParentPath, String targetName, 
@@ -12577,7 +12588,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("verReposCheckOutEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId, HistoryType_RealDoc);
+				preCommitId = verReposGetPreviousReposCommitIdLegacy(repos, true, commitId, historyType);
 				Log.debug("verReposCheckOutEx() to get deletedEntryList from preCommit:" + preCommitId);
 				successList1 = verReposCheckOutLegacy(repos, false, doc, tmpLocalRootPath + localParentPath, targetName, preCommitId, force, deletedEntryList, historyType);
 			}
@@ -12599,7 +12610,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.debug("verReposCheckOutEx() deletedEntryList size:" + deletedEntryList.size());
 				//checkOut Deleted Entries from previous commit
-				preCommitId = verReposGetPreviousReposCommitId(repos, commitId, HistoryType_RealDoc);
+				preCommitId = verReposGetPreviousReposCommitId(repos, commitId, historyType);
 				Log.debug("verReposCheckOutEx() to get deletedEntryList from preCommit:" + preCommitId);				
 				successList1 = verReposCheckOut(repos, doc, tmpLocalRootPath, localParentPath, targetName, preCommitId, force, deletedEntryList, historyType);
 			}
@@ -12731,6 +12742,46 @@ public class BaseController  extends BaseFunction{
 		return successList;
 	}
 
+	
+	private boolean verReposDeleteHistory(Repos repos, Doc doc, 
+			String commitId, 
+			int historyType) 
+	{
+		CommitLog commit = getCommitLogById(repos, commitId, historyType);
+		if(commit == null)
+		{
+			Log.debug("verReposDeleteHistory() failed to get commitLog for commitId:" + commitId);			
+			return false;
+		}
+		Log.debug("verReposDeleteHistory() revision:" + commit.verReposRevision);			
+		
+		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
+		if(historyVerReposConfig != null)
+		{
+			if(historyVerReposConfig.isVerRepos == false)
+			{
+				doc.offsetPath = commit.verReposOffsetPath;
+				channel.remoteStorageDeleteEntry(
+						historyVerReposConfig, 
+						repos, doc);
+			}	
+		}
+		
+		//删除commitEntry
+		CommitEntry commitEntry = new CommitEntry();
+		commitEntry.commitId = commit.commitId;
+		commitEntry.path = doc.getPath();
+		commitEntry.name = doc.getName();
+		channel.deleteCommitEntryAndSubEntries(repos, commitEntry, historyType);
+		
+		//删除commitLog
+		if(doc.getDocId() == 0L)
+		{
+			channel.deleteCommit(repos, commit, historyType);
+		}
+		return true;		
+	}
+	
 	/*
 	 * verReposCheckOut
 	 * 参数：
@@ -13221,6 +13272,28 @@ public class BaseController  extends BaseFunction{
 		return indexLib;
 	}
 	
+	//Delete Index For CommitEntry
+	public boolean deleteIndexForCommitEntry(Repos repos, CommitEntry entry, int historyType)
+	{
+		Log.debug("deleteIndexForCommitEntry() id:" + entry.id);
+		Date date = new Date(entry.startTime);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
+		boolean ret = false;
+		ret = LuceneUtil2.deleteIndexForCommitEntry(entry, indexLib);
+		return ret;
+	}
+	
+	//Delete Index For CommitEntry and SubEntries
+	public boolean deleteIndexForCommitEntryAndSubEntries(Repos repos, CommitEntry entry, int historyType)
+	{
+		Log.debug("deleteIndexForCommitEntry() id:" + entry.id);
+		Date date = new Date(entry.startTime);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
+		boolean ret = false;
+		ret = LuceneUtil2.deleteCommitEntryForDocAndSubDocs(entry, entry.commitId, entry.commitId, indexLib);
+		return ret;
+	}
+	
 	//Add Index For CommitEntry
 	public boolean addIndexForCommitEntry(Repos repos, CommitEntry entry, int historyType)
 	{
@@ -13297,6 +13370,16 @@ public class BaseController  extends BaseFunction{
 		String indexLib = getIndexLibPathForCommitLog(repos, date, historyType);
 		boolean ret = false;
 		ret = LuceneUtil2.updateCommitLogIndex(commit, indexLib);
+		return ret;
+	}
+	
+	public boolean deleteIndexForCommitLog(Repos repos, CommitLog commit, int historyType)
+	{
+		Log.debug("deleteIndexForCommitLog() id:" + commit.id);
+		Date date = new Date(commit.commitId);
+		String indexLib = getIndexLibPathForCommitLog(repos, date, historyType);
+		boolean ret = false;
+		ret = LuceneUtil2.deleteCommitLogIndex(commit, indexLib);
 		return ret;
 	}
 	
@@ -23862,6 +23945,67 @@ public class BaseController  extends BaseFunction{
 		writeJson(rt, response);
 		docSysDebugLog("saveDocToDisk() [" + path + name + "] 文件校验成功", rt);
 		addSystemLog(request, accessUser, event, event, eventName, queryId, "成功", null, null, null, buildSystemLogDetailContent(rt));			
+	}
+	
+	//DocHistory Delete Interfaces
+	protected void deleteRealDocHistory(
+			String taskId,
+			Repos repos,
+			Long docId, Long pid, String path, String name,  Integer level, Integer type,
+			String commitId,
+			String entryPath,
+			ReposAccess reposAccess,
+			ReturnAjax rt,
+			HttpSession session, HttpServletRequest request,HttpServletResponse response,
+			int historyType) 
+	{
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		
+		Doc doc = null;
+		boolean isRealDoc = true;
+		if(entryPath == null)
+		{
+			doc = buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, level, type, isRealDoc, localRootPath, localVRootPath, null, null);
+		}
+		else
+		{
+			//Remove the /
+			char startChar = entryPath.charAt(0);
+			if(startChar == '/')
+			{
+				entryPath = entryPath.substring(1);
+			}
+			doc = buildBasicDoc(repos.getId(), null, null, reposPath, entryPath, "", null, null, isRealDoc, localRootPath, localVRootPath, null, null);
+		}
+		
+		//User Right Check
+		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
+		if(docUserAuth == null)
+		{
+			rt.setError("您无此操作权限，请联系管理员");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(docUserAuth.getAccess() == null || docUserAuth.getAccess() != 1)
+		{
+			rt.setError("您无权访问该文件，请联系管理员");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(docUserAuth.getDeleteEn() == null || docUserAuth.getDeleteEn() != 1)
+		{
+			rt.setError("您没有该文件的删除权限，请联系管理员");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		verReposDeleteHistory(repos, doc, commitId, historyType);
+		writeJson(rt, response);	
+		return;
 	}
 	
 	//Doc Revert Interfaces
