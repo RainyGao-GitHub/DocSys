@@ -282,6 +282,7 @@
             case 0:	//History
             case 2: //LocalBackup
             case 3: //RemoteBackup
+            case 4: //RecycleBin
 		   		if(docId == 0)
 		   		{
 		   			switch(langType)
@@ -479,6 +480,7 @@
             case 0:	//History
             case 2: //LocalBackup
             case 3: //RemoteBackup
+            case 4: //RecycelBin
 		   		if(docId == 0)
 		   		{
 		   			switch(langType)
