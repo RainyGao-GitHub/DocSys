@@ -124,6 +124,7 @@ import com.DocSystem.commonService.SmsService;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.CommitAction.CommitAction;
+import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.CommonAction;
@@ -3663,7 +3664,8 @@ public class BaseController  extends BaseFunction{
 			User login_user, 
 			ReturnAjax rt,
 			ActionContext context,
-			List<CommonAction> asyncActionList) 	//actions which need to execute async after this function
+			List<CommonAction> asyncActionList, 	//actions which need to execute async after this function
+			int historyType)
 	{			
 		if(commitMsg == null)
 		{
@@ -3674,8 +3676,9 @@ public class BaseController  extends BaseFunction{
 		List<Doc> successDocList = null;
 		if(isFSM(repos)) //文件管理系统
 		{	
-			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, downloadAll, needDeletedEntry, true, HistoryType_RealDoc);
+			successDocList = verReposCheckOutEx(repos, doc, null, null, null, commitId, downloadAll, needDeletedEntry, true, historyType);
 
+			//注意：这里用HistoryType_RealDoc是对的，因为这里的commit是版本管理用的
 			insertCommit(repos, doc, context, null, null, HistoryType_RealDoc);
 			//TODO: revert操作的commitEntry会在updateCommit时写入
 			//insertCommitEntry(repos, doc, context, "revert", null, login_user);
@@ -3702,6 +3705,8 @@ public class BaseController  extends BaseFunction{
 			{
 				ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
 				revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, commitActionList, null);
+
+				//注意：这里用HistoryType_RealDoc是对的，因为这里的commit是版本管理用的
 				updateCommit(repos, doc, context, revision, rt.getDebugLog(), commitActionList, HistoryType_RealDoc);
 				
 				if(revision != null)
@@ -4670,6 +4675,15 @@ public class BaseController  extends BaseFunction{
 		Doc dstDoc = buildBasicDoc(repos.getId(), null, null, srcDoc.getReposPath(), 
 				srcDoc.getPath(), srcDoc.getName(), null, srcDoc.getType(), true, recycleBinLocalRootPath + offsetPath, null, null, null);
 		
+		//Build ActionContext for RecycleBin
+		//对于回收站而言，属于add操作
+		ActionContext contextForRecycelBin = buildBasicActionContext(null, context.user, "add", "add", "移动至回收站", null, repos, srcDoc, null, null);
+		contextForRecycelBin.info = context.info;
+		contextForRecycelBin.commitMsg = context.commitMsg;
+		contextForRecycelBin.commitUser = context.commitUser;
+		contextForRecycelBin.offsetPath = offsetPath;
+		contextForRecycelBin.commitId = generateCommitId(repos, dstDoc, context.startTime);
+		
 		//创建上级目录，否则移动会失败
 		Log.debug("moveRealDocToRecycleBin() dstParentPath:" + dstDoc.getLocalRootPath() + dstDoc.getPath());
 		File parentDir = new File(dstDoc.getLocalRootPath() + dstDoc.getPath());
@@ -4684,27 +4698,16 @@ public class BaseController  extends BaseFunction{
 			ret = moveRealDoc(repos, srcDoc, dstDoc, rt);
 			if(ret == true)
 			{
-				insertCommit(
-						repos, srcDoc, 
-						context.startTime, null,
-						context.user.getId(), context.user.getName(),
-						context.commitId, context.commitMsg, context.commitUser,
-						offsetPath, recycleBinRevision, null, HistoryType_RecycleBin);
+				insertCommit(repos, dstDoc, contextForRecycelBin, recycleBinRevision, null, HistoryType_RecycleBin);
 
-				context.commitEntryList = new ArrayList<CommitEntry>();
-				buildCommitEntryListForDocDeleteWithRecycleBin(
-						srcDoc.getLevel(), srcDoc.getLocalRootPath(), srcDoc.getPath(), srcDoc.getName(), 
-						dstDoc.getLevel(), dstDoc.getLocalRootPath(), dstDoc.getPath(), dstDoc.getName(),
-						context.commitEntryList);
-
-				//insertCommitEntries
+				//insertCommitEntries for delete Entry
 				new Thread(new Runnable() {
 					public void run() {
 						Log.debug("moveRealDocToRecycleBin() insertCommitEntries in new thread");
-						insertCommitEntries(
+						insertCommitEntriesForDoc(
 								repos,
-								context,
-								context.commitEntryList, 
+								contextForRecycelBin,
+								dstDoc,
 								HistoryType_RecycleBin);					}
 				}).start();
 			}
@@ -4733,12 +4736,18 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
-		insertCommit(
-				repos, srcDoc, 
-				context.startTime, null,
-				context.user.getId(), context.user.getName(),
-				context.commitId, context.commitMsg, context.commitUser,
-				offsetPath, recycleBinRevision, null, HistoryType_RecycleBin);
+		insertCommit(repos, dstDoc, contextForRecycelBin, recycleBinRevision, null, HistoryType_RecycleBin);
+		
+		//insertCommitEntries for delete Entry
+		new Thread(new Runnable() {
+			public void run() {
+				Log.debug("moveRealDocToRecycleBin() insertCommitEntries in new thread");
+				insertCommitEntriesForDoc(
+						repos,
+						contextForRecycelBin,
+						dstDoc,
+						HistoryType_RecycleBin);					}
+		}).start();
 		
 		//Build ComitEntryList
 		context.commitEntryList = new ArrayList<CommitEntry>();
@@ -4747,15 +4756,8 @@ public class BaseController  extends BaseFunction{
 				dstDoc.getLevel(), dstDoc.getLocalRootPath(), dstDoc.getPath(), dstDoc.getName(),
 				context.commitEntryList);
 
-		new Thread(new Runnable() {
-			public void run() {
-				Log.debug("moveRealDocToRecycleBin() insertCommitEntries in new thread");
-				insertCommitEntries(
-						repos,
-						context,
-						context.commitEntryList, 
-						HistoryType_RecycleBin);					}
-		}).start();
+
+		
 		return true;
 	}
 	
@@ -4864,6 +4866,13 @@ public class BaseController  extends BaseFunction{
 		Log.debug("insertCommitEntries() commitId:" + context.commitId + " commitMsg:" + context.commitMsg + " commitUsers:" + context.commitUser
 				+ " action:" + context.event + " [" + context.doc.getPath() + context.doc.getName() + "]");
 		channel.insertCommitEntries(repos, context, commitEntryList, historyType);
+	}
+	
+	protected void insertCommitEntriesForDoc(Repos repos, ActionContext context, Doc doc, int historyType) 
+	{
+		Log.debug("insertCommitEntries() commitId:" + context.commitId + " commitMsg:" + context.commitMsg + " commitUsers:" + context.commitUser
+				+ " action:" + context.event + " [" + context.doc.getPath() + context.doc.getName() + "]");
+		channel.insertCommitEntriesForDoc(repos, context, doc, historyType);
 	}
 	
 	protected void insertCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType) 
@@ -13358,7 +13367,22 @@ public class BaseController  extends BaseFunction{
 		ret = LuceneUtil2.addIndexForCommitEntries(repos, context, commitEntryList, indexLib);
 		
 		return ret;
-	}	public boolean addIndexForCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType)
+	}	
+	
+	protected boolean addIndexForCommitEntriesForDoc(Repos repos, ActionContext context, Doc doc, int historyType) 
+	{
+		Log.debug("addIndexForCommitEntries() context:" + context.event);
+		
+		Date date = new Date(context.commitId);
+		String indexLib = getIndexLibPathForCommitEntry(repos, date, historyType);
+		boolean ret = false;
+		
+		ret = LuceneUtil2.addIndexForCommitEntriesForDoc(repos, context, doc, indexLib);
+		
+		return ret;
+	}
+	
+	public boolean addIndexForCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType)
 	{
 		Log.debug("addIndexForCommitEntriesEx() context:" + context.event);
 		if(commitActionList == null || commitActionList.size() == 0)
@@ -24043,7 +24067,8 @@ public class BaseController  extends BaseFunction{
 			String commitMsg,
 			ReposAccess reposAccess,
 			ReturnAjax rt,
-			HttpSession session, HttpServletRequest request,HttpServletResponse response) 
+			HttpSession session, HttpServletRequest request,HttpServletResponse response, 
+			int historyType) 
 	{
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
@@ -24155,7 +24180,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(isLatestCommitEx(repos, doc, commitId, rt, HistoryType_RealDoc) == true)
+			if(isLatestCommitEx(repos, doc, commitId, rt, historyType) == true)
 			{
 				docSysErrorLog("恢复失败:" + doc.getPath() + doc.getName() + " 已是最新版本!",rt);					
 
@@ -24189,7 +24214,8 @@ public class BaseController  extends BaseFunction{
 				reposAccess.getAccessUser(), 
 				rt, 
 				context, 
-				asyncActionList);
+				asyncActionList,
+				historyType);
 		
 		unlockDoc(doc, lockType, reposAccess.getAccessUser());
 		

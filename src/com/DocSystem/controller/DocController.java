@@ -5167,7 +5167,12 @@ public class DocController extends BaseController{
 			needDeletedEntry = 1;
 		}
 		
-		if(historyType != null && historyType == 1)
+		if(historyType == null)
+		{
+			historyType = HistoryType_RealDoc;
+		}
+		
+		if(historyType == HistoryType_VirtualDoc)
 		{
 			revertVirtualDocHistory(
 					taskId, 
@@ -5195,7 +5200,8 @@ public class DocController extends BaseController{
 				commitMsg, 
 				reposAccess, 
 				rt, 
-				session, request, response);
+				session, request, response,
+				historyType);
 	}
 
 	/****************   set  Doc RemoteStorage Ignore ******************/

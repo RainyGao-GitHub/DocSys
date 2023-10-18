@@ -8,6 +8,7 @@ import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.CommitAction.CommitAction;
+import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
@@ -179,7 +180,9 @@ public interface Channel {
 	void insertCommitEntries(Repos repos, FolderUploadAction action, List<CommitEntry> commitEntryList, int historyType);
 
 	void insertCommitEntries(Repos repos, ActionContext context, List<CommitEntry> commitEntryList, int historyType);
-
+	
+	void insertCommitEntriesForDoc(Repos repos, ActionContext context, Doc doc, int historyType);
+	
 	void insertCommitEntriesEx(Repos repos, ActionContext context, List<CommitAction> commitActionList, int historyType);
 
 	void deleteCommitEntry(Repos repos, CommitEntry entry, int historyType);
@@ -210,5 +213,4 @@ public interface Channel {
 	boolean convertReposHistory(Repos repos, Integer maxNum, ReturnAjax rt, int historyType);
 
 	Doc getHistoryDoc(Repos repos, Doc doc, String commitId, int historyType);
-
 }

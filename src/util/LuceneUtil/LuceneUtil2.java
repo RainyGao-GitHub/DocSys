@@ -2259,7 +2259,6 @@ public class LuceneUtil2   extends BaseFunction
     			commitEntry.path = entry.path;
     			commitEntry.name = entry.name;
     			commitEntry.entryType = entry.entryType;
-    			commitEntry.realCommitAction = entry.realCommitAction;
     			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
     			addIndexForCommitEntryBasic(commitEntry, indexLib);
     		}
@@ -2317,6 +2316,80 @@ public class LuceneUtil2   extends BaseFunction
 		ret = true;
 		return ret;
 	}
+	
+	public static boolean addIndexForCommitEntriesForDoc(Repos repos, ActionContext context, Doc doc, String indexLib) {
+    	Log.debug("addIndexForCommitEntries() context:" + context.event + " indexLib:"+indexLib);    	
+    	Log.printObject("addIndexForCommitEntries() context:", context);
+    	
+		boolean ret = false;
+		
+		Object synclock = getSyncLock(indexLib);
+		
+		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
+		String lockName = "indexLibSyncLock" + indexLib;
+		synchronized(synclock)
+    	{
+    		redisSyncLockEx(lockName, lockInfo);
+    	
+    		//使用共用的commitEntry来减少内存的占用
+    		CommitEntry commitEntry = new CommitEntry();
+			commitEntry.startTime = context.startTime;
+			commitEntry.userId = context.user.getId();
+			commitEntry.userName = context.user.getName();
+			commitEntry.commitId = context.commitId;
+			commitEntry.commitMsg = context.commitMsg;
+			commitEntry.commitUsers = context.commitUser;
+			commitEntry.reposId = repos.getId();
+			commitEntry.reposName = repos.getName();
+			commitEntry.commitAction = context.event;
+			commitEntry.realCommitAction = context.event;
+
+			addIndexForCommitEntriesForDoc(
+        			commitEntry,
+        			doc.getLevel(), doc.getLocalRootPath(), doc.getPath(), doc.getName(),
+        			indexLib);
+    				
+			redisSyncUnlockEx(lockName, lockInfo, synclock);
+    	}
+		
+		ret = true;
+		return ret;
+	}
+	
+	private static void addIndexForCommitEntriesForDoc(
+			CommitEntry commitEntry,
+			int level, String localRootPath, String path, String name, 
+			String indexLib)
+	{
+    	String filePath = localRootPath + path + name;
+        
+    	File file = new File(filePath); 
+        if(file.exists())
+        {        	
+            commitEntry.docId = Path.getDocId(level, path + name);
+            commitEntry.path = path;
+            commitEntry.name = name;
+            commitEntry.entryType = file.isFile()? 1:2;
+            commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+			addIndexForCommitEntryBasic(commitEntry, indexLib);
+			
+            if(file.isFile())        		
+        	{
+				return;
+            }
+            
+        	//SubEntries under folder	              	
+        	String subDirPath = path + name + "/";
+        	File[] tmp = file.listFiles();
+            for(int i=0;i<tmp.length;i++)
+            {
+            	addIndexForCommitEntriesForDoc(
+            			commitEntry,
+            			level+1, localRootPath, subDirPath, tmp[i].getName(),
+            			indexLib);
+            }
+        }
+ 	}
 	
 	public static boolean addIndexForCommitEntriesEx(Repos repos, ActionContext context,
 			List<CommitAction> commitActionList, String indexLib) 	
