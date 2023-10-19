@@ -7640,7 +7640,7 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	private String verReposGetPreviousReposCommitIdEx(Repos repos, String commitId, int historyType) {
-		if(isLegacyReposHistory(repos))
+		if(isLegacyReposHistory(repos, historyType))
 		{
 			return verReposGetPreviousReposCommitIdLegacy(repos, true, commitId, historyType);
 		}
@@ -7712,7 +7712,7 @@ public class BaseController  extends BaseFunction{
 
 	protected String verReposGetLatestReposCommitIdEx(Repos repos, int historyType) 
 	{
-		if(isLegacyReposHistory(repos))
+		if(isLegacyReposHistory(repos, historyType))
 		{
 			return verReposGetLatestReposCommitIdLegacy(repos, true, historyType);
 		}
@@ -7904,7 +7904,7 @@ public class BaseController  extends BaseFunction{
 	
 	protected Doc verReposGetDocEx(Repos repos, Doc doc, String commitId, int historyType)
 	{
-		if(isLegacyReposHistory(repos))
+		if(isLegacyReposHistory(repos, historyType))
 		{
 			return verReposGetDocLegacy(repos, doc, commitId, historyType);
 		}
@@ -12231,7 +12231,7 @@ public class BaseController  extends BaseFunction{
 	protected List<LogEntry> getCommitHistoryEx(Repos repos, Doc doc, int maxLogNum, String endCommitId, int historyType) 
 	{
 		Log.debug("getCommitHistoryEx() maxLogNum:" + maxLogNum + " endCommitId:" + endCommitId);
-		if(isLegacyReposHistory(repos))
+		if(isLegacyReposHistory(repos, historyType))
 		{
 			return verReposGetHistoryLegacy(repos, false, doc, maxLogNum, endCommitId);
 		}
@@ -12241,17 +12241,22 @@ public class BaseController  extends BaseFunction{
 	protected List<ChangedItem> verReposGetHistoryDetailEx(Repos repos, Doc doc, String commitId, int historyType) 
 	{
 		Log.debug("verReposGetHistoryDetailEx() [" + doc.getPath() + doc.getName() + "] commitId:" + commitId);
-		if(isLegacyReposHistory(repos))
+		if(isLegacyReposHistory(repos, historyType))
 		{
 			return verReposGetHistoryDetailLegacy(repos, false, doc, commitId, historyType);
 		}
 		return verReposGetHistoryDetail(repos, doc, commitId, historyType);
 	}
 	
-	protected boolean isLegacyReposHistory(Repos repos) {
-		String path = Path.getReposVersionExtentionConfigPath(repos);
-		File file = new File(path);
-		return !file.exists();
+	protected boolean isLegacyReposHistory(Repos repos, int historyType) {
+		if(historyType == HistoryType_RealDoc)
+		{
+			String path = Path.getReposVersionExtentionConfigPath(repos);
+			File file = new File(path);
+			return !file.exists();
+		}
+		//注意只有HistoryType_RealDoc会有历史版本的格式问题，其他肯定是新的格式
+		return true;
 	}
 	
 	protected boolean setReposHistoryFormat(Repos repos, boolean legacyForamt) 
@@ -12584,7 +12589,7 @@ public class BaseController  extends BaseFunction{
 			deletedEntryList = new HashMap<String,String>();
 		}
 		
-		if(isLegacyReposHistory(repos))
+		if(isLegacyReposHistory(repos, historyType))
 		{
 			if(tmpLocalRootPath == null)
 			{
@@ -12683,7 +12688,7 @@ public class BaseController  extends BaseFunction{
 			deletedEntryList = new HashMap<String,String>();
 		}
 		
-		if(isLegacyReposHistory(repos))
+		if(isLegacyReposHistory(repos, historyType))
 		{
 			if(tmpLocalRootPath == null)
 			{
@@ -24234,7 +24239,7 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean isLatestCommitEx(Repos repos, Doc doc, String commitId, ReturnAjax rt, int historyType) 
 	{
-		if(isLegacyReposHistory(repos))
+		if(isLegacyReposHistory(repos, historyType))
 		{
 			if(isLatestVerReposCommitLegacy(repos, doc, commitId, rt))
 			{
