@@ -12700,7 +12700,7 @@ public class BaseController  extends BaseFunction{
 							repos, doc, 
 							tmpLocalRootPath, localParentPath, targetName, 
 							commit.verReposRevision, 
-							constants.PullType.force, 
+							constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, 
 							downloadList,
 							checkoutedList);
 
@@ -12871,7 +12871,7 @@ public class BaseController  extends BaseFunction{
 							repos, doc, 
 							tmpLocalRootPath, localParentPath, targetName, 
 							commit.verReposRevision, 
-							constants.PullType.force, 
+							constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, 
 							downloadList,
 							checkoutedList);
 	
@@ -13006,7 +13006,7 @@ public class BaseController  extends BaseFunction{
 				repos, doc, 
 				tmpLocalRootPath, localParentPath, targetName, 
 				commit.verReposRevision, 
-				constants.PullType.force, 
+				constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, 
 				includeList,
 				excludeList);
 	}
