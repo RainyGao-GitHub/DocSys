@@ -610,7 +610,7 @@ public class ReposController extends BaseController{
 			return;			
 		}
 		
-		if(isLegacyReposHistory(repos) == false)
+		if(isLegacyReposHistory(repos, HistoryType_RealDoc) == false)
 		{
 			rt.setError("该仓库历史已是最新格式!");				
 			writeJson(rt, response);	
