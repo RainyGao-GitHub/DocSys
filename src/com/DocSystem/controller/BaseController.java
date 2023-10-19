@@ -12256,7 +12256,7 @@ public class BaseController  extends BaseFunction{
 			return !file.exists();
 		}
 		//注意只有HistoryType_RealDoc会有历史版本的格式问题，其他肯定是新的格式
-		return true;
+		return false;
 	}
 	
 	protected boolean setReposHistoryFormat(Repos repos, boolean legacyForamt) 
