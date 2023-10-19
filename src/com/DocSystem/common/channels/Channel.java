@@ -154,7 +154,9 @@ public interface Channel {
 			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
 			int pullType, 
-			HashMap<String,String> downloadList);
+			HashMap<String,String> includeList,
+			HashMap<String,String> excludeList);
+	
 	List<Doc> remoteStorageCheckOutForDownload(
 			RemoteStorageConfig remote, 
 			Repos repos, Doc doc, 
@@ -162,7 +164,8 @@ public interface Channel {
 			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
 			boolean force,
-			HashMap<String,String> downloadList,
+			HashMap<String,String> includeList,
+			HashMap<String,String> excludeList,
 			int historyType);
 
 	String buildMailContent(String content, String lang);
