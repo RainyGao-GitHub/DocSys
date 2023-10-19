@@ -24375,6 +24375,12 @@ public class BaseController  extends BaseFunction{
 	
 	private boolean isLatestCommitEx(Repos repos, Doc doc, String commitId, ReturnAjax rt, int historyType) 
 	{
+		if(historyType != HistoryType_RealDoc)
+		{
+			//LocalBackup/RemoteBackup/RecycleBin没有最新版本一说，总是可以进行恢复操作
+			return false;
+		}
+		
 		if(isLegacyReposHistory(repos, historyType))
 		{
 			if(isLatestVerReposCommitLegacy(repos, doc, commitId, rt))
