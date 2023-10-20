@@ -4575,13 +4575,6 @@ function contextMenuInit()
 				}
 		},
 		{divider: true},
-		{text: _Lang('查看历史'), action: function(e){
-					e.preventDefault();
-					curRightClickedTreeNode = null;
-	    			showDocHistory(gRootDoc,0);
-				}
-		},
-		{divider: true},
 		{text: _Lang('查看备份'), subMenu: [
 			{text: _Lang('本地备份'), action: function(e){
 					e.preventDefault();
@@ -4610,6 +4603,13 @@ function contextMenuInit()
 				}
 			},
 			]
+		},
+		{divider: true},
+		{text: _Lang('查看历史'), action: function(e){
+					e.preventDefault();
+					curRightClickedTreeNode = null;
+	    			showDocHistory(gRootDoc,0);
+				}
 		},
 		{divider: true},
 		{text: _Lang('回收站'), action: function(e){
@@ -4759,12 +4759,6 @@ function contextMenuInit()
 				}
 		},
 		{divider: true},
-		{text: _Lang('查看历史'), action: function(e){
-					e.preventDefault();
-		      		showDocHistory(curRightClickedTreeNode,0);
-				}
-		},
-		{divider: true},
 		{text: _Lang('查看备份'), subMenu: [
 			{text: _Lang('本地备份'), action: function(e){
 					e.preventDefault();
@@ -4791,6 +4785,12 @@ function contextMenuInit()
 				}
 			},				
 			]
+		},
+		{divider: true},
+		{text: _Lang('查看历史'), action: function(e){
+					e.preventDefault();
+		      		showDocHistory(curRightClickedTreeNode,0);
+				}
 		},
 		{divider: true},
 		{text: _Lang('回收站'), action: function(e){
@@ -4969,13 +4969,6 @@ function contextMenuInit()
 				}
 		},			
 		{divider: true},
-		{text: _Lang('查看历史'), action: function(e){
-					e.preventDefault();
-					var parentNode = getParentNodeEx(gDocInfo);
-	    			showDocHistory(parentNode,0);
-				}
-		},
-		{divider: true},
 		{text: _Lang('查看备份'), subMenu: [
 			{text: _Lang('本地备份'), action: function(e){
 					e.preventDefault();
@@ -5006,6 +4999,13 @@ function contextMenuInit()
 				}
 			},
 			]
+		},
+		{divider: true},
+		{text: _Lang('查看历史'), action: function(e){
+					e.preventDefault();
+					var parentNode = getParentNodeEx(gDocInfo);
+	    			showDocHistory(parentNode,0);
+				}
 		},
 		{divider: true},
 		{text: _Lang('回收站'), action: function(e){
@@ -5194,12 +5194,6 @@ function contextMenuInit()
 					}
 			},
 			{divider: true},
-			{text: _Lang('查看历史'), action: function(e){
-					e.preventDefault();
-					showDocHistory(curRightClickedDocListNode,0);
-				}
-			},	
-			{divider: true},
 			{text: _Lang('查看备份'), subMenu: [
 				{text: _Lang('本地备份'), action: function(e){
 						e.preventDefault();
@@ -5227,6 +5221,12 @@ function contextMenuInit()
 				},
 				]
 			},			
+			{divider: true},
+			{text: _Lang('查看历史'), action: function(e){
+					e.preventDefault();
+					showDocHistory(curRightClickedDocListNode,0);
+				}
+			},	
 			{divider: true},
 			{text: _Lang('回收站'), action: function(e){
 						e.preventDefault();
@@ -5426,12 +5426,6 @@ function contextMenuInit()
 					}
 			},
 			{divider: true},
-			{text: _Lang('查看历史'), action: function(e){
-					e.preventDefault();
-					showDocHistory(curRightClickedDocListNode,0);
-				}
-			},
-			{divider: true},
 			{text: _Lang('查看备份'), subMenu: [
 				{text: _Lang('本地备份'), action: function(e){
 						e.preventDefault();
@@ -5458,6 +5452,12 @@ function contextMenuInit()
 						}
 					},
 				]
+			},
+			{divider: true},
+			{text: _Lang('查看历史'), action: function(e){
+					e.preventDefault();
+					showDocHistory(curRightClickedDocListNode,0);
+				}
 			},
 			{divider: true},
 			{text: _Lang('回收站'), action: function(e){
@@ -5609,12 +5609,6 @@ function contextMenuInit()
 					}
 			},
 			{divider: true},
-			{text: _Lang('查看历史'), action: function(e){
-					e.preventDefault();
-					showDocHistory(gDocInfo,0);
-				}
-			},
-			{divider: true},
 			{text: _Lang('查看备份'), subMenu: [
 				{text: _Lang('本地备份'), action: function(e){
 						e.preventDefault();
@@ -5641,6 +5635,12 @@ function contextMenuInit()
 					}
 				},
 				]
+			},
+			{divider: true},
+			{text: _Lang('查看历史'), action: function(e){
+					e.preventDefault();
+					showDocHistory(gDocInfo,0);
+				}
 			},
 			{divider: true},
 			{text: _Lang('回收站'), action: function(e){
