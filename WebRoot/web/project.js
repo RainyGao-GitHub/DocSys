@@ -4574,22 +4574,6 @@ function contextMenuInit()
 					DoPaste(gCopiedNodes,null,gIsCopy);
 				}
 		},
-		{divider: true},
-		{text: _Lang('查看备份'), subMenu: [
-			{text: _Lang('本地备份'), action: function(e){
-					e.preventDefault();
-					curRightClickedTreeNode = null;
-        			showDocHistory(gRootDoc, 2);
-    			}
-			},	
-			{text: _Lang('异地备份'), action: function(e){
-					e.preventDefault();
-					curRightClickedTreeNode = null;
-        			showDocHistory(gRootDoc, 3);
-				}
-			},
-			]
-		},
 		{divider: true},		
 		{text: _Lang('远程存储'), subMenu: [
 			{text: _Lang('推送'),  action: function(e){
@@ -4662,6 +4646,22 @@ function contextMenuInit()
 									downloadDoc(treeNodes,true,2);
 								}
 							},
+		   				]
+		   			},
+		   			{divider: true},
+		   			{text: _Lang('查看备份'), subMenu: [
+		   				{text: _Lang('本地备份'), action: function(e){
+		   						e.preventDefault();
+		   						curRightClickedTreeNode = null;
+		   	        			showDocHistory(gRootDoc, 2);
+		   	    			}
+		   				},	
+		   				{text: _Lang('异地备份'), action: function(e){
+		   						e.preventDefault();
+		   						curRightClickedTreeNode = null;
+		   	        			showDocHistory(gRootDoc, 3);
+		   					}
+		   				},
 		   				]
 		   			},
 				]
@@ -4757,20 +4757,6 @@ function contextMenuInit()
 						curRightClickedTreeNode = null;
 	    			}
 				}
-		},
-		{divider: true},
-		{text: _Lang('查看备份'), subMenu: [
-			{text: _Lang('本地备份'), action: function(e){
-					e.preventDefault();
-        			showDocHistory(curRightClickedTreeNode, 2);
-    			}
-			},	
-			{text: _Lang('异地备份'), action: function(e){
-					e.preventDefault();
-        			showDocHistory(curRightClickedTreeNode, 3);
-				}
-			},
-			]
 		},
 		{divider: true},	
 		{text: _Lang('远程存储'), subMenu: [
@@ -4904,6 +4890,20 @@ function contextMenuInit()
 								},
 		   				  ]
 		   			},
+		   			{divider: true},
+		   			{text: _Lang('查看备份'), subMenu: [
+		   				{text: _Lang('本地备份'), action: function(e){
+		   						e.preventDefault();
+		   	        			showDocHistory(curRightClickedTreeNode, 2);
+		   	    			}
+		   				},	
+		   				{text: _Lang('异地备份'), action: function(e){
+		   						e.preventDefault();
+		   	        			showDocHistory(curRightClickedTreeNode, 3);
+		   					}
+		   				},
+		   				]
+		   			},
 			  ]
 		},
 		{divider: true},
@@ -4968,22 +4968,6 @@ function contextMenuInit()
 					DoPaste(gCopiedNodes, parentNode, gIsCopy);
 				}
 		},			
-		{divider: true},
-		{text: _Lang('查看备份'), subMenu: [
-			{text: _Lang('本地备份'), action: function(e){
-					e.preventDefault();
-					var parentNode = getParentNodeEx(gDocInfo);
-        			showDocHistory(parentNode, 2);
-    			}
-			},	
-			{text: _Lang('异地备份'), action: function(e){
-					e.preventDefault();
-					var parentNode = getParentNodeEx(gDocInfo);
-        			showDocHistory(parentNode, 3);
-				}
-			},
-			]
-		},
 		{divider: true},	
 		{text: _Lang('远程存储'), subMenu: [
 			{text: _Lang('推送'),  action: function(e){
@@ -5123,7 +5107,23 @@ function contextMenuInit()
 			        			}
 							},						   							
    					  	]
-   	   				},					
+   	   				},
+   	   				{divider: true},
+		   	 		{text: _Lang('查看备份'), subMenu: [
+		   	 			{text: _Lang('本地备份'), action: function(e){
+		   	 					e.preventDefault();
+		   	 					var parentNode = getParentNodeEx(gDocInfo);
+		   	         			showDocHistory(parentNode, 2);
+		   	     			}
+		   	 			},	
+		   	 			{text: _Lang('异地备份'), action: function(e){
+		   	 					e.preventDefault();
+		   	 					var parentNode = getParentNodeEx(gDocInfo);
+		   	         			showDocHistory(parentNode, 3);
+		   	 				}
+		   	 			},
+		   	 			]
+		   	 		},
 			  	]
 			},			
 		]
@@ -5192,20 +5192,6 @@ function contextMenuInit()
 						deleteNodes.push(curRightClickedDocListNode);
 						DoDelete(deleteNodes);
 					}
-			},
-			{divider: true},
-			{text: _Lang('查看备份'), subMenu: [
-				{text: _Lang('本地备份'), action: function(e){
-						e.preventDefault();
-	        			showDocHistory(curRightClickedDocListNode, 2);
-	    			}
-				},	
-				{text: _Lang('异地备份'), action: function(e){
-						e.preventDefault();
-	        			showDocHistory(curRightClickedDocListNode, 3);
-					}
-				},
-				]
 			},
 			{divider: true},
 			{text: _Lang('远程存储'), subMenu: [
@@ -5317,7 +5303,21 @@ function contextMenuInit()
 								}
 							},
 		   				]
-		   			},				
+		   			},			
+					{divider: true},
+					{text: _Lang('查看备份'), subMenu: [
+						{text: _Lang('本地备份'), action: function(e){
+								e.preventDefault();
+			        			showDocHistory(curRightClickedDocListNode, 2);
+			    			}
+						},	
+						{text: _Lang('异地备份'), action: function(e){
+								e.preventDefault();
+			        			showDocHistory(curRightClickedDocListNode, 3);
+							}
+						},
+						]
+					},
 				]
 			},		
 			{divider: true},
@@ -5424,21 +5424,7 @@ function contextMenuInit()
 							curRightClickedDocListNode = null;
 		    			}
 					}
-			},
-			{divider: true},
-			{text: _Lang('查看备份'), subMenu: [
-				{text: _Lang('本地备份'), action: function(e){
-						e.preventDefault();
-	        			showDocHistory(curRightClickedDocListNode, 2);
-	    			}
-				},	
-				{text: _Lang('异地备份'), action: function(e){
-						e.preventDefault();
-	        			showDocHistory(curRightClickedDocListNode, 3);
-					}
-				},
-				]
-			},
+			},			
 			{divider: true},
 			{text: _Lang('远程存储'), subMenu: [
 					{text: _Lang('推送'),  action: function(e){
@@ -5571,6 +5557,20 @@ function contextMenuInit()
 									},
 			   				]
 			   			},
+			   			{divider: true},
+						{text: _Lang('查看备份'), subMenu: [
+							{text: _Lang('本地备份'), action: function(e){
+									e.preventDefault();
+				        			showDocHistory(curRightClickedDocListNode, 2);
+				    			}
+							},	
+							{text: _Lang('异地备份'), action: function(e){
+									e.preventDefault();
+				        			showDocHistory(curRightClickedDocListNode, 3);
+								}
+							},
+							]
+						},
    				]
    			},   			
 			{divider: true},
@@ -5607,20 +5607,6 @@ function contextMenuInit()
 						deleteNodes.push(gDocInfo);
 						DoDelete(deleteNodes);
 					}
-			},
-			{divider: true},
-			{text: _Lang('查看备份'), subMenu: [
-				{text: _Lang('本地备份'), action: function(e){
-						e.preventDefault();
-	        			showDocHistory(gDocInfo, 2);
-	    			}
-				},	
-				{text: _Lang('异地备份'), action: function(e){
-						e.preventDefault();
-	        			showDocHistory(gDocInfo, 3);
-					}
-				},
-				]
 			},
 			{divider: true},		
 			{text: _Lang('远程存储'), subMenu: [
@@ -5733,6 +5719,20 @@ function contextMenuInit()
 							},
 		   				]
 		   			},
+					{divider: true},
+					{text: _Lang('查看备份'), subMenu: [
+						{text: _Lang('本地备份'), action: function(e){
+								e.preventDefault();
+			        			showDocHistory(gDocInfo, 2);
+			    			}
+						},	
+						{text: _Lang('异地备份'), action: function(e){
+								e.preventDefault();
+			        			showDocHistory(gDocInfo, 3);
+							}
+						},
+						]
+					},
 				]
 			},
 			{divider: true},
