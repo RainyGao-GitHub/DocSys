@@ -4620,12 +4620,6 @@ function contextMenuInit()
 		},
 		{divider: true},		
 		{text: _Lang('更多') + '...', subMenu: [
-					{text: _Lang('刷新'), action: function(e){
-								e.preventDefault();
-								refreshDoc(null, 0);
-							}
-					},
-		   			{divider: true},
 					{text: _Lang('推送'),  action: function(e){
 							e.preventDefault();
 							showDocPushPanel(gRootDoc, 1);
@@ -4637,6 +4631,12 @@ function contextMenuInit()
 						}
 					},
 					{divider: true},
+					{text: _Lang('刷新'), action: function(e){
+								e.preventDefault();
+								refreshDoc(null, 0);
+							}
+					},
+		   			{divider: true},
 					{text: _Lang('锁定'), action: function(e){
 							e.preventDefault();
 							lockDoc(gRootDoc, 1);
@@ -4851,16 +4851,6 @@ function contextMenuInit()
 						]
 					},
 					{divider: true},
-					{text: _Lang('刷新'), action: function(e){
-								e.preventDefault();
-								if(curRightClickedTreeNode !== null)
-								{
-									refreshDoc(curRightClickedTreeNode, 0);
-									curRightClickedTreeNode = null;
-				    			}
-							}
-					},
-					{divider: true},
 					{text: _Lang('推送'),  action: function(e){
 							e.preventDefault();
 							showDocPushPanel(curRightClickedTreeNode, 1);
@@ -4870,6 +4860,16 @@ function contextMenuInit()
 							e.preventDefault();
 							showDocPullPanel(curRightClickedTreeNode, 1);
 						}
+					},
+					{divider: true},
+					{text: _Lang('刷新'), action: function(e){
+								e.preventDefault();
+								if(curRightClickedTreeNode !== null)
+								{
+									refreshDoc(curRightClickedTreeNode, 0);
+									curRightClickedTreeNode = null;
+				    			}
+							}
 					},
 					{divider: true},
 					{text: _Lang('锁定'), action: function(e){
@@ -5073,13 +5073,6 @@ function contextMenuInit()
 						},
 						]
 					},
-					{divider: true},
-					{text: _Lang('刷新'), action: function(e){
-								e.preventDefault();
-								var parentNode = getParentNodeEx(gDocInfo);
-								refreshDoc(parentNode, 0);
-							}
-					},
    	   				{divider: true},
 					{text: _Lang('推送'),  action: function(e){
 							e.preventDefault();
@@ -5093,6 +5086,13 @@ function contextMenuInit()
 							showDocPullPanel(parentNode, 1);
 						}
 					},			
+					{divider: true},
+					{text: _Lang('刷新'), action: function(e){
+								e.preventDefault();
+								var parentNode = getParentNodeEx(gDocInfo);
+								refreshDoc(parentNode, 0);
+							}
+					},
 					{divider: true},
 					{text: _Lang('锁定'), action: function(e){
 							e.preventDefault();
@@ -5518,16 +5518,6 @@ function contextMenuInit()
 							]
 						},
 						{divider: true},
-						{text: _Lang('刷新'), action: function(e){
-									e.preventDefault();
-									if(curRightClickedDocListNode !== null)
-									{
-										refreshDoc(curRightClickedDocListNode, 0);
-										curRightClickedDocListNode = null;
-					    			}
-								}
-						},
-						{divider: true},
 						{text: _Lang('推送'),  action: function(e){
 								e.preventDefault();
 								showDocPushPanel(curRightClickedDocListNode, 1);
@@ -5537,6 +5527,16 @@ function contextMenuInit()
 								e.preventDefault();
 								showDocPullPanel(curRightClickedDocListNode, 1);
 							}
+						},
+						{divider: true},
+						{text: _Lang('刷新'), action: function(e){
+									e.preventDefault();
+									if(curRightClickedDocListNode !== null)
+									{
+										refreshDoc(curRightClickedDocListNode, 0);
+										curRightClickedDocListNode = null;
+					    			}
+								}
 						},
 						{divider: true},
 						{text: _Lang('锁定'), action: function(e){
