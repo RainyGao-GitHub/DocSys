@@ -1686,7 +1686,7 @@ function parseDocContent(content)
 
 function getDocHistoryTitle(docName, docType, historyType)
 {
-	var title = _Lang("历史版本") + " [" + docName + "]";
+	var title = "";
 	switch(historyType)
 	{
 	case 0:
@@ -1700,6 +1700,10 @@ function getDocHistoryTitle(docName, docType, historyType)
 			{
 				title = _Lang("历史版本") + " [" + docName + "/]";
 			}
+			else
+			{
+				title = _Lang("历史版本") + " [" + docName + "]";
+			}
 		}
 		break;
 	case 1:
@@ -1709,7 +1713,14 @@ function getDocHistoryTitle(docName, docType, historyType)
 		}
 		else
 		{
-			var title = _Lang("备注历史") + " [" + docName + "]";
+			if(docType == 2)
+			{
+				title = _Lang("备注历史") + " [" + docName + "/]";				
+			}
+			else
+			{
+				title = _Lang("备注历史") + " [" + docName + "]";
+			}
 		}
 		break;
 	case 2:
@@ -1723,6 +1734,10 @@ function getDocHistoryTitle(docName, docType, historyType)
 			{
 				title = _Lang("本地备份历史") + " [" + docName + "/]";
 			}
+			else
+			{
+				title = _Lang("本地备份历史") + " [" + docName + "]";				
+			}				
 		}
 		break;
 	case 3:
@@ -1736,6 +1751,10 @@ function getDocHistoryTitle(docName, docType, historyType)
 			{
 				title = _Lang("异地备份历史") + " [" + docName + "/]";
 			}
+			else
+			{
+				title = _Lang("异地备份历史") + " [" + docName + "]";				
+			}
 		}
 		break;
 	case 4:
@@ -1748,6 +1767,10 @@ function getDocHistoryTitle(docName, docType, historyType)
 			if(docType == 2)
 			{
 				title = _Lang("回收站") + " [" + docName + "/]";
+			}
+			else
+			{
+				title = _Lang("回收站") + " [" + docName + "]";				
 			}
 		}
 		break;
@@ -1765,8 +1788,9 @@ function showDocHistory(node, historyType)
 	var pid = 0;
 	var docType = 2;
 
-	if(historyType == 0)
+	switch(historyType)
 	{
+	case 0:
 		if(gReposInfo.type != 5)	//前置仓库不检查
 		{
 			if(gReposInfo.verCtrl == undefined || gReposInfo.verCtrl == 0)
@@ -1780,6 +1804,76 @@ function showDocHistory(node, historyType)
 				return;
 			}
 		}
+		break;
+	case 2:
+		if(gReposInfo.type == 5)	//前置仓库不支持
+		{
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("前置仓库不支持自动备份") + "!",
+	    	});
+			return;
+		}
+		
+		if(gReposInfo.autoBackupConfig == undefined || gReposInfo.autoBackupConfig.localBackupConfig == undefined)
+		{
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("该仓库未开通本地备份，请联系管理员") + "!",
+	    	});
+			return;
+		}
+		break;
+	case 3:
+		if(gReposInfo.type == 5)	//前置仓库不支持
+		{
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("前置仓库不支持自动备份") + "!",
+	    	});
+			return;
+		}
+		
+		if(gReposInfo.autoBackupConfig == undefined || gReposInfo.autoBackupConfig.remoteBackupConfig == undefined)
+		{
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("该仓库未开通异地备份，请联系管理员") + "!",
+	    	});
+			return;
+		}
+		break;
+	case 4:
+		if(gReposInfo.type == 5)	//前置仓库不支持
+		{
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("前置仓库不支持回收站") + "!",
+	    	});
+			return;
+		}
+		
+		if(gReposInfo.recycleBinConfig == undefined || !gReposInfo.recycleBinConfig.enable)
+		{
+			showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("该仓库未开通回收站功能，请联系管理员") + "!",
+	    	});
+			return;
+		}
+		break;
 	}
 	
 	var treeNode = node;
@@ -4671,6 +4765,20 @@ function contextMenuInit()
 				}
 		},
 		{divider: true},
+		{text: _Lang('查看备份'), subMenu: [
+			{text: _Lang('本地备份'), action: function(e){
+					e.preventDefault();
+        			showDocHistory(curRightClickedTreeNode, 2);
+    			}
+			},	
+			{text: _Lang('异地备份'), action: function(e){
+					e.preventDefault();
+        			showDocHistory(curRightClickedTreeNode, 3);
+				}
+			},
+			]
+		},
+		{divider: true},	
 		{text: _Lang('远程存储'), subMenu: [
 			{text: _Lang('推送'),  action: function(e){
 					e.preventDefault();
@@ -4685,6 +4793,12 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
+		{text: _Lang('回收站'), action: function(e){
+					e.preventDefault();
+					showDocHistory(curRightClickedTreeNode,4);
+				}
+		},
+		{divider: true},	
 		{text: _Lang('更多') + '...', subMenu: [
 					{text: _Lang('在新窗口打开'), action: function(e){
 							e.preventDefault();
@@ -4861,6 +4975,22 @@ function contextMenuInit()
 				}
 		},
 		{divider: true},
+		{text: _Lang('查看备份'), subMenu: [
+			{text: _Lang('本地备份'), action: function(e){
+					e.preventDefault();
+					var parentNode = getParentNodeEx(gDocInfo);
+        			showDocHistory(parentNode, 2);
+    			}
+			},	
+			{text: _Lang('异地备份'), action: function(e){
+					e.preventDefault();
+					var parentNode = getParentNodeEx(gDocInfo);
+        			showDocHistory(parentNode, 3);
+				}
+			},
+			]
+		},
+		{divider: true},	
 		{text: _Lang('远程存储'), subMenu: [
 			{text: _Lang('推送'),  action: function(e){
 					e.preventDefault();
@@ -4875,6 +5005,13 @@ function contextMenuInit()
 				}
 			},
 			]
+		},
+		{divider: true},
+		{text: _Lang('回收站'), action: function(e){
+					e.preventDefault();
+					var parentNode = getParentNodeEx(gDocInfo);
+					showDocHistory(parentNode,4);
+				}
 		},
 		{divider: true},
 		{text: _Lang('更多') + '...', subMenu: [
@@ -5048,6 +5185,20 @@ function contextMenuInit()
 				}
 			},	
 			{divider: true},
+			{text: _Lang('查看备份'), subMenu: [
+				{text: _Lang('本地备份'), action: function(e){
+						e.preventDefault();
+	        			showDocHistory(curRightClickedDocListNode, 2);
+	    			}
+				},	
+				{text: _Lang('异地备份'), action: function(e){
+						e.preventDefault();
+	        			showDocHistory(curRightClickedDocListNode, 3);
+					}
+				},
+				]
+			},
+			{divider: true},
 			{text: _Lang('远程存储'), subMenu: [
 				{text: _Lang('推送'),  action: function(e){
 						e.preventDefault();
@@ -5061,6 +5212,12 @@ function contextMenuInit()
 				},
 				]
 			},			
+			{divider: true},
+			{text: _Lang('回收站'), action: function(e){
+						e.preventDefault();
+						showDocHistory(curRightClickedDocListNode,4);
+					}
+			},
 			{divider: true},
 			{text: _Lang('更多') + '...', subMenu: [
 				{text: _Lang('预览'), action: function(e){
@@ -5258,6 +5415,20 @@ function contextMenuInit()
 				}
 			},
 			{divider: true},
+			{text: _Lang('查看备份'), subMenu: [
+				{text: _Lang('本地备份'), action: function(e){
+						e.preventDefault();
+	        			showDocHistory(curRightClickedDocListNode, 2);
+	    			}
+				},	
+				{text: _Lang('异地备份'), action: function(e){
+						e.preventDefault();
+	        			showDocHistory(curRightClickedDocListNode, 3);
+					}
+				},
+				]
+			},
+			{divider: true},
 			{text: _Lang('远程存储'), subMenu: [
 					{text: _Lang('推送'),  action: function(e){
 							e.preventDefault();
@@ -5270,6 +5441,12 @@ function contextMenuInit()
 						}
 					},
 				]
+			},
+			{divider: true},
+			{text: _Lang('回收站'), action: function(e){
+						e.preventDefault();
+						showDocHistory(curRightClickedDocListNode,4);
+					}
 			},
 			{divider: true},
 			{text: _Lang('更多') + '...', subMenu: [
@@ -5420,6 +5597,20 @@ function contextMenuInit()
 				}
 			},
 			{divider: true},
+			{text: _Lang('查看备份'), subMenu: [
+				{text: _Lang('本地备份'), action: function(e){
+						e.preventDefault();
+	        			showDocHistory(gDocInfo, 2);
+	    			}
+				},	
+				{text: _Lang('异地备份'), action: function(e){
+						e.preventDefault();
+	        			showDocHistory(gDocInfo, 3);
+					}
+				},
+				]
+			},
+			{divider: true},		
 			{text: _Lang('远程存储'), subMenu: [
 				{text: _Lang('推送'),  action: function(e){
 						e.preventDefault();
@@ -5432,6 +5623,12 @@ function contextMenuInit()
 					}
 				},
 				]
+			},
+			{divider: true},
+			{text: _Lang('回收站'), action: function(e){
+						e.preventDefault();
+						showDocHistory(gDocInfo,4);
+					}
 			},
 			{divider: true},
 			{text: _Lang('更多') + '...', subMenu: [
