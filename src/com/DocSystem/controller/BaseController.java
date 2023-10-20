@@ -5715,6 +5715,8 @@ public class BaseController  extends BaseFunction{
 				syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
 			}
+			//TODO: 仓库定时同步设置不当会导致会导致全文搜索自动同步过度频繁，从而引起磁盘IO过高问题，因此关闭它
+			//syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
 			break;
 		case SYNC_VerRepos: //版本仓库同步
 			if(isFSM(repos) == true)
