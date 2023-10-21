@@ -5035,6 +5035,8 @@ public class BaseController  extends BaseFunction{
 		{
 			commit.verReposStatus = -1;
 			commit.verReposErrorInfo = errorInfo;
+			commit.verReposOffsetPath = offsetPath;
+			commit.verReposRevision = revision;
 		}
 		else
 		{
@@ -5084,6 +5086,8 @@ public class BaseController  extends BaseFunction{
 		{
 			commit.verReposStatus = -1;
 			commit.verReposErrorInfo = errorInfo;
+			commit.verReposOffsetPath = offsetPath;
+			commit.verReposRevision = revision;
 		}
 		else
 		{
@@ -12694,6 +12698,12 @@ public class BaseController  extends BaseFunction{
 						continue;
 					}
 					
+					if(commit.verReposStatus == null || commit.verReposStatus != 200)
+					{
+						Log.debug("verReposCheckOutEx() commit.verReposStatus:" + commit.verReposStatus);	
+						continue;
+					}
+					
 					//基于commitLog的历史的文件可以存储在任意偏移的位置，因此历史版本里可能包含offsetPath，需要指定给doc
 					doc.offsetPath = commit.verReposOffsetPath;
 					List<Doc> docList = channel.remoteStorageCheckOut(
@@ -12865,6 +12875,12 @@ public class BaseController  extends BaseFunction{
 						continue;
 					}
 					
+					if(commit.verReposStatus == null || commit.verReposStatus != 200)
+					{
+						Log.debug("verReposCheckOutForDownloadEx() commit.verReposStatus:" + commit.verReposStatus);	
+						continue;
+					}
+					
 					//基于commitLog的历史的文件可以存储在任意偏移的位置，因此历史版本里可能包含offsetPath，需要指定给doc
 					doc.offsetPath = commit.verReposOffsetPath;
 					List<Doc> docList = channel.remoteStorageCheckOut(
@@ -12926,15 +12942,23 @@ public class BaseController  extends BaseFunction{
 		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
 		if(historyVerReposConfig != null)
 		{
+			//verReposOffsetPath为空表示写入失败或者错误，不允许删除
 			if(historyVerReposConfig.isVerRepos == false)
 			{
-				doc.offsetPath = commit.verReposOffsetPath;
-				channel.remoteStorageDeleteEntry(
-						historyVerReposConfig, 
-						repos, doc,
-						accessUser, 
-						commitMsg,
-						rt);
+				//删除历史操作需要小心为上，所以检查是比较严格的
+				if(commit.verReposStatus != null && commit.verReposStatus == 200)
+				{
+					if(commit.verReposOffsetPath != null && commit.verReposOffsetPath.isEmpty() == false)
+					{
+						doc.offsetPath = commit.verReposOffsetPath;
+						channel.remoteStorageDeleteEntry(
+								historyVerReposConfig, 
+								repos, doc,
+								accessUser, 
+								commitMsg,
+								rt);
+					}
+				}
 			}	
 		}
 		
@@ -12988,15 +13012,22 @@ public class BaseController  extends BaseFunction{
 		CommitLog commit = getCommitLogById(repos, commitId, historyType);
 		if(commit == null)
 		{
-			Log.debug("verReposCheckOutEx() failed to get commitLog for commitId:" + commitId);			
+			Log.debug("verReposCheckOut() failed to get commitLog for commitId:" + commitId);			
 			return null;
 		}
-		Log.debug("verReposCheckOutEx() revision:" + commit.verReposRevision + " verReposOffsetPath:" + commit.verReposOffsetPath);			
+		
+		if(commit.verReposStatus == null || commit.verReposStatus != 200)
+		{
+			Log.debug("verReposCheckOut() commit.verReposStatus:" + commit.verReposStatus);			
+			return null;
+		}
+		
+		Log.debug("verReposCheckOut() revision:" + commit.verReposRevision + " verReposOffsetPath:" + commit.verReposOffsetPath);			
 		
 		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
 		if(historyVerReposConfig == null)
 		{
-			Log.debug("verReposCheckOutEx() failed to get historyVerReposConfig from commitLog");			
+			Log.debug("verReposCheckOut() failed to get historyVerReposConfig from commitLog");			
 			return null;
 		}
 				
@@ -13064,6 +13095,12 @@ public class BaseController  extends BaseFunction{
 		if(historyVerReposConfig == null)
 		{
 			Log.debug("verReposCheckOutForDownload() failed to get historyVerReposConfig from commitLog");			
+			return null;
+		}
+		
+		if(commit.verReposStatus == null || commit.verReposStatus != 200)
+		{
+			Log.debug("verReposCheckOutForDownload() commit.verReposStatus:" + commit.verReposStatus);	
 			return null;
 		}
 		
