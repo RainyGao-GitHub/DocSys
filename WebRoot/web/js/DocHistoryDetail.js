@@ -380,9 +380,9 @@
 						changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+entryPath+ " from " + srcEntryPath + "</a>";
 					}
 					
-					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.viewHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("查看") + "</a>";
-					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
-					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.showRevertConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("恢复") + "</a>";
+					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.viewHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px;width:80px;'>" + _Lang("查看") + "</a>";
+					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px;width:80px;'>" + _Lang("下载") + "</a>";
+					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.showRevertConfirm("+i+ ")' class='mybtn-primary' style='width:80px;'>" + _Lang("恢复") + "</a>";
 					
 					var se = "<li>" 
 						+"	<i class='cell changeType w10'>"
