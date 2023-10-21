@@ -12685,7 +12685,7 @@ public class BaseController  extends BaseFunction{
 				for(int i=0; i<commitList.size(); i++)
 				{
 					CommitLog commit = commitList.get(i);
-					Log.debug("verReposCheckOutEx() revision:" + commit.verReposRevision);			
+					Log.debug("verReposCheckOutEx() revision:" + commit.verReposRevision + " verReposOffsetPath:" + commit.verReposOffsetPath);			
 					
 					RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
 					if(historyVerReposConfig == null)
@@ -12991,7 +12991,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("verReposCheckOutEx() failed to get commitLog for commitId:" + commitId);			
 			return null;
 		}
-		Log.debug("verReposCheckOutEx() revision:" + commit.verReposRevision);			
+		Log.debug("verReposCheckOutEx() revision:" + commit.verReposRevision + " verReposOffsetPath:" + commit.verReposOffsetPath);			
 		
 		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
 		if(historyVerReposConfig == null)

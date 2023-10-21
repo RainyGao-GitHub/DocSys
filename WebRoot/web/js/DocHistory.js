@@ -815,6 +815,7 @@
 					var opBtn1 = "";
 					var opBtn2 = "";
 					var opBtn3 = "";
+					var opBtn4 = "";
 					switch(historyType)
 					{
 					case 1:
@@ -822,20 +823,29 @@
 						opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
 						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("恢复") + "</a>";
 						opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("回退") + "</a>";
+						opBtn4 = "";
 						break;
 					case 0:
+						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("详情") + "</a>";							
+						opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
+						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("恢复") + "</a>";
+						opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("回退") + "</a>";
+						opBtn4 = "";
+						break;
 					case 2:
 					case 3:
 						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("详情") + "</a>";							
 						opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
 						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("恢复") + "</a>";
-						opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("回退") + "</a>";
+						opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showResetConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("回退") + "</a>";
+						opBtn4 = "		<a href='javascript:void(0)' onclick='DocHistory.showDeleteConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("删除") + "</a>";
 						break;
 					case 4:
 						opBtn = "		<a href='javascript:void(0)' onclick='DocHistory.showHistoryDetail("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("详情") + "</a>";							
 						opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistory.showDownloadConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("下载") + "</a>";
 						opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistory.showRevertConfirm("+i+ ")' class='mybtn-primary' style='margin-bottom:20px'>" + _Lang("恢复") + "</a>";
-						opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistory.showDeleteConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("删除") + "</a>";
+						opBtn3 = "";
+						opBtn4 = "		<a href='javascript:void(0)' onclick='DocHistory.showDeleteConfirm("+i+ ")' class='mybtn-primary'>" + _Lang("删除") + "</a>";
 						break;
 					}
 					
@@ -865,6 +875,7 @@
 						+ 		opBtn1 
 						+ 		opBtn2 
 						+ 		opBtn3 
+						+ 		opBtn4 
 						+"	</i>"
 						+"</li>";
 					
