@@ -12921,7 +12921,7 @@ public class BaseController  extends BaseFunction{
 			Log.debug("verReposDeleteHistory() failed to get commitLog for commitId:" + commitId);			
 			return false;
 		}
-		Log.debug("verReposDeleteHistory() revision:" + commit.verReposRevision);			
+		Log.debug("verReposDeleteHistory() revision:" + commit.verReposRevision + " verReposOffsetPath:" + commit.verReposOffsetPath);			
 		
 		RemoteStorageConfig historyVerReposConfig = getHistoryVerReposConfig(repos, commit);
 		if(historyVerReposConfig != null)
