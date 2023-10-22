@@ -4601,23 +4601,25 @@ public class BaseController  extends BaseFunction{
 			//realTimeBackup(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
 			if(isLocalBackupPushEnabled(repos))
 			{
-				CommonAction.insertCommonActionEx(asyncActionList, 
-						repos, doc, null, null, 
-						commitMsg, commitUser, 
-						ActionType.LocalAutoBackup, Action.PUSH, DocType.REALDOC, "deleteDoc", 
-						null, 
-						login_user, 
-						false);	
+				Log.debug("deleteDoc_FSM() 删除操作不需要本地备份");
+				//CommonAction.insertCommonActionEx(asyncActionList, 
+				//		repos, doc, null, null, 
+				//		commitMsg, commitUser, 
+				//		ActionType.LocalAutoBackup, Action.PUSH, DocType.REALDOC, "deleteDoc", 
+				//		null, 
+				//		login_user, 
+				//		false);	
 			}
 			if(isRemoteBackupPushEnabled(repos))
 			{
-				CommonAction.insertCommonActionEx(asyncActionList, 
-						repos, doc, null, null, 
-						commitMsg, commitUser, 
-						ActionType.RemoteAutoBackup, Action.PUSH, DocType.REALDOC, "deleteDoc", 
-						null, 
-						login_user, 
-						false);
+				Log.debug("deleteDoc_FSM() 删除操作不需要异地备份");
+				//CommonAction.insertCommonActionEx(asyncActionList, 
+				//		repos, doc, null, null, 
+				//		commitMsg, commitUser, 
+				//		ActionType.RemoteAutoBackup, Action.PUSH, DocType.REALDOC, "deleteDoc", 
+				//		null, 
+				//		login_user, 
+				//		false);
 			}
 
 		}
