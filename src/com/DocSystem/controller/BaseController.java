@@ -12726,8 +12726,9 @@ public class BaseController  extends BaseFunction{
 					}
 
 					//如果使用了版本仓库存储历史，那么不需要继续了，因为版本仓库是支持直接一次性取到历史切面上的文件的
-					if(historyVerReposConfig.isVerRepos == false)
+					if(historyVerReposConfig.isVerRepos)
 					{
+						Log.debug("verReposCheckOutEx() 历史存储使用了版本仓库, 不需要继续！");
 						break;
 					}					
 				}
