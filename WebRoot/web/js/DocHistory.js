@@ -725,6 +725,7 @@
 	             	if( "ok" == ret.status){
 	        		  	console.log(ret.data);
 	        		  	bootstrapQ.alert(_Lang("删除成功！"));
+	        		  	$('#historyItem' + index).hide();
 	                }
 	                else
 	                {
@@ -849,7 +850,7 @@
 						break;
 					}
 					
-					var se = "<li>"
+					var se = "<li id='historyItem" + i + "'>"
 						+"	<i class='cell commitId w10'>"
 						+"		<span class='name  breakAll'>"
 						+"			<a id='commitId"+i+"' value='" +commitId+ "' href='javascript:void(0)'>"+version+"</a>"
