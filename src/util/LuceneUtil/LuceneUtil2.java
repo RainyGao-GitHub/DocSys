@@ -2259,6 +2259,8 @@ public class LuceneUtil2   extends BaseFunction
     			commitEntry.path = entry.path;
     			commitEntry.name = entry.name;
     			commitEntry.entryType = entry.entryType;
+    			commitEntry.size = entry.size;
+    			commitEntry.latestEditTime = entry.latestEditTime;
     			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
     			addIndexForCommitEntryBasic(commitEntry, indexLib);
     		}
@@ -2305,7 +2307,8 @@ public class LuceneUtil2   extends BaseFunction
     			commitEntry.path = entry.path;
     			commitEntry.name = entry.name;
     			commitEntry.entryType = entry.entryType;
-    			commitEntry.realCommitAction = entry.realCommitAction;
+    			commitEntry.size = entry.size;
+    			commitEntry.latestEditTime = entry.latestEditTime;
     			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
     			addIndexForCommitEntryBasic(commitEntry, indexLib);
     		}
@@ -2370,6 +2373,8 @@ public class LuceneUtil2   extends BaseFunction
             commitEntry.path = path;
             commitEntry.name = name;
             commitEntry.entryType = file.isFile()? 1:2;
+            commitEntry.size = file.length();
+            commitEntry.latestEditTime = file.lastModified();            
             commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
 			addIndexForCommitEntryBasic(commitEntry, indexLib);
 			
@@ -2431,6 +2436,8 @@ public class LuceneUtil2   extends BaseFunction
         			commitEntry.path = doc.getPath();
         			commitEntry.name = doc.getName();
         			commitEntry.entryType = doc.getType();
+        			commitEntry.size = doc.getSize();
+        			commitEntry.latestEditTime = doc.getLatestEditTime();
     				commitEntry.realCommitAction = "add";
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
@@ -2441,6 +2448,8 @@ public class LuceneUtil2   extends BaseFunction
         			commitEntry.path = doc.getPath();
         			commitEntry.name = doc.getName();
         			commitEntry.entryType = doc.getType();
+        			commitEntry.size = doc.getSize();
+        			commitEntry.latestEditTime = doc.getLatestEditTime();
     				commitEntry.realCommitAction = "delete";
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
@@ -2451,6 +2460,8 @@ public class LuceneUtil2   extends BaseFunction
         			commitEntry.path = doc.getPath();
         			commitEntry.name = doc.getName();
         			commitEntry.entryType = doc.getType();
+        			commitEntry.size = doc.getSize();
+        			commitEntry.latestEditTime = doc.getLatestEditTime();
     				commitEntry.realCommitAction = "modify";
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
@@ -2461,6 +2472,8 @@ public class LuceneUtil2   extends BaseFunction
         			commitEntry.path = doc.getPath();
         			commitEntry.name = doc.getName();
         			commitEntry.entryType = doc.getType();
+        			commitEntry.size = doc.getSize();
+        			commitEntry.latestEditTime = doc.getLatestEditTime();
     				commitEntry.realCommitAction = "delete";
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
@@ -2470,6 +2483,8 @@ public class LuceneUtil2   extends BaseFunction
         			commitEntry.path = newDoc.getPath();
         			commitEntry.name = newDoc.getName();
         			commitEntry.entryType = newDoc.getType();
+        			commitEntry.size = newDoc.getSize();
+        			commitEntry.latestEditTime = newDoc.getLatestEditTime();
         			commitEntry.realCommitAction = "add";
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
@@ -2480,6 +2495,8 @@ public class LuceneUtil2   extends BaseFunction
         			commitEntry.path = doc.getPath();
         			commitEntry.name = doc.getName();
         			commitEntry.entryType = doc.getType();
+        			commitEntry.size = doc.getSize();
+        			commitEntry.latestEditTime = doc.getLatestEditTime();
     				commitEntry.realCommitAction = "noChange";
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
@@ -2489,6 +2506,8 @@ public class LuceneUtil2   extends BaseFunction
         			commitEntry.path = newDoc.getPath();
         			commitEntry.name = newDoc.getName();
         			commitEntry.entryType = newDoc.getType();
+        			commitEntry.size = newDoc.getSize();
+        			commitEntry.latestEditTime = newDoc.getLatestEditTime();
         			commitEntry.realCommitAction = "add";
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
@@ -2498,13 +2517,16 @@ public class LuceneUtil2   extends BaseFunction
         			commitEntry.docId = doc.getDocId();
         			commitEntry.path = doc.getPath();
         			commitEntry.name = doc.getName();
-        			commitEntry.entryType = doc.getType();
+        			commitEntry.size = doc.getSize();
+        			commitEntry.latestEditTime = doc.getLatestEditTime();
     				commitEntry.realCommitAction = "delete";
     				commitEntry.entryType = 1; //File
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
     				//Add DstEntry
         			commitEntry.entryType = 2; //Dir
+        			commitEntry.size = newDoc.getSize();
+        			commitEntry.latestEditTime = newDoc.getLatestEditTime();
         			commitEntry.realCommitAction = "add";
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
@@ -2521,6 +2543,8 @@ public class LuceneUtil2   extends BaseFunction
         			addIndexForCommitEntryBasic(commitEntry, indexLib);
     				//Add DstEntry
         			commitEntry.entryType = 1; //File
+        			commitEntry.size = newDoc.getSize();
+        			commitEntry.latestEditTime = newDoc.getLatestEditTime();
         			commitEntry.realCommitAction = "add";
         			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
         			addIndexForCommitEntryBasic(commitEntry, indexLib);

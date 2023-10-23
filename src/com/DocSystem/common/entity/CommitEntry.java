@@ -28,4 +28,6 @@ public class CommitEntry {
 	public String realCommitAction;		//add/delete/modify/noChange/move/copy/filetodir/dirtofile	//add和modify并不影响历史文件获取，但是会影响显示	
 	public Integer isSrcEntry;	//For copy/move/renameDoc used to mark the entry is srcEntry or not
 	public Integer entryType;	//1:file 2:folder
+	public Long size;			//Size of file, folder size is null or 0
+	public Long latestEditTime; //latest Edit Time
 }

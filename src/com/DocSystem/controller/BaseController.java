@@ -3781,6 +3781,27 @@ public class BaseController  extends BaseFunction{
 		}
 		return true;
 	}
+	
+	protected boolean convertRevertedDocListToLocalChanges(List<Doc> revertedDocList, String localChangesRootPath, List<CommitEntry> commitEntryList) {
+		CommitEntry commitEntry = new CommitEntry();
+		commitEntry.realCommitAction = "modify";
+		
+		for(int i=0; i< revertedDocList.size(); i++)
+		{
+			Doc doc = revertedDocList.get(i);
+			File changedNode = new File(localChangesRootPath + doc.getPath() + doc.getName());
+			changedNode.mkdirs();
+			commitEntry.docId = doc.getDocId();
+			commitEntry.path = doc.getPath();
+			commitEntry.name = doc.getName();
+			commitEntry.entryType = doc.getType();
+			commitEntry.size = doc.getSize();
+			commitEntry.latestEditTime = doc.getLatestEditTime();
+			commitEntryList.add(commitEntry);			
+		}
+		
+		return true;
+	}
 
 	protected HashMap<String, ChangedItem> convertChangeItemListToHashMap(List<ChangedItem> changItemList) {
 		HashMap<String, ChangedItem> hashMap = new HashMap<String, ChangedItem>();
@@ -4778,6 +4799,8 @@ public class BaseController  extends BaseFunction{
             commitEntry.path = path;
             commitEntry.name = name;
             commitEntry.entryType = dstFile.isFile()? 1:2;
+            commitEntry.size = dstFile.length();
+			commitEntry.latestEditTime = dstFile.lastModified();
             commitEntryList.add(commitEntry);
             
             if(dstFile.isFile())        		
@@ -4830,6 +4853,8 @@ public class BaseController  extends BaseFunction{
 		entry.path = doc.getPath();
 		entry.name = doc.getName();
 		entry.entryType = doc.getType();
+		entry.size = doc.getSize();
+		entry.latestEditTime = doc.getLatestEditTime();
 		entry.realCommitAction = realAction;
 		entry.isSrcEntry = isSrcEntry;	//only for copyDoc/moveDoc/renameDoc
 
@@ -10889,6 +10914,8 @@ public class BaseController  extends BaseFunction{
 	            commitEntry.path = path;
 	            commitEntry.name = name;
 	            commitEntry.entryType = file.isFile()? 1:2;
+	            commitEntry.size = file.length();
+				commitEntry.latestEditTime = file.lastModified();
 	            commitEntryList.add(commitEntry);
 	            return true;	            
             }
@@ -11654,12 +11681,16 @@ public class BaseController  extends BaseFunction{
             commitEntry.path = path;
             commitEntry.name = name;
             commitEntry.entryType = dstFile.isFile()? 1:2;
+            commitEntry.size = dstFile.length();
+			commitEntry.latestEditTime = dstFile.lastModified();
             CommitEntry dstCommitEntry = new CommitEntry();
             dstCommitEntry.realCommitAction = "add";
             dstCommitEntry.docId = Path.getDocId(dstLevel, dstPath + dstName);
             dstCommitEntry.path = dstPath;
             dstCommitEntry.name = dstName;
             dstCommitEntry.entryType = dstFile.isFile()? 1:2;
+            commitEntry.size = dstFile.length();
+			commitEntry.latestEditTime = dstFile.lastModified();
             commitEntryList.add(commitEntry);
             commitEntryList.add(dstCommitEntry);     
         	
@@ -11781,13 +11812,17 @@ public class BaseController  extends BaseFunction{
 	            commitEntry.path = path;
 	            commitEntry.name = name;
 	            commitEntry.entryType = 1;
-	            
+	            commitEntry.size = file.length();
+				commitEntry.latestEditTime = file.lastModified();
+				
 	            CommitEntry dstCommitEntry = new CommitEntry();
 	            dstCommitEntry.realCommitAction = "add";
 	            dstCommitEntry.docId = Path.getDocId(dstLevel, dstPath + dstName);
 	            dstCommitEntry.path = dstPath;
 	            dstCommitEntry.name = dstName;        
 	            dstCommitEntry.entryType = 1;
+	            commitEntry.size = dstFile.length();
+				commitEntry.latestEditTime = dstFile.lastModified();
 	            commitEntryList.add(commitEntry);
 	            commitEntryList.add(dstCommitEntry);     		
         		return true;
@@ -11809,12 +11844,16 @@ public class BaseController  extends BaseFunction{
             commitEntry.path = path;
             commitEntry.name = name;
             commitEntry.entryType = 2;
+            commitEntry.size = file.length();
+			commitEntry.latestEditTime = file.lastModified();
             CommitEntry dstCommitEntry = new CommitEntry();
             dstCommitEntry.realCommitAction = "add";
             dstCommitEntry.docId = Path.getDocId(dstLevel, dstPath + dstName);
             dstCommitEntry.path = dstPath;
             dstCommitEntry.name = dstName;    
             dstCommitEntry.entryType = 2;
+            commitEntry.size = dstFile.length();
+			commitEntry.latestEditTime = dstFile.lastModified();
             commitEntryList.add(commitEntry);
             commitEntryList.add(dstCommitEntry);
         	
