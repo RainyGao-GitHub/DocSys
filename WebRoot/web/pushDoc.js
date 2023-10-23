@@ -544,6 +544,8 @@ var DocPush = (function () {
    		var forceEn = $("#dialog-push-doc input[name='forceEn']").is(':checked')? 1: 0;
    		var recurciveEn = $("#dialog-push-doc input[name='recurciveEn']").is(':checked')? 1: 0;
 
+	   	targetServerId = selectedServer.id;
+	   	
     	$.ajax({
              url : "/DocSystem/Bussiness/pushDoc.do",
              type : "post",
