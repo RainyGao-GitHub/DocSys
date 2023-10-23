@@ -11204,7 +11204,24 @@ webpackJsonp([1], [, , function(e, t, n) {
             setTimeout(a, 100),
             this.$watch(function() {
                 return e.styles.showEditor
-            }, a)
+            }, a);
+            
+            window.addEventListener("message", (evt) => {
+                if (evt.origin !== undefined && evt.origin !== "") {
+                    if (evt.data !== undefined && evt.data !== "") {
+                        switch (evt.data.type) {
+                            case "uploadPasteImgCompleted":
+                                g.a.clEditor.replace(
+                                    g.a.clEditor.selectionMgr.selectionStart,
+                                    g.a.clEditor.selectionMgr.selectionEnd,
+                                    `![enter image description here](${evt.data.imgUrl})`
+                                );
+                                break;
+                            default:
+                        }
+                    }
+                }
+            });
         },
         destroyed: function() {
             window.removeEventListener("resize", this.updateStyle),

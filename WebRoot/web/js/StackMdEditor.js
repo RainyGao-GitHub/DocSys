@@ -68,11 +68,23 @@ var StackMdEditor = (function () {
 		//监听stackeidtor发来的消息
 		console.log("StackMdEditor initEditor() start lisener for message event");
   		window.addEventListener('message', messageHandler);
-		
-		//监听paste事件，用于触发图片粘贴功能实现
-		console.log("StackMdEditor initEditor() start lisener for paste event");
-  		document.addEventListener('paste', handlePasteImgEvent);
 	};
+
+	/**
+	 * 监听 stackedit 的 paste 事件，用于触发图片粘贴功能实现
+	 */
+	function addPasteEventListener() {
+		console.log("StackMdEditor start lisener for paste event");
+		var stackEditIframe = $(".stackedit-iframe");
+		var stackEditIframeWindow;
+		if (stackEditIframe && stackEditIframe[0]) {
+			stackEditIframeWindow = stackEditIframe[0].contentWindow;
+			stackEditIframeWindow.addEventListener('paste', function() {
+				console.log('监听 stackedit 的 paste 事件正常');
+			});
+			stackEditIframeWindow.addEventListener('paste', handlePasteImgEvent);
+		}
+	}
 	
 	/**
 	 * staticEdit消息事件处理
@@ -94,6 +106,9 @@ var StackMdEditor = (function () {
 				setEditMode(false);
 				
 				_commonEditor.appReady();
+
+				// 需要等 iframe 页面加载完成后，再添加对 paste 事件的监听
+				addPasteEventListener();
 				break;
 			case 'fileChange':
 				console.log("StackMdEditor fileChange");
@@ -222,7 +237,12 @@ var StackMdEditor = (function () {
 		return url;
 	}
 	
-	function uploadMarkdownPic(file) {
+	/**
+	 * 上传 Markdown 的图片
+	 * @param {File} file 上传的图片文件对象
+	 * @param {boolean} isPasteImg 是否是粘贴图片 
+	 */
+	function uploadMarkdownPic(file, isPasteImg) {
 		console.log("StackMdEditor uploadMarkdownPic() _docInfo:", _docInfo);
 		var imageUploadBaseURL = getImageUploadBaseURL(_docInfo);
 		var imgName =  file.lastModified + "_" + file.name;
@@ -247,7 +267,11 @@ var StackMdEditor = (function () {
 					if (stackeditEl !== undefined) {
 						var origin = window.location.protocol + '//' + window.location.host;
 						var imgUrl = origin + ret.url;
-						stackeditEl[0].contentWindow.postMessage({"type":"uploadCompleted","imgUrl":imgUrl},"*");
+						if (!isPasteImg) {
+							stackeditEl[0].contentWindow.postMessage({"type":"uploadCompleted","imgUrl":imgUrl},"*");
+						} else {
+							stackeditEl[0].contentWindow.postMessage({"type":"uploadPasteImgCompleted","imgUrl":imgUrl},"*");
+						}
 					}
 				}
 				else {
@@ -297,7 +321,7 @@ var StackMdEditor = (function () {
         	return;
         }
 
-        uploadMarkdownPic(file);
+        uploadMarkdownPic(file, true);
     }
 
 	/**
