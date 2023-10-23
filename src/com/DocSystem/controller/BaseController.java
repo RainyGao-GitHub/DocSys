@@ -25041,6 +25041,7 @@ public class BaseController  extends BaseFunction{
 			remote.GIT.localVerReposPath = server.localVerReposPath;
 			remote.GIT.userName = server.serverUserName;
 			remote.GIT.pwd = Base64Util.base64Decode(server.serverUserPwd);
+			remote.isVerRepos = true;
 			break;
 		case "svn":
 			remote.SVN = new SvnConfig();
@@ -25048,6 +25049,7 @@ public class BaseController  extends BaseFunction{
 			remote.SVN.isRemote = server.isRemote;
 			remote.SVN.userName = server.serverUserName;
 			remote.SVN.pwd = Base64Util.base64Decode(server.serverUserPwd);
+			remote.isVerRepos = true;
 			break;
 		}
 		return remote;
