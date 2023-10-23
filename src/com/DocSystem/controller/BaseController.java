@@ -3700,7 +3700,8 @@ public class BaseController  extends BaseFunction{
 		if(isFSM(repos)) //文件管理系统
 		{
 			String localChangesRootPath = Path.getReposTmpPath(repos) + "reposSyncupScanResult/revertDocHistory-localChanges-" + new Date().getTime() + "/";
-			if(convertRevertedDocListToLocalChanges(successDocList, localChangesRootPath))
+			context.commitEntryList = new ArrayList<CommitEntry>();
+			if(convertRevertedDocListToLocalChanges(successDocList, localChangesRootPath, context.commitEntryList))
 			{
 				ArrayList<CommitAction> commitActionList = new ArrayList<CommitAction>();
 				revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt, localChangesRootPath, 2, commitActionList, null);
