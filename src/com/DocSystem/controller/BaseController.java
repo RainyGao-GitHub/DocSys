@@ -4692,7 +4692,7 @@ public class BaseController  extends BaseFunction{
 		boolean ret = false;
 		String recycleBinRevision =  context.startTime + "";
 		String recycleBinLocalRootPath = Path.getRecycleBinRootPath(repos);
-		String offsetPath =  recycleBinRevision + "/";
+		String offsetPath =  srcDoc.getDocId() + "_" + recycleBinRevision + "/";
 		Log.debug("moveRealDocToRecycleBin() recycleBinLocalRootPath:" + recycleBinLocalRootPath);
 
 		Doc dstDoc = buildBasicDoc(repos.getId(), null, null, srcDoc.getReposPath(), 
