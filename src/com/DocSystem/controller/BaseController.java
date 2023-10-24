@@ -4705,7 +4705,7 @@ public class BaseController  extends BaseFunction{
 		contextForRecycelBin.commitMsg = context.commitMsg;
 		contextForRecycelBin.commitUser = context.commitUser;
 		contextForRecycelBin.offsetPath = offsetPath;
-		contextForRecycelBin.commitId = generateCommitId(repos, dstDoc, context.startTime);
+		contextForRecycelBin.commitId = generateCommitId(repos, dstDoc, contextForRecycelBin.startTime);
 		
 		//创建上级目录，否则移动会失败
 		Log.debug("moveRealDocToRecycleBin() dstParentPath:" + dstDoc.getLocalRootPath() + dstDoc.getPath());
