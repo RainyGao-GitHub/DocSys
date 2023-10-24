@@ -4690,17 +4690,17 @@ public class BaseController  extends BaseFunction{
 	protected boolean moveRealDocToRecycleBin(Repos repos, Doc srcDoc, ActionContext context, ReturnAjax rt)
 	{
 		boolean ret = false;
-		String recycleBinRevision =  context.startTime + "";
+		//Build ActionContext for RecycleBin
+		//对于回收站而言，属于add操作
+		ActionContext contextForRecycelBin = buildBasicActionContext(null, context.user, "add", "add", "移动至回收站", null, repos, srcDoc, null, null);
+		String recycleBinRevision =  contextForRecycelBin.startTime + "";
 		String recycleBinLocalRootPath = Path.getRecycleBinRootPath(repos);
-		String offsetPath =  srcDoc.getDocId() + "_" + recycleBinRevision + "/";
+		String offsetPath = recycleBinRevision + "_" +  srcDoc.getDocId() + "/";
 		Log.debug("moveRealDocToRecycleBin() recycleBinLocalRootPath:" + recycleBinLocalRootPath);
 
 		Doc dstDoc = buildBasicDoc(repos.getId(), null, null, srcDoc.getReposPath(), 
 				srcDoc.getPath(), srcDoc.getName(), null, srcDoc.getType(), true, recycleBinLocalRootPath + offsetPath, null, null, null);
 		
-		//Build ActionContext for RecycleBin
-		//对于回收站而言，属于add操作
-		ActionContext contextForRecycelBin = buildBasicActionContext(null, context.user, "add", "add", "移动至回收站", null, repos, srcDoc, null, null);
 		contextForRecycelBin.info = context.info;
 		contextForRecycelBin.commitMsg = context.commitMsg;
 		contextForRecycelBin.commitUser = context.commitUser;
