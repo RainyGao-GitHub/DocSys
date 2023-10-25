@@ -68,7 +68,15 @@ function lang(str)
 		"备份" : "Backup",
 		"成功" : "Success",
 		"失败" : "Failed",
-		
+		"不限" : "NoLimit",
+		"长期" : "LongTerm",
+		"已过期" : "Expired",
+		"证书已过期，请购买商业版证书！" : "License was expired, Please purchase business license !",
+		"免费版禁止修改主页，请购买商业版证书！" : "Main page was changed, Please purchase business license !",
+		"证书已失效，请重新购买商业版证书！" : "License is invalid, Please purchase business license !",
+		"用户数量已达到上限，请购买商业版证书！" : "The number of users has reached the maximum limit, Please purchase business license !",
+		"查询失败" : "Query Failed",
+			
 		//注册
 		"注册失败"	: "Sign Up Failed",			
 		"获取验证码" : "Send",
@@ -272,7 +280,7 @@ function lang(str)
 		"是否删除该用户的目录权限设置" :  "Do you want to remove User on this folder",		
 		"删除用户的目录权限设置失败" : "Failed to remove User on folder",
 
-		"获取仓库列表失败" : "Failed to get repository's file list",
+		"获取仓库列表失败" : "Failed to get repository list",
 		"添加访问用户" : "Add Access User",
 		"添加访问组" : "Add Access Group",
 		
@@ -722,12 +730,7 @@ function lang(str)
 		"是否删除系统日志？" : "Do you want to delete SystemLog ?",
 		"删除成功" : "Delete Success",
 		"删除失败" : "Delete Failed",		
-		
-		//LicenseInstall
-		"不限" : "NoLimit",
-		"长期" : "LongTerm",
-		"已过期" : "Expired",
-		
+			
 		//Order
 		"获取订单列表失败" : "Failed to get Order List",
 		"付款" : "Pay",
