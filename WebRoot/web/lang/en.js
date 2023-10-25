@@ -687,7 +687,7 @@ function lang(str)
 		"是否取消Office安装！" : "Do you want to cancel install OfficeEditor ?",
 		"安装成功" : "Install Success",
 		
-		//SystemLog
+		//System
 		"新建仓库" : "Create Reposiotry",
 		"删除仓库" : "Delete Reposiotry",
 		"修改仓库" : "Modify Reposiotry",
@@ -722,6 +722,11 @@ function lang(str)
 		"是否删除系统日志？" : "Do you want to delete SystemLog ?",
 		"删除成功" : "Delete Success",
 		"删除失败" : "Delete Failed",		
+		
+		//LicenseInstall
+		"不限" : "NoLimit",
+		"长期" : "LongTerm",
+		"已过期" : "Expired",
 		
 		//Order
 		"获取订单列表失败" : "Failed to get Order List",
