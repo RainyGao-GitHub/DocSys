@@ -4145,6 +4145,14 @@ public class DocController extends BaseController{
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
+		
+		//检查用户是否有权限下载文件
+		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
 		doc.setShareId(shareId);
 		path = doc.getPath();
 		name = doc.getName();
