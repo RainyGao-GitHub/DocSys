@@ -76,7 +76,8 @@ function lang(str)
 		"证书已失效，请重新购买商业版证书！" : "License is invalid, Please purchase business license !",
 		"用户数量已达到上限，请购买商业版证书！" : "The number of users has reached the maximum limit, Please purchase business license !",
 		"查询失败" : "Query Failed",
-			
+		"文件服务器" : "FileServer",	
+		
 		//注册
 		"注册失败"	: "Sign Up Failed",			
 		"获取验证码" : "Send",

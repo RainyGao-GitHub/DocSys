@@ -4588,6 +4588,20 @@ function contextMenuInit()
 			},
 			]
 		},
+		{divider: true},		
+		{text: _Lang('文件服务器'), subMenu: [
+			{text: _Lang('推送'),  action: function(e){
+					e.preventDefault();
+					showDocPushPanel(gRootDoc, 1);
+				}
+			},
+			{text: _Lang('拉取'),  action: function(e){
+					e.preventDefault();
+					showDocPullPanel(gRootDoc, 1);
+				}
+			},
+			]
+		},
 		{divider: true},
 		{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
@@ -4604,17 +4618,6 @@ function contextMenuInit()
 		},
 		{divider: true},		
 		{text: _Lang('更多') + '...', subMenu: [
-					{text: _Lang('推送'),  action: function(e){
-							e.preventDefault();
-							showDocPushPanel(gRootDoc, 1);
-						}
-					},
-					{text: _Lang('拉取'),  action: function(e){
-							e.preventDefault();
-							showDocPullPanel(gRootDoc, 1);
-						}
-					},
-					{divider: true},
 					{text: _Lang('刷新'), action: function(e){
 								e.preventDefault();
 								refreshDoc(null, 0);
@@ -4773,6 +4776,20 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
+		{text: _Lang('文件服务器'), subMenu: [
+			{text: _Lang('推送'),  action: function(e){
+					e.preventDefault();
+					showDocPushPanel(curRightClickedTreeNode, 1);
+				}
+			},
+			{text: _Lang('拉取'),  action: function(e){
+					e.preventDefault();
+					showDocPullPanel(curRightClickedTreeNode, 1);
+				}
+			},
+			]
+		},
+		{divider: true},
 		{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 		      		showDocHistory(curRightClickedTreeNode,0);
@@ -4835,17 +4852,6 @@ function contextMenuInit()
 							}
 						},
 						]
-					},
-					{divider: true},
-					{text: _Lang('推送'),  action: function(e){
-							e.preventDefault();
-							showDocPushPanel(curRightClickedTreeNode, 1);
-						}
-					},
-					{text: _Lang('拉取'),  action: function(e){
-							e.preventDefault();
-							showDocPullPanel(curRightClickedTreeNode, 1);
-						}
 					},
 					{divider: true},
 					{text: _Lang('刷新'), action: function(e){
@@ -4985,6 +4991,22 @@ function contextMenuInit()
 			]
 		},
 		{divider: true},
+		{text: _Lang('文件服务器'), subMenu: [
+			{text: _Lang('推送'),  action: function(e){
+					e.preventDefault();
+					var parentNode = getParentNodeEx(gDocInfo);
+					showDocPushPanel(parentNode, 1);
+				}
+			},
+			{text: _Lang('拉取'),  action: function(e){
+					e.preventDefault();
+					var parentNode = getParentNodeEx(gDocInfo);
+					showDocPullPanel(parentNode, 1);
+				}
+			},			
+			]
+		},
+		{divider: true},
 		{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 					var parentNode = getParentNodeEx(gDocInfo);
@@ -5058,19 +5080,6 @@ function contextMenuInit()
 						]
 					},
    	   				{divider: true},
-					{text: _Lang('推送'),  action: function(e){
-							e.preventDefault();
-							var parentNode = getParentNodeEx(gDocInfo);
-							showDocPushPanel(parentNode, 1);
-						}
-					},
-					{text: _Lang('拉取'),  action: function(e){
-							e.preventDefault();
-							var parentNode = getParentNodeEx(gDocInfo);
-							showDocPullPanel(parentNode, 1);
-						}
-					},			
-					{divider: true},
 					{text: _Lang('刷新'), action: function(e){
 								e.preventDefault();
 								var parentNode = getParentNodeEx(gDocInfo);
@@ -5208,6 +5217,20 @@ function contextMenuInit()
 				]
 			},			
 			{divider: true},
+			{text: _Lang('文件服务器'), subMenu: [
+				{text: _Lang('推送'),  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(curRightClickedDocListNode, 1);
+					}
+				},
+				{text: _Lang('拉取'),  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(curRightClickedDocListNode, 1);
+					}
+				},	
+				]
+			},
+			{divider: true},
 			{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 					showDocHistory(curRightClickedDocListNode,0);
@@ -5271,18 +5294,7 @@ function contextMenuInit()
 							},
 						]
 					},
-		   			{divider: true},
-					{text: _Lang('推送'),  action: function(e){
-							e.preventDefault();
-							showDocPushPanel(curRightClickedDocListNode, 1);
-						}
-					},
-					{text: _Lang('拉取'),  action: function(e){
-							e.preventDefault();
-							showDocPullPanel(curRightClickedDocListNode, 1);
-						}
-					},	
-					{divider: true},					
+		   			{divider: true},				
 					{text: _Lang('预览'), action: function(e){
 							e.preventDefault();
 							openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
@@ -5440,6 +5452,20 @@ function contextMenuInit()
 				]
 			},
 			{divider: true},
+			{text: _Lang('文件服务器'), subMenu: [
+				{text: _Lang('推送'),  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(curRightClickedDocListNode, 1);
+					}
+				},
+				{text: _Lang('拉取'),  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(curRightClickedDocListNode, 1);
+					}
+				},
+				]
+			},
+			{divider: true},
 			{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 					showDocHistory(curRightClickedDocListNode,0);
@@ -5502,17 +5528,6 @@ function contextMenuInit()
 								}
 							},
 							]
-						},
-						{divider: true},
-						{text: _Lang('推送'),  action: function(e){
-								e.preventDefault();
-								showDocPushPanel(curRightClickedDocListNode, 1);
-							}
-						},
-						{text: _Lang('拉取'),  action: function(e){
-								e.preventDefault();
-								showDocPullPanel(curRightClickedDocListNode, 1);
-							}
 						},
 						{divider: true},
 						{text: _Lang('刷新'), action: function(e){
@@ -5623,6 +5638,20 @@ function contextMenuInit()
 				]
 			},
 			{divider: true},
+			{text: _Lang('文件服务器'), subMenu: [
+				{text: _Lang('推送'),  action: function(e){
+						e.preventDefault();
+						showDocPushPanel(gRootDoc, 1);
+					}
+				},
+				{text: _Lang('拉取'),  action: function(e){
+						e.preventDefault();
+						showDocPullPanel(gRootDoc, 1);
+					}
+				},
+				]
+			},
+			{divider: true},
 			{text: _Lang('查看历史'), action: function(e){
 					e.preventDefault();
 					showDocHistory(gDocInfo,0);
@@ -5687,17 +5716,6 @@ function contextMenuInit()
 						]
 					},
 		   			{divider: true},
-					{text: _Lang('推送'),  action: function(e){
-							e.preventDefault();
-							showDocPushPanel(gRootDoc, 1);
-						}
-					},
-					{text: _Lang('拉取'),  action: function(e){
-							e.preventDefault();
-							showDocPullPanel(gRootDoc, 1);
-						}
-					},
-					{divider: true},
 					{text: _Lang('预览'), action: function(e){
 							e.preventDefault();
 							openDoc(gDocInfo, true, "openInArtDialog", "pdf", gShareId);
