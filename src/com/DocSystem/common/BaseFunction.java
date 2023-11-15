@@ -3016,7 +3016,7 @@ public class BaseFunction{
 		return parseRemoteStorageConfig(remoteStorage, localVerReposPathForGit);
 	}
 	
-	private static RemoteStorageConfig parseRemoteStorageConfigJson(String remoteStorage,
+	protected static RemoteStorageConfig parseRemoteStorageConfigJson(String remoteStorage,
 			String localVerReposPathForGit) {
 		
 		JSONObject jsonObj = JSON.parseObject(remoteStorage);
@@ -3043,7 +3043,7 @@ public class BaseFunction{
 		return remote;
 	}
 
-	private static boolean isJsonFormat(String remoteStorage) {
+	protected static boolean isJsonFormat(String remoteStorage) {
 		if(remoteStorage.length() > 0 && remoteStorage.charAt(0) == '{')
 		{
 			return true;

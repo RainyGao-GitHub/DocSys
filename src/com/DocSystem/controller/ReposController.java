@@ -1577,7 +1577,15 @@ public class ReposController extends BaseController{
 		Long curTime = new Date().getTime();
 		String localTestPath = Path.getDefaultReposRootPath(OSType) + "tmp/RemoteStorageTest-" + curTime + "/" + type + "/";
 		String localVerReposPathForGit = localTestPath + "LocalGitRepos/";
-		remote = parseRemoteStorageConfig(config, localVerReposPathForGit);
+		if(isJsonFormat(config))
+		{
+			remote = parseRemoteStorageConfigJson(config, localVerReposPathForGit);			
+		}
+		else
+		{
+			remote = parseRemoteStorageConfig(config, localVerReposPathForGit);
+		}
+		
 		if(remote == null)
 		{
 			testResult += "解析失败:<br/>";
