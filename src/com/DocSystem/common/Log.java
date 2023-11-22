@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.io.RandomAccessFile;
 import java.util.Date;
 
+import com.DocSystem.common.entity.DataBuffer;
 import com.alibaba.fastjson.JSON;
 
 import util.DateFormat;
@@ -342,5 +343,9 @@ public class Log {
 			String json = JSON.toJSONStringWithDateFormat(obj, "yyy-MM-dd HH:mm:ss");
 			debug(Head + json);
 		}
+	}
+
+	public static void printDataBuffer(String Head, DataBuffer pBuffer) {
+	    Log.debug(Head + "bufSize:" + pBuffer.bufSize + " size:" + pBuffer.size + " offset:" + pBuffer.offset);
 	}
 }
