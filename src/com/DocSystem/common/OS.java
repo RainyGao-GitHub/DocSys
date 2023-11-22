@@ -5,6 +5,8 @@ public class OS {
 	public final static int Windows = 1;
 	public final static int Linux = 2;
 	public final static int MacOS = 3;
+	public final static int Android = 4;
+	public final static int IOS = 5;
 
 	public static boolean isWinOS(Integer OSType) {
 		if(OSType == OS.Windows){
