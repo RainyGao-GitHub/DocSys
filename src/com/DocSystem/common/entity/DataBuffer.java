@@ -29,9 +29,9 @@ public class DataBuffer {
 
 	public DataBuffer(DataBuffer pBuffer) {
 		this.data = pBuffer.data;
-        this.bufSize = pBuffer.bufSize;
-        this.size = pBuffer.size;
-        this.offset = pBuffer.offset;
+	    this.bufSize = pBuffer.bufSize;
+	    this.size = pBuffer.size;
+	    this.offset = pBuffer.offset;
 	}
 
 	public void clear() {

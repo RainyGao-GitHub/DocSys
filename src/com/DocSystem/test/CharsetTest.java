@@ -16,6 +16,7 @@ class CharsetTest
         System.out.println("System defulat charset:" + Charset.defaultCharset());        
         
         try {        	
+        	//String han = "A";	//系统默认编码
             String han = "汉";	//系统默认编码
             
             byte han_org_buf[] = new byte[han.length()*2];
