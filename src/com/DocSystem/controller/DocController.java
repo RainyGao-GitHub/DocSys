@@ -1830,135 +1830,16 @@ public class DocController extends BaseController{
 				+ " targetPath:" + targetPath
 				+ " recurciveEn:" + recurciveEn + " forceEn:" + forceEn 
 				+ " taskId:" + taskId);
-		
-		ReturnAjax rt = new ReturnAjax();
 
-		if(targetReposId == null)	//pushToRepos
-		{
-			Log.debug("pushDocRS() targetReposId is null");
-			docSysErrorLog("目标仓库未指定", rt);
-			writeJson(rt, response);		
-			return;
-		}
-		
-		//Check authCode or reposAccess
-		ReposAccess reposAccess = null;
-		if(authCode != null)
-		{
-			if(checkAuthCode(authCode, null, rt) == null)
-			{
-				Log.debug("pushDocRS checkAuthCode Failed");
-				//docSysErrorLog("无效授权码或授权码已过期！", rt);
-				writeJson(rt, response);		
-				return;
-			}
-			reposAccess = getAuthCode(authCode).getReposAccess();
-		}
-		else
-		{
-			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
-		}
-		if(reposAccess == null)
-		{
-			Log.debug("pushDocRS reposAccess is null");
-			rt.setError("非法访问");
-			writeJson(rt, response);		
-			return;
-		}
-		
-		Repos repos = getReposEx(reposId);
-		if(!reposCheck(repos, rt, response))
-		{
-			return;
-		}
-		
-		AuthCode remoteStoraeAuthCode = generateAuthCode("remoteAccess", 1*CONST_DAY, 1000000, reposAccess, null);
-		if(remoteStoraeAuthCode == null)
-		{
-			Log.debug("pushDocRS() 授权码生成失败");
-			writeJson(rt, response);			
-			return;
-		}
-			
-		String localServerUrl = getLocalMxsdocServerUrl(request);
-		Log.debug("pushDocRS() localServerUrl:" + localServerUrl);
-
-		UserPreferServer server = null;
-		server = new UserPreferServer();
-		server.serverType = "mxsdoc";
-		server.serverUrl = localServerUrl;
-		server.url = localServerUrl;
-		server.authCode = remoteStoraeAuthCode.getCode();
-		
-		//检查localParentPath是否存在，如果不存在的话，需要创建localParentPath
-		String reposPath = Path.getReposPath(repos);
-		String localRootPath = Path.getReposRealPath(repos);
-		String localVRootPath = Path.getReposVirtualPath(repos);
-		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, 0L, null);
-		//推送到指定目录
-		if(targetPath != null)
-		{
-			targetPath = Path.dirPathFormat(targetPath);
-			if(targetPath.equals(doc.getPath()))
-			{
-				targetPath = null;
-			}
-			else
-			{
-				doc.offsetPath = targetPath;
-				doc.rebasePath = doc.getPath();
-			}
-		}
-		
-		Doc localDoc = docSysGetDoc(repos, doc, false);
-		if(localDoc == null || localDoc.getType() == 0)
-		{
-			docSysErrorLog("文件 " + path + name + " 不存在！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		Boolean ret = false;
-		//push subEntries
-        boolean recurcive = false;
-        if(recurciveEn != null && recurciveEn == 1)
-        {
-        	recurcive = true;
-        }  
-        //push force
-        int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged_SkipDelete;
-        if(forceEn != null && forceEn == 1)
-        {
-        	pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;
-        }  
-		
-		String commitMsg = "文件推送";
-		RemoteStorageConfig remoteStorageConfig = null;
-		server.reposId = targetReposId;
-		remoteStorageConfig = convertFileServerConfigToRemoteStorageConfig(server);
-		//需要区分仓库或远程存储目录
-		if(targetPath == null)
-		{
-			remoteStorageConfig.remoteStorageIndexLib = Path.getReposIndexLibPath(repos)  + "FileServer/" + server.serverUrl.hashCode() + "_Repos" + targetReposId + "/Doc";
-		}
-		else
-		{
-			//TODO: 这里有indexLib库过多的风险，但推送的到指定路径通常是自动推送（路径是固定的），因此暂时不考虑参照节点库过多的问题
-			remoteStorageConfig.remoteStorageIndexLib = Path.getReposIndexLibPath(repos)  + "FileServer/" + server.serverUrl.hashCode() + "_Repos" + targetReposId + "_TargetPath" + targetPath.hashCode() + "/Doc";					
-		}
-		
-		ret = channel.remoteStoragePush(remoteStorageConfig, repos, localDoc, reposAccess.getAccessUser(), commitMsg, recurcive, pushType, rt);
-
-		writeJson(rt, response);
-		
-		if(ret == false)
-		{
-			addSystemLog(request, reposAccess.getAccessUser(), "pushDocRS", "pushDocRS", "文件推送", taskId, "失败", repos, localDoc, null, buildSystemLogDetailContent(rt));							
-		}
-		else
-		{
-			addSystemLog(request, reposAccess.getAccessUser(), "pushDocRS", "pushDocRS", "文件推送", taskId, "成功", repos, localDoc, null, buildSystemLogDetailContent(rt));			
-		}
+		channel.pushDocRS
+		(
+				taskId,
+				reposId, docId, pid, path, name, //待推送的文件或目录信息
+				targetReposId, targetPath, //目标目录信息
+				recurciveEn, //null/0: false, 1: true
+				forceEn, //null/0: false, 1: true
+				shareId, authCode, //
+				response, request, session);
 	}
 	
 	/****************   Upload a Picture for Markdown ******************/

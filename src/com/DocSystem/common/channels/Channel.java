@@ -4,6 +4,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.Log;
@@ -216,4 +220,16 @@ public interface Channel {
 	boolean convertReposHistory(Repos repos, Integer maxNum, ReturnAjax rt, int historyType);
 
 	Doc getHistoryDoc(Repos repos, Doc doc, String commitId, int historyType);
+	
+	//第三方接入API接口
+	public void pushDocRS(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name, //待推送的文件或目录信息
+			Integer targetReposId, String targetPath, //目标目录信息
+			Integer recurciveEn, //null/0: false, 1: true
+			Integer forceEn, //null/0: false, 1: true
+			Integer shareId, String authCode, //
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception;
+	
+	
 }
