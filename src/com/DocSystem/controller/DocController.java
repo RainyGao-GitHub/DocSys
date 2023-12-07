@@ -2209,8 +2209,8 @@ public class DocController extends BaseController{
 		{
 			//文件服务器前置仓库不允许远程存储
 			remoteStorageEn = false;
-			//从文件服务器拉取文件
-			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
+			//从文件服务器拉取文件（对于前置仓库，拉取时会删除远程不存在的文件）
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedWithoutLocalCheckForce, null);
 		}
 
 		Doc localEntry = fsGetDoc(repos, doc);
