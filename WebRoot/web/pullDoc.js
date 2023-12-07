@@ -709,7 +709,7 @@ var DocPull = (function () {
 			id: 'fileSelector',
 			url: 'fileSelector' + langExt + '.html',
 			title: _Lang('文件选择'),
-			msg: _Lagn('页面正在加载，请稍等') + '...',
+			msg: _Lang('页面正在加载，请稍等') + '...',
 			foot: false,
 			big: false,
 			callback: function(){
