@@ -109,6 +109,8 @@ import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.LongBeatCheckAction;
+import com.DocSystem.common.MatchResult;
+import com.DocSystem.common.MatchTemplate;
 import com.DocSystem.common.MyExtractCallback;
 import com.DocSystem.common.OS;
 import com.DocSystem.common.OfficeExtract;
@@ -25053,5 +25055,33 @@ public class BaseController  extends BaseFunction{
 			break;
 		}
 		return remote;
+	}
+	
+	
+	//TOOD: 宏替换
+	void replaceMacro(String input, StringBuilder output, String matchRule, String replaceRule)
+	{
+		int beginIndex = 0;
+		MatchTemplate matchTemplate = new MatchTemplate(matchRule);
+
+		MatchResult matchResult = new MatchResult();
+		matchResult.findPrefix(input, beginIndex, matchTemplate);
+		while(matchResult.status > 0)
+		{
+			if(matchResult.getVars(input, matchTemplate))
+			if(matchResult.skipReplace)	//变量部分不匹配，不替换
+			{
+				output.append(input.substring(beginIndex, matchResult.endIndex));				
+			}
+			else
+			{
+				output.append(input.substring(beginIndex, matchResult.startIndex));
+				output.append(matchResult.replaceContent);
+			}
+						
+			//查找下一个match内容
+			beginIndex = matchResult.endIndex;
+			matchResult.findPrefix(input, beginIndex, matchTemplate);
+		}
 	}
 }
