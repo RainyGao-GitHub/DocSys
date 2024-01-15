@@ -375,6 +375,54 @@ function copyString(str)
 	});
 }
 
+var gFileSuffixForLocalApp = "";
+function openWordApp(fileUrl)
+{
+	var customProtocol = "ms-word:" + fileUrl;
+    window.location.href = customProtocol;
+}
+
+function openExcelApp(fileUrl)
+{
+	var customProtocol = "ms-excel:" + fileUrl;
+    window.location.href = customProtocol;
+}
+
+function openPptApp(fileUrl)
+{
+	var customProtocol = "ms-powerpoint:" + fileUrl;
+    window.location.href = customProtocol;
+}
+
+function openLocalApp(fileLink)
+{
+	switch(gFileSuffixForLocalApp)
+	{
+	case "doc":
+	case "docx":
+		fileLink += "/word." + gFileSuffixForLocalApp;
+		openWordApp(fileLink);
+		break;
+	case "csv":
+	case "xls":
+	case "xlsx":
+		fileLink += "/excel." + gFileSuffixForLocalApp;
+		openExcelApp(fileLink);
+		break;
+	case "ppt":
+	case "pptx":
+		fileLink += "/ppt." + gFileSuffixForLocalApp;
+		openPptApp(fileLink);
+		break;
+	}
+}
+
+function openInLocalApp(node) 
+{
+	gFileSuffixForLocalApp = getFileSuffix(node.name);
+	getDocFileLink(node, openLocalApp, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
+}
+
 //文件下载接口
 function downloadDoc(treeNodes,needConfirm,downloadType)
 {
@@ -4815,6 +4863,11 @@ function contextMenuInit()
 							}
 						}
 					},
+					{text: _Lang('本地打开'), action: function(e){
+							e.preventDefault();
+							openInLocalApp(curRightClickedTreeNode);
+						}
+					},
 					{divider: true},
 					{text: _Lang('设置密码'), action: function(e){
 							e.preventDefault();
@@ -5033,6 +5086,11 @@ function contextMenuInit()
 							{
 								openDoc(parentNode, true, "openInNewPage", "office", gShareId);
 							}
+						}
+					},
+					{text: _Lang('本地打开'), action: function(e){
+							e.preventDefault();
+							openInLocalApp(parentNode);
 						}
 					},
 					{divider: true},
@@ -5254,6 +5312,11 @@ function contextMenuInit()
 							{
 								openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);
 							}
+						}
+					},
+					{text: _Lang('本地打开'), action: function(e){
+							e.preventDefault();
+							openInLocalApp(curRightClickedDocListNode);
 						}
 					},
 					{divider: true},					
@@ -5491,6 +5554,11 @@ function contextMenuInit()
 								}
 							}
 						},
+						{text: _Lang('本地打开'), action: function(e){
+								e.preventDefault();
+								openInLocalApp(curRightClickedDocListNode);
+							}
+						},
 						{divider: true},
 						{text: _Lang('设置密码'), action: function(e){
 								e.preventDefault();
@@ -5675,6 +5743,11 @@ function contextMenuInit()
 							{
 								openDoc(gDocInfo, true, "openInNewPage", "office", gShareId);
 							}
+						}
+					},
+					{text: _Lang('本地打开'), action: function(e){
+							e.preventDefault();
+							openInLocalApp(gDocInfo);
 						}
 					},
 					{divider: true},
