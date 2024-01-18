@@ -322,6 +322,7 @@ function lang(str)
 		"文件拉取" : "Pull Document",
 		"文件分享" : "Share Document",
 		"在新窗口打开" : "Open In New Page",
+		"本地打开" : "Open In Office",
 		"属性" : "Properties",
 		"查看历史" : "View History",		
 		"查看备份" : "View Backup",		
