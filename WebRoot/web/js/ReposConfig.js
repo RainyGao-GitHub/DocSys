@@ -2137,7 +2137,7 @@ var ReposConfig = (function () {
 	            		id: "idAlertDialog",	
 	            		title: _Lang("提示"),
 	            		okbtn: _Lang("确定"),
-	            		msg: "<font color='green'><strong>" + _lang("测试成功") + "</strong></font><br/><br/>" + ret.msgInfo,
+	            		msg: "<font color='green'><strong>" + _Lang("测试成功") + "</strong></font><br/><br/>" + ret.msgInfo,
 	            	});
 	            }
 	            else
