@@ -108,6 +108,12 @@ public class SFTPUtil {
  
     //获取文件列表
     public Vector<?> listFiles(String directory) {
+    	if(directory == null || directory.isEmpty())
+    	{
+    		//ls接口不允许使用空字符串作为根目录
+    		directory = "/";
+    	}
+    	
     	Vector<?> list = null;
         try {        	
         	list = sftp.ls(directory);
