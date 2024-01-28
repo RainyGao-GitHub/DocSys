@@ -3637,6 +3637,10 @@ public class BaseFunction{
 		{
 			rootPath = buildRemoteStorageRootPath(subStrs);
 		}
+		else
+		{
+			rootPath = "/";
+		}
 		Log.debug("parseSftpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
 		
 		//seperate host with port
@@ -3671,6 +3675,10 @@ public class BaseFunction{
 		if(subStrs.length > 1)
 		{
 			rootPath = buildRemoteStorageRootPath(subStrs);
+		}
+		else
+		{
+			rootPath = "/";
 		}
 		Log.debug("parseFtpUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
 		
@@ -3709,6 +3717,10 @@ public class BaseFunction{
 		if(subStrs.length > 1)
 		{
 			rootPath = buildRemoteStorageRootPath(subStrs);
+		}
+		else
+		{
+			rootPath = "/";
 		}
 		Log.debug("parseSmbUrl hostWithPort:" + hostWithPort + " rootPath:" + rootPath);
 		

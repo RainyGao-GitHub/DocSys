@@ -409,11 +409,14 @@ public class Doc  implements Comparable<Doc>{
     
 	public String getRemotePath() {
 		String path = this.path;
+		
+		//rebasePath非空表明文件路径对应的远程服务器的文件路径需要除去头部的rebasePath
 		if(this.rebasePath != null)
 		{
 			path = this.path.substring(this.rebasePath.length(), this.path.length());
 		}
-				
+		
+		//offsetPath非空表明文件路径对应的远程服务器的文件路径需要加上偏移地址		
 		if(this.offsetPath != null)
 		{
 			path = this.offsetPath + path;
