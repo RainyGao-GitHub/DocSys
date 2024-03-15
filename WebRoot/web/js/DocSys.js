@@ -262,15 +262,27 @@ function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 {
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle);
+		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, 0);
 	}
 	else
 	{
-		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle);
+		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, 0);
 	}
 }
 
-function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
+function getDocFileLinkForPreview(docInfo, successCallback, errorCallback, urlStyle)
+{
+	if(docInfo.isZip && docInfo.isZip == 1)
+	{
+		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, 1);
+	}
+	else
+	{
+		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, 1);
+	}
+}
+
+function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, forPreview)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -281,6 +293,11 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
     	errorInfo = "请选择文件";
     	errorCallback && errorCallback(errorInfo);
     	return;
+    }
+    
+    if(forPreview == undefined)
+    {
+    	forPreview = 0;
     }
   	
 	$.ajax({
@@ -295,6 +312,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
             historyType: docInfo.historyType,
             shareId: docInfo.shareId,
             urlStyle: urlStyle,
+            forPreview: forPreview,
         },
         success : function (ret) {
         	console.log("getDocFileLinkBasic ret",ret);
@@ -319,7 +337,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle)
 }
 
 //获取压缩文件的文件链接接口
-function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
+function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, forPreview)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -330,6 +348,11 @@ function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
     	errorInfo = "请选择文件";
     	errorCallback && errorCallback(errorInfo);
     	return;
+    }
+    
+    if(forPreview == undefined)
+    {
+    	forPreview = 0;
     }
   	
 	$.ajax({
@@ -345,6 +368,7 @@ function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
             rootName: docInfo.rootName,
             shareId: docInfo.shareId,
             urlStyle: urlStyle,
+            forPreview: forPreview,
         },
         success : function (ret) {
         	console.log("getZipDocFileLink ret",ret);

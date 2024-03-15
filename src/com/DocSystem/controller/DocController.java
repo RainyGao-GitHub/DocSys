@@ -4079,10 +4079,11 @@ public class DocController extends BaseController{
 			String commitId, Integer needDeletedEntry, Integer historyType,
 			Integer shareId,
 			String urlStyle,
+			Integer forPreview,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("*************** getDocFileLink [" + path + name + "] ********************");		
-		Log.info("getDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId);
+		Log.info("getDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId + " forPreview:" + forPreview);
 
 		//注意该接口支持name是空的的情况
 		if(path == null)
@@ -4117,11 +4118,15 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		//检查用户是否有权限下载文件
-		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		//如果是用于预览目的则不需要进行下载权限检查
+		if(forPreview == null || forPreview != 1)
 		{
-			writeJson(rt, response);
-			return;
+			//检查用户是否有权限下载文件
+			if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+			{
+				writeJson(rt, response);
+				return;
+			}
 		}
 		
 		doc.setShareId(shareId);
