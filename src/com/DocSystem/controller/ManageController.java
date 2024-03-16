@@ -1334,7 +1334,14 @@ public class ManageController extends BaseController{
 		
 		if(redisEn != null)
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "redisEn", redisEn+"");
+			if(redisEn != 0 && channel.isAllowedAction("clusterDeploy", rt) == false)
+			{
+				Log.info("当前授权证书不支持集群部署，请购买相应的授权证书!");
+			}
+			else
+			{
+				ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "redisEn", redisEn+"");
+			}
 		}
 		
 		if(redisUrl != null)

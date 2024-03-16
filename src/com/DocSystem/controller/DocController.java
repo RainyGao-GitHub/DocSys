@@ -4669,7 +4669,18 @@ public class DocController extends BaseController{
 					session, request, response);
 			return;
 		}
-
+		
+		switch(historyType)
+		{
+		case HistoryType_RecycleBin:
+			if(channel.isAllowedAction("recycleBin", rt) == false)	//检查回收站功能
+			{
+				writeJson(rt, response);
+				return;
+			}	
+			break;
+		}
+		
 		getRealDocHistory(
 				repos, 
 				docId, pid, path, name, level, type, 
@@ -5171,6 +5182,25 @@ public class DocController extends BaseController{
 					rt, 
 					session, request, response);
 			return;
+		}
+		
+		switch(historyType)
+		{
+		case HistoryType_LocalBackup:
+		case HistoryType_RemoteBackup:
+			if(channel.isAllowedAction("revertBackup", rt) == false)	//备份恢复功能检查
+			{
+				writeJson(rt, response);
+				return;
+			}	
+			break;
+		case HistoryType_RecycleBin:
+			if(channel.isAllowedAction("recycleBin", rt) == false)	//检查回收站功能
+			{
+				writeJson(rt, response);
+				return;
+			}
+			break;
 		}
 		
 		revertRealDocHistory(
