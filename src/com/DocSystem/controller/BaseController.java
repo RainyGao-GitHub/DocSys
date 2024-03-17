@@ -85,6 +85,7 @@ import org.redisson.Redisson;
 import org.redisson.api.RBucket;
 import org.redisson.api.RMap;
 import org.redisson.config.Config;
+import org.redisson.config.SingleServerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 import org.tmatesoft.svn.core.SVNDirEntry;
@@ -178,6 +179,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
+import com.google.gson.JsonObject;
 import com.jcraft.jzlib.GZIPInputStream;
 
 import net.sf.sevenzipjbinding.IInArchive;
@@ -251,9 +253,17 @@ public class BaseController  extends BaseFunction{
 			return false;
 		}
 		
+		//TODO: redisUrl里可以支持传递高级参数(例如密码)，因此需要先解析再连接
+		JSONObject redisConfig = parseRedisConfig(redisUrl);
 		Config config = new Config();
-		config.useSingleServer().setAddress(redisUrl);
-		
+		//config.useSingleServer().setAddress(redisUrl);
+		SingleServerConfig singleServerConfig = config.useSingleServer();
+		singleServerConfig.setAddress(redisConfig.getString("url"));
+		String password = redisConfig.getString("password");
+		if(password != null && password.isEmpty() == false)
+		{
+			singleServerConfig.setPassword(redisConfig.getString("password"));		
+		}
 		try {
 			redisClient = Redisson.create(config);
 			if(redisClient == null)
@@ -297,6 +307,44 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
+	private static JSONObject parseRedisConfig(String redisConfigStr) 
+	{
+		JSONObject config = new JSONObject();
+		String[] subStrs = redisConfigStr.split(";");
+
+		//Parse redisUrl
+		String redisUrl = subStrs[0];
+		config.put("url", redisUrl);
+
+		//Parse sftpConfigs
+		if(subStrs.length > 1)
+		{
+			String key = "";
+			String value = "";
+			int index;
+			for(int i=1; i<subStrs.length; i++)
+			{
+				//String[] param = subStrs[i].split("="); //这个方式会把包含=的字符串截断
+				index = subStrs[i].indexOf("=");
+				if(index > 0 && (index < subStrs[i].length() -1))	//key和value至少有一个字符
+				{
+					key = (subStrs[i].substring(0, index)).trim();
+					if(key.isEmpty() == false)
+					{
+						value = subStrs[i].substring(index+1).trim();
+						if(value.isEmpty() == false)
+						{
+							config.put(key, value);
+						}
+					}
+				}
+			}			
+		}
+
+		Log.printObject("parseRedisConfig() redisConfig:", config);
+		return config;
+	}
+
 	static boolean isClusterConfigChanged(String configName, String preValue, String newValue)
 	{
 		if(preValue == null || preValue.isEmpty())
