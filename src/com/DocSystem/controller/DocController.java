@@ -5188,7 +5188,7 @@ public class DocController extends BaseController{
 		{
 		case HistoryType_LocalBackup:
 		case HistoryType_RemoteBackup:
-			if(channel.isAllowedAction("revertBackup", rt) == false)	//备份恢复功能检查
+			if(channel.isAllowedAction("recoverBackup", rt) == false)	//备份恢复功能检查
 			{
 				writeJson(rt, response);
 				return;
