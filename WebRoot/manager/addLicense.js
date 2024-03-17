@@ -28,35 +28,57 @@ function doSelectAllowAllActionEnable(obj,event){
 	console.log("doSelectAllowAllActionEnable allowAllActionEnable:" + allowAllActionEnable);
 	if(allowAllActionEnable == 0)
 	{
-		$("#getAuthCodeEnable").prop("checked",false);
+		$("#thirdPartyAccessEnable").prop("checked",false);
+		$("#clusterDeployEnable").prop("checked",false);
+		
 		$("#resetHistoryEnable").prop("checked",false);
+		$("#deleteHistoryEnable").prop("checked",false);
+		
 		$("#recoverBackupEnable").prop("checked",false);
+		
 		$("#recycleBinEnable").prop("checked",false);
+		
 		//attr不能多次选择会无效
-		//$("#getAuthCodeEnable").attr("checked",false);	
+		//$("#thirdPartyAccessEnable").attr("checked",false);	
 		//$("#resetHistoryEnable").attr("checked",false);	
 		//$("#recoverBackupEnable").attr("checked",false);	
 		//$("#recycleBinEnable").attr("checked",false);	
 	}
 	else
 	{	
-		$("#getAuthCodeEnable").prop("checked",true);
+		$("#thirdPartyAccessEnable").prop("checked",true);
+		$("#clusterDeployEnable").prop("checked",true);
+
 		$("#resetHistoryEnable").prop("checked",true);
+		$("#deleteHistoryEnable").prop("checked",true);
+		
 		$("#recoverBackupEnable").prop("checked",true);
+		
 		$("#recycleBinEnable").prop("checked",true);
+		
 		//attr不能多次选择会无效
-		//$("#getAuthCodeEnable").attr("checked","checked");
+		//$("#thirdPartyAccessEnable").attr("checked","checked");
 		//$("#resetHistoryEnable").attr("checked","checked");
 		//$("#recoverBackupEnable").attr("checked","checked");
 		//$("#recycleBinEnable").attr("checked","checked");
 	}
 }
 
-function doSelectGetAuthCodeEnable(obj,event){
-	console.log("doSelectGetAuthCodeEnable()");
-	var getAuthCodeEnable = $("#getAuthCodeEnable").is(':checked')? 1: 0;
-	console.log("doSelectGetAuthCodeEnable getAuthCodeEnable:" + getAuthCodeEnable);
-	if(getAuthCodeEnable == 0)
+function doSelectThirdPartyAccessEnable(obj,event){
+	console.log("doSelectThirdPartyAccessEnable()");
+	var thirdPartyAccessEnable = $("#thirdPartyAccessEnable").is(':checked')? 1: 0;
+	console.log("doSelectThirdPartyAccessEnable thirdPartyAccessEnable:" + thirdPartyAccessEnable);
+	if(thirdPartyAccessEnable == 0)
+	{
+		$("#allowAllActionEnable").prop("checked",false);
+	}
+}
+
+function doSelectClusterDeployEnable(obj,event){
+	console.log("doSelectClusterDeployEnable()");
+	var clusterDeployEnable = $("#clusterDeployEnable").is(':checked')? 1: 0;
+	console.log("doSelectClusterDeployEnable clusterDeployEnable:" + clusterDeployEnable);
+	if(clusterDeployEnable == 0)
 	{
 		$("#allowAllActionEnable").prop("checked",false);
 	}
@@ -67,6 +89,16 @@ function doSelectResetHistoryEnable(obj,event){
 	var resetHistoryEnable = $("#resetHistoryEnable").is(':checked')? 1: 0;
 	console.log("doSelectResetHistoryEnable resetHistoryEnable:" + resetHistoryEnable);
 	if(resetHistoryEnable == 0)
+	{
+		$("#allowAllActionEnable").prop("checked",false);
+	}
+}
+
+function doSelectDeleteHistoryEnable(obj,event){
+	console.log("doSelectDeleteHistoryEnable()");
+	var deleteHistoryEnable = $("#deleteHistoryEnable").is(':checked')? 1: 0;
+	console.log("doSelectDeleteHistoryEnable deleteHistoryEnable:" + deleteHistoryEnable);
+	if(deleteHistoryEnable == 0)
 	{
 		$("#allowAllActionEnable").prop("checked",false);
 	}
@@ -95,8 +127,13 @@ function doSelectRecycleBinEnable(obj,event){
 function getAllowedAction()
 {
 	var allowAllActionEnable = $("#allowAllActionEnable").is(':checked')? 1: 0;
-	var getAuthCodeEnable = $("#getAuthCodeEnable").is(':checked')? 1: 0;
+	
+	var thirdPartyAccessEnable = $("#thirdPartyAccessEnable").is(':checked')? 1: 0;
+	var clusterDeployEnable = $("#clusterDeployEnable").is(':checked')? 1: 0;
+	
 	var resetHistoryEnable = $("#resetHistoryEnable").is(':checked')? 1: 0;
+	var deleteHistoryEnable = $("#deleteHistoryEnable").is(':checked')? 1: 0;
+	
 	var recoverBackupEnable = $("#recoverBackupEnable").is(':checked')? 1: 0;
 	var recycleBinEnable = $("#recycleBinEnable").is(':checked')? 1: 0;
 
@@ -105,18 +142,30 @@ function getAllowedAction()
 	{
 		allowedAction += "allowAllAction:\"enabled\","
 	}
-	if(getAuthCodeEnable == 1)
+	
+	if(thirdPartyAccessEnable == 1)
 	{
-		allowedAction += "getAuthCode:\"enabled\","
+		allowedAction += "thirdPartyAccess:\"enabled\","
 	}
+	if(clusterDeployEnable == 1)
+	{
+		allowedAction += "clusterDeploy:\"enabled\","
+	}
+	
 	if(resetHistoryEnable == 1)
 	{
 		allowedAction += "resetHistory:\"enabled\","
 	}
+	if(deleteHistoryEnable == 1)
+	{
+		allowedAction += "deleteHistory:\"enabled\","
+	}
+	
 	if(recoverBackupEnable == 1)
 	{
 		allowedAction += "recoverBackup:\"enabled\","
 	}
+	
 	if(recycleBinEnable == 1)
 	{
 		allowedAction += "recycleBin:\"enabled\","
