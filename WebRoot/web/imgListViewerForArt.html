@@ -89,6 +89,7 @@
 			//console.log("getImgList doc:", doc);
 			if(isPictureFile(doc.name) == true)
 			{
+				doc.shareId = docInfo.shareId;
 				imgList.push(doc);
 				if(doc.docId == docInfo.docId)
 				{
@@ -99,7 +100,7 @@
     	console.log("getImgList imgList:", imgList);
     	console.log("getImgList index:", index);
     	
-		getDocFileLink(imgList[index], showImage, showErrorMessage);	    	
+		getDocFileLinkForPreview(imgList[index], showImage, showErrorMessage);	    	
    	}
     
     function gotoPreviousDoc()
@@ -107,7 +108,7 @@
     	if(index > 0)
     	{
     		index--;
-			getDocFileLink(imgList[index], showImage, showErrorMessage);	    	
+			getDocFileLinkForPreview(imgList[index], showImage, showErrorMessage);	    	
     	}
     }
     
@@ -116,7 +117,7 @@
     	if(index < imgList.length -1)
     	{
     		index++;
-			getDocFileLink(imgList[index], showImage, showErrorMessage);	    	
+			getDocFileLinkForPreview(imgList[index], showImage, showErrorMessage);	    	
     	}	    	
     }
     
