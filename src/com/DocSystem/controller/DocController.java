@@ -155,7 +155,18 @@ public class DocController extends BaseController{
 			String localVRootPath = Path.getReposVirtualPath(repos);
 			Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, 0L, "");
 			doc.setContent(content);
-			updateVirualDocContent(repos, doc, commitMsg, reposAccess.getAccessUser().getName(), reposAccess.getAccessUser(), rt, null);
+			List<CommonAction> actionList = new ArrayList<CommonAction>();
+			boolean ret = updateVirualDocContent(repos, doc, commitMsg, reposAccess.getAccessUser().getName(), reposAccess.getAccessUser(), rt, actionList);
+			if(ret)
+			{
+				addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "添加备注", taskId, "成功", repos, doc, null, buildSystemLogDetailContent(rt));			
+				deleteTmpVirtualDocContent(repos, doc, reposAccess.getAccessUser());
+				executeCommonActionList(actionList, rt);
+			}
+			else
+			{
+				addSystemLog(request, reposAccess.getAccessUser(), "addDoc", "addDoc", "添加备注", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));						
+			}
 		}
 	}
 
