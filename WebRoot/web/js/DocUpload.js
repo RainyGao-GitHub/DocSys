@@ -894,7 +894,7 @@
 			//弹出用户确认窗口
       		qiao.bs.confirm({
     	    	id: 'uploadErrorConfirm',
-    	        msg: FileName + " " +Lang("上传失败") + "("+ _Lang(errMsg) + ")," + _Lang("是否继续上传其他文件？"),
+    	        msg: FileName + " " +_Lang("上传失败") + "("+ _Lang(errMsg) + ")," + _Lang("是否继续上传其他文件？"),
     	        close: false,		
     	        title: _Lang("确认"),
     	        okbtn: _Lang("继续"),
