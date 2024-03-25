@@ -235,6 +235,9 @@ public class BaseFunction{
 	//远程存储服务器锁HashMap
 	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
 
+	//Office协同编辑打开的文件[dockey , docPath]
+	public static ConcurrentHashMap<String, String> openedDocsMap = new ConcurrentHashMap<String, String>();
+
 	//Office协同编辑同步锁HashMap
 	protected static ConcurrentHashMap<String, OfficeEditLock> officeEditLocksMap = new ConcurrentHashMap<String, OfficeEditLock>();
 
