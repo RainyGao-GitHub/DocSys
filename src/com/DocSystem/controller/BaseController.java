@@ -307,7 +307,7 @@ public class BaseController  extends BaseFunction{
 		return false;
 	}
 	
-	private static JSONObject parseRedisConfig(String redisConfigStr) 
+	protected static JSONObject parseRedisConfig(String redisConfigStr) 
 	{
 		JSONObject config = new JSONObject();
 		String[] subStrs = redisConfigStr.split(";");

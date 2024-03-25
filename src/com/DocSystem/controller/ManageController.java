@@ -22,6 +22,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.config.SingleServerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -1466,10 +1467,21 @@ public class ManageController extends BaseController{
 		
 		testResult += "2. Redis服务器测试<br/>";
 		testResult += "2.1 连接服务器测试<br/>";
+
 		//注册RedissonClient对象
-        Config config = new Config();
-        config.useSingleServer().setAddress(redisUrl);
-        RedissonClient redissonClient = Redisson.create(config);
+		//TODO: redisUrl里可以支持传递高级参数(例如密码)，因此需要先解析再连接
+		JSONObject redisConfig = parseRedisConfig(redisUrl);
+		Config config = new Config();
+		//config.useSingleServer().setAddress(redisUrl);
+		SingleServerConfig singleServerConfig = config.useSingleServer();
+		singleServerConfig.setAddress(redisConfig.getString("url"));
+		String password = redisConfig.getString("password");
+		if(password != null && password.isEmpty() == false)
+		{
+			singleServerConfig.setPassword(redisConfig.getString("password"));		
+		}
+		
+		RedissonClient redissonClient = Redisson.create(config);
         testResult += "连接成功<br/><br/>";
 		
         testResult += "2.2 Lock测试<br/>";
