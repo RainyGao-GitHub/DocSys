@@ -14539,9 +14539,11 @@ public class BaseController  extends BaseFunction{
 	protected void clearRedisCache() {
 		Log.info("clearRedisCache()");
 		
+		
 		//注意: 千万不要把当前serverUrl直接加入死亡列表 
 		//因为，用户有可能把自己的clusteServerUrl设置成别的服务器，从而把正确的server从集群里挤掉，所以不能直接删除
-		//只能清除已经明确死亡的服务器，换句话说，重新加入集群需要30分钟之后（当然可以考虑缩短集群心跳间隔）
+		//只能清除已经明确死亡的服务器，自动重新加入集群需要30分钟之后（当然可以考虑缩短集群心跳间隔）
+		//或者在此函数调用前，将自己设置未已过期，目前docSysInit和resetCluster接口已经处理了
 		
 		//Go throuhg clusterServersMap
 	    List<String> deleteList = new ArrayList<String>();
