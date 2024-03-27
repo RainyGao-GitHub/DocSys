@@ -14362,14 +14362,13 @@ public class BaseController  extends BaseFunction{
 				
 				if(redisEn)
 				{
+					RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+					//将当前服务器标记为过期状态，触发清理工作
+					clusterServersMap.put(clusterServerUrl, 0L);
+					clearRedisCache();
+					
 					if(clusterDeployCheckGlobal(force) == true)
 					{
-						RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
-						
-						//注意：进群检测通过后才能清理Office编辑相关的Redis数据， 将当前服务器标记为过期状态
-						clusterServersMap.put(clusterServerUrl, 0L);
-						clearRedisCache();
-						
 						//重新设置心跳时间来激活当前集群
 						clusterServersMap.put(clusterServerUrl, new Date().getTime());
 						addClusterHeartBeatDelayTask();
@@ -14423,14 +14422,13 @@ public class BaseController  extends BaseFunction{
 		Log.info("restartClusterServer() [" + clusterServerUrl+ "]");
 		if(redisEn)
 		{
+			RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+			//将当前服务器标记为过期状态，触发清理工作
+			clusterServersMap.put(clusterServerUrl, 0L);
+			clearRedisCache();
+		
 			if(clusterDeployCheckGlobal(true) == true)
 			{
-				RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
-				
-				//注意：进群检测通过后才能清理Office编辑相关的Redis数据， 将当前服务器标记为过期状态
-				clusterServersMap.put(clusterServerUrl, 0L);
-				clearRedisCache();
-				
 				//重新设置心跳时间来激活当前集群
 				clusterServersMap.put(clusterServerUrl, new Date().getTime());
 				addClusterHeartBeatDelayTask();
