@@ -14604,7 +14604,7 @@ public class BaseController  extends BaseFunction{
 		    for(int i=0; i< deleteList.size(); i++)
 		    {
 		    	String deleteServerUrl = deleteList.get(i);
-				Log.debug("clearRedisCache() clear redis cache for clusterServer [" + deleteServerUrl + "]");
+				Log.info("clearRedisCache() clear redis cache for clusterServer [" + deleteServerUrl + "]");
 				clearAllRemoteStorageLocksMap(deleteServerUrl);
 				clearAllReposRedisData(deleteServerUrl);
 				clearAllOfficeRedisData(deleteServerUrl);
