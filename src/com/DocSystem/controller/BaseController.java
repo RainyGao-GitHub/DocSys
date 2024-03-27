@@ -14362,11 +14362,15 @@ public class BaseController  extends BaseFunction{
 				
 				if(redisEn)
 				{
-					//clear redis cache
-					clearRedisCache();
 					if(clusterDeployCheckGlobal(force) == true)
 					{
 						RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+						
+						//注意：进群检测通过后才能清理Office编辑相关的Redis数据， 将当前服务器标记为过期状态
+						clusterServersMap.put(clusterServerUrl, 0L);
+						clearRedisCache();
+						
+						//重新设置心跳时间来激活当前集群
 						clusterServersMap.put(clusterServerUrl, new Date().getTime());
 						addClusterHeartBeatDelayTask();
 					}
@@ -14419,11 +14423,15 @@ public class BaseController  extends BaseFunction{
 		Log.info("restartClusterServer() [" + clusterServerUrl+ "]");
 		if(redisEn)
 		{
-			//clear redis cache
-			clearRedisCache();
 			if(clusterDeployCheckGlobal(true) == true)
 			{
 				RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+				
+				//注意：进群检测通过后才能清理Office编辑相关的Redis数据， 将当前服务器标记为过期状态
+				clusterServersMap.put(clusterServerUrl, 0L);
+				clearRedisCache();
+				
+				//重新设置心跳时间来激活当前集群
 				clusterServersMap.put(clusterServerUrl, new Date().getTime());
 				addClusterHeartBeatDelayTask();
 			}
@@ -14579,7 +14587,8 @@ public class BaseController  extends BaseFunction{
 	    
 	    for(int i=0; i< deleteList.size(); i++)
 	    {
-	    	clusterServersMap.remove(deleteList.get(i));
+	    	Log.info("clearRedisCache() remove dead server:" + deleteList.get(i));
+        	clusterServersMap.remove(deleteList.get(i));
 	    }
 		
 		if(clusterServersMap.size() == 0)
