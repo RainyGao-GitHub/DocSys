@@ -14687,7 +14687,7 @@ public class BaseController  extends BaseFunction{
 	private void clearAllOfficeRedisData(String targetServerUrl) {
 		if(channel == null)
 	    {
-			Log.debug("clearAllOfficeData 非商业版本不支持Office编辑");
+			Log.info("clearAllOfficeData 非商业版本不支持Office编辑");
 			return;
 	    }
 		
