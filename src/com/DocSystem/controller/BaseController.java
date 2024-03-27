@@ -14398,11 +14398,13 @@ public class BaseController  extends BaseFunction{
 		{
 			if(redisEn)
 			{
-				//clear redis cache
+				RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
+				//将当前服务器标记为过期状态，触发清理工作
+				clusterServersMap.put(clusterServerUrl, 0L);
 				clearRedisCache();
+			
 				if(clusterDeployCheckGlobal(force) == true)
 				{
-					RMap<String, Long> clusterServersMap = redisClient.getMap("clusterServersMap");
 					clusterServersMap.put(clusterServerUrl, new Date().getTime());
 					addClusterHeartBeatDelayTask();
 				}
@@ -14599,14 +14601,21 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-		    for(int i=0; i< deleteList.size(); i++)
-		    {
-		    	String deleteServerUrl = deleteList.get(i);
-				Log.info("clearRedisCache() clear redis cache for clusterServer [" + deleteServerUrl + "]");
-				clearAllRemoteStorageLocksMap(deleteServerUrl);
-				clearAllReposRedisData(deleteServerUrl);
-				clearAllOfficeRedisData(deleteServerUrl);
-		    }
+			if(deleteList.size() == 0)
+			{
+				Log.info("clearRedisCache() 没有过期的集群服务器，无需清理");
+			}
+			else
+			{
+				for(int i=0; i< deleteList.size(); i++)
+			    {
+			    	String deleteServerUrl = deleteList.get(i);
+					Log.info("clearRedisCache() clear redis cache for clusterServer [" + deleteServerUrl + "]");
+					clearAllRemoteStorageLocksMap(deleteServerUrl);
+					clearAllReposRedisData(deleteServerUrl);
+					clearAllOfficeRedisData(deleteServerUrl);
+			    }
+			}
 		}
 		
 		return;
