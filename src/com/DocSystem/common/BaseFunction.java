@@ -1798,7 +1798,8 @@ public class BaseFunction{
 		rt.setError(buildLockFailMsg(docLock, lockType));
 		
 		long curTime = new Date().getTime();
-		docSysDebugLog("isDocForceLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 强制锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info[lockType] + "]", rt);
+		String timeStamp = DateFormat.dateTimeFormat(new Date(docLock.createTime[lockType]));
+		docSysDebugLog("isDocForceLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 在 [" + timeStamp + "] 强制锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info[lockType] + "]", rt);
 		return true;	
 	}
 	
@@ -1808,7 +1809,8 @@ public class BaseFunction{
 		if(event == null)
 		{
 			String lockTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(docLock.lockTime[lockType]);
-			msg  = "[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "]强制锁定:" + docLock.info[lockType] + "，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!";
+			String timeStamp = DateFormat.dateTimeFormat(new Date(docLock.createTime[lockType]));
+			msg  = "[" + docLock.getPath() + docLock.getName() +"]已被用户[" + docLock.locker[lockType] + "] 在 [" + timeStamp + "] 强制锁定:" + docLock.info[lockType] + "，自动解锁时间[" + lockTime + "], 如需强制解锁，请联系系统管理员!";
 			return msg;
 		}
 		
