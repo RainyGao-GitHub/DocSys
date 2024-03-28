@@ -1413,7 +1413,7 @@ public class BaseFunction{
 		Integer lockBy = reposLock.lockBy[lockType];
 		Integer curLockState = reposLock.getState();
 		Integer lockState = getLockState(lockType);
-		if(lockBy != null && lockBy != login_user.getId())
+		if(lockBy != null && lockBy.equals(login_user.getId()) == false)
 		{
 			Log.debug("unlockRepos() repos was not locked by " + login_user.getName());
 			return false;
