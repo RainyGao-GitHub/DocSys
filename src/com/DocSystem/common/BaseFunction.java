@@ -1908,7 +1908,8 @@ public class BaseFunction{
 		rt.setError(buildLockFailMsg(docLock, lockType));
 
 		long curTime = new Date().getTime();
-		docSysDebugLog("isDocLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info[lockType] + "]", rt);
+		String timeStamp = DateFormat.dateTimeFormat(new Date(docLock.createTime[lockType]));
+		docSysDebugLog("isDocLocked() [" + docLock.getPath() + docLock.getName() +"] 已被 [" + docLock.lockBy[lockType] + " " + docLock.locker[lockType] + "] 在 [" + timeStamp + "] 锁定了 " + (curTime - docLock.createTime[lockType]) + " ms, 将于 " + (docLock.lockTime[lockType] - curTime) + " ms 后自动解锁!, lockInfo[" + docLock.info[lockType] + "]", rt);
 
 		return true;	
 	}
