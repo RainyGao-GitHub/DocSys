@@ -42,7 +42,6 @@ import com.DocSystem.entity.UserGroup;
 
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
-import com.DocSystem.websocket.entity.OfficeEditorLock;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
