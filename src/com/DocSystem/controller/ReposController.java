@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.DocSystem.common.Constans;
 import org.redisson.api.RBucket;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -85,7 +86,7 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		if(systemLicenseInfoCheck(rt) == false)
+		if(systemLicenseInfoCheck(rt) == false && Constans.CHECK_LICENSE)
 		{
 			writeJson(rt, response);			
 		}
@@ -95,6 +96,7 @@ public class ReposController extends BaseController{
 		List <Repos> accessableReposList = getAccessableReposList(UserId);
 		//Log.printObject("getReposList() accessableReposList",accessableReposList);		
 		rt.setData(accessableReposList);
+		rt.setStatus("ok");
 		writeJson(rt, response);
 	}
 

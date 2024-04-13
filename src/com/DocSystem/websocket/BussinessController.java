@@ -1,17 +1,10 @@
 package com.DocSystem.websocket;
 
-import com.DocSystem.common.ActionContext;
-import com.DocSystem.common.Base64Util;
+import com.DocSystem.common.*;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.ActionType;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.CommonAction.DocType;
-import com.DocSystem.common.FileUtil;
-import com.DocSystem.common.IPUtil;
-import com.DocSystem.common.Log;
-import com.DocSystem.common.OS;
-import com.DocSystem.common.Path;
-import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.License;
 import com.DocSystem.common.entity.LongTermTask;
@@ -82,8 +75,6 @@ import util.ReturnAjax;
 @RequestMapping({"/Bussiness"})
 public class BussinessController extends a {
 
-    private static final boolean checkLicense = false;
-
     @RequestMapping({"/addRemoteDocShare.do"})
     public void addRemoteDocShare(Integer reposId, String path, String name, Integer userId, Integer isAdmin, Integer access, Integer editEn, Integer addEn, Integer deleteEn, Integer downloadEn, Integer heritable, String sharePwd, Long shareHours, HttpSession session, HttpServletRequest request, HttpServletResponse response) {
         Log.infoHead("************** addRemoteDocShare [" + path + name + "] ****************");
@@ -141,7 +132,7 @@ public class BussinessController extends a {
         Log.infoHead("************** addDocShare [" + path + name + "] ****************");
         Log.info("addDocShare reposId:" + reposId + " path:" + path + " name:" + name + " sharePwd:" + sharePwd + " shareHours:" + shareHours + " isAdmin:" + isAdmin + " access:" + access + " editEn:" + editEn + " addEn:" + addEn + " deleteEn:" + deleteEn + " downloadEn:" + downloadEn + " heritable:" + heritable);
         ReturnAjax rt = new ReturnAjax();
-        if (!systemLicenseInfoCheck(rt) && checkLicense) {
+        if (!systemLicenseInfoCheck(rt) && Constans.CHECK_LICENSE) {
             writeJson(rt, response);
             return;
         }
@@ -2391,7 +2382,7 @@ public class BussinessController extends a {
 
     private boolean RemoteStorageAccessCheck(ReturnAjax rt) {
         /* 1847 */
-        if (channel == null && checkLicense) {
+        if (channel == null && Constans.CHECK_LICENSE) {
             /* 1849 */
             docSysErrorLog("非商业版不支持远程存储！", rt);
             /* 1850 */
@@ -5958,7 +5949,7 @@ public class BussinessController extends a {
 
         }
         /* 4534 */
-        if (!systemLicenseInfoCheck(rt) && checkLicense) {
+        if (!systemLicenseInfoCheck(rt) && Constans.CHECK_LICENSE) {
             /* 4536 */
             writeJson(rt, response);
 
@@ -6122,7 +6113,7 @@ public class BussinessController extends a {
 
         }
         /* 4676 */
-        if (!systemLicenseInfoCheck(rt) && checkLicense) {
+        if (!systemLicenseInfoCheck(rt) && Constans.CHECK_LICENSE) {
             /* 4678 */
             writeJson(rt, response);
 
@@ -6396,7 +6387,7 @@ public class BussinessController extends a {
         /* 4888 */
         ReturnAjax rt = new ReturnAjax();
         /* 4889 */
-        if (docSysType == 0 && checkLicense) {
+        if (docSysType == 0 && Constans.CHECK_LICENSE) {
             /* 4891 */
             rt.setError("开源版不支持日志管理，请购买商业版授权证书！");
             /* 4892 */
@@ -6418,7 +6409,7 @@ public class BussinessController extends a {
 
         }
         /* 4904 */
-        if (!systemLicenseInfoCheck(rt) && checkLicense) {
+        if (!systemLicenseInfoCheck(rt) && Constans.CHECK_LICENSE) {
             /* 4906 */
             writeJson(rt, response);
 
@@ -6485,7 +6476,7 @@ public class BussinessController extends a {
         /* 4947 */
         ReturnAjax rt = new ReturnAjax();
         /* 4948 */
-        if (docSysType == 0 && checkLicense) {
+        if (docSysType == 0 && Constans.CHECK_LICENSE) {
             /* 4950 */
             rt.setError("开源版不支持日志管理，请购买商业版授权证书！");
             /* 4951 */
