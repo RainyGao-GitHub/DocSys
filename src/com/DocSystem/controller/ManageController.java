@@ -942,9 +942,9 @@ public class ManageController extends BaseController{
 		
 		JSONObject systemLicense = new JSONObject();
 		systemLicense.put("type", systemLicenseInfo.type);
-		systemLicense.put("usersCount", systemLicenseInfo.usersCount);
-		systemLicense.put("expireTime", systemLicenseInfo.expireTime);
-		systemLicense.put("hasLicense", systemLicenseInfo.hasLicense);
+		systemLicense.put("usersCount", null);
+		systemLicense.put("expireTime", null);
+		systemLicense.put("hasLicense", true);
 		systemLicense.put("customer", systemLicenseInfo.customer);
 		systemLicense.put("createTime", systemLicenseInfo.createTime);
 		systemLicense.put("allowedAction", systemLicenseInfo.allowedAction);
@@ -955,9 +955,9 @@ public class ManageController extends BaseController{
 		
 		JSONObject officeLicense = new JSONObject();
 		officeLicense.put("mode", officeLicenseInfo.mode);
-		officeLicense.put("usersCount", officeLicenseInfo.usersCount);
-		officeLicense.put("connections", officeLicenseInfo.connections);
-		officeLicense.put("hasLicense", officeLicenseInfo.hasLicense);
+		officeLicense.put("usersCount", null);
+		officeLicense.put("connections", null);
+		officeLicense.put("hasLicense", true);
 		
 		
 		JSONObject licenses = new JSONObject();
