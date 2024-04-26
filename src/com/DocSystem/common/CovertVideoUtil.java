@@ -6,6 +6,12 @@ import org.bytedeco.javacv.*;
 
 @Slf4j
 public class CovertVideoUtil {
+    /**
+     *
+     * @param inputPath 输入文件路径
+     * @param outputPath 输出文件路径
+     * @throws FrameRecorder.Exception 异常
+     */
     public static void convert(String inputPath, String outputPath) throws FrameRecorder.Exception {
        try {
            FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(inputPath);
