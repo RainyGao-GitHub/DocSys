@@ -18076,10 +18076,18 @@ public class BaseController  extends BaseFunction{
 			Log.debug("DBUpgrade() 数据库备份失败!");
 			return true;
 		}
+		//Copy to defaultReposRootPath
+		String defaultReposRootPath  = Path.getDefaultReposRootPath(OSType);
+		FileUtil.copyFile(backUpPath + backUpName + ".sql", defaultReposRootPath + "DBBackup/" + backUpName + ".sql", false);
 		
 		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
 		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
-		return exportDatabaseAsJson(backupTabList, backUpPath, backUpName + ".json", oldVersion, newVersion, type, url, user, pwd);
+		boolean ret = exportDatabaseAsJson(backupTabList, backUpPath, backUpName + ".json", oldVersion, newVersion, type, url, user, pwd);
+		if(ret == true)
+		{
+			FileUtil.copyFile(backUpPath + backUpName + ".json", defaultReposRootPath + "DBBackup/" + backUpName + ".json", false);
+		}
+		return ret;
 	}
 
 	protected static boolean createDBTab(String tabName, String type, String url, String user, String pwd) {
