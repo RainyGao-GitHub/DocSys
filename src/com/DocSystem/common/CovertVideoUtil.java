@@ -94,31 +94,42 @@ public class CovertVideoUtil {
         recorder.release();
     }
 
-    public static void convertVideoToMp4(String inputPath, String outputPath) throws Exception {
-        // 创建grabber来读取视频文件
-        FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(inputPath);
-        grabber.start();
-
-        // 创建recorder来输出视频文件
-        FFmpegFrameRecorder recorder = new FFmpegFrameRecorder(outputPath, grabber.getImageWidth(), grabber.getImageHeight(), grabber.getAudioChannels());
-        recorder.setFormat("mp4"); // 设置输出格式为MP4
-        recorder.setFrameRate(grabber.getFrameRate());
-        recorder.setSampleRate(grabber.getSampleRate());
-        recorder.setVideoCodec(avcodec.AV_CODEC_ID_H264); // 设置视频编解码器为H.264
-        recorder.setAudioCodec(avcodec.AV_CODEC_ID_AAC); // 设置音频编解码器为AAC
-        recorder.start();
-
-        // 读取并记录所有帧
-        Frame frame;
-        while ((frame = grabber.grab()) != null) {
-            recorder.record(frame);
-        }
-
-        // 关闭grabber和recorder
-        grabber.stop();
-        grabber.release();
-        recorder.stop();
-        recorder.release();
+    public static boolean convertVideoToMp4(String inputPath, String outputPath)
+    {
+    	boolean ret = false;
+    	try 
+    	{
+	    	// 创建grabber来读取视频文件
+	        FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(inputPath);
+	        grabber.start();
+	
+	        // 创建recorder来输出视频文件
+	        FFmpegFrameRecorder recorder = new FFmpegFrameRecorder(outputPath, grabber.getImageWidth(), grabber.getImageHeight(), grabber.getAudioChannels());
+	        recorder.setFormat("mp4"); // 设置输出格式为MP4
+	        recorder.setFrameRate(grabber.getFrameRate());
+	        recorder.setSampleRate(grabber.getSampleRate());
+	        recorder.setVideoCodec(avcodec.AV_CODEC_ID_H264); // 设置视频编解码器为H.264
+	        recorder.setAudioCodec(avcodec.AV_CODEC_ID_AAC); // 设置音频编解码器为AAC
+	        recorder.start();
+	
+	        // 读取并记录所有帧
+	        Frame frame;
+	        while ((frame = grabber.grab()) != null) {
+	            recorder.record(frame);
+	        }
+	
+	        // 关闭grabber和recorder
+	        grabber.stop();
+	        grabber.release();
+	        recorder.stop();
+	        recorder.release();
+	        ret = true;
+    	} 
+    	catch (Exception e) 
+    	{
+    		Log.error(e);
+	    }
+    	return ret;
     }
 
     /**

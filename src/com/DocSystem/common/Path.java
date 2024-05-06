@@ -263,6 +263,12 @@ public class Path {
 		return userTmpDir;
 	}
 	
+	public static String getReposTmpPathForVideoPreview(Repos repos, String path, String name) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/videoPreview/" +  path.hashCode() + "_" + name + "/";
+		FileUtil.createDir(userTmpDir);
+		return userTmpDir;
+	}
+	
 	public static String getReposTmpPathForTextEdit(Repos repos, User login_user, boolean isRealDoc) {
 		if(isRealDoc)
 		{
