@@ -18078,14 +18078,16 @@ public class BaseController  extends BaseFunction{
 		}
 		//Copy to defaultReposRootPath
 		String defaultReposRootPath  = Path.getDefaultReposRootPath(OSType);
-		FileUtil.copyFile(backUpPath + backUpName + ".sql", defaultReposRootPath + "DBBackup/" + backUpName + ".sql", false);
+		
+		String curTimeStr = DateFormat.dateTimeFormat2(new Date());
+		FileUtil.copyFile(backUpPath + backUpName + ".sql", defaultReposRootPath + "DBBackup/" + curTimeStr + "/" + backUpName + ".sql", false);
 		
 		Integer newVersion = getVersionFromFile(docSysWebPath, "version");
 		Integer oldVersion = getVersionFromFile(docSysIniPath , "version");
 		boolean ret = exportDatabaseAsJson(backupTabList, backUpPath, backUpName + ".json", oldVersion, newVersion, type, url, user, pwd);
 		if(ret == true)
 		{
-			FileUtil.copyFile(backUpPath + backUpName + ".json", defaultReposRootPath + "DBBackup/" + backUpName + ".json", false);
+			FileUtil.copyFile(backUpPath + backUpName + ".json", defaultReposRootPath + "DBBackup/"  + curTimeStr + "/" + backUpName + ".json", false);
 		}
 		return ret;
 	}
