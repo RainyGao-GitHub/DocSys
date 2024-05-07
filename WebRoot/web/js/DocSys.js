@@ -272,6 +272,9 @@ function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 
 function getDocFileLinkForPreview(docInfo, successCallback, errorCallback, urlStyle)
 {
+	//set videoConvertType
+	docInfo.videoConvertType = getVideoConvert(docInfo.fileSuffix);
+	
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
 		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, 1);
@@ -313,6 +316,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, 
             shareId: docInfo.shareId,
             urlStyle: urlStyle,
             forPreview: forPreview,
+            videoConvertType: docInfo.videoConvertType,
         },
         success : function (ret) {
         	console.log("getDocFileLinkBasic ret",ret);
@@ -369,6 +373,7 @@ function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, fo
             shareId: docInfo.shareId,
             urlStyle: urlStyle,
             forPreview: forPreview,
+            videoConvertType: docInfo.videoConvertType,
         },
         success : function (ret) {
         	console.log("getZipDocFileLink ret",ret);
@@ -1069,6 +1074,33 @@ function isVideo(suffix)
 	}
 	
 	return true;
+}
+
+function getVideoConvert(suffix)
+{
+	if(!suffix || suffix == "")
+	{
+		return 0;
+	}
+	var convertTypeMap = {
+			avi : 1,
+			mov : 0,
+			mpeg : 1,
+			mpg : 1,
+			mp4 : 0,
+			rmvb : 1,
+			asf : 1,
+			flv : 1,
+			ogg : 1,
+	};
+	
+	var type = convertTypeMap[suffix];
+	if ( undefined == type )
+	{
+		return 0;
+	}
+	
+	return type;
 }
 
 function isAudio(suffix)
@@ -1868,7 +1900,9 @@ function showVideoWithDPlayer(objId, fileLink)
 }
 
 function getVideoTypeByFileSuffix(suffix)
-{
+{	
+	return "video/mp4";
+	
 	if(!suffix || suffix == "")
 	{
 		return "video/mp4";

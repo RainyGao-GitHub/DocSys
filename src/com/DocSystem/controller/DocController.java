@@ -2668,7 +2668,8 @@ public class DocController extends BaseController{
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
 		Log.infoHead("************** downloadVideo ****************");
-		Log.info("downloadVideo reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn + " disposition:" + disposition);
+		Log.info("downloadVideo reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn 
+				+ " convertType:" + convertType + " disposition:" + disposition);
 		
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -4263,6 +4264,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			String urlStyle,
 			Integer forPreview,
+			Integer videoConvertType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("*************** getDocFileLink [" + path + name + "] ********************");		
@@ -4302,7 +4304,11 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
 		//如果是用于预览目的则不需要进行下载权限检查
-		if(forPreview == null || forPreview != 1)
+		if(forPreview == null)
+		{
+			forPreview = 0;
+		}
+		if(forPreview != 1)
 		{
 			//检查用户是否有权限下载文件
 			if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
@@ -4321,6 +4327,7 @@ public class DocController extends BaseController{
 			historyType = HistoryType_RealDoc;
 		}
 		
+		boolean isOriginalDoc = true;
 		Doc tmpDoc = doc;
 		if(commitId == null)
 		{
@@ -4340,6 +4347,7 @@ public class DocController extends BaseController{
 		}
 		else
 		{
+			isOriginalDoc = false;
 			Doc remoteDoc = null;
 			if(isFSM(repos))
 			{
@@ -4389,8 +4397,16 @@ public class DocController extends BaseController{
 		}
 		
 		String authCode = addDocDownloadAuthCode(reposAccess, null);
-		
+
 		//TODO: 如果是视频文件，用于preview的情况下，需要进行转码，因此fileLink可能不是指向原始文件的，前端需要告知视频转换类型
+		if(forPreview == 1)
+		{
+			if(videoConvertType != null && videoConvertType == 1)
+			{
+				tmpDoc = convertVideoToMP4(repos, tmpDoc);
+			}
+		}
+		
 		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);
 		if(fileLink == null)
 		{
@@ -4404,6 +4420,22 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	private Doc convertVideoToMP4(Repos repos, Doc doc) 
+	{
+		//TODO: 视频预览文件统一放到指定路径下
+		String imgPreviewPath = Path.getReposTmpPathForVideoPreview(repos, doc.getPath(), doc.getName());
+		Doc newDoc = generateVideoWithConvertType(doc.getLocalRootPath() + doc.getPath(), doc.getName(), imgPreviewPath, 1);
+		if(newDoc == null)
+		{
+			return doc;
+		}
+		
+		doc.setLocalRootPath(newDoc.getLocalRootPath());
+		doc.setPath("");
+		doc.setName(newDoc.getName());
+		return doc;
+	}
+
 	@RequestMapping("/getDocFileLinkRS.do")
 	public void getDocFileLink(Integer reposId, String path, String name, 
 			String commitId, Integer needDeletedEntry, Integer historyType,
