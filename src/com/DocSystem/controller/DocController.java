@@ -2660,7 +2660,7 @@ public class DocController extends BaseController{
 	}
 	
 	//视频文件获取接口: 可以通过convertType指定转换类型或者直接读取
-	@RequestMapping(value="/downloadVideo/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}/{encryptEn}/{resolutionLevel}", method=RequestMethod.GET)
+	@RequestMapping(value="/downloadVideo/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}/{encryptEn}/{convertType}", method=RequestMethod.GET)
 	public void downloadVideo(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId, @PathVariable("encryptEn") Integer encryptEn,
 			 @PathVariable("convertType") Integer convertType,
@@ -4244,6 +4244,8 @@ public class DocController extends BaseController{
 		checkAndExtractEntryFromCompressDoc(repos, tempRootDoc, tmpDoc);
 		
 		String authCode = addDocDownloadAuthCode(reposAccess, null);
+		
+		//TODO: 如果是视频文件，用于preview的情况下，需要进行转码，因此fileLink可能不是指向原始文件的，前端需要告知视频转换类型
 		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 0, rt);
 		if(fileLink == null)
 		{
@@ -4387,6 +4389,8 @@ public class DocController extends BaseController{
 		}
 		
 		String authCode = addDocDownloadAuthCode(reposAccess, null);
+		
+		//TODO: 如果是视频文件，用于preview的情况下，需要进行转码，因此fileLink可能不是指向原始文件的，前端需要告知视频转换类型
 		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);
 		if(fileLink == null)
 		{

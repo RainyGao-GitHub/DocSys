@@ -37,7 +37,7 @@ public class CovertVideoUtil {
        }
     }
     
-    public static void convertFormat(String inputPath, String outputPath) throws Exception {
+    public static void convertVideoToAvi(String inputPath, String outputPath) throws Exception {
         // 创建grabber来读取视频文件
         FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(inputPath);
         grabber.start();
@@ -138,9 +138,8 @@ public class CovertVideoUtil {
      * @throws FrameRecorder.Exception
      */
     public static void main(String[] args) throws Exception {
-    	//convertFormat("C:/N-20N3PF2E7EB0-Data/ragao/Desktop/IMG_7509.MOV", "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/IMG_7509.avi");
-    	//convertMovToMp4("C:/N-20N3PF2E7EB0-Data/ragao/Desktop/IMG_7509.MOV", "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/IMG_7509.mp4");
-        convertVideoToMp4("C:/N-20N3PF2E7EB0-Data/ragao/Desktop/IMG_7509.MOV", "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/mov.mp4");
+    	convertVideoToAvi("C:/N-20N3PF2E7EB0-Data/ragao/Desktop/IMG_7509.MOV", "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/IMG_7509.avi");
+    	convertVideoToMp4("C:/N-20N3PF2E7EB0-Data/ragao/Desktop/IMG_7509.MOV", "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/mov.mp4");
         convertVideoToMp4("C:/N-20N3PF2E7EB0-Data/ragao/Desktop/IMG_7509.avi", "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/avi.mp4");
     }
 }

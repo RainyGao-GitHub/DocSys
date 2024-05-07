@@ -860,6 +860,76 @@ function buildDocImagePreviewLink(downloadDocInfo, resolutionLevel, urlStyle)
 	return docLink;
 }
 
+function buildDocVideoPreviewLink(downloadDocInfo, convertType, urlStyle)
+{	
+	console.log("buildDocVideoPreviewLink downloadDocInfo:", downloadDocInfo);
+	var name = encodeURI(downloadDocInfo.name);
+   	var path = encodeURI(downloadDocInfo.path);
+   	var targetName = encodeURI(downloadDocInfo.targetName);
+   	var targetPath = encodeURI(downloadDocInfo.targetPath);
+   	
+   	if(urlStyle && urlStyle == "REST")
+   	{
+   		var docRestLink =  "/DocSystem/Doc/downloadVideo/" + downloadDocInfo.vid + "/" + path + "/" + name + "/" +targetPath+ "/"+targetName;
+   		if(downloadDocInfo.authCode)
+   		{
+   			docRestLink += "/" + downloadDocInfo.authCode;
+   		}
+   		else
+   		{
+   			docRestLink += "/0";
+   		}
+   		if(downloadDocInfo.shareId)
+   		{
+   			docRestLink +=  "/"  + downloadDocInfo.shareId;
+   		}
+   		else
+   		{
+   			docRestLink += "/0";
+   		}
+   		if(downloadDocInfo.encryptEn)
+   		{
+   			docRestLink +=  "/"  + downloadDocInfo.encryptEn;
+   		}
+   		else
+   		{
+   			docRestLink += "/0";   			
+   		}
+   		if(convertType)
+   		{
+   			docRestLink +=  "/"  + convertType;
+   		}
+   		else
+   		{
+   			docRestLink += "/0"; 
+   		}
+   		return docRestLink;
+   	}
+   	
+	var docLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDocInfo.vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName;
+	if(downloadDocInfo.authCode)
+   	{
+		docLink += "&authCode=" + downloadDocInfo.authCode;
+   	}
+	if(downloadDocInfo.shareId)
+	{
+		docLink += "&shareId="+downloadDocInfo.shareId;
+	}
+	if(downloadDocInfo.deleteFlag)
+	{
+		docLink += "&deleteFlag="+ downloadDocInfo.deleteFlag;	
+	}
+	if(downloadDocInfo.encryptEn)
+	{
+		docLink += "&encryptEn="+ downloadDocInfo.encryptEn;	
+	}
+	if(convertType)
+	{
+		docLink += "&convertType="+ convertType;	
+	}	
+	return docLink;
+}
+
 function getDocImagePreviewLink(docInfo, resolutionLevel, urlStyle)
 {
 	var docDataEx = docInfo.dataEx;
@@ -870,6 +940,18 @@ function getDocImagePreviewLink(docInfo, resolutionLevel, urlStyle)
 	
 	docDataEx.vid = docInfo.vid;
 	return buildDocImagePreviewLink(docDataEx, resolutionLevel, urlStyle);
+}
+
+function getDocVideoPreviewLink(docInfo, convertType, urlStyle)
+{
+	var docDataEx = docInfo.dataEx;
+	if(!docDataEx || docDataEx == null)	//表明不是文件，无法预览
+	{
+		return null;
+	}
+	
+	docDataEx.vid = docInfo.vid;
+	return buildDocVideoPreviewLink(docDataEx, convertType, urlStyle);
 }
 
 //文件类型获取与判断接口
