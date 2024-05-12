@@ -4339,7 +4339,6 @@ public class DocController extends BaseController{
 			historyType = HistoryType_RealDoc;
 		}
 		
-		boolean isOriginalDoc = true;
 		Doc tmpDoc = doc;
 		if(commitId == null)
 		{
@@ -4359,7 +4358,6 @@ public class DocController extends BaseController{
 		}
 		else
 		{
-			isOriginalDoc = false;
 			Doc remoteDoc = null;
 			if(isFSM(repos))
 			{
@@ -4410,7 +4408,7 @@ public class DocController extends BaseController{
 		
 		String authCode = addDocDownloadAuthCode(reposAccess, null);
 
-		//TODO: 如果是视频文件，用于preview的情况下，需要进行转码，因此fileLink可能不是指向原始文件的，前端需要告知视频转换类型
+		//TODO: 如果是视频文件，用于preview的情况下，需要进行转码，因此fileLink可能不是指向原始文件的，前端需要告知视频转换类型，否则默认就是mp4
 		if(forPreview == 1)
 		{
 			if(videoConvertType != null && videoConvertType == 1)
