@@ -2813,10 +2813,22 @@ public class DocController extends BaseController{
 		switch(convertType)
 		{
 		case 1:	//Convert to mp4
-			if(CovertVideoUtil.convertVideoToMp4(localFilePath + name, imgPreviewPath + convertType + "_" + name) == false)
+			String fileSuffix = FileUtil.getFileSuffix(name);
+			if(fileSuffix == null || fileSuffix.isEmpty())
 			{
 				return null;
-			}			
+			}
+			if(fileSuffix.equals("mp4") || fileSuffix.equals("mov"))
+			{
+				FileUtil.copyFile(localFilePath + name, imgPreviewPath + convertType + "_" + name, false);
+			}
+			else
+			{
+				if(CovertVideoUtil.convertVideoToMp4(localFilePath + name, imgPreviewPath + convertType + "_" + name) == false)
+				{
+					return null;
+				}			
+			}
 			break;
 		default:
 			return null;
