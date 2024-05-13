@@ -1038,6 +1038,7 @@ function isPicture(suffix)
 			gif : true,
 			bmp : true,
 			mpg : true,
+			jfif : true,
 	};
 	
 	var type = fileTypeMap[suffix];
@@ -1381,7 +1382,8 @@ function getDiyFileIconType(name)
 	        jpeg 	: 	"picture",
 			png 	: 	"picture",
 	    	gif 	: 	"picture",
-			mp3 	: 	"video",
+	    	jfif 	: 	"picture",
+	    	mp3 	: 	"video",
 			mp4 	: 	"video",
 			mpg 	: 	"video",
 			mkv 	: 	"video",
