@@ -105,6 +105,7 @@ import com.DocSystem.entity.OfficeEditLock;
 import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposExtConfigDigest;
+import com.DocSystem.entity.SyncSourceLock;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -235,6 +236,9 @@ public class BaseFunction{
 	//远程存储服务器锁HashMap
 	protected static ConcurrentHashMap<String, RemoteStorageLock> remoteStorageLocksMap = new ConcurrentHashMap<String, RemoteStorageLock>();
 
+	//同步资源同步锁HashMap
+	protected static ConcurrentHashMap<String, SyncSourceLock> syncSourceLocksMap = new ConcurrentHashMap<String, SyncSourceLock>();
+	
 	//Office协同编辑打开的文件[dockey , docPath]
 	public static ConcurrentHashMap<String, String> openedDocsMap = new ConcurrentHashMap<String, String>();
 
