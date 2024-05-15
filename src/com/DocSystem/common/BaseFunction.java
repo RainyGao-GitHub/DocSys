@@ -2170,8 +2170,8 @@ public class BaseFunction{
 		return true;
 	}
 	
-	//*** remoteStorageLocksMap ***
-	//unlockRemoteStorage not need to executed with synclock, because it already is thread safe 
+	//*** remoteStorageLocksMap ***	
+	//unlockRemoteStorage need not to be executed with synclock, because it is already in thread safe 
 	protected boolean unlockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) 
 	{
 		Log.debug("unlockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] Start for [" + doc.getPath() + doc.getName() + "]");
@@ -2251,6 +2251,217 @@ public class BaseFunction{
 		return (RemoteStorageLock) remoteStorageLocksMap.get(remoteStorageName);
 	}
     
+	//*** syncSourceLocksMap ***
+	public boolean lockSyncSource(
+			String sourceName, String lockName, String lockInfo,
+			long lockDuration, 	//锁定时长(超过该时长将自动解锁)
+			Object synclock, 	//线程锁对象
+			int retryCount, int retrySleepTime, //同步锁获取失败的重试次数与重试睡眠时间（如果重试次数设置为0表示取锁失败直接返回）
+			User accessUser, Doc doc)
+	{
+		SyncSourceLock lock = tryLockSyncSource(sourceName, lockName, lockInfo, lockDuration, synclock, retryCount, retrySleepTime, accessUser, doc);
+		if(lock != null)
+		{
+			//Log.info("lockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] lock success for [" + doc.getPath() + doc.getName() + "]");
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private SyncSourceLock tryLockSyncSource(String sourceName, String lockName, String lockInfo, 
+			long lockDuration, Object synclock, int retryCount, int retrySleepTime, 
+			User accessUser, Doc doc) 
+	{
+		//Log.debug("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] Start");
+
+		SyncSourceLock newLock = null;
+		SyncSourceLock curLock = null;
+		
+		int count = 0;
+		for(;;)
+		{
+			synchronized(synclock)
+			{
+				redisSyncLockEx(lockName ,lockInfo);
+				
+				curLock = getSyncSourceLock(lockName);
+				if(curLock == null)
+				{
+					//Log.debug("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] not locked");
+					curLock = new SyncSourceLock();
+					curLock.state = 1;
+					curLock.sourceName = sourceName;
+					curLock.name = lockName;
+					curLock.lockBy = accessUser.getId();
+					curLock.locker = accessUser.getName();
+					curLock.createTime = new Date().getTime();
+					curLock.lockTime = curLock.createTime + lockDuration;
+					curLock.synclock = new SyncLock();
+					curLock.server = clusterServerUrl;
+					curLock.info = lockInfo;
+					addSyncSourceLock(lockName, curLock);
+				
+					newLock = curLock;
+				}
+				else
+				{
+					//check if it is locked
+					if(curLock.state == 0)
+					{
+						//Log.debug("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] not locked");
+						curLock.state = 1;
+						curLock.lockBy = accessUser.getId();
+						curLock.locker = accessUser.getName();
+						curLock.createTime = new Date().getTime();
+						curLock.lockTime = curLock.createTime + lockDuration;
+						curLock.server = clusterServerUrl;
+						curLock.info = lockInfo;
+
+						newLock = curLock;
+						
+						updateSyncSourceLock(lockName, curLock);
+					}
+					else
+					{
+						long curTime = new Date().getTime();
+						if(curLock.lockTime < curTime)
+						{
+							Log.info("tryLockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "] is expired");
+							curLock.state = 1;
+							curLock.lockBy = accessUser.getId();
+							curLock.locker = accessUser.getName();
+							curLock.createTime = new Date().getTime();
+							curLock.lockTime = curLock.createTime + lockDuration;
+							curLock.server = clusterServerUrl;
+							curLock.info = lockInfo;
+							
+							newLock = curLock;
+							updateSyncSourceLock(lockName, curLock);
+						}
+						else
+						{
+							String timeStamp = DateFormat.dateTimeFormat(new Date(curLock.createTime));
+							String detail = "[" + timeStamp + "] " + curLock.info + "]";
+							Log.debug("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] state:" + curLock.state + " 详情: " + detail);
+							long lockedTime = curTime - curLock.createTime;
+							long leftTime = curLock.lockTime - curTime;
+							Log.debug( "[" + lockName + "] of [" + sourceName + "]已被 [" + curLock.locker + "] 锁定了 " + lockedTime  + " ms, 将于 " + leftTime + " ms 后自动解锁\n");
+						}
+					}
+				}
+				
+				redisSyncUnlockEx(lockName, lockInfo, synclock);
+			}
+		
+			if(newLock != null) 
+			{
+				Log.info("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] Lock success for [" + doc.getPath() + doc.getName() + "]");	
+				return newLock;
+			}
+			
+			//wait for wake up or timeout
+			count++;
+			if(count >= retryCount)
+			{
+				Log.info("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] lock failed with max retries:" + retryCount + " for [" + doc.getPath() + doc.getName() + "]");
+				break;
+			}
+			
+			Log.info("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] lock failed " + count + " times for [" + doc.getPath() + doc.getName() + "] , sleep " + retrySleepTime + " ms and try again");
+			
+			synchronized(curLock.synclock)
+			{
+				try {
+					curLock.synclock.wait(retrySleepTime);
+				} catch (InterruptedException e) {
+					errorLog(e);
+				}
+			}
+		}
+		return null;
+	}
+
+	//unlockSyncSource need not to be executed with synclock, because it is already in thread safe 
+	protected boolean unlockSyncSource(String lockName, User accessUser, Doc doc)
+	{
+		Log.debug("unlockSyncSource() syncSourceLock [" + lockName + "] Start for [" + doc.getPath() + doc.getName() + "]");
+		SyncSourceLock curLock = getSyncSourceLock(lockName);
+		if(curLock == null)
+		{
+			Log.debug("unlockSyncSource() syncSourceLock [" + lockName + "] was not locked");
+			return true;
+		}
+		
+		if(curLock.lockBy == null || curLock.lockBy.equals(accessUser.getId()))
+		{
+			curLock.state = 0;
+			updateSyncSourceLock(lockName, curLock);
+			
+			//wakeup all pendding thread for this lock
+			Log.info("unlockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "] for [" + doc.getPath() + doc.getName() + "], wakeup all sleep threads");
+			synchronized(curLock.synclock)
+			{
+				curLock.synclock.notifyAll();
+			}
+			Log.debug("unlockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "] unlock success for [" + doc.getPath() + doc.getName() + "]");
+			return true;
+		}
+		
+		Log.info("unlockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "] unlock failed " + " for [" + doc.getPath() + doc.getName() + "] (lockBy:" + curLock.lockBy + " unlock user:" + accessUser.getId());
+		return false;
+	}
+
+	protected void addSyncSourceLock(String lockName, SyncSourceLock lock) {
+		if(redisEn)
+		{
+			addSyncSourceLockRedis(lockName, lock);
+		}
+		else
+		{
+			addSyncSourceLockLocal(lockName, lock);
+		}
+	}
+	
+	private void addSyncSourceLockLocal(String lockName, SyncSourceLock lock) {
+		syncSourceLocksMap.put(lockName, lock);
+	}
+	
+	private void addSyncSourceLockRedis(String lockName, SyncSourceLock lock) {
+		RMap<Object, Object>  syncSourceLocksMap = redisClient.getMap("syncSourceLocksMap");
+		syncSourceLocksMap.put(lockName, lock);
+	}
+
+	protected void updateSyncSourceLock(String lockName, SyncSourceLock lock) {
+		if(redisEn)
+		{
+			updateSyncSourceLockRedis(lockName, lock);
+		}
+	}
+
+	private void updateSyncSourceLockRedis(String lockName, SyncSourceLock lock) {
+		RMap<Object, Object>  syncSourceLocksMap = redisClient.getMap("syncSourceLocksMap");
+		syncSourceLocksMap.put(lockName, lock);
+	}
+	
+	protected SyncSourceLock getSyncSourceLock(String lockName) {
+		if(redisEn)
+		{
+			return getSyncSourceLockRedis(lockName);
+		}
+		
+		return getSyncSourceLockLocal(lockName);
+	}
+
+	private SyncSourceLock getSyncSourceLockLocal(String lockName) {
+		return syncSourceLocksMap.get(lockName);
+	}
+	
+	private SyncSourceLock getSyncSourceLockRedis(String lockName) {
+		RMap<Object, Object>  syncSourceLocksMap = redisClient.getMap("syncSourceLocksMap");
+		return (SyncSourceLock) syncSourceLocksMap.get(lockName);
+	}
+	
 	private static void initSystemLicenseInfo() {
 		Log.debug("initSystemLicenseInfo() ");
 		//Default systemLicenseInfo
