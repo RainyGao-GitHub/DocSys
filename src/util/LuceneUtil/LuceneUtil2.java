@@ -2120,9 +2120,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addCommitLogIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		String sourceName = "CommitLogIndexLib";
-		//TODO: 最多锁定2分钟，最多重试3次每次3秒
-		if(false == lockSyncSource(sourceName, lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		if(false == lockSyncSource("CommitLog", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
 		{
 			return false;
 		}
@@ -2144,9 +2142,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 updateCommitLogIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		String sourceName = "CommitLogIndexLib";
-		//TODO: 最多锁定2分钟，最多重试3次每次3秒
-		if(false == lockSyncSource(sourceName, lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		if(false == lockSyncSource("CommitLog", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
 		{
 			return false;
 		}
@@ -2169,9 +2165,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 deleteCommitLogIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		String sourceName = "CommitLogIndexLib";
-		//TODO: 最多锁定2分钟，最多重试3次每次3秒
-		if(false == lockSyncSource(sourceName, lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		if(false == lockSyncSource("CommitLog", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
 		{
 			return false;
 		}
@@ -2193,15 +2187,14 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 deleteIndexForCommitEntry synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		synchronized(synclock)
-    	{
-    		redisSyncLockEx(lockName, lockInfo);
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, null))
+		{
+			return false;
+		}
     	
-    		ret = deleteIndexForCommitEntryBasic(entry.id, indexLib);
+    	ret = deleteIndexForCommitEntryBasic(entry.id, indexLib);
 			
-			redisSyncUnlockEx(lockName, lockInfo, synclock);
-    	}
-		
+    	unlockSyncSource(lockName, systemUser, null);
 		return ret;
     }
 	
@@ -2216,15 +2209,14 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addIndexForCommitEntry synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		synchronized(synclock)
-    	{
-    		redisSyncLockEx(lockName, lockInfo);
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, null))
+		{
+			return false;
+		}
     	
-    		ret = addIndexForCommitEntryBasic(entry, indexLib);
+    	ret = addIndexForCommitEntryBasic(entry, indexLib);
 			
-			redisSyncUnlockEx(lockName, lockInfo, synclock);
-    	}
-		
+    	unlockSyncSource(lockName, systemUser, null);
 		return ret;
     }
 	
@@ -2239,39 +2231,39 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		synchronized(synclock)
-    	{
-    		redisSyncLockEx(lockName, lockInfo);
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, null))
+		{
+			return false;
+		}
     		
-    		//使用共用的commitEntry来减少内存的占用
-    		CommitEntry commitEntry = new CommitEntry();
-			commitEntry.startTime = action.startTime;
-			commitEntry.userId = action.user.getId();
-			commitEntry.userName = action.user.getName();
-			commitEntry.commitId = action.commitId;
-			commitEntry.commitMsg = action.commitMsg;
-			commitEntry.commitUsers = action.commitUser;
-			commitEntry.commitAction = action.event;
-			commitEntry.reposId = repos.getId();
-			commitEntry.reposName = repos.getName();
-			
-    		for(CommitEntry entry: commitEntryList)
-    		{
-    			commitEntry.realCommitAction = entry.realCommitAction;
-    			commitEntry.docId = entry.docId;
-    			commitEntry.path = entry.path;
-    			commitEntry.name = entry.name;
-    			commitEntry.entryType = entry.entryType;
-    			commitEntry.size = entry.size;
-    			commitEntry.latestEditTime = entry.latestEditTime;
-    			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
-    			addIndexForCommitEntryBasic(commitEntry, indexLib);
-    		}
-    		
-			redisSyncUnlockEx(lockName, lockInfo, synclock);
-    	}
+		//使用共用的commitEntry来减少内存的占用
+		CommitEntry commitEntry = new CommitEntry();
+		commitEntry.startTime = action.startTime;
+		commitEntry.userId = action.user.getId();
+		commitEntry.userName = action.user.getName();
+		commitEntry.commitId = action.commitId;
+		commitEntry.commitMsg = action.commitMsg;
+		commitEntry.commitUsers = action.commitUser;
+		commitEntry.commitAction = action.event;
+		commitEntry.reposId = repos.getId();
+		commitEntry.reposName = repos.getName();
 		
-		ret = true;
+		for(CommitEntry entry: commitEntryList)
+		{
+			commitEntry.realCommitAction = entry.realCommitAction;
+			commitEntry.docId = entry.docId;
+			commitEntry.path = entry.path;
+			commitEntry.name = entry.name;
+			commitEntry.entryType = entry.entryType;
+			commitEntry.size = entry.size;
+			commitEntry.latestEditTime = entry.latestEditTime;
+			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+			addIndexForCommitEntryBasic(commitEntry, indexLib);
+		}
+    		
+        unlockSyncSource(lockName, systemUser, null);
+		
+        ret = true;
 		return ret;
 	}
 	
@@ -2287,38 +2279,38 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		synchronized(synclock)
-    	{
-    		redisSyncLockEx(lockName, lockInfo);
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, null))
+		{
+			return false;
+		}
     	
-    		//使用共用的commitEntry来减少内存的占用
-    		CommitEntry commitEntry = new CommitEntry();
-			commitEntry.startTime = context.startTime;
-			commitEntry.userId = context.user.getId();
-			commitEntry.userName = context.user.getName();
-			commitEntry.commitId = context.commitId;
-			commitEntry.commitMsg = context.commitMsg;
-			commitEntry.commitUsers = context.commitUser;
-			commitEntry.commitAction = context.event;
-			commitEntry.reposId = repos.getId();
-			commitEntry.reposName = repos.getName();
-			
-    		for(CommitEntry entry: commitEntryList)
-    		{
-    			commitEntry.realCommitAction = entry.realCommitAction;
-    			commitEntry.docId = entry.docId;
-    			commitEntry.path = entry.path;
-    			commitEntry.name = entry.name;
-    			commitEntry.entryType = entry.entryType;
-    			commitEntry.size = entry.size;
-    			commitEntry.latestEditTime = entry.latestEditTime;
-    			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
-    			addIndexForCommitEntryBasic(commitEntry, indexLib);
-    		}
-    		
-			redisSyncUnlockEx(lockName, lockInfo, synclock);
-    	}
+		//使用共用的commitEntry来减少内存的占用
+		CommitEntry commitEntry = new CommitEntry();
+		commitEntry.startTime = context.startTime;
+		commitEntry.userId = context.user.getId();
+		commitEntry.userName = context.user.getName();
+		commitEntry.commitId = context.commitId;
+		commitEntry.commitMsg = context.commitMsg;
+		commitEntry.commitUsers = context.commitUser;
+		commitEntry.commitAction = context.event;
+		commitEntry.reposId = repos.getId();
+		commitEntry.reposName = repos.getName();
 		
+		for(CommitEntry entry: commitEntryList)
+		{
+			commitEntry.realCommitAction = entry.realCommitAction;
+			commitEntry.docId = entry.docId;
+			commitEntry.path = entry.path;
+			commitEntry.name = entry.name;
+			commitEntry.entryType = entry.entryType;
+			commitEntry.size = entry.size;
+			commitEntry.latestEditTime = entry.latestEditTime;
+			commitEntry.id = buildUniqueIdForCommitEntry(commitEntry);
+			addIndexForCommitEntryBasic(commitEntry, indexLib);
+		}
+    		
+        unlockSyncSource(lockName, systemUser, null);
+        
 		ret = true;
 		return ret;
 	}
