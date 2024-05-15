@@ -167,6 +167,7 @@ import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.entity.Role;
+import com.DocSystem.entity.SyncSourceLock;
 import com.DocSystem.entity.SysConfig;
 import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
@@ -14601,6 +14602,7 @@ public class BaseController  extends BaseFunction{
 		{
 			Log.debug("clearRedisCache() clusterServersMap is empty, do clean all redis data");
 			clearGlobalRedisData();
+			clearAllSyncSourceLocksMap(null);
 			clearAllRemoteStorageLocksMap(null);
 			clearAllReposRedisData(null);
 			clearAllOfficeRedisData(null);
@@ -14617,6 +14619,7 @@ public class BaseController  extends BaseFunction{
 			    {
 			    	String deleteServerUrl = deleteList.get(i);
 					Log.info("clearRedisCache() clear redis cache for clusterServer [" + deleteServerUrl + "]");
+					clearAllSyncSourceLocksMap(deleteServerUrl);
 					clearAllRemoteStorageLocksMap(deleteServerUrl);
 					clearAllReposRedisData(deleteServerUrl);
 					clearAllOfficeRedisData(deleteServerUrl);
@@ -14708,7 +14711,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	private void clearAllRemoteStorageLocksMap(String targetServerUrl) {
-		//遍历reposLocksMap, and unlock the locks locked by serverUrl
+		//遍历remoteStorageLocksMap, and unlock the locks locked by serverUrl
 		RMap<Object, Object> remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
 		List<RemoteStorageLock> deleteList = new ArrayList<RemoteStorageLock>();
     	try {
@@ -14744,6 +14747,48 @@ public class BaseController  extends BaseFunction{
 	        	RemoteStorageLock remoteStorageLock = deleteList.get(i);
 	        	remoteStorageLocksMap.remove(remoteStorageLock.name);
 	        	//redisSyncUnlock("remoteStorageSyncLock" + remoteStorageLock.name, "clearAllRemoteStorageLocksMap()");
+	        }
+        } catch (Exception e) {
+            errorLog(e);
+        }
+	}
+	
+	private void clearAllSyncSourceLocksMap(String targetServerUrl) {
+		//遍历syncSourceLocksMap, and unlock the locks locked by serverUrl
+		RMap<Object, Object> syncSourceLocksMap = redisClient.getMap("syncSourceLocksMap");
+		List<SyncSourceLock> deleteList = new ArrayList<SyncSourceLock>();
+    	try {
+	        if (syncSourceLocksMap != null) {
+				Iterator<Entry<Object, Object>> iterator = syncSourceLocksMap.entrySet().iterator();
+		        while (iterator.hasNext()) 
+		        {
+		        	Entry<Object, Object> entry = iterator.next();
+		            if(entry != null)
+		        	{
+		            	SyncSourceLock lock = (SyncSourceLock) entry.getValue();
+		            	Integer curState = lock.state;
+	            		Log.debug("clearAllSyncSourceLocksMap() lock[" + lock.name + "] state:" + curState);
+		            	if(curState == 0)
+		            	{
+		            		deleteList.add(lock);
+		            	}
+		            	else
+		            	{
+		            		
+		            		if(targetServerUrl == null || lock.server == null || lock.server.equals(targetServerUrl))
+		            		{
+		            			deleteList.add(lock);
+		            		}
+		            	}
+		        	}
+		        }
+	        }	        
+	        
+	        //remove the remoteStorageLock
+	        for(int i=0; i<deleteList.size(); i++)
+	        {
+	        	SyncSourceLock remoteStorageLock = deleteList.get(i);
+	        	syncSourceLocksMap.remove(remoteStorageLock.name);
 	        }
         } catch (Exception e) {
             errorLog(e);
