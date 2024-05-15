@@ -12561,7 +12561,7 @@ public class BaseController  extends BaseFunction{
 		Date date1 = new Date();
 
 		//TODO: 3分钟内取不到锁则放弃提交版本，表明资源已被长时间占用或异常
-		if(false == lockSyncSource("SvnCommit", lockName, lockInfo, 2*60*60*1000, reposData.syncLockForSvnCommit, 3*1000, 60, systemUser, doc))
+		if(false == lockSyncSource("SvnCommit", lockName, lockInfo, 2*60*60*1000, reposData.syncLockForSvnCommit, 3*1000, 60, systemUser))
 		{
 			return null;
 		}
@@ -12575,7 +12575,7 @@ public class BaseController  extends BaseFunction{
 			revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser, localChangesRootPath, subDocCommitFlag, commitActionList, commitActionListFake);
 		}
 		
-		unlockSyncSource(lockName, systemUser, doc);
+		unlockSyncSource(lockName, systemUser);
 		
 		Date date2 = new Date();
 		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms svnDocCommit() for [" +doc.getPath() + doc.getName()+ "] \n");
@@ -12599,7 +12599,7 @@ public class BaseController  extends BaseFunction{
 		String lockName = "reposData.syncLockForGitCommit" + repos.getId();
 		
 		//TODO: 3分钟内取不到锁则放弃提交版本，表明资源已被长时间占用或异常
-		if(false == lockSyncSource("GitCommit", lockName, lockInfo, 2*60*60*1000, reposData.syncLockForGitCommit, 3*1000, 60, systemUser, doc))
+		if(false == lockSyncSource("GitCommit", lockName, lockInfo, 2*60*60*1000, reposData.syncLockForGitCommit, 3*1000, 60, systemUser))
 		{
 			return null;
 		}
@@ -12620,7 +12620,7 @@ public class BaseController  extends BaseFunction{
 			}
 		}
 			
-		unlockSyncSource(lockName, systemUser, doc);
+		unlockSyncSource(lockName, systemUser);
 
 		Date date2 = new Date();
 		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms gitDocCommit() for [" +doc.getPath() + doc.getName()+ "] \n");

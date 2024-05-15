@@ -37,7 +37,6 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
@@ -67,8 +66,6 @@ import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.AutoTaskConfig;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
-import com.DocSystem.common.entity.CommitEntry;
-import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
@@ -200,7 +197,6 @@ public class BaseFunction{
     protected static User systemUser = new User();
     protected static User anyUser = new User();	//EveryOne
     
-
 	public static boolean redisEn = false;
 	public static String redisUrl = null;
 	public static RedissonClient redisClient = null;
@@ -2257,9 +2253,9 @@ public class BaseFunction{
 			long lockDuration, 	//锁定时长(超过该时长将自动解锁)
 			Object synclock, 	//线程锁对象
 			int retryCount, int retrySleepTime, //同步锁获取失败的重试次数与重试睡眠时间（如果重试次数设置为0表示取锁失败直接返回）
-			User accessUser, Doc doc)
+			User accessUser)
 	{
-		SyncSourceLock lock = tryLockSyncSource(sourceName, lockName, lockInfo, lockDuration, synclock, retryCount, retrySleepTime, accessUser, doc);
+		SyncSourceLock lock = tryLockSyncSource(sourceName, lockName, lockInfo, lockDuration, synclock, retryCount, retrySleepTime, accessUser);
 		if(lock != null)
 		{
 			//Log.info("lockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] lock success for [" + doc.getPath() + doc.getName() + "]");
@@ -2271,7 +2267,7 @@ public class BaseFunction{
 	
 	private static SyncSourceLock tryLockSyncSource(String sourceName, String lockName, String lockInfo, 
 			long lockDuration, Object synclock, int retryCount, int retrySleepTime, 
-			User accessUser, Doc doc) 
+			User accessUser) 
 	{
 		//Log.debug("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] Start");
 
@@ -2356,7 +2352,7 @@ public class BaseFunction{
 		
 			if(newLock != null) 
 			{
-				Log.info("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] Lock success for [" + doc.getPath() + doc.getName() + "]");	
+				Log.info("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] Lock success");	
 				return newLock;
 			}
 			
@@ -2364,11 +2360,11 @@ public class BaseFunction{
 			count++;
 			if(count >= retryCount)
 			{
-				Log.info("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] lock failed with max retries:" + retryCount + " for [" + doc.getPath() + doc.getName() + "]");
+				Log.info("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] lock failed with max retries:" + retryCount);
 				break;
 			}
 			
-			Log.info("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] lock failed " + count + " times for [" + doc.getPath() + doc.getName() + "] , sleep " + retrySleepTime + " ms and try again");
+			Log.info("tryLockSyncSource() syncSourceLock [" + lockName + "] of [" + sourceName + "] lock failed " + count + " times, sleep " + retrySleepTime + " ms and try again");
 			
 			synchronized(curLock.synclock)
 			{
@@ -2383,9 +2379,9 @@ public class BaseFunction{
 	}
 
 	//unlockSyncSource need not to be executed with synclock, because it is already in thread safe 
-	protected static boolean unlockSyncSource(String lockName, User accessUser, Doc doc)
+	protected static boolean unlockSyncSource(String lockName, User accessUser)
 	{
-		Log.debug("unlockSyncSource() syncSourceLock [" + lockName + "] Start for [" + doc.getPath() + doc.getName() + "]");
+		Log.debug("unlockSyncSource() syncSourceLock [" + lockName + "] Start");
 		SyncSourceLock curLock = getSyncSourceLock(lockName);
 		if(curLock == null)
 		{
@@ -2399,16 +2395,16 @@ public class BaseFunction{
 			updateSyncSourceLock(lockName, curLock);
 			
 			//wakeup all pendding thread for this lock
-			Log.info("unlockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "] for [" + doc.getPath() + doc.getName() + "], wakeup all sleep threads");
+			Log.info("unlockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "], wakeup all sleep threads");
 			synchronized(curLock.synclock)
 			{
 				curLock.synclock.notifyAll();
 			}
-			Log.debug("unlockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "] unlock success for [" + doc.getPath() + doc.getName() + "]");
+			Log.debug("unlockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "] unlock Success");
 			return true;
 		}
 		
-		Log.info("unlockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "] unlock failed " + " for [" + doc.getPath() + doc.getName() + "] (lockBy:" + curLock.lockBy + " unlock user:" + accessUser.getId());
+		Log.info("unlockSyncSource() syncSourceLock [" + curLock.name + "] of [" + curLock.sourceName + "] unlock failed (lockBy:" + curLock.lockBy + " unlock user:" + accessUser.getId());
 		return false;
 	}
 
@@ -5715,14 +5711,14 @@ public class BaseFunction{
 		Date date1 = new Date();
 		String lockInfo = "addSystemLog() syncLockForSystemLog";
 		String lockName = "syncLockForSystemLog";
-		if(false == lockSyncSource("SystemLog", lockName, lockInfo, 2*60*1000, syncLockForSystemLog, 3*1000, 3, systemUser, null))
+		if(false == lockSyncSource("SystemLog", lockName, lockInfo, 2*60*1000, syncLockForSystemLog, 3*1000, 3, systemUser))
 		{
 			return false;
 		}    		
 		
 		ret = addSystemLogIndex(log, indexLib);
 
-		unlockSyncSource(lockName, systemUser, null);
+		unlockSyncSource(lockName, systemUser);
 		
 		Date date2 = new Date();
         Log.debug("addSystemLog() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");

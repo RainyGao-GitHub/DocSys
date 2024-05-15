@@ -269,7 +269,7 @@ public class ReposController extends BaseController{
 		//以下这段代码是为了避免有用户同时发起addRepos(前端快速点击添加操作也会引起该行为)，导致两个仓库的文件存储路径信息相同
 		String lockInfo = "addRepos() syncLockForRepos [" + repos.getName() + "]";
 		String lockName = "syncLockForRepos";
-		if(false == lockSyncSource("ReposAdd", lockName, lockInfo, 2*60*1000, syncLockForSystemLog, 3*1000, 3, systemUser, null))
+		if(false == lockSyncSource("ReposAdd", lockName, lockInfo, 2*60*1000, syncLockForSystemLog, 3*1000, 3, systemUser))
 		{
 			Log.debug("addRepos() 获取线程锁失败");
 			String ErrMsg = "获取线程锁失败";
@@ -302,7 +302,7 @@ public class ReposController extends BaseController{
 		Integer reposId = repos.getId();
 		Log.debug("new ReposId" + reposId);
 
-		unlockSyncSource(lockName, systemUser, null);
+		unlockSyncSource(lockName, systemUser);
 		
 		//Lock the repos
 		DocLock reposLock = null;

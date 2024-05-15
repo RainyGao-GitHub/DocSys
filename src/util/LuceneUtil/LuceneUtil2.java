@@ -121,14 +121,14 @@ public class LuceneUtil2   extends BaseFunction
 
 		String lockInfo = "LuceneUtil2 deleteIndexLib synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser))
 		{
 			return false;
 		}
 			
     	ret = FileUtil.delFileOrDir(indexLib);
     		
-    	unlockSyncSource(lockName, systemUser, null);
+    	unlockSyncSource(lockName, systemUser);
     	return ret;
     }
 	
@@ -176,7 +176,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, doc))
+		if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser))
 		{
 			return false;
 		}
@@ -209,7 +209,7 @@ public class LuceneUtil2   extends BaseFunction
 			closeResource(indexWriter, directory, analyzer);
 		}
     	
-		unlockSyncSource(lockName, systemUser, doc);
+		unlockSyncSource(lockName, systemUser);
 
 		Date date2 = new Date();
         Log.debug("创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
@@ -427,7 +427,7 @@ public class LuceneUtil2   extends BaseFunction
     	Object synclock = getSyncLock(indexLib);
     	String lockInfo = "LuceneUtil2 updateIndex synclock:" + indexLib;
     	String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, doc))
+		if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser))
 		{
 			return false;
 		}
@@ -460,7 +460,7 @@ public class LuceneUtil2   extends BaseFunction
 			closeResource(indexWriter, directory, analyzer);
 		}	
 			
-		unlockSyncSource(lockName, systemUser, doc);
+		unlockSyncSource(lockName, systemUser);
     	
         Date date2 = new Date();
         Log.debug("更新索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
@@ -487,7 +487,7 @@ public class LuceneUtil2   extends BaseFunction
     	Object synclock = getSyncLock(indexLib);
     	String lockInfo = "LuceneUtil2 deleteIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, doc))
+		if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser))
 		{
 			return false;
 		}
@@ -515,7 +515,7 @@ public class LuceneUtil2   extends BaseFunction
 			closeResource(indexWriter, directory, analyzer);					
 		}
 			
-		unlockSyncSource(lockName, systemUser, doc);
+		unlockSyncSource(lockName, systemUser);
    	
         Date date2 = new Date();
         Log.debug("删除索引耗时：" + (date2.getTime() - date1.getTime()) + "ms for [" + doc.getPath() + doc.getName() + "]\n");
@@ -547,7 +547,7 @@ public class LuceneUtil2   extends BaseFunction
 		    	Object synclock = getSyncLock(indexLib);
 	    		String lockInfo = "LuceneUtil2 deleteIndexEx synclock:" + indexLib;
 		    	String lockName = "indexLibSyncLock" + indexLib;
-				if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, doc))
+				if(false == lockSyncSource("DocIndexLib", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser))
 				{
 					return false;
 				}
@@ -578,7 +578,7 @@ public class LuceneUtil2   extends BaseFunction
 					closeResource(indexWriter, directory, analyzer);
 				}
 					
-				unlockSyncSource(lockName, systemUser, doc);
+				unlockSyncSource(lockName, systemUser);
 	    	}
     	}
     	
@@ -2120,14 +2120,14 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addCommitLogIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("CommitLog", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		if(false == lockSyncSource("CommitLog", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser))
 		{
 			return false;
 		}
 		
 		ret = addCommitLogIndexBasic(commit, indexLib);
 			
-		unlockSyncSource(lockName, systemUser, null);
+		unlockSyncSource(lockName, systemUser);
     	return ret;
     }
 	
@@ -2142,7 +2142,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 updateCommitLogIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("CommitLog", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		if(false == lockSyncSource("CommitLog", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser))
 		{
 			return false;
 		}
@@ -2150,7 +2150,7 @@ public class LuceneUtil2   extends BaseFunction
     	deleteCommitLogIndexBasic(commit.id, indexLib);
         ret = addCommitLogIndexBasic(commit, indexLib);
 			
-		unlockSyncSource(lockName, systemUser, null);
+		unlockSyncSource(lockName, systemUser);
     	return ret;
     }
 	
@@ -2165,14 +2165,14 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 deleteCommitLogIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("CommitLog", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		if(false == lockSyncSource("CommitLog", lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser))
 		{
 			return false;
 		}
 		
 		ret = deleteCommitLogIndexBasic(commit.id, indexLib);
 			
-		unlockSyncSource(lockName, systemUser, null);
+		unlockSyncSource(lockName, systemUser);
     	return ret;
     }
 	
@@ -2187,14 +2187,14 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 deleteIndexForCommitEntry synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, null))
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser))
 		{
 			return false;
 		}
     	
     	ret = deleteIndexForCommitEntryBasic(entry.id, indexLib);
 			
-    	unlockSyncSource(lockName, systemUser, null);
+    	unlockSyncSource(lockName, systemUser);
 		return ret;
     }
 	
@@ -2209,14 +2209,14 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addIndexForCommitEntry synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, null))
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser))
 		{
 			return false;
 		}
     	
     	ret = addIndexForCommitEntryBasic(entry, indexLib);
 			
-    	unlockSyncSource(lockName, systemUser, null);
+    	unlockSyncSource(lockName, systemUser);
 		return ret;
     }
 	
@@ -2231,7 +2231,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, null))
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser))
 		{
 			return false;
 		}
@@ -2261,7 +2261,7 @@ public class LuceneUtil2   extends BaseFunction
 			addIndexForCommitEntryBasic(commitEntry, indexLib);
 		}
     		
-        unlockSyncSource(lockName, systemUser, null);
+        unlockSyncSource(lockName, systemUser);
 		
         ret = true;
 		return ret;
@@ -2279,7 +2279,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, null))
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser))
 		{
 			return false;
 		}
@@ -2309,7 +2309,7 @@ public class LuceneUtil2   extends BaseFunction
 			addIndexForCommitEntryBasic(commitEntry, indexLib);
 		}
     		
-        unlockSyncSource(lockName, systemUser, null);
+        unlockSyncSource(lockName, systemUser);
         
 		ret = true;
 		return ret;
@@ -2325,7 +2325,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, doc))
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser))
 		{
 			return false;
 		}
@@ -2348,7 +2348,7 @@ public class LuceneUtil2   extends BaseFunction
         			doc.getLevel(), doc.getLocalRootPath(), doc.getPath(), doc.getName(),
         			indexLib);
     				
-		unlockSyncSource(lockName, systemUser, null);
+		unlockSyncSource(lockName, systemUser);
 		ret = true;
 		return ret;
 	}
@@ -2402,7 +2402,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addIndexForCommitEntries synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser, null))
+		if(false == lockSyncSource("CommitEntry", lockName, lockInfo, 10*60*1000, synclock, 3*1000, 10, systemUser))
 		{
 			return false;
 		}
@@ -2549,7 +2549,7 @@ public class LuceneUtil2   extends BaseFunction
 			}
 		}
     		
-    	unlockSyncSource(lockName, systemUser, null);
+    	unlockSyncSource(lockName, systemUser);
 		ret = true;
 		return ret;
 	}
