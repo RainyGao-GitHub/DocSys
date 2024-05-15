@@ -2252,7 +2252,7 @@ public class BaseFunction{
 	}
     
 	//*** syncSourceLocksMap ***
-	public boolean lockSyncSource(
+	public static boolean lockSyncSource(
 			String sourceName, String lockName, String lockInfo,
 			long lockDuration, 	//锁定时长(超过该时长将自动解锁)
 			Object synclock, 	//线程锁对象
@@ -2269,7 +2269,7 @@ public class BaseFunction{
 		return false;
 	}
 	
-	private SyncSourceLock tryLockSyncSource(String sourceName, String lockName, String lockInfo, 
+	private static SyncSourceLock tryLockSyncSource(String sourceName, String lockName, String lockInfo, 
 			long lockDuration, Object synclock, int retryCount, int retrySleepTime, 
 			User accessUser, Doc doc) 
 	{
@@ -2383,7 +2383,7 @@ public class BaseFunction{
 	}
 
 	//unlockSyncSource need not to be executed with synclock, because it is already in thread safe 
-	protected boolean unlockSyncSource(String lockName, User accessUser, Doc doc)
+	protected static boolean unlockSyncSource(String lockName, User accessUser, Doc doc)
 	{
 		Log.debug("unlockSyncSource() syncSourceLock [" + lockName + "] Start for [" + doc.getPath() + doc.getName() + "]");
 		SyncSourceLock curLock = getSyncSourceLock(lockName);
@@ -2412,7 +2412,7 @@ public class BaseFunction{
 		return false;
 	}
 
-	protected void addSyncSourceLock(String lockName, SyncSourceLock lock) {
+	protected static void addSyncSourceLock(String lockName, SyncSourceLock lock) {
 		if(redisEn)
 		{
 			addSyncSourceLockRedis(lockName, lock);
@@ -2423,28 +2423,28 @@ public class BaseFunction{
 		}
 	}
 	
-	private void addSyncSourceLockLocal(String lockName, SyncSourceLock lock) {
+	private static void addSyncSourceLockLocal(String lockName, SyncSourceLock lock) {
 		syncSourceLocksMap.put(lockName, lock);
 	}
 	
-	private void addSyncSourceLockRedis(String lockName, SyncSourceLock lock) {
+	private static void addSyncSourceLockRedis(String lockName, SyncSourceLock lock) {
 		RMap<Object, Object>  syncSourceLocksMap = redisClient.getMap("syncSourceLocksMap");
 		syncSourceLocksMap.put(lockName, lock);
 	}
 
-	protected void updateSyncSourceLock(String lockName, SyncSourceLock lock) {
+	protected static void updateSyncSourceLock(String lockName, SyncSourceLock lock) {
 		if(redisEn)
 		{
 			updateSyncSourceLockRedis(lockName, lock);
 		}
 	}
 
-	private void updateSyncSourceLockRedis(String lockName, SyncSourceLock lock) {
+	private static void updateSyncSourceLockRedis(String lockName, SyncSourceLock lock) {
 		RMap<Object, Object>  syncSourceLocksMap = redisClient.getMap("syncSourceLocksMap");
 		syncSourceLocksMap.put(lockName, lock);
 	}
 	
-	protected SyncSourceLock getSyncSourceLock(String lockName) {
+	protected static SyncSourceLock getSyncSourceLock(String lockName) {
 		if(redisEn)
 		{
 			return getSyncSourceLockRedis(lockName);
@@ -2453,11 +2453,11 @@ public class BaseFunction{
 		return getSyncSourceLockLocal(lockName);
 	}
 
-	private SyncSourceLock getSyncSourceLockLocal(String lockName) {
+	private static SyncSourceLock getSyncSourceLockLocal(String lockName) {
 		return syncSourceLocksMap.get(lockName);
 	}
 	
-	private SyncSourceLock getSyncSourceLockRedis(String lockName) {
+	private static SyncSourceLock getSyncSourceLockRedis(String lockName) {
 		RMap<Object, Object>  syncSourceLocksMap = redisClient.getMap("syncSourceLocksMap");
 		return (SyncSourceLock) syncSourceLocksMap.get(lockName);
 	}

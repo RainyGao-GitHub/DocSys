@@ -2120,15 +2120,16 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 addCommitLogIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		synchronized(synclock)
-    	{
-    		redisSyncLockEx(lockName, lockInfo);
+		String sourceName = "CommitLogIndexLib";
+		//TODO: 最多锁定2分钟，最多重试3次每次3秒
+		if(false == lockSyncSource(sourceName, lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		{
+			return false;
+		}
+		
+		ret = addCommitLogIndexBasic(commit, indexLib);
 			
-    		ret = addCommitLogIndexBasic(commit, indexLib);
-			
-    		redisSyncUnlockEx(lockName, lockInfo, synclock);
-    	}
-
+		unlockSyncSource(lockName, systemUser, null);
     	return ret;
     }
 	
@@ -2143,16 +2144,17 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 updateCommitLogIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		synchronized(synclock)
-    	{
-    		redisSyncLockEx(lockName, lockInfo);
+		String sourceName = "CommitLogIndexLib";
+		//TODO: 最多锁定2分钟，最多重试3次每次3秒
+		if(false == lockSyncSource(sourceName, lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		{
+			return false;
+		}
 			
-    		deleteCommitLogIndexBasic(commit.id, indexLib);
-        	ret = addCommitLogIndexBasic(commit, indexLib);
+    	deleteCommitLogIndexBasic(commit.id, indexLib);
+        ret = addCommitLogIndexBasic(commit, indexLib);
 			
-    		redisSyncUnlockEx(lockName, lockInfo, synclock);
-    	}
-
+		unlockSyncSource(lockName, systemUser, null);
     	return ret;
     }
 	
@@ -2167,15 +2169,16 @@ public class LuceneUtil2   extends BaseFunction
 		
 		String lockInfo = "LuceneUtil2 deleteCommitLogIndex synclock:" + indexLib;
 		String lockName = "indexLibSyncLock" + indexLib;
-		synchronized(synclock)
-    	{
-    		redisSyncLockEx(lockName, lockInfo);
+		String sourceName = "CommitLogIndexLib";
+		//TODO: 最多锁定2分钟，最多重试3次每次3秒
+		if(false == lockSyncSource(sourceName, lockName, lockInfo, 2*60*1000, synclock, 3*1000, 3, systemUser, null))
+		{
+			return false;
+		}
+		
+		ret = deleteCommitLogIndexBasic(commit.id, indexLib);
 			
-    		ret = deleteCommitLogIndexBasic(commit.id, indexLib);
-    		
-    		redisSyncUnlockEx(lockName, lockInfo, synclock);
-    	}
-
+		unlockSyncSource(lockName, systemUser, null);
     	return ret;
     }
 	
