@@ -12558,21 +12558,24 @@ public class BaseController  extends BaseFunction{
 		String lockName = "reposData.syncLockForSvnCommit" + repos.getId();
 
 		Date date1 = new Date();
-		synchronized(reposData.syncLockForSvnCommit)
+
+		//TODO: 3分钟内取不到锁则放弃提交版本，表明资源已被长时间占用或异常
+		if(false == lockSyncSource("SvnCommit", lockName, lockInfo, 2*60*60*1000, reposData.syncLockForSvnCommit, 3*1000, 60, systemUser, doc))
 		{
-			redisSyncLockEx(lockName, lockInfo);
-			
-			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
-			{
-				Log.debug("svnDocCommit() verReposInit Failed");
-			}
-			else
-			{
-				revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser, localChangesRootPath, subDocCommitFlag, commitActionList, commitActionListFake);
-			}
-			
-			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForSvnCommit);
+			return null;
 		}
+			
+		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
+		{
+			Log.debug("svnDocCommit() verReposInit Failed");
+		}
+		else
+		{
+			revision = verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser, localChangesRootPath, subDocCommitFlag, commitActionList, commitActionListFake);
+		}
+		
+		unlockSyncSource(lockName, systemUser, doc);
+		
 		Date date2 = new Date();
 		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms svnDocCommit() for [" +doc.getPath() + doc.getName()+ "] \n");
 
@@ -12593,28 +12596,31 @@ public class BaseController  extends BaseFunction{
 
 		String lockInfo = "gitDocCommit() reposData.syncLockForGitCommit";
 		String lockName = "reposData.syncLockForGitCommit" + repos.getId();
-		synchronized(reposData.syncLockForGitCommit)
+		
+		//TODO: 3分钟内取不到锁则放弃提交版本，表明资源已被长时间占用或异常
+		if(false == lockSyncSource("GitCommit", lockName, lockInfo, 2*60*60*1000, reposData.syncLockForGitCommit, 3*1000, 60, systemUser, doc))
 		{
-			redisSyncLockEx(lockName, lockInfo);
+			return null;
+		}
 			
-			if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
+		if(false == verReposUtil.Init(repos, isRealDoc, commitUser))
+		{
+			Log.debug("gitDocCommit() verReposInit Failed");
+		}
+		else
+		{
+			if(verReposUtil.checkAndClearnBranch(true) == false)
 			{
-				Log.debug("gitDocCommit() verReposInit Failed");
+				Log.debug("gitDocCommit() master branch is dirty and failed to clean");
 			}
 			else
 			{
-				if(verReposUtil.checkAndClearnBranch(true) == false)
-				{
-					Log.debug("gitDocCommit() master branch is dirty and failed to clean");
-				}
-				else
-				{
-					revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser, localChangesRootPath, subDocCommitFlag, commitActionList, commitActionListFake);
-				}
+				revision =  verReposUtil.doAutoCommit(repos, doc, commitMsg,commitUser, localChangesRootPath, subDocCommitFlag, commitActionList, commitActionListFake);
 			}
-			
-			redisSyncUnlockEx(lockName, lockInfo, reposData.syncLockForGitCommit);
 		}
+			
+		unlockSyncSource(lockName, systemUser, doc);
+
 		Date date2 = new Date();
 		Log.debug("版本提交耗时:" + (date2.getTime() - date1.getTime()) + "ms gitDocCommit() for [" +doc.getPath() + doc.getName()+ "] \n");
 

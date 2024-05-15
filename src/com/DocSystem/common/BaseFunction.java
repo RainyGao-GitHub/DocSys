@@ -5715,14 +5715,14 @@ public class BaseFunction{
 		Date date1 = new Date();
 		String lockInfo = "addSystemLog() syncLockForSystemLog";
 		String lockName = "syncLockForSystemLog";
-		synchronized(syncLockForSystemLog)
+		if(false == lockSyncSource("SystemLog", lockName, lockInfo, 2*60*1000, syncLockForSystemLog, 3*1000, 3, systemUser, null))
 		{
-    		redisSyncLockEx(lockName, lockInfo);
-    		
-			ret = addSystemLogIndex(log, indexLib);
+			return false;
+		}    		
+		
+		ret = addSystemLogIndex(log, indexLib);
 
-			redisSyncUnlockEx(lockName, lockInfo, syncLockForSystemLog);
-		}
+		unlockSyncSource(lockName, systemUser, null);
 		
 		Date date2 = new Date();
         Log.debug("addSystemLog() 创建索引耗时：" + (date2.getTime() - date1.getTime()) + "ms\n");
