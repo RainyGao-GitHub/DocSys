@@ -2167,84 +2167,15 @@ public class BaseFunction{
 	}
 	
 	//*** remoteStorageLocksMap ***	
-	//unlockRemoteStorage need not to be executed with synclock, because it is already in thread safe 
-	protected boolean unlockRemoteStorage(RemoteStorageConfig remote, User accessUser, Doc doc) 
-	{
-		Log.debug("unlockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] Start for [" + doc.getPath() + doc.getName() + "]");
-		RemoteStorageLock curLock = getRemoteStorageLock(remote.remoteStorageIndexLib);
-		if(curLock == null)
-		{
-			Log.debug("unlockRemoteStorage() remoteStorageLock [" + remote.remoteStorageIndexLib + "] was not locked");
-			return true;
-		}
-		
-		if(curLock.lockBy == null || curLock.lockBy.equals(accessUser.getId()))
-		{
-			curLock.state = 0;
-			updateRemoteStorageLock(remote.remoteStorageIndexLib, curLock);
-			
-			//wakeup all pendding thread for this lock
-			Log.info("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] for [" + doc.getPath() + doc.getName() + "], wakeup all sleep threads");
-			synchronized(curLock.synclock)
-			{
-				curLock.synclock.notifyAll();
-			}
-			Log.debug("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] unlock success for [" + doc.getPath() + doc.getName() + "]");
-			return true;
-		}
-		
-		Log.info("unlockRemoteStorage() remoteStorageLock [" + curLock.name + "] unlock failed " + " for [" + doc.getPath() + doc.getName() + "] (lockBy:" + curLock.lockBy + " unlock user:" + accessUser.getId());
-		return false;
-	}
-
-	protected void addRemoteStorageLock(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		if(redisEn)
-		{
-			addRemoteStorageLockRedis(remoteStorageName, remoteStorageLock);
-		}
-		else
-		{
-			addRemoteStorageLockLocal(remoteStorageName, remoteStorageLock);
-		}
-	}
-	
-	private void addRemoteStorageLockLocal(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
-	}
-	
-	private void addRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		RMap<Object, Object>  remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
-		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
-	}
-
-	protected void updateRemoteStorageLock(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		if(redisEn)
-		{
-			updateRemoteStorageLockRedis(remoteStorageName, remoteStorageLock);
-		}
-	}
-
-	private void updateRemoteStorageLockRedis(String remoteStorageName, RemoteStorageLock remoteStorageLock) {
-		RMap<Object, Object>  remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
-		remoteStorageLocksMap.put(remoteStorageName, remoteStorageLock);
-	}
-	
-	protected RemoteStorageLock getRemoteStorageLock(String remoteStorageName) {
-		if(redisEn)
-		{
-			return getRemoteStorageLockRedis(remoteStorageName);
-		}
-		
-		return getRemoteStorageLockLocal(remoteStorageName);
-	}
-
-	private RemoteStorageLock getRemoteStorageLockLocal(String remoteStorageName) {
-		return remoteStorageLocksMap.get(remoteStorageName);
-	}
-	
-	private RemoteStorageLock getRemoteStorageLockRedis(String remoteStorageName) {
-		RMap<Object, Object>  remoteStorageLocksMap = redisClient.getMap("remoteStorageLocksMap");
-		return (RemoteStorageLock) remoteStorageLocksMap.get(remoteStorageName);
+	protected Object getRemoteStorageSyncLock(String remoteStorage) {
+		Object synclock = remoteStorageSyncLockHashMap.get(remoteStorage);
+    	if(synclock == null)
+    	{
+    		Log.debug("getRemoteStorageSyncLock() synclock for " + remoteStorage + " is null, do create");
+    		synclock = new Object();
+    		remoteStorageSyncLockHashMap.put(remoteStorage, synclock);
+    	}
+    	return synclock;
 	}
     
 	//*** syncSourceLocksMap ***
