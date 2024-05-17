@@ -1184,8 +1184,8 @@ public class BaseController  extends BaseFunction{
 	//
 	protected List<Doc> getDocListFromRootToDoc(Repos repos, Doc doc, DocAuth rootDocAuth,  Doc rootDoc, HashMap<Long, DocAuth> docAuthHashMap, Integer listType, ReturnAjax rt)
 	{
+		//TODO: 注意这里获取的是rootDoc目录下的文件列表
 		//Log.debug("getDocListFromRootToDoc() reposId:" + repos.getId() + " parentPath:" + doc.getPath() +" docName:" + doc.getName());
-				
 		List<Doc> resultList = getAccessableSubDocList(repos, rootDoc, rootDocAuth, docAuthHashMap, listType, rt);	//get subDocList under root
 		if(resultList == null || resultList.size() == 0)
 		{
@@ -1217,7 +1217,6 @@ public class BaseController  extends BaseFunction{
 		}
 		int pLevel = rootDoc.getLevel();
 		DocAuth pDocAuth = rootDocAuth;
-		
 		for(int i=0; i<deepth; i++)
 		{
 			String name = paths[i];
@@ -1228,7 +1227,7 @@ public class BaseController  extends BaseFunction{
 			}	
 			
 			Doc tempDoc = buildBasicDoc(reposId, null, pid, doc.getReposPath(), pPath, name, pLevel+1, 2, true, doc.getLocalRootPath(), doc.getLocalVRootPath(), null, null);
-			DocAuth docAuth = getDocAuthFromHashMap(doc.getDocId(), pDocAuth, docAuthHashMap);
+			DocAuth docAuth = getDocAuthFromHashMap(tempDoc.getDocId(), pDocAuth, docAuthHashMap);
 			
 			List<Doc> subDocList = getAccessableSubDocList(repos, tempDoc, docAuth, docAuthHashMap, listType, rt);
 			if(subDocList == null || subDocList.size() == 0)
