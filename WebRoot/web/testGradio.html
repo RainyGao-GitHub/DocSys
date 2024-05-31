@@ -164,7 +164,23 @@
 			 				<i class="cell w10">
 			 					<a href="javascript:void(0)" onclick="receiveDataTest();" class="mybtn-primary">testReceiveData</a>
 			 				</i>
-			 			</li>			 			
+			 			</li>	
+			 			
+			 			<li>	
+			 				<i class="cell w7">askWithGradio</i> 	
+			 				<i class="cell w20">		
+			 					<input id="askWithGradioUrl" value="http://10.183.67.123:8080" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea id="askWithGradioParam"></textarea>
+			 				</i>	
+			 				<i class="cell w10">		
+			 					<div id="askWithGradioResult"></div>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="askWithGradio();" class="mybtn-primary">askWithGradio</a>
+			 				</i>
+			 			</li>		 			
 			</div>
         <div class="manual-progress"><b class="progress-bar"></b></div>
     </article>
@@ -334,7 +350,161 @@ function receiveDataTest()
 	} else {
 	    console.error('Your browser does not support Server-Sent Events.');
 	}
+}
+
+function askWithGradio()
+{
+	var question = $("#askWithGradioParam").val();
+	if(question == undefined || question == "")
+	{	
+		alert("请输入您的问题");
+		return;
+	}
+	console.log("askWithGradio() question:", question);
+	var serverUrl = $("#askWithGradioUrl").val();
+	console.log("askWithGradio() serverUrl:", serverUrl);
+
+	var sessionId = new Date().getTime() + "";
+	console.log("askWithGradio() sessionId:", sessionId);
+
+	const displayHtmlElement = document.getElementById('askWithGradioResult');
 	
+	predict(serverUrl, sessionId, question, displayHtmlElement);
+}
+
+function predict(serverUrl, sessionId, question, displayHtmlElement)
+{		
+	console.log("predict() question:" + question + " sessionId:" + sessionId);
+	var queryData = {};
+	queryData.data = [];
+	queryData.data.push(question);
+	queryData.data_event = null;
+	queryData.fn_index = 0;
+	queryData.session_hash = sessionId;
+	queryData.trigger_id = 1;
+	
+	//发送predict
+	var url = serverUrl + "/run/predict";
+	fetch(url, {
+	    method: 'POST', // 使用 POST 方法
+	    headers: {
+	        'Content-Type': 'application/json' // 指定请求头的 Content-Type 为 JSON
+	    },
+	    body: JSON.stringify(queryData) // 将 JavaScript 对象转换为 JSON 字符串
+	})
+	.then(response => {
+	    if (!response.ok) {
+	        throw new Error('Network response was not ok ' + response.statusText);
+	    }
+	    return response.json(); // 解析 JSON 响应
+	})
+	.then(data => {
+	    console.log(data); // 处理响应数据
+	    join(serverUrl, sessionId, question, displayHtmlElement);
+	})
+	.catch(error => {
+	    console.error('There has been a problem with your fetch operation:', error);
+	});	
+}
+
+function join(serverUrl, sessionId, question, displayHtmlElement)
+{	
+	console.log("join() question:" + question + " sessionId:" + sessionId);
+	var queryData = {};
+	queryData.data = [];
+	queryData.data.push(null);
+	queryData.data.push(null);
+	queryData.data_event = null;
+	queryData.fn_index = 2;
+	queryData.session_hash = sessionId;
+	queryData.trigger_id = 1;
+	
+	var url = serverUrl + "/queue/join?";
+	fetch(url, {
+	    method: 'POST', // 使用 POST 方法
+	    headers: {
+	        'Content-Type': 'application/json' // 指定请求头的 Content-Type 为 JSON
+	    },
+	    body: JSON.stringify(queryData) // 将 JavaScript 对象转换为 JSON 字符串
+	})
+	.then(response => {
+	    if (!response.ok) {
+	        throw new Error('Network response was not ok ' + response.statusText);
+	    }
+	    return response.json(); // 解析 JSON 响应
+	})
+	.then(data => {
+	    console.log(data); // 处理响应数据
+	    receiveData(serverUrl, sessionId, question, displayHtmlElement);
+	})
+	.catch(error => {
+	    console.error('There has been a problem with your fetch operation:', error);
+	});	
+}
+
+function receiveData(serverUrl, sessionId, question, displayHtmlElement)
+{		
+	console.log("receiveData() question:" + question + " sessionId:" + sessionId);
+
+	var url = serverUrl + "/queue/data?session_hash=" + sessionId;
+	const textarea = document.getElementById('receiveDataResult');
+    
+	if (!!window.EventSource) {
+	    var eventSource = new EventSource(url);
+
+	    eventSource.addEventListener('message', function(event) {
+	        // 处理来自服务器的消息
+	        //console.log('Message received:', event.data);
+	        // 可以在此处解析消息内容并更新页面内容
+	     	const jsonData = JSON.parse(event.data);
+	        if(jsonData.output)
+	     	{
+	     		console.log('Message received:', event.data.output);
+		        if(jsonData.output.data)
+	     		{
+		        	var newData = jsonData.output.data;
+		        	console.log('Message received:', newData);      	
+		        	if(newData[0])
+		        	{
+		        		if(newData[0][0])
+		        		{
+		        			if(newData[0][0][2])
+		        			{
+		    		        	console.log('Message received:', newData[0][0][2]);
+		    	                displayHtmlElement.innerHTML += newData[0][0][2];
+		        			}
+		        		}
+		        	}
+	     		}
+	     	}
+	    }, false);
+
+	    eventSource.addEventListener('open', function(event) {
+	        // 当连接成功建立时执行
+	        console.log('Connection to server opened.');
+	    }, false);
+
+	    eventSource.addEventListener('error', function(event) {
+	        // 当连接发生错误时执行
+	        if (event.target.readyState === EventSource.CLOSED) {
+	            // 连接已关闭
+	            console.log('Connection was closed.');
+	        } else if (event.target.readyState === EventSource.CONNECTING) {
+	            // 正在重新连接
+	            console.log('Reconnecting...');
+	        } else {
+	            // 连接发生错误
+	            console.error('An error occurred:', event);
+	        }
+	    }, false);
+
+	    // 你还可以添加其他自定义事件处理程序
+	    // eventSource.addEventListener('custom-event', function(event) {
+	    //     console.log('Custom event received:', event.data);
+	    // }, false);
+	} else {
+	    console.error('Your browser does not support Server-Sent Events.');
+	}
 }
 
 </script>
