@@ -71,7 +71,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 ### 二、系统升级
 #### 1、下载升级包【DocSystem.war】
-国内下载地址：[微云](https://share.weiyun.com/0Kjpf2o0)
+国内下载地址：[微云](http://dw.gofreeteam.com/DocSystem/web/project.html?vid=46&shareId=884281120)
 
 国外下载地址：[GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
