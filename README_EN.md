@@ -118,7 +118,7 @@ For Linux [docsys-linux-x.xx.xx.tar.gz]
 
 For Windows [docsys-win-x.xx.xx.zip]
 
-CHINA : [Wechat Cloud](https://share.weiyun.com/0Kjpf2o0)
+CHINA : [Wechat Cloud](http://dw.gofreeteam.com/DocSystem/web/project.html?vid=46&shareId=884281120)
 
 GLOBAL : [GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
