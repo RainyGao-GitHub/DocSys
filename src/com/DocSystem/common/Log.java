@@ -45,8 +45,8 @@ public class Log {
 			File file = new File(filePath);
 			if(file.exists())
 			{
-				if(file.length() > 209715200)	//日志文件存在且大于200M则将文件按当前时间备份
-				//if(file.length() > 20971520)	//日志文件存在且大于20M则将文件按当前时间备份
+				//if(file.length() > 209715200)	//日志文件存在且大于200M则将文件按当前时间备份
+				if(file.length() > 52428800)	//日志文件存在且大于50M则将文件按当前时间备份
 				{
 					String timeStamp = DateFormat.dateTimeFormat2(new Date());
 					File newfile = new File(filePath + "-" + timeStamp);
