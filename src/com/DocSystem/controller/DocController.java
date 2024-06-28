@@ -41,7 +41,6 @@ import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
-import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LargeFileScanTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
