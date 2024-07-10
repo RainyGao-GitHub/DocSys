@@ -28,15 +28,23 @@ class FreeTypeTest
             checkError(FT_Init_FreeType(pLibrary));
             long library = pLibrary.get(0);
             
+            FT_Parameter.Buffer pParams = FT_Parameter.malloc(4, stack);
+            pParams.get(0).tag(FT_MAKE_TAG('i', 'g', 'p', 'f')).data(0);
+            pParams.get(1).tag(FT_MAKE_TAG('i', 'g', 'p', 's')).data(0);
+            pParams.get(2).tag(FT_MAKE_TAG( 'i', 'g', 'p', 'f' )).data(0);        
+            pParams.get(3).tag(FT_MAKE_TAG( 'i', 'g', 'p', 's' )).data(0);
+            
             // Load a font file
             String fontFilePath = "C:/Dev/DocSys/WebRoot/web/static/office-editor/core-fonts/freefont/FreeMono.ttf";
             ByteBuffer fontBuffer = readFontFile(fontFilePath);
 
             // Set up FT_Open_Args
             FT_Open_Args openArgs = FT_Open_Args.calloc(stack);
-            openArgs.flags(FT_OPEN_MEMORY);
+            openArgs.flags(FT_OPEN_MEMORY | FT_OPEN_PARAMS);
             openArgs.memory_base(fontBuffer);
             openArgs.memory_size(fontBuffer.capacity());
+            openArgs.num_params(4);
+            openArgs.params(pParams);
 
             // Create Font Face
             PointerBuffer pFace = stack.mallocPointer(1);
