@@ -158,6 +158,36 @@ public class FileUtil {
 		return ret;
 	}
 	
+	public static boolean saveDataToFile(byte[] buff, String filePath)
+	{	
+		if(buff == null)
+		{
+			Log.debug("saveDataToFile() buff is null");
+			return false;
+		}
+		
+		boolean ret = false;
+		FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(filePath);
+			out.write(buff, 0, buff.length);
+			ret = true;
+		} catch (Exception e) {
+			Log.debug("saveDataToFile() new FileOutputStream failed");
+			Log.debug(e);
+		} finally {
+			if(out != null)
+			{
+				try {
+					out.close();
+				} catch (IOException e) {
+					Log.debug(e);
+				}
+			}
+		}
+		return ret;
+	}
+	
 	public static boolean saveDataToFile(byte[] buff, String path, String name, long offset, int size) {
 		if(buff == null)
 		{
