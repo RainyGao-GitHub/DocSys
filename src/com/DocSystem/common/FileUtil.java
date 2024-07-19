@@ -256,8 +256,12 @@ public class FileUtil {
 	}
 	
 	public static byte[] readBufferFromFile(String path, String name) 
+	{
+		return readBufferFromFile(path + name);
+	}
+	
+	public static byte[] readBufferFromFile(String filePath) 
 	{	
-		String filePath = path + name;
 		try 
 		{			
 			File file = new File(filePath);
