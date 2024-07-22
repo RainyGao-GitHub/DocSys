@@ -290,6 +290,19 @@ public class Log {
 		}
 	}
 	
+	public static void printInt(int data) {
+		if(isLogEnable(debug, allowGeneral))
+		{
+			System.out.printf( "%04X ", data);
+
+			if(logFile != null)
+			{
+				toFile(String.format("%04X ", data), logFile);
+			}
+		}
+	}
+
+	
 	public static void printBytes(byte[] data) {
 		if(isLogEnable(debug, allowGeneral))
 		{
