@@ -47,28 +47,33 @@ public class OfficeExtract {
     	    fis = null;
     		
     	    return FileUtil.saveDocContentToFile(content.toString().trim(), path, name, null);
-		} catch (Exception e) {
+		}
+		catch (Exception e) 
+		{
+			Log.info(e);
 			if(doc1 != null)
 			{
-				try {
+				try 
+				{
 					doc1.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				}
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
 			
 			if(fis != null)
 			{
-				try {
+				try 
+				{
 					fis.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} 
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
-			
-    		e.printStackTrace();
     		return false;
     	}
 	}
@@ -97,38 +102,45 @@ public class OfficeExtract {
         	fis = null;
         	
     	    return FileUtil.saveDocContentToFile(str.toString().trim(), path, name, null);
-		} catch (Exception e) {			
+		} 
+		catch (Exception e) 
+		{		
+			Log.info(e);
 			if(extractor != null)
 			{
-				try {
+				try 
+				{
 					extractor.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} 
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
 			
 			if(xdoc != null)
 			{
-				try {
+				try 
+				{
 					xdoc.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} 
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
 		
 			if(fis != null)
 			{
-				try {
+				try 
+				{
 					fis.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} 
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
-			}
-			
-			e.printStackTrace();
+			}			
 			return false;
 		}
 	}
@@ -139,7 +151,8 @@ public class OfficeExtract {
         HSSFWorkbook workBook = null;  
         ExcelExtractor extractor = null; 
         
-        try {  
+        try 
+        {  
 	
 			is = new FileInputStream(filePath);  
 			workBook = new HSSFWorkbook(new POIFSFileSystem(is));  
@@ -157,7 +170,10 @@ public class OfficeExtract {
             is = null;
               
             return FileUtil.saveDocContentToFile( text.toString().trim(), path, name, null);
-        } catch(Exception e) {
+        }
+        catch(Exception e) 
+        {
+        	Log.info(e);
 			if(extractor != null)
 			{
 				try {
@@ -170,26 +186,28 @@ public class OfficeExtract {
 			
 			if(workBook != null)
 			{
-				try {
+				try 
+				{
 					workBook.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} 
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
 		
 			if(is != null)
 			{
-				try {
+				try 
+				{
 					is.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				}
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
-        	
-            e.printStackTrace();
-            return false;
+			return false;
         }
 	}
 
@@ -213,38 +231,46 @@ public class OfficeExtract {
             is = null;
             
             return FileUtil.saveDocContentToFile( text.toString().trim(), path, name, null);
-		} catch (Exception e) { 
+		} 
+		catch (Exception e) 
+		{
+			Log.info(e);
+			
 			if(extractor != null)
 			{
-				try {
+				try 
+				{
 					extractor.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} 
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
 			
 			if(workBook != null)
 			{
-				try {
+				try 
+				{
 					workBook.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				}
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
 		
 			if(is != null)
 			{
-				try {
+				try 
+				{
 					is.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				}
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
-			
-        	e.printStackTrace();  
         	return false;
         }       
 	}
@@ -265,27 +291,33 @@ public class OfficeExtract {
             is = null;
             
             return FileUtil.saveDocContentToFile( text.toString().trim(), path, name, null);
-		} catch (Exception e) {  
+		} 
+		catch (Exception e) 
+		{
+			Log.info(e);
 			if(extractor != null)
 			{
-				try {
+				try 
+				{
 					extractor.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} 
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
 		
 			if(is != null)
 			{
-				try {
+				try 
+				{
 					is.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				} 
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
-            e.printStackTrace(); 
             return false;
         }          
 	}
@@ -296,7 +328,8 @@ public class OfficeExtract {
         XMLSlideShow slide = null;
         XSLFPowerPointExtractor extractor = null;  
         
-        try {  
+        try 
+        {  
 			is = new FileInputStream(filePath); 
 	        slide = new XMLSlideShow(is);
             extractor=new XSLFPowerPointExtractor(slide);  
@@ -310,37 +343,45 @@ public class OfficeExtract {
             is = null;
             
             return FileUtil.saveDocContentToFile( text.toString().trim(), path, name, null);
-        } catch (Exception e) {  
-			if(extractor != null)
+        } 
+        catch (Exception e) 
+        {  
+			Log.info(e);
+        	if(extractor != null)
 			{
-				try {
+				try 
+				{
 					extractor.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				}
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
 			
 			if(slide != null)
 			{
-				try {
+				try 
+				{
 					slide.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				}
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
 		
 			if(is != null)
 			{
-				try {
+				try 
+				{
 					is.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				}
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}
-        	e.printStackTrace(); 
             return false;
         }
 	}
@@ -369,16 +410,18 @@ public class OfficeExtract {
 	   }
 	   catch(Exception e)
 	   {
+			Log.info(e);
 			if(document != null)
 			{
-				try {
+				try 
+				{
 					document.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				}
+				catch (IOException e1) 
+				{
+					Log.info(e1);
 				}
 			}			
-			e.printStackTrace();
 			return false;
 	   }
 	}

@@ -12,6 +12,9 @@ import com.alibaba.fastjson.JSON;
 
 import util.DateFormat;
 
+//TODO: System.err的优先级高于System.out，因此如果两者混用就会出现日志输出顺序混乱的问题
+//TODO: System.err通常只有在调试的时候用于高亮提示，实际情况下日志都是后来获取的，需要保证日志的顺序输出，方便问题的分析
+//TODO: e.printStackTrace默认时输出到System.err里的，这里统一输出在System.out里，因此代码里需要调用Log的接口来避免信息混乱
 public class Log {
 	//logLevel
 	public final static int debug = 0;

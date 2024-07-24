@@ -1828,7 +1828,8 @@ public class FileUtil {
 	public static String getFileEncode(String filePath)
 	{
         String charsetName = null;
-        try {
+        try 
+        {
             File file = new File(filePath);
             CodepageDetectorProxy detector = CodepageDetectorProxy.getInstance();
             detector.add(new ParsingDetector(false));
@@ -1837,11 +1838,14 @@ public class FileUtil {
             detector.add(UnicodeDetector.getInstance());
             java.nio.charset.Charset charset = null;
             charset = detector.detectCodepage(file.toURI().toURL());
-            if (charset != null) {
+            if (charset != null) 
+            {
                 charsetName = charset.name();
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        }
+        catch (Exception ex) 
+        {
+        	Log.info(ex);
             return null;
         }
         return charsetName;

@@ -21,11 +21,14 @@ public class Reflect {
 	public static Object getFieldValue(Object object,String field){
 	    char[] chars = field.trim().toCharArray();
 	    chars[0] -= 32;//将field的首字母转为大写，因为set方法后跟的是首字母大写的属性
-	    try {
+	    try 
+	    {
 	        Method method = object.getClass().getMethod("get" + String.valueOf(chars));
 	        return method.invoke(object);
-	    } catch (Exception e) {
-	        e.printStackTrace();
+	    } 
+	    catch (Exception e) 
+	    {
+	    	Log.info(e);
 	    }
 	    return null;
 	}

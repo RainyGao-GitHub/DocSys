@@ -5,6 +5,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import com.DocSystem.common.Log;
+
 public class ShareThread extends Thread {
 
 	boolean stopShareThread = false;
@@ -25,7 +27,8 @@ public class ShareThread extends Thread {
 		if(proxyServerIP != null)
 		{
 			Socket socket;
-			try {
+			try 
+			{
 				socket = new Socket(proxyServerIP, port);
 				sendShareRequest(socket);
 				if(receiveShareRespose(socket) == false)
@@ -40,12 +43,10 @@ public class ShareThread extends Thread {
 					//msgHandler();
 				}
 				socket.close();				
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} 
+			catch (Exception e) 
+			{
+				Log.info(e);
 			}
 		}	
 	}

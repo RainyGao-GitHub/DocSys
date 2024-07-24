@@ -40,15 +40,20 @@ public class MyExtractCallback implements IArchiveExtractCallback {
 		final String path = (String) inArchive.getProperty(index, PropID.PATH);
 		final boolean isFolder = (boolean) inArchive.getProperty(index, PropID.IS_FOLDER);
 		return new ISequentialOutStream() {
-			public int write(byte[] data) throws SevenZipException {
-				try {
-					if (!isFolder) {
+			public int write(byte[] data) throws SevenZipException 
+			{
+				try 
+				{
+					if (!isFolder) 
+					{
 						System.out.println(path);
 						File file = new File(ourDir + path);
 						save2File(file, data);
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
+				} 
+				catch (Exception e) 
+				{
+					Log.info(e);
 				}
 				return data.length;
 			}

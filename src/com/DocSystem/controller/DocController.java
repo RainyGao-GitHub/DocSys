@@ -2954,7 +2954,8 @@ public class DocController extends BaseController{
 			return null;
 		}
 		
-		try {	
+		try 
+		{	
 			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
 			path = Base64Util.base64Decode(path);
 			if(path == null)
@@ -2973,8 +2974,10 @@ public class DocController extends BaseController{
 			String localRootPath = Path.getReposRealPath(repos);
 			
 			return generateImageWithResolutionLevel(localRootPath + path, name, imgPreviewPath, resolutionLevel);			
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+		} 
+		catch (Exception e) 
+		{
+			Log.info(e);
 			return null;
 		}	
 	}
