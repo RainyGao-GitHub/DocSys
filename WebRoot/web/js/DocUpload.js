@@ -1984,8 +1984,8 @@
 	                }
 	            },
 	            error : function () {
-	            	uploadErrorHandler(SubContext, "checkChunkUploaded "+name+ " " + _Lang("异常"));
-		            uploadErrorConfirmHandler(SubContext, "checkChunkUploaded "+name+ " " + _Lang("异常"));
+	            	uploadErrorHandler(SubContext, "checkChunkUploaded "+ SubContext.name + "[" + chunk.index + "] " + _Lang("异常"));
+		            uploadErrorConfirmHandler(SubContext, "checkChunkUploaded "+ SubContext.name + "[" + chunk.index + "] " + _Lang("异常"));
 		            return;
 	            }
 	        });
