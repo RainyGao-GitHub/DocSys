@@ -86,7 +86,7 @@ Support to online join and exit cluster with automatic parameters check (No need
 # Install and Upgrade MxsDoc
 ### 1. Install
 #### 1.1 Download Installation Package
-CHINA : [Wechat Cloud](https://share.weiyun.com/0Kjpf2o0)
+CHINA : [Wechat Cloud](http://dw.gofreeteam.com/DocSystem/web/project.html?vid=46&shareId=884281120)
 
 GLOBAL : [GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
@@ -104,7 +104,7 @@ Remote Access : Replace "localhost" with server IP
 
 ### 2. Upgrade
 #### 2.1 Download Upgrade Package [DocSystem.war]
-CHINA : [Wechat Cloud](https://share.weiyun.com/0Kjpf2o0)
+CHINA : [Wechat Cloud](http://dw.gofreeteam.com/DocSystem/web/project.html?vid=46&shareId=884281120)
 
 GLOBAL : [GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
