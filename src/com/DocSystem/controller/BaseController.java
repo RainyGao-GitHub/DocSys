@@ -24978,6 +24978,8 @@ public class BaseController  extends BaseFunction{
 			return "系统升级";
 		case constants.DocUpload.InstallOffice:
 			return "安装Office";
+		case constants.DocUpload.InstallOfficeFonts:
+			return "安装字体";
 		}
 		return "文件上传";
 	}
@@ -25021,6 +25023,9 @@ public class BaseController  extends BaseFunction{
 			localRootPath = docSysIniPath + "upgrade/";
 			break;
 		case constants.DocUpload.InstallOffice:
+			localRootPath = docSysWebPath + "web/static/";
+			break;
+		case constants.DocUpload.InstallOfficeFonts:
 			localRootPath = docSysWebPath + "web/static/";
 			break;
 		}

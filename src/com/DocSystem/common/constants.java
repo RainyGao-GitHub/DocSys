@@ -184,5 +184,6 @@ public class constants {
 	public class DocUpload  {
 		public final static int UpgradeDocSystem  		= 1;
 		public final static int InstallOffice 			= 2;
+		public final static int InstallOfficeFonts 		= 3;		
 	}
 }

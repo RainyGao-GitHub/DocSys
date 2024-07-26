@@ -3035,8 +3035,8 @@ var OfficeFontsInstall = (function () {
             	   var task = ret.data;
            	       if(task.status == 200)
             	   {
-	           			console.log("OfficeFontsInstallPrepareSuccessHandler() Off编辑器安装完成");
-	           			$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("Office编辑器安装完成"));
+	           			console.log("OfficeFontsInstallPrepareSuccessHandler() 字体安装完成");
+	           			$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("字体安装完成"));
 	           			gStatus = 0;
            	        	return;
             	   }

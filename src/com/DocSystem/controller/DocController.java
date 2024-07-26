@@ -1107,7 +1107,7 @@ public class DocController extends BaseController{
 			String dirPath,	Long batchStartTime, Integer totalCount, //for folder upload
 			Integer shareId,
 			String authCode,
-			Integer usage,	//UpgradeDocSystem, InstallOffice
+			Integer usage,	//UpgradeDocSystem, InstallOffice, InstallOfficeFonts
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("************** checkDocInfo [" + path + name + "] ****************");
