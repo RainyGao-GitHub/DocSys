@@ -2235,6 +2235,12 @@ function upgradeSystem(){
 	case 3:
 		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
 		return;
+	case 4:
+		showErrorMessage(_Lang("正在安装字体库，请稍后重试!"));			
+		return;
+	case 5:
+		showErrorMessage(_Lang("正在生成字体库，请稍后重试!"));			
+		return;
 	}
 	
 	//清除文件控件
@@ -2774,6 +2780,12 @@ function installOffice(){
 	case 3:
 		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
 		return;
+	case 4:
+		showErrorMessage(_Lang("正在安装新字体，请稍后重试!"));			
+		return;
+	case 5:
+		showErrorMessage(_Lang("正在生成字体库，请稍后重试!"));			
+		return;
 	}
 	
 	//清除文件控件
@@ -3188,6 +3200,12 @@ function onlineInstallOfficeConfirm()
 	case 3:
 		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
 		return;
+	case 4:
+		showErrorMessage(_Lang("正在安装新字体，请稍后重试!"));			
+		return;
+	case 5:
+		showErrorMessage(_Lang("正在生成字体库，请稍后重试!"));			
+		return;
 	}
 	
 	gStatus = 3;
@@ -3233,6 +3251,77 @@ function startOnlineInstallOffice()
         },
         error : function () {
         	showErrorMessage(_Lang("安装失败", ":", "服务器异常"));
+        	gStatus = 0;
+        }
+    });
+}
+
+//重新生成字体库
+function generateOfficeFontsConfirm()
+{
+	console.log("generateOfficeFontsConfirm()");
+	switch(gStatus)
+	{
+	case 1:
+		showErrorMessage(_Lang("系统升级中，请稍后重试!"));
+		return;
+	case 2:
+		showErrorMessage(_Lang("正在安装Office，请稍后重试!"));			
+		return;
+	case 3:
+		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
+		return;
+	case 4:
+		showErrorMessage(_Lang("正在安装字体，请稍后重试!"));			
+		return;
+	case 5:
+		showErrorMessage(_Lang("正在重置字体库，请稍后重试!"));			
+		return;
+	}
+	
+	gStatus = 5;
+    qiao.bs.confirm({
+    		id: "generateOfficeFontsConfirmDialog",
+	        title: _Lang("重置字体库"),
+	        msg: _Lang("是否重置生成字体库？"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
+    	},function () {
+			startGenerateOfficeFonts();
+	    	return true;   //close dialog
+    	},function()
+    	{
+    		gStatus = 0;
+    		return true;	//close dialog
+    	}
+    );
+}
+
+function startGenerateOfficeFonts()
+{
+	console.log("startGenerateOfficeFonts()");
+	$.ajax({
+        url : "/DocSystem/Bussiness/generateOfficeFonts.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        },
+        success : function (ret) {
+        	console.log("startGenerateOfficeFonts ret",ret);
+            if( "ok" == ret.status )
+            {
+            	showErrorMessage(_Lang("重置成功"));
+            	gStatus = 0;
+            }
+            else 
+            {
+                console.log(ret.msgInfo);
+	        	showErrorMessage(_Lang("重置失败", ":", ret.msgInfo));	               
+	        	gStatus = 0;
+            }
+        },
+        error : function () {
+        	showErrorMessage(_Lang("重置失败", ":", "服务器异常"));
         	gStatus = 0;
         }
     });

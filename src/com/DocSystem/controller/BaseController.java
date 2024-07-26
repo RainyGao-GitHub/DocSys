@@ -180,7 +180,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.junrar.Archive;
 import com.github.junrar.rarfile.FileHeader;
-import com.google.gson.JsonObject;
 import com.jcraft.jzlib.GZIPInputStream;
 
 import net.sf.sevenzipjbinding.IInArchive;
@@ -14385,7 +14384,13 @@ public class BaseController  extends BaseFunction{
 				
 				//start DataBase auto backup thread
 				addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
-
+				
+				
+				if(initOfficeEditorFonts())
+				{
+					return "ERROR_initOfficeFontsFailed";
+				}
+				
 				FileUtil.saveDocContentToFile("ok", docSysIniPath,  "docSysIniState", "UTF-8");
 				return "ok";
 			}
@@ -14426,6 +14431,16 @@ public class BaseController  extends BaseFunction{
 		return ret;
 	}
 	
+	private boolean initOfficeEditorFonts() 
+	{
+		Log.info("initOfficeEditorFonts()");
+		if(channel == null)
+		{
+			return true;
+		}
+		return channel.initOfficeEditorFonts();
+	}
+
 	protected void restartClusterServer() {
 		Log.info("restartClusterServer() [" + clusterServerUrl+ "]");
 		if(redisEn)

@@ -58,6 +58,8 @@
 	                    <td class="edit">
 	                      	<button onclick="installOffice()" data-id="" class="btn btn-lg btn-warning examine_ban">Install...</button>	                      	
 	                      	<button onclick="onlineInstallOfficeConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">Online Install</button>
+	                      	<button onclick="addOfficeFonts()" data-id="" class="btn btn-lg btn-warning examine_ban">Install Fonts...</button>	                      	
+	                      	<button onclick="generateOfficeFontsConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">Reset Fonts</button>
 	                      	<button id="btnDisableOffice" onclick="disableOffice()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.officeDisabled == 1}} style="display:none" {{/if}}>Disable</button>
 	                      	<button id="btnEnableOffice" onclick="enableOffice()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.officeDisabled == 0}} style="display:none" {{/if}}>Enable</button>
 	                    </td>

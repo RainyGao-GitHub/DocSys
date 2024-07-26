@@ -232,4 +232,6 @@ public interface Channel {
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception;
 	
 	public boolean isAllowedAction(String action, ReturnAjax rt);
+
+	public boolean initOfficeEditorFonts();
 }
