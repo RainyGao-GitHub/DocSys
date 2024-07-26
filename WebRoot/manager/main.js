@@ -2845,6 +2845,335 @@ function addOfficeFontsConfirm(e)
     );
 }
 
+//OfficeFontsInstall类
+var OfficeFontsInstall = (function () {
+	var _firstFile;
+	var _status = 0;
+	var _taskId;
+	
+	var OfficeFontsInstallFileUpload;
+	function OfficeFontsInstallFileUploadInit()
+	{
+		var uploadDisplayInit = function(index, totalNum) {
+			console.log("uploadDisplayInit index:" + index + " totalNum:" + totalNum);
+			var str="<div><span class='upload-list-title'>[" + _Lang("安装字体") + "] " + _Lang("正在上传") + "  " +index +" / " + totalNum +"</span><i class='el-icon-close uploadCloseBtn' onclick='stopInstallOfficeFonts()'></i></div>";
+			str +="<div id='uploadedFileList' class='uploadedFileList'></div>";
+			$(".el-upload-list").show();
+			$('.el-upload-list').html(str);
+      	};
+     
+      	var showUploadingInfo = function(reuploadFlag, uploadStartedNum, totalNum, reuploadStartedNum, reuploadTotalNum)
+      	{
+      		if(reuploadFlag == false)
+      		{
+      			$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("正在上传") + " " + uploadStartedNum + " / " + totalNum);
+      		}
+      		else
+      		{
+      			$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("正在重传") + " " + reuploadStartedNum + " / " + reuploadTotalNum);
+      		}
+      	}
+      	
+		var createUploadItem = function(index, fileName) {
+			console.log("createUploadItem index:" + index + " fileName:" + fileName);
+			return "<li class='el-upload-list__item file" + index + " is-uploading' value=" + index + ">"+
+			"<a class='el-upload-list__item-name uploadFileName'><i class='el-icon-document'></i><span class='uploadFileName' >"+ fileName +"</span></a>"+
+			"<a class='reuploadBtn reupload" + index + "' onclick='OfficeFontsInstall.reuploadFailDocs("+ index +")'  style='display:none'>" + _Lang("重传") + "</a>"+
+			"<label class='el-upload-list__item-status-label'><i class='el-icon-upload-success el-icon-circle-check'></i></label>"+
+			"<i class='el-icon-close stopUpload'  value="+index+" onclick='OfficeFontsInstall.stopUpload("+ index +")'></i>"+
+			"<div class='el-progress el-progress--line'>"+
+				"<div class='el-progress-bar'>"+
+					"<div class='el-progress-bar__outer' >"+
+						"<div class='el-progress-bar__inner'></div>"+
+					"</div>"+
+				"</div>"+
+				"<div class='el-progress__text' style='font-size: 12.8px;'></div>"+
+			"</div>"+
+		  "</li>";
+		};
+  		
+		var appendUploadItems = function(uploadItemsHtmlStr) {
+			$('#uploadedFileList').append(uploadItemsHtmlStr);
+		};
+				
+  		var deleteUploadItem = function(index) {
+	  		$('.file' + index).remove();      		
+  		};
+
+  		var updateUploadItem = function(index, speed, percent){
+			$('.file'+index+' .el-progress__text').text(speed + " " + percent+"%");
+			$('.file'+index+' .el-progress-bar__inner')[0].style.width = percent +"%"; //进度条
+
+			//printUploadedTime();
+  		};
+  		
+  		var stopAllUploadCallback = function(){  	  		
+	    	//停止上传
+  			$(".el-upload-list").hide();
+	    	gStatus = 0;
+  		};
+  		
+  		var reuploadItemInit = function(index){
+      		//hide the reupload btn
+    		$(".reupload"+index).hide();
+    		
+    		$('.file' + index).addClass('is-uploading');
+			$('.file' + index).removeClass('is-fail');
+  		};
+
+  		var uploadSuccessCallback = function(index, context){  	  					
+			//更新上传显示
+  			$('.file'+index).removeClass('is-uploading');
+  			$('.file'+index).addClass('is-success');
+  			//hide the reupload btn
+  			$(".reupload"+index).hide();
+  		};
+  		
+  		var uploadErrorCallback = function(index){  	  		
+
+  			$('.file' + index).removeClass('is-uploading');
+  			$('.file' + index).addClass('is-fail');
+  	  	
+  	  		//show the reupload btn
+  			$(".reupload" + index).show();
+  		};
+  		
+  		var uploadEndCallback = function(totalNum, successNum)
+  		{  	  		
+      		//显示上传完成 
+      		var uploadEndInfo = "[" + _Lang("安装字体") + "] " + _Lang("上传完成") + "(" + _LangStats(totalNum) + ")," + _Lang("开始安装...");
+      		if(successNum != totalNum)
+      		{
+      			uploadEndInfo = "[" + _Lang("安装字体") + "] " + _Lang("上传失败") + "(" + _LangStats(totalNum, successNum) + ")";
+      			$(".reuploadAllBtn").show();
+      		}
+      		else
+      		{
+      			$(".reuploadAllBtn").hide();
+      			startInstalOfficeFonts(_firstFile);
+      		}
+      		$(".upload-list-title").text(uploadEndInfo);   		
+      		
+      		//清除文件控件
+			$("#installOffice").val("");
+  		};
+  		
+		var config = {
+				uploadDisplayInit: uploadDisplayInit,
+				showUploadingInfo: showUploadingInfo,
+				createUploadItem: createUploadItem,
+				appendUploadItems: appendUploadItems,		
+				deleteUploadItem: deleteUploadItem,
+				updateUploadItem: updateUploadItem,
+				stopAllUploadCallback: stopAllUploadCallback,
+				uploadSuccessCallback: uploadSuccessCallback,			
+				uploadErrorCallback: uploadErrorCallback,			
+				uploadEndCallback: uploadEndCallback,			
+				reuploadItemInit: reuploadItemInit,
+				usage: 3,	//OfficeFontsInstall
+		};
+  		
+		OfficeFontsInstallFileUpload = new DocUpload(config);
+	}
+	    	
+	//Re Upload Fail Docs
+    function reuploadFailDocs(index)
+    {
+    	console.log("reuploadFailDocs() index:" + index);
+    	OfficeFontsInstallFileUpload.reuploadFailDocs(index);
+    }
+
+	//Stop Upload
+	function stopUpload(index)
+	{
+    	//var index = $(this).attr('value');	//value 不是i的原生属性，所以不能用value
+    	console.log("stopUpload " + index);
+    	OfficeFontsInstallFileUpload.stopUpload(index);
+    }
+
+	function start(files, firstFile){
+		_firstFile = firstFile;
+	  	var parentPath = "";
+	  	var parentId = 0;
+	  	var level = 0;
+	  	var vid = -1;
+	  	var parentNode = null;
+		OfficeFontsInstallFileUpload.uploadDocs(files, parentNode, parentPath, parentId, level, vid);
+	}
+	
+	function startOfficeFontsInstallPrepareTask(taskId, delayTime)
+	{
+		_taskId = taskId;
+		console.log("startOfficeFontsInstallPrepareTask() taskId:" + taskId + " delayTime:" + delayTime);
+		var nextDelayTime = delayTime; //每次增加5s
+		if(nextDelayTime < 60000) //最长1分钟
+		{
+			nextDelayTime += 5000;
+		}
+		
+		setTimeout(function () {
+			console.log("timerForQueryOfficeFontsInstallPrepareTask triggered!");
+			doQueryOfficeFontsInstallPrepareTask(taskId, nextDelayTime);
+		},delayTime);	//check it 2s later	
+	}
+	
+	function doQueryOfficeFontsInstallPrepareTask(taskId, nextDelayTime)
+	{
+		console.log("doQueryOfficeFontsInstallPrepareTask() taskId:" + taskId + " nextDelayTime:" + nextDelayTime);
+
+		$.ajax({
+            url : "/DocSystem/Manage/queryLongTermTask.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                taskId: taskId,
+            },
+            success : function (ret) {
+        	   console.log("doQueryOfficeFontsInstallPrepareTask() ret:",ret);        
+               if( "ok" == ret.status )
+               {    
+            	   var task = ret.data;
+           	       if(task.status == 200)
+            	   {
+	           			console.log("OfficeFontsInstallPrepareSuccessHandler() Off编辑器安装完成");
+	           			$(".upload-list-title").text("[" + _Lang("安装Office") + "] " + _Lang("Office编辑器安装完成"));
+	           			gStatus = 0;
+           	        	return;
+            	   }
+           	       startOfficeFontsInstallPrepareTask(task.id, nextDelayTime);
+               }
+               else	//后台报错
+               {
+            	   	console.log("字体安装失败:" + ret.msgInfo);
+					$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("安装失败", ":", ret.msgInfo));
+               }
+            },
+            error : function () {	//后台异常
+        	   	console.log("字体安装失败:服务器异常");
+				$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("安装失败", ":", "服务器异常"));
+            }
+    	});	
+	}
+	
+	function stop()
+	{
+    	if(_status < 2)	//上传中
+    	{
+    		OfficeFontsInstallFileUpload.stopAllUpload();
+    	}
+    	else
+    	{
+    		stopOfficeFontsInstallPrepareTask(_taskId);
+    	}
+	}
+	
+	function stopOfficeFontsInstallPrepareTask(taskId)
+	{
+		console.log("stopOfficeFontsInstallPrepareTask() taskId:" + taskId);
+
+		$.ajax({
+            url : "/DocSystem/Manage/stopLongTermTask.do",
+            type : "post",
+            dataType : "json",
+            data : {
+                taskId: taskId,
+            },
+            success : function (ret) {
+        	   console.log("stopOfficeFontsInstallPrepareTask() ret:",ret);        
+               if( "ok" == ret.status )
+               {    
+	           		console.log("stopOfficeFontsInstallPrepareTask() 字体安装任务已取消");
+	           		$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("字体安装任务已取消"));
+               }
+               else
+               {
+            	   	console.log("stopOfficeFontsInstallPrepareTask() 字体安装任务取消失败:" + ret.msgInfo);
+            	   	showErrorMessage(_Lang("字体安装任务取消失败", ":", ret.msgInfo));
+               }
+            },
+            error : function () {	//后台异常
+        	   	console.log("stopOfficeFontsInstallPrepareTask() 字体安装任务取消失败:服务器异常");
+        	   	showErrorMessage(_Lang("字体安装任务取消失败", ":", "服务器异常"));
+            }
+    	});	
+	}
+	
+	//初始化上传控件
+	OfficeFontsInstallFileUploadInit();
+	
+	//开放给外部的调用接口
+    return {
+    	start: function(files, firstFile){
+    		start(files, firstFile);
+        },
+        stop: function(){
+        	stop();
+        },
+        stopUpload: function(index){
+        	stopUpload(index);
+        },
+        reuploadFailDocs: function(index){
+        	reuploadFailDocs(index);
+        },
+        startOfficeFontsInstallPrepareTask: function(taskId, delayTime){
+        	startOfficeFontsInstallPrepareTask(taskId, delayTime);
+        },
+	};
+})();
+
+function startInstalOfficeFonts(file)
+{
+	$.ajax({
+        url : "/DocSystem/Bussiness/installOfficeFonts.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	name: file.name,
+        	size: file.size,
+        },
+        success : function (ret) {
+        	console.log("startInstalOfficeFonts() ret:",ret);
+			if("ok" == ret.status){
+				//showErrorMessage("Office编辑器安装成功");
+				var task = ret.data;
+				OfficeInstall.startOfficeInstallPrepareTask(task.id, 2000); //2秒后查询
+				$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("安装准备中..."));
+			 }
+			 else	//上传失败
+			 {
+				//上传失败
+				console.log("startInstalOfficeFonts() 字体安装失败：" + ret.msgInfo);
+				$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("安装失败", ":", ret.msgInfo));
+				gStatus = 0;
+				return;
+             }
+        },
+        error : function () {
+	    	$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("安装失败", ":", "服务器异常"));
+			gStatus = 0;
+        }
+    });
+}
+
+function stopInstallOfficeFonts(){
+	if(gStatus == 0)
+	{
+		$(".el-upload-list").hide();
+		return;
+	}
+	
+	qiao.bs.confirm({
+        id: 'bsconfirm',
+        msg: _Lang('是否取消字体安装！'),
+        title: _Lang("确认"),
+        okbtn: _Lang("取消安装"),
+        qubtn: _Lang("继续"),
+    },function(){
+    	OfficeFontsInstall.stop();
+    },function(){
+        //alert('点击了取消！');
+    });
+}
 
 //安装OfficeEditor
 function installOffice(){
@@ -3176,12 +3505,12 @@ var OfficeInstall = (function () {
                }
                else
                {
-            	   	console.log("stopSystemUpgradePrepareTask() Office安装任务取消失败:" + ret.msgInfo);
+            	   	console.log("stopOfficeInstallPrepareTask() Office安装任务取消失败:" + ret.msgInfo);
             	   	showErrorMessage(_Lang("Office安装任务取消失败", ":", ret.msgInfo));
                }
             },
             error : function () {	//后台异常
-        	   	console.log("stopSystemUpgradePrepareTask() Office安装任务取消失败:服务器异常");
+        	   	console.log("stopOfficeInstallPrepareTask() Office安装任务取消失败:服务器异常");
         	   	showErrorMessage(_Lang("Office安装任务取消失败", ":", "服务器异常"));
             }
     	});	
@@ -3265,6 +3594,7 @@ function stopInstallOffice(){
         //alert('点击了取消！');
     });
 }
+
 
 //在线安装
 function onlineInstallOfficeConfirm()
