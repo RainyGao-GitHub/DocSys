@@ -2236,10 +2236,10 @@ function upgradeSystem(){
 		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
 		return;
 	case 4:
-		showErrorMessage(_Lang("正在安装字体库，请稍后重试!"));			
+		showErrorMessage(_Lang("正在安装字体，请稍后重试!"));			
 		return;
 	case 5:
-		showErrorMessage(_Lang("正在生成字体库，请稍后重试!"));			
+		showErrorMessage(_Lang("正在重置字体库，请稍后重试!"));			
 		return;
 	}
 	
@@ -2766,6 +2766,87 @@ function doEnableOffice(){
     });
 }
 
+//安装字体
+function addOfficeFonts(){
+	console.log("addOfficeFonts()");
+	
+	switch(gStatus)
+	{
+	case 1:
+		showErrorMessage(_Lang("系统升级中，请稍后重试!"));
+		return;
+	case 2:
+		showErrorMessage(_Lang("正在安装Office，请稍后重试!"));			
+		return;
+	case 3:
+		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
+		return;
+	case 4:
+		showErrorMessage(_Lang("正在安装字体，请稍后重试!"));			
+		return;
+	case 5:
+		showErrorMessage(_Lang("正在重置字体库，请稍后重试!"));			
+		return;
+	}
+	
+	//清除文件控件
+	$("#addOfficeFonts").val("");
+    return $("#addOfficeFonts").click();
+}
+
+function addOfficeFontsConfirm(e)
+{
+	console.log("addOfficeFontsConfirm()");
+	gStatus = 4;
+
+    var files = e.target.files;
+    var firstFile;
+    if(files.length > 0)
+   	{
+    	console.log("files.length:" + files.length);
+    	for( var i = 0 ; i < files.length ; i++ )
+    	{  
+    		firstFile = files[i];
+    	   	if(typeof firstFile == 'object')
+    	   	{
+    	   		//var relativePath = firstFile.webkitRelativePath;	//获取第一个文件的相对路径
+    	   		//console.log("firstFile relativePath:"+firstFile.webkitRelativePath);
+    	   		break;
+    	   	}
+    	   	else
+    	   	{
+    	   		//This is something else 
+    	   		//console.log("it is not a file");
+    	   	}
+    	}
+    }
+    else
+   	{
+   		showErrorMessage(_Lang("请选择文件"));
+    	gStatus = 0;
+   		return false;
+   	}  
+    
+    
+    qiao.bs.confirm({
+    		id: "addOfficeFontsConfirmDialog",
+	        title: _Lang("添加字体"),
+	        msg: _Lang("是否安装新字体？"),
+	        okbtn: _Lang("是"),
+	        qubtn: _Lang("否"),
+    	},function () {
+    		OfficeFontsInstall.start(files, firstFile);
+	    	return true;   //close dialog
+    	},function()
+    	{
+	    	gStatus = 0;
+    		return true;	//close dialog
+    	}
+    );
+}
+
+
+//安装OfficeEditor
 function installOffice(){
 	console.log("installOffice()");
 	
@@ -2781,10 +2862,10 @@ function installOffice(){
 		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
 		return;
 	case 4:
-		showErrorMessage(_Lang("正在安装新字体，请稍后重试!"));			
+		showErrorMessage(_Lang("正在安装字体，请稍后重试!"));			
 		return;
 	case 5:
-		showErrorMessage(_Lang("正在生成字体库，请稍后重试!"));			
+		showErrorMessage(_Lang("正在重置字体库，请稍后重试!"));			
 		return;
 	}
 	
@@ -3201,10 +3282,10 @@ function onlineInstallOfficeConfirm()
 		showErrorMessage(_Lang("正在在线安装Office，请稍后重试!"));			
 		return;
 	case 4:
-		showErrorMessage(_Lang("正在安装新字体，请稍后重试!"));			
+		showErrorMessage(_Lang("正在安装字体，请稍后重试!"));			
 		return;
 	case 5:
-		showErrorMessage(_Lang("正在生成字体库，请稍后重试!"));			
+		showErrorMessage(_Lang("正在重置字体库，请稍后重试!"));			
 		return;
 	}
 	
