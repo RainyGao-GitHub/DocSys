@@ -1097,6 +1097,37 @@ public class FileUtil {
 		return false;
 	}
 	
+	protected static boolean isFontFile(String fileSuffix) {
+		if(fileSuffix == null)
+		{
+			//"未知文件类型"
+			return false;
+		}
+
+		switch(fileSuffix)
+		{
+		case "ttf":
+		case "otf":
+		case "woff":
+		case "woff2":
+		case "eot":
+		case "svg":
+		case "pfb":
+		case "pfm":
+		case "ps":
+			return true;
+		default:
+			break;
+		}
+		return false;
+	}
+	
+	public static boolean isOfficeFontFile(String name) 
+	{
+		String fileSuffix = getFileSuffix(name);
+		return isFontFile(fileSuffix);
+	}
+	
 	public static boolean isPdf(String fileSuffix) {
 		if(fileSuffix == null)
 		{

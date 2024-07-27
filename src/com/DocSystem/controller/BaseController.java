@@ -19672,7 +19672,7 @@ public class BaseController  extends BaseFunction{
 		if(compressFileType == null)
 		{
 			Log.debug("extarctZipFile() " + name + " 不是压缩文件！");
-			return FileUtil.moveFileOrDir(path, name, targetPath, name, false);
+			return false;
 		}
 		
 		boolean ret = false;
