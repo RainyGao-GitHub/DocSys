@@ -219,39 +219,23 @@ Copy all DLL files under folder [DocSystem\web\static\office-editor\libs\Linux] 
 
 ```
 chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/server/FileConverter/bin/"
-chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/server/tools/"
-chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/bin/"
+
 ```
 ##### 3.1.3 Enable write permission (Optional)
 
 ```
 chmod 755 -R "/data/"
 ```
-##### 3.1.4 Restart MxsDoc
 
 #### 3.2 Online Changed Excel Content was lost under Linux 
 
-##### 3.2.1 Install Font
+##### 3.2.1 Install New Font
 
-yum -y install fontconfig
-
-##### 3.2.2 Add Chinese Fonts
-
-Copy the font files under folder [C:/Windows/Fonts] to [/usr/share/fonts]
-
-##### 3.2.3 Generate fonts.scale File
-
-yum -y install ttmkfdir 
-
-##### 3.2.4 Refresh font cache
-
-fc-cache
+Management -> System Management -> Install Fonts... (Select the font file or Compress the font folder to zip file and install)
 
 ##### 3.2.5 Re-Generate Office Fonts
 
-Run the script: DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
-
-##### 3.2.6 Restart MxsDoc
+Management -> System Management -> Reset Fonts... (It will take about 10-20 Minutes)
 
 #### 3.3 Handshake timeout for Office Edit which cause Office file open failed under Linux
 
