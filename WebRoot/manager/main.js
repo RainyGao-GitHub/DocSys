@@ -3134,9 +3134,8 @@ function startInstalOfficeFonts(file)
         success : function (ret) {
         	console.log("startInstalOfficeFonts() ret:",ret);
 			if("ok" == ret.status){
-				//showErrorMessage("Office编辑器安装成功");
 				var task = ret.data;
-				OfficeInstall.startOfficeInstallPrepareTask(task.id, 2000); //2秒后查询
+				OfficeFontsInstall.startOfficeFontsInstallPrepareTask(task.id, 2000); //2秒后查询
 				$(".upload-list-title").text("[" + _Lang("安装字体") + "] " + _Lang("安装准备中..."));
 			 }
 			 else	//上传失败
