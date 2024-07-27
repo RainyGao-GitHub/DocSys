@@ -25028,7 +25028,7 @@ public class BaseController  extends BaseFunction{
 			localRootPath = docSysWebPath + "web/static/";
 			break;
 		case constants.DocUpload.InstallOfficeFonts:
-			localRootPath = docSysWebPath + "web/static/";
+			localRootPath = docSysWebPath + "web/static/office-fonts/";
 			break;
 		}
 		return localRootPath;

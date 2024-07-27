@@ -1695,7 +1695,7 @@ public class DocController extends BaseController{
 					commitMsg,
 					dirPath, batchStartTime, totalCount, isEnd, //for folder upload			
 					accessUser,
-					rt,	//UpgradeDocSystem, InstallOffice
+					rt,	//UpgradeDocSystem, InstallOffice, InstallOfficeFonts
 					response, request, session);
 			return;
 		}

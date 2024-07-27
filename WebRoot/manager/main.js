@@ -2415,8 +2415,8 @@ var SystemUpgrade = (function () {
   			$(".reupload"+index).hide();
   		};
   		
-  		var uploadErrorCallback = function(index){  	  		
-
+  		var uploadErrorCallback = function(index)
+  		{  	  		
   			$('.file' + index).removeClass('is-uploading');
   			$('.file' + index).addClass('is-fail');
   	  	
