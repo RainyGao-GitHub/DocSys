@@ -191,32 +191,18 @@ chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/server/F
 
 ```
 chmod 755 -R "/data/"
+
 ```
-##### 1.4、重启MxsDoc
 
-#### 2、Linux系统Excel在线编辑退出后修改内容丢失
+#### 2、Linux系统 中文显示乱码 / 无法保存 / 字体不一致
 
-##### 2.1、安装字体库
+##### 2.1、安装中文字体
 
-yum -y install fontconfig
+管理后台 -> 系统管理 -> 添加字体 (选择需要安装的中文字体 或者 把 C:/Windows/Fonts 目录压缩成zip包进行安装)
 
-##### 2.2、添加中文字体
+##### 2.2、重新生成字体库
 
-将 C:/Windows/Fonts 字体文件复制到 /usr/share/fonts 目录
-
-##### 2.3、生成 fonts.scale 文件
-
-yum -y install ttmkfdir 
-
-##### 2.4、刷新字体缓存
-
-fc-cache
-
-##### 2.5、重新生成office字体库
-
-运行  DocSystem\web\static\office-editor\bin\documentserver-generate-allfonts.sh 
-
-##### 2.6、重启MxsDoc
+管理后台 -> 系统管理 -> 重置字体库（该操作将重新生成Office字体库，如果系统自带字体库较多，大约需要10几分钟左右，请耐心等待）
 
 #### 3、Linux系统 Office 编辑握手延时过大，导致文件打开失败
 
