@@ -102,12 +102,7 @@ Windows系统下载【docsys-win-x.xx.xx.zip】
 
 #### 3、适用场景
 
-低于V2.02.45的版本和特殊版本
-
-| 版本       |   说明         |
-| ------------- |  -------------       |
-| V2.02.51      |  图片缩略图预览支持   |
-
+低于V2.02.51的版本
 
 # 限制与价格
 ### 限制
@@ -190,8 +185,7 @@ https://gitee.com/RainyGao/DocSys-Docs
 
 ```
 chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/server/FileConverter/bin/"
-chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/server/tools/"
-chmod 777 -R "$CATALINA_HOME/webapps/DocSystem/web/static/office-editor/bin/"
+
 ```
 ##### 1.3、手动修改以下目录的写入权限（可选）
 
