@@ -233,5 +233,5 @@ public interface Channel {
 	
 	public boolean isAllowedAction(String action, ReturnAjax rt);
 
-	public boolean initOfficeEditorFonts();
+	public boolean initOfficeEditorFonts(boolean needThumbnails);
 }
