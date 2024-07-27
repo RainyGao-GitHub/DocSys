@@ -1817,6 +1817,7 @@ public class ManageController extends BaseController{
 		{
 		case 200:	//成功
 			//延时删除下载压缩任务
+			rt.setMsgInfo(task.info);
 			addDelayTaskForLongTermTaskDelete(task.id, 120L);	//2分钟后删除
 			break;
 		case -1: 	//失败
