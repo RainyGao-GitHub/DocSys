@@ -14384,14 +14384,12 @@ public class BaseController  extends BaseFunction{
 				
 				//start DataBase auto backup thread
 				addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
-				
-				
-				if(initOfficeEditorFonts())
-				{
-					return "ERROR_initOfficeFontsFailed";
-				}
-				
+								
 				FileUtil.saveDocContentToFile("ok", docSysIniPath,  "docSysIniState", "UTF-8");
+
+				//TODO: 初始化OfficeFonts
+				initOfficeEditorFonts();
+				
 				return "ok";
 			}
 		}
@@ -14428,6 +14426,10 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		FileUtil.saveDocContentToFile(ret, docSysIniPath,  "docSysIniState", "UTF-8");
+		
+		//TODO: 初始化OfficeFonts
+		initOfficeEditorFonts();
+		
 		return ret;
 	}
 	
@@ -14438,7 +14440,7 @@ public class BaseController  extends BaseFunction{
 		{
 			return true;
 		}
-		return channel.initOfficeEditorFonts();
+		return channel.initOfficeEditorFonts(false);
 	}
 
 	protected void restartClusterServer() {
