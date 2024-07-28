@@ -3683,10 +3683,12 @@ function startOnlineInstallOffice()
         	    return;
             }else {
             	showErrorMessage(_Lang("安装失败", ":", ret.msgInfo));
+            	gStatus = 0;
             }
         },
         error : function () {
         	showErrorMessage(_Lang("安装失败", ":", "服务器异常"));
+        	gStatus = 0;
         }
     });
 }
@@ -3735,11 +3737,13 @@ function doQueryOnlineInstallOfficeTask(taskId, nextDelayTime)
            {
         	   	console.log("在线安装Office失败:" + ret.msgInfo);
        			showErrorMessage(_Lang("在线安装Office失败", " : ", ret.msgInfo));
+       			gStatus = 0;
            }
         },
         error : function () {	//后台异常
     	   	console.log("在线安装Office失败:服务器异常");
    			showErrorMessage(_Lang("在线安装Office失败", " : ", "服务器异常"));
+   			gStatus = 0;
         }
 	});		
 }
@@ -3802,10 +3806,12 @@ function startGenerateOfficeFonts()
         	    return;
             }else {
             	showErrorMessage(_Lang("重置字体库失败", ":", ret.msgInfo));
+            	gStatus = 0;
             }
         },
         error : function () {
         	showErrorMessage(_Lang("重置字体库失败", ":", "服务器异常"));
+        	gStatus = 0;
         }
     });
 }
@@ -3854,11 +3860,13 @@ function doQueryGenerateOfficeFontsTask(taskId, nextDelayTime)
            {
         	   	console.log("字体库重置失败:" + ret.msgInfo);
        			showErrorMessage(_Lang("字体库重置失败", " : ", ret.msgInfo));
+       			gStatus = 0;
            }
         },
         error : function () {	//后台异常
     	   	console.log("字体库重置失败:服务器异常");
    			showErrorMessage(_Lang("字体库重置失败", " : ", "服务器异常"));
+   			gStatus = 0;
         }
 	});		
 }
