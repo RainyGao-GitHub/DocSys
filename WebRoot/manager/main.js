@@ -3729,7 +3729,7 @@ function doQueryOnlineInstallOfficeTask(taskId, nextDelayTime)
            			showErrorMessage(_Lang("在线安装Office成功"));
            			return;
         	   }
-       	    startOnlineInstallOfficeQueryTask(task.id, nextDelayTime);
+       	       startOnlineInstallOfficeQueryTask(task.id, nextDelayTime);
            }
            else	//后台报错
            {
