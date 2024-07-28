@@ -3679,7 +3679,7 @@ function startOnlineInstallOffice()
             if( "ok" == ret.status ){
         	    console.log("startOnlineInstallOffice start ret:",ret);   
         	    showErrorMessage(_Lang("Office安装中，可能需要花费较长时间，您可先关闭当前窗口！"));
-				startOnlineInstallOfficeQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
+				startOnlineInstallOfficeQueryTask(ret.data.id, 2000); //2秒后查询
         	    return;
             }else {
             	showErrorMessage(_Lang("安装失败", ":", ret.msgInfo));
@@ -3798,7 +3798,7 @@ function startGenerateOfficeFonts()
             if( "ok" == ret.status ){
         	    console.log("generateOfficeFonts start ret:",ret);   
         	    showErrorMessage(_Lang("字体库生成中，可能需要花费较长时间，您可先关闭当前窗口！"));
-				startGenerateOfficeFontsQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
+				startGenerateOfficeFontsQueryTask(ret.data.id, 2000); //2秒后查询
         	    return;
             }else {
             	showErrorMessage(_Lang("重置字体库失败", ":", ret.msgInfo));
