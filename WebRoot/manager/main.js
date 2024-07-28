@@ -3710,31 +3710,79 @@ function generateOfficeFontsConfirm()
 function startGenerateOfficeFonts()
 {
 	console.log("startGenerateOfficeFonts()");
-	$.ajax({
-        url : "/DocSystem/Bussiness/generateOfficeFonts.do",
+    $.ajax({
+        url : "/DocSystem/Repos/generateOfficeFonts.do",
         type : "post",
         dataType : "json",
         data : {
         },
         success : function (ret) {
-        	console.log("startGenerateOfficeFonts ret",ret);
-            if( "ok" == ret.status )
-            {
-            	showErrorMessage(_Lang("重置成功"));
-            	gStatus = 0;
-            }
-            else 
-            {
-                console.log(ret.msgInfo);
-	        	showErrorMessage(_Lang("重置失败", ":", ret.msgInfo));	               
-	        	gStatus = 0;
+            if( "ok" == ret.status ){
+        	    console.log("generateOfficeFonts start ret:",ret);   
+        	    showErrorMessage(_Lang("字体库生成中，可能需要花费较长时间，您可先关闭当前窗口！"));
+				startGenerateOfficeFontsQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
+        	    return;
+            }else {
+            	showErrorMessage(_Lang("重置字体库失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-        	showErrorMessage(_Lang("重置失败", ":", "服务器异常"));
-        	gStatus = 0;
+        	showErrorMessage(_Lang("重置字体库失败", ":", "服务器异常"));
         }
     });
+}
+
+function startGenerateOfficeFontsQueryTask(SubContext, taskId, delayTime)
+{
+	console.log("startGenerateOfficeFontsQueryTask() taskId:" + taskId + " delayTime:" + delayTime);
+	var nextDelayTime = delayTime; //每次增加5s
+	if(nextDelayTime < 60000) //最长1分钟
+	{
+		nextDelayTime += 5000;
+	}
+	
+	setTimeout(function () {
+		console.log("timerForQueryGenerateOfficeFontsQueryTask triggered!");
+		doQueryGenerateOfficeFontsTask(SubContext, taskId, nextDelayTime);
+	},delayTime);	//check it 2s later	
+}
+
+function doQueryGenerateOfficeFontsTask(SubContext, taskId, nextDelayTime)
+{
+	console.log("doQueryGenerateOfficeFontsTask() taskId:" + taskId);
+
+	$.ajax({
+        url : "/DocSystem/Manage/queryLongTermTask.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            taskId: taskId,
+        },
+        success : function (ret) {
+    	   console.log("doQueryGenerateOfficeFontsTask() ret:",ret);        
+           if( "ok" == ret.status )
+           {    
+        	   var task = ret.data;
+       	       if(task.status == 200)
+        	   {
+           			console.log("doQueryGenerateOfficeFontsTask() 字体库重置成功");
+           			gStatus = 0;
+           			showErrorMessage(_Lang("字体库重置成功", " : ", "服务器异常"));
+           			return;
+        	   }
+       	       startGenerateOfficeFontsQueryTask(task.id, nextDelayTime);
+           }
+           else	//后台报错
+           {
+        	   	console.log("字体库重置失败:" + ret.msgInfo);
+       			showErrorMessage(_Lang("字体库重置失败", " : ", ret.msgInfo));
+           }
+        },
+        error : function () {	//后台异常
+    	   	console.log("字体库重置失败:服务器异常");
+   			showErrorMessage(_Lang("字体库重置失败", " : ", "服务器异常"));
+        }
+	});		
 }
 
 var systemLogSearchWord = "";
