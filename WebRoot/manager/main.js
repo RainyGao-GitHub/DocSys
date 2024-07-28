@@ -3622,7 +3622,7 @@ function onlineInstallOfficeConfirm()
     qiao.bs.confirm({
     		id: "onlineInstallOfficeConfirmDialog",
 	        title: _Lang("安装Office"),
-	        msg: _Lang("是否安装Office？"),
+	        msg: _Lang("在线安装OfficeEditor大约需要10分钟, 是否安装？"),
 	        okbtn: _Lang("确认"),
 	        qubtn: _Lang("取消"),
     	},function () {
@@ -3666,6 +3666,84 @@ function startOnlineInstallOffice()
     });
 }
 
+function startOnlineInstallOffice()
+{
+	console.log("startOnlineInstallOffice()");
+    $.ajax({
+        url : "/DocSystem/Bussiness/onlineInstallOffice.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+        	    console.log("startOnlineInstallOffice start ret:",ret);   
+        	    showErrorMessage(_Lang("Office安装中，可能需要花费较长时间，您可先关闭当前窗口！"));
+				startOnlineInstallOfficeQueryTask(SubContext, ret.data.id, 2000); //2秒后查询
+        	    return;
+            }else {
+            	showErrorMessage(_Lang("安装失败", ":", ret.msgInfo));
+            }
+        },
+        error : function () {
+        	showErrorMessage(_Lang("安装失败", ":", "服务器异常"));
+        }
+    });
+}
+
+function startOnlineInstallOfficeQueryTask(taskId, delayTime)
+{
+	console.log("startGenerateOfficeFontsQueryTask() taskId:" + taskId + " delayTime:" + delayTime);
+	var nextDelayTime = delayTime; //每次增加5s
+	if(nextDelayTime < 60000) //最长1分钟
+	{
+		nextDelayTime += 5000;
+	}
+	
+	setTimeout(function () {
+		console.log("timerForQueryOnlineInstallOfficeTask triggered!");
+		doQueryOnlineInstallOfficeTask(taskId, nextDelayTime);
+	},delayTime);	//check it 2s later	
+}
+
+function doQueryOnlineInstallOfficeTask(taskId, nextDelayTime)
+{
+	console.log("doQueryOnlineInstallOfficeTask() taskId:" + taskId);
+
+	$.ajax({
+        url : "/DocSystem/Manage/queryLongTermTask.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            taskId: taskId,
+        },
+        success : function (ret) {
+    	   console.log("doQueryOnlineInstallOfficeTask() ret:",ret);        
+           if( "ok" == ret.status )
+           {    
+        	   var task = ret.data;
+       	       if(task.status == 200)
+        	   {
+           			console.log("doQueryOnlineInstallOfficeTask() 在线安装Office成功");
+           			gStatus = 0;
+           			showErrorMessage(_Lang("在线安装Office成功"));
+           			return;
+        	   }
+       	    startOnlineInstallOfficeQueryTask(task.id, nextDelayTime);
+           }
+           else	//后台报错
+           {
+        	   	console.log("在线安装Office失败:" + ret.msgInfo);
+       			showErrorMessage(_Lang("在线安装Office失败", " : ", ret.msgInfo));
+           }
+        },
+        error : function () {	//后台异常
+    	   	console.log("在线安装Office失败:服务器异常");
+   			showErrorMessage(_Lang("在线安装Office失败", " : ", "服务器异常"));
+        }
+	});		
+}
+
 //重新生成字体库
 function generateOfficeFontsConfirm()
 {
@@ -3693,7 +3771,7 @@ function generateOfficeFontsConfirm()
     qiao.bs.confirm({
     		id: "generateOfficeFontsConfirmDialog",
 	        title: _Lang("重置字体库"),
-	        msg: _Lang("是否重置生成字体库？"),
+	        msg: _Lang("重新生成字体库大约需要10分钟, 期间将无法使用Office, 是否重置？"),
 	        okbtn: _Lang("确认"),
 	        qubtn: _Lang("取消"),
     	},function () {
@@ -3711,7 +3789,7 @@ function startGenerateOfficeFonts()
 {
 	console.log("startGenerateOfficeFonts()");
     $.ajax({
-        url : "/DocSystem/Repos/generateOfficeFonts.do",
+        url : "/DocSystem/Bussiness/generateOfficeFonts.do",
         type : "post",
         dataType : "json",
         data : {
@@ -3732,7 +3810,7 @@ function startGenerateOfficeFonts()
     });
 }
 
-function startGenerateOfficeFontsQueryTask(SubContext, taskId, delayTime)
+function startGenerateOfficeFontsQueryTask(taskId, delayTime)
 {
 	console.log("startGenerateOfficeFontsQueryTask() taskId:" + taskId + " delayTime:" + delayTime);
 	var nextDelayTime = delayTime; //每次增加5s
@@ -3742,12 +3820,12 @@ function startGenerateOfficeFontsQueryTask(SubContext, taskId, delayTime)
 	}
 	
 	setTimeout(function () {
-		console.log("timerForQueryGenerateOfficeFontsQueryTask triggered!");
-		doQueryGenerateOfficeFontsTask(SubContext, taskId, nextDelayTime);
+		console.log("timerForQueryGenerateOfficeFontsTask triggered!");
+		doQueryGenerateOfficeFontsTask(taskId, nextDelayTime);
 	},delayTime);	//check it 2s later	
 }
 
-function doQueryGenerateOfficeFontsTask(SubContext, taskId, nextDelayTime)
+function doQueryGenerateOfficeFontsTask(taskId, nextDelayTime)
 {
 	console.log("doQueryGenerateOfficeFontsTask() taskId:" + taskId);
 
@@ -3767,7 +3845,7 @@ function doQueryGenerateOfficeFontsTask(SubContext, taskId, nextDelayTime)
         	   {
            			console.log("doQueryGenerateOfficeFontsTask() 字体库重置成功");
            			gStatus = 0;
-           			showErrorMessage(_Lang("字体库重置成功", " : ", "服务器异常"));
+           			showErrorMessage(_Lang("字体库重置成功"));
            			return;
         	   }
        	       startGenerateOfficeFontsQueryTask(task.id, nextDelayTime);
