@@ -135,7 +135,7 @@ public class BaseFunction{
 	
 	//应用路径
     protected static String docSysIniPath = null;
-    protected static String docSysWebPath = null;
+    public static String docSysWebPath = null;
     protected static String defaultLogFilePath = null;
     protected static String webappsPath = null;
     
