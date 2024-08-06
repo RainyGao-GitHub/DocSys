@@ -891,7 +891,9 @@ public class FileUtil {
             
             randomFile.close();
             return true;
-        } catch (IOException e) {
+        }
+        catch (Exception e) 
+        {
             Log.debug(e);
         }
         return false;
