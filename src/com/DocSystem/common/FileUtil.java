@@ -833,6 +833,11 @@ public class FileUtil {
     	String oldFilePath = oldpath + oldName;
     	String newFilePath = newpath + newName;
     	
+    	return moveFileOrDir(oldFilePath, newFilePath, cover);    	
+    }
+    
+    public static boolean moveFileOrDir(String oldFilePath, String newFilePath, boolean cover){
+    	
     	if(!oldFilePath.equals(newFilePath))
         {
             File oldfile=new File(oldFilePath);
