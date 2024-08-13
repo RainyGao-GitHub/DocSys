@@ -836,8 +836,8 @@ public class FileUtil {
     	return moveFileOrDir(oldFilePath, newFilePath, cover);    	
     }
     
-    public static boolean moveFileOrDir(String oldFilePath, String newFilePath, boolean cover){
-    	
+    public static boolean moveFileOrDir(String oldFilePath, String newFilePath, boolean cover)
+    {	
     	if(!oldFilePath.equals(newFilePath))
         {
             File oldfile=new File(oldFilePath);
