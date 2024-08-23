@@ -1,9 +1,6 @@
 package com.DocSystem.test;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-
 import com.DocSystem.common.FileUtil;
 
 public class FileUtilTest {
