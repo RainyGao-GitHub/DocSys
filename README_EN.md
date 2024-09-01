@@ -137,56 +137,53 @@ For MxsDoc whose version is less than V2.02.51
 
 # Limitation and Price
 ### Limitation
-|Functionalities |  Personal Edition | Professional Edition | Enterprise Edition  | Development Edition  |
+|Functionalities |  Personal Edition | Professional Edition | Enterprise Edition  |
 | -------------  |  -------------   | ------------- | -------------  | -------------   |
-| Price          | [Free](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)  | [Buy](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) | [Buy](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) |  Consult |
-| Storage Management     | +         |       +       |     +         |     +         |
-| Permission Management     | +         |       +       |     +         |     +         |
-| User Management     | +         |       +       |     +         |     +         |
-| History     | +         |       +       |     +         |     +         |
-| Document's Note     | +         |       +       |     +         |     +         |
-| Smart Search     | +         |       +       |     +         |     +         |
-| Sharing Management     | +         |       +       |     +         |     +         |
-| ZIP/RAR/7z/tar/tgz File Preview     | +         |       +       |     +         |     +         |
-| Text File Preview    | +         |       +       |     +         |     +         |
-| Text File Edit     | +         |       +       |     +         |     +         |
-| Push to Repository   | +         |       +       |     +         |     +         |
-| Push to FTP/SFTP/SMB/MXSDOC  | +         |       +       |     +         |     +         |
-| Office File Preview  | +         |       +       |     +         |     +         |
-| Office File Edit | +         |       +       |     +         |     +         |
-| WPS File Preview     | +         |       +       |     +         |     +         |
-| WPS File Edit     | +         |       +       |     +         |     +         |
-| SystemLog Management    | +         |       +       |     +         |     +         |
-|Remote Storage  | -         |       -       |     +         |     +         |
-| Local Auto-Backup    | -         |       -       |     +         |     +         |
-| Remote Auto-Backup    | -         |       -       |     +         |     +         |
-| File Encryption | -         |       -       |     +         |     +         |
-| LDAP Sign-In    | -         |       -       |     +         |     +         |
-| History Revert    | -         |       -       |     -         |     +         |
-| Backup Recover    | -         |       -       |     -         |     +         |
-| Recycle-Bin      | -         |       -       |     -         |     +         |
-| Third-Party Access   | -         |       -       |     -         |     +         |
-| Cluster Deployment        | -         |       -       |     -         |     +         |
-| User Limitation        | 10 Persons      |       Buy     |    Buy       |    Consult      |
-| Upgrade Limitation        | No-Limit      |       No-Limit     |     No-Limit      |     No-Limit      |
+| Price          | [Free](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)  | [Buy](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) | [Buy](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) |
+| Storage Management        | +         |       +       |     +         | 
+| Permission Management     | +         |       +       |     +         |
+| User Management           | +         |       +       |     +         | 
+| History                   | +         |       +       |     +         |  
+| Document's Note           | +         |       +       |     +         | 
+| Smart Search              | +         |       +       |     +         |  
+| Sharing Management        | +         |       +       |     +         |   
+| ZIP/RAR/7z/tar/tgz File Preview | +   |       +       |     +         |    
+| Text File Preview         | +         |       +       |     +         |  
+| Text File Edit            | +         |       +       |     +         |   
+| Push to Repository        | +         |       +       |     +         |  
+| Push to FTP/SFTP/SMB/MXSDOC  | +      |       +       |     +         |   
+| Office File Preview       | +         |       +       |     +         |   
+| Office File Edit          | +         |       +       |     +         |    
+| WPS File Preview          | +         |       +       |     +         |    
+| WPS File Edit             | +         |       +       |     +         |   
+| SystemLog Management      | +         |       +       |     +         |  
+|Remote Storage             | -         |       -       |     +         |    
+| Local Auto-Backup         | -         |       -       |     +         |  
+| Remote Auto-Backup        | -         |       -       |     +         | 
+| File Encryption           | -         |       -       |     +         |   
+| LDAP Sign-In              | -         |       -       |     +         |   
+| Recycle-Bin               | -         |       Option  |     Option    |   
+| History Delete            | -         |       Option  |     Option    |   
+| Backup Recover            | -         |       -       |     Option    |  
+| Third-Party Access        | -         |       -       |     Option    |    
+| Cluster Deployment        | -         |       -       |     Option    |    
+| User Limitation           | 10 Persons|       Buy     |     Buy       |   
+| Upgrade Limitation        | No-Limit  |       No-Limit|     No-Limit  |    
 
 ### Business Edition's Price
 #### Professional Edition
 |ValidTime/UserCount |   50-Persons   |   100-Persons   |  200-Persons   |   500-Persons   | 1000-Persons  |  No-Limit  |
 | ------------- | --------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-| No-Limit      |        ￥5500    |    ￥7500     |    ￥9500     |     ￥12500    |    ￥18500    |   ￥26500      |
+| 1 Year        |        ￥1140    |    ￥1500     |    ￥2220     |     ￥3180    |    ￥4200     |   ￥6000      |
 
 #### Enterprise Edition
 
 |ValidTime/UserCount |   50-Persons   |   100-Persons   |  200-Persons   |   500-Persons   | 1000-Persons  |  No-Limit  |
 | ------------- | --------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-| No-Limit      |        ￥9500    |    ￥12500     |    ￥18500     |     ￥26500    |    ￥35000    |   ￥50000      |
+| 1 Year        |        ￥1900    |    ￥2500     |    ￥3700     |     ￥5300    |    ￥7000    |   ￥10000      |
 
 
-#### Development Edition
-|ValidTime/UserCount |   50-Persons   |   100-Persons   |  200-Persons   |   500-Persons   | 1000-Persons  |  No-Limit  |
-| ------------- | --------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-| No-Limit      |        Consult   |    Consult   |    Consult    |     Consult    |    Consult   |   Consult     |
+#### [More](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)
 
 
 # Technical Consult Or Purchase 
