@@ -138,7 +138,7 @@ For MxsDoc whose version is less than V2.02.51
 # Limitation and Price
 ### Limitation
 |Functionalities |  Personal Edition | Professional Edition | Enterprise Edition  |
-| -------------  |  -------------   | ------------- | -------------  | -------------   |
+| -------------  |  -------------   | ------------- | -------------  | 
 | Price          | [Free](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)  | [Buy](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) | [Buy](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) |
 | Storage Management        | +         |       +       |     +         | 
 | Permission Management     | +         |       +       |     +         |
