@@ -209,6 +209,45 @@ public class MxsDocUtil {
         return ret;		
 	}
 	
+	public static boolean downloadFromUrl(String sFileUrl, String localPath, String fileName) 
+	{
+		Log.debug("MxsDocUtil download sFileUrl:" + sFileUrl + " localPath:" + localPath + " fileName:" + fileName);
+        boolean ret = false;
+        File localDir = new File(localPath);
+        if(localDir.exists() == false)
+        {
+        	localDir.mkdirs();
+        }
+        return downloadFromUrl(sFileUrl, localPath + fileName);
+	}
+	
+	public static boolean downloadFromUrl(String sFileUrl, String sFilePath) 
+	{
+		Log.debug("MxsDocUtil download sFileUrl:" + sFileUrl + " sFilePath:" + sFilePath);
+        boolean ret = false;
+        File file = null;
+        FileOutputStream os = null;
+        
+        try {
+            file = new File(sFilePath);
+            os = new FileOutputStream(file);
+            
+            ret = BaseFunction.downloadFromUrl(sFileUrl, os);
+        } catch (Exception e) {
+            Log.debug(e);
+        } finally {
+        	if(os != null)
+        	{
+        		try {
+					os.close();
+				} catch (IOException e) {
+					Log.debug(e);
+				}
+        	}
+        }
+        return ret;		
+	}
+	
 	public boolean upload(String remotePath, String localPath, String fileName, 
 			Integer isEnd, 
 			String dirPath, Long batchStartTime, Integer totalCount) 

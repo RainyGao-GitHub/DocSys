@@ -204,24 +204,24 @@ public class FileUtil {
 			File file = new File(filePath);
 			if(!file.exists() || !file.isFile())
 			{
-				Log.debug("readDocContentFromFile " +filePath+ " 不存在或不是文件");
+				Log.debug("saveDataToFile() " +filePath+ " 不存在或不是文件");
 				return false;
 			}
 
 			long fileSize = file.length();
-			//Log.debug("readBufferFromFile fileSize:[" + fileSize + "]");
+			//Log.debug("saveDataToFile() fileSize:[" + fileSize + "]");
 			
 			if(offset >= fileSize)
 			{
 				return false;
 			}
 			
-			//Log.debug("readBufferFromFile size:[" + size + "]");
+			//Log.debug("saveDataToFile() size:[" + size + "]");
 			if(offset + size > fileSize)
 			{
 				size = (int) (fileSize - offset);
 			}
-			//Log.debug("readBufferFromFile size:[" + size + "]");
+			//Log.debug("saveDataToFile() size:[" + size + "]");
 			if(size  <= 0)
 			{
 				return false;
@@ -253,6 +253,13 @@ public class FileUtil {
 		String filePath = path + name;
 		String encode = getCharset(filePath);
 		return  readDocContentFromFile(path, name, encode);
+	}
+	
+	public static String readDocContentFromFile2(String filePath) 
+	{	
+		String encode = getCharset(filePath);
+		byte[] buffer = readBufferFromFile(filePath);
+		return getString(buffer, encode);
 	}
 	
 	public static byte[] readBufferFromFile(String path, String name) 
