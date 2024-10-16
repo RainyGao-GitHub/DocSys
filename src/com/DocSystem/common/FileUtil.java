@@ -257,9 +257,13 @@ public class FileUtil {
 	
 	public static String readDocContentFromFile2(String filePath) 
 	{	
-		String encode = getCharset(filePath);
-		byte[] buffer = readBufferFromFile(filePath);
-		return getString(buffer, encode);
+		if(FileUtil.isFileExist(filePath))
+		{
+			String encode = getCharset(filePath);
+			byte[] buffer = readBufferFromFile(filePath);
+			return getString(buffer, encode);
+		}
+		return "";
 	}
 	
 	public static byte[] readBufferFromFile(String path, String name) 
