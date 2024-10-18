@@ -9,12 +9,19 @@
 <body style="height: 100%; margin: 0;">
     <div id="placeholder" style="height: 100%"></div>
     <script type="text/javascript">
-    var myDocInfo = {
+    //TODO: 建议用户通过url来传递这些officeDocInfo
+    var officeDocInfo = {
+    		authCode: "11111111", 	//请从接口"http://localhost:8100/DocSystem/Bussiness/getAuthCode.do"获取
     		fileLink: "",
     		saveFileLink: "",
-    		name: "test.docx",
-    		dockey: "123456",		//用户自己定义的dockey,需要保证唯一性
-    		authCode: "11111111", 	//请从接口"http://localhost:8100/DocSystem/Bussiness/getAuthCode.do"获取
+    		fileName: "test.docx",
+    		fileKey: "123456",		//用户自己定义的,需要保证唯一性
+    		user: {
+                "id":   "00001",
+                "name": "testUser",
+    		}
+    		edit: true,
+    		download: true,
     };
     OfficeEditor.PageInit(officeDocInfo);
     
@@ -45,13 +52,13 @@
     	    documentType = getDocumentType(fileType);
     	    title = docInfo.name;
     	    dockey = docInfo.docId + "";    
-    	    getDocOfficeLinkExternal(docInfo, showOffice, showErrorMessage, "REST", 1);
+    	    getDocOfficeLinkRS(docInfo, showOffice, showErrorMessage, "REST");
     	    document.title = docInfo.name;
     	}    
         
         function showOffice(data)
        	{
-    		var fileLink = data.fileLink;
+    		var fileLink = buildFullLink(data.fileLink);
     		var saveFileLink = "";
     		dockey = data.key + "";	//key是用来标志唯一性的，文件改动了key也必须改动
     		
@@ -525,11 +532,11 @@
     	alert($msg);
     }
     
-    function getDocOfficeLinkExternal(docInfo, successCallback, errorCallback, urlStyle, isBussiness)
+    function getDocOfficeLinkRS(docInfo, successCallback, errorCallback, urlStyle)
     {	
     	var fileLink = "";
     	var errorInfo = "";
-    	console.log("getDocOfficeLinkExternal()  docInfo:", docInfo);
+    	console.log("getDocOfficeLinkRS()  docInfo:", docInfo);
         if(!docInfo || docInfo == null || docInfo.id == 0)
         {
         	//未定义需要显示的文件
@@ -538,7 +545,7 @@
         	return;
         }
       	
-        var url = "/DocSystem/Bussiness/getDocOfficeLinkExternal.do"
+        var url = "/DocSystem/Bussiness/getDocOfficeLinkRS.do"
         $.ajax({
             url : url,
             type : "post",
@@ -546,14 +553,17 @@
             data : {
             	fileLink: docInfo.fileLink,
                 saveFileLink: docInfo.saveFileLink,
-                name: docInfo.name,
-                dockey: docInfo.dockey,
-                authCode: docInfo.authCode,
-                preview: "office",
+                fileName: docInfo.fileName,
+                fileKey: docInfo.fileKey,
+                userId: docInfo.user.id,
+                userName: docInfo.user.name,
+                editEn: docInfo.edit? 1 : 0,
+                downloadEn: docInfo.download? 1 : 0,        
                 urlStyle: urlStyle,
+                authCode: docInfo.authCode,
             },
             success : function (ret) {
-            	console.log("getDocOfficeLinkExternal ret",ret);
+            	console.log("getDocOfficeLinkRS ret",ret);
             	if( "ok" == ret.status )
             	{
             		successCallback &&successCallback(ret.data, ret.dataEx);

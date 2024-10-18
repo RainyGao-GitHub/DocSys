@@ -170,6 +170,11 @@ public class BaseFunction{
     protected static String serverIP = null;
     protected static String serverMAC = null;
     protected static String serverSN = null;
+    
+    //RemoteOfficeEdit配置信息（第三方Office在线编辑）
+    protected static Integer reposIdForRemoteOfficeEdit = 1;
+    protected static String rootPathForRemoteOfficeEdit = "";
+    
 	    
 	//分享代理服务线程（一个服务器只允许启动一个）
 	protected static ProxyThread proxyThread = null;
