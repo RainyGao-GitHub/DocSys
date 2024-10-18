@@ -4,18 +4,18 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Test OfficeEditor</title>
     <!-- 这是MxsDoc的Office编辑器的api.js，建议最早加载 -->
-    <script type="text/javascript" src="http://localhost:8100/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js"></script>    
-    <!-- 下面是Web服务器的资源，用户可以根据自己需要修改 -->    
-    <script src="static/scripts/jquery.min.js"></script>
-    <script type="text/javascript" src="js/common.js"></script>
-    <script type="text/javascript" src="js/base64.js"></script>
-    <script type="text/javascript" src="js/DocSys.js"></script>
-    <script type="text/javascript" src=js/OfficeEditor.js></script>    
+    <script type="text/javascript" src="http://localhost:8100/DocSystem/web/static/office-editor/web-apps/apps/api/documents/api.js"></script>
 </head>
 <body style="height: 100%; margin: 0;">
     <div id="placeholder" style="height: 100%"></div>
     <script type="text/javascript">
-    var officeDocInfo = {};
+    var myDocInfo = {
+    		fileLink: "",
+    		saveFileLink: "",
+    		name: "test.docx",
+    		dockey: "123456",		//用户自己定义的dockey,需要保证唯一性
+    		authCode: "11111111", 	//请从接口"http://localhost:8100/DocSystem/Bussiness/getAuthCode.do"获取
+    };
     OfficeEditor.PageInit(officeDocInfo);
     
     //OfficeEditor类
@@ -44,9 +44,9 @@
     	    fileType = convertWpsToOfficeType(fileType);
     	    documentType = getDocumentType(fileType);
     	    title = docInfo.name;
-    	    dockey = docInfo.docId + "";    	
+    	    dockey = docInfo.docId + "";    
+    	    getDocOfficeLinkExternal(docInfo, showOffice, showErrorMessage, "REST", 1);
     	    document.title = docInfo.name;
-    	    showOffice(docInfo);
     	}    
         
         function showOffice(data)
@@ -98,11 +98,6 @@
         	
         	var onRequestHistoryData = function(event) {
         		console.log("onRequestHistoryData() event:", event);
-        	    if(isExternalOffice)
-        	    {
-        	    	return;
-        	    }
-
         		var version = event.data;
         		setOfficeDocHistoryData(version);
         	};
@@ -522,6 +517,59 @@
     	}
     	
     	return type;
+    }
+    
+  //提示对话框
+    function showErrorMessage($msg) {
+    	console.log("showErrorMessage() ", $msg);
+    	alert($msg);
+    }
+    
+    function getDocOfficeLinkExternal(docInfo, successCallback, errorCallback, urlStyle, isBussiness)
+    {	
+    	var fileLink = "";
+    	var errorInfo = "";
+    	console.log("getDocOfficeLinkExternal()  docInfo:", docInfo);
+        if(!docInfo || docInfo == null || docInfo.id == 0)
+        {
+        	//未定义需要显示的文件
+        	errorInfo = "请选择文件";
+        	errorCallback && errorCallback(errorInfo);
+        	return;
+        }
+      	
+        var url = "/DocSystem/Bussiness/getDocOfficeLinkExternal.do"
+        $.ajax({
+            url : url,
+            type : "post",
+            dataType : "json",
+            data : {
+            	fileLink: docInfo.fileLink,
+                saveFileLink: docInfo.saveFileLink,
+                name: docInfo.name,
+                dockey: docInfo.dockey,
+                authCode: docInfo.authCode,
+                preview: "office",
+                urlStyle: urlStyle,
+            },
+            success : function (ret) {
+            	console.log("getDocOfficeLinkExternal ret",ret);
+            	if( "ok" == ret.status )
+            	{
+            		successCallback &&successCallback(ret.data, ret.dataEx);
+                }
+                else 
+                {
+                	console.log(ret.msgInfo);
+                	errorInfo = "获取文件信息失败：" + ret.msgInfo;
+                	errorCallback && errorCallback(errorInfo);
+                }
+            },
+            error : function () {
+            	errorInfo = "获取文件信息失败：服务器异常";
+            	errorCallback && errorCallback(errorInfo);
+            }
+        });
     }
 
     </script>
