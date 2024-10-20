@@ -946,6 +946,12 @@
 				andFlag = "&";
 			}
 			
+			if(docInfo.authCode)
+			{
+				urlParamStr += andFlag + "authCode=" + docInfo.authCode;
+				andFlag = "&";
+			}
+			
 			return urlParamStr;
 		}
 }

@@ -159,6 +159,12 @@ function buildRequestParamStrForDoc(docInfo)
 		andFlag = "&";
 	}
 	
+	if(docInfo.authCode)
+	{
+		urlParamStr += andFlag + "authCode=" + docInfo.authCode;
+		andFlag = "&";
+	}
+	
 	return urlParamStr;
 }
 
@@ -254,6 +260,12 @@ function getDocInfoFromRequestParamStr()
 	{
 		docInfo.shareId = shareId;
 	}
+	
+	var authCode = getQueryString("authCode");
+	if(authCode && authCode != null)
+	{
+		docInfo.authCode = authCode;
+	}
 	return docInfo;
 }
 
@@ -314,6 +326,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, 
             commitId: docInfo.commitId,
             historyType: docInfo.historyType,
             shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
             urlStyle: urlStyle,
             forPreview: forPreview,
             videoConvertType: docInfo.videoConvertType,
@@ -371,6 +384,7 @@ function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, fo
             rootPath: docInfo.rootPath,
             rootName: docInfo.rootName,
             shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
             urlStyle: urlStyle,
             forPreview: forPreview,
             videoConvertType: docInfo.videoConvertType,
@@ -439,6 +453,7 @@ function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle
             rootPath: docInfo.rootPath,
             rootName: docInfo.rootName,
             shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
             preview: "office",
             urlStyle: urlStyle,
         },
@@ -489,6 +504,7 @@ function getZipDocOfficeLink(docInfo, successCallback, errorCallback, urlStyle, 
             rootPath: docInfo.rootPath,
             rootName: docInfo.rootName,
             shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
             preview: "office",
             urlStyle: urlStyle,
         },
@@ -553,6 +569,7 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
                 historyType: docInfo.historyType,
                 needDeletedEntry: docInfo.needDeletedEntry,
                 shareId: docInfo.shareId,
+                authCode: docInfo.authCode,
             },
             success : function (ret1) {
             	//console.log("getDocText ret1",ret1);
@@ -580,6 +597,7 @@ function getDocTextBasic(docInfo, successCallback, errorCallback)
 		            	                name: docInfo.name,
 		            	                docType: docInfo.docType, //取回文件内容
 		            	                shareId: docInfo.shareId,
+		            	                authCode: docInfo.authCode,
 		            	            },
 		            	            success : function (ret2) {
 		            	            	//console.log("getDocText ret2",ret2);
@@ -637,6 +655,7 @@ function getZipDocText(docInfo, successCallback, errorCallback)
                 rootName: docInfo.rootName, //压缩文件名
                 docType: 1, //取回文件内容
                 shareId: docInfo.shareId,
+                authCode: docInfo.authCode,
             },
             success : function (ret1) {
             	//console.log("getDocText ret1",ret1);
@@ -1555,7 +1574,7 @@ function showSuccessMsg(msg)
 }
 
 //****************** Show File In NewPage **************************
-function openDocInNewPage(doc)
+function openDocInNewPage(doc, authCode)
 {
 	console.log("openDocInNewPage() doc:",doc);
 
@@ -1566,14 +1585,18 @@ function openDocInNewPage(doc)
 	var href = "/DocSystem/web/project.html?vid="+gReposInfo.id+"&doc="+docId+"&path="+path+"&name="+name;
 	if(gShareId)
 	{
-		href += "&shareId"+gShareId;
+		href += "&shareId="+gShareId;
+	}
+	if(authCode)
+	{
+		href += "&authCode="+authCode;		
 	}
 	console.log(href);
 	window.open(href);
 }
 
 //****************** Show File In NewPage/Dialog **************************
-function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
+function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId, authCode)
 {
 	console.log("openDoc() showUnknownFile:" + showUnknownFile + " openInNewPage:" + openInNewPage + " preview:" + preview);
 	console.log("openDoc() doc:",doc);
@@ -1585,7 +1608,7 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 	}
 	
 	//copy do to docInfo
-	var docInfo = copyDocInfo(doc, shareId);
+	var docInfo = copyDocInfo(doc, shareId, authCode);
 	console.log("openDoc() docInfo:", docInfo);
 	
 	if(showUnknownFile && (showUnknownFile == true || showUnknownFile == "showUnknownFile"))
@@ -1654,7 +1677,7 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId)
 	}
 }
 
-function copyDocInfo(doc, shareId)
+function copyDocInfo(doc, shareId, authCode)
 {
 	if(doc)
 	{
@@ -1671,9 +1694,14 @@ function copyDocInfo(doc, shareId)
     		docInfo.vid = gReposInfo.id;
     	}
     	
-    	if(gShareId)
+    	if(shareId)
     	{
-    		docInfo.shareId = gShareId;
+    		docInfo.shareId = shareId;
+    	}
+    	
+    	if(authCode)
+    	{
+    		docInfo.authCode = authCode;
     	}
     	
 		docInfo.docId = doc.docId;
@@ -1745,6 +1773,7 @@ function openOffice(docInfo, openInNewPage, preview)
             commitId: docInfo.commitId,
             historyType: docInfo.historyType,
             shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
             preview: preview,  //preview表示是否是预览，预览则是转成pdf
         },
         success : function (ret) {
@@ -1803,6 +1832,7 @@ function openCad(docInfo, openInNewPage)
             commitId: docInfo.commitId,
             historyType: docInfo.historyType,
             shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
             //preview: preview,  //cad总是预览，无法编辑
         },
         success : function (ret) {
