@@ -350,468 +350,604 @@
 			 					<a href="javascript:void(0)" onclick="getHistoryDetailTest();" class="mybtn-primary">查询历史详情</a>
 			 				</i>
 			 			</li>
+			 			<!-- Office在线编辑服务测试 -->
+			 			<li>	
+			 				<i class="cell w7">Office在线编辑</i> 	
+			 				<i class="cell w20">		
+			 					<input id="mxsdocServerUrl" value="http://localhost:8100" type="text" style="width:80%">
+			 				</i>	
+			 				<i class="cell w15">		
+			 					<textarea id="remoteOfficeEditParam">
+			 					{
+			 						"fileLink": 	"http://localhost:8100/DocSystem/Doc/downloadDoc/1/0/dGVzdDEudHh0/QzovRG9jU3lzUmVwb3Nlcy8xL2RhdGEvcmRhdGEv/dGVzdDEudHh0/-260524091/0/1",
+			 						"saveFileLink":	"",
+			 						"fileName":		"test.docx",
+			 						"fileKey": 		"1234567",
+			 						"fileCheckSum": "",
+			 						"userId": 		"00001",
+			 						"userName": 	"测试用户",
+			 						"editEn": 		1,
+			 						"downloadEn": 	1		 									 							 						
+			 					}		 					
+			 					</textarea>	
+			 				</i>
+			 				<i class="cell w10">		
+			 					<textarea id="remoteOfficeEditResult"></textarea>
+			 				</i>
+			 				<i class="cell w10">
+			 					<a href="javascript:void(0)" onclick="remoteOfficeEditTest();" class="mybtn-primary">Office在线编辑</a>
+			 				</i>
+			 			</li>
 			</div>
         <div class="manual-progress"><b class="progress-bar"></b></div>
     </article>
     <div class="manual-mask"></div>
 </div>
-
+	
 <script type="text/javascript">
-var gAuthCode = "";
+	var gAuthCode = "";
 
-//页面加载完成处理函数    
-$(document).ready(function(){
-	console.log("Page is ready");
-});
+	//页面加载完成处理函数    
+	$(document).ready(function(){
+		console.log("Page is ready");
+	});
 
-function getAuthCodeTest()
-{	
-	var paramStr = $("#getAuthCodeParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
+	function getAuthCodeTest()
+	{	
+		var paramStr = $("#getAuthCodeParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#getAuthCodeUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            userName: param.userName,
+				pwd: base64_encode(param.pwd),
+				type: param.type
+	        },
+	        success : function (ret) {
+	     		if(ret.status == "ok")
+	        	{
+	            	gAuthCode = ret.data;
+	            	$("#getAuthCodeResult").val(JSON.stringify(ret));
+	     			alert("获取授权码成功:" + ret.data);
+				}
+	            else
+	            {
+	            	$("#getAuthCodeResult").val(JSON.stringify(ret));
+	            	alert("获取授权码失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	alert("获取授权码失败: 服务器异常");
+	        }
+	    });
+	}
+
+	function getSubDocListTest()
+	{	
+		var paramStr = $("#getSubDocListParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#getSubDocListUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            reposId: param.reposId,
+	            path: param.path,
+	            authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	     		if(ret.status == "ok")
+	        	{
+	     			$("#getSubDocListResult").val(JSON.stringify(ret));
+	     			alert("获取文件列表成功");
+	        	}
+	            else
+	            {
+	            	$("#getSubDocListResult").val(JSON.stringify(ret));
+	            	alert("获取文件列表失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	alert ("获取文件列表失败: 服务器异常");
+	        }
+	    });
+	}
+
+	function getDocInfoTest()
+	{	
+		var paramStr = $("#getDocInfoParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#getDocInfoUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            reposId: param.reposId,
+	            path: param.path,
+				name: param.name,
+	            authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	     		if(ret.status == "ok")
+	        	{
+	     			$("#getDocInfoResult").val(JSON.stringify(ret));
+	     			alert("获取文件信息成功");
+	        	}
+	            else
+	            {
+					//getSubDocList failed
+	            	$("#getDocInfoResult").val(JSON.stringify(ret));
+	            	alert("获取文件信息失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	alert ("获取文件信息失败: 服务器异常");
+	        }
+	    });
+	}
+
+	function getDocFileLinkTest()
+	{	
+		var paramStr = $("#getDocFileLinkParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#getDocFileLinkUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	reposId: param.reposId,
+	            path: param.path,
+	            name: param.name,
+	            urlStyle: param.urlStyle,
+	            authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	        	if( "ok" == ret.status )
+	        	{
+	        		var docLink = ret.data;
+	        		fileLink = buildFullLink(docLink);
+	        		$("#getDocFileLinkResult").val(JSON.stringify(ret));
+	        		alert("获取文件链接成功");
+	        	}
+	            else 
+	            {
+	        		$("#getDocFileLinkResult").val(JSON.stringify(ret));
+	            	alert("获取文件链接失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	errorInfo = "获取文件信息失败：服务器异常";
+	        }
+	    });
+	}
+
+	function addDocTest()
+	{		
+		var paramStr = $("#addDocParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#addDocUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+				taskId:param.taskId,
+	        	reposId: param.reposId,
+	            path: param.path,
+				name: param.name,
+				type: param.type,
+	            authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	     		if(ret.status == "ok")
+	        	{
+	     			$("#addDocResult").val(JSON.stringify(ret));
+	     			alert("新增文件成功");
+				}
+	            else
+	            {
+	     			$("#addDocResult").val(JSON.stringify(ret));
+	            	alert("新增文件失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	alert ("新增文件失败: 服务器异常");
+	        }
+	    });
+	}
+
+	function copyDocTest()
+	{	
+		var paramStr = $("#copyDocParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#copyDocUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+				taskId:param.taskId,
+	            reposId: param.reposId,
+	            srcPath: param.srcPath,
+				srcName: param.srcName,
+				dstPath: param.dstPath,
+				dstName: param.dstName,
+				isMove: param.isMove,
+	            authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	     		if(ret.status == "ok")
+	        	{
+	     			$("#copyDocResult").val(JSON.stringify(ret));
+	     			alert("复制文件成功");
+				}
+	            else
+	            {
+	     			$("#copyDocResult").val(JSON.stringify(ret));
+	            	alert("复制文件失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	alert ("复制文件失败: 服务器异常");
+	        }
+	    });
+	}
+
+	function uploadDocTest()
+	{	
+		var paramStr = $("#uploadDocParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#uploadDocUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+				taskId:param.taskId,
+	            reposId: param.reposId,
+	            path: param.path,
+				name: param.name,
+				size: param.size,
+				fileLink: param.fileLink,
+	            authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	     		if(ret.status == "ok")
+	        	{
+	     			$("#uploadDocResult").val(JSON.stringify(ret));
+	     			alert("上传文件成功:", ret.data);
+				}
+	            else
+	            {
+	            	$("#uploadDocResult").val(JSON.stringify(ret));
+	            	alert("上传文件失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	alert ("上传文件失败: 服务器异常");
+	        }
+	    });
+	}
+
+	function pushDocTest()
+	{
+		var paramStr = $("#pushDocParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#pushDocUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+				taskId:param.taskId,
+	            reposId: param.reposId,
+	            path: param.path,
+				name: param.name,
+				targetReposId: param.targetReposId,
+	            targetPath: param.targetPath,
+	            recurciveEn: param.recurciveEn,
+	            forceEn: param.recurciveEn,
+	            authCode: gAuthCode
+	        },
+	        success : function (ret) {
+	     		if(ret.status == "ok")
+	        	{
+	     			$("#pushDocResult").val(JSON.stringify(ret));
+	     			alert("推送文件成功");
+				}
+	            else
+	            {
+	     			$("#pushDocResult").val(JSON.stringify(ret));
+	            	alert("推送文件失败:" + ret.msgInfo);
+	            }
+	        },
+	        error : function () {
+	        	alert ("推送文件失败: 服务器异常");
+	        }
+	    });
+	}
+
+	function deleteDocTest()
+	{		
+		var paramStr = $("#deleteDocParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#deleteDocUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+				taskId:param.taskId,
+	            reposId: param.reposId,
+	            path: param.path,
+				name: param.name,
+				authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	     		if(ret.status == "ok")
+	        	{
+	            	alert("删除文件成功:");
+	            	$("#deleteDocResult").val(JSON.stringify(ret));
+				}
+	            else
+	            {
+	            	alert("删除文件失败:" + ret.msgInfo);
+	            	$("#deleteDocResult").val(JSON.stringify(ret));        		
+	            }
+	        },
+	        error : function () {
+	        	alert ("删除文件失败: 服务器异常");
+	        }
+	    });
+	}
+
+
+	function querySystemLogTest()
+	{
+		var paramStr = $("#querySystemLogParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#querySystemLogUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            queryId: param.queryId,
+				event: param.event,
+	            reposName: param.reposName,
+	            path:param.path,
+	            name:param.name,
+	            userId:param.userId,
+	            userName:param.userName,
+	            startTime: param.startTime,
+	            endTime:param.endTime,
+	            authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	        	console.log("querySystemLogTest", ret)
+	     		if(ret.status == "ok")
+	        	{
+	            	alert("查询系统日志成功");
+	            	$("#querySystemLogResult").val(JSON.stringify(ret));
+				}
+	            else
+	            {
+	            	alert("查询系统日志失败:" + ret.msgInfo);
+	            	$("#querySystemLogResult").val(JSON.stringify(ret));        		
+	            }
+	        },
+	        error : function () {
+	        	alert ("查询系统日志失败: 服务器异常");
+	        }
+	    });
+	}
+
+	function getDocHistoryTest()
+	{
+		var paramStr = $("#getDocHistoryParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		$.ajax({
+	        url : $("#getDocHistoryUrl").val(),
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	            reposId: param.reposId,
+	            path:param.path,
+	            name:param.name,
+	            historyType:param.historyType,
+	            authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	        	console.log("getDocHistoryTest", ret)
+	     		if(ret.status == "ok")
+	        	{
+	            	alert("获取文件历史成功");
+	            	$("#getDocHistoryResult").val(JSON.stringify(ret));
+				}
+	            else
+	            {
+	            	alert("获取文件历史失败:" + ret.msgInfo);
+	            	$("#getDocHistoryTestResult").val(JSON.stringify(ret));        		
+	            }
+	        },
+	        error : function () {
+	        	alert ("获取文件历史失败: 服务器异常");
+	        }
+	    });
+	}
 	
-	$.ajax({
-        url : $("#getAuthCodeUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-            userName: param.userName,
-			pwd: base64_encode(param.pwd),
-			type: param.type
-        },
-        success : function (ret) {
-     		if(ret.status == "ok")
-        	{
-            	gAuthCode = ret.data;
-            	$("#getAuthCodeResult").val(JSON.stringify(ret));
-     			alert("获取授权码成功:" + ret.data);
+	function remoteOfficeEditTest()
+	{
+		var paramStr = $("#remoteOfficeEditParam").val();
+		console.log(paramStr);	
+		var param = JSON.parse(paramStr);
+		console.log(param);
+		
+		var mxsdocServerUrl = $("#mxsdocServerUrl").val();
+		$.ajax({
+	        url : mxsdocServerUrl + "/DocSystem/Bussiness/getDocInfoForRemoteOfficeEdit.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	fileLink : param.fileLink,
+	        	saveFileLink : param.saveFileLink,
+	            fileName : param.fileName,
+	            fileKey : param.fileKey,
+	            fileCheckSum : param.fileCheckSum,
+	            userId : param.userId,
+	            userName : param.userName,
+	            editEn : param.editEn,
+	            downloadEn : param.downloadEn,
+	            authCode: gAuthCode,
+	        },
+	        success : function (ret) {
+	        	console.log("remoteOfficeEditTest: getDocInfoForRemoteOfficeEdit ret:", ret)
+	     		if(ret.status == "ok")
+	        	{
+	            	$("#remoteOfficeEditResult").val(JSON.stringify(ret));
+	            	openOfficeInNewPageRS(ret.data, mxsdocServerUrl);
+				}
+	            else
+	            {
+	            	alert("获取Office文件信息失败:" + ret.msgInfo);
+	            	$("#remoteOfficeEditResult").val(JSON.stringify(ret));        		
+	            }
+	        },
+	        error : function () {
+	        	alert ("获取Office文件信息失败: 服务器异常");
+	        }
+	    });
+		
+		function openOfficeInNewPageRS(docInfo, mxsdocServerUrl)
+		{	
+			console.log("openOfficeInNewPageRS docInfo:", docInfo);
+
+		    var urlParamStr = buildRequestParamStrForDoc(docInfo);
+		    console.log("urlParamStr=" + urlParamStr);
+			var link = mxsdocServerUrl + "/DocSystem/web/office.jsp?" + urlParamStr;
+		    window.open(link);
+		}
+		
+		function buildRequestParamStrForDoc(docInfo)
+		{
+			if(!docInfo)
+			{
+				return "";
 			}
-            else
-            {
-            	$("#getAuthCodeResult").val(JSON.stringify(ret));
-            	alert("获取授权码失败:" + ret.msgInfo);
-            }
-        },
-        error : function () {
-        	alert("获取授权码失败: 服务器异常");
-        }
-    });
-}
-
-function getSubDocListTest()
-{	
-	var paramStr = $("#getSubDocListParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#getSubDocListUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-            reposId: param.reposId,
-            path: param.path,
-            authCode: gAuthCode,
-        },
-        success : function (ret) {
-     		if(ret.status == "ok")
-        	{
-     			$("#getSubDocListResult").val(JSON.stringify(ret));
-     			alert("获取文件列表成功");
-        	}
-            else
-            {
-            	$("#getSubDocListResult").val(JSON.stringify(ret));
-            	alert("获取文件列表失败:" + ret.msgInfo);
-            }
-        },
-        error : function () {
-        	alert ("获取文件列表失败: 服务器异常");
-        }
-    });
-}
-
-function getDocInfoTest()
-{	
-	var paramStr = $("#getDocInfoParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#getDocInfoUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-            reposId: param.reposId,
-            path: param.path,
-			name: param.name,
-            authCode: gAuthCode,
-        },
-        success : function (ret) {
-     		if(ret.status == "ok")
-        	{
-     			$("#getDocInfoResult").val(JSON.stringify(ret));
-     			alert("获取文件信息成功");
-        	}
-            else
-            {
-				//getSubDocList failed
-            	$("#getDocInfoResult").val(JSON.stringify(ret));
-            	alert("获取文件信息失败:" + ret.msgInfo);
-            }
-        },
-        error : function () {
-        	alert ("获取文件信息失败: 服务器异常");
-        }
-    });
-}
-
-function getDocFileLinkTest()
-{	
-	var paramStr = $("#getDocFileLinkParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#getDocFileLinkUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-        	reposId: param.reposId,
-            path: param.path,
-            name: param.name,
-            urlStyle: param.urlStyle,
-            authCode: gAuthCode,
-        },
-        success : function (ret) {
-        	if( "ok" == ret.status )
-        	{
-        		var docLink = ret.data;
-        		fileLink = buildFullLink(docLink);
-        		$("#getDocFileLinkResult").val(JSON.stringify(ret));
-        		alert("获取文件链接成功");
-        	}
-            else 
-            {
-        		$("#getDocFileLinkResult").val(JSON.stringify(ret));
-            	alert("获取文件链接失败:" + ret.msgInfo);
-            }
-        },
-        error : function () {
-        	errorInfo = "获取文件信息失败：服务器异常";
-        }
-    });
-}
-
-function addDocTest()
-{		
-	var paramStr = $("#addDocParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#addDocUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-			taskId:param.taskId,
-        	reposId: param.reposId,
-            path: param.path,
-			name: param.name,
-			type: param.type,
-            authCode: gAuthCode,
-        },
-        success : function (ret) {
-     		if(ret.status == "ok")
-        	{
-     			$("#addDocResult").val(JSON.stringify(ret));
-     			alert("新增文件成功");
+			
+			var urlParamStr = "";
+			var andFlag = "";
+			if(docInfo.vid)
+			{
+				urlParamStr = "reposId=" + docInfo.vid;
+				andFlag = "&";
 			}
-            else
-            {
-     			$("#addDocResult").val(JSON.stringify(ret));
-            	alert("新增文件失败:" + ret.msgInfo);
-            }
-        },
-        error : function () {
-        	alert ("新增文件失败: 服务器异常");
-        }
-    });
-}
 
-function copyDocTest()
-{	
-	var paramStr = $("#copyDocParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#copyDocUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-			taskId:param.taskId,
-            reposId: param.reposId,
-            srcPath: param.srcPath,
-			srcName: param.srcName,
-			dstPath: param.dstPath,
-			dstName: param.dstName,
-			isMove: param.isMove,
-            authCode: gAuthCode,
-        },
-        success : function (ret) {
-     		if(ret.status == "ok")
-        	{
-     			$("#copyDocResult").val(JSON.stringify(ret));
-     			alert("复制文件成功");
+			if(docInfo.docId)
+			{
+				urlParamStr += andFlag + "docId=" + docInfo.docId;
+				andFlag = "&";
 			}
-            else
-            {
-     			$("#copyDocResult").val(JSON.stringify(ret));
-            	alert("复制文件失败:" + ret.msgInfo);
-            }
-        },
-        error : function () {
-        	alert ("复制文件失败: 服务器异常");
-        }
-    });
-}
-
-function uploadDocTest()
-{	
-	var paramStr = $("#uploadDocParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#uploadDocUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-			taskId:param.taskId,
-            reposId: param.reposId,
-            path: param.path,
-			name: param.name,
-			size: param.size,
-			fileLink: param.fileLink,
-            authCode: gAuthCode,
-        },
-        success : function (ret) {
-     		if(ret.status == "ok")
-        	{
-     			$("#uploadDocResult").val(JSON.stringify(ret));
-     			alert("上传文件成功:", ret.data);
+			
+			if(docInfo.path)
+			{
+				urlParamStr += andFlag + "path=" + base64_encode(docInfo.path);
+				andFlag = "&";
 			}
-            else
-            {
-            	$("#uploadDocResult").val(JSON.stringify(ret));
-            	alert("上传文件失败:" + ret.msgInfo);
-            }
-        },
-        error : function () {
-        	alert ("上传文件失败: 服务器异常");
-        }
-    });
-}
-
-function pushDocTest()
-{
-	var paramStr = $("#pushDocParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#pushDocUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-			taskId:param.taskId,
-            reposId: param.reposId,
-            path: param.path,
-			name: param.name,
-			targetReposId: param.targetReposId,
-            targetPath: param.targetPath,
-            recurciveEn: param.recurciveEn,
-            forceEn: param.recurciveEn,
-            authCode: gAuthCode
-        },
-        success : function (ret) {
-     		if(ret.status == "ok")
-        	{
-     			$("#pushDocResult").val(JSON.stringify(ret));
-     			alert("推送文件成功");
+			
+			if(docInfo.name)
+			{
+				urlParamStr += andFlag + "name=" + base64_encode(docInfo.name);
+				andFlag = "&";
 			}
-            else
-            {
-     			$("#pushDocResult").val(JSON.stringify(ret));
-            	alert("推送文件失败:" + ret.msgInfo);
-            }
-        },
-        error : function () {
-        	alert ("推送文件失败: 服务器异常");
-        }
-    });
-}
-
-function deleteDocTest()
-{		
-	var paramStr = $("#deleteDocParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#deleteDocUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-			taskId:param.taskId,
-            reposId: param.reposId,
-            path: param.path,
-			name: param.name,
-			authCode: gAuthCode,
-        },
-        success : function (ret) {
-     		if(ret.status == "ok")
-        	{
-            	alert("删除文件成功:");
-            	$("#deleteDocResult").val(JSON.stringify(ret));
+			
+			if(docInfo.docType)
+			{
+				urlParamStr += andFlag + "docType=" + base64_encode(docInfo.docType);
+				andFlag = "&";	
 			}
-            else
-            {
-            	alert("删除文件失败:" + ret.msgInfo);
-            	$("#deleteDocResult").val(JSON.stringify(ret));        		
-            }
-        },
-        error : function () {
-        	alert ("删除文件失败: 服务器异常");
-        }
-    });
-}
-
-
-function querySystemLogTest()
-{
-	var paramStr = $("#querySystemLogParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#querySystemLogUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-            queryId: param.queryId,
-			event: param.event,
-            reposName: param.reposName,
-            path:param.path,
-            name:param.name,
-            userId:param.userId,
-            userName:param.userName,
-            startTime: param.startTime,
-            endTime:param.endTime,
-            authCode: gAuthCode,
-        },
-        success : function (ret) {
-        	console.log("querySystemLogTest", ret)
-     		if(ret.status == "ok")
-        	{
-            	alert("查询系统日志成功");
-            	$("#querySystemLogResult").val(JSON.stringify(ret));
+			
+			if(docInfo.isZip)
+			{
+				urlParamStr += andFlag + "isZip=" + docInfo.isZip;
+				andFlag = "&";		
+				if(docInfo.rootPath)
+				{
+					urlParamStr += andFlag + "rootPath=" + base64_encode(docInfo.path);
+					andFlag = "&";
+				}
+				
+				if(docInfo.rootName)
+				{
+					urlParamStr += andFlag + "rootName=" + base64_encode(docInfo.name);
+					andFlag = "&";
+				}
 			}
-            else
-            {
-            	alert("查询系统日志失败:" + ret.msgInfo);
-            	$("#querySystemLogResult").val(JSON.stringify(ret));        		
-            }
-        },
-        error : function () {
-        	alert ("查询系统日志失败: 服务器异常");
-        }
-    });
-}
-
-function getDocHistoryTest()
-{
-	var paramStr = $("#getDocHistoryParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#getDocHistoryUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-            reposId: param.reposId,
-            path:param.path,
-            name:param.name,
-            historyType:param.historyType,
-            authCode: gAuthCode,
-        },
-        success : function (ret) {
-        	console.log("getDocHistoryTest", ret)
-     		if(ret.status == "ok")
-        	{
-            	alert("获取文件历史成功");
-            	$("#getDocHistoryResult").val(JSON.stringify(ret));
+			
+			if(docInfo.isHistory)
+			{
+				urlParamStr += andFlag + "isHistory=" + docInfo.isHistory;
+				andFlag = "&";		
+				if(docInfo.commitId)
+				{
+					urlParamStr += andFlag + "commitId=" + docInfo.commitId;
+					andFlag = "&";		
+				}
+				if(docInfo.historyType)
+				{
+					urlParamStr += andFlag + "historyType=" + docInfo.historyType;
+					andFlag = "&";		
+				}
+				if(docInfo.needDeletedEntry)
+				{
+					urlParamStr += andFlag + "needDeletedEntry=" + docInfo.needDeletedEntry;
+					andFlag = "&";					
+				}
 			}
-            else
-            {
-            	alert("获取文件历史失败:" + ret.msgInfo);
-            	$("#getDocHistoryTestResult").val(JSON.stringify(ret));        		
-            }
-        },
-        error : function () {
-        	alert ("获取文件历史失败: 服务器异常");
-        }
-    });
-}
-
-function getHistoryDetailTest()
-{
-	var paramStr = $("#getHistoryDetailParam").val();
-	console.log(paramStr);	
-	var param = JSON.parse(paramStr);
-	console.log(param);
-	
-	$.ajax({
-        url : $("#getHistoryDetailUrl").val(),
-        type : "post",
-        dataType : "json",
-        data : {
-            reposId: param.reposId,
-            path:param.path,
-            name:param.name,
-            historyType:param.historyType,
-            authCode: gAuthCode,
-        },
-        success : function (ret) {
-        	console.log("getHistoryDetailTest", ret)
-     		if(ret.status == "ok")
-        	{
-            	alert("获取历史详情成功");
-            	$("#getHistoryDetailResult").val(JSON.stringify(ret));
+			
+			if(docInfo.fileLink)
+			{
+				urlParamStr += andFlag + "fileLink=" + docInfo.fileLink;
+				andFlag = "&";
 			}
-            else
-            {
-            	alert("获取历史详情失败:" + ret.msgInfo);
-            	$("#getHistoryDetailResult").val(JSON.stringify(ret));        		
-            }
-        },
-        error : function () {
-        	alert ("获取历史详情失败: 服务器异常");
-        }
-    });
+			
+			if(docInfo.shareId)
+			{
+				urlParamStr += andFlag + "shareId=" + docInfo.shareId;
+				andFlag = "&";
+			}
+			
+			return urlParamStr;
+		}
 }
 
 </script>

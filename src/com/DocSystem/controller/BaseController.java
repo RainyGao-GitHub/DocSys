@@ -144,6 +144,7 @@ import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
+import com.DocSystem.common.entity.RemoteDocumentEditTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
@@ -8978,6 +8979,9 @@ public class BaseController  extends BaseFunction{
 			docSysWarningLog("updateDoc_FSM() updateDocInfo Failed", rt);
 		}
 		
+		//TODO: RemoteDocumentEditSave 远程文档编辑回存
+		RemoteDocumentEditSave(repos, doc);
+		
 		if(context.folderUploadAction != null)
 		{
 			insertCommitEntry(repos, doc, context.folderUploadAction, "modify", null, login_user, HistoryType_RealDoc);
@@ -9081,6 +9085,131 @@ public class BaseController  extends BaseFunction{
 		return 1;
 	}
 	
+	private void RemoteDocumentEditSave(Repos repos, Doc doc) 
+	{
+		if(repos.getId().equals(reposIdForRemoteDocumentEdit) == false || doc.getPath().startsWith(rootPathForRemoteDocumentEdit) == false)
+		{
+			//TODO: 非远程文档编辑仓库
+			return;
+		}
+		
+		String taskId = getRemoteDocumentEditTask(doc);
+		RemoteDocumentEditTask task = getRemoteDocumentEditTaskById(taskId);
+		if(task == null)
+		{
+			//TODO: 非远程文档编辑任务
+			return;
+		}
+		
+		if(task.saveFileLink == null || task.saveFileLink.isEmpty())
+		{
+			//TODO: 该远程编辑任务不需要回存
+			return;
+		}
+		
+		long currTime = new Date().getTime();
+		if(task.stopFlag || currTime > task.expireTime)
+		{
+			//TODO: 远程文档编辑任务已终止或已过期，不需要回存
+			return;
+		}
+
+		//TODO: 进行远程文档保存
+		File file = new File(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+		int size = (int) file.length();
+		byte [] docData = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), 0L, size);
+		if(docData == null)
+		{
+			Log.debug("RemoteDocumentEditSave readBufferFromFile is null");
+			return;
+		}
+		
+		//TODO: 在线程中进行回存
+		new Thread(new Runnable() {
+			public void run() {
+				Log.debug("RemoteDocumentEditSave() saveFile in new thread");				
+				BaseFunction.postFileStreamAndJsonObj(task.saveFileLink, task.doc.getName(), docData, null, true);
+			}
+		}).start();
+	}
+	
+	protected String getRemoteDocumentEditTask(Doc doc) 
+	{
+		return "RemoteDocumentEdit-" + doc.getDocId();
+	}
+
+	protected RemoteDocumentEditTask getRemoteDocumentEditTaskById(String taskId) {
+		return remoteDocumentEditTaskHashMap.get(taskId);
+	}
+	
+	protected RemoteDocumentEditTask createRemoteDocumentEditTask(String taskId, Doc doc, Integer reposId, String rootPath, ReturnAjax rt) 
+	{
+		if(remoteDocumentEditTaskHashMap.size() > 1000)
+		{
+			Log.info("createRemoteDocumentEditTask() RemoteDocumentEditTask 总数已超限，请检查您的系统是否正常");
+			rt.setError("系统大文件扫描任务过多，请检查您的系统是否正常");
+			return null;
+		}
+
+		long curTime = new Date().getTime();
+        Log.info("createRemoteDocumentEditTask() curTime:" + curTime);
+		cleanExpiredRemoteDocumentEditTask(curTime);
+   
+		RemoteDocumentEditTask task = remoteDocumentEditTaskHashMap.get(taskId);
+		if(task != null)
+		{
+			Log.info("createRemoteDocumentEditTask() RemoteDocumentEditTask [" + taskId + "] 已存在");
+			return task;
+		}
+		
+		//create new task
+		task =	new RemoteDocumentEditTask();
+		task.id = taskId;
+		task.reposId = reposId;
+		task.rootPath = rootPath;
+		task.doc = doc;
+		task.createTime = curTime;
+		task.createTime = curTime + 6*60*60*1000;	//设置过期时间
+		task.status = 0;	//初始化 		
+		task.info = "";
+		remoteDocumentEditTaskHashMap.put(taskId, task);	
+		return task;
+	}
+
+	private void cleanExpiredRemoteDocumentEditTask(long curTime) {
+		if(remoteDocumentEditTaskHashMap.size() < 100)
+		{
+			return;
+		}
+
+		List<String> deleteList = new ArrayList<String>();
+		for (Entry<String, RemoteDocumentEditTask> entry : remoteDocumentEditTaskHashMap.entrySet()) 
+		{
+			RemoteDocumentEditTask task = entry.getValue();
+			if(task.status == 0)
+			{
+				//未开始的任务，如果超过10分钟，删除
+				if(curTime - task.createTime > 10*60*1000)
+				{
+					deleteList.add(entry.getKey());
+				}
+			}
+			else
+			{
+				//已经开始的任务，如果当前已超时删除
+				if(curTime  > task.expireTime)
+				{
+					deleteList.add(entry.getKey());
+				}
+			}
+		}
+		//删除过期的任务
+		for(String taskId : deleteList)
+		{
+			remoteDocumentEditTaskHashMap.remove(taskId);
+		}
+	}
+
 	protected int updateDocEx_FSM(Repos repos, Doc doc,
 			byte[] docData,
 			Integer chunkNum, Long chunkSize, String chunkParentPath, 

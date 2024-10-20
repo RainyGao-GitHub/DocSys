@@ -79,6 +79,7 @@ import com.DocSystem.common.entity.OfficeLicense;
 import com.DocSystem.common.entity.PreferLink;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
+import com.DocSystem.common.entity.RemoteDocumentEditTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.RemoteStorageSyncupConfig;
 import com.DocSystem.common.entity.ReposAccess;
@@ -171,9 +172,9 @@ public class BaseFunction{
     protected static String serverMAC = null;
     protected static String serverSN = null;
     
-    //RemoteOfficeEdit配置信息（第三方Office在线编辑）
-    protected static Integer reposIdForRemoteOfficeEdit = 1;
-    protected static String rootPathForRemoteOfficeEdit = "";
+    //RemoteDocumentEdit配置信息（第三方Office在线编辑）
+    protected static Integer reposIdForRemoteDocumentEdit = 1;
+    protected static String rootPathForRemoteDocumentEdit = "";
     
 	    
 	//分享代理服务线程（一个服务器只允许启动一个）
@@ -196,6 +197,8 @@ public class BaseFunction{
 	//Global LargFileScanTask
 	protected static ConcurrentHashMap<String, LargeFileScanTask> largeFileScanTaskHashMap = new ConcurrentHashMap<String, LargeFileScanTask>();
 
+	//Global RemoteDocumentEditHashMap
+	protected static ConcurrentHashMap<String, RemoteDocumentEditTask> remoteDocumentEditTaskHashMap = new ConcurrentHashMap<String, RemoteDocumentEditTask>();
 	
 	//系统默认用户
 	protected static User coEditUser = new User();
