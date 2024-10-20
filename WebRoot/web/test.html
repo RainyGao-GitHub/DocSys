@@ -360,7 +360,7 @@
 			 					<textarea id="remoteOfficeEditParam">
 			 					{
 			 						"fileLink": 	"http://localhost:8100/DocSystem/Doc/downloadDoc/1/0/dGVzdDEudHh0/QzovRG9jU3lzUmVwb3Nlcy8xL2RhdGEvcmRhdGEv/dGVzdDEudHh0/-260524091/0/1",
-			 						"saveFileLink":	"",
+			 						"saveFileLink":	"http://localhost:8100/DocSystem/Doc/saveDoc/1/0/dGVzdDEudHh0/QzovRG9jU3lzUmVwb3Nlcy8xL2RhdGEvcmRhdGEv/dGVzdDEudHh0/-260524091/0",
 			 						"fileName":		"test.docx",
 			 						"fileKey": 		"1234567",
 			 						"fileCheckSum": "",
@@ -814,7 +814,7 @@
 		
 		var mxsdocServerUrl = $("#mxsdocServerUrl").val();
 		$.ajax({
-	        url : mxsdocServerUrl + "/DocSystem/Bussiness/getDocInfoForRemoteOfficeEdit.do",
+	        url : mxsdocServerUrl + "/DocSystem/Bussiness/getDocInfoForRemoteDocumentEdit.do",
 	        type : "post",
 	        dataType : "json",
 	        data : {
@@ -830,11 +830,13 @@
 	            authCode: gAuthCode,
 	        },
 	        success : function (ret) {
-	        	console.log("remoteOfficeEditTest: getDocInfoForRemoteOfficeEdit ret:", ret)
+	        	console.log("remoteOfficeEditTest: getDocInfoForRemoteDocumentEdit ret:", ret)
 	     		if(ret.status == "ok")
 	        	{
 	            	$("#remoteOfficeEditResult").val(JSON.stringify(ret));
-	            	openOfficeInNewPageRS(ret.data, mxsdocServerUrl);
+	            	var docInfoForRemoteEdit = ret.data;
+	            	docInfoForRemoteEdit.authCode = gAuthCode;
+	            	openOfficeInNewPageRS(docInfoForRemoteEdit, mxsdocServerUrl);
 				}
 	            else
 	            {

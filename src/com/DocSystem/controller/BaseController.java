@@ -9092,18 +9092,20 @@ public class BaseController  extends BaseFunction{
 			//TODO: 非远程文档编辑仓库
 			return;
 		}
-		
+
 		String taskId = getRemoteDocumentEditTask(doc);
 		RemoteDocumentEditTask task = getRemoteDocumentEditTaskById(taskId);
 		if(task == null)
 		{
 			//TODO: 非远程文档编辑任务
+			Log.debug("RemoteDocumentEditSave() 不是远程文档编辑任务");
 			return;
 		}
 		
 		if(task.saveFileLink == null || task.saveFileLink.isEmpty())
 		{
 			//TODO: 该远程编辑任务不需要回存
+			Log.debug("RemoteDocumentEditSave() 该远程文档编辑任务不需要回存");
 			return;
 		}
 		
@@ -9111,6 +9113,7 @@ public class BaseController  extends BaseFunction{
 		if(task.stopFlag || currTime > task.expireTime)
 		{
 			//TODO: 远程文档编辑任务已终止或已过期，不需要回存
+			Log.debug("RemoteDocumentEditSave() 该远程文档编辑任务已停止或过期，不需要回存");
 			return;
 		}
 
@@ -9121,13 +9124,14 @@ public class BaseController  extends BaseFunction{
 		if(docData == null)
 		{
 			Log.debug("RemoteDocumentEditSave readBufferFromFile is null");
+			Log.debug("RemoteDocumentEditSave() 文档内容读取失败");
 			return;
 		}
 		
 		//TODO: 在线程中进行回存
 		new Thread(new Runnable() {
 			public void run() {
-				Log.debug("RemoteDocumentEditSave() saveFile in new thread");				
+				Log.debug("RemoteDocumentEditSave() saveFile in new thread: 开始文档回存");				
 				BaseFunction.postFileStreamAndJsonObj(task.saveFileLink, task.doc.getName(), docData, null, true);
 			}
 		}).start();
