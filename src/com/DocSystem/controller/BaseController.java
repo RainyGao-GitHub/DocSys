@@ -5796,9 +5796,14 @@ public class BaseController  extends BaseFunction{
 			{
 				syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+				//TODO: 仓库定时同步设置不当会导致会导致全文搜索自动同步过度频繁，从而引起磁盘IO过高问题，因此关闭它
+				//syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
 			}
-			//TODO: 仓库定时同步设置不当会导致会导致全文搜索自动同步过度频繁，从而引起磁盘IO过高问题，因此关闭它
-			//syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
+			else
+			{
+				//TODO: 前置仓库如果用户开启了自动刷新，那么需要进行刷新
+				syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
+			}	
 			break;
 		case SYNC_VerRepos: //版本仓库同步
 			if(isFSM(repos) == true)
@@ -5892,6 +5897,7 @@ public class BaseController  extends BaseFunction{
 	private boolean refreshSearchIndexForEntry(Repos repos, Doc doc, Doc dbDoc, Integer subEntryPushFlag, ReturnAjax rt) 
 	{
 		//TODO: 如果是前置仓库，使用getLocalDocChangeType是否会出现问题，待确定
+		//TODO: 理论上这个并不会出现什么问题，dbDoc里的信息就是远程doc的信息
 		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, doc);	
 		switch(localChangeType )
 		{
@@ -5948,6 +5954,7 @@ public class BaseController  extends BaseFunction{
 			subEntryPushFlag = 0;
 		}
 		
+		//TODO: 如果前置仓库，那么取到的是远程服务器的文件列表
 		List<Doc> entryList = docSysGetDocList(repos, doc, GetDocList_LocalEntry);
 		if(entryList == null)
 		{
