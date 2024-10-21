@@ -836,6 +836,7 @@
 	            	$("#remoteOfficeEditResult").val(JSON.stringify(ret));
 	            	var docInfoForRemoteEdit = ret.data;
 	            	docInfoForRemoteEdit.authCode = gAuthCode;
+	            	docInfoForRemoteEdit.userName = userName;
 	            	openOfficeInNewPageRS(docInfoForRemoteEdit, mxsdocServerUrl);
 				}
 	            else
@@ -953,6 +954,31 @@
 				urlParamStr += andFlag + "authCode=" + docInfo.authCode;
 				andFlag = "&";
 			}
+			
+			if(docInfo.userId)
+			{
+				urlParamStr += andFlag + "userId=" + docInfo.userId;
+				andFlag = "&";
+			}
+			
+			if(docInfo.userName)
+			{
+				urlParamStr += andFlag + "userName=" + docInfo.userName;
+				andFlag = "&";
+			}
+			
+			if(docInfo.editEn)
+			{
+				urlParamStr += andFlag + "editEn=" + docInfo.editEn;
+				andFlag = "&";
+			}
+			
+			if(docInfo.downloadEn)
+			{
+				urlParamStr += andFlag + "downloadEn=" + docInfo.downloadEn;
+				andFlag = "&";
+			}
+			
 			
 			return urlParamStr;
 		}

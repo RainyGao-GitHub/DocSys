@@ -165,6 +165,30 @@ function buildRequestParamStrForDoc(docInfo)
 		andFlag = "&";
 	}
 	
+	if(docInfo.userId)
+	{
+		urlParamStr += andFlag + "userId=" + docInfo.userId;
+		andFlag = "&";
+	}
+	
+	if(docInfo.userName)
+	{
+		urlParamStr += andFlag + "userName=" + docInfo.userName;
+		andFlag = "&";
+	}
+	
+	if(docInfo.editEn)
+	{
+		urlParamStr += andFlag + "editEn=" + docInfo.editEn;
+		andFlag = "&";
+	}
+	
+	if(docInfo.downloadEn)
+	{
+		urlParamStr += andFlag + "downloadEn=" + docInfo.downloadEn;
+		andFlag = "&";
+	}
+	
 	return urlParamStr;
 }
 
@@ -266,6 +290,32 @@ function getDocInfoFromRequestParamStr()
 	{
 		docInfo.authCode = authCode;
 	}
+	
+	
+	var userId = getQueryString("userId");
+	if(userId && userId != null)
+	{
+		docInfo.userId = userId;
+	}	
+	
+	var userName = getQueryString("userName");
+	if(userName && userName != null)
+	{
+		docInfo.userName = userName;
+	}
+	
+	var editEn = getQueryString("editEn");
+	if(editEn && editEn != null)
+	{
+		docInfo.editEn = editEn;
+	}	
+	
+	var downloadEn = getQueryString("downloadEn");
+	if(downloadEn && downloadEn != null)
+	{
+		docInfo.downloadEn = downloadEn;
+	}	
+	
 	return docInfo;
 }
 
@@ -461,7 +511,25 @@ function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle
         	console.log("getDocOfficeLinkBasic ret",ret);
         	if( "ok" == ret.status )
         	{
-        		successCallback &&successCallback(ret.data, ret.dataEx);
+        		var officeDocInfo = ret.data;
+        		
+        		//如果用户指定了用户名字，那么需要修改显示用户名
+        		if(docInfo.userName)
+        		{
+        			//TODO: 把显示的用户名改掉
+        			officeDocInfo.realName = docInfo.userName;
+        		}
+        		
+        		//如果用户期望的权限小于真实权限，那么需要调整为期望权限
+        		if(docInfo.editEn < officeDocInfo.editEn)
+        		{
+        			officeDocInfo.editEn = docInfo.editEn;
+        		}
+        		if(docInfo.downloadEn < officeDocInfo.downloadEn)
+        		{
+        			officeDocInfo.downloadEn = docInfo.downloadEn;
+        		}
+        		successCallback &&successCallback(officeDocInfo, ret.dataEx);
             }
             else 
             {
