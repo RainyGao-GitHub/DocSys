@@ -1732,7 +1732,7 @@ public class DocController extends BaseController{
 		return;
 	}
 
-	@RequestMapping(value="/uploadDocEx/{vid}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
+	@RequestMapping(value="/uploadDocEx/{vid}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.POST)
 	public void uploadDocEx(@PathVariable("vid") Integer vid, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
 			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
 			String taskId,	//用户自定义的taskId，将会被存入系统日志的queryId字段，以便用户可以随时查询该任务的信息
