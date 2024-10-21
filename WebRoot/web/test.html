@@ -836,7 +836,7 @@
 	            	$("#remoteOfficeEditResult").val(JSON.stringify(ret));
 	            	var docInfoForRemoteEdit = ret.data;
 	            	docInfoForRemoteEdit.authCode = gAuthCode;
-	            	docInfoForRemoteEdit.userName = userName;
+	            	docInfoForRemoteEdit.userName = param.userName;
 	            	openOfficeInNewPageRS(docInfoForRemoteEdit, mxsdocServerUrl);
 				}
 	            else
