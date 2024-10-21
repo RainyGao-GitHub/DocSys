@@ -963,7 +963,7 @@
 			
 			if(docInfo.userName)
 			{
-				urlParamStr += andFlag + "userName=" + docInfo.userName;
+				urlParamStr += andFlag + "userName=" + base64_encode(docInfo.userName);
 				andFlag = "&";
 			}
 			

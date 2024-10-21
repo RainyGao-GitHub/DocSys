@@ -301,7 +301,7 @@ function getDocInfoFromRequestParamStr()
 	var userName = getQueryString("userName");
 	if(userName && userName != null)
 	{
-		docInfo.userName = userName;
+		docInfo.userName = base64_decode(userName);
 	}
 	
 	var editEn = getQueryString("editEn");
