@@ -9124,23 +9124,27 @@ public class BaseController  extends BaseFunction{
 			Log.debug("RemoteDocumentEditSave() 该远程文档编辑任务已经过期，不需要回存");
 			return;
 		}
-
-		//TODO: 进行远程文档保存
-		File file = new File(doc.getLocalRootPath() + doc.getPath(), doc.getName());
-		int size = (int) file.length();
-		byte [] docData = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), 0L, size);
-		if(docData == null)
-		{
-			Log.debug("RemoteDocumentEditSave readBufferFromFile is null");
-			Log.debug("RemoteDocumentEditSave() 文档内容读取失败");
-			return;
-		}
 		
 		//TODO: 在线程中进行回存
-		new Thread(new Runnable() {
+		new Thread(new Runnable() 
+		{
 			public void run() {
-				Log.debug("RemoteDocumentEditSave() saveFile in new thread: 开始文档回存");				
-				BaseFunction.postFileStreamAndJsonObj(task.saveFileLink, task.doc.getName(), docData, null, true);
+				Log.debug("RemoteDocumentEditSave() saveFile in new thread: 开始文档回存");	
+				//TODO: 进行远程文档保存
+				File file = new File(doc.getLocalRootPath() + doc.getPath(), doc.getName());
+				int size = (int) file.length();
+				byte [] docData = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), 0L, size);
+				if(docData == null)
+				{
+					Log.debug("RemoteDocumentEditSave() readBufferFromFile is null");
+					Log.debug("RemoteDocumentEditSave() 文档内容读取失败");
+					return;
+				}
+				
+				//TODO: 未来可能需要考虑文件过大的分片上传问题
+				HashMap<String, String>  reqParams = new HashMap<String, String>();
+				reqParams.put("size", size+"");			
+				BaseFunction.postFileStreamAndJsonObj(task.saveFileLink, task.doc.getName(), docData, reqParams, true);
 			}
 		}).start();
 	}
