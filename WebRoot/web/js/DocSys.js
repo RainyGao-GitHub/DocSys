@@ -173,7 +173,7 @@ function buildRequestParamStrForDoc(docInfo)
 	
 	if(docInfo.userName)
 	{
-		urlParamStr += andFlag + "userName=" + docInfo.userName;
+		urlParamStr += andFlag + "userName=" + base64_encode(docInfo.userName);
 		andFlag = "&";
 	}
 	
@@ -513,7 +513,12 @@ function getDocOfficeLinkBasic(docInfo, successCallback, errorCallback, urlStyle
         	{
         		var officeDocInfo = ret.data;
         		
-        		//如果用户指定了用户名字，那么需要修改显示用户名
+        		//如果用户指定了用户ID
+        		if(docInfo.userId)
+        		{
+        			//TODO: 把用户ID改掉
+        			officeDocInfo.userId = docInfo.userId;
+        		}
         		if(docInfo.userName)
         		{
         			//TODO: 把显示的用户名改掉
