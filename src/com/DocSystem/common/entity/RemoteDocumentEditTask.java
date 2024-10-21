@@ -13,8 +13,9 @@ public class RemoteDocumentEditTask
 	
 	public Long createTime;		//task create time
 	public long expireTime;		//task expire time
-	
-	public String saveFileLink;	//TODO: 远程文件的保存链接 
+
+	public String fileLink;		//TODO: 文件下载地址
+	public String saveFileLink;	//TODO: 文件保存地址
 	
 	public boolean stopFlag = false;
 	public int status;	//200: success -1: failed others: in progress

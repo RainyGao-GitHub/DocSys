@@ -9102,6 +9102,14 @@ public class BaseController  extends BaseFunction{
 			return;
 		}
 		
+		if(task.stopFlag)
+		{
+			//TODO: 远程文档编辑任务已终止或已过期，不需要回存
+			Log.debug("RemoteDocumentEditSave() 该远程文档编辑任务已停止，不进行回存");
+			return;
+		}
+
+		
 		if(task.saveFileLink == null || task.saveFileLink.isEmpty())
 		{
 			//TODO: 该远程编辑任务不需要回存
@@ -9113,7 +9121,7 @@ public class BaseController  extends BaseFunction{
 		if(task.stopFlag || currTime > task.expireTime)
 		{
 			//TODO: 远程文档编辑任务已终止或已过期，不需要回存
-			Log.debug("RemoteDocumentEditSave() 该远程文档编辑任务已停止或过期，不需要回存");
+			Log.debug("RemoteDocumentEditSave() 该远程文档编辑任务已经过期，不需要回存");
 			return;
 		}
 
