@@ -9118,7 +9118,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		long currTime = new Date().getTime();
-		if(task.stopFlag || currTime > task.expireTime)
+		if(currTime > task.expireTime)
 		{
 			//TODO: 远程文档编辑任务已终止或已过期，不需要回存
 			Log.debug("RemoteDocumentEditSave() 该远程文档编辑任务已经过期，不需要回存");
@@ -9181,7 +9181,7 @@ public class BaseController  extends BaseFunction{
 		task.rootPath = rootPath;
 		task.doc = doc;
 		task.createTime = curTime;
-		task.createTime = curTime + 6*60*60*1000;	//设置过期时间
+		task.expireTime = curTime + 6*60*60*1000;	//设置过期时间
 		task.status = 0;	//初始化 		
 		task.info = "";
 		remoteDocumentEditTaskHashMap.put(taskId, task);	

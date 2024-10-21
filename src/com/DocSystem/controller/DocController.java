@@ -1732,6 +1732,70 @@ public class DocController extends BaseController{
 		return;
 	}
 
+	@RequestMapping(value="/uploadDocEx/{vid}/{targetPath}/{targetName}/{authCode}/{shareId}", method=RequestMethod.GET)
+	public void uploadDocEx(@PathVariable("vid") Integer vid, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
+			@PathVariable("authCode") String authCode, @PathVariable("shareId") Integer shareId,
+			String taskId,	//用户自定义的taskId，将会被存入系统日志的queryId字段，以便用户可以随时查询该任务的信息
+			String remoteDirectory, Long size, Integer type, String checkSum,
+			MultipartFile uploadFile,
+			String fileLink,
+			Integer chunkIndex, Integer chunkNum, Integer cutSize, Long chunkSize, String chunkHash, Integer combineDisabled,
+			String commitMsg,
+			String dirPath,	Long batchStartTime, Integer totalCount, Integer isEnd,  //Parameters for FolderUpload or FolderPush	
+			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
+	{
+		Log.infoHead("************** uploadDocEx ****************");
+		Log.info("uploadDocEx reposId:" + vid + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax();
+		
+		//Convert authCode and shareId same with Non Rest Style request
+		if(authCode.equals("0"))
+		{
+			authCode = null;
+		}
+		if(shareId == 0)
+		{
+			shareId = null;
+		}
+		
+		if(targetPath == null || targetName == null)
+		{
+			docSysErrorLog("目标路径不能为空！", rt);
+			writeJson(rt, response);			
+		}
+		
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+		targetPath = Base64Util.base64Decode(targetPath);
+		if(targetPath == null)
+		{
+			docSysErrorLog("目标路径解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = Base64Util.base64Decode(targetName);
+		if(targetName == null)
+		{
+			docSysErrorLog("目标文件名解码失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		uploadDocRS(
+				taskId, 
+				vid, remoteDirectory, targetPath, targetName, size, type, checkSum,
+				uploadFile,
+				fileLink,
+				chunkIndex, chunkNum, cutSize, chunkSize, chunkHash, combineDisabled,
+				commitMsg,
+				dirPath, batchStartTime, totalCount, isEnd,  //Parameters for FolderUpload or FolderPush	
+				shareId,
+				authCode,
+				response, request, session);	
+	}
+	
 	@RequestMapping("/uploadDocRS.do")
 	public void uploadDocRS(
 			String taskId,	//用户自定义的taskId，将会被存入系统日志的queryId字段，以便用户可以随时查询该任务的信息
