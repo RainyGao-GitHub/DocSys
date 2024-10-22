@@ -5780,16 +5780,24 @@ public class BaseController  extends BaseFunction{
 			{
 				syncUpLocalWithVerReposForce(repos, doc, login_user, action, 2, rt);
 				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+				syncUpDocSearchIndex_FSM(repos, doc, action, 2, true, rt);	//强制刷新
 			}
-			syncUpDocSearchIndex(repos, doc, action, 2, true, rt);	//强制刷新
+			else
+			{
+				syncUpDocSearchIndex_FrontFS(repos, doc, action, 2, true, rt);	//强制刷新
+			}
 			break;
 		case SYNC_ALL:	//用户手动刷新
 			if(isFSM(repos) == true)
 			{
 				syncUpLocalWithVerRepos(repos, doc, login_user, action, 2, rt);
 				syncUpLocalWithRemoteStorage(repos, doc, login_user, action, 2, true, true, true, rt);
+				syncUpDocSearchIndex_FSM(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
 			}
-			syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
+			else
+			{
+				syncUpDocSearchIndex_FrontFS(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引					
+			}
 			break;
 		case SYNC_AUTO:			//仓库定时同步
 			if(isFSM(repos) == true)
@@ -5802,7 +5810,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				//TODO: 前置仓库如果用户开启了自动刷新，那么需要进行刷新
-				syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
+				syncUpDocSearchIndex_FrontFS(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
 			}	
 			break;
 		case SYNC_VerRepos: //版本仓库同步
@@ -5818,7 +5826,14 @@ public class BaseController  extends BaseFunction{
 			}
 			break;	
 		case SYNC_SearchIndex: //强制刷新Index
-			syncUpDocSearchIndex(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
+			if(isFSM(repos) == true)
+			{
+				syncUpDocSearchIndex_FSM(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引
+			}
+			else
+			{
+				syncUpDocSearchIndex_FrontFS(repos, doc, action, 2, false, rt);	//根据文件名的IndexLib更新索引				
+			}
 			break;		
 		default:
 			break;
@@ -5827,46 +5842,46 @@ public class BaseController  extends BaseFunction{
 		return true;
 	}
 	
-	private void syncUpDocSearchIndex(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, boolean force, ReturnAjax rt) {
-		Log.info("syncUpDocSearchIndex() 同步文件搜索");
+	private void syncUpDocSearchIndex_FrontFS(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, boolean force, ReturnAjax rt) {
+		Log.info("syncUpDocSearchIndex_FrontFS() 同步文件搜索");
 		//用户手动刷新：总是会触发索引刷新操作
 		if(action.getAction() == null)
 		{
-			Log.info("**************************** refreshDocSearchIndex() action is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			Log.info("**************************** syncUpDocSearchIndex_FrontFS() action is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			return;
 		}	
 		
 		if(force)
 		{
-			Log.info("**************************** refreshDocSearchIndex() 强制刷新 SearchIndex for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			Log.info("**************************** syncUpDocSearchIndex_FrontFS() 强制刷新 SearchIndex for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			if(doc.getDocId() == 0)
 			{
 				//Delete All Index Lib
-				Log.info("refreshDocSearchIndex() delete all index lib");
+				Log.info("syncUpDocSearchIndex_FrontFS() delete all index lib");
 				deleteDocNameIndexLib(repos);
 				deleteRDocIndexLib(repos);
 				deleteVDocIndexLib(repos);
 				//Build All Index For Doc
-				Log.info("refreshDocSearchIndex() buildIndexForDoc");
+				Log.info("syncUpDocSearchIndex_FrontFS() buildIndexForDoc");
 				buildIndexForDoc(repos, doc, null, null, rt, 2);
 			}
 			else
 			{
 				//deleteAllIndexUnderDoc
-				Log.info("refreshDocSearchIndex() delete all index for doc [" + doc.getPath() + doc.getName() + "]");
+				Log.info("syncUpDocSearchIndex_FrontFS() delete all index for doc [" + doc.getPath() + doc.getName() + "]");
 				deleteAllIndexForDoc(repos, doc, 2);
 				//buildAllIndexForDoc
-				Log.info("refreshDocSearchIndex() buildIndexForDoc [" + doc.getPath() + doc.getName() + "]");
+				Log.info("syncUpDocSearchIndex_FrontFS() buildIndexForDoc [" + doc.getPath() + doc.getName() + "]");
 				buildIndexForDoc(repos, doc, null, null, rt, 2);
 			}
-			Log.info("**************************** refreshDocSearchIndex() 结束强制刷新 SearchIndex for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			Log.info("**************************** syncUpDocSearchIndex_FrontFS() 结束强制刷新 SearchIndex for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
 			return;
 		}
 		
 		//普通同步需要检查是否开启了自动同步
 		if(repos.autoSyncupConfig == null)
 		{
-			Log.info("syncUpDocSearchIndex() repos:" + repos.getName() + " autoSyncupConfig is null");
+			Log.info("syncUpDocSearchIndex_FrontFS() repos:" + repos.getName() + " autoSyncupConfig is null");
 			return;
 		}
 		
@@ -5874,15 +5889,71 @@ public class BaseController  extends BaseFunction{
 				|| repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == null
 				|| repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == 0)
 		{
-			Log.info("syncUpDocSearchIndex() repos:" + repos.getName() + " searchIndexSyncupConfig was disabled");
+			Log.info("syncUpDocSearchIndex_FrontFS() repos:" + repos.getName() + " searchIndexSyncupConfig was disabled");
 			return;
 		}
 		
 		//基于文件名的IndexLib进行扫描并更新
-		refreshSearchIndexForDoc(repos, doc, subDocSyncupFlag, rt);
+		refreshSearchIndexForDoc_FrontFS(repos, doc, subDocSyncupFlag, rt);
+	}
+	
+	private void syncUpDocSearchIndex_FSM(Repos repos, Doc doc, CommonAction action, Integer subDocSyncupFlag, boolean force, ReturnAjax rt) {
+		Log.info("syncUpDocSearchIndex_FSM() 同步文件搜索");
+		//用户手动刷新：总是会触发索引刷新操作
+		if(action.getAction() == null)
+		{
+			Log.info("**************************** syncUpDocSearchIndex_FSM() action is null for " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			return;
+		}	
+		
+		if(force)
+		{
+			Log.info("**************************** syncUpDocSearchIndex_FSM() 强制刷新 SearchIndex for: " + doc.getDocId() + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			if(doc.getDocId() == 0)
+			{
+				//Delete All Index Lib
+				Log.info("syncUpDocSearchIndex_FSM() delete all index lib");
+				deleteDocNameIndexLib(repos);
+				deleteRDocIndexLib(repos);
+				deleteVDocIndexLib(repos);
+				//Build All Index For Doc
+				Log.info("syncUpDocSearchIndex_FSM() buildIndexForDoc");
+				buildIndexForDoc(repos, doc, null, null, rt, 2);
+			}
+			else
+			{
+				//deleteAllIndexUnderDoc
+				Log.info("syncUpDocSearchIndex_FSM() delete all index for doc [" + doc.getPath() + doc.getName() + "]");
+				deleteAllIndexForDoc(repos, doc, 2);
+				//buildAllIndexForDoc
+				Log.info("syncUpDocSearchIndex_FSM() buildIndexForDoc [" + doc.getPath() + doc.getName() + "]");
+				buildIndexForDoc(repos, doc, null, null, rt, 2);
+			}
+			Log.info("**************************** syncUpDocSearchIndex() 结束强制刷新 SearchIndex for: " + doc.getDocId()  + " " + doc.getPath() + doc.getName() + " subDocSyncupFlag:" + subDocSyncupFlag);
+			return;
+		}
+		
+		//普通同步需要检查是否开启了自动同步
+		if(repos.autoSyncupConfig == null)
+		{
+			Log.info("syncUpDocSearchIndex_FSM() repos:" + repos.getName() + " autoSyncupConfig is null");
+			return;
+		}
+		
+		if(repos.autoSyncupConfig.searchIndexSyncupConfig == null 
+				|| repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == null
+				|| repos.autoSyncupConfig.searchIndexSyncupConfig.autoSyncupEn == 0)
+		{
+			Log.info("syncUpDocSearchIndex_FSM() repos:" + repos.getName() + " searchIndexSyncupConfig was disabled");
+			return;
+		}
+		
+		//基于文件名的IndexLib进行扫描并更新
+		refreshSearchIndexForDoc_FSM(repos, doc, subDocSyncupFlag, rt);
 	}
 
-	private boolean refreshSearchIndexForDoc(Repos repos, Doc doc, Integer subDocSyncupFlag, ReturnAjax rt) 
+	
+	private boolean refreshSearchIndexForDoc_FSM(Repos repos, Doc doc, Integer subDocSyncupFlag, ReturnAjax rt) 
 	{
     	Doc entry = docSysGetDoc(repos, doc, true);
 		//从DocName IndexLib中获取IndexEntryHashMap用于参照节点
@@ -5890,33 +5961,42 @@ public class BaseController  extends BaseFunction{
     	Doc dbEntry = getIndexEntry(repos, doc, indexLib);
     	
     	//刷新索引
-    	return refreshSearchIndexForEntry(repos, entry, dbEntry, subDocSyncupFlag, rt);
+    	return refreshSearchIndexForEntry_FSM(repos, entry, dbEntry, subDocSyncupFlag, rt);
+	}
+	
+	private boolean refreshSearchIndexForDoc_FrontFS(Repos repos, Doc doc, Integer subDocSyncupFlag, ReturnAjax rt) 
+	{
+    	Doc entry = docSysGetDoc(repos, doc, true);
+		//从DocName IndexLib中获取IndexEntryHashMap用于参照节点
+		String indexLib = getIndexLibPath(repos,0);
+    	Doc dbEntry = getIndexEntry(repos, doc, indexLib);
+    	
+    	//刷新索引
+    	return refreshSearchIndexForEntry_FrontFS(repos, entry, dbEntry, subDocSyncupFlag, rt);
 	}
 	
 	//根据doc和dbDoc确定是否需要更新索引的操作
-	private boolean refreshSearchIndexForEntry(Repos repos, Doc doc, Doc dbDoc, Integer subEntryPushFlag, ReturnAjax rt) 
+	private boolean refreshSearchIndexForEntry_FSM(Repos repos, Doc doc, Doc dbDoc, Integer subEntryPushFlag, ReturnAjax rt) 
 	{
-		//TODO: 如果是前置仓库，使用getLocalDocChangeType是否会出现问题，待确定
-		//TODO: 理论上这个并不会出现什么问题，dbDoc里的信息就是远程doc的信息
 		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, doc);	
 		switch(localChangeType )
 		{
 		case LOCALADD:
-			Log.debug("refreshSearchIndexForEntry() [" +doc.getPath() + doc.getName()+ "] 本地新增, 更新索引");
+			Log.debug("refreshSearchIndexForEntry_FSM() [" +doc.getPath() + doc.getName()+ "] 本地新增, 更新索引");
 			deleteAllIndexForDoc(repos, doc, 2);
 			buildIndexForDoc(repos, doc, null, null, rt, 2);
 			break;
 		case LOCALCHANGE:
-			Log.debug("doPushEntryToRemoteStorageAsync() [" +doc.getPath() + doc.getName()+ "] 本地改动, 更新索引");
+			Log.debug("refreshSearchIndexForEntry_FSM() [" +doc.getPath() + doc.getName()+ "] 本地改动, 更新索引");
 			deleteAllIndexForDoc(repos, doc, 2);
 			buildIndexForDoc(repos, doc, null, null, rt, 1);
 			break;			
 		case LOCALDELETE:
-			Log.debug("doPushEntryToRemoteStorageAsync() [" +doc.getPath() + doc.getName()+ "] 本地删除, 更新索引");
+			Log.debug("refreshSearchIndexForEntry_FSM() [" +doc.getPath() + doc.getName()+ "] 本地删除, 更新索引");
 			deleteAllIndexForDoc(repos, doc, 2);
 			break;
 		case LOCALDIRTOFILE:
-			Log.debug("doPushEntryToRemoteStorageAsync() [" +doc.getPath() + doc.getName()+ "] 本地目录->文件, 更新索引");
+			Log.debug("refreshSearchIndexForEntry_FSM() [" +doc.getPath() + doc.getName()+ "] 本地目录->文件, 更新索引");
 			deleteAllIndexForDoc(repos, doc, 2);
 			buildIndexForDoc(repos, doc, null, null, rt, 1);
 			break;
@@ -5933,14 +6013,52 @@ public class BaseController  extends BaseFunction{
 		
 		if(doc.getType() == 2 && localChangeType == DocChangeType.NOCHANGE)
 		{
-			refreshSearchIndexForSubEntries(repos, doc, subEntryPushFlag, rt);			
+			refreshSearchIndexForSubEntries_FSM(repos, doc, subEntryPushFlag, rt);			
 		}
 		return true;	
 	}
 	
-	private boolean refreshSearchIndexForSubEntries(Repos repos, Doc doc, Integer subEntryPushFlag, ReturnAjax rt) 
+	private boolean refreshSearchIndexForEntry_FrontFS(Repos repos, Doc doc, Doc dbDoc, Integer subEntryPushFlag, ReturnAjax rt) 
+	{
+		//TODO: 前置仓库不判断文件是否改变，只判断是否删除或新增
+		DocChangeType localChangeType = getLocalDocChangeType(dbDoc, doc);	
+		switch(localChangeType )
+		{
+		case LOCALADD:
+			Log.debug("refreshSearchIndexForEntry_FSM() [" +doc.getPath() + doc.getName()+ "] 本地新增, 更新索引");
+			deleteAllIndexForDoc(repos, doc, 2);
+			buildIndexForDoc(repos, doc, null, null, rt, 2);
+			break;		
+		case LOCALDELETE:
+			Log.debug("refreshSearchIndexForEntry_FSM() [" +doc.getPath() + doc.getName()+ "] 本地删除, 更新索引");
+			deleteAllIndexForDoc(repos, doc, 2);
+			break;
+		case LOCALDIRTOFILE:
+			Log.debug("refreshSearchIndexForEntry_FSM() [" +doc.getPath() + doc.getName()+ "] 本地目录->文件, 更新索引");
+			deleteAllIndexForDoc(repos, doc, 2);
+			buildIndexForDoc(repos, doc, null, null, rt, 1);
+			break;
+		case LOCALFILETODIR:
+			Log.debug("doPushEntryToRemoteStorageAsync() [" +doc.getPath() + doc.getName()+ "] 本地文件->目录, 更新索引");
+			deleteAllIndexForDoc(repos, doc, 2);
+			buildIndexForDoc(repos, doc, null, null, rt, 2);
+			break;
+		case NOCHANGE:
+			break;
+		default:
+			break;
+		}
+		
+		if(doc.getType() == 2)
+		{
+			refreshSearchIndexForSubEntries_FrontFS(repos, doc, subEntryPushFlag, rt);			
+		}
+		return true;	
+	}
+	
+	private boolean refreshSearchIndexForSubEntries_FSM(Repos repos, Doc doc, Integer subEntryPushFlag, ReturnAjax rt) 
 	{		
-		Log.debug("refreshSearchIndexForSubEntries() doc:[" + doc.getPath() + doc.getName() + "]");
+		Log.debug("refreshSearchIndexForSubEntries_FSM() doc:[" + doc.getPath() + doc.getName() + "]");
 
 		//子目录不递归
 		if(subEntryPushFlag == 0)
@@ -5958,7 +6076,7 @@ public class BaseController  extends BaseFunction{
 		List<Doc> entryList = docSysGetDocList(repos, doc, GetDocList_LocalEntry);
 		if(entryList == null)
 		{
-			Log.info("refreshSearchIndexForSubEntries() getLocalEntryList return null for:" + doc.getPath() + doc.getName());			
+			Log.info("refreshSearchIndexForSubEntries_FSM() getLocalEntryList return null for:" + doc.getPath() + doc.getName());			
 			return false;
 		}
 		
@@ -5969,7 +6087,7 @@ public class BaseController  extends BaseFunction{
 		{
 			Doc subLocalDoc  = entryList.get(i);
 			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
-			refreshSearchIndexForEntry(repos, subLocalDoc, subDbDoc, subEntryPushFlag, rt);	
+			refreshSearchIndexForEntry_FSM(repos, subLocalDoc, subDbDoc, subEntryPushFlag, rt);	
 			if(subDbDoc != null)
 			{
 				dbHashMap.remove(subDbDoc.getName());
@@ -5978,7 +6096,53 @@ public class BaseController  extends BaseFunction{
 		
 		//The entries remained in dbHashMap is the entries which have been deleted
 		for (Doc subDbDoc : dbHashMap.values()) {
-			Log.debug("doPushSubEntriesToRemoteStorage() delete:" + subDbDoc.getPath() + subDbDoc.getName());	
+			Log.debug("refreshSearchIndexForSubEntries_FSM() delete:" + subDbDoc.getPath() + subDbDoc.getName());	
+			deleteAllIndexForDoc(repos, doc, 2);
+		}
+		return true;
+	}
+	
+	private boolean refreshSearchIndexForSubEntries_FrontFS(Repos repos, Doc doc, Integer subEntryPushFlag, ReturnAjax rt) 
+	{		
+		Log.debug("refreshSearchIndexForSubEntries_FrontFS() doc:[" + doc.getPath() + doc.getName() + "]");
+
+		//子目录不递归
+		if(subEntryPushFlag == 0)
+		{
+			return true;
+		}
+		
+		//子目录递归不继承
+		if(subEntryPushFlag == 1)
+		{
+			subEntryPushFlag = 0;
+		}
+		
+		//TODO: 如果前置仓库，那么取到的是远程服务器的文件列表
+		List<Doc> entryList = docSysGetDocList(repos, doc, GetDocList_LocalEntry);
+		if(entryList == null)
+		{
+			Log.info("refreshSearchIndexForSubEntries_FrontFS() getLocalEntryList return null for:" + doc.getPath() + doc.getName());			
+			return false;
+		}
+		
+		//从DocName IndexLib中获取IndexEntryHashMap用于参照节点
+		String indexLib = getIndexLibPath(repos,0);
+		HashMap<String, Doc> dbHashMap = getIndexEntryHashMap(repos, doc, indexLib);
+		for(int i=0; i<entryList.size(); i++)
+		{
+			Doc subLocalDoc  = entryList.get(i);
+			Doc subDbDoc = dbHashMap.get(subLocalDoc.getName());
+			refreshSearchIndexForEntry_FrontFS(repos, subLocalDoc, subDbDoc, subEntryPushFlag, rt);	
+			if(subDbDoc != null)
+			{
+				dbHashMap.remove(subDbDoc.getName());
+			}
+		}
+		
+		//The entries remained in dbHashMap is the entries which have been deleted
+		for (Doc subDbDoc : dbHashMap.values()) {
+			Log.debug("refreshSearchIndexForSubEntries_FSM() delete:" + subDbDoc.getPath() + subDbDoc.getName());	
 			deleteAllIndexForDoc(repos, doc, 2);
 		}
 		return true;
