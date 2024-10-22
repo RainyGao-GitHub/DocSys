@@ -177,13 +177,23 @@ function buildRequestParamStrForDoc(docInfo)
 		andFlag = "&";
 	}
 	
-	if(docInfo.editEn)
+	if(docInfo.editEn == undefined)
+	{
+		urlParamStr += andFlag + "editEn=0";
+		andFlag = "&";
+	}
+	else
 	{
 		urlParamStr += andFlag + "editEn=" + docInfo.editEn;
 		andFlag = "&";
 	}
 	
-	if(docInfo.downloadEn)
+	if(docInfo.downloadEn == undefined)
+	{
+		urlParamStr += andFlag + "downloadEn=0";
+		andFlag = "&";
+	}
+	else
 	{
 		urlParamStr += andFlag + "downloadEn=" + docInfo.downloadEn;
 		andFlag = "&";

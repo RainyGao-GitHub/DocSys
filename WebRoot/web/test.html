@@ -366,8 +366,8 @@
 			 						"fileCheckSum": "",
 			 						"userId": 		"00001",
 			 						"userName": 	"测试用户",
-			 						"editEn": 		1,
-			 						"downloadEn": 	1		 									 							 						
+			 						"editEn": 		0,
+			 						"downloadEn": 	0		 									 							 						
 			 					}		 					
 			 					</textarea>	
 			 				</i>
@@ -823,10 +823,6 @@
 	            fileName : param.fileName,
 	            fileKey : param.fileKey,
 	            fileCheckSum : param.fileCheckSum,
-	            userId : param.userId,
-	            userName : param.userName,
-	            editEn : param.editEn,
-	            downloadEn : param.downloadEn,
 	            authCode: gAuthCode,
 	        },
 	        success : function (ret) {
@@ -834,8 +830,11 @@
 	     		if(ret.status == "ok")
 	        	{
 	            	$("#remoteOfficeEditResult").val(JSON.stringify(ret));
+	            	//TODO: 注意getDocInfoForRemoteDocumentEdit只是对需要编辑的文件进行了缓存
+	            	//TODO: 并不涉及权限和用户信息的指定，因此需要在获取成功后指定
 	            	var docInfoForRemoteEdit = ret.data;
 	            	docInfoForRemoteEdit.authCode = gAuthCode;
+	            	//TODO: 指定用户信息和权限
 	            	docInfoForRemoteEdit.userId = param.userId;
 	            	docInfoForRemoteEdit.userName = param.userName;
 	            	docInfoForRemoteEdit.editEn = param.editEn;
@@ -970,13 +969,23 @@
 				andFlag = "&";
 			}
 			
-			if(docInfo.editEn)
+			if(docInfo.editEn == undefined)
+			{
+				urlParamStr += andFlag + "editEn=0";
+				andFlag = "&";
+			}
+			else
 			{
 				urlParamStr += andFlag + "editEn=" + docInfo.editEn;
 				andFlag = "&";
 			}
 			
-			if(docInfo.downloadEn)
+			if(docInfo.downloadEn == undefined)
+			{
+				urlParamStr += andFlag + "downloadEn=0";
+				andFlag = "&";
+			}
+			else
 			{
 				urlParamStr += andFlag + "downloadEn=" + docInfo.downloadEn;
 				andFlag = "&";
