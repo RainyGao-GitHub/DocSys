@@ -19896,6 +19896,7 @@ public class BaseController  extends BaseFunction{
 				else
 				{
 					repos.remoteServerConfig = getReposRemoteServerConfig(repos);
+					repos.autoSyncupConfig = getReposSyncupConfig(repos);
 					repos.setVerCtrl(0);
 				}
 				
