@@ -2660,6 +2660,8 @@ public class BaseFunction{
 	//**** 自动同步配置 *******
 	protected static ReposSyncupConfig parseAutoSyncupConfig(Repos repos, String autoSyncup) {
 		try {
+			boolean isFSM = isFSM(repos);
+			
 			//autoSyncup中不允许出现转义字符 \ ,否则会导致JSON解析错误
 			if(autoSyncup == null || autoSyncup.isEmpty())
 			{
@@ -2677,19 +2679,33 @@ public class BaseFunction{
 			Log.printObject("parseAutoSyncupConfig() ", jsonObj);
 			
 			VerReposSyncupConfig verReposSyncupConfig = null;
-			JSONObject verReposSyncupObj = jsonObj.getJSONObject("verReposSyncupConfig");
-			if(verReposSyncupObj != null)
+			if(isFSM)
 			{
-				Log.printObject("parseAutoSyncupConfig() verReposSyncupObj:", verReposSyncupObj);
-				verReposSyncupConfig = getVerReposSyncupConfig(repos, verReposSyncupObj);
+				JSONObject verReposSyncupObj = jsonObj.getJSONObject("verReposSyncupConfig");
+				if(verReposSyncupObj != null)
+				{
+					Log.printObject("parseAutoSyncupConfig() verReposSyncupObj:", verReposSyncupObj);
+					verReposSyncupConfig = getVerReposSyncupConfig(repos, verReposSyncupObj);
+				}
+			}
+			else
+			{
+				Log.debug("parseAutoSyncupConfig() 前置仓库不支持版本仓库自动同步");
 			}
 			
 			RemoteStorageSyncupConfig remoteStorageSyncupConfig = null;
-			JSONObject remoteStorageSyncupObj = jsonObj.getJSONObject("remoteStorageSyncupConfig");
-			if(remoteStorageSyncupObj != null)
+			if(isFSM)
 			{
-				Log.printObject("parseAutoSyncupConfig() remoteStorageSyncupObj:", remoteStorageSyncupObj);
-				remoteStorageSyncupConfig = getRemoteStorageSyncupConfig(repos, remoteStorageSyncupObj);
+				JSONObject remoteStorageSyncupObj = jsonObj.getJSONObject("remoteStorageSyncupConfig");
+				if(remoteStorageSyncupObj != null)
+				{
+					Log.printObject("parseAutoSyncupConfig() remoteStorageSyncupObj:", remoteStorageSyncupObj);
+					remoteStorageSyncupConfig = getRemoteStorageSyncupConfig(repos, remoteStorageSyncupObj);
+				}
+			}
+			else
+			{
+				Log.debug("parseAutoSyncupConfig() 前置仓库不支持远程存储自动同步");
 			}
 			
 			SearchIndexSyncupConfig searchIndexSyncupConfig = null;
@@ -4041,11 +4057,11 @@ public class BaseFunction{
 	{
 		Log.debug("+++++++++ initReposAutoSyncupConfig for repos [" + repos.getName() + "] autoSyncup: " + autoSyncup);
 		
-		if(isFSM(repos) == false)
-		{
-			Log.debug("initReposAutoSyncupConfig 前置类型仓库不支持自动同步！");
-			return;
-		}
+//		if(isFSM(repos) == false)
+//		{
+//			Log.debug("initReposAutoSyncupConfig 前置类型仓库不支持自动同步！");
+//			return;
+//		}
 		
 		ReposSyncupConfig config = parseAutoSyncupConfig(repos, autoSyncup);
 		repos.autoSyncupConfig = config;
