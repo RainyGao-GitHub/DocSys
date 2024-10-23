@@ -179,8 +179,9 @@ function buildRequestParamStrForDoc(docInfo)
 	
 	if(docInfo.editEn == undefined)
 	{
-		urlParamStr += andFlag + "editEn=0";
-		andFlag = "&";
+		//TODO: 如果未定义则不要传递，系统会根据用户实际权限确定
+		//urlParamStr += andFlag + "editEn=0";
+		//andFlag = "&";
 	}
 	else
 	{
@@ -190,8 +191,9 @@ function buildRequestParamStrForDoc(docInfo)
 	
 	if(docInfo.downloadEn == undefined)
 	{
-		urlParamStr += andFlag + "downloadEn=0";
-		andFlag = "&";
+		//TODO: 如果未定义则不要传递，系统会根据用户实际权限确定
+		//urlParamStr += andFlag + "downloadEn=0";
+		//andFlag = "&";
 	}
 	else
 	{
