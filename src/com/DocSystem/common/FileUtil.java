@@ -865,6 +865,7 @@ public class FileUtil {
             	if(cover)//覆盖
                 {
                 	Log.info("moveFileOrDir() 强制覆盖！");
+                	newfile.delete();
                     return oldfile.renameTo(newfile);
                 }
                 else
