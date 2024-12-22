@@ -1593,7 +1593,7 @@ public class ManageController extends BaseController{
 		getListOfSASLMechanisms(config);
 
 		testResult += "2. 登录LDAP服务器<br/>";
-		LdapContext ctx = getLDAPConnection(null, null, config);
+		LdapContext ctx = getLDAPConnection(config.userAccount, config.userPassword, config);
 		if(ctx == null)
 		{
 			Log.debug("ldapTest() getLDAPConnection 失败"); 

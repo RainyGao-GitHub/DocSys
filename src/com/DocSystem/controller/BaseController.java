@@ -2871,7 +2871,14 @@ public class BaseController  extends BaseFunction{
 	
 	public User ldapLoginCheck(String userName, String pwd)
 	{
-		LdapContext ctx = getLDAPConnection(userName, pwd, systemLdapConfig);
+        if(systemLdapConfig.enabled == null || systemLdapConfig.enabled == false)
+		{
+			errorLog("ldapLoginCheck() ldapConfig.enable is " + systemLdapConfig.enabled);
+			return null;
+		}
+        
+		//使用管理员账号连接ldap服务器
+		LdapContext ctx = getLDAPConnection(systemLdapConfig.userAccount, systemLdapConfig.userPassword, systemLdapConfig);
 		if(ctx == null)
 		{
 			Log.debug("ldapLoginCheck() getLDAPConnection 失败"); 
@@ -2892,24 +2899,24 @@ public class BaseController  extends BaseFunction{
 		Log.printObject("ldapLoginCheck() list:", list);
 		if(list == null || list.size() != 1)
 		{
-			Log.debug("ldapLoginCheck() readLdap 失败"); 			
+			Log.debug("ldapLoginCheck() 用户不存在"); 			
 			return null;
 		}
 		
+		//使用用户密码进行ldap连接，校验密码
 		User user = list.get(0);
-		//检查密码字段
-		switch(systemLdapConfig.authMode)
+		ctx = getLDAPConnection(userName, pwd, systemLdapConfig);
+		if(ctx == null)
 		{
-		case 3:
-			if(user.getPwd() != null)
-			{
-				if(pwd.equals(user.getPwd()) == false)
-				{
-					return null;
-				}
-			}
-			break;
+			Log.debug("ldapLoginCheck() 密码错误"); 
+			return null;
 		}
+		try {
+			ctx.close();
+		} catch (NamingException e) {
+			Log.info(e);
+		}
+
 		
 		return user;
 	}
@@ -2938,14 +2945,8 @@ public class BaseController  extends BaseFunction{
      * ldapConfig没有指定userAccount，则根据userName来进行校验和登录，userName为空则使用basedn的ctx，userName非空则使用loginMode=userName,basedn进行登录校验并获取ctx（authMode=1才校验密码，密码为pwd）
      * @return LdapContext
      */
-    public LdapContext getLDAPConnection(String userName, String pwd, LDAPConfig ldapConfig) 
-    {
-        if(ldapConfig.enabled == null || ldapConfig.enabled == false)
-		{
-			errorLog("getLDAPConnection() ldapConfig.enable is " + ldapConfig.enabled);
-			return null;
-		}
-				
+    public LdapContext getLDAPConnection(String PRINCIPAL, String CREDENTIALS, LDAPConfig ldapConfig) 
+    {				
 		String LDAP_URL = ldapConfig.url;
 		if(LDAP_URL == null || LDAP_URL.isEmpty())
 		{
@@ -2960,67 +2961,6 @@ public class BaseController  extends BaseFunction{
 			authentication = "simple";
 		}
 		Log.debug("getLDAPConnection authentication:" + authentication);
-		
-		String PRINCIPAL = null;
-		String CREDENTIALS = null;
-        if(ldapConfig.userAccount != null && ldapConfig.userAccount.isEmpty() == false)
-        {
-        	//使用配置的管理员账号密码进行鉴权
-        	PRINCIPAL = ldapConfig.userAccount;
-        	if(ldapConfig.userPassword != null && ldapConfig.userPassword.isEmpty() == false)
-        	{
-        		CREDENTIALS = ldapConfig.userPassword;
-        	}
-        }
-        else
-        {
-        	String basedn = ldapConfig.basedn;
-    		Log.info("getLDAPConnection() basedn:" + basedn);    		
-            
-    		String loginMode = ldapConfig.loginMode;
-    		Log.info("getLDAPConnection() loginMode:" + loginMode);   
-    		
-    		//userName为空则只获取LDAP basedn的ctx，不进行用户校验
-            if(userName == null || userName.isEmpty())
-    		{
-            	PRINCIPAL = basedn;
-    		}
-            else
-            {
-            	if(ldapConfig.authMode == null)
-            	{
-            		ldapConfig.authMode = 0;
-            	}
-            	
-            	Log.debug("getLDAPConnection() authMode:" + ldapConfig.authMode); 
-    			switch(ldapConfig.authMode)
-            	{
-            	case 0: //使用loginMode + basedn鉴权
-	            	PRINCIPAL = loginMode + "=" + userName + "," + basedn;     
-	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
-	            	break;
-            	case 1:	//使用loginMode + basedn和密码鉴权
-            		PRINCIPAL = loginMode + "=" + userName + "," + basedn;     
-	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
-	            	CREDENTIALS = pwd;
-	            	break;
-            	case 2:	//直接使用登录用户名和密码进行鉴权
-            		PRINCIPAL = userName;     
-	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
-	            	CREDENTIALS = pwd;
-	            	break;
-            	case 3:	//直接使用登录用户名进行鉴权(在后续通过和userPassword信息进行对比校验)
-            		PRINCIPAL = userName;     
-	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
-	            	break;
-            	default:	//直接使用登录用户名和密码进行鉴权
-            		PRINCIPAL = userName;     
-	            	Log.debug("getLDAPConnection() PRINCIPAL:" + PRINCIPAL);    			
-	            	CREDENTIALS = pwd;
-	            	break;
-            	}
-    		}	
-        }
 		
 		switch(authentication)
 		{
