@@ -2770,40 +2770,29 @@ public class BaseController  extends BaseFunction{
 		return str;
 	}
 	
-	protected User loginCheck(String userName, String pwd, HttpServletRequest request, HttpSession session, HttpServletResponse response, ReturnAjax rt) {
-		User tmp_user = new User();
-		tmp_user.setName(userName);
+	protected User loginCheck(String userName, String pwd, HttpServletRequest request, HttpSession session, HttpServletResponse response, ReturnAjax rt) 
+	{
 		String decodedPwd = Base64Util.base64Decode(pwd);
 		Log.debug("loginCheck decodedPwd:" + decodedPwd);
-		String md5Pwd = MD5.md5(decodedPwd);
-		tmp_user.setPwd(pwd);
 		
 		if(systemLdapConfig.enabled == false || systemLdapConfig.url == null || systemLdapConfig.url.isEmpty())
 		{
-			List<User> uLists = getUserList(userName,md5Pwd);
-			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
-			if(ret == false)
-			{
-				Log.info("loginCheck() 登录失败");
-				return null;
-			}
-			return uLists.get(0);
+			return defaultLoginCheck(userName, pwd, decodedPwd, request, session, response, rt);		
 		}
 		
+		return ldapLoginCheck(userName, pwd, decodedPwd, request, session, response, rt);
+	}
+	
+	private User ldapLoginCheck(String userName, String pwd, String decodedPwd, HttpServletRequest request,
+			HttpSession session, HttpServletResponse response, ReturnAjax rt) 
+	{
 		//LDAP模式
-		Log.info("loginCheck() LDAP Mode"); 
+		Log.info("ldapLoginCheck() LDAP Mode"); 
 		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd);
-		if(ldapLoginUser == null) //LDAP 登录失败（尝试用数据库方式登录）
+		if(ldapLoginUser == null)
 		{
-			Log.info("loginCheck() ldapLoginCheck login failed, try traditional mode");
-			List<User> uLists = getUserList(userName,md5Pwd);
-			boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
-			if(ret == false)
-			{
-				Log.info("loginCheck() 登录失败");
-				return null;
-			}
-			return uLists.get(0);
+			Log.info("ldapLoginCheck() LDAP 登录检查失败, 尝试默认方式登录!"); 
+			return defaultLoginCheck(userName, pwd, decodedPwd, request, session, response, rt);	
 		}
 		
 		//获取数据库用户
@@ -2824,8 +2813,11 @@ public class BaseController  extends BaseFunction{
 				return null;			
 			}
 
-			ldapLoginUser.setPwd(md5Pwd); //密码也存入DB
-			ldapLoginUser.setCreateType(10);	//用户为LDAP登录添加
+			//保存密码至数据库
+			String md5Pwd = MD5.md5(decodedPwd);
+			ldapLoginUser.setPwd(md5Pwd);
+			//设置用户的登录类型
+			ldapLoginUser.setCreateType(10);
 
 			//set createTime
 			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
@@ -2844,7 +2836,26 @@ public class BaseController  extends BaseFunction{
 		dbUser.setEmail(ldapLoginUser.getEmail());
 		return dbUser;
 	}
-	
+
+	private User defaultLoginCheck(String userName, String pwd, String decodedPwd, HttpServletRequest request, HttpSession session,
+			HttpServletResponse response, ReturnAjax rt) 
+	{
+		String md5Pwd = MD5.md5(decodedPwd);
+
+		User tmp_user = new User();
+		tmp_user.setName(userName);
+		tmp_user.setPwd(pwd);
+				
+		List<User> uLists = getUserList(userName,md5Pwd);
+		boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
+		if(ret == false)
+		{
+			Log.info("defaultLoginCheck() 登录失败");
+			return null;
+		}
+		return uLists.get(0);
+	}
+
 	public User getUserByName(String name)
 	{
 		User user = new User();
