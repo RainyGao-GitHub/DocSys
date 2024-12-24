@@ -57,9 +57,6 @@ public final class RegularUtil {
 		return match(regex, str);
 	}
 	
-	// 预编译正则表达式，提高性能  
-    private static final Pattern MOBILE_PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");  
-
     /**  
      * 验证是否为有效的手机号码  
      * 覆盖了中国大陆常见的手机号段，包括新的19x号段  
@@ -68,10 +65,8 @@ public final class RegularUtil {
      * @return 如果是有效的手机号码，则返回true；否则返回false  
      */
     public static boolean IsMobliePhone(String str) {  
-        if (str == null) {  
-            return false;  
-        }  
-        return MOBILE_PHONE_PATTERN.matcher(str).matches();  
+		String regex = "^1[3-9]\\d{9}$";
+		return match(regex, str);
     }  
 
 	/**
