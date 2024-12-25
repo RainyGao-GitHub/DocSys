@@ -2788,7 +2788,7 @@ public class BaseController  extends BaseFunction{
 	{
 		//LDAP模式
 		Log.info("ldapLoginCheck() LDAP Mode"); 
-		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd);
+		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd, systemLdapConfig);
 		if(ldapLoginUser == null)
 		{
 			Log.info("ldapLoginCheck() LDAP 登录检查失败, 尝试默认方式登录!"); 
@@ -2869,26 +2869,26 @@ public class BaseController  extends BaseFunction{
 		return uList.get(0);
 	}
 	
-	public User ldapLoginCheck(String userName, String pwd)
+	public User ldapLoginCheck(String userName, String pwd, LDAPConfig ldapConfig)
 	{
-        if(systemLdapConfig.enabled == null || systemLdapConfig.enabled == false)
+        if(ldapConfig.enabled == null || ldapConfig.enabled == false)
 		{
-			errorLog("ldapLoginCheck() ldapConfig.enable is " + systemLdapConfig.enabled);
+			errorLog("ldapLoginCheck() ldapConfig.enable is " + ldapConfig.enabled);
 			return null;
 		}
         
 		//使用管理员账号连接ldap服务器
-		LdapContext ctx = getLDAPConnection(systemLdapConfig.userAccount, systemLdapConfig.userPassword, systemLdapConfig);
+		LdapContext ctx = getLDAPConnection(ldapConfig.userAccount, ldapConfig.userPassword, ldapConfig);
 		if(ctx == null)
 		{
 			Log.debug("ldapLoginCheck() getLDAPConnection 失败"); 
 			return null;
 		}
 		
-		String filter = systemLdapConfig.filter;
+		String filter = ldapConfig.filter;
 		Log.info("getLDAPConnection() filter:" + filter);       		
 		
-		List<User> list = readLdap(ctx, systemLdapConfig.basedn, filter, systemLdapConfig.loginMode, userName);
+		List<SearchResult> list = searchInLdap(ctx, ldapConfig, userName);
 		
 		try {
 			ctx.close();
@@ -2903,9 +2903,10 @@ public class BaseController  extends BaseFunction{
 			return null;
 		}
 		
-		//使用用户密码进行ldap连接，校验密码
-		User user = list.get(0);
-		ctx = getLDAPConnection(userName, pwd, systemLdapConfig);
+		//使用userDN进行密码校验
+		SearchResult result = list.get(0);
+		String userDN = result.getNameInNamespace();
+		ctx = getLDAPConnection(userDN, pwd, systemLdapConfig);
 		if(ctx == null)
 		{
 			Log.debug("ldapLoginCheck() 密码错误"); 
@@ -2918,7 +2919,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		
-		return user;
+		return convertToUser(result, ldapConfig);
 	}
 	
 	//获取LDAP Server支持的SASL鉴权机制列表
@@ -3165,75 +3166,93 @@ public class BaseController  extends BaseFunction{
         return ctx;
 	}
     
-	public List<User> readLdap(LdapContext ctx, String basedn, String filter, String loginMode, String userName){
-		Log.debug("readLdap() basedn:" + basedn);
+	public static List<SearchResult> searchInLdap(LdapContext ctx, LDAPConfig ldapConfig, String userName)
+	{
+		Log.debug("searchInLdap() basedn:" + ldapConfig.basedn);
 		if(ctx == null)
 		{
-			Log.info("readLdap() ctx is null");
+			Log.info("searchInLdap() ctx is null");
 			return null;
 		}
 		
-		List<User> lm=new ArrayList<User>();
+		List<SearchResult> resultList = new ArrayList<SearchResult>();		
+		
 		try {
-	        String[] attrPersonArray = { loginMode, "userPassword", "displayName", "cn", "sn", "mail", "description"};
+	        //String[] attrPersonArray = { loginMode, "userPassword", "displayName", "cn", "sn", "mail", "description", "dn"};
             SearchControls searchControls = new SearchControls();//搜索控件
             searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);//搜索范围
-            searchControls.setReturningAttributes(attrPersonArray);
+            searchControls.setReturningAttributes(ldapConfig.attributes);
             //1.要搜索的上下文或对象的名称；2.过滤条件，可为null，默认搜索所有信息；3.搜索控件，可为null，使用默认的搜索控件
+            String filter = null;
             if(userName != null && userName.isEmpty() == false)
             {
-            	filter = "(&" + filter + "("+ loginMode + "=" + userName + ")" + ")";
+            	filter = "(&" + ldapConfig.filter + "("+ ldapConfig.loginMode + "=" + userName + ")" + ")";
             }
-            Log.debug("readLdap() filter:" + filter);
+            Log.debug("searchInLdap() filter:" + filter);
             
-            NamingEnumeration<SearchResult> answer = ctx.search(basedn, filter, searchControls);
+            NamingEnumeration<SearchResult> answer = ctx.search(ldapConfig.basedn, filter, searchControls);
             while (answer.hasMore()) {
                 SearchResult result = (SearchResult) answer.next();
-                NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();
-                
-                Log.debug("readLdap() userInfo:");
-                User lu=new User();
-                while (attrs.hasMore()) 
-                {
-                    Attribute attr = (Attribute) attrs.next();
-                    Log.debug("readLdap() " + attr.getID() + " = " + attr.get().toString());
-                    
-                    if(loginMode.equals(attr.getID())){
-                    	lu.setName(attr.get().toString());
-                    } 
-                    else if("userPassword".equals(attr.getID()))
-                    {
-                    	Object value = attr.get();
-                    	lu.setPwd(new String((byte [])value));
-                    }
-                    //else if("displayName".equals(attr.getID())){
-                    	//lu.setRealName(attr.get().toString());
-                    //}
-                    else if("cn".equals(attr.getID())){
-                    	lu.setRealName(attr.get().toString());
-                    }
-                	//else if("sn".equals(attr.getID())){
-                	//	//	lu.sn = attr.get().toString();
-                	//}
-                    else if("mail".equals(attr.getID())){
-                    	lu.setEmail(attr.get().toString());
-                    }
-                    else if("description".equals(attr.getID())){
-                    	lu.setIntro(attr.get().toString());
-                    }
-                }
-                
-                if(lu.getName() != null)
-                {
-                	lm.add(lu);
-                }
+                resultList.add(result);
             }
+            
+            
 		}catch (Exception e) {
-			Log.debug("获取用户信息异常:");
+			Log.debug("searchInLdap() 获取用户信息异常:");
 			Log.info(e);
 		}
 		 
-		return lm;
+		return resultList;
+	}
+	
+	private User convertToUser(SearchResult result, LDAPConfig ldapConfig)
+	{
+        NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();
+        
+        Log.debug("readLdap() userInfo:");
+        User lu = new User();
+        try {
+	        while (attrs.hasMore()) 
+	        {
+	            Attribute attr = (Attribute) attrs.next();
+	            Log.debug("convertToUser() " + attr.getID() + " = " + attr.get().toString());
+	            
+	            if(ldapConfig.loginMode.equals(attr.getID()))
+	            {
+	            	lu.setName(attr.get().toString());
+	            } 
+	            else if("userPassword".equals(attr.getID()))
+	            {
+	            	Object value = attr.get();
+	            	lu.setPwd(new String((byte [])value));
+	            }
+	            //else if("displayName".equals(attr.getID())){
+	            	//lu.setRealName(attr.get().toString());
+	            //}
+	            else if("cn".equals(attr.getID())){
+	            	lu.setRealName(attr.get().toString());
+	            }
+	        	//else if("sn".equals(attr.getID())){
+	        	//	//	lu.sn = attr.get().toString();
+	        	//}
+	            else if("mail".equals(attr.getID())){
+	            	lu.setEmail(attr.get().toString());
+	            }
+	            else if("description".equals(attr.getID())){
+	            	lu.setIntro(attr.get().toString());
+	            }	            
+	        }
+	        
+	        if(lu.getName() != null)
+	        {
+	        	return lu;
+	        }
+        }
+	    catch(Exception e)
+        {
+	    	Log.error(e);
+        }
+		return null;
 	}
     
 	/**
