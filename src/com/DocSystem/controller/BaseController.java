@@ -153,6 +153,7 @@ import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;
+import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.common.entity.MxsDocConfig;
@@ -2869,14 +2870,30 @@ public class BaseController  extends BaseFunction{
 		
 		return uList.get(0);
 	}
-	
-	public User ldapLoginCheck(String userName, String pwd, LDAPConfig ldapConfig)
+
+	public User ldapLoginCheck(String userName, String pwd, SystemLDAPConfig systemLdapConfig)
 	{
-        if(ldapConfig.enabled == null || ldapConfig.enabled == false)
+        if(systemLdapConfig.enabled == false)
 		{
-			errorLog("ldapLoginCheck() ldapConfig.enable is " + ldapConfig.enabled);
+			errorLog("ldapLoginCheck() systemLdapConfig.enable is " + systemLdapConfig.enabled);
 			return null;
 		}
+        
+        if(systemLdapConfig.ldapConfigList.isEmpty())
+		{
+			errorLog("ldapLoginCheck() ldapConfigList is empty");
+			return null;
+		}
+        
+        //判断userName是否带域名，进行不同的处理方法
+        //如果带了域名，则查找域名对应的ldapServer，否则查找所有ldapServer
+        //如果没带域名，则查找所有ldapServer
+		
+		return null;        
+	}
+
+	public User ldapLoginCheck(String userName, String pwd, LDAPConfig ldapConfig)
+	{
         
 		//使用管理员账号连接ldap服务器
 		LdapContext ctx = getLDAPConnection(ldapConfig.userAccount, ldapConfig.userPassword, ldapConfig);
@@ -2907,7 +2924,7 @@ public class BaseController  extends BaseFunction{
 		//使用userDN进行密码校验
 		SearchResult result = list.get(0);
 		String userDN = result.getNameInNamespace();
-		ctx = getLDAPConnection(userDN, pwd, systemLdapConfig);
+		ctx = getLDAPConnection(userDN, pwd, ldapConfig);
 		if(ctx == null)
 		{
 			Log.debug("ldapLoginCheck() 密码错误"); 
