@@ -12,6 +12,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.naming.NamingException;
+import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -1606,68 +1608,49 @@ public class ManageController extends BaseController{
 		
 		testResult += "登录LDAP服务器成功<br/><br/>";
 		
-		testResult += "3. 获取用户信息列表<br/>";
-		List<User> list = readLdap(ctx, config.basedn, config.filter, systemLdapConfig.loginMode, null);
-		if(list == null)
+		String loginTestUser = config.settings.getString("loginTestUser");		
+		testResult += "3. 查询用户信息<br/>";
+		List<SearchResult> list = searchInLdap(ctx, config, loginTestUser);
+		try {
+			ctx.close();
+		} catch (NamingException e) {
+			Log.info(e);
+		}
+		
+		if(list == null || list.size() == 0)
 		{
-			testResult += "用户信息列表获取失败<br/>";
+			testResult += "用户信息查询失败<br/>";
 			rt.setError(testResult);
 			writeJson(rt, response);		
 			return;	    	
+		}		
+		testResult += "用户信息查询成功<br/>";
+		
+		if(loginTestUser != null)
+		{
+			String loginTestUserPassword = config.settings.getString("loginTestUserPassword");
+			testResult += "4. 用户密码校验<br/>";
+			ctx = getLDAPConnection(loginTestUser, loginTestUserPassword, config);
+			if(ctx == null)
+			{
+				Log.debug("ldapTest() getLDAPConnection 失败"); 
+				
+				testResult += "登录失败<br/>";
+				rt.setError(testResult);
+				writeJson(rt, response);			
+				return;
+			}
+			try {
+				ctx.close();
+			} catch (NamingException e) {
+				Log.info(e);
+			}
+			testResult += "用户密码校验成功<br/>";
 		}
 		
-		testResult += "用户信息列表获取成功<br/>";
-		for(int i=0; i<list.size(); i++)
-		{
-			User entry = list.get(i);
-			testResult += "[name:" + entry.getName() + " realName:"+ entry.getRealName() + "]<br/>";
-			if(i > 6)
-			{
-				testResult += "...<br/>"; 
-				break;
-			}
-		}
 		rt.setData(list);
 		rt.setMsgInfo(testResult);				
 		writeJson(rt, response);
-	}
-	
-	protected LDAPConfig convertLdapConfig(String ldapConfig) {
-		if(ldapConfig == null || ldapConfig.isEmpty())
-		{
-			Log.debug("convertLdapConfig() ldapConfig is empty");
-			return null;
-		}
-		
-		LDAPConfig config = new LDAPConfig();
-		String [] configs = ldapConfig.split(";");
-		config.settings = getLDAPSettings(configs);		
-
-		//获取url和basedn
-		String ldapConfigUrl = configs[0].trim();
-		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfigUrl);
-		if(urlInfo == null)
-		{
-			Log.debug("convertLdapConfig() ldapConfigUrl error:" + ldapConfigUrl);
-			return null;
-		}
-		
-		config.url = urlInfo.prefix + urlInfo.params[0] + "/";
-		config.basedn = "";
-		if(urlInfo.params.length > 1)
-		{
-			config.basedn = urlInfo.params[1];	//0保存的是host+port			
-		}
-		
-		config.authentication = getLdapAuthentication(config.settings);
-		config.authMode = getLdapAuthMode(config.settings);
-		config.loginMode = getLdapLoginMode(config.settings);	
-		config.userAccount = getLdapUserAccount(config.settings);				
-		config.userPassword = getLdapUserPassword(config.settings);				
-		config.filter = getLdapBaseFilter(config.settings);
-
-		config.enabled = true;
-		return config;
 	}
 
 	@RequestMapping("/upgradeSystem.do")

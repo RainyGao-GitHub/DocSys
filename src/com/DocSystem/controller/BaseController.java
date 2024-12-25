@@ -121,6 +121,7 @@ import com.DocSystem.common.ReposData;
 import com.DocSystem.common.RunResult;
 import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.SyncLock;
+import com.DocSystem.common.URLInfo;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.JavaSmsApi;
 import com.DocSystem.commonService.SmsService;
@@ -3205,7 +3206,7 @@ public class BaseController  extends BaseFunction{
 		return resultList;
 	}
 	
-	private User convertToUser(SearchResult result, LDAPConfig ldapConfig)
+	private static User convertToUser(SearchResult result, LDAPConfig ldapConfig)
 	{
         NamingEnumeration<? extends Attribute> attrs = result.getAttributes().getAll();
         
@@ -3217,28 +3218,29 @@ public class BaseController  extends BaseFunction{
 	            Attribute attr = (Attribute) attrs.next();
 	            Log.debug("convertToUser() " + attr.getID() + " = " + attr.get().toString());
 	            
-	            if(ldapConfig.loginMode.equals(attr.getID()))
+	            //name
+	            if(ldapConfig.attributesMap.get("name").equals(attr.getID()))
 	            {
 	            	lu.setName(attr.get().toString());
-	            } 
-	            else if("userPassword".equals(attr.getID()))
-	            {
-	            	Object value = attr.get();
-	            	lu.setPwd(new String((byte [])value));
 	            }
-	            //else if("displayName".equals(attr.getID())){
-	            	//lu.setRealName(attr.get().toString());
-	            //}
-	            else if("cn".equals(attr.getID())){
+	            //realName
+	            if(ldapConfig.attributesMap.get("realName").equals(attr.getID()))
+	            {
 	            	lu.setRealName(attr.get().toString());
 	            }
-	        	//else if("sn".equals(attr.getID())){
-	        	//	//	lu.sn = attr.get().toString();
-	        	//}
-	            else if("mail".equals(attr.getID())){
+	            //nickName
+	            if(ldapConfig.attributesMap.get("nickName").equals(attr.getID()))
+	            {
+	            	lu.setNickName(attr.get().toString());
+	            }
+	            //email
+	            if(ldapConfig.attributesMap.get("mail").equals(attr.getID()))
+	            {
 	            	lu.setEmail(attr.get().toString());
 	            }
-	            else if("description".equals(attr.getID())){
+	            //description
+	            if(ldapConfig.attributesMap.get("description").equals(attr.getID()))
+	            {
 	            	lu.setIntro(attr.get().toString());
 	            }	            
 	        }
@@ -3254,6 +3256,7 @@ public class BaseController  extends BaseFunction{
         }
 		return null;
 	}
+
     
 	/**
 	 * 用户数据校验

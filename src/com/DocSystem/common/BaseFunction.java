@@ -2453,11 +2453,105 @@ public class BaseFunction{
 		}
 
 		systemLdapConfig.authentication = getLdapAuthentication(systemLdapConfig.settings); //鉴权方式
-		systemLdapConfig.authMode = getLdapAuthMode(systemLdapConfig.settings); //密码格式
 		systemLdapConfig.loginMode = getLdapLoginMode(systemLdapConfig.settings); //用户属性标识，默认是uid	
 		systemLdapConfig.userAccount = getLdapUserAccount(systemLdapConfig.settings); //LDAP鉴权用户（不设置则使用登录用户鉴权）				
 		systemLdapConfig.userPassword = getLdapUserPassword(systemLdapConfig.settings);	//LDAP鉴权用户的密码			
 		systemLdapConfig.filter = getLdapBaseFilter(systemLdapConfig.settings); //过滤条件
+		buildLdapUserAttributesAndMap(systemLdapConfig); //过滤条件
+	}
+
+	protected LDAPConfig convertLdapConfig(String ldapConfig) 
+	{
+		if(ldapConfig == null || ldapConfig.isEmpty())
+		{
+			Log.debug("convertLdapConfig() ldapConfig is empty");
+			return null;
+		}
+		
+		LDAPConfig config = new LDAPConfig();
+		String [] configs = ldapConfig.split(";");
+		config.settings = getLDAPSettings(configs);		
+
+		//获取url和basedn
+		String ldapConfigUrl = configs[0].trim();
+		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfigUrl);
+		if(urlInfo == null)
+		{
+			Log.debug("convertLdapConfig() ldapConfigUrl error:" + ldapConfigUrl);
+			return null;
+		}
+		
+		config.url = urlInfo.prefix + urlInfo.params[0] + "/";
+		config.basedn = "";
+		if(urlInfo.params.length > 1)
+		{
+			config.basedn = urlInfo.params[1];	//0保存的是host+port			
+		}
+		
+		config.authentication = getLdapAuthentication(config.settings);
+		config.loginMode = getLdapLoginMode(config.settings);	
+		config.userAccount = getLdapUserAccount(config.settings);				
+		config.userPassword = getLdapUserPassword(config.settings);				
+		config.filter = getLdapBaseFilter(config.settings);
+		buildLdapUserAttributesAndMap(config);
+
+		config.enabled = true;
+		return config;
+	}
+	
+	protected static void buildLdapUserAttributesAndMap(LDAPConfig ldapConfig) 
+	{
+		ldapConfig.attributes = new String[5];
+		ldapConfig.attributesMap = new HashMap<String, String>();
+		
+		String attributeName = getAttributeName("name", ldapConfig);
+		ldapConfig.attributesMap.put("name", attributeName);
+		ldapConfig.attributes[0] = attributeName;
+
+		attributeName = getAttributeName("realName", ldapConfig);
+		ldapConfig.attributesMap.put("realName", attributeName);
+		ldapConfig.attributes[1] = attributeName;
+
+		attributeName = getAttributeName("nickName", ldapConfig);
+		ldapConfig.attributesMap.put("nickName", attributeName);
+		ldapConfig.attributes[2] = attributeName;
+		
+		attributeName = getAttributeName("mail", ldapConfig);
+		ldapConfig.attributesMap.put("mail", attributeName);
+		ldapConfig.attributes[3] = attributeName;
+
+		attributeName = getAttributeName("description", ldapConfig);
+		ldapConfig.attributesMap.put("description", attributeName);		
+		ldapConfig.attributes[4] = attributeName;
+	}
+    
+	private static String getAttributeName(String userAttribute, LDAPConfig ldapConfig) 
+	{
+		String attributeName = null;
+		if(ldapConfig.settings != null)
+		{
+			attributeName = ldapConfig.settings.getString( userAttribute + "Attribute");
+		}
+		
+		switch(userAttribute)
+		{
+		case "name":
+			attributeName = attributeName == null? ldapConfig.loginMode : attributeName;
+			break;
+		case "realName":
+			attributeName = attributeName == null? "cn" : attributeName;
+			break;
+		case "nickName":
+			attributeName = attributeName == null? "displayName" : attributeName;
+			break;
+		case "mail":
+			attributeName = attributeName == null? "mail" : attributeName;
+			break;
+		case "description":
+			attributeName = attributeName == null? "description" : attributeName;
+			break;
+		}
+		return attributeName;
 	}
 
 	protected static String getLdapAuthentication(JSONObject ldapSettings) {

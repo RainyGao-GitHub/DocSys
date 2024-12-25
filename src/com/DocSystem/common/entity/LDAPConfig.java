@@ -1,5 +1,7 @@
 package com.DocSystem.common.entity;
 
+import java.util.Map;
+
 import com.alibaba.fastjson.JSONObject;
 
 public class LDAPConfig {
@@ -12,5 +14,6 @@ public class LDAPConfig {
 	public String userPassword;		//LDAP管理员的密码
 	public String filter;  			//过滤条件
 	public JSONObject settings;		//用于存储额外的配置（包括属性映射表）
-	public String[] attributes;		//需要读取的属性
+	public String[] attributes;					//需要读取的用户属性
+	public Map<String, String> attributesMap;	//属性映射表(mxsdoc和ldap用户属性隐射关系)
 }
