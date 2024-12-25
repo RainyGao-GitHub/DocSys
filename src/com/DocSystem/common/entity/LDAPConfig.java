@@ -5,7 +5,7 @@ import java.util.Map;
 import com.alibaba.fastjson.JSONObject;
 
 public class LDAPConfig {
-	public Boolean enabled;
+	public String name;				//domainName
 	public String url;
 	public String basedn;
 	public String authentication; 	//simple, GSSAPI

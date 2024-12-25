@@ -104,6 +104,7 @@ import com.DocSystem.entity.RemoteStorageLock;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.SyncSourceLock;
+import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -152,7 +153,7 @@ public class BaseFunction{
     public static Integer officeType = 0; //0:内置 1:外置
     
     //系统LDAP设置
-    public static LDAPConfig systemLdapConfig = null;
+    public static SystemLDAPConfig systemLdapConfig = null;
 		
 	public static int OSType = OS.UNKOWN; //
 
@@ -2411,10 +2412,7 @@ public class BaseFunction{
 	protected static void initLdapConfig() {
 		Log.debug("initLdapConfig() ");
 		//Default LDAPConfig
-		systemLdapConfig = new LDAPConfig();
-		systemLdapConfig.enabled = false;
-		systemLdapConfig.url = "";
-		systemLdapConfig.basedn = "";
+		systemLdapConfig = new SystemLDAPConfig();
 		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "ldapConfig");
 		if(value != null)
 		{
@@ -2422,7 +2420,7 @@ public class BaseFunction{
 		}		
 	}
 		
-	protected static void applySystemLdapConfig(String ldapConfig) {
+	protected static void applySystemLdapConfig(String systemLdapConfigStr) {
 		//UPdate系统ldapConfig
 		if(docSysType == constants.DocSys_Enterprise_Edition)
 		{
@@ -2433,31 +2431,60 @@ public class BaseFunction{
 			systemLdapConfig.enabled = false;				
 		}
 		
-		String [] configs = ldapConfig.split(";");
-		systemLdapConfig.settings = getLDAPSettings(configs);		
+		String [] ldapConfigStrArray = systemLdapConfigStr.split("||");
+		for(int i=0; i < ldapConfigStrArray.length; i++)
+		{
+			LDAPConfig ldapConfig = parseLdapConfig(ldapConfigStrArray[i]);
+			if(ldapConfig != null)
+			{
+				systemLdapConfig.ldapConfigList.add(ldapConfig);
+			}
+		}		
+	}
+
+	private static LDAPConfig parseLdapConfig(String ldapConfigStr) 
+	{
+		Log.debug("parseLdapConfig() ldapConfigStr [" + ldapConfigStr + "]");			
+		if(ldapConfigStr == null)
+		{
+			return null;
+		}
+		
+		ldapConfigStr = ldapConfigStr.trim();
+		if(ldapConfigStr.isEmpty())
+		{
+			return null;
+		}
+		
+		LDAPConfig config = new LDAPConfig();
+		String [] configs = ldapConfigStr.split(";");
+		config.settings = getLDAPSettings(configs);		
 
 		//获取url和basedn
 		String ldapConfigUrl = configs[0].trim();
 		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfigUrl);
 		if(urlInfo == null)
 		{
-			Log.debug("applySystemLdapConfig() ldapConfigUrl error:" + ldapConfigUrl);
-			return;
+			Log.debug("parseLdapConfig() ldapConfigUrl error:" + ldapConfigUrl);
+			return null;
 		}
 		
-		systemLdapConfig.url = urlInfo.prefix + urlInfo.params[0] + "/";
-		systemLdapConfig.basedn = "";
+		config.url = urlInfo.prefix + urlInfo.params[0] + "/";
+		config.basedn = "";
 		if(urlInfo.params.length > 1)
 		{
-			systemLdapConfig.basedn = urlInfo.params[1];	//0保存的是host+port			
+			config.basedn = urlInfo.params[1];	//0保存的是host+port			
 		}
 
-		systemLdapConfig.authentication = getLdapAuthentication(systemLdapConfig.settings); //鉴权方式
-		systemLdapConfig.loginMode = getLdapLoginMode(systemLdapConfig.settings); //用户属性标识，默认是uid	
-		systemLdapConfig.userAccount = getLdapUserAccount(systemLdapConfig.settings); //LDAP鉴权用户（不设置则使用登录用户鉴权）				
-		systemLdapConfig.userPassword = getLdapUserPassword(systemLdapConfig.settings);	//LDAP鉴权用户的密码			
-		systemLdapConfig.filter = getLdapBaseFilter(systemLdapConfig.settings); //过滤条件
-		buildLdapUserAttributesAndMap(systemLdapConfig); //过滤条件
+		config.name = config.settings.getString("name");
+		config.authentication = getLdapAuthentication(config.settings); //鉴权方式
+		config.loginMode = getLdapLoginMode(config.settings); //用户属性标识，默认是uid	
+		config.userAccount = getLdapUserAccount(config.settings); //LDAP鉴权用户（不设置则使用登录用户鉴权）				
+		config.userPassword = getLdapUserPassword(config.settings);	//LDAP鉴权用户的密码			
+		config.filter = getLdapBaseFilter(config.settings); //过滤条件
+		buildLdapUserAttributesAndMap(config); //过滤条件
+
+		return config;
 	}
 
 	protected LDAPConfig convertLdapConfig(String ldapConfig) 
@@ -2495,7 +2522,6 @@ public class BaseFunction{
 		config.filter = getLdapBaseFilter(config.settings);
 		buildLdapUserAttributesAndMap(config);
 
-		config.enabled = true;
 		return config;
 	}
 	
