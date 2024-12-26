@@ -143,6 +143,7 @@ import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.LDAPConfig;
+import com.DocSystem.common.entity.LdapLoginCheckResult;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.RemoteDocumentEditTask;
@@ -2777,7 +2778,7 @@ public class BaseController  extends BaseFunction{
 		String decodedPwd = Base64Util.base64Decode(pwd);
 		Log.debug("loginCheck decodedPwd:" + decodedPwd);
 		
-		if(systemLdapConfig.enabled == false || systemLdapConfig.url == null || systemLdapConfig.url.isEmpty())
+		if(systemLdapConfig.enabled == false || systemLdapConfig.ldapConfigList.isEmpty())
 		{
 			return defaultLoginCheck(userName, pwd, decodedPwd, request, session, response, rt);		
 		}
@@ -2790,11 +2791,19 @@ public class BaseController  extends BaseFunction{
 	{
 		//LDAP模式
 		Log.info("ldapLoginCheck() LDAP Mode"); 
-		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd, systemLdapConfig);
+		LdapLoginCheckResult checkResult = new LdapLoginCheckResult();
+		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd, systemLdapConfig, checkResult);
 		if(ldapLoginUser == null)
 		{
-			Log.info("ldapLoginCheck() LDAP 登录检查失败, 尝试默认方式登录!"); 
-			return defaultLoginCheck(userName, pwd, decodedPwd, request, session, response, rt);	
+			if(checkResult.status == LdapLoginCheckResult.PasswordError)
+			{
+				Log.info("ldapLoginCheck() 密码校验失败!"); 
+				rt.setError("用户名或密码错误！");
+				return null;
+			}
+
+			Log.info("ldapLoginCheck() 用户不存在, 尝试默认方式登录!"); 
+			return defaultLoginCheck(userName, pwd, decodedPwd, request, session, response, rt);
 		}
 		
 		//获取数据库用户
@@ -2871,28 +2880,75 @@ public class BaseController  extends BaseFunction{
 		return uList.get(0);
 	}
 
-	public User ldapLoginCheck(String userName, String pwd, SystemLDAPConfig systemLdapConfig)
+	public User ldapLoginCheck(String userName, String pwd, SystemLDAPConfig systemLdapConfig, LdapLoginCheckResult checkResult)
 	{
         if(systemLdapConfig.enabled == false)
 		{
-			errorLog("ldapLoginCheck() systemLdapConfig.enable is " + systemLdapConfig.enabled);
+			Log.info("ldapLoginCheck() systemLdapConfig.enable is " + systemLdapConfig.enabled);
 			return null;
 		}
         
         if(systemLdapConfig.ldapConfigList.isEmpty())
 		{
-			errorLog("ldapLoginCheck() ldapConfigList is empty");
+        	Log.info("ldapLoginCheck() ldapConfigList is empty");
 			return null;
 		}
         
-        //判断userName是否带域名，进行不同的处理方法
-        //如果带了域名，则查找域名对应的ldapServer，否则查找所有ldapServer
-        //如果没带域名，则查找所有ldapServer
+        //判断userName是否带域名
+        String realUserName = userName;
+        String domain = null;
+        String[] strArray = userName.split("/");
+        if(strArray.length >= 2)
+        {
+        	domain = strArray[0];
+        	realUserName = strArray[1];
+        }
+        Log.debug("ldapLoginCheck() domain: " + domain + " realUserName:" + realUserName );
+        
+        //Mulit LDAP
+        if(systemLdapConfig.ldapConfigList.size() > 1)
+        {
+        	return multiLdapLoginCheck(domain, realUserName, pwd, systemLdapConfig, checkResult);
+        }
+
+        return ldapLoginCheck(realUserName, pwd, systemLdapConfig.ldapConfigList.get(0), checkResult);
+	}
+	
+	public User multiLdapLoginCheck(String domain, String realUserName, String pwd, SystemLDAPConfig systemLdapConfig, LdapLoginCheckResult checkResult)
+	{
+		//如果找到有对应名字的LDAPServer则可以直接登录
+		if(domain != null && domain.isEmpty() == false)
+		{
+			String domainLowCase = domain.toLowerCase();
+			for(LDAPConfig config : systemLdapConfig.ldapConfigList)
+			{
+				if(config.name != null && config.name.toLowerCase().equals(domainLowCase))
+				{
+					return ldapLoginCheck(realUserName, pwd, config, checkResult);
+				}
+			}
+		}
 		
-		return null;        
+		//如果没有对应domain的LDAPsever,那么逐个登录
+		User user = null;
+		for(LDAPConfig config : systemLdapConfig.ldapConfigList)
+		{
+			user = ldapLoginCheck(realUserName, pwd, config, checkResult);
+			if(user != null)
+			{
+				return user;
+			}
+			
+			//登录失败要看情况，如果是密码错误，那么不允许继续			
+			if(checkResult.status == LdapLoginCheckResult.PasswordError)
+			{
+				return null;
+			}
+		}
+		return user;
 	}
 
-	public User ldapLoginCheck(String userName, String pwd, LDAPConfig ldapConfig)
+	public User ldapLoginCheck(String userName, String pwd, LDAPConfig ldapConfig, LdapLoginCheckResult checkResult)
 	{
         
 		//使用管理员账号连接ldap服务器
@@ -2915,11 +2971,20 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		Log.printObject("ldapLoginCheck() list:", list);
-		if(list == null || list.size() != 1)
+		if(list == null || list.size() == 0)
 		{
-			Log.debug("ldapLoginCheck() 用户不存在"); 			
+			Log.debug("ldapLoginCheck() 用户不存在");
+			checkResult.status = -1;
 			return null;
 		}
+		
+		if(list == null || list.size() == 0)
+		{
+			Log.debug("ldapLoginCheck() 系统出现重名用户");
+			checkResult.status = -2;
+			return null;
+		}
+		
 		
 		//使用userDN进行密码校验
 		SearchResult result = list.get(0);
@@ -2928,6 +2993,7 @@ public class BaseController  extends BaseFunction{
 		if(ctx == null)
 		{
 			Log.debug("ldapLoginCheck() 密码错误"); 
+			checkResult.status = -3;
 			return null;
 		}
 		try {
