@@ -2487,42 +2487,26 @@ public class BaseFunction{
 		return config;
 	}
 
-	protected LDAPConfig convertLdapConfig(String ldapConfig) 
+	protected SystemLDAPConfig getSystemLdapConfig(String systemLdapConfigStr) 
 	{
-		if(ldapConfig == null || ldapConfig.isEmpty())
+		if(systemLdapConfigStr == null || systemLdapConfigStr.isEmpty())
 		{
-			Log.debug("convertLdapConfig() ldapConfig is empty");
+			Log.debug("getSystemLdapConfig() systemLdapConfigStr is empty");
 			return null;
 		}
-		
-		LDAPConfig config = new LDAPConfig();
-		String [] configs = ldapConfig.split(";");
-		config.settings = getLDAPSettings(configs);		
 
-		//获取url和basedn
-		String ldapConfigUrl = configs[0].trim();
-		URLInfo urlInfo = getUrlInfoFromUrl(ldapConfigUrl);
-		if(urlInfo == null)
+		SystemLDAPConfig config = new SystemLDAPConfig();		
+		String [] ldapConfigStrArray = systemLdapConfigStr.split("||");
+		for(int i=0; i < ldapConfigStrArray.length; i++)
 		{
-			Log.debug("convertLdapConfig() ldapConfigUrl error:" + ldapConfigUrl);
-			return null;
+			LDAPConfig ldapConfig = parseLdapConfig(ldapConfigStrArray[i]);
+			if(ldapConfig != null)
+			{
+				config.ldapConfigList.add(ldapConfig);
+			}
 		}
-		
-		config.url = urlInfo.prefix + urlInfo.params[0] + "/";
-		config.basedn = "";
-		if(urlInfo.params.length > 1)
-		{
-			config.basedn = urlInfo.params[1];	//0保存的是host+port			
-		}
-		
-		config.authentication = getLdapAuthentication(config.settings);
-		config.loginMode = getLdapLoginMode(config.settings);	
-		config.userAccount = getLdapUserAccount(config.settings);				
-		config.userPassword = getLdapUserPassword(config.settings);				
-		config.filter = getLdapBaseFilter(config.settings);
-		buildLdapUserAttributesAndMap(config);
-
 		return config;
+		
 	}
 	
 	protected static void buildLdapUserAttributesAndMap(LDAPConfig ldapConfig) 

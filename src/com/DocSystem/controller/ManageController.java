@@ -55,6 +55,7 @@ import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.QueryResult;
+import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.controller.BaseController;
 
@@ -1579,8 +1580,8 @@ public class ManageController extends BaseController{
 			return;
 		}	
 		
-		LDAPConfig config = convertLdapConfig(ldapConfig);
-		if(config == null)
+		SystemLDAPConfig systemLdapConfig = getSystemLdapConfig(ldapConfig);
+		if(systemLdapConfig == null)
 		{
 			testResult += "解析失败:<br/>";
 			testResult += ldapConfig + "<br/>";
@@ -1590,8 +1591,18 @@ public class ManageController extends BaseController{
 			return;
 		}
 		testResult += "解析成功:<br/>" ;
-		testResult += JSON.toJSONString(config).replace(",", "<br/>") + "<br/><br/>";
+		testResult += JSON.toJSONString(systemLdapConfig).replace(",", "<br/>") + "<br/><br/>";
 		
+		if(systemLdapConfig.ldapConfigList.isEmpty())
+		{
+			testResult += "配置错误<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		//测试第一个LDAP
+		LDAPConfig config = systemLdapConfig.ldapConfigList.get(0);
 		getListOfSASLMechanisms(config);
 
 		testResult += "2. 登录LDAP服务器<br/>";
@@ -1648,7 +1659,7 @@ public class ManageController extends BaseController{
 			testResult += "用户密码校验成功<br/>";
 		}
 		
-		rt.setData(list);
+		rt.setData(list);					
 		rt.setMsgInfo(testResult);				
 		writeJson(rt, response);
 	}

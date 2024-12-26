@@ -121,7 +121,6 @@ import com.DocSystem.common.ReposData;
 import com.DocSystem.common.RunResult;
 import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.SyncLock;
-import com.DocSystem.common.URLInfo;
 import com.DocSystem.commonService.EmailService;
 import com.DocSystem.commonService.JavaSmsApi;
 import com.DocSystem.commonService.SmsService;
