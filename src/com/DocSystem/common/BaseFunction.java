@@ -2496,13 +2496,18 @@ public class BaseFunction{
 		}
 
 		SystemLDAPConfig config = new SystemLDAPConfig();		
-		String [] ldapConfigStrArray = systemLdapConfigStr.split("||");
+		String [] ldapConfigStrArray = systemLdapConfigStr.split("\\|\\|"); 
 		for(int i=0; i < ldapConfigStrArray.length; i++)
 		{
-			LDAPConfig ldapConfig = parseLdapConfig(ldapConfigStrArray[i]);
-			if(ldapConfig != null)
+			String ldapConfigStr = ldapConfigStrArray[i];
+			Log.debug("getSystemLdapConfig() ldapConfigStr:" + ldapConfigStr);
+			if(ldapConfigStr.length() > 10)
 			{
-				config.ldapConfigList.add(ldapConfig);
+				LDAPConfig ldapConfig = parseLdapConfig(ldapConfigStr);
+				if(ldapConfig != null)
+				{
+					config.ldapConfigList.add(ldapConfig);
+				}
 			}
 		}
 		return config;
