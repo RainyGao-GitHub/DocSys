@@ -30,6 +30,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 import util.DateFormat;
+import util.LDAPUtil;
 import util.ReadProperties;
 import util.ReturnAjax;
 import com.DocSystem.entity.DocAuth;
@@ -50,7 +51,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
-import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.LDAPConfig;
@@ -1580,7 +1580,7 @@ public class ManageController extends BaseController{
 			return;
 		}	
 		
-		SystemLDAPConfig systemLdapConfig = getSystemLdapConfig(ldapConfig);
+		SystemLDAPConfig systemLdapConfig = LDAPUtil.getSystemLdapConfig(ldapConfig);
 		if(systemLdapConfig == null)
 		{
 			testResult += "解析失败:<br/>";
@@ -1603,10 +1603,10 @@ public class ManageController extends BaseController{
 		
 		//测试第一个LDAP
 		LDAPConfig config = systemLdapConfig.ldapConfigList.get(0);
-		getListOfSASLMechanisms(config);
+		LDAPUtil.getListOfSASLMechanisms(config);
 
 		testResult += "2. 登录LDAP服务器<br/>";
-		LdapContext ctx = getLDAPConnection(config.userAccount, config.userPassword, config);
+		LdapContext ctx = LDAPUtil.getLDAPConnection(config.userAccount, config.userPassword, config);
 		if(ctx == null)
 		{
 			Log.debug("ldapTest() getLDAPConnection 失败"); 
@@ -1621,7 +1621,7 @@ public class ManageController extends BaseController{
 		
 		String loginTestUser = config.settings.getString("loginTestUser");		
 		testResult += "3. 查询用户信息<br/>";
-		List<SearchResult> list = searchInLdap(ctx, config, loginTestUser);
+		List<SearchResult> list = LDAPUtil.searchInLdap(ctx, config, loginTestUser);
 		try {
 			ctx.close();
 		} catch (NamingException e) {
@@ -1641,7 +1641,7 @@ public class ManageController extends BaseController{
 		{
 			String loginTestUserPassword = config.settings.getString("loginTestUserPassword");
 			testResult += "4. 用户密码校验<br/>";
-			ctx = getLDAPConnection(loginTestUser, loginTestUserPassword, config);
+			ctx = LDAPUtil.getLDAPConnection(loginTestUser, loginTestUserPassword, config);
 			if(ctx == null)
 			{
 				Log.debug("ldapTest() getLDAPConnection 失败"); 

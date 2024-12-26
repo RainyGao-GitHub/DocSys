@@ -92,6 +92,7 @@ import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tukaani.xz.XZInputStream;
 
 import util.DateFormat;
+import util.LDAPUtil;
 import util.ReadProperties;
 import util.RegularUtil;
 import util.ReturnAjax;
@@ -141,7 +142,6 @@ import com.DocSystem.common.entity.CommitLog;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
-import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.LdapLoginCheckResult;
 import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.QueryResult;
@@ -153,7 +153,6 @@ import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
 import com.DocSystem.common.entity.SvnConfig;
-import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.UserPreferServer;
 import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.common.entity.MxsDocConfig;
@@ -2791,7 +2790,7 @@ public class BaseController  extends BaseFunction{
 		//LDAP模式
 		Log.info("ldapLoginCheck() LDAP Mode"); 
 		LdapLoginCheckResult checkResult = new LdapLoginCheckResult();
-		User ldapLoginUser = ldapLoginCheck(userName, decodedPwd, systemLdapConfig, checkResult);
+		User ldapLoginUser = LDAPUtil.ldapLoginCheck(userName, decodedPwd, systemLdapConfig, checkResult);
 		if(ldapLoginUser == null)
 		{
 			if(checkResult.status == LdapLoginCheckResult.PasswordError)
