@@ -2427,21 +2427,12 @@ public class BaseFunction{
 		//UPdate系统ldapConfig
 		if(docSysType == constants.DocSys_Enterprise_Edition)
 		{
+			systemLdapConfig = LDAPUtil.getSystemLdapConfig(systemLdapConfigStr);
 			systemLdapConfig.enabled = true;
 		}
 		else
 		{
 			systemLdapConfig.enabled = false;				
-		}
-		
-		String [] ldapConfigStrArray = systemLdapConfigStr.split("||");
-		for(int i=0; i < ldapConfigStrArray.length; i++)
-		{
-			LDAPConfig ldapConfig = LDAPUtil.parseLdapConfig(ldapConfigStrArray[i]);
-			if(ldapConfig != null)
-			{
-				systemLdapConfig.ldapConfigList.add(ldapConfig);
-			}
 		}		
 	}
 

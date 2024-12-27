@@ -1,6 +1,8 @@
 package com.DocSystem.controller;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,6 +56,7 @@ import com.DocSystem.common.Path;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.LDAPConfig;
+import com.DocSystem.common.entity.LdapLoginCheckResult;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.LongTermTask;
@@ -1591,7 +1594,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		testResult += "解析成功:<br/>" ;
-		testResult += JSON.toJSONString(systemLdapConfig).replace(",", "<br/>") + "<br/><br/>";
+		testResult += JSON.toJSONString(systemLdapConfig) + "<br/><br/>";
 		
 		if(systemLdapConfig.ldapConfigList.isEmpty())
 		{
@@ -1601,65 +1604,39 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		//测试第一个LDAP
-		LDAPConfig config = systemLdapConfig.ldapConfigList.get(0);
-		LDAPUtil.getListOfSASLMechanisms(config);
-
-		testResult += "2. 登录LDAP服务器<br/>";
-		LdapContext ctx = LDAPUtil.getLDAPConnection(config.userAccount, config.userPassword, config);
-		if(ctx == null)
+		testResult += "2. 登录测试<br/>";
+		try 
 		{
-			Log.debug("ldapTest() getLDAPConnection 失败"); 
-			
-			testResult += "登录失败<br/>";
-			rt.setError(testResult);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		testResult += "登录LDAP服务器成功<br/><br/>";
-		
-		String loginTestUser = config.settings.getString("loginTestUser");		
-		testResult += "3. 查询用户信息<br/>";
-		List<SearchResult> list = LDAPUtil.searchInLdap(ctx, config, loginTestUser);
-		try {
-			ctx.close();
-		} catch (NamingException e) {
-			Log.info(e);
-		}
-		
-		if(list == null || list.size() == 0)
-		{
-			testResult += "用户信息查询失败<br/>";
-			rt.setError(testResult);
-			writeJson(rt, response);		
-			return;	    	
-		}		
-		testResult += "用户信息查询成功<br/>";
-		
-		if(loginTestUser != null)
-		{
-			String loginTestUserPassword = config.settings.getString("loginTestUserPassword");
-			testResult += "4. 用户密码校验<br/>";
-			ctx = LDAPUtil.getLDAPConnection(loginTestUser, loginTestUserPassword, config);
-			if(ctx == null)
+			LdapLoginCheckResult checkResult = new LdapLoginCheckResult();
+			User ldapLoginUser = LDAPUtil.ldapLoginCheck("test", "test", systemLdapConfig, checkResult);
+			if(ldapLoginUser != null)
 			{
-				Log.debug("ldapTest() getLDAPConnection 失败"); 
-				
-				testResult += "登录失败<br/>";
-				rt.setError(testResult);
-				writeJson(rt, response);			
-				return;
+				testResult += "登录测试成功<br/>";
 			}
-			try {
-				ctx.close();
-			} catch (NamingException e) {
-				Log.info(e);
+			else
+			{
+				switch(checkResult.status)
+				{
+				case LdapLoginCheckResult.PasswordError:
+					testResult += "密码错误<br/>";
+				case LdapLoginCheckResult.UserNotExist:
+					testResult += "用户不存在<br/>";
+				case LdapLoginCheckResult.DuplicatedUser:
+					testResult += "系统存在重名用户<br/>";
+				default:
+					testResult += "未知错误<br/>";
+				}
 			}
-			testResult += "用户密码校验成功<br/>";
 		}
-		
-		rt.setData(list);					
+		catch(Exception e)
+		{
+			Log.debug(e);
+			testResult += "登录测试失败<br/>";
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			e.printStackTrace(new PrintStream(baos));			
+			testResult += baos.toString();
+		}
+
 		rt.setMsgInfo(testResult);				
 		writeJson(rt, response);
 	}
