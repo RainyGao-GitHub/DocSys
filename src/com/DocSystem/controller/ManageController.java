@@ -1593,6 +1593,8 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		systemLdapConfig.enabled = true;
+		
 		testResult += "解析成功:<br/>" ;
 		testResult += JSON.toJSONString(systemLdapConfig) + "<br/><br/>";
 		
