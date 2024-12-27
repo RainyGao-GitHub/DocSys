@@ -140,8 +140,8 @@ public class UserController extends BaseController {
 			return;
 		}
 		
-		//I not sure if the info in loginUser is lastest, so I need to get the usrInfo from database 
-		user = userService.getUser(user.getId());
+		//TODO: session的User信息有可能是从ldap里获取的，那么如果这里重新获取就会导致信息被更新掉了，所以不能重新获取
+		//user = userService.getUser(user.getId());
 		user.setPwd("");
 		user.docSysType = docSysType;
 		user.isSalesServer = isSalesServer;

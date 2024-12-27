@@ -2774,7 +2774,6 @@ public class BaseController  extends BaseFunction{
 	protected User loginCheck(String userName, String pwd, HttpServletRequest request, HttpSession session, HttpServletResponse response, ReturnAjax rt) 
 	{
 		String decodedPwd = Base64Util.base64Decode(pwd);
-		Log.debug("loginCheck decodedPwd:" + decodedPwd);
 		
 		if(systemLdapConfig.enabled == false || systemLdapConfig.ldapConfigList.isEmpty())
 		{
@@ -2804,6 +2803,7 @@ public class BaseController  extends BaseFunction{
 			return defaultLoginCheck(userName, pwd, decodedPwd, request, session, response, rt);
 		}
 		
+		Log.printObject("ldapLoginCheck() ldapLoginUser:", ldapLoginUser);
 		//获取数据库用户
 		User dbUser = getUserByName(userName);
 		if(dbUser == null)
@@ -2837,18 +2837,22 @@ public class BaseController  extends BaseFunction{
 			{
 				docSysErrorLog("Failed to add new User in DB", rt);
 			}
-			return ldapLoginUser;
+			
+			//重新读取user信息，因为需要userId，否则后续的逻辑会出现问题
+			dbUser = getUserByName(userName);
 		}
 		
-		//登录的用户名字和邮箱总是以LDAP的为准
+		//TODO: 登录的用户名字和邮箱总是以LDAP的为准,因为LDAP上可能已经更新了
 		dbUser.setRealName(ldapLoginUser.getRealName());
 		dbUser.setEmail(ldapLoginUser.getEmail());
+		Log.printObject("ldapLoginCheck() dbUser:", dbUser);
 		return dbUser;
 	}
 
 	private User defaultLoginCheck(String userName, String pwd, String decodedPwd, HttpServletRequest request, HttpSession session,
 			HttpServletResponse response, ReturnAjax rt) 
 	{
+		Log.info("defaultLoginCheck() userName:" + userName);
 		String md5Pwd = MD5.md5(decodedPwd);
 
 		User tmp_user = new User();
@@ -2856,12 +2860,34 @@ public class BaseController  extends BaseFunction{
 		tmp_user.setPwd(pwd);
 				
 		List<User> uLists = getUserList(userName,md5Pwd);
-		boolean ret = loginCheck(rt, tmp_user, uLists, session,response);
-		if(ret == false)
+		if(uLists == null || uLists.size() < 1)
 		{
-			Log.info("defaultLoginCheck() 登录失败");
+			Log.debug("defaultLoginCheck() uLists size < 1");
+			rt.setError("用户名或密码错误！");
 			return null;
 		}
+		
+		//TODO: 检查是否出现重名用户
+		Log.debug("defaultLoginCheck() uLists size:" + uLists.size());
+		int systemUserCount = 0;
+		for(int i = 0; i < uLists.size(); i++)
+		{
+			if(uLists.get(i).getCreateType() < 10)
+			{
+				systemUserCount ++;
+				if(systemUserCount > 1)
+				{
+					break;
+				}
+			}
+		}
+		if(systemUserCount != 1)
+		{
+			Log.debug("loginCheck() 系统存在多个相同用户 systemUserCount:" + systemUserCount);
+			rt.setError("登录异常: 系统出现重名用户！");
+			return null;
+		}
+		
 		return uLists.get(0);
 	}
 
@@ -2876,53 +2902,6 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return uList.get(0);
-	}
-    
-	/**
-	 * 用户数据校验
-	 * @param uLists 根据条件从数据库中查出的user列表
-	 * @param rt 返回ajax信息的类
-	 * @param session 
-	 * @param localUser 前台传回的user信息，或者cookies中保存的用户信息
-	 * @return
-	 */
-	public boolean loginCheck(ReturnAjax rt,User localUser, List<User> uLists,HttpSession session,HttpServletResponse response)
-	{	
-		if(uLists == null)
-		{
-			Log.debug("loginCheck() uLists is null");
-			rt.setError("用户名或密码错误！");
-			return false;	
-		}
-		else if(uLists.size()<1){
-			Log.debug("loginCheck() uLists size < 1");
-			rt.setError("用户名或密码错误！");
-			return false;
-		}
-		
-		Log.debug("loginCheck() uLists size:" + uLists.size());
-		int systemUserCount = 0;
-		for(int i = 0; i < uLists.size(); i++)
-		{
-			if(uLists.get(i).getCreateType() < 10)
-			{
-				systemUserCount ++;
-				if(systemUserCount > 1)
-				{
-					break;
-				}
-			}
-		}
-		
-		if(systemUserCount != 1)
-		{
-			Log.debug("loginCheck() 系统存在多个相同用户 systemUserCount:" + systemUserCount);
-			rt.setError("用户名或密码错误！");
-			//rt.setError("登录失败！");
-			return false;
-		}
-		
-		return true;
 	}
 	
 	public boolean isFirstUserExists()

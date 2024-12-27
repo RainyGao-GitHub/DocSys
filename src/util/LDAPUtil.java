@@ -376,6 +376,7 @@ public class LDAPUtil
         {
         	user.setName(userName);
         }
+        return user;
 	}
 	
 	public static User multiLdapLoginCheck(String domain, String realUserName, String pwd, SystemLDAPConfig systemLdapConfig, LdapLoginCheckResult checkResult)
