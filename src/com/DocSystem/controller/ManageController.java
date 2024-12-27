@@ -1621,12 +1621,16 @@ public class ManageController extends BaseController{
 				{
 				case LdapLoginCheckResult.PasswordError:
 					testResult += "密码错误<br/>";
+					break;
 				case LdapLoginCheckResult.UserNotExist:
 					testResult += "用户不存在<br/>";
+					break;
 				case LdapLoginCheckResult.DuplicatedUser:
 					testResult += "系统存在重名用户<br/>";
+					break;
 				default:
 					testResult += "未知错误<br/>";
+					break;
 				}
 			}
 		}
