@@ -361,12 +361,21 @@ public class LDAPUtil
         Log.debug("ldapLoginCheck() domain: " + domain + " realUserName:" + realUserName );
         
         //Mulit LDAP
-        if(systemLdapConfig.ldapConfigList.size() > 1)
+        User user = null;
+		if(systemLdapConfig.ldapConfigList.size() > 1)
         {
-        	return multiLdapLoginCheck(domain, realUserName, pwd, systemLdapConfig, checkResult);
+        	user  =  multiLdapLoginCheck(domain, realUserName, pwd, systemLdapConfig, checkResult);
         }
-
-        return ldapLoginCheck(realUserName, pwd, systemLdapConfig.ldapConfigList.get(0), checkResult);
+        else
+        {
+        	user = ldapLoginCheck(realUserName, pwd, systemLdapConfig.ldapConfigList.get(0), checkResult);
+        }
+		
+		//TODO: 保留原始的用户名，避免多域登录时存在重名用户
+        if(user != null)
+        {
+        	user.setName(userName);
+        }
 	}
 	
 	public static User multiLdapLoginCheck(String domain, String realUserName, String pwd, SystemLDAPConfig systemLdapConfig, LdapLoginCheckResult checkResult)
