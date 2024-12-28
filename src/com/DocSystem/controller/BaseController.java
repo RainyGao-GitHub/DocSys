@@ -2775,7 +2775,7 @@ public class BaseController  extends BaseFunction{
 	{
 		String decodedPwd = Base64Util.base64Decode(pwd);
 		
-		if(systemLdapConfig.enabled == false || systemLdapConfig.ldapConfigList.isEmpty())
+		if(systemLdapConfig == null || systemLdapConfig.enabled == false || systemLdapConfig.ldapConfigList.isEmpty())
 		{
 			return defaultLoginCheck(userName, pwd, decodedPwd, request, session, response, rt);		
 		}
@@ -2837,9 +2837,11 @@ public class BaseController  extends BaseFunction{
 			{
 				docSysErrorLog("Failed to add new User in DB", rt);
 			}
-			
-			//重新读取user信息，因为需要userId，否则后续的逻辑会出现问题
-			dbUser = getUserByName(userName);
+			else
+			{
+				//重新读取user信息，因为需要userId，否则后续的逻辑会出现问题
+				dbUser = getUserByName(userName);
+			}
 		}
 		
 		//TODO: 登录的用户名字和邮箱总是以LDAP的为准,因为LDAP上可能已经更新了

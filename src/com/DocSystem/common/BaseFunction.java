@@ -2414,8 +2414,6 @@ public class BaseFunction{
 	////////////////// LDAP LDAP LDAP LDAP LDAP 
 	protected static void initLdapConfig() {
 		Log.debug("initLdapConfig() ");
-		//Default LDAPConfig
-		systemLdapConfig = new SystemLDAPConfig();
 		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "ldapConfig");
 		if(value != null)
 		{
@@ -2425,15 +2423,18 @@ public class BaseFunction{
 		
 	protected static void applySystemLdapConfig(String systemLdapConfigStr) {
 		//UPdate系统ldapConfig
-		if(docSysType == constants.DocSys_Enterprise_Edition)
+		systemLdapConfig = LDAPUtil.getSystemLdapConfig(systemLdapConfigStr);
+		if(systemLdapConfig != null)
 		{
-			systemLdapConfig = LDAPUtil.getSystemLdapConfig(systemLdapConfigStr);
-			systemLdapConfig.enabled = true;
+			if(docSysType == constants.DocSys_Enterprise_Edition)
+			{
+				systemLdapConfig.enabled = true;
+			}
+			else
+			{
+				systemLdapConfig.enabled = false;				
+			}		
 		}
-		else
-		{
-			systemLdapConfig.enabled = false;				
-		}		
 	}
 
 	///////// systemLicense

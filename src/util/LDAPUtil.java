@@ -36,13 +36,13 @@ public class LDAPUtil
 {   
 	public static SystemLDAPConfig getSystemLdapConfig(String systemLdapConfigStr) 
 	{
+		SystemLDAPConfig config = new SystemLDAPConfig();		
 		if(systemLdapConfigStr == null || systemLdapConfigStr.isEmpty())
 		{
 			Log.debug("getSystemLdapConfig() systemLdapConfigStr is empty");
-			return null;
+			return config;
 		}
 
-		SystemLDAPConfig config = new SystemLDAPConfig();		
 		String [] ldapConfigStrArray = systemLdapConfigStr.split("\\|\\|"); 
 		for(int i=0; i < ldapConfigStrArray.length; i++)
 		{
