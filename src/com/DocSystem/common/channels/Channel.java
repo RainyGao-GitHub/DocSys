@@ -47,7 +47,8 @@ public interface Channel {
 			String commitMsg, 
 			User accessUser, 
 			ReturnAjax rt,
-			boolean force, 
+			boolean force,
+			boolean skipDelete,
 			int subDocCommitFlag);
 	String remoteServerDocCopy(
 			Repos repos, Doc srcDoc, Doc dstDoc, 
@@ -101,7 +102,8 @@ public interface Channel {
 			User accessUser, 
 			String commitMsg, 
 			boolean recurcive, 
-			int pushType, 
+			int pushType,
+			boolean skipDelete,
 			ReturnAjax rt);
 	boolean remoteStorageDeleteEntry(
 			RemoteStorageConfig remote, 
@@ -116,7 +118,7 @@ public interface Channel {
 			Repos repos, Doc doc, 
 			User accessUser, 
 			String commitMsg, 
-			boolean recurcive, boolean force, 
+			boolean recurcive, boolean force, boolean skipDelete,
 			ReturnAjax rt,
 			int historyType);
 
@@ -228,6 +230,7 @@ public interface Channel {
 			Integer targetReposId, String targetPath, //目标目录信息
 			Integer recurciveEn, //null/0: false, 1: true
 			Integer forceEn, //null/0: false, 1: true
+			Integer deleteEn, //null/0: false, 1: true
 			Integer shareId, String authCode, //
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception;
 	

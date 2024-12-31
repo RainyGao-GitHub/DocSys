@@ -165,8 +165,8 @@ public class constants {
 	
 	public class PushType  {
 		public final static int pushLocalAddAndRemoteNochange  						= 10;	//适用于只推送本地新增的场景
-		public final static int pushLocalChangedAndRemoteNotChanged_SkipDelete 		= 20;	//适用于只推送本地改动的场景（自动或手动推送） 
-		public final static int pushLocalChangedOrRemoteChanged_SkipDelete 			= 30;	//适用于强制推送本地文件的场景（自动或手动强制推送，远程的将被强制覆盖）
+		public final static int pushLocalChangedAndRemoteNotChanged 				= 20;	//适用于只推送本地改动的场景（自动或手动推送） 
+		public final static int pushLocalChangedOrRemoteChanged 					= 30;	//适用于强制推送本地文件的场景（自动或手动强制推送，远程的将被强制覆盖）
 		public final static int pushLocalChangedWithoutRemoteCheck					= 40;	//适用于远程目标没有参考意义的场景（例如自动备份到按时间创建的目录，或则推送到新目录）
 		public final static int pushLocalChangedWithoutRemoteCheckForce				= 50;	//适用于远程目标需要和本地保持完全一致的情况（本地文件不存在会当作删除操作进行推送）
 		public final static int force  												= 100;	//适用于基于行为的推送	
