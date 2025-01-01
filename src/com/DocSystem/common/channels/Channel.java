@@ -61,6 +61,7 @@ public interface Channel {
 			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
 			int pullType, 
+			boolean skipDelete,
 			HashMap<String, String> downloadList);
 	List<Doc> remoteServerCheckOutForDownload(
 			Repos repos, Doc doc, 
@@ -95,6 +96,7 @@ public interface Channel {
 			String commitId, 
 			boolean recurcive, 
 			int pullType, 
+			boolean skipDelete,
 			ReturnAjax rt);
 	boolean remoteStoragePush(
 			RemoteStorageConfig remote, 
@@ -160,6 +162,7 @@ public interface Channel {
 			String tempLocalRootPath, String targetPath, String targetName, 
 			String commitId, 
 			int pullType, 
+			boolean skipDelete,
 			HashMap<String,String> includeList,
 			HashMap<String,String> excludeList);
 	

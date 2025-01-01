@@ -3617,7 +3617,7 @@ public class DocController extends BaseController{
 		Doc tmpDoc = doc;
 		if(isFSM(repos) == false)
 		{
-			channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged, null);
 		}			
 		
 		String fileSuffix = FileUtil.getFileSuffix(name);
@@ -4412,7 +4412,7 @@ public class DocController extends BaseController{
 			//前置类型仓库，需要先将文件CheckOut出来
 			if(isFSM(repos) == false)
 			{
-				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
+				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, null);
 			}
 			
 			Doc localDoc = fsGetDoc(repos, tmpDoc);
@@ -4574,7 +4574,7 @@ public class DocController extends BaseController{
 			//前置类型仓库，需要先将文件CheckOut出来
 			if(isFSM(repos) == false)
 			{
-				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
+				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, null);
 			}
 			
 			Doc localDoc = fsGetDoc(repos, tmpDoc);
@@ -7067,7 +7067,7 @@ public class DocController extends BaseController{
 		{	
 			if(isFSM(repos) == false)
 			{
-				channel.remoteServerCheckOut(repos, rootDoc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
+				channel.remoteServerCheckOut(repos, rootDoc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, null);
 			}
 		}
 		

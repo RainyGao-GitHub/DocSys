@@ -3308,7 +3308,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
+			successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged, null);
 		}
 		
 		if(successDocList == null || successDocList.size() == 0)
@@ -5890,7 +5890,7 @@ public class BaseController  extends BaseFunction{
 							int pullType = constants.PullType.pullRemoteAddAndLocalNotChanged; //remoteAdded and localNotChanged
 							if(remote.autoPullForce == 1)
 							{
-								pullType = constants.PullType.pullRemoteChangedAndLocalNotChanged_SkipDelete;	//remoteChanged and localNotChanged
+								pullType = constants.PullType.pullRemoteChangedAndLocalNotChanged;	//remoteChanged and localNotChanged
 							}
 							
 							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, rt);
@@ -11105,7 +11105,7 @@ public class BaseController  extends BaseFunction{
 		//置类型仓库需要先将文件下载到本地
 		if(isFSM(repos) == false)
 		{
-			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, null);
 		}		
 	
 		String content = "";
@@ -12698,7 +12698,7 @@ public class BaseController  extends BaseFunction{
 							repos, doc, 
 							tmpLocalRootPath, localParentPath, targetName, 
 							commit.verReposRevision, 
-							constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, 
+							constants.PullType.pullRemoteChangedOrLocalChanged, 
 							downloadList,
 							checkoutedList);
 
@@ -12876,7 +12876,7 @@ public class BaseController  extends BaseFunction{
 							repos, doc, 
 							tmpLocalRootPath, localParentPath, targetName, 
 							commit.verReposRevision, 
-							constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, 
+							constants.PullType.pullRemoteChangedOrLocalChanged, 
 							downloadList,
 							checkoutedList);
 	
@@ -13026,7 +13026,7 @@ public class BaseController  extends BaseFunction{
 				repos, doc, 
 				tmpLocalRootPath, localParentPath, targetName, 
 				commit.verReposRevision, 
-				constants.PullType.pullRemoteChangedOrLocalChanged_SkipDelete, 
+				constants.PullType.pullRemoteChangedOrLocalChanged, 
 				includeList,
 				excludeList);
 	}

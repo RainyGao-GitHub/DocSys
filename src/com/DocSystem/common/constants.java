@@ -174,8 +174,8 @@ public class constants {
 	
 	public class PullType  {
 		public final static int pullRemoteAddAndLocalNotChanged  					= 10;	//适用于只拉取远程新增的场景
-		public final static int pullRemoteChangedAndLocalNotChanged_SkipDelete 		= 20;	//适用于只拉取远程改动的场景（自动或手动拉取）
-		public final static int pullRemoteChangedOrLocalChanged_SkipDelete 			= 30;	//适用于强制拉取远程文件的场景（自动或手动强制拉取，本地的将被强制覆盖）
+		public final static int pullRemoteChangedAndLocalNotChanged 				= 20;	//适用于只拉取远程改动的场景（自动或手动拉取）
+		public final static int pullRemoteChangedOrLocalChanged 					= 30;	//适用于强制拉取远程文件的场景（自动或手动强制拉取，本地的将被强制覆盖）
 		public final static int pullRemoteChangedWithoutLocalCheck					= 40;	//适用于本地目标没有参考意义的场景（例如前置仓库）
 		public final static int pullRemoteChangedWithoutLocalCheckForce				= 50;	//适用于本地目标需要和远程保持完全一致的情况（例如前置仓库：远程文件不存在会当作删除操作进行拉取）
 		public final static int force  												= 100;	//适用于基于行为的拉取（目前没有使用场景，因为远程的行为无法获取）
