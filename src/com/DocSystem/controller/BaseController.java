@@ -5887,7 +5887,7 @@ public class BaseController  extends BaseFunction{
 						if(remoteStoragePullEnable && remote.autoPull != null && remote.autoPull == 1)
 						{
 							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
-							int pullType = constants.PullType.pullRemoteAddAndLocalNochange; //remoteAdded and localNotChanged
+							int pullType = constants.PullType.pullRemoteAddAndLocalNotChanged; //remoteAdded and localNotChanged
 							if(remote.autoPullForce == 1)
 							{
 								pullType = constants.PullType.pullRemoteChangedAndLocalNotChanged_SkipDelete;	//remoteChanged and localNotChanged

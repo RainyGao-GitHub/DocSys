@@ -164,7 +164,7 @@ public class constants {
 	public final static int DocSys_Personal_Edition = 3;
 	
 	public class PushType  {
-		public final static int pushLocalAddAndRemoteNochange  						= 10;	//适用于只推送本地新增的场景
+		public final static int pushLocalAddAndRemoteNotChanged  					= 10;	//适用于只推送本地新增的场景
 		public final static int pushLocalChangedAndRemoteNotChanged 				= 20;	//适用于只推送本地改动的场景（自动或手动推送） 
 		public final static int pushLocalChangedOrRemoteChanged 					= 30;	//适用于强制推送本地文件的场景（自动或手动强制推送，远程的将被强制覆盖）
 		public final static int pushLocalChangedWithoutRemoteCheck					= 40;	//适用于远程目标没有参考意义的场景（例如自动备份到按时间创建的目录，或则推送到新目录）
@@ -173,7 +173,7 @@ public class constants {
 	}
 	
 	public class PullType  {
-		public final static int pullRemoteAddAndLocalNochange  						= 10;	//适用于只拉取远程新增的场景
+		public final static int pullRemoteAddAndLocalNotChanged  					= 10;	//适用于只拉取远程新增的场景
 		public final static int pullRemoteChangedAndLocalNotChanged_SkipDelete 		= 20;	//适用于只拉取远程改动的场景（自动或手动拉取）
 		public final static int pullRemoteChangedOrLocalChanged_SkipDelete 			= 30;	//适用于强制拉取远程文件的场景（自动或手动强制拉取，本地的将被强制覆盖）
 		public final static int pullRemoteChangedWithoutLocalCheck					= 40;	//适用于本地目标没有参考意义的场景（例如前置仓库）
