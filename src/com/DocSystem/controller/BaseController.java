@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,21 +45,6 @@ import java.util.Properties;
 import java.util.Scanner;
 import java.util.Map.Entry;
 
-import javax.naming.AuthenticationException;
-import javax.naming.CommunicationException;
-import javax.naming.Context;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-import javax.naming.ldap.InitialLdapContext;
-import javax.naming.ldap.LdapContext;
-import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -3308,7 +3292,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged, true, null);
+			successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.force, false, null);
 		}
 		
 		if(successDocList == null || successDocList.size() == 0)
@@ -11105,7 +11089,7 @@ public class BaseController  extends BaseFunction{
 		//置类型仓库需要先将文件下载到本地
 		if(isFSM(repos) == false)
 		{
-			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, true, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, false, null);
 		}		
 	
 		String content = "";

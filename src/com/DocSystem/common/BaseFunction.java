@@ -72,7 +72,6 @@ import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
 import com.DocSystem.common.entity.GitConfig;
-import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.LargeFileScanTask;
 import com.DocSystem.common.entity.License;
 import com.DocSystem.common.entity.LocalConfig;

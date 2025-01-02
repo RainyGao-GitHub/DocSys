@@ -1897,6 +1897,7 @@ public class DocController extends BaseController{
 			Integer targetReposId, String targetPath, //目标目录信息
 			Integer recurciveEn, //null/0: false, 1: true
 			Integer forceEn, //null/0: false, 1: true
+			Integer deleteEn, //null/0: false, 1: true
 			Integer shareId, String authCode, //
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
@@ -1914,6 +1915,7 @@ public class DocController extends BaseController{
 				targetReposId, targetPath, //目标目录信息
 				recurciveEn, //null/0: false, 1: true
 				forceEn, //null/0: false, 1: true
+				deleteEn, //null/0: false, 1: true
 				shareId, authCode, //
 				response, request, session);
 	}
@@ -2286,7 +2288,7 @@ public class DocController extends BaseController{
 			//文件服务器前置仓库不允许远程存储
 			remoteStorageEn = false;
 			//从文件服务器拉取文件（对于前置仓库，拉取时会删除远程不存在的文件）
-			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedWithoutLocalCheckForce, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, false, null);
 		}
 
 		Doc localEntry = fsGetDoc(repos, doc);
@@ -2411,7 +2413,7 @@ public class DocController extends BaseController{
 	}
 	
 	//TODO: 这个函数使用需要小心，searchIndex更新有性能问题
-	protected boolean remoteStorageCheckOut(Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, int pullType, ReturnAjax rt)
+	protected boolean remoteStorageCheckOut(Repos repos, Doc doc, User accessUser, String commitId, boolean recurcive, int pullType, boolean skipDelete, ReturnAjax rt)
 	{
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null)
@@ -2441,7 +2443,7 @@ public class DocController extends BaseController{
 			return false;
 		}
 		
-		channel.remoteStoragePull(remote, repos, doc, accessUser, commitId, recurcive, pullType, rt);
+		channel.remoteStoragePull(remote, repos, doc, accessUser, commitId, recurcive, pullType, skipDelete, rt);
 		DocPullContext pullResult = (DocPullContext) rt.getDataEx();
 	    if(pullResult != null && pullResult.successCount > 0)
 	    {
@@ -3617,7 +3619,7 @@ public class DocController extends BaseController{
 		Doc tmpDoc = doc;
 		if(isFSM(repos) == false)
 		{
-			channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged, false, null);
 		}			
 		
 		String fileSuffix = FileUtil.getFileSuffix(name);
@@ -3717,7 +3719,7 @@ public class DocController extends BaseController{
 			}
 			else
 			{
-				channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, 3, null);
+				channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, constants.PullType.force, false, null);
 			}
 		}
 		tmpDoc = buildBasicDoc(repos.getId(), doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);					
@@ -4412,7 +4414,7 @@ public class DocController extends BaseController{
 			//前置类型仓库，需要先将文件CheckOut出来
 			if(isFSM(repos) == false)
 			{
-				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, null);
+				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, false, null);
 			}
 			
 			Doc localDoc = fsGetDoc(repos, tmpDoc);
@@ -4465,7 +4467,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, 3, null);
+					channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, constants.PullType.pullRemoteChangedWithoutLocalCheck, true, null);
 				}
 			}
 			
@@ -4574,7 +4576,7 @@ public class DocController extends BaseController{
 			//前置类型仓库，需要先将文件CheckOut出来
 			if(isFSM(repos) == false)
 			{
-				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, null);
+				channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, false, null);
 			}
 			
 			Doc localDoc = fsGetDoc(repos, tmpDoc);
@@ -4627,7 +4629,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, 3, null);
+					channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, constants.PullType.force, false, null);
 				}
 			}
 			
@@ -7067,7 +7069,7 @@ public class DocController extends BaseController{
 		{	
 			if(isFSM(repos) == false)
 			{
-				channel.remoteServerCheckOut(repos, rootDoc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, null);
+				channel.remoteServerCheckOut(repos, rootDoc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, false, null);
 			}
 		}
 		
