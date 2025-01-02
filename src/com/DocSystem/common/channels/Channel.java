@@ -1,6 +1,5 @@
 package com.DocSystem.common.channels;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,9 +9,7 @@ import javax.servlet.http.HttpSession;
 
 import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.FolderUploadAction;
-import com.DocSystem.common.Log;
 import com.DocSystem.common.CommitAction.CommitAction;
-import com.DocSystem.common.CommitAction.CommitType;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
@@ -29,7 +26,6 @@ import com.DocSystem.entity.User;
 import com.DocSystem.websocket.entity.DocSearchContext;
 
 import util.ReturnAjax;
-import util.LuceneUtil.LuceneUtil2;
 
 /**
  * business channel
