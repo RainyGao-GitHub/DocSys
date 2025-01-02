@@ -3632,7 +3632,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(isRemoteSeverPushEnabled(repos))
 			{
-				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, true, 2) == null)
+				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, isRemoteSeverPushSkipDelete(repos), 2) == null)
 				{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("addDoc_FSM() remoteServerDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
