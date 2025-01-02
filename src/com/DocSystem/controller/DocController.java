@@ -4467,7 +4467,7 @@ public class DocController extends BaseController{
 				}
 				else
 				{
-					channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, constants.PullType.pullRemoteChangedWithoutLocalCheck, true, null);
+					channel.remoteServerCheckOut(repos, doc, tempLocalRootPath, null, null, commitId, constants.PullType.force, false, null);
 				}
 			}
 			
