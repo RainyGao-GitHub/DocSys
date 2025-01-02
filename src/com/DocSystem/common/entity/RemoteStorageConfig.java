@@ -15,8 +15,10 @@ public class RemoteStorageConfig  implements Serializable {
 	public String rootPath;	//remote root path
 	public Integer autoPull = 0;
 	public Integer autoPullForce = 0;
+	public boolean autoPullSkipDelete = true;	
 	public Integer autoPush = 0;
 	public Integer autoPushForce = 0;
+	public boolean autoPushSkipDelete = true;
 	public LocalConfig FILE = null;
 	public SftpConfig SFTP = null;
 	public FtpConfig FTP = null;

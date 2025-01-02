@@ -3308,7 +3308,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged, null);
+			successDocList = channel.remoteServerCheckOut(repos, doc, null, null, null, commitId, constants.PullType.pullRemoteChangedOrLocalChanged, true, null);
 		}
 		
 		if(successDocList == null || successDocList.size() == 0)
@@ -3351,7 +3351,7 @@ public class BaseController  extends BaseFunction{
 				return false;
 		     }
 		        
-		     revision = channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2);
+		     revision = channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, true, 2);
 			 if(revision == null)
 			 { 
 				 return false;
@@ -3648,7 +3648,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(isRemoteSeverPushEnabled(repos))
 			{
-				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
+				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, true, 2) == null)
 				{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("addDoc_FSM() remoteServerDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -3802,7 +3802,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(channel.remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, 2) == null)
+			if(channel.remoteServerDocCommit(repos, doc,commitMsg,login_user,rt, false, true, 2) == null)
 			{
 				unlockDoc(doc, lockType, login_user);
 				docSysDebugLog("addDocEx_FSM() remoteServerDocCommit [" + doc.getPath() + doc.getName() + "] Failed", rt);
@@ -4002,7 +4002,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(isRemoteSeverPushEnabled(repos))
 			{
-				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
+				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, isRemoteSeverPushSkipDelete(repos), 2) == null)
 				{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("saveDoc_FSM() remoteServerDocCommit [" +  doc.getPath() + doc.getName()  + "] Failed", rt);
@@ -4275,7 +4275,7 @@ public class BaseController  extends BaseFunction{
 			{	
 				if(channel != null)
 				{
-					revision = channel.remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, 2);
+					revision = channel.remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, true, isRemoteSeverPushSkipDelete(repos), 2);
 				}
 				
 				if(revision == null)
@@ -5876,12 +5876,12 @@ public class BaseController  extends BaseFunction{
 						if(remoteStoragePushEnable && remote.autoPush != null && remote.autoPush == 1)
 						{
 							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
-							int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged_SkipDelete;
+							int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged;
 							if(remote.autoPushForce == 1)
 							{
-								pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;
+								pushType = constants.PushType.pushLocalChangedOrRemoteChanged;
 							}
-							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, pushType, rt);
+							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, pushType, remote.autoPushSkipDelete, rt);
 						}				
 						
 						if(remoteStoragePullEnable && remote.autoPull != null && remote.autoPull == 1)
@@ -5893,7 +5893,7 @@ public class BaseController  extends BaseFunction{
 								pullType = constants.PullType.pullRemoteChangedAndLocalNotChanged;	//remoteChanged and localNotChanged
 							}
 							
-							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, rt);
+							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, remote.autoPullSkipDelete, rt);
 						    
 							DocPullContext pullResult = (DocPullContext) rt.getDataEx();
 						    if(pullResult != null && pullResult.successCount > 0)
@@ -8796,7 +8796,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(isRemoteSeverPushEnabled(repos))
 			{	
-				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
+				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, isRemoteSeverPushSkipDelete(repos), 2) == null)
 				{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("updateDoc_FSM() remoteServerDocCommit Failed", rt);
@@ -9057,7 +9057,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(channel.remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, false, 2) == null)
+			if(channel.remoteServerDocCommit(repos, doc, commitMsg,login_user,rt, false, true, 2) == null)
 			{
 				unlockDoc(doc, lockType, login_user);
 				Log.info("updateDocEx_FSM() remoteServerDocCommit Failed");
@@ -9527,7 +9527,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(isRemoteSeverPushEnabled(repos))
 			{
-				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
+				if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, isRemoteSeverPushSkipDelete(repos), 2) == null)
 				{
 					unlockDoc(doc, lockType, login_user);
 					docSysDebugLog("copySameDocForUpload() remoteServerDocCommit Failed", rt);
@@ -9666,7 +9666,7 @@ public class BaseController  extends BaseFunction{
 			{
 				if(isRemoteSeverPushEnabled(repos))
 				{
-					if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, 2) == null)
+					if(channel.remoteServerDocCommit(repos, doc, commitMsg, login_user, rt, false, isRemoteSeverPushSkipDelete(repos), 2) == null)
 					{
 						docSysDebugLog("updateRealDocContent_FSM() remoteServerDocCommit Failed", rt);
 						docSysErrorLog("远程推送失败", rt); //remoteServerDocCommit already set the errorinfo
@@ -11105,7 +11105,7 @@ public class BaseController  extends BaseFunction{
 		//置类型仓库需要先将文件下载到本地
 		if(isFSM(repos) == false)
 		{
-			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, null);
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, true, null);
 		}		
 	
 		String content = "";
@@ -12698,7 +12698,8 @@ public class BaseController  extends BaseFunction{
 							repos, doc, 
 							tmpLocalRootPath, localParentPath, targetName, 
 							commit.verReposRevision, 
-							constants.PullType.pullRemoteChangedOrLocalChanged, 
+							constants.PullType.pullRemoteChangedOrLocalChanged,
+							true,
 							downloadList,
 							checkoutedList);
 
@@ -12877,6 +12878,7 @@ public class BaseController  extends BaseFunction{
 							tmpLocalRootPath, localParentPath, targetName, 
 							commit.verReposRevision, 
 							constants.PullType.pullRemoteChangedOrLocalChanged, 
+							true,
 							downloadList,
 							checkoutedList);
 	
@@ -13027,6 +13029,7 @@ public class BaseController  extends BaseFunction{
 				tmpLocalRootPath, localParentPath, targetName, 
 				commit.verReposRevision, 
 				constants.PullType.pullRemoteChangedOrLocalChanged, 
+				true,
 				includeList,
 				excludeList);
 	}
@@ -15582,27 +15585,28 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged_SkipDelete;
+		int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged;
 		if(remote.autoPushForce == 1)
 		{
-			pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;
+			pushType = constants.PushType.pushLocalChangedOrRemoteChanged;
 		}
+		//boolean skipDelete = remote.autoPushSkipDelete;
 		
 		switch(action)
 		{
 		case "copyDoc":
 			Log.info("********* realTimeRemoteStoragPush() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
 			break;
 		case "moveDoc":
 			Log.info("********* realTimeRemoteStoragPush() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
 			break;
 		case "renameDoc":
 			Log.info("********* realTimeRemoteStoragPush() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -15612,7 +15616,7 @@ public class BaseController  extends BaseFunction{
 		//case "revertDocHistory":
 		default:
 			Log.info("********* realTimeRemoteStoragPush() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
 			break;
 		}			
 		return ret;
@@ -15636,6 +15640,11 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		return isRemoteActionEnabled(repos, repos.remoteServerConfig);
+	}
+	
+	private boolean isRemoteSeverPushSkipDelete(Repos repos) 
+	{
+		return repos.remoteServerConfig.autoPushSkipDelete;
 	}
 	
 	private boolean isLocalBackupPushEnabled(Repos repos) {
@@ -15779,7 +15788,7 @@ public class BaseController  extends BaseFunction{
 		int pushType = constants.PushType.pushLocalChangedWithoutRemoteCheck;
 		if(remote.isVerRepos)
 		{
-			pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;
+			pushType = constants.PushType.pushLocalChangedOrRemoteChanged;
 		}
 		
 		//Build ActionContext
@@ -15795,17 +15804,17 @@ public class BaseController  extends BaseFunction{
 		{
 		case "copyDoc":
 			Log.info("********* realTimeRemoteBackup() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
 			break;
 		case "moveDoc":
 			Log.info("********* realTimeRemoteBackup() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete,  rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete,  rt);
 			break;
 		case "renameDoc":
 			Log.info("********* realTimeRemoteBackup() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete,  rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete,  rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -15817,7 +15826,7 @@ public class BaseController  extends BaseFunction{
 		//	break;
 		default:
 			Log.info("********* realTimeRemoteBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
 			break;
 		}
 		
@@ -15877,7 +15886,7 @@ public class BaseController  extends BaseFunction{
 		int pushType = constants.PushType.pushLocalChangedWithoutRemoteCheck;	//localChanged and remoteNoCheck 
 		if(remote.isVerRepos)
 		{
-			pushType = constants.PushType.pushLocalChangedOrRemoteChanged_SkipDelete;	//localChanged or remoteChanged
+			pushType = constants.PushType.pushLocalChangedOrRemoteChanged;	//localChanged or remoteChanged
 		}
 
 		//Build ActionContext
@@ -15893,17 +15902,17 @@ public class BaseController  extends BaseFunction{
 		{
 		case "copyDoc":
 			Log.info("********* realTimeLocalBackup() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
 			break;
 		case "moveDoc":
 			Log.info("********* realTimeLocalBackup() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
 			break;
 		case "renameDoc":
 			Log.info("********* realTimeLocalBackup() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -15913,7 +15922,7 @@ public class BaseController  extends BaseFunction{
 		//case "revertDocHistory":
 		default:
 			Log.info("********* realTimeLocalBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
 			break;
 		}
 		
@@ -16334,14 +16343,14 @@ public class BaseController  extends BaseFunction{
 			        				if(uniqueTask != null)
 			        				{
 			        					//执行仓库本地备份
-			        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt, HistoryType_LocalBackup);
+			        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, true, rt, HistoryType_LocalBackup);
 			        					stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
 			        				}
 	        					}
 		        				else
 		        				{
 		        					//执行仓库本地备份
-		        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, rt, HistoryType_LocalBackup);
+		        					channel.reposBackUp(latestLocalBackupConfig, latestReposInfo, rootDoc, systemUser, "本地定时备份", true, true, true, rt, HistoryType_LocalBackup);
 		        				}
 	        					unlockDoc(rootDoc, lockType,  systemUser);
         					}
@@ -16531,13 +16540,13 @@ public class BaseController  extends BaseFunction{
 		        					JSONObject uniqueTask = checkStartUniqueTaskRedis(uniqueTaskId);
 			        				if(uniqueTask != null)
 			        				{			        				
-				        				channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt, HistoryType_RemoteBackup);
+				        				channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, true, rt, HistoryType_RemoteBackup);
 				            			stopUniqueTaskRedis(uniqueTaskId, uniqueTask);
 			        				}
 	        					}
 		        				else
 		        				{
-			                    	channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, rt, HistoryType_RemoteBackup);
+			                    	channel.reposBackUp(latestRemoteBackupConfig, latestReposInfo, rootDoc, systemUser, "异地定时备份", true, true, true, rt, HistoryType_RemoteBackup);
 		        				}
 		        				unlockDoc(rootDoc, lockType,  systemUser);
         					}
