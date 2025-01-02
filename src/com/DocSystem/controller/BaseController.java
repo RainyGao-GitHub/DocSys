@@ -5875,7 +5875,7 @@ public class BaseController  extends BaseFunction{
 					{
 						if(remoteStoragePushEnable && remote.autoPush != null && remote.autoPush == 1)
 						{
-							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce);
+							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce + "  remote.autoPushSkipDelete:" +  remote.autoPushSkipDelete);
 							int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged;
 							if(remote.autoPushForce == 1)
 							{
@@ -5886,7 +5886,7 @@ public class BaseController  extends BaseFunction{
 						
 						if(remoteStoragePullEnable && remote.autoPull != null && remote.autoPull == 1)
 						{
-							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce);
+							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce + "  remote.autoPullSkipDelete:" +  remote.autoPullSkipDelete);
 							int pullType = constants.PullType.pullRemoteAddAndLocalNotChanged; //remoteAdded and localNotChanged
 							if(remote.autoPullForce == 1)
 							{
@@ -15590,23 +15590,23 @@ public class BaseController  extends BaseFunction{
 		{
 			pushType = constants.PushType.pushLocalChangedOrRemoteChanged;
 		}
-		//boolean skipDelete = remote.autoPushSkipDelete;
+		boolean skipDelete = remote.autoPushSkipDelete;
 		
 		switch(action)
 		{
 		case "copyDoc":
 			Log.info("********* realTimeRemoteStoragPush() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, skipDelete, rt);
 			break;
 		case "moveDoc":
 			Log.info("********* realTimeRemoteStoragPush() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  skipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  skipDelete, rt);
 			break;
 		case "renameDoc":
 			Log.info("********* realTimeRemoteStoragPush() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  skipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  skipDelete, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -15616,7 +15616,7 @@ public class BaseController  extends BaseFunction{
 		//case "revertDocHistory":
 		default:
 			Log.info("********* realTimeRemoteStoragPush() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  skipDelete, rt);
 			break;
 		}			
 		return ret;
@@ -15790,6 +15790,7 @@ public class BaseController  extends BaseFunction{
 		{
 			pushType = constants.PushType.pushLocalChangedOrRemoteChanged;
 		}
+		boolean skipDelete = remote.autoPushSkipDelete;
 		
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(null, accessUser, "reposBackup", "reposBackup", "仓库异地实时备份", null, repos, doc, null, null);
@@ -15804,17 +15805,17 @@ public class BaseController  extends BaseFunction{
 		{
 		case "copyDoc":
 			Log.info("********* realTimeRemoteBackup() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, skipDelete, rt);
 			break;
 		case "moveDoc":
 			Log.info("********* realTimeRemoteBackup() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete,  rt);
-			channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete,  rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, skipDelete,  rt);
+			channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, skipDelete,  rt);
 			break;
 		case "renameDoc":
 			Log.info("********* realTimeRemoteBackup() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete,  rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete,  rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, skipDelete,  rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, skipDelete,  rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -15826,7 +15827,7 @@ public class BaseController  extends BaseFunction{
 		//	break;
 		default:
 			Log.info("********* realTimeRemoteBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, skipDelete, rt);
 			break;
 		}
 		
@@ -15888,6 +15889,7 @@ public class BaseController  extends BaseFunction{
 		{
 			pushType = constants.PushType.pushLocalChangedOrRemoteChanged;	//localChanged or remoteChanged
 		}
+		boolean skipDelete = remote.autoPushSkipDelete;
 
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(null, accessUser, "reposBackup", "reposBackup", "仓库本地实时备份", null, repos, doc, null, null);
@@ -15902,17 +15904,17 @@ public class BaseController  extends BaseFunction{
 		{
 		case "copyDoc":
 			Log.info("********* realTimeLocalBackup() copyDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, skipDelete, rt);
 			break;
 		case "moveDoc":
 			Log.info("********* realTimeLocalBackup() moveDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, skipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, skipDelete, rt);
 			break;
 		case "renameDoc":
 			Log.info("********* realTimeLocalBackup() renameDoc [" + doc.getPath() + doc.getName() + "] to [" + dstDoc.getPath() + dstDoc.getName() + "] ***********");
-			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
-			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
+			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, skipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType, skipDelete, rt);
 			break;
 		//case "addDoc":
 		//case "deleteDoc":
@@ -15922,7 +15924,7 @@ public class BaseController  extends BaseFunction{
 		//case "revertDocHistory":
 		default:
 			Log.info("********* realTimeLocalBackup() " + action + " [" + doc.getPath() + doc.getName() + "] ***********");
-			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, remote.autoPushSkipDelete, rt);
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType, skipDelete, rt);
 			break;
 		}
 		

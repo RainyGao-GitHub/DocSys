@@ -3613,6 +3613,7 @@ public class BaseFunction{
 	}
 	
 	private static void setRemoteAutoPushPull(RemoteStorageConfig remote, JSONObject config) {
+		//autoPushSettings
 		remote.autoPush = config.getInteger("autoPush");
 		if(remote.autoPush == null)
 		{
@@ -3625,6 +3626,9 @@ public class BaseFunction{
 			remote.autoPushForce = 0;
 		}
 		
+		remote.autoPushSkipDelete = isSkipDelete( config.getInteger("autoPushSkipDelete"));
+		
+		//autoPullSettings
 		remote.autoPull = config.getInteger("autoPull");
 		if(remote.autoPull == null)
 		{
@@ -3636,6 +3640,8 @@ public class BaseFunction{
 		{
 			remote.autoPullForce = 0;
 		}
+		
+		remote.autoPullSkipDelete = isSkipDelete( config.getInteger("autoPullSkipDelete"));
 	}
 
 	
@@ -6486,5 +6492,10 @@ public class BaseFunction{
 			return false;					
 		}
 		return true;
+	}
+	
+	public static boolean isSkipDelete(Integer deleteEn) 
+	{
+		return deleteEn != null? (deleteEn != 1) : true;
 	}
 }
