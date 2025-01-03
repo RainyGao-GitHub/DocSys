@@ -352,7 +352,16 @@ public class LDAPUtil
         //判断userName是否带域名
         String realUserName = userName;
         String domain = null;
-        String[] strArray = userName.split("/");
+        String[] strArray = null;
+        //先用反斜杠进行拆分
+        strArray = userName.split("\\");
+        //如果反斜杠没有的话尝试用正斜杠拆分
+        if(strArray.length <= 1)
+        {
+        	strArray = userName.split("/");
+        }
+        
+        //如果>=2表示有域名
         if(strArray.length >= 2)
         {
         	domain = strArray[0];

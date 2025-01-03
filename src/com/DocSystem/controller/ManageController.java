@@ -1609,8 +1609,17 @@ public class ManageController extends BaseController{
 		testResult += "2. 登录测试<br/>";
 		try 
 		{
+			String testUser = systemLdapConfig.ldapConfigList.get(0).settings.getString("testUser");
+			String testUserPassword = systemLdapConfig.ldapConfigList.get(0).settings.getString("testUserPassword");
+			if(testUser == null || testUser.isEmpty())
+			{
+				testUser = "test";
+			}
+			testResult += "登录账号: " + testUser + "<br/>";
+			testResult += "登录密码: " + testUserPassword + "<br/>";
+				
 			LdapLoginCheckResult checkResult = new LdapLoginCheckResult();
-			User ldapLoginUser = LDAPUtil.ldapLoginCheck("test", "test", systemLdapConfig, checkResult);
+			User ldapLoginUser = LDAPUtil.ldapLoginCheck(testUser, testUserPassword, systemLdapConfig, checkResult);
 			if(ldapLoginUser != null)
 			{
 				testResult += "登录测试成功<br/>";
