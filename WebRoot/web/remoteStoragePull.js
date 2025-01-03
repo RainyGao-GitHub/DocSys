@@ -5,6 +5,7 @@ var RemoteStoragePull = (function () {
    	function remoteStoragePull()
    	{
    		var forceEn = $("#dialog-remoteStoragePull input[name='forceEn']").is(':checked')? 1: 0;
+   		var deleteEn = $("#dialog-remoteStoragePull input[name='deleteEn']").is(':checked')? 1: 0;
    		var recurciveEn = $("#dialog-remoteStoragePull input[name='recurciveEn']").is(':checked')? 1: 0;
    		var pullEntryPath = $("#dialog-remoteStoragePull input[name='pullEntryPath']").val();
    		console.log("remoteStoragePull() pull entry:" + pullEntryPath);
@@ -20,6 +21,7 @@ var RemoteStoragePull = (function () {
 	            shareId: gShareId,
 	            recurciveEn : recurciveEn,
 	            forceEn : forceEn,
+	            deleteEn : deleteEn,
              },
              success : function (ret) {
             	console.log("remoteStoragePull ret:", ret);            		
@@ -234,13 +236,34 @@ var RemoteStoragePull = (function () {
 		        title: _Lang("确认操作"),
 		        okbtn: _Lang("确认"),
 		        qubtn: _Lang("取消"),
-		        msg: _Lang('文件可能被删除或覆盖，是否强制拉取？'),
+		        msg: _Lang('文件改动将被强制覆盖，是否强制拉取？'),
 		    },function(){
 		    	//确认
 		    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked","checked");
 		    },function(){
 				//取消
 		    	$("#dialog-remoteStoragePull input[name='forceEn']").attr("checked",false);			
+		    });
+		}
+	}
+	
+	function doSelectDeleteConfirm()
+	{
+		var deleteEn = $("#dialog-remoteStoragePull input[name='deleteEn']").is(':checked')? 1: 0;
+		if(deleteEn == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'deletePullConfirm',
+		        title: _Lang("确认操作"),
+		        okbtn: _Lang("确认"),
+		        qubtn: _Lang("取消"),
+		        msg: _Lang('文件可能被删除，是否允许删除？'),
+		    },function(){
+		    	//确认
+		    	$("#dialog-remoteStoragePull input[name='deleteEn']").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#dialog-remoteStoragePull input[name='deleteEn']").attr("checked",false);			
 		    });
 		}
 	}
@@ -264,6 +287,9 @@ var RemoteStoragePull = (function () {
         },   
         doSelectForceConfirm: function(){
         	doSelectForceConfirm();
+        }, 
+        doSelectDeleteConfirm: function(){
+        	doSelectDeleteConfirm();
         }, 
 	};
 })();

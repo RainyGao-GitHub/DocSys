@@ -505,9 +505,9 @@ function lang(str)
 		
 		//文件拉取
 		"拉取失败" : "Pull Failed",
-		"文件改动将被强制覆盖，是否强制拉取？" : "Local files will be replaced forcely, please confirm",
-		"文件可能被删除或覆盖，是否强制拉取？" : "Local files will be replaced forcely, please confirm",
-		"该操作将拉取目录下的所有文件，是否允许？" : "All files under this folder will be pulled, please confirm",
+		"文件改动将被强制覆盖，是否强制拉取？" 		: "Local files will be replaced forcely, please confirm",
+		"文件可能被删除，是否允许删除？" 			: "Local files may be deleted, please confirm",
+		"该操作将拉取目录下的所有文件，是否允许？" 	: "All files under this folder will be pulled, please confirm",
 		
 		//常用服务器管理
 		"本地服务器" : "Local Server",
