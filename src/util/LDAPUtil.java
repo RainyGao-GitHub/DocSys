@@ -398,6 +398,8 @@ public class LDAPUtil
 					return ldapLoginCheck(realUserName, pwd, config, checkResult);
 				}
 			}
+			checkResult.status = LdapLoginCheckResult.DomainNotExist;
+			return null;
 		}
 		
 		//如果没有对应domain的LDAPsever,那么逐个登录
