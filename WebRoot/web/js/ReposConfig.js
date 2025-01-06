@@ -1698,6 +1698,36 @@ var ReposConfig = (function () {
 		}
 	}
 	
+	/** 远程存储自动拉取选项 **/
+	function doSelectRemoteStorageAutoPullEnable()
+	{
+		var enable = MyJquery.isChecked("remoteStorage-autoPull");
+		console.log("doSelectRemoteStorageAutoPullEnable enable:" + enable);
+		if(enable == 0)
+		{
+			MyJquery.hide("remoteStorageAutoPullConfig");
+		}
+		else
+		{	
+			MyJquery.show("remoteStorageAutoPullConfig");
+		}
+	}
+	
+	/** 远程存储自动推送选项 **/
+	function doSelectRemoteStorageAutoPushEnable()
+	{
+		var enable = MyJquery.isChecked("remoteStorage-autoPush");
+		console.log("doSelectRemoteStorageAutoPushEnable enable:" + enable);
+		if(enable == 0)
+		{
+			MyJquery.hide("remoteStorageAutoPushConfig");
+		}
+		else
+		{	
+			MyJquery.show("remoteStorageAutoPushConfig");
+		}
+	}
+	
 	/********* 自动同步设置 *****************/
 	function doSelectAutoSyncupConfigEnable()
 	{
@@ -2233,6 +2263,12 @@ var ReposConfig = (function () {
 	    doSelectRemoteStorageFilterEnable: function(){
 	    	doSelectRemoteStorageFilterEnable();
 	    },
+	    doSelectRemoteStorageAutoPullEnable: function(){
+	    	doSelectRemoteStorageAutoPullEnable();
+	    },
+	    doSelectRemoteStorageAutoPushEnable: function(){
+	    	doSelectRemoteStorageAutoPushEnable();
+	    },	    
 	    doSelectVerCtrlEnable: function(){
 	    	doSelectVerCtrlEnable();
 	    },    
