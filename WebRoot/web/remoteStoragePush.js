@@ -52,13 +52,34 @@ function doSelectForceConfirm()
 	        title: _Lang("确认操作"),
 	        okbtn: _Lang("确认"),
 	        qubtn: _Lang("取消"),
-	        msg: _Lang('远程文件可能被删除或覆盖，是否强制推送？'),
+	        msg: _Lang('远程文件改动将被强制覆盖，是否强制推送？'),
 	    },function(){
 	    	//确认
 	    	$("#dialog-remoteStoragePush input[name='forceEn']").attr("checked","checked");
 	    },function(){
 			//取消
 	    	$("#dialog-remoteStoragePush input[name='forceEn']").attr("checked",false);			
+	    });
+	}
+}
+
+function doSelectDeleteConfirm()
+{
+	var deleteEn = $("#dialog-remoteStoragePush input[name='deleteEn']").is(':checked')? 1: 0;
+	if(deleteEn == 1)
+	{
+		qiao.bs.confirm({
+	        id: 'deletePullConfirm',
+	        title: _Lang("确认操作"),
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
+	        msg: _Lang('远程文件可能被删除，是否允许删除？'),
+	    },function(){
+	    	//确认
+	    	$("#dialog-remoteStoragePush input[name='deleteEn']").attr("checked","checked");
+	    },function(){
+			//取消
+	    	$("#dialog-remoteStoragePush input[name='deleteEn']").attr("checked",false);			
 	    });
 	}
 }
@@ -103,8 +124,9 @@ var RemoteStoragePush = (function () {
 	
    	function remoteStoragePush()
    	{
-   		var forceEn = $("#dialog-remoteStoragePush input[name='forceEn']").is(':checked')? 1: 0;
    		var recurciveEn = $("#dialog-remoteStoragePush input[name='recurciveEn']").is(':checked')? 1: 0;
+   		var forceEn = $("#dialog-remoteStoragePush input[name='forceEn']").is(':checked')? 1: 0;
+   		var deleteEn = $("#dialog-remoteStoragePush input[name='deleteEn']").is(':checked')? 1: 0;
    		
     	$.ajax({
              url : "/DocSystem/Bussiness/remoteStoragePush.do",
@@ -117,6 +139,7 @@ var RemoteStoragePush = (function () {
 	            shareId: gShareId,
 	            recurciveEn : recurciveEn,
 	            forceEn : forceEn,
+	            deleteEn : deleteEn,
              },
              success : function (ret) {
             	console.log("remoteStoragePush ret:", ret);            		

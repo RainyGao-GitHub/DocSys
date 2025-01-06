@@ -311,25 +311,17 @@ public class LDAPUtil
 			String configStr = configs[i];
 			if(!configStr.isEmpty())
 			{
-				String [] subStr = configStr.split("=");
-				if(subStr.length >= 2)
+				String key = null;
+				String value = "";
+
+				int sepPos = configStr.indexOf("=");
+				if(sepPos > 0)
 				{
-					String key = subStr[0];
-					String value = subStr[1];
-					if(key.equals("filter") || key.equals("userAccount"))	//将等号补回来
+					key = configStr.substring(0, sepPos).trim();
+					if(sepPos < (configStr.length() - 1))
 					{
-						if(subStr.length > 2)
-						{
-							for(int j=2; j < subStr.length -1; j++)
-							{
-								value = value + "=" + subStr[j];
-							}
-							value = value + "=" + subStr[subStr.length -1];				
-						}
+						value = configStr.substring(sepPos + 1).trim();
 					}
-					//TODO: 去除前后的空格
-					key = key.trim();
-					value = value.trim();
 					settings.put(key, value);
 					Log.debug("getLDAPSettings() " + key + " : " + value);
 				}
