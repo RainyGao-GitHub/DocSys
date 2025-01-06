@@ -348,13 +348,15 @@ public class LDAPUtil
         	Log.info("ldapLoginCheck() ldapConfigList is empty");
 			return null;
 		}
+
+    	Log.info("ldapLoginCheck() userName:" + userName);
         
         //判断userName是否带域名
         String realUserName = userName;
         String domain = null;
         String[] strArray = null;
         //先用反斜杠进行拆分
-        strArray = userName.split("\\");
+        strArray = userName.split("\\\\");
         //如果反斜杠没有的话尝试用正斜杠拆分
         if(strArray.length <= 1)
         {
@@ -424,6 +426,7 @@ public class LDAPUtil
 
 	public static User ldapLoginCheck(String userName, String pwd, LDAPConfig ldapConfig, LdapLoginCheckResult checkResult)
 	{
+		Log.info("ldapLoginCheck() url:" + ldapConfig.url + " userName:" + userName); 
 		//使用管理员账号连接ldap服务器
 		LdapContext ctx = getLDAPConnection(ldapConfig.userAccount, ldapConfig.userPassword, ldapConfig);
 		if(ctx == null)

@@ -1611,6 +1611,8 @@ public class ManageController extends BaseController{
 		{
 			String testUser = systemLdapConfig.ldapConfigList.get(0).settings.getString("testUser");
 			String testUserPassword = systemLdapConfig.ldapConfigList.get(0).settings.getString("testUserPassword");
+			Log.debug("");
+			Log.debug("ldapTest() testUser:" + testUser + " testUserPassword:" + testUserPassword);
 			if(testUser == null || testUser.isEmpty())
 			{
 				testUser = "test";
