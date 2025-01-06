@@ -166,11 +166,37 @@
 				</div>			    
 		 	    <div id="remoteStorageProtocolConfig" style="margin-top:10px; display:none">
 		        	<input class="form-control" type="text" id="remoteStorage"  placeholder="sftp://192.168.0.1:22;userName=test;pwd=123456;"  value="" style="margin-top:10px;width: 86%"/>
-		    		<label style="margin-left:1px">AutoPull<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPull" value="0"></span></label>
-			        <label style="margin-left:10px">ForcePull<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPullForce" value="0"></span></label>
-			        <label style="margin-left:15px">AutoPush<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPush" value="0"></span></label>
-			        <label style="margin-left:10px">ForcePush<span style="margin-left:3px"><input type="checkbox" id="remoteStorage-autoPushForce" value="0"></span></label>	    		
 				</div>
+
+            	<label style="margin-top:10px">AutoPull
+            		<span style="margin-left:5px">
+            			<input type="checkbox" id="remoteStorage-autoPull" value="0" onclick="ReposConfig.doSelectRemoteStorageAutoPullEnable()">
+            		</span>
+            	</label>
+				<div id="remoteStorageAutoPullConfig" style="margin-top:5px; display:none">
+					<div style="height:30px;">
+						<span>Allow Overwrite Local Changes<input type="checkbox" id="remoteStorage-autoPullForce" value="0" style="margin-left:25px"></span>
+					</div> 
+					<div style="height:30px;">
+						<span>Allow Delete Local Files<input type="checkbox" id="remoteStorage-autoPullDelete" value="0" style="margin-left:25px"></span>
+					</div> 
+				</div>
+				<div></div>
+            	<label style="margin-top:10px">AutoPush
+            		<span style="margin-left:5px">
+            			<input type="checkbox" id="remoteStorage-autoPush" value="0" onclick="ReposConfig.doSelectRemoteStorageAutoPushEnable()">
+            		</span>
+            	</label>
+				<div id="remoteStorageAutoPushConfig" style="margin-top:5px; display:none">
+					<div style="height:30px;">
+						<span>Allow Overwrite Remote Changes<input type="checkbox" id="remoteStorage-autoPushForce" value="0" style="margin-left:25px"></span>
+					</div> 
+					<div style="height:30px;">
+						<span>Allow Delete Remote Files<input type="checkbox" id="remoteStorage-autoPushDelete" value="0" style="margin-left:25px"></span>
+					</div> 
+				</div>					       	
+				<div></div>						
+				
             	<label style="margin-top:10px">Advanced Options
             		<span style="margin-left:5px">
             			<input type="checkbox" id="remoteStorageFilterEnable" value="0" onclick="ReposConfig.doSelectRemoteStorageFilterEnable()">
