@@ -293,7 +293,7 @@ var ReposConfig = (function () {
 	   		$("#remoteStorage-autoPullForce").attr("checked",false);
 	   	}
 	   	
-	   	if(remoteStorageConfig.autoPullDelete != undefined && remoteStorageConfig.autoPullDelete == 1)
+	   	if(remoteStorageConfig.autoPullSkipDelete != undefined && remoteStorageConfig.autoPullSkipDelete == false)
 	   	{
 			$("#remoteStorage-autoPullDelete").attr("checked","checked");
 	   	}
@@ -344,7 +344,7 @@ var ReposConfig = (function () {
 	   		$("#remoteStorage-autoPushForce").attr("checked",false);
 	   	}
 	   	
-	   	if(remoteStorageConfig.autoPushDelete != undefined && remoteStorageConfig.autoPushDelete == 1)
+	   	if(remoteStorageConfig.autoPushSkipDelete != undefined && remoteStorageConfig.autoPushSkipDelete == false)
 	   	{
 			$("#remoteStorage-autoPushDelete").attr("checked","checked");
 	   	}
