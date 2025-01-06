@@ -1699,11 +1699,13 @@ var ReposConfig = (function () {
 	    var remoteStorage = MyJquery.getValue("remoteStorage"); //remoteStorage
 		var autoPull = MyJquery.isChecked("remoteStorage-autoPull");
 		var autoPullForce = MyJquery.isChecked("remoteStorage-autoPullForce");
+		var autoPullDelete = MyJquery.isChecked("remoteStorage-autoPullDelete");
 		var autoPush = MyJquery.isChecked("remoteStorage-autoPush");
 		var autoPushForce = MyJquery.isChecked("remoteStorage-autoPushForce");
+		var autoPushDelete = MyJquery.isChecked("remoteStorage-autoPushDelete");
 	    if(remoteStorage != undefined && remoteStorage != "")
 		{
-	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce;
+	    	remoteStorage += ";autoPull=" + autoPull + ";autoPullForce=" + autoPullForce + ";autoPullDelete=" + autoPullDelete + ";autoPush=" + autoPush + ";autoPushForce=" + autoPushForce + ";autoPushDelete=" + autoPushDelete;
 			remoteStorage = prefix + remoteStorage;
 		}
 	    console.log("getRemoteStorageConfig remoteStorage:" + remoteStorage);

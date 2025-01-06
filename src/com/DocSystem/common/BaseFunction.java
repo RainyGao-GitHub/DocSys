@@ -3625,7 +3625,7 @@ public class BaseFunction{
 			remote.autoPushForce = 0;
 		}
 		
-		remote.autoPushSkipDelete = isSkipDelete( config.getInteger("autoPushSkipDelete"));
+		remote.autoPushSkipDelete = isSkipDelete( config.getInteger("autoPushDelete"));
 		
 		//autoPullSettings
 		remote.autoPull = config.getInteger("autoPull");
@@ -3640,7 +3640,7 @@ public class BaseFunction{
 			remote.autoPullForce = 0;
 		}
 		
-		remote.autoPullSkipDelete = isSkipDelete( config.getInteger("autoPullSkipDelete"));
+		remote.autoPullSkipDelete = isSkipDelete( config.getInteger("autoPullDelete"));
 	}
 
 	
