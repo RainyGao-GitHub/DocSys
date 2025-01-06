@@ -327,6 +327,9 @@ public class LDAPUtil
 							value = value + "=" + subStr[subStr.length -1];				
 						}
 					}
+					//TODO: 去除前后的空格
+					key = key.trim();
+					value = value.trim();
 					settings.put(key, value);
 					Log.debug("getLDAPSettings() " + key + " : " + value);
 				}
