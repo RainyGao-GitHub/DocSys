@@ -255,17 +255,36 @@ var ReposConfig = (function () {
 		
 		var remoteStorage =  buildRemoteStorageConfigStr(reposInfo.remoteStorageConfig);
 		$("#remoteStorage").val(remoteStorage);
+	   	
+	   	showRemoteStorageAutoPullConfig(reposInfo.remoteStorageConfig);
+
+	   	showRemoteStorageAutoPushConfig(reposInfo.remoteStorageConfig);
+
+	   	showRemoteStorageFilterConfig(reposInfo.remoteStorageConfig);
+	}
+	
+	function showRemoteStorageAutoPullConfig(remoteStorageConfig)
+	{
+		console.log("showRemoteStorageAutoPullConfig remoteStorageConfig:", remoteStorageConfig);
+		if(remoteStorageConfig == undefined)
+		{
+			return;
+		}
 		
-	   	if(reposInfo.remoteStorageConfig.autoPull != undefined && reposInfo.remoteStorageConfig.autoPull == 1)
+		var remoteStorageAutoPullEnable = 0;
+		
+	   	if(remoteStorageConfig.autoPull != undefined && remoteStorageConfig.autoPull == 1)
 	   	{
+	   		remoteStorageAutoPullEnable = 1;
 	   		$("#remoteStorage-autoPull").attr("checked","checked");
 	   	}
 	   	else
 	   	{
+	   		remoteStorageAutoPullEnable = 0;
 	   		$("#remoteStorage-autoPull").attr("checked",false);
 	   	}
 	   		
-	   	if(reposInfo.remoteStorageConfig.autoPullForce != undefined && reposInfo.remoteStorageConfig.autoPullForce == 1)
+	   	if(remoteStorageConfig.autoPullForce != undefined && remoteStorageConfig.autoPullForce == 1)
 	   	{
 			$("#remoteStorage-autoPullForce").attr("checked","checked");
 	   	}
@@ -273,26 +292,77 @@ var ReposConfig = (function () {
 	   	{
 	   		$("#remoteStorage-autoPullForce").attr("checked",false);
 	   	}
-	   		
-	   	if(reposInfo.remoteStorageConfig.autoPush != undefined && reposInfo.remoteStorageConfig.autoPush == 1)
+	   	
+	   	if(remoteStorageConfig.autoPullDelete != undefined && remoteStorageConfig.autoPullDelete == 1)
 	   	{
+			$("#remoteStorage-autoPullDelete").attr("checked","checked");
+	   	}
+	   	else
+	   	{
+	   		$("#remoteStorage-autoPullDelete").attr("checked",false);
+	   	}
+		
+		if(remoteStorageAutoPullEnable == 0)
+		{
+			//隐藏自动拉取选项
+			$("#remoteStorageAutoPullConfig").hide();
+		}
+		else
+		{
+			//显示自动拉取选项
+			$("#remoteStorageAutoPullConfig").show();
+		}
+	}
+	
+	function showRemoteStorageAutoPushConfig(remoteStorageConfig)
+	{
+		console.log("showRemoteStorageAutoPushConfig remoteStorageConfig:", remoteStorageConfig);
+		if(remoteStorageConfig == undefined)
+		{
+			return;
+		}
+		
+		var remoteStorageAutoPushEnable = 0;
+		
+	   	if(remoteStorageConfig.autoPush != undefined && remoteStorageConfig.autoPush == 1)
+	   	{
+	   		remoteStorageAutoPushEnable = 1;
 	   		$("#remoteStorage-autoPush").attr("checked","checked");
 	   	}
 	   	else
 	   	{
-			$("#remoteStorage-autoPush").attr("checked",false);
+	   		remoteStorageAutoPushEnable = 0;
+	   		$("#remoteStorage-autoPush").attr("checked",false);
 	   	}
-	   	
-	   	if(reposInfo.remoteStorageConfig.autoPushForce != undefined && reposInfo.remoteStorageConfig.autoPushForce == 1)
+	   		
+	   	if(remoteStorageConfig.autoPushForce != undefined && remoteStorageConfig.autoPushForce == 1)
 	   	{
-	   		$("#remoteStorage-autoPushForce").attr("checked","checked");
+			$("#remoteStorage-autoPushForce").attr("checked","checked");
 	   	}
 	   	else
 	   	{
 	   		$("#remoteStorage-autoPushForce").attr("checked",false);
 	   	}
 	   	
-	   	showRemoteStorageFilterConfig(reposInfo.remoteStorageConfig);
+	   	if(remoteStorageConfig.autoPushDelete != undefined && remoteStorageConfig.autoPushDelete == 1)
+	   	{
+			$("#remoteStorage-autoPushDelete").attr("checked","checked");
+	   	}
+	   	else
+	   	{
+	   		$("#remoteStorage-autoPushDelete").attr("checked",false);
+	   	}
+		
+		if(remoteStorageAutoPushEnable == 0)
+		{
+			//隐藏自动推送选项
+			$("#remoteStorageAutoPushConfig").hide();
+		}
+		else
+		{
+			//显示自动推送选项
+			$("#remoteStorageAutoPushConfig").show();
+		}
 	}
 	
 	function showRemoteStorageFilterConfig(remoteStorageConfig)
