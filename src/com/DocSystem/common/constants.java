@@ -169,7 +169,7 @@ public class constants {
 		public final static int pushLocalChangedOrRemoteChanged 					= 30;	//适用于强制推送本地文件的场景（自动或手动强制推送、备份到版本仓库，远程的改动将被强制覆盖）
 		public final static int pushLocalChangedWithoutRemoteCheck					= 40;	//适用于远程目标没有参考意义的场景（例如自动备份到按时间创建的目录，或则推送远程服务器）
 		public final static int pushLocalChangedWithoutRemoteCheckForce				= 50;	//适用于远程目标没有参考意义而且需要删除远程多余文件的场景（例如推送到远程服务器）
-		public final static int force  												= 100;	//适用于基于行为的推送	
+		public final static int force  												= 100;	//适用于基于行为的推送（目前的基于行为的是直接调用了底层的接口）	
 	}
 	
 	public class PullType  {
@@ -178,7 +178,7 @@ public class constants {
 		public final static int pullRemoteChangedOrLocalChanged 					= 30;	//适用于强制拉取远程文件的场景（自动或手动强制拉取，本地的将被强制覆盖）
 		public final static int pullRemoteChangedWithoutLocalCheck					= 40;	//适用于本地目标没有参考意义的场景（例如前置仓库）
 		public final static int pullRemoteChangedWithoutLocalCheckForce				= 50;	//适用于本地目标需要和远程保持完全一致的情况（例如前置仓库：远程文件不存在会当作删除操作进行拉取）
-		public final static int force  												= 100;	//适用于基于行为的拉取（目前没有使用场景，因为远程的行为无法获取）
+		public final static int force  												= 100;	//适用于基于行为的拉取（前置仓库单个文件的下载、编辑、版本回退）
 	}
 	
 	public class DocUpload  {
