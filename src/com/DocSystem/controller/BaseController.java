@@ -5860,10 +5860,14 @@ public class BaseController  extends BaseFunction{
 						if(remoteStoragePushEnable && remote.autoPush != null && remote.autoPush == 1)
 						{
 							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动推送  remote.autoPush:" + remote.autoPush + "  remote.autoPushForce:" +  remote.autoPushForce + "  remote.autoPushSkipDelete:" +  remote.autoPushSkipDelete);
-							int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged;
-							if(remote.autoPushForce == 1)
+							int pushType = constants.PushType.pushLocalAddAndRemoteNotChanged;	//localAdd only
+							if(remote.autoPushAddOnly == false)
 							{
-								pushType = constants.PushType.pushLocalChangedOrRemoteChanged;
+								pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged; //localChanged and remoteNotChanged
+								if(remote.autoPushForce == 1)
+								{
+									pushType = constants.PushType.pushLocalChangedOrRemoteChanged;
+								}
 							}
 							channel.remoteStoragePush(remote, repos, doc, login_user,  "远程存储自动推送", subDocSyncupFlag == 2, pushType, remote.autoPushSkipDelete, rt);
 						}				
@@ -5871,12 +5875,15 @@ public class BaseController  extends BaseFunction{
 						if(remoteStoragePullEnable && remote.autoPull != null && remote.autoPull == 1)
 						{
 							Log.info("syncUpLocalWithRemoteStorage() 远程存储自动拉取  remote.autoPull:" + remote.autoPull + "  remote.autoPullForce:" +  remote.autoPullForce + "  remote.autoPullSkipDelete:" +  remote.autoPullSkipDelete);
-							int pullType = constants.PullType.pullRemoteAddAndLocalNotChanged; //remoteAdded and localNotChanged
-							if(remote.autoPullForce == 1)
+							int pullType = constants.PullType.pullRemoteAddAndLocalNotChanged; //remoteAdd only
+							if(remote.autoPullAddOnly == false)
 							{
-								pullType = constants.PullType.pullRemoteChangedAndLocalNotChanged;	//remoteChanged and localNotChanged
+								pullType = constants.PullType.pullRemoteChangedAndLocalNotChanged; //remoteChanged and localNotChanged
+								if(remote.autoPullForce == 1)
+								{
+									pullType = constants.PullType.pullRemoteChangedOrLocalChanged;	//remoteChanged or localChanged
+								}
 							}
-							
 							channel.remoteStoragePull(remote, repos, doc, login_user, null, subDocSyncupFlag == 2, pullType, remote.autoPullSkipDelete, rt);
 						    
 							DocPullContext pullResult = (DocPullContext) rt.getDataEx();
@@ -15569,10 +15576,14 @@ public class BaseController  extends BaseFunction{
 		
 		//push Options
 		boolean recurcive = true;
-		int pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged;
-		if(remote.autoPushForce == 1)
+		int pushType = constants.PushType.pushLocalAddAndRemoteNotChanged;
+		if(remote.autoPushAddOnly == false)
 		{
-			pushType = constants.PushType.pushLocalChangedOrRemoteChanged;
+			pushType = constants.PushType.pushLocalChangedAndRemoteNotChanged;
+			if(remote.autoPushForce == 1)
+			{
+				pushType = constants.PushType.pushLocalChangedOrRemoteChanged;
+			}
 		}
 		boolean skipDelete = remote.autoPushSkipDelete;
 		

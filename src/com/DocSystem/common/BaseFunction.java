@@ -6497,4 +6497,9 @@ public class BaseFunction{
 	{
 		return deleteEn != null? (deleteEn != 1) : true;
 	}
+
+	public static boolean isAddOnly(Integer addOnly) 
+	{
+		return addOnly != null? (addOnly == 1) : false;
+	}
 }

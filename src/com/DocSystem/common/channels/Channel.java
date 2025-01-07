@@ -230,6 +230,7 @@ public interface Channel {
 			Integer recurciveEn, //null/0: false, 1: true
 			Integer forceEn, //null/0: false, 1: true
 			Integer deleteEn, //null/0: false, 1: true
+			Integer addOnly, //null/0: false, 1: true
 			Integer shareId, String authCode, //
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception;
 	

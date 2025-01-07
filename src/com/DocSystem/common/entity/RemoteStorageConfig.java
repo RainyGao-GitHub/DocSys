@@ -14,9 +14,11 @@ public class RemoteStorageConfig  implements Serializable {
 	public String protocol;
 	public String rootPath;	//remote root path
 	public Integer autoPull = 0;
+	public boolean autoPullAddOnly = false;
 	public Integer autoPullForce = 0;
 	public boolean autoPullSkipDelete = true;	
 	public Integer autoPush = 0;
+	public boolean autoPushAddOnly = false;
 	public Integer autoPushForce = 0;
 	public boolean autoPushSkipDelete = true;
 	public LocalConfig FILE = null;
@@ -35,5 +37,5 @@ public class RemoteStorageConfig  implements Serializable {
 	public ConcurrentHashMap<String, Integer> notAllowedFileTypeHashMap = null;
 	public Integer isUnkownFileAllowed = null;
 	
-	public ConcurrentHashMap<String, Integer> ignoreHashMap = null;	
+	public ConcurrentHashMap<String, Integer> ignoreHashMap = null;
 }
