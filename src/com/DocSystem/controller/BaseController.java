@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16060,9 +16061,31 @@ public class BaseController  extends BaseFunction{
 		
 		//stopReposSyncupTasks
 		//go through all syncupTask and close all task
+        List<Long> deleteList = new ArrayList<Long>();
 		for (GenericTask value : syncupTaskHashMap.values()) {
 			Log.info("addDelayTaskForReposSyncUp() stop syncupTask:" + value.createTime);			
 			value.stopFlag = true;
+			if(value.scheduledFuture == null)
+			{
+				//任务没有启动线程，可以直接终止，加入到删除类别
+				deleteList.add(value.createTime);
+			}
+			else
+			{
+				//终止任务: 如果已经开始了则忽略
+				boolean mayInterruptIfRunning = false; 
+				if(value.scheduledFuture.cancel(mayInterruptIfRunning) == true)
+				{
+					//任务如果取消成功，则加入删除列表中，否则等待任务自行清除（任务会根据stopFlag来终止）
+					deleteList.add(value.createTime);
+				}
+			}
+		}
+		
+		//清除取消成功或者没有线程的任务
+		for(Long taskId : deleteList)
+		{
+			syncupTaskHashMap.remove(taskId);
 		}
 		
 		//startReposSyncupTask
@@ -16070,8 +16093,9 @@ public class BaseController  extends BaseFunction{
 		syncupTask.createTime = curTime;
 		syncupTaskHashMap.put(curTime, syncupTask);
 
-		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);		
-		executor.schedule(
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+		//保存该schedule，方便未来进行取消，比如配置进行了修改
+		syncupTask.scheduledFuture = executor.schedule(
         		new Runnable() {
         			long createTime = curTime;
         			int reposId = repos.getId();

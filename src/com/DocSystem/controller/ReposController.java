@@ -1237,12 +1237,9 @@ public class ReposController extends BaseController{
 		
 		if(autoSyncup != null)
 		{
-			//Save Old autoBackupConfig
-			ReposSyncupConfig oldAutoSyncupConfig = reposInfo.autoSyncupConfig;
-			
 			setReposAutoSyncup(reposInfo, autoSyncup);
 			initReposAutoSyncupConfig(reposInfo, autoSyncup);
-			if(reposInfo.autoSyncupConfig != null && oldAutoSyncupConfig == null)
+			if(reposInfo.autoSyncupConfig != null)
 			{
 				addDelayTaskForReposSyncUp(reposInfo, 10, 600L); //10分钟后自动同步
 			}
