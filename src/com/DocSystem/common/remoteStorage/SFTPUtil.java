@@ -117,7 +117,10 @@ public class SFTPUtil {
     	Vector<?> list = null;
         try {        	
         	list = sftp.ls(directory);
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
+        	Log.debug("listFiles() directory:" + directory + " 异常!");
         	Log.debug(e);
         }
         return list;
@@ -131,6 +134,7 @@ public class SFTPUtil {
             sftp.put(input, sftpFileName);  //上传文件
             ret = true;
         } catch (Exception e) {
+        	Log.debug("upload() directory:" + directory +  " sftpFileName:" + sftpFileName + " 异常!");
         	Log.debug(e);
         }
         return ret;
@@ -142,12 +146,17 @@ public class SFTPUtil {
 
 		Log.debug("upload remotePath:" + remotePath + " localPath:" + localPath + " fileName:" + fileName);
 
-		try {
+		try 
+		{
         	is = new FileInputStream(localPath + fileName);
         	ret = upload(remotePath, fileName, is);   
-		} catch (Exception e) {
+		} 
+		catch (Exception e) 
+		{
+			Log.debug("upload() remotePath:" + remotePath +  " localPath:" + localPath + " 异常!");
 			Log.debug(e);
-		} finally {
+		} 
+		finally {
 			if(is != null)
 			{
 				try {
@@ -178,9 +187,13 @@ public class SFTPUtil {
             os = new FileOutputStream(file);
             sftp.get(remotePath + fileName, os);
             ret = true;
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        } finally {
+        } 
+        catch (Exception e1) 
+        {
+        	Log.debug("download() remotePath:" + remotePath +  " localPath:" + localPath + " fileName:" + fileName + " 异常!");
+            Log.debug(e1);
+        } 
+        finally {
         	if(os != null)
         	{
         		try {
@@ -199,8 +212,11 @@ public class SFTPUtil {
     	try {
             sftp.mkdir(directory);
             ret =  true;
-        } catch (Exception e) {
-        	Log.debug(e);
+        } 
+    	catch (Exception e) 
+    	{
+    		Log.debug("mkdir() directory:" + directory + " 异常!");
+            Log.debug(e);
         }
     	return ret;
     }
@@ -238,7 +254,10 @@ public class SFTPUtil {
 				}
 			}
 			ret = delDir(directory, fileName);
-		} catch (Exception e) {
+		} 
+		catch (Exception e)
+		{
+			Log.debug("delDirs() directory:" + directory + " fileName:" + fileName + " 异常!");
 			Log.debug(e);
 		}
     	return ret;
@@ -249,8 +268,10 @@ public class SFTPUtil {
     	try {
             sftp.rmdir(directory + fileName);
             ret =  true;
-        } catch (Exception e) {
-			Log.debug("delDir() delete file [" + directory + fileName + "] Failed");
+        }
+    	catch (Exception e) 
+    	{
+			Log.debug("delDir() directory:" + directory + " fileName:" + fileName + " 异常!");
         	Log.debug(e);
         }
     	return ret;
@@ -261,8 +282,10 @@ public class SFTPUtil {
     	try {
             sftp.rm(directory + fileName);
             ret =  true;
-        } catch (Exception e) {
-			Log.debug("delFile() delete file [" + directory + fileName + "] Failed");
+        } 
+    	catch (Exception e) 
+    	{
+			Log.debug("delFile() directory:" + directory + " fileName:" + fileName + " 异常!");
         	Log.debug(e);
         }
     	return ret;
@@ -319,7 +342,10 @@ public class SFTPUtil {
 	    			}
             	}
 			}
-        } catch (Exception e) {
+        }
+		catch (Exception e) 
+		{
+			Log.debug("copyDir() srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName + " 异常!");
         	Log.debug(e);
 		}
         return ret;
@@ -337,7 +363,10 @@ public class SFTPUtil {
         	sftp.put(is, dstRemotePath + dstName);
             Log.debug("copyFile() " + dstRemotePath + dstName + " put ok ");
         	ret = true;
-        } catch (Exception e1) {
+        } 
+        catch (Exception e1) 
+        {
+			Log.debug("copyFile() srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName + " 异常!");
 			Log.debug(e1);
 		} finally {
 			if(is != null)
@@ -369,7 +398,10 @@ public class SFTPUtil {
     	try {
             sftp.rename(srcRemotePath + srcName, dstRemotePath + dstName);
             ret =  true;
-        } catch (Exception e) {
+        } 
+    	catch (Exception e) 
+    	{
+    		Log.debug("move() srcRemotePath:" + srcRemotePath + " srcName:" + srcName + " dstRemotePath:" + dstRemotePath + " dstName:" + dstName + " 异常!");			
         	Log.debug(e);
         }
         return ret;        
@@ -377,10 +409,14 @@ public class SFTPUtil {
 
     //切换目录
     public void cd(String directory) {
-        try {
+        try 
+        {
 			sftp.cd(directory);
-		} catch (Exception e) {
-			Log.debug(e);
+		}
+        catch (Exception e) 
+        {
+        	Log.debug("cd() directory:" + directory + " 异常!");			
+        	Log.debug(e);
 		}
     }
 
@@ -390,7 +426,10 @@ public class SFTPUtil {
     	try {
 			sftp.cd(directory);
 			ret = true;
-        } catch (Exception e) {
+        } 
+    	catch (Exception e) 
+    	{
+    		Log.debug("isDirExists() directory:" + directory + " 异常!");
         	Log.debug(e);
 		}
         return ret;
@@ -412,6 +451,7 @@ public class SFTPUtil {
         try {
             sftp.ls(directory, selector);
         } catch (Exception e) {
+        	Log.debug("isFileExists() directory:" + directory + " fileName:" + fileName + " 异常!");
             Log.debug(e);
         }
  
