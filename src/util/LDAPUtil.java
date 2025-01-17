@@ -387,7 +387,7 @@ public class LDAPUtil
 	
 	public static User multiLdapLoginCheck(String domain, String realUserName, String pwd, SystemLDAPConfig systemLdapConfig, LdapLoginCheckResult checkResult)
 	{
-		//如果登录用户没有指定域名，那么只有明确不需要进行域名检查的LDAPServer才能进行校验
+		//如果登录用户没有指定域名，domainCheck或者domainCheck=0我们都认为允许不带域名登录
 		if(domain == null || domain.isEmpty())
 		{
 			User user = null;
@@ -395,7 +395,7 @@ public class LDAPUtil
 			{
 				//TODO: 如果不指定domainCheck，那么允许不带域名登录
 				Integer domainCheck = config.settings.getInteger("domainCheck");
-				if(domainCheck != null && domainCheck != 1)
+				if(domainCheck == null || domainCheck == 0)
 				{
 					user = ldapLoginCheck(realUserName, pwd, config, checkResult);
 					if(user != null)
@@ -422,6 +422,7 @@ public class LDAPUtil
 			}
 		}
 		checkResult.status = LdapLoginCheckResult.DomainNotExist;
+		checkResult.info = "DomainNotExist";		
 		return null;		
 	}
 
@@ -455,11 +456,11 @@ public class LDAPUtil
 			return null;
 		}
 		
-		if(list == null || list.size() == 0)
+		if(list.size() > 1)
 		{
 			Log.debug("ldapLoginCheck() 系统出现重名用户");
 			checkResult.status = -2;
-			checkResult.info = "UserNotExist";			
+			checkResult.info = "DuplicatedUser";			
 			return null;
 		}
 		
@@ -472,6 +473,7 @@ public class LDAPUtil
 		{
 			Log.debug("ldapLoginCheck() 密码错误"); 
 			checkResult.status = -3;
+			checkResult.info = "PasswordError";
 			return null;
 		}
 		try {
