@@ -14225,7 +14225,7 @@ public class BaseController  extends BaseFunction{
 			{
 				Log.info("docSysInit() 数据库连接测试失败 (SytemtStart triggered docSysInit)");
 				//系统启动时的初始化force要设置成false,否则数据库初始化时间过长会导致服务器重启
-				Log.info("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!");		
+				Log.info("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!【注意这只是提示信息不是报错，请直接登录系统】");		
 
 				FileUtil.saveDocContentToFile("ERROR_DBNotExists", docSysIniPath,  "docSysIniState", "UTF-8");
 				return "ERROR_DBNotExists";
