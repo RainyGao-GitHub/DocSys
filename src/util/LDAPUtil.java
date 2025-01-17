@@ -387,38 +387,42 @@ public class LDAPUtil
 	
 	public static User multiLdapLoginCheck(String domain, String realUserName, String pwd, SystemLDAPConfig systemLdapConfig, LdapLoginCheckResult checkResult)
 	{
-		//如果找到有对应名字的LDAPServer则可以直接登录
-		if(domain != null && domain.isEmpty() == false)
+		//如果登录用户没有指定域名，那么只有明确不需要进行域名检查的LDAPServer才能进行校验
+		if(domain == null || domain.isEmpty())
 		{
-			String domainLowCase = domain.toLowerCase();
+			User user = null;
 			for(LDAPConfig config : systemLdapConfig.ldapConfigList)
 			{
-				if(config.name != null && config.name.toLowerCase().equals(domainLowCase))
+				//TODO: 如果不指定domainCheck，那么允许不带域名登录
+				Integer domainCheck = config.settings.getInteger("domainCheck");
+				if(domainCheck != null && domainCheck != 1)
 				{
-					return ldapLoginCheck(realUserName, pwd, config, checkResult);
-				}
+					user = ldapLoginCheck(realUserName, pwd, config, checkResult);
+					if(user != null)
+					{
+						return user;
+					}
+					//登录失败要看情况，如果是密码错误，那么不允许继续			
+					if(checkResult.status == LdapLoginCheckResult.PasswordError)
+					{
+						return null;
+					}
+				}					
 			}
-			checkResult.status = LdapLoginCheckResult.DomainNotExist;
-			return null;
+			return user;			
 		}
 		
-		//如果没有对应domain的LDAPsever,那么逐个登录
-		User user = null;
+		//TODO: 如果登录用户指定了域名，那么查找对应域的LDAPServer进行校验		
+		String domainLowCase = domain.toLowerCase();
 		for(LDAPConfig config : systemLdapConfig.ldapConfigList)
 		{
-			user = ldapLoginCheck(realUserName, pwd, config, checkResult);
-			if(user != null)
+			if(config.name != null && config.name.toLowerCase().equals(domainLowCase))
 			{
-				return user;
-			}
-			
-			//登录失败要看情况，如果是密码错误，那么不允许继续			
-			if(checkResult.status == LdapLoginCheckResult.PasswordError)
-			{
-				return null;
+				return ldapLoginCheck(realUserName, pwd, config, checkResult);
 			}
 		}
-		return user;
+		checkResult.status = LdapLoginCheckResult.DomainNotExist;
+		return null;		
 	}
 
 	public static User ldapLoginCheck(String userName, String pwd, LDAPConfig ldapConfig, LdapLoginCheckResult checkResult)
@@ -447,6 +451,7 @@ public class LDAPUtil
 		{
 			Log.debug("ldapLoginCheck() 用户不存在");
 			checkResult.status = -1;
+			checkResult.info = "UserNotExist";			
 			return null;
 		}
 		
@@ -454,6 +459,7 @@ public class LDAPUtil
 		{
 			Log.debug("ldapLoginCheck() 系统出现重名用户");
 			checkResult.status = -2;
+			checkResult.info = "UserNotExist";			
 			return null;
 		}
 		

@@ -7,5 +7,6 @@ public class LdapLoginCheckResult
 	public static final int PasswordError 	= -3;
 	public static final int DomainNotExist 	= -4;
 		
-	public int status;	
+	public int status;
+	public String info;
 }
