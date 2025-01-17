@@ -381,6 +381,7 @@ public class LDAPUtil
         if(user != null)
         {
         	user.setName(userName);
+			checkResult.status = LdapLoginCheckResult.Success;
         }
         return user;
 	}
@@ -407,7 +408,11 @@ public class LDAPUtil
 					{
 						return null;
 					}
-				}					
+				}
+				else
+				{
+					Log.debug("multiLdapLoginCheck() [" + config.name + "] [" + config.url + "] 不支持不带域名的账号登录");
+				}
 			}
 			return user;			
 		}
@@ -428,7 +433,7 @@ public class LDAPUtil
 
 	public static User ldapLoginCheck(String userName, String pwd, LDAPConfig ldapConfig, LdapLoginCheckResult checkResult)
 	{
-		Log.info("ldapLoginCheck() url:" + ldapConfig.url + " userName:" + userName); 
+		Log.info("ldapLoginCheck() [" + ldapConfig.name + "] [" + ldapConfig.url + "] userName:" + userName); 
 		//使用管理员账号连接ldap服务器
 		LdapContext ctx = getLDAPConnection(ldapConfig.userAccount, ldapConfig.userPassword, ldapConfig);
 		if(ctx == null)
@@ -451,7 +456,7 @@ public class LDAPUtil
 		if(list == null || list.size() == 0)
 		{
 			Log.debug("ldapLoginCheck() 用户不存在");
-			checkResult.status = -1;
+			checkResult.status = LdapLoginCheckResult.UserNotExist;
 			checkResult.info = "UserNotExist";			
 			return null;
 		}
@@ -459,7 +464,7 @@ public class LDAPUtil
 		if(list.size() > 1)
 		{
 			Log.debug("ldapLoginCheck() 系统出现重名用户");
-			checkResult.status = -2;
+			checkResult.status = LdapLoginCheckResult.DuplicatedUser;
 			checkResult.info = "DuplicatedUser";			
 			return null;
 		}
@@ -472,7 +477,7 @@ public class LDAPUtil
 		if(ctx == null)
 		{
 			Log.debug("ldapLoginCheck() 密码错误"); 
-			checkResult.status = -3;
+			checkResult.status = LdapLoginCheckResult.PasswordError;
 			checkResult.info = "PasswordError";
 			return null;
 		}
