@@ -2855,26 +2855,23 @@ public class BaseController  extends BaseFunction{
 		
 		//TODO: 检查是否出现重名用户
 		Log.debug("defaultLoginCheck() uLists size:" + uLists.size());
-		int systemUserCount = 0;
-		for(int i = 0; i < uLists.size(); i++)
+		if(uLists.size() > 1)
 		{
-			if(uLists.get(i).getCreateType() < 10)
-			{
-				systemUserCount ++;
-				if(systemUserCount > 1)
-				{
-					break;
-				}
-			}
-		}
-		if(systemUserCount != 1)
-		{
-			Log.debug("loginCheck() 系统存在多个相同用户 systemUserCount:" + systemUserCount);
+			Log.debug("defaultLoginCheck() 系统存在多个相同用户");
 			rt.setError("登录异常: 系统出现重名用户！");
 			return null;
 		}
 		
-		return uLists.get(0);
+		//如果用户是LDAP用户，那么不允许登录
+		User user = uLists.get(0);
+		if(user.getCreateType() < 10)
+		{
+			Log.debug("defaultLoginCheck() LDAP用户不允许默认方式登录！");
+			rt.setError("用户名或密码错误！");
+			return null;
+		}
+		
+		return user;
 	}
 
 	public User getUserByName(String name)
