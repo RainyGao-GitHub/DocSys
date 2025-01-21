@@ -439,7 +439,7 @@ public class BaseController  extends BaseFunction{
 		user.setName("Admin");
 		user.setNickName("超级管理员");
 		user.setPwd(MD5.md5("Admin"));
-		user.setCreateType(0);	//系统自动创建
+		user.setCreateType(UserCreateType_FirstUser);	//系统自动创建
 		//set createTime
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
 		String createTime = df.format(new Date());// new Date()为获取当前系统时间
@@ -2810,7 +2810,7 @@ public class BaseController  extends BaseFunction{
 			String md5Pwd = MD5.md5(decodedPwd);
 			ldapLoginUser.setPwd(md5Pwd);
 			//设置用户的登录类型
-			ldapLoginUser.setCreateType(10);
+			ldapLoginUser.setCreateType(UserCreateType_LDAPLogin);
 
 			//set createTime
 			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
@@ -2864,7 +2864,7 @@ public class BaseController  extends BaseFunction{
 		
 		//如果用户是LDAP用户，那么不允许登录
 		User user = uLists.get(0);
-		if(user.getCreateType() < 10)
+		if(user.getCreateType() == UserCreateType_LDAPLogin)
 		{
 			Log.debug("defaultLoginCheck() LDAP用户不允许默认方式登录！");
 			rt.setError("用户名或密码错误！");
@@ -2988,8 +2988,8 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i < uList.size(); i++)
 		{
 			User user = uList.get(i);
-			//创建类型<10为系统用户（10： LDAP登录添加的用户， 11：第三方登录添加的用户）
-			if(user.getCreateType() < 10)
+			// LDAP登录添加的用户不需要进行电话检查
+			if(user.getCreateType() != UserCreateType_LDAPLogin)
 			{
 				return true;
 			}
@@ -3011,8 +3011,8 @@ public class BaseController  extends BaseFunction{
 		for(int i=0; i < uList.size(); i++)
 		{
 			User user = uList.get(i);
-			//创建类型<10为系统用户（10： LDAP登录添加的用户， 11：第三方登录添加的用户）
-			if(user.getCreateType() < 10)
+			//LDAP登录的用户不进行邮件检查
+			if(user.getCreateType() != UserCreateType_LDAPLogin)
 			{
 				return true;
 			}

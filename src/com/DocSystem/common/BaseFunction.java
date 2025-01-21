@@ -136,6 +136,12 @@ public class BaseFunction{
 	protected static final int HistoryType_RemoteBackup = 3;
 	protected static final int HistoryType_RecycleBin = 4;
 	
+	//UserCreateType
+	protected static final int UserCreateType_FirstUser   = 0;	//第一个管理员
+	protected static final int UserCreateType_Registered  = 1;	//自行注册的用户
+	protected static final int UserCreateType_ByAdmin 	  = 2;	//管理员创建的用户
+	protected static final int UserCreateType_LDAPLogin   = 10;	//LDAP登录创建的用户
+	
 	//应用路径
     protected static String docSysIniPath = null;
     public static String docSysWebPath = null;

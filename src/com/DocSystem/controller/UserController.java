@@ -316,7 +316,7 @@ public class UserController extends BaseController {
 			return;
 		}
 		user.setPwd(pwd);
-		user.setCreateType(1);	//用户为自主注册
+		user.setCreateType(UserCreateType_Registered);	//用户为自主注册
 		//set createTime
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
 		String createTime = df.format(new Date());// new Date()为获取当前系统时间
@@ -414,7 +414,7 @@ public class UserController extends BaseController {
 		}
 		
 		user.setPwd(pwd);
-		user.setCreateType(1);	//用户为自主注册
+		user.setCreateType(UserCreateType_Registered);	//用户为自主注册
 		user.setRealName(realName);
 		user.setNickName(nickName);
 		user.setIntro(intro);
