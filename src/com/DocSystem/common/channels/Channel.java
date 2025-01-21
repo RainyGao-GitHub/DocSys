@@ -237,4 +237,16 @@ public interface Channel {
 	public boolean isAllowedAction(String action, ReturnAjax rt);
 
 	public boolean initOfficeEditorFonts(boolean needThumbnails);
+
+	public void generateFont(
+			boolean bIsUseSystemFonts,
+			String strAllFontsWebFolder,
+    		String strAllFontsFolder,
+    		String strThumbnailsFolder,
+    		String strFontsSelectionBinFolder,
+    		String fontsOutputFolder,
+    		String orgFontFolders,
+    		int nFontFlag,
+    		boolean needThumbnails,
+    		boolean force);
 }
