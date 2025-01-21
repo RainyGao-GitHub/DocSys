@@ -1898,6 +1898,7 @@ public class DocController extends BaseController{
 			Integer recurciveEn, //null/0: false, 1: true
 			Integer forceEn, //null/0: false, 1: true
 			Integer deleteEn, //null/0: false, 1: true
+			Integer addOnly, //null/0: false, 1: true
 			Integer shareId, String authCode, //
 			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
 	{
@@ -1916,6 +1917,7 @@ public class DocController extends BaseController{
 				recurciveEn, //null/0: false, 1: true
 				forceEn, //null/0: false, 1: true
 				deleteEn, //null/0: false, 1: true
+				addOnly,  //null/0: false, 1: true
 				shareId, authCode, //
 				response, request, session);
 	}
