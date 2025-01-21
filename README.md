@@ -321,7 +321,7 @@ vi  /etc/sysconfig/i18n
 #### 5、LDAP设置说明
 
 ##### 5.1 LDAP设置格式如下
-ldap://【域控服务器地址】:【端口】/【基础DN】;【鉴权方式】;【鉴权账号】;【鉴权密码】;【登录账号属性】;【登录校验方式】
+ldap://【域控服务器地址】:【端口】/【基础DN】;【鉴权账号】;【鉴权密码】;【登录账号属性】;【登录校验方式】
 
 ##### 5.2 参数说明
 
@@ -355,17 +355,11 @@ simple\none\DIGEST-MD5\EXTERNAL\CRAM-MD5\GSSAPI
 
 默认用户登录账号的属性为 uid，设置了该参数，表明使用指定属性查询登录账号的信息，例如：loginMode=cn
 
-【登录校验方式】
+##### 5.3 多域登录设置 [多个LDAPServer]
 
-如果设置了鉴权账号，该参数无效
+每个LDAPSever配置用 || 分开，例如:
 
-authMode=0：使用【loginMode=userName,basedn】进行鉴权，不需要密码，例如：【uid=guest,ou=test,dc=gofreeteam,dc=com】     
-
-authMode=1：使用【loginMode=userName,basedn】进行鉴权，需要密码
-
-authMode=2：使用登录用户名、密码进行鉴权
-
-authMode=3：使用登录用户名鉴权，在鉴权通过后，读取LDAP信息后再进行密码校验     
+ldap://server1.com:389/ou=People,o=test1;loginMode=uid;filter=(objectClass=Person);name=hz;domainCheck=1 || ldap://server2.com:389/ou=People,o=test2;loginMode=uid;filter=(objectClass=Person);name=bj;domainCheck=1 
 
 #### 6、FTP服务器连接成功，但无法获取文件列表
 
