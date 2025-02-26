@@ -839,7 +839,9 @@
 	            	docInfoForRemoteEdit.userName = param.userName;
 	            	docInfoForRemoteEdit.editEn = param.editEn;
 	            	docInfoForRemoteEdit.downloadEn = param.downloadEn;
-	            	openOfficeInNewPageRS(docInfoForRemoteEdit, mxsdocServerUrl);
+	            	docInfoForRemoteEdit.mxsdocServerUrl = mxsdocServerUrl;
+	            	//openOfficeInNewPageRS(docInfoForRemoteEdit, mxsdocServerUrl);
+	            	openDoc(docInfoForRemoteEdit, true, "openInNewPage", "office");
 				}
 	            else
 	            {

@@ -2184,6 +2184,16 @@ function showOffice(docInfo, openInNewPage)
 }
 
 //ShowDocInNewPage
+//TODO: getMxsdocServerUrl() is for remoteDocumentEdit, because page may was not opened in mxsdoc
+function getMxsdocServerUrl(docInfo)
+{
+	if(docInfo.mxsdocServerUrl == undefined)
+	{
+		return "";
+	}
+	return docInfo.mxsdocServerUrl;
+}
+
 function showImgInNewPage(docInfo, fileLink)
 {
 	console.log("showImgInDialog docInfo:", docInfo);
@@ -2195,11 +2205,11 @@ function showImgInNewPage(docInfo, fileLink)
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		window.open("/DocSystem/web/imgViewer.html?" + urlParamStr);				
+		window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/imgViewer.html?" + urlParamStr);				
 	}
 	else
 	{
-		window.open("/DocSystem/web/imageListViewer.html?" + urlParamStr);		
+		window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/imageListViewer.html?" + urlParamStr);		
 	}
 }
 
@@ -2210,7 +2220,7 @@ function showVideoInNewPage(docInfo, fileLink){
 		docInfo.fileLink = fileLink;
 	}
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/videoViewer.html?" + urlParamStr);
+	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/videoViewer.html?" + urlParamStr);
 }
 
 function showAudioInNewPage(docInfo, fileLink){
@@ -2220,14 +2230,14 @@ function showAudioInNewPage(docInfo, fileLink){
 		docInfo.fileLink = fileLink;
 	}
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/audio.html?" + urlParamStr);
+	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/audio.html?" + urlParamStr);
 }
 
 function showZipInNewPage(docInfo)
 {
 	console.log("showZipInNewPage docInfo:", docInfo);
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/zipViewer.html?" + urlParamStr);
+	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/zipViewer.html?" + urlParamStr);
 }
 
 function showPdfInNewPage(docInfo, fileLink)
@@ -2238,14 +2248,18 @@ function showPdfInNewPage(docInfo, fileLink)
 		docInfo.fileLink = fileLink;
 	}
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/pdfViewer.html?" + urlParamStr);
+	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/pdfViewer.html?" + urlParamStr);
 }
 
 function showMarkdownInNewPage(docInfo, openType)
 {
 	console.log("showTextInNewPage docInfo:", docInfo);
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open("/DocSystem/web/stackedit.html?" + urlParamStr);			
+	if(docInfo.mxsdocServerUrl)
+	{
+		
+	}
+	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/stackedit.html?" + urlParamStr);			
 }
 
 function showTextInNewPage(docInfo, openType)
@@ -2254,11 +2268,11 @@ function showTextInNewPage(docInfo, openType)
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
 	if(openType && openType == "textViewer")
 	{
-		window.open("/DocSystem/web/textViewer.html?" + urlParamStr);
+		window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/textViewer.html?" + urlParamStr);
 	}
 	else
 	{
-		window.open("/DocSystem/web/ace.html?" + urlParamStr);			
+		window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/ace.html?" + urlParamStr);			
 	}
 }
 
