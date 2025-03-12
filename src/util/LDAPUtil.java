@@ -368,14 +368,15 @@ public class LDAPUtil
         
         //Mulit LDAP
         User user = null;
-		if(systemLdapConfig.ldapConfigList.size() > 1)
-        {
-        	user  =  multiLdapLoginCheck(domain, realUserName, pwd, systemLdapConfig, checkResult);
-        }
-        else
-        {
-        	user = ldapLoginCheck(realUserName, pwd, systemLdapConfig.ldapConfigList.get(0), checkResult);
-        }
+//		if(systemLdapConfig.ldapConfigList.size() > 1)
+//        {
+//        	user  =  multiLdapLoginCheck(domain, realUserName, pwd, systemLdapConfig, checkResult);
+//        }
+//        else
+//        {
+//        	user = ldapLoginCheck(realUserName, pwd, systemLdapConfig.ldapConfigList.get(0), checkResult);
+//        }
+    	user  =  multiLdapLoginCheck(domain, realUserName, pwd, systemLdapConfig, checkResult);
 		
 		//TODO: 保留原始的用户名，避免多域登录时存在重名用户
         if(user != null)
