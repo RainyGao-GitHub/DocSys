@@ -15607,7 +15607,7 @@ public class BaseController  extends BaseFunction{
 			if(doc.getType() == null)
 			{
 				//TODO: 提醒后续逻辑需要设置doc的type
-				Log.info("********* realTimeRemoteStoragPush() docType 为空，需要在remoteStoragePush时通过获取远程节点属性进行确认 ***********");
+				Log.info("********* realTimeRemoteStoragPush() 文件类型为空，有可能是删除操作，需要后续推送的时候进行确认 ***********");
 			}
 			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  skipDelete, rt);
 			break;
