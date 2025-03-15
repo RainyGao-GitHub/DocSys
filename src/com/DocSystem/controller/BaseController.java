@@ -4216,6 +4216,7 @@ public class BaseController  extends BaseFunction{
 			
 			if(isRemoteStoragePushEnabled(repos))
 			{
+				//TODO: 注意如果是删除操作，那么此时doc的type是null, 那么需要在执行远程推送的时候进行type确认
 				//realTimeRemoteStoragePush(repos, doc, null, login_user, commitMsg, rt, "deleteDoc");
 				CommonAction.insertCommonActionEx(asyncActionList, 
 						repos, doc, null, null, 
@@ -15600,8 +15601,17 @@ public class BaseController  extends BaseFunction{
 			channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  skipDelete, rt);
 			ret = channel.remoteStoragePush(remote, repos, dstDoc, accessUser, commitMsg, recurcive, pushType,  skipDelete, rt);
 			break;
+		case "deleteDoc":
+			//TODO: 删除操作是一个特殊的行为，因为由于本地节点已经不存在，所以doc.type可能是空，那么我需要根据远程节点的类型来进行设置
+			Log.info("********* realTimeRemoteStoragPush() deleteDoc [" + doc.getPath() + doc.getName() + "] docType: [" + doc.getType() + "] ***********");
+			if(doc.getType() == null)
+			{
+				//TODO: 提醒后续逻辑需要设置doc的type
+				Log.info("********* realTimeRemoteStoragPush() docType 为空，需要在remoteStoragePush时通过获取远程节点属性进行确认 ***********");
+			}
+			ret = channel.remoteStoragePush(remote, repos, doc, accessUser, commitMsg, recurcive, pushType,  skipDelete, rt);
+			break;
 		//case "addDoc":
-		//case "deleteDoc":
 		//case "updateDocContent":
 		//case "uploadDoc":
 		//case "uploadDocRS":
