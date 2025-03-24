@@ -43,15 +43,15 @@
         }
  		
 		//提供给外部的多文件download接口
-		function downloadDocs(treeNodes, dstParentNode, vid, downloadType)	//多文件下载函数
+		function downloadDocs(treeNodes, dstParentNode, vid, downloadType, compressFlag)	//多文件下载函数
 		{
-			console.log("downloadDocs reposId:" + vid + " downloadType:" + downloadType + " treeNodes:", treeNodes);
+			console.log("downloadDocs reposId:" + vid + " downloadType:" + downloadType + " compressFlag:" + compressFlag + " treeNodes:", treeNodes);
 			if(!treeNodes || treeNodes.length <= 0)
 			{
 				showErrorMessage(_Lang("请选择需要下载的文件!"));
 				return;
 			}
-			
+		
 			//get the parentInfo
 		  	var dstPath = "";
 		  	var dstPid = 0;
@@ -71,22 +71,22 @@
 
 			if(isDownloading == true)
 			{
-				DocDownloadAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+				DocDownloadAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType, compressFlag);
 	    		//尝试触发多线程下载
 	        	downloadNextDoc();
 
 			}
 			else
 			{
-				DocDownloadInit(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+				DocDownloadInit(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType, compressFlag);
 				downloadDoc();
 			}			
 		}
 		
       	//初始化DocDownload
-      	function DocDownloadInit(treeNodes,dstParentNode,dstPath,dstPid,dstLevel,vid, downloadType)	//多文件下载函数
+      	function DocDownloadInit(treeNodes,dstParentNode,dstPath,dstPid,dstLevel,vid, downloadType, compressFlag)	//多文件下载函数
 		{
-			console.log("DocDownloadInit() downloadType:" + downloadType);
+			console.log("DocDownloadInit() downloadType:" + downloadType + " compressFlag:" + compressFlag);
 			var fileNum = treeNodes.length;
 			console.log("DocDownloadInit() fileNum:" + fileNum);				
 
@@ -97,18 +97,18 @@
 			failNum = 0; //下载失败个数
 			drawedNum =0; //已绘制个数
 			
-			//Build Batch
-			var Batch = {};
-			Batch.treeNodes = treeNodes;
-			Batch.dstParentNode = dstParentNode;
-			Batch.dstPath = dstPath;
-			Batch.dstPid = dstPid;
-			Batch.dstLevel = dstLevel;
-			Batch.vid = vid;
-			Batch.num = fileNum;
-			Batch.index = 0;
-			Batch.state = 0;
-			Batch.downloadType = downloadType;	//1: realDoc 2: VDoc
+			var Batch;
+			//TODO: 如果是多个文件且compressFlag有设置，这个批次需要当作一个文件进行下载，上下文里需要传入的是需要下载的文件列表
+			if(fileNume > 1 && compressFlag !== undefined && compressFlag == true )
+			{
+				//Build Batch For compress download
+				Batch = buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+			}
+			else
+			{
+				//Build Batch For normal download
+				Batch = buildBatchForDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+			}
 			
 			//add to Content
 			Content.BatchList = [];
@@ -185,9 +185,9 @@
       	}
       	
       	//增加下载文件
-      	function DocDownloadAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType)	//多文件下载函数
+      	function DocDownloadAppend(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType, compressFlag)	//多文件下载函数
 		{
-			console.log("DocDownloadAppend() downloadType:" + downloadType);
+			console.log("DocDownloadAppend() downloadType:" + downloadType + " compressFlag:" + compressFlag);
 
 			if(!treeNodes)
 			{
@@ -198,19 +198,28 @@
 			var fileNum = treeNodes.length;
 			console.log("DocDownloadAppend() fileNum:" + fileNum);
 
-			//Build Batch
 			var Batch = {};
-			Batch.treeNodes = treeNodes;
-			Batch.dstParentNode = dstParentNode;
-			Batch.dstPath = dstPath;
-			Batch.dstPid = dstPid;
-			Batch.dstLevel = dstLevel;
-			Batch.vid = vid;
-			Batch.num = fileNum;
-			Batch.index = 0;
-			Batch.state = 0;
-			Batch.downloadType = downloadType;	//1: realDoc 2: VDoc
-
+			//TODO: 如果是多个文件且compressFlag有设置，这个批次需要当作一个文件进行下载，上下文里需要传入的是需要下载的文件列表
+			if(fileNume > 1 && compressFlag !== undefined && compressFlag == true )
+			{
+				//Build Batch
+				Batch = buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+			}
+			else
+			{
+				//Build Batch
+				Batch.treeNodes = treeNodes;
+				Batch.dstParentNode = dstParentNode;
+				Batch.dstPath = dstPath;
+				Batch.dstPid = dstPid;
+				Batch.dstLevel = dstLevel;
+				Batch.vid = vid;
+				Batch.num = fileNum;
+				Batch.index = 0;
+				Batch.state = 0;
+				Batch.downloadType = downloadType;	//1: realDoc 2: VDoc
+			}
+			
 			//Append to Content
 			Content.BatchList.push(Batch);
 			Content.batchNum++;
@@ -233,6 +242,40 @@
 			
 			$(".download-list-title").text(_Lang("下载列表") + " (" + _LangStats(totalNum) + ")");			
 		}
+      	
+      	//构造正常下载的批次信息
+      	function buildBatchForDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType)
+      	{
+			Batch.treeNodes = treeNodes;
+			Batch.dstParentNode = dstParentNode;
+			Batch.dstPath = dstPath;
+			Batch.dstPid = dstPid;
+			Batch.dstLevel = dstLevel;
+			Batch.vid = vid;
+			Batch.num = fileNum;
+			Batch.index = 0;
+			Batch.state = 0;
+			Batch.downloadType = downloadType;	//1: realDoc 2: VDoc			
+			return Batch;
+      	}
+      	
+        //构造打包下载的批次信息
+      	function buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType)
+      	{
+      		Batch = {}
+			Batch.treeNodes = buildTreeNodesForCompressDownload(treeNodes);  //构造一个虚拟的treeNodes, 里面只有一个treeNode, 用于模拟打包后的文件信息
+			Batch.downloadList = buildDocListForCompressDownload(treeNodes); //构造打包的文件列表
+			Batch.dstParentNode = dstParentNode;
+			Batch.dstPath = dstPath;
+			Batch.dstPid = dstPid;
+			Batch.dstLevel = dstLevel;
+			Batch.vid = vid;
+			Batch.num = 1;
+			Batch.index = 0;
+			Batch.state = 0;
+			Batch.downloadType = downloadType;	//1: realDoc 2: VDoc				
+			return Batch;
+      	}
       	
       	//并将需要下载的文件加入到SubContextList中
 		function buildSubContextList(Content, SubContextList, maxInitNum)
@@ -257,6 +300,7 @@
       		var index = Batch.index;
       		var fileNum =  Batch.num;
       		var downloadType = Batch.downloadType;
+      		var downloadList = Batch.downloadList; //用于打包下载
       		console.log("buildSubContextList() Batch index:" + index + " fileNum:" + fileNum );
       		
       		var count = 0;
@@ -290,6 +334,7 @@
 		    	   	SubContext.size = treeNode.size;
     	   		   	SubContext.lastestEditTime = treeNode.latestEditTime;
     	   		    SubContext.downloadType = downloadType;
+    	   		    SubContext.downloadList = downloadList;
 			    	
     	   		   	//dst ParentNode Info
     	   		   	SubContext.dstParentNode = dstParentNode;
