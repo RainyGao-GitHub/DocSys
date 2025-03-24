@@ -3,7 +3,14 @@ package com.DocSystem.common.entity;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 
-public class DownloadPrepareTask {
+public class DownloadPrepareTask 
+{
+	public final static int CompressType_local_folder 		 = 0;
+	public final static int CompressType_repos_folder 		 = 1;
+	public final static int CompressType_verRepos_folder 	 = 2;
+	public final static int CompressType_remoteServer_folder = 3;
+	public final static int CompressType_with_docList 		 = 4;
+	
 	public String id;
 	
 	public Integer type = 0; //0: compress dedicated folder 1: download repos's folder 2:download verRepos's folder or file

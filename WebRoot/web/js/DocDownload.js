@@ -408,6 +408,7 @@
                     path: SubContext.path,
                     name: SubContext.name,
                     downloadType: SubContext.downloadType,
+                    downloadList: SubContext.downloadList,
                     shareId: gShareId,
                 },
                 success : function (ret) {

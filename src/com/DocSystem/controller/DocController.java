@@ -2204,11 +2204,14 @@ public class DocController extends BaseController{
 			String taskId,
 			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			Integer downloadType,
+			String downloadList,	//打包下载文件列表
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
 		Log.infoHead("************** downloadDocPrepare [" + path + name + "] ****************");
 		Log.info("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType + " shareId:" + shareId);
+		
+		Log.debug("downloadDocPrepare  downloadList:" + downloadList);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
