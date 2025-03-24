@@ -381,7 +381,8 @@ public class LDAPUtil
 		//TODO: 保留原始的用户名，避免多域登录时存在重名用户
         if(user != null)
         {
-        	user.setName(userName);
+        	//TODO: 将用户名替换成小写，以便权限一致
+        	user.setName(userName.toLowerCase().replace("\\", "/"));
 			checkResult.status = LdapLoginCheckResult.Success;
         }
         return user;
@@ -402,6 +403,32 @@ public class LDAPUtil
 					user = ldapLoginCheck(realUserName, pwd, config, checkResult);
 					if(user != null)
 					{
+						//TODO: 根据CaseType决定用户名是否使用大小写
+//						String caseType  = config.settings.getString("CaseType");
+//						Log.debug("multiLdapLoginCheck() caseType:" + caseType);
+//						if(caseType != null & caseType.isEmpty() == false)
+//						{
+//							caseType = caseType.toLowerCase();
+//							switch(caseType)
+//							{
+//							case "lower":
+//							case "lowercase":
+//							case "lower_case":
+//							case "tolowercase":
+//							case "to_lower_case":
+//							case "0":								
+//								user.setName(user.getName().toLowerCase());
+//								break;
+//							case "upper":
+//							case "uppercase":
+//							case "upper_case":
+//							case "touppercase":
+//							case "to_upper_case":
+//							case "1":							
+//								user.setName(user.getName().toUpperCase());
+//								break;								
+//							}
+//						}
 						return user;
 					}
 					//登录失败要看情况，如果是密码错误，那么不允许继续			
