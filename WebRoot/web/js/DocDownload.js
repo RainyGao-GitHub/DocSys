@@ -208,16 +208,7 @@
 			else
 			{
 				//Build Batch
-				Batch.treeNodes = treeNodes;
-				Batch.dstParentNode = dstParentNode;
-				Batch.dstPath = dstPath;
-				Batch.dstPid = dstPid;
-				Batch.dstLevel = dstLevel;
-				Batch.vid = vid;
-				Batch.num = fileNum;
-				Batch.index = 0;
-				Batch.state = 0;
-				Batch.downloadType = downloadType;	//1: realDoc 2: VDoc
+				Batch = buildBatchForDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
 			}
 			
 			//Append to Content
@@ -246,6 +237,7 @@
       	//构造正常下载的批次信息
       	function buildBatchForDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType)
       	{
+      		Batch = {};
 			Batch.treeNodes = treeNodes;
 			Batch.dstParentNode = dstParentNode;
 			Batch.dstPath = dstPath;
@@ -255,14 +247,14 @@
 			Batch.num = fileNum;
 			Batch.index = 0;
 			Batch.state = 0;
-			Batch.downloadType = downloadType;	//1: realDoc 2: VDoc			
+			Batch.downloadType = downloadType;	//1: realDoc 2: VDoc		
 			return Batch;
       	}
       	
         //构造打包下载的批次信息
       	function buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType)
       	{
-      		Batch = {}
+      		Batch = {};
 			Batch.treeNodes = buildTreeNodesForCompressDownload(treeNodes);  //构造一个虚拟的treeNodes, 里面只有一个treeNode, 用于模拟打包后的文件信息
 			Batch.downloadList = buildDocListForCompressDownload(treeNodes); //构造打包的文件列表
 			Batch.dstParentNode = dstParentNode;
