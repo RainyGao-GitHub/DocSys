@@ -1,5 +1,7 @@
 package com.DocSystem.common.entity;
 
+import java.util.List;
+
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
 
@@ -24,6 +26,9 @@ public class DownloadPrepareTask
 	public Repos repos;
 	public Doc doc;
 	public ReposAccess reposAccess;
+	
+	//基于文件列表的打包下载
+	public List<Doc> docList;
 
 	//历史版本下载
 	public String commitId = null;

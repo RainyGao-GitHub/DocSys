@@ -22261,7 +22261,7 @@ public class BaseController  extends BaseFunction{
 			executeDownloadPrepareTaskForRemoteServerEntry(task, requestIP);
 			break;
 		case DownloadPrepareTask.download_with_docList: //4:download with docList
-			executeDownloadPrepareTaskWithDocList(task, requestIP);
+			executeDownloadPrepareTaskForReposDocList(task, requestIP);
 			break;
 		default:
 			break;
@@ -22716,6 +22716,66 @@ public class BaseController  extends BaseFunction{
 		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);			
 		//延时删除任务和压缩文件
 		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);			
+	}
+	
+	private void executeDownloadPrepareTaskForReposDocList(DownloadPrepareTask task, String requestIP) {		
+		String targetPath = task.targetPath;
+		String targetName = task.targetName;
+		Long deleteDelayTime = null;		
+		
+		//检查并创建压缩目录
+		File dir = new File(targetPath);
+		if(!dir.exists())
+		{
+			dir.mkdirs();
+		}
+		
+		//TODO: 由于打包下载的文件可以是任意位置的文件，所以需要统一拷贝到临时目录， 这个临时目录不一定真的用于解密
+		Repos repos = task.repos;
+		String tmpEncryptPath = Path.getReposTmpPathForDecrypt(repos);
+		String tmpEncryptName = task.doc.getName();
+		if(tmpEncryptName == null || tmpEncryptName.isEmpty())
+		{
+			tmpEncryptName = repos.getName(); //用仓库名作为解密存储目录
+		}
+
+		//只拷贝有权限的文件
+		task.info = "文件拷贝中...";
+		for(Doc subDoc : task.docList)
+		{
+			copyAuthedFilesForDownload(tmpEncryptPath, tmpEncryptName, repos, subDoc, task.reposAccess);
+		}
+
+		//加密的仓库，需要先解密再压缩
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			//解密指定目录的文件
+			task.info = "文件解密中...";
+			decryptFileOrDir(repos, tmpEncryptPath, tmpEncryptName);
+		}
+		
+		task.info = "目录压缩中...";
+		if(doCompressDir(tmpEncryptPath, tmpEncryptName, targetPath, targetName, null) == false)
+		{
+			task.status = 3; //Failed
+			task.info = "目录压缩失败";
+			deleteDelayTime = 300L; //5分钟后删除
+			addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "失败", task.repos, task.doc, null, task.info);								
+			//删除临时解密目录
+			FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
+			//延时删除任务和压缩文件
+			addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);
+			return;
+		}
+
+		task.status = 2; //Success
+		task.info = "文件打包成功";
+		deleteDelayTime = 72000L; //20小时后			
+		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);				
+		//删除临时解密目录
+		FileUtil.delDir(tmpEncryptPath + tmpEncryptName);
+		//延时删除任务和压缩文件
+		addDelayTaskForDownloadPrepareTaskDelete(task, deleteDelayTime);	
 	}
 	
 	public void addDelayTaskForDownloadPrepareTaskDelete(DownloadPrepareTask task, Long deleteDelayTime) {

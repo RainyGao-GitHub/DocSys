@@ -2215,6 +2215,7 @@ public class DocController extends BaseController{
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
+		//TODO: 对于downloadList非空的情况是否需要额外考虑呢?
 		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
 		if(reposAccess == null)
 		{
@@ -2233,29 +2234,56 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, null, null);
-		
-		//检查用户是否有权限下载文件
-		if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		if(downloadList != null)
 		{
-			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
-			return;
-		}
-		
-		if(checkUserAccessPwd(repos, doc, session, rt) == false)
-		{
-			writeJson(rt, response);
-			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
-			return;
-		}
-		
-		if(downloadType != null && downloadType == 2)
-		{
-			downloadVDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), rt);
+			//如果下载列表非空，表示要打包下载，那么需要逐个文件检查权限，此时Doc是一个虚拟的doc只是用于指定文件的名字
+			List<Doc> docList = getDocListFromDownloadList(repos, downloadList);
+			for(Doc subDoc: docList)
+			{
+				//检查用户是否有权限下载文件
+				if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), subDoc, reposAccess.getAuthMask(), rt) == false)
+				{
+					writeJson(rt, response);
+					addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, subDoc, null, buildSystemLogDetailContent(rt));				
+					return;
+				}
+				
+				//检查访问密码
+				if(checkUserAccessPwd(repos, subDoc, session, rt) == false)
+				{
+					writeJson(rt, response);
+					addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, subDoc, null, buildSystemLogDetailContent(rt));				
+					return;
+				}
+				
+			}
+			downloadDocListPrepare_FSM(repos, doc, docList, reposAccess, true, rt);
 		}
 		else
 		{
-			downloadDocPrepare_FSM(repos, doc, reposAccess, true, rt);				
+			//检查用户是否有权限下载文件
+			if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+			{
+				writeJson(rt, response);
+				addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+				return;
+			}
+			
+			if(checkUserAccessPwd(repos, doc, session, rt) == false)
+			{
+				writeJson(rt, response);
+				addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
+				return;
+			}
+			
+			if(downloadType != null && downloadType == 2)
+			{
+				downloadVDocPrepare_FSM(repos, doc, reposAccess.getAccessUser(), rt);
+			}
+			else
+			{
+				downloadDocPrepare_FSM(repos, doc, reposAccess, true, rt);				
+			}
 		}
 		
 		writeJson(rt, response);
@@ -2373,7 +2401,62 @@ public class DocController extends BaseController{
 		return;		
 	}
 	
+	public void downloadDocListPrepare_FSM(Repos repos, Doc doc, List<Doc> docList, ReposAccess reposAccess,  boolean remoteStorageEn, ReturnAjax rt)
+	{	
+		if(isFSM(repos) == false)
+		{
+			//文件服务器前置仓库不允许远程存储
+			remoteStorageEn = false;
+			//从文件服务器拉取文件（对于前置仓库，拉取时会删除远程不存在的文件）
+			for(Doc subDoc : docList)
+			{
+				channel.remoteServerCheckOut(repos, subDoc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, false, null);
+			}
+		}
+				
+		String targetName = doc.getName();
+		String targetPath = doc.getLocalRootPath() + doc.getPath();
+		//创建异步下载任务
+		String compressTargetPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
+		String compressTargetName = targetName + ".zip";
+		if(targetName.isEmpty())
+		{
+			compressTargetName = repos.getName() + ".zip";
+		}
+		DownloadPrepareTask downloadPrepareTask = createDownloadPrepareTask(
+					repos,
+					doc,
+					docList,
+					reposAccess,
+					null,
+					null,
+					false,
+					compressTargetPath,
+					compressTargetName,
+					DownloadPrepareTask.download_with_docList, //download with docList
+					rt);
+			
+		if(downloadPrepareTask != null)
+		{
+			rt.setData(downloadPrepareTask);
+			rt.setMsgData(5);	//文件打包中...
+		}
+		return;
+	}
+	
 	private DownloadPrepareTask createDownloadPrepareTask(Repos repos, Doc doc, ReposAccess reposAccess,
+			String inputPath, String inputName, boolean deleteInput,
+			String targetPath, String targetName, 
+			Integer type,
+			ReturnAjax rt) 
+	{
+		return createDownloadPrepareTask(repos, doc, null, reposAccess,
+			inputPath, inputName, deleteInput,
+			targetPath, targetName, 
+			type,
+			rt);
+	}
+	private DownloadPrepareTask createDownloadPrepareTask(Repos repos, Doc doc, List<Doc> docList, ReposAccess reposAccess,
 			String inputPath, String inputName, boolean deleteInput,
 			String targetPath, String targetName, 
 			Integer type,
@@ -2385,8 +2468,8 @@ public class DocController extends BaseController{
 		String taskId = reposAccess.getAccessUserId() + "-" + repos.getId() + "-" + doc.getDocId() + "-" + curTime;
 		if(downloadPrepareTaskHashMap.get(taskId) != null)
 		{
-			Log.info("createDownloadPrepareTask() 压缩任务 " + taskId + "已存在");
-			rt.setError("目录压缩任务 " + taskId + " 已存在");
+			Log.info("createDownloadPrepareTask() 下载任务 " + taskId + "已存在");
+			rt.setError("下载任务 " + taskId + " 已存在");
 			return null;
 		}
 		
@@ -2400,18 +2483,21 @@ public class DocController extends BaseController{
 		task.doc = doc;
 		task.reposAccess = reposAccess;
 		
+		//设置docList
+		task.docList = docList;
+		
 		//压缩指定目录
 		task.inputPath = inputPath;
 		task.inputName = inputName;
 		task.deleteInput = deleteInput;
 		
-		//压缩文件
+		//压缩文件存储路径
 		task.targetPath = targetPath + taskId + "/";
 		task.targetName = targetName;
 		
-		task.status = 1; //压缩中..
+		task.status = 1; //文件打包中..
 		
-		task.info = "目录压缩中...";
+		task.info = "文件打包中...";
 		downloadPrepareTaskHashMap.put(taskId, task);
 		
 		return task;

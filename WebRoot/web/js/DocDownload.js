@@ -256,7 +256,7 @@
       	{
       		Batch = {};
 			Batch.treeNodes = buildTreeNodesForCompressDownload(treeNodes);  //构造一个虚拟的treeNodes, 里面只有一个treeNode, 用于模拟打包后的文件信息
-			Batch.downloadList = buildDocListForCompressDownload(treeNodes); //构造打包的文件列表
+			Batch.downloadList = buildDownloadListForCompressDownload(treeNodes); //构造打包的文件列表
 			Batch.dstParentNode = dstParentNode;
 			Batch.dstPath = dstPath;
 			Batch.dstPid = dstPid;
@@ -267,6 +267,41 @@
 			Batch.state = 0;
 			Batch.downloadType = downloadType;	//1: realDoc 2: VDoc				
 			return Batch;
+      	}
+      	
+      	function buildDownloadListForCompressDownload(treeNodes)
+      	{
+      		var downloadList = [];
+      		var count = 0;
+			console.log("buildDownloadListForCompressDownload fileNum:" + treeNodes.length);
+    		for( var i = index ; i < treeNodes.length ; i++ )
+    		{
+ 				count++;
+ 				if(count > 1000)
+ 				{
+ 					//buildSubContext 每次最多1000个文件
+ 					break;
+ 				}
+ 				
+    			var treeNode = treeNodes[i];
+ 				if(treeNode && treeNode != null)
+    	   		{
+     				var doc = {};
+     				doc.path = treeNode.path;
+     				doc.name = treeNode.name;
+     				downloadList.push(SubContext);
+    	   		}
+	    	}
+    		return downloadList;
+      	}
+      	
+      	function buildTreeNodesForCompressDownload(treeNodes)
+      	{
+      		//TODO: 最简单的处理方法, 取出第一个文件节点用作下载信息
+      		var treeNode = treeNodes[0];
+      		var fakeTreeNodes = [];
+      		fakeTreeNodes.push(treeNode);
+      		return fakeTreeNodes;
       	}
       	
       	//并将需要下载的文件加入到SubContextList中
