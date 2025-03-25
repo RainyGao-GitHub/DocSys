@@ -2358,7 +2358,7 @@ public class DocController extends BaseController{
 					false,
 					compressTargetPath,
 					compressTargetName,
-					1, //download repos's folder
+					DownloadPrepareTask.download_repos_folder, //download repos's folder
 					rt);
 			
 			if(downloadPrepareTask != null)
@@ -5301,15 +5301,15 @@ public class DocController extends BaseController{
 			}
 			
 			//创建下载准备任务
-			Integer prepareTaskType = 2; //download verRepos's folder or file
+			Integer prepareTaskType = DownloadPrepareTask.download_verRepos_folder; //download verRepos's folder or file
 			if(isFSM(repos) == false)
 			{
-				prepareTaskType = 3; //download remoteServer's folder or file
+				prepareTaskType = DownloadPrepareTask.download_remoteServer_folder; //download remoteServer's folder or file
 				//successDocList = remoteServerCheckOut(repos, doc, userTmpDir, userTmpDir, targetName, commitId, true, true, downloadList);					
 			}
 			else
 			{
-				prepareTaskType = 2; //download verRepos's folder or file
+				prepareTaskType = DownloadPrepareTask.download_verRepos_folder; //download verRepos's folder or file
 				//successDocList = verReposCheckOut(repos, false, doc, userTmpDir, targetName, commitId, true, true, downloadList) ;
 			}
 			

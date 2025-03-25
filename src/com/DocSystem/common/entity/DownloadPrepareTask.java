@@ -5,11 +5,11 @@ import com.DocSystem.entity.Repos;
 
 public class DownloadPrepareTask 
 {
-	public final static int CompressType_local_folder 		 = 0;
-	public final static int CompressType_repos_folder 		 = 1;
-	public final static int CompressType_verRepos_folder 	 = 2;
-	public final static int CompressType_remoteServer_folder = 3;
-	public final static int CompressType_with_docList 		 = 4;
+	public final static int download_local_folder 		 = 0;
+	public final static int download_repos_folder 		 = 1;
+	public final static int download_verRepos_folder 	 = 2;
+	public final static int download_remoteServer_folder = 3;
+	public final static int download_with_docList 		 = 4;
 	
 	public String id;
 	

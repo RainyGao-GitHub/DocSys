@@ -22248,19 +22248,19 @@ public class BaseController  extends BaseFunction{
 		Log.debug("executeDownloadPrepareTask() taskType:" + task.type);
 		switch(task.type)
 		{
-		case DownloadPrepareTask.CompressType_local_folder: //0: compress dedicated folder
+		case DownloadPrepareTask.download_local_folder: //0: compress dedicated folder
 			executeDownloadPrepareTaskForLocalFolder(task, requestIP);
 			break;
-		case DownloadPrepareTask.CompressType_repos_folder: //1: download repos's folder
+		case DownloadPrepareTask.download_repos_folder: //1: download repos's folder
 			executeDownloadPrepareTaskForReposFolder(task, requestIP);
 			break;
-		case DownloadPrepareTask.CompressType_verRepos_folder: //2:download verRepos's folder or file
+		case DownloadPrepareTask.download_verRepos_folder: //2:download verRepos's folder or file
 			executeDownloadPrepareTaskForVerReposEntry(task, requestIP);
 			break;
-		case DownloadPrepareTask.CompressType_remoteServer_folder: //3:download remoteServer's folder or file
+		case DownloadPrepareTask.download_remoteServer_folder: //3:download remoteServer's folder or file
 			executeDownloadPrepareTaskForRemoteServerEntry(task, requestIP);
 			break;
-		case DownloadPrepareTask.CompressType_with_docList: //4:download with docList
+		case DownloadPrepareTask.download_with_docList: //4:download with docList
 			executeDownloadPrepareTaskWithDocList(task, requestIP);
 			break;
 		default:
