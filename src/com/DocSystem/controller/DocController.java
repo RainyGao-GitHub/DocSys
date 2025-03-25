@@ -58,6 +58,8 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.User;
 import com.DocSystem.websocket.entity.DocPullContext;
 import com.DocSystem.websocket.entity.DocSearchContext;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import util.ReturnAjax;
 import util.FileUtil.CompressPic;
@@ -2204,14 +2206,14 @@ public class DocController extends BaseController{
 			String taskId,
 			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			Integer downloadType,
-			List<Doc> downloadList,	//打包下载文件列表
+			String downloadList,	//打包下载文件列表
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
 		Log.infoHead("************** downloadDocPrepare [" + path + name + "] ****************");
 		Log.info("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType + " shareId:" + shareId);
 		
-		Log.printObject("downloadDocPrepare  downloadList:", downloadList);
+		Log.debug("downloadDocPrepare  downloadList:" + downloadList);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
@@ -2234,7 +2236,7 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, null, null);
-		if(downloadList != null)
+		if(downloadList != null && downloadList.isEmpty() == false)
 		{
 			//如果下载列表非空，表示要打包下载，那么需要逐个文件检查权限，此时Doc是一个虚拟的doc只是用于指定文件的名字
 			List<Doc> docList = getDocListFromDownloadList(repos, downloadList);
@@ -2314,19 +2316,21 @@ public class DocController extends BaseController{
 		}
 	}
 
-	private List<Doc> getDocListFromDownloadList(Repos repos, List<Doc> downloadList) 
+	private List<Doc> getDocListFromDownloadList(Repos repos, String downloadList) 
 	{
 		Integer reposId = repos.getId();
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		
+		JSONArray list = JSON.parseArray(downloadList);
 		List<Doc> docList = new ArrayList<Doc>();
 		//补齐doc信息
-		for(Doc subDoc : downloadList)
+		for(int i=0; i< list.size(); i++)
 		{
-			subDoc = buildBasicDoc(reposId, null, null, reposPath, subDoc.getPath(), subDoc.getName(), subDoc.getLevel(), subDoc.getType(), true, localRootPath, localVRootPath, null, null);
-			docList.add(subDoc);		
+			JSONObject obj = (JSONObject) list.get(i);
+			Doc subDoc = buildBasicDoc(reposId, null, null, reposPath, obj.getString("path"), obj.getString("name"), obj.getInteger("level"), obj.getInteger("type"), true, localRootPath, localVRootPath, null, null);
+			docList .add(subDoc);		
 		}
 		return docList;
 	}

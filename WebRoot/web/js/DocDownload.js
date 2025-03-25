@@ -99,10 +99,18 @@
 			
 			var Batch;
 			//TODO: 如果是多个文件且compressFlag有设置，这个批次需要当作一个文件进行下载，上下文里需要传入的是需要下载的文件列表
-			if(fileNume > 1 && compressFlag !== undefined && compressFlag == true )
+			if(fileNum > 1)
 			{
-				//Build Batch For compress download
-				Batch = buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+				if(compressFlag === undefined || compressFlag == true)
+				{
+					//Build Batch For compress download
+					Batch = buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+				}
+				else
+				{
+					//Build Batch For normal download
+					Batch = buildBatchForDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);					
+				}
 			}
 			else
 			{
@@ -200,14 +208,22 @@
 
 			var Batch = {};
 			//TODO: 如果是多个文件且compressFlag有设置，这个批次需要当作一个文件进行下载，上下文里需要传入的是需要下载的文件列表
-			if(fileNume > 1 && compressFlag !== undefined && compressFlag == true )
+			if(fileNum > 1)
 			{
-				//Build Batch
-				Batch = buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+				if(compressFlag === undefined || compressFlag == true)
+				{
+					//Build Batch For compress download
+					Batch = buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+				}
+				else
+				{
+					//Build Batch For normal download
+					Batch = buildBatchForDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);					
+				}
 			}
 			else
 			{
-				//Build Batch
+				//Build Batch For normal download
 				Batch = buildBatchForDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
 			}
 			
@@ -244,7 +260,7 @@
 			Batch.dstPid = dstPid;
 			Batch.dstLevel = dstLevel;
 			Batch.vid = vid;
-			Batch.num = fileNum;
+			Batch.num = treeNodes.length;
 			Batch.index = 0;
 			Batch.state = 0;
 			Batch.downloadType = downloadType;	//1: realDoc 2: VDoc		
@@ -271,7 +287,7 @@
       	
       	function buildDownloadListForCompressDownload(treeNodes)
       	{
-      		var downloadList = [];
+      		var downloadList = "[";
       		var count = 0;
 			console.log("buildDownloadListForCompressDownload fileNum:" + treeNodes.length);
     		for( var i = index ; i < treeNodes.length ; i++ )
@@ -286,20 +302,36 @@
     			var treeNode = treeNodes[i];
  				if(treeNode && treeNode != null)
     	   		{
-     				var doc = {};
-        			doc.vid = vid;
-        			doc.docId = treeNode.id;  
-        			doc.pid = treeNode.pid;
-        			doc.path = treeNode.path;
-        			doc.name = treeNode.name;
-        			doc.level = treeNode.level;		
-        			doc.type = treeNode.isParent == true? 2: 1;
-		    	   	//doc.size = treeNode.size;
-    	   		   	//doc.lastestEditTime = treeNode.latestEditTime;
-        			downloadList.push(doc);     				
+ 					if(count == 0)
+ 					{
+ 						downloadList += "{"
+ 					}
+ 					else
+ 					{
+ 						downloadList += ",{";						
+ 					}
+ 					if(treeNode.path)
+ 					{
+ 						downloadList += "\"path\":\"" + treeNode.path + "\",";						
+ 					}
+ 					if(treeNode.name)
+ 					{
+ 						downloadList += "\"name\":\"" + treeNode.name + "\",";						
+ 					}
+ 					if(treeNode.level)
+ 					{
+ 						downloadList += "\"level\":\"" + treeNode.level + "\",";						
+ 					}
+ 					if(treeNode.isParent)
+ 					{
+ 						downloadList += "\"type\":\"" + (treeNode.isParent == true? 2: 1) + "\"";						
+ 					}
+ 					downloadList += "}"
     	   		}
 	    	}
-    		return downloadList;
+    		
+    		downloadList += "]";
+    		return (downloadList);
       	}
       	
       	function buildTreeNodesForCompressDownload(treeNodes)
