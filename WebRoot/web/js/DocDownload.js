@@ -287,9 +287,16 @@
  				if(treeNode && treeNode != null)
     	   		{
      				var doc = {};
-     				doc.path = treeNode.path;
-     				doc.name = treeNode.name;
-     				downloadList.push(SubContext);
+        			doc.vid = vid;
+        			doc.docId = treeNode.id;  
+        			doc.pid = treeNode.pid;
+        			doc.path = treeNode.path;
+        			doc.name = treeNode.name;
+        			doc.level = treeNode.level;		
+        			doc.type = treeNode.isParent == true? 2: 1;
+		    	   	//doc.size = treeNode.size;
+    	   		   	//doc.lastestEditTime = treeNode.latestEditTime;
+        			downloadList.push(doc);     				
     	   		}
 	    	}
     		return downloadList;
