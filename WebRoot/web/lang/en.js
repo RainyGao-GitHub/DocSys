@@ -448,6 +448,7 @@ function lang(str)
 		"待下载..." : "Download Pennding...",
 		"下载失败" : "Download failed",
 		"目录压缩中" : "Compressing the folder",
+		"文件打包中" : "Compressing files",
 		"下载失败,是否继续下载其他文件？" : "Download failed, Continue to download other files",
 		"是否继续下载其他文件？" : "Continue to download other files",
 		"已取消" : "Cancled",
