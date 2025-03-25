@@ -105,6 +105,7 @@
 				{
 					//Build Batch For compress download
 					Batch = buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
+					fileNum = 1;
 				}
 				else
 				{
@@ -271,8 +272,8 @@
       	function buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType)
       	{
       		Batch = {};
-			Batch.treeNodes = buildTreeNodesForCompressDownload(treeNodes);  //构造一个虚拟的treeNodes, 里面只有一个treeNode, 用于模拟打包后的文件信息
 			Batch.downloadList = buildDownloadListForCompressDownload(treeNodes); //构造打包的文件列表
+      		Batch.treeNodes = buildTreeNodesForCompressDownload(treeNodes);  //构造一个虚拟的treeNodes, 里面只有一个treeNode, 用于模拟打包后的文件信息
 			Batch.dstParentNode = dstParentNode;
 			Batch.dstPath = dstPath;
 			Batch.dstPid = dstPid;
@@ -290,15 +291,8 @@
       		var downloadList = "[";
       		var count = 0;
 			console.log("buildDownloadListForCompressDownload fileNum:" + treeNodes.length);
-    		for( var i = index ; i < treeNodes.length ; i++ )
-    		{
- 				count++;
- 				if(count > 1000)
- 				{
- 					//buildSubContext 每次最多1000个文件
- 					break;
- 				}
- 				
+    		for( var i = 0 ; i < treeNodes.length ; i++ )
+    		{ 				
     			var treeNode = treeNodes[i];
  				if(treeNode && treeNode != null)
     	   		{
@@ -310,27 +304,22 @@
  					{
  						downloadList += ",{";						
  					}
- 					if(treeNode.path)
- 					{
- 						downloadList += "\"path\":\"" + treeNode.path + "\",";						
- 					}
- 					if(treeNode.name)
- 					{
- 						downloadList += "\"name\":\"" + treeNode.name + "\",";						
- 					}
- 					if(treeNode.level)
- 					{
- 						downloadList += "\"level\":\"" + treeNode.level + "\",";						
- 					}
- 					if(treeNode.isParent)
- 					{
- 						downloadList += "\"type\":\"" + (treeNode.isParent == true? 2: 1) + "\"";						
- 					}
+ 					downloadList += "\"path\":\"" + treeNode.path + "\",";						
+ 					downloadList += "\"name\":\"" + treeNode.name + "\",";						
+ 					downloadList += "\"type\":\"" + (treeNode.isParent == true? 2: 1) + "\"";						
  					downloadList += "}"
+ 		 			
+ 					count++;
+ 	 				if(count > 1000)
+ 	 				{
+ 	 					//buildSubContext 每次最多1000个文件
+ 	 					break;
+ 	 				}
     	   		}
 	    	}
     		
     		downloadList += "]";
+    		console.log("buildDownloadListForCompressDownload downloadList:" + downloadList);
     		return (downloadList);
       	}
       	
@@ -338,8 +327,15 @@
       	{
       		//TODO: 最简单的处理方法, 取出第一个文件节点用作下载信息
       		var treeNode = treeNodes[0];
+
+      		var fakeDoc = {};
+      		fakeDoc.path = "";
+      		fakeDoc.name = treeNode.name + "...等" + treeNodes.length + "个文件";
+      		fakeDoc.type = 2;
+      		fakeDoc.vid = treeNode.vid;
+      		
       		var fakeTreeNodes = [];
-      		fakeTreeNodes.push(treeNode);
+      		fakeTreeNodes.push(fakeDoc);
       		return fakeTreeNodes;
       	}
       	

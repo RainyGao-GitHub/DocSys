@@ -22738,12 +22738,17 @@ public class BaseController  extends BaseFunction{
 		{
 			tmpEncryptName = repos.getName(); //用仓库名作为解密存储目录
 		}
+		File tmpDir = new File(tmpEncryptPath + tmpEncryptName);
+		if(tmpDir.exists() == false)
+		{
+			dir.mkdirs();
+		}
 
 		//只拷贝有权限的文件
 		task.info = "文件拷贝中...";
 		for(Doc subDoc : task.docList)
 		{
-			copyAuthedFilesForDownload(tmpEncryptPath, tmpEncryptName, repos, subDoc, task.reposAccess);
+			copyAuthedFilesForDownload(tmpEncryptPath + tmpEncryptName + "/", subDoc.getName(), repos, subDoc, task.reposAccess);
 		}
 
 		//加密的仓库，需要先解密再压缩
@@ -22769,7 +22774,7 @@ public class BaseController  extends BaseFunction{
 		}
 
 		task.status = 2; //Success
-		task.info = "文件打包成功";
+		task.info = "目录压缩成功";
 		deleteDelayTime = 72000L; //20小时后			
 		addSystemLog(requestIP, task.reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", null, "成功", task.repos, task.doc, null, task.info);				
 		//删除临时解密目录
