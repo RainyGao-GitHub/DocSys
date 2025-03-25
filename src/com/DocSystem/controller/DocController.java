@@ -2204,14 +2204,14 @@ public class DocController extends BaseController{
 			String taskId,
 			Integer reposId, Long docId, Long pid, String path, String name,  Integer level, Integer type,
 			Integer downloadType,
-			String downloadList,	//打包下载文件列表
+			List<Doc> downloadList,	//打包下载文件列表
 			Integer shareId,
 			HttpServletResponse response,HttpServletRequest request,HttpSession session)
 	{
 		Log.infoHead("************** downloadDocPrepare [" + path + name + "] ****************");
 		Log.info("downloadDocPrepare  reposId:" + reposId + " docId:" + docId + " pid:" + pid + " path:" + path + " name:" + name  + " level:" + level + " type:" + type + " downloadType:" + downloadType + " shareId:" + shareId);
 		
-		Log.debug("downloadDocPrepare  downloadList:" + downloadList);
+		Log.printObject("downloadDocPrepare  downloadList:", downloadList);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
@@ -2312,6 +2312,23 @@ public class DocController extends BaseController{
 		{
 			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));				
 		}
+	}
+
+	private List<Doc> getDocListFromDownloadList(Repos repos, List<Doc> downloadList) 
+	{
+		Integer reposId = repos.getId();
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		
+		List<Doc> docList = new ArrayList<Doc>();
+		//补齐doc信息
+		for(Doc subDoc : downloadList)
+		{
+			subDoc = buildBasicDoc(reposId, null, null, reposPath, subDoc.getPath(), subDoc.getName(), subDoc.getLevel(), subDoc.getType(), true, localRootPath, localVRootPath, null, null);
+			docList.add(subDoc);		
+		}
+		return docList;
 	}
 
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, ReposAccess reposAccess,  boolean remoteStorageEn, ReturnAjax rt)
