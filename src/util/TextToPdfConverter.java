@@ -2,42 +2,52 @@ package util;
 
 import org.apache.pdfbox.pdmodel.PDDocument;  
 import org.apache.pdfbox.pdmodel.PDPage;  
-import org.apache.pdfbox.pdmodel.PDPageContentStream;  
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 
 import com.DocSystem.common.Log;
 
-import java.io.BufferedReader;
-import java.io.FileReader;  
-import java.io.IOException;  
+import java.io.*;
 
 public class TextToPdfConverter {  
     
     private static final float MARGIN = 40;  
-    private static final float LINE_HEIGHT = 15;  
-    private static final PDType1Font FONT = PDType1Font.HELVETICA;  
-    private static final float FONT_SIZE = 12;  
+    private static final float LINE_HEIGHT = 20;  // 增大行高适应中文  
+    private static final float FONT_SIZE = 14;  
+    
+    // 使用支持中文的字体文件路径  
+    private static final String FONT_PATH = "C:/Windows/Fonts/simfang.ttf";  
 
     public static void convertTextToPdf(String inputPath, String outputPath) throws IOException {  
         try (PDDocument document = new PDDocument()) {  
-            PDPage currentPage = createNewPage(document);  
+            // 加载中文字体  
+            PDType0Font font = PDType0Font.load(document, new File(FONT_PATH));  
+            
+            PDPage currentPage = new PDPage();  
+            document.addPage(currentPage);  
             PDPageContentStream contentStream = null;  
             
-            try (BufferedReader reader = new BufferedReader(new FileReader(inputPath))) {  
+            try (BufferedReader reader = new BufferedReader(  
+                    new InputStreamReader(  
+                        new FileInputStream(inputPath), "UTF-8"))) {  // 明确指定编码  
+                
                 contentStream = new PDPageContentStream(document, currentPage);  
-                contentStream.setFont(FONT, FONT_SIZE);  
+                contentStream.setFont(font, FONT_SIZE);  
                 float y = currentPage.getMediaBox().getHeight() - MARGIN;  
 
                 String line;  
                 while ((line = reader.readLine()) != null) {  
+                    // 处理换行和分页  
                     if (y < MARGIN) {  
                         contentStream.close();  
-                        currentPage = createNewPage(document);  
+                        currentPage = new PDPage();  
+                        document.addPage(currentPage);  
                         contentStream = new PDPageContentStream(document, currentPage);  
-                        contentStream.setFont(FONT, FONT_SIZE);  
+                        contentStream.setFont(font, FONT_SIZE);  
                         y = currentPage.getMediaBox().getHeight() - MARGIN;  
                     }  
-
+                    
+                    // 写入文本  
                     contentStream.beginText();  
                     contentStream.newLineAtOffset(MARGIN, y);  
                     contentStream.showText(line);  
@@ -47,22 +57,12 @@ public class TextToPdfConverter {
                 }  
             } finally {  
                 if (contentStream != null) {  
-                    try {  
-                        contentStream.close();  
-                    } catch (IOException e) {  
-                        System.err.println("流关闭异常: " + e.getMessage());  
-                    }  
+                    contentStream.close();  
                 }  
             }  
             document.save(outputPath);  
         }  
-    }  
-
-    private static PDPage createNewPage(PDDocument doc) {  
-        PDPage page = new PDPage();  
-        doc.addPage(page);  
-        return page;  
-    }  
+    }
     
     public static void main(String[] args) {  
         try {  

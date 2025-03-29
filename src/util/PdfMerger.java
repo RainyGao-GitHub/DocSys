@@ -29,4 +29,18 @@ public class PdfMerger {
             throw new IOException("加密文档无法合并: " + e.getMessage());  
         }  
     }  
+    
+    public static void main(String[] args) throws Exception {  
+        String[] files = {  
+            "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/images.pdf",  
+            "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/text.pdf",  
+        };  
+        
+        try {  
+            PdfMerger.mergePdfFiles(files, "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/merged.pdf");  
+            System.out.println("PDF合并成功");  
+        } catch (IOException e) {  
+            System.err.println("合并失败: " + e.getMessage());  
+        }  
+    }
 }  
