@@ -1720,7 +1720,14 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId, authCode
 	else if(isPdf(docInfo.fileSuffix))
 	{
 		docInfo.fileLink = ""; //copyDocInfo的fileLink不是RESTLink，因此需要清空，保证showPdf接口重新获取RESTLINK
-		showPdf(docInfo, openInNewPage);
+		if(preview !== undefined && preview == "print")
+		{
+			showPdfForPrint(docInfo, openInNewPage);			
+		}
+		else
+		{
+			showPdf(docInfo, openInNewPage);
+		}
 	}
 	else if(isOffice(docInfo.fileSuffix))
 	{
@@ -1869,6 +1876,11 @@ function openOffice(docInfo, openInNewPage, preview)
     				docInfo.fileLink = ret.data;
     				showPdf(docInfo, openInNewPage);
                 }
+            	else if(ret.dataEx == "print")
+                {
+    				docInfo.fileLink = ret.data;
+    				showPdfForPrint(docInfo, openInNewPage);
+                }
             	else if(ret.dataEx == "office")
                 {
             		if(openInNewPage != "openInNewPage")
@@ -1927,6 +1939,11 @@ function openCad(docInfo, openInNewPage)
                 {
     				docInfo.fileLink = ret.data;
     				showPdf(docInfo, openInNewPage);
+                }
+            	if(ret.dataEx == "print")
+                {
+    				docInfo.fileLink = ret.data;
+    				showPdfForPrint(docInfo, openInNewPage);
                 }
             	else
             	{
@@ -2122,6 +2139,25 @@ function showPdf(docInfo, openInNewPage)
 		else
 		{
 			showPdfInDialog(docInfo);
+		}
+	}
+}
+
+function showPdf(docInfo, openInNewPage)
+{
+	if(openInNewPage == "openInNewPage")
+	{
+		showPdfInNewPageForPrint(docInfo);
+	}
+	else
+	{
+		if(openInNewPage == "openInArtDialog")
+		{			
+			showPdfInArtDialogForPrint(docInfo);
+		}
+		else
+		{
+			showPdfInDialogForPrint(docInfo);
 		}
 	}
 }
@@ -2470,6 +2506,30 @@ function showPdfInArtDialog(docInfo) {
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
 		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		big: true,
+		padding: 0,
+		width: width,
+		height: height,
+		resize: true,
+		drag: true,
+		data: docInfo,
+	});
+	if (window.artDialogList === undefined) {
+		window.artDialogList = {};
+	}
+	window.artDialogList["ArtDialog" + docInfo.docId] = d;
+}
+
+function showPdfInArtDialogForPrint(docInfo) {
+	//获取窗口的高度并设置高度
+	var height =  getArtDialogInitHeight();
+	var width = getArtDialogInitWidth();
+	var d = new artDialog({
+		id: "ArtDialogForPrint" + docInfo.docId,
+		title: docInfo.name,
+		content: '<iframe frameborder="0" name="ArtDialogForPrint' + docInfo.docId + '" src="pdfViewerForPrint.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
