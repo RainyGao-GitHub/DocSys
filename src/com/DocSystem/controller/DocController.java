@@ -4628,7 +4628,7 @@ public class DocController extends BaseController{
 	}
 
 	@RequestMapping("/getDocFileLinkRS.do")
-	public void getDocFileLink(Integer reposId, String path, String name, 
+	public void getDocFileLinkRS(Integer reposId, String path, String name, 
 			String commitId, Integer needDeletedEntry, Integer historyType,
 			Integer shareId,
 			String authCode,
