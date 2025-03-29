@@ -1728,7 +1728,7 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId, authCode
 	}
 	else if(isCad(docInfo.fileSuffix))
 	{
-		openCad(docInfo, openInNewPage);		
+		openCad(docInfo, openInNewPage, preview);		
 	}
 	else if(isMarkdown(docInfo.fileSuffix))
 	{
@@ -1901,7 +1901,7 @@ function openOffice(docInfo, openInNewPage, preview)
     });
 }
 
-function openCad(docInfo, openInNewPage)
+function openCad(docInfo, openInNewPage, preview)
 {
 	console.log("openCad() openInNewPage:" + openInNewPage + " docInfo:", docInfo);
     var url = "/DocSystem/Bussiness/getDocCadLink.do";
@@ -1923,7 +1923,7 @@ function openCad(docInfo, openInNewPage)
             historyType: docInfo.historyType,
             shareId: docInfo.shareId,
             authCode: docInfo.authCode,
-            //preview: preview,  //cad总是预览，无法编辑
+            preview: preview,  //cad总是预览，无法编辑
         },
         success : function (ret) {
             if( "ok" == ret.status ){
