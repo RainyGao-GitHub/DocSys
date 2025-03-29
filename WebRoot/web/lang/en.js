@@ -454,6 +454,10 @@ function lang(str)
 		"已取消" : "Cancled",
 		"下载准备中..." : "Download preparing...",
 		
+		//打印文件
+		"是否打印" : "Do you want to print",
+		"请选择需要打印的文件" : "No any file or folder was selected to print",
+		"请选择需要打印的文件!" : "No any file or folder was selected to print !",
 		
 		//文件访问密码
 		"密码验证" : "Verify Password",
