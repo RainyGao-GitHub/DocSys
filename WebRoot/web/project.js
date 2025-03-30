@@ -4789,13 +4789,6 @@ function contextMenuInit()
 				}
 		},
 		{divider: true},
-		{text: _Lang('打印'), action: function(e){
-			e.preventDefault();
-			var treeNodes = getSelectedNodes();
-			printDoc(treeNodes,true,1);
-		}
-		},
-		{divider: true},
 		{text: _Lang('分享'), action: function(e){
 					e.preventDefault();
 					shareDoc(curRightClickedTreeNode);
@@ -4969,6 +4962,14 @@ function contextMenuInit()
 							e.preventDefault();
 							openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf", gShareId);
 						}
+					},
+					{divider: true},
+					{text: _Lang('打印'), action: function(e){
+						e.preventDefault();
+						var treeNodes = [];
+						treeNodes.push(curRightClickedTreeNode);
+						printDoc(treeNodes,true,1);
+					}
 					},
 					{divider: true},
 					{text: _Lang('备注'), subMenu: [
@@ -5399,6 +5400,14 @@ function contextMenuInit()
 							e.preventDefault();
 							openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
 						}
+					},	
+					{divider: true},
+					{text: _Lang('打印'), action: function(e){
+							e.preventDefault();
+							var treeNodes = [];
+							treeNodes.push(curRightClickedDocListNode);
+							printDoc(treeNodes,true,1);
+						}
 					},					
 					{divider: true},					
 					{text: _Lang('备注'), subMenu: [
@@ -5481,14 +5490,6 @@ function contextMenuInit()
 					var treeNodes = [];
 					treeNodes.push(curRightClickedDocListNode);
 					downloadDoc(treeNodes,true,1);
-				}
-			},
-			{divider: true},
-			{text: _Lang('打印'), action: function(e){
-					e.preventDefault();
-					var treeNodes = [];
-					treeNodes.push(curRightClickedDocListNode);
-					printDoc(treeNodes,true,1);
 				}
 			},
 			{divider: true},
@@ -5670,6 +5671,14 @@ function contextMenuInit()
 							}
 						},
 						{divider: true},
+						{text: _Lang('打印'), action: function(e){
+								e.preventDefault();
+								var treeNodes = [];
+								treeNodes.push(curRightClickedDocListNode);
+								printDoc(treeNodes,true,1);
+							}
+						},
+						{divider: true},
 						{text: _Lang('备注'), subMenu: [
 									{text: _Lang('查看历史'), action: function(e){
 											e.preventDefault();
@@ -5720,14 +5729,6 @@ function contextMenuInit()
 					treeNodes.push(gDocInfo);
 					downloadDoc(treeNodes,true,1);
 				}
-			},
-			{divider: true},
-			{text: _Lang('打印'), action: function(e){
-				e.preventDefault();
-				var treeNodes = [];
-				treeNodes.push(gDocInfo);
-				printDoc(treeNodes,true,1);
-			}
 			},
 			{divider: true},
 			{text: _Lang('分享'), action: function(e){
@@ -5845,6 +5846,14 @@ function contextMenuInit()
 					{text: _Lang('预览'), action: function(e){
 							e.preventDefault();
 							openDoc(gDocInfo, true, "openInArtDialog", "pdf", gShareId);
+						}
+					},
+					{divider: true},
+					{text: _Lang('打印'), action: function(e){
+							e.preventDefault();
+							var treeNodes = [];
+							treeNodes.push(gDocInfo);
+							printDoc(treeNodes,true,1);
 						}
 					},
 					{divider: true},

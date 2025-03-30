@@ -455,6 +455,7 @@ function lang(str)
 		"下载准备中..." : "Download preparing...",
 		
 		//打印文件
+		"打印" : "Print",
 		"是否打印" : "Do you want to print",
 		"请选择需要打印的文件" : "No any file or folder was selected to print",
 		"请选择需要打印的文件!" : "No any file or folder was selected to print !",
