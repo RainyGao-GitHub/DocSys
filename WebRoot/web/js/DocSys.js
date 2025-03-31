@@ -1869,6 +1869,11 @@ function openOffice(docInfo, openInNewPage, preview)
     				docInfo.fileLink = ret.data;
     				showPdf(docInfo, openInNewPage);
                 }
+            	else if(ret.dataEx == "pdfViewOnly")
+                {
+    				docInfo.fileLink = ret.data;
+    				showPdfViewOnly(docInfo, openInNewPage);
+                }
             	else if(ret.dataEx == "print")
                 {
     				docInfo.fileLink = ret.data;
