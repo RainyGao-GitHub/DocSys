@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>文件预览</title>
+    <style type="text/css">
+    </style>
+    <!-- jquery -->
+    <script src="static/scripts/jquery.min.js"></script>
+    <!-- pdf -->
+    <script src="static/pdfjs/build/pdf.js"></script>
+    <script src="static/pdfjs/build/pdf.worker.js"></script>
+    <!-- bootstrapQ -->
+    <link href="static/bootstrapQ/qiao.css" rel="stylesheet">
+    <script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+    <!-- DocSys -->
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/base64.js"></script>
+    <script type="text/javascript" src="js/DocSys.js"></script>
+    
+    <script type="text/javascript">
+        var var_win_height = $(window).height();
+
+        $(document).ready(function () {
+            resetPlayerSize(); 
+            viewDoc();
+        });
+
+        $(window).resize(function () {
+            resetPlayerSize();
+        });
+
+        function resetPlayerSize() {
+            var_win_height = $(window).height();
+            $(".tmPlayer").css({ "height": var_win_height + "px" });
+        } 
+    </script>
+</head>
+
+<body style="margin: 0;overflow: hidden"> 
+    <div id="tmPlayer" class="tmPlayer" style="height: 557px; width: 100%; height: 100%"></div>
+
+    <script type="text/javascript">
+	    
+    	function viewDoc()
+	   	{
+	    	var fileLink = getQueryString("fileLink");
+		    console.log("viewDoc() fileLink:"+fileLink);
+		    if(!fileLink || fileLink == null || fileLink == "")
+		    {
+			    var docInfo = getDocInfoFromRequestParamStr();	    
+			    getDocFileLinkForPreview(docInfo, showPDF, showErrorMessage, "REST"); //RESTFUL URL    	
+		    }
+		    else
+		    {
+		    	showPDF(fileLink);
+		    }
+	   	}   
+	    
+	    function showPDF(url)
+	   	{
+	    	console.log("showPDF() url:", url);
+	        $('.tmPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewerViewOnly.html?file=' + url +
+	            '" style="width:100%; height:100%;"></iframe>');
+	   	}
+    </script>
+</body>
+</html>

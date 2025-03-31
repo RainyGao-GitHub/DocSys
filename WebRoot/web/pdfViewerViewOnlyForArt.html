@@ -1,0 +1,74 @@
+<!-- jquery -->
+<script src="static/scripts/jquery.min.js"></script>
+<!-- pdf -->
+<script src="static/pdfjs/build/pdf.js"></script>
+<script src="static/pdfjs/build/pdf.worker.js"></script>
+<!-- bootstrapQ -->
+<link href="static/bootstrapQ/qiao.css" rel="stylesheet">
+<script type="text/javascript" src="static/bootstrapQ/qiao.js"></script>
+<!-- DocSys -->
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/base64.js"></script>
+<script type="text/javascript" src="js/DocSys.js"></script>
+<div id="pdfPlayer" class="pdfPlayer" style="width: 100%; height:1200px;"></div>
+
+<script type="text/javascript">
+    function GetRequest() {
+        var url = location.search; //获取url中"?"符后的字串
+        var theRequest = {};
+        if (url.indexOf("?") !== -1) {
+            var str = url.substr(1);
+            var strs = str.split("&");
+            for(var i = 0; i < strs.length; i ++) {
+                theRequest[strs[i].split("=")[0]]=unescape(strs[i].split("=")[1]);
+            }
+        }
+        return theRequest;
+    }
+    var params = GetRequest();
+    var docid = params['docid'];
+    //获取artDialog父窗口传递过来的参数
+    var artDialog2 = window.top.artDialogList['ArtDialog'+docid];
+    if (artDialog2 == null) {
+        artDialog2 = window.parent.artDialogList['ArtDialog' + docid];
+    }
+    // 获取对话框传递过来的数据
+    var docInfo = artDialog2.config.data;
+	console.log("pdfViewerForArt.html => docInfo:",docInfo);
+
+	var var_win_height = $(window).height();
+
+    $(document).ready(function () {
+        resetPlayerSize(); 
+        viewDoc();
+    });
+
+    $(window).resize(function () {
+        resetPlayerSize();
+    });
+
+    function resetPlayerSize() {
+        var_win_height = $(window).height();
+        $(".pdfPlayer").css({ "height": var_win_height + "px" });
+    }
+    
+   	function viewDoc()
+   	{
+	    var fileLink = docInfo.fileLink;	    
+	    if(!fileLink || fileLink == null || fileLink == "")
+	    {
+	    	getDocFileLinkForPreview(docInfo, showPDF, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink    	
+	    }
+	    else
+	    {
+	    	showPDF(fileLink);
+	    }
+   	}   
+    
+    function showPDF(url)
+   	{
+    	console.log("showPDF() url:", url);
+        $('.pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewerViewOnly.html?file=' + url +
+            '" style="width:100%; height:100%;"></iframe>');
+   	}
+</script>

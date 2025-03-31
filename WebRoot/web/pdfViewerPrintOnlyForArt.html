@@ -68,7 +68,7 @@
     function showPDF(url)
    	{
     	console.log("showPDF() url:", url);
-    	$('.pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer_print.html?file=' + url +
+    	$('.pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewerPrintOnly.html?file=' + url +
         '" style="width:100%; height:100%;"></iframe>');
     
     	/* 浏览器有安全限制，无法主动触发打印
