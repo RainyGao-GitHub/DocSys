@@ -336,11 +336,11 @@ function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
 {
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, 0);
+		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, "");
 	}
 	else
 	{
-		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, 0);
+		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, "");
 	}
 }
 
@@ -351,15 +351,15 @@ function getDocFileLinkForPreview(docInfo, successCallback, errorCallback, urlSt
 	
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, 1);
+		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, "preview");
 	}
 	else
 	{
-		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, 1);
+		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, "preview");
 	}
 }
 
-function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, forPreview)
+function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, preview)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -372,9 +372,9 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, 
     	return;
     }
     
-    if(forPreview == undefined)
+    if(preview == undefined)
     {
-    	forPreview = 0;
+    	preview = "";
     }
   	
 	$.ajax({
@@ -390,7 +390,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, 
             shareId: docInfo.shareId,
             authCode: docInfo.authCode,
             urlStyle: urlStyle,
-            forPreview: forPreview,
+            preview: preview,
             videoConvertType: docInfo.videoConvertType,
         },
         success : function (ret) {
@@ -416,7 +416,7 @@ function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, 
 }
 
 //获取压缩文件的文件链接接口
-function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, forPreview)
+function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, preview)
 {	
 	var fileLink = "";
 	var errorInfo = "";
@@ -429,9 +429,9 @@ function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, fo
     	return;
     }
     
-    if(forPreview == undefined)
+    if(preview == undefined)
     {
-    	forPreview = 0;
+    	preview = "";
     }
   	
 	$.ajax({
@@ -448,7 +448,7 @@ function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, fo
             shareId: docInfo.shareId,
             authCode: docInfo.authCode,
             urlStyle: urlStyle,
-            forPreview: forPreview,
+            preview: preview,
             videoConvertType: docInfo.videoConvertType,
         },
         success : function (ret) {
@@ -1843,7 +1843,7 @@ function openOffice(docInfo, openInNewPage, preview)
     var url = "/DocSystem/Bussiness/getDocOfficeLink.do";
     if(docInfo.isZip && docInfo.isZip == 1)
     {
-        var url = "/DocSystem/Bussiness/getZipDocOfficeLink.do";    	
+        url = "/DocSystem/Bussiness/getZipDocOfficeLink.do";    	
     }
 	$.ajax({
         url : url,
@@ -1864,7 +1864,15 @@ function openOffice(docInfo, openInNewPage, preview)
         success : function (ret) {
             if( "ok" == ret.status ){
             	console.log("openOffice ret", ret);
-            	if(ret.dataEx == "pdf")
+            	if(ret.dataEx == "office")
+                {
+            		if(openInNewPage != "openInNewPage")
+            		{
+            			docInfo.fileLink = ret.data;
+            		}
+            		showOffice(docInfo, openInNewPage);
+                }
+            	else if(ret.dataEx == "pdf")
                 {
     				docInfo.fileLink = ret.data;
     				showPdf(docInfo, openInNewPage);
@@ -1877,31 +1885,23 @@ function openOffice(docInfo, openInNewPage, preview)
             	else if(ret.dataEx == "print")
                 {
     				docInfo.fileLink = ret.data;
-    				showPdfForPrint(docInfo, openInNewPage);
-                }
-            	else if(ret.dataEx == "office")
-                {
-            		if(openInNewPage != "openInNewPage")
-            		{
-            			docInfo.fileLink = ret.data;
-            		}
-            		showOffice(docInfo, openInNewPage);
+    				showPdfPrintOnly(docInfo, openInNewPage);
                 }
             	else
             	{
                 	console.log("previewOfficeInDialog getDocOfficeLink Failed (maybe office not supported or not installed)");
-                	showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容            		
+                	showText(docInfo, openInNewPage);
             	}
             }
-            else
+            else 
             {
-            	console.log("previewOfficeInDialog getDocOfficeLink Failed");
-            	showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
+            	console.log("openOffice() 获取文件信息失败: ret.msgInfo");
+            	showErrorMessage(_Lang("获取文件信息失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-            console.log("previewOfficeInDialog getDocOfficeLink Failed 服务器异常");
-            showText(docInfo, openInNewPage); //ReadOnly 方式显示文件内容
+        	console.log("openOffice() 获取文件信息失败: 服务器异常");
+        	showErrorMessage(_Lang("获取文件信息失败", ":", "服务器异常"));
         }
     });
 }
@@ -1912,7 +1912,7 @@ function openCad(docInfo, openInNewPage, preview)
     var url = "/DocSystem/Bussiness/getDocCadLink.do";
     if(docInfo.isZip && docInfo.isZip == 1)
     {
-        var url = "/DocSystem/Bussiness/getZipDocCadLink.do";    	
+        url = "/DocSystem/Bussiness/getZipDocCadLink.do";    	
     }
 	$.ajax({
         url : url,
@@ -1933,34 +1933,30 @@ function openCad(docInfo, openInNewPage, preview)
         success : function (ret) {
             if( "ok" == ret.status ){
             	console.log("openCad ret", ret);
-            	if(ret.dataEx == "pdf")
-                {
-    				docInfo.fileLink = ret.data;
-    				showPdf(docInfo, openInNewPage);
-                }
             	if(ret.dataEx == "pdfViewOnly")
                 {
     				docInfo.fileLink = ret.data;
     				showPdfViewOnly(docInfo, openInNewPage);
                 }
-            	if(ret.dataEx == "print")
+            	else if(ret.dataEx == "print")
                 {
     				docInfo.fileLink = ret.data;
-    				showPdfForPrint(docInfo, openInNewPage);
+    				showPdfPrintOnly(docInfo, openInNewPage);
                 }
-            	else
-            	{
-            		showErrorMessage(_Lang("文件打开失败", ":", ret.msgInfo));
-            	}
+            	else //if(ret.dataEx == "pdf")
+                {
+    				docInfo.fileLink = ret.data;
+    				showPdf(docInfo, openInNewPage);
+                }
             }
             else
             {
-            	console.log("openCad getDocCadLink Failed");
+            	console.log("openCad() getDocCadLink Failed");
         		showErrorMessage(_Lang("文件打开失败", ":", ret.msgInfo));
             }
         },
         error : function () {
-            console.log("openCad getDocCadLink Failed 服务器异常");
+            console.log("openCad() getDocCadLink Failed 服务器异常");
     		showErrorMessage(_Lang("文件打开失败", ":", "服务器异常"));
         }
     });
@@ -2129,24 +2125,178 @@ function showZip(docInfo, openInNewPage)
 
 function openPdf(docInfo, openInNewPage, preview)
 {
+	console.log("openPdf preview:" + preview);
+    var url = "/DocSystem/Doc/getDocFileLink.do";
+    if(docInfo.isZip && docInfo.isZip == 1)
+    {
+        url = "/DocSystem/Doc/getZipDocFileLink.do";    	
+    }
+    
 	if(preview === undefined)
 	{
-		showPdfViewOnly(docInfo, openInNewPage);
-		return;
+		preview = "";
 	}
 	
-	if(preview == "print")
-	{
-		showPdfForPrint(docInfo, openInNewPage);			
-	}
-	else if(preview == "pdf")
-	{
-		showPdf(docInfo, openInNewPage);		
-	}	
-	else
-	{
-		showPdfViewOnly(docInfo, openInNewPage);
-	}
+	$.ajax({
+        url : url,
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: docInfo.vid,
+            path: docInfo.path,
+            name: docInfo.name,
+            commitId: docInfo.commitId,
+            historyType: docInfo.historyType,
+            shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
+            urlStyle: urlStyle,
+            preview: preview,
+            videoConvertType: docInfo.videoConvertType,
+        },
+        success : function (ret) {
+        	console.log("openPdf ret",ret);
+            if( "ok" == ret.status ){
+            	console.log("openPdf ret", ret);
+            	if(ret.dataEx == "pdfViewOnly")
+                {
+    				docInfo.fileLink = ret.data;
+    				showPdfViewOnly(docInfo, openInNewPage);
+                }
+            	else if(ret.dataEx == "print")
+                {
+    				docInfo.fileLink = ret.data;
+    				showPdfPrintOnly(docInfo, openInNewPage);
+                }
+            	else //if(ret.dataEx == "pdf")
+                {
+    				docInfo.fileLink = ret.data;
+    				showPdf(docInfo, openInNewPage);
+                }
+            }
+            else 
+            {
+            	console.log("openPdf() 获取文件信息失败:" + ret.msgInfo);
+            	showErrorMessage(_Lang("获取文件信息失败", ":", ret.msgInfo));
+            }
+        },
+        error : function () {
+        	console.log("openPdf() 获取文件信息失败: 服务器异常");
+        	showErrorMessage(_Lang("获取文件信息失败", ":", "服务器异常"));
+        }
+    });
+}
+
+function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, preview)
+{	
+	var fileLink = "";
+	var errorInfo = "";
+	console.log("getDocFileLinkBasic()  docInfo:", docInfo);
+    if(!docInfo || docInfo == null || docInfo.id == 0)
+    {
+    	//未定义需要显示的文件
+    	errorInfo = "请选择文件";
+    	errorCallback && errorCallback(errorInfo);
+    	return;
+    }
+    
+    if(preview == undefined)
+    {
+    	preview = "";
+    }
+  	
+	$.ajax({
+        url : "/DocSystem/Doc/getDocFileLink.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: docInfo.vid,
+            path: docInfo.path,
+            name: docInfo.name,
+            commitId: docInfo.commitId,
+            historyType: docInfo.historyType,
+            shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
+            urlStyle: urlStyle,
+            preview: preview,
+            videoConvertType: docInfo.videoConvertType,
+        },
+        success : function (ret) {
+        	console.log("getDocFileLinkBasic ret",ret);
+        	if( "ok" == ret.status )
+        	{
+        		var docLink = ret.data;
+        		var fileLink = buildFullLink(docLink);
+        		successCallback &&successCallback(fileLink);
+            }
+            else 
+            {
+            	console.log(ret.msgInfo);
+            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
+            	errorCallback && errorCallback(errorInfo);
+            }
+        },
+        error : function () {
+        	errorInfo = "获取文件信息失败：服务器异常";
+        	errorCallback && errorCallback(errorInfo);
+        }
+    });
+}
+//获取压缩文件的文件链接接口
+function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, preview)
+{	
+	var fileLink = "";
+	var errorInfo = "";
+	console.log("getZipDocFileLink()  docInfo:", docInfo);
+    if(!docInfo || docInfo == null || docInfo.id == 0)
+    {
+    	//未定义需要显示的文件
+    	errorInfo = "请选择文件";
+    	errorCallback && errorCallback(errorInfo);
+    	return;
+    }
+    
+    if(preview == undefined)
+    {
+    	preview = "";
+    }
+  	
+	$.ajax({
+        url : "/DocSystem/Doc/getZipDocFileLink.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: docInfo.vid,
+            path: docInfo.path,
+            name: docInfo.name,
+            isZip: docInfo.isZip,
+            rootPath: docInfo.rootPath,
+            rootName: docInfo.rootName,
+            shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
+            urlStyle: urlStyle,
+            preview: preview,
+            videoConvertType: docInfo.videoConvertType,
+        },
+        success : function (ret) {
+        	console.log("getZipDocFileLink ret",ret);
+        	if( "ok" == ret.status )
+        	{
+        		var docLink = ret.data;
+        		var fileLink = buildFullLink(docLink);
+        		successCallback &&successCallback(fileLink);
+            }
+            else 
+            {
+            	console.log(ret.msgInfo);
+            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
+            	errorCallback && errorCallback(errorInfo);
+            }
+        },
+        error : function () {
+        	errorInfo = "获取文件信息失败：服务器异常";
+        	errorCallback && errorCallback(errorInfo);
+        }
+    });
 }
 
 function showPdf(docInfo, openInNewPage)
@@ -2172,36 +2322,36 @@ function showPdfViewOnly(docInfo, openInNewPage)
 {
 	if(openInNewPage == "openInNewPage")
 	{
-		showPdfInNewPage(docInfo);
+		showPdfViewOnlyInNewPage(docInfo);
 	}
 	else
 	{
 		if(openInNewPage == "openInArtDialog")
 		{			
-			showPdfInArtDialog(docInfo);
+			showPdfViewOnlyInArtDialog(docInfo);
 		}
 		else
 		{
-			showPdfInDialog(docInfo);
+			showPdfViewOnlyInDialog(docInfo);
 		}
 	}
 }
 
-function showPdfForPrint(docInfo, openInNewPage)
+function showPdfPrintOnly(docInfo, openInNewPage)
 {
 	if(openInNewPage == "openInNewPage")
 	{
-		showPdfInNewPageForPrint(docInfo);
+		showPdfPrintOnlyInNewPage(docInfo);
 	}
 	else
 	{
 		if(openInNewPage == "openInArtDialog")
 		{			
-			showPdfInArtDialogForPrint(docInfo);
+			showPdfPrintOnlyInArtDialog(docInfo);
 		}
 		else
 		{
-			showPdfInDialogForPrint(docInfo);
+			showPdfPrintOnlyInDialog(docInfo);
 		}
 	}
 }
@@ -2358,10 +2508,6 @@ function showMarkdownInNewPage(docInfo, openType)
 {
 	console.log("showTextInNewPage docInfo:", docInfo);
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	if(docInfo.mxsdocServerUrl)
-	{
-		
-	}
 	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/stackedit.html?" + urlParamStr);			
 }
 

@@ -4456,12 +4456,12 @@ public class DocController extends BaseController{
 			String commitId, Integer needDeletedEntry, Integer historyType,
 			Integer shareId,
 			String urlStyle,
-			Integer forPreview,
+			String preview,
 			Integer videoConvertType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("*************** getDocFileLink [" + path + name + "] ********************");		
-		Log.info("getDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId + " forPreview:" + forPreview);
+		Log.info("getDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId + " commitId:" + commitId + " preview:" + preview);
 
 		//注意该接口支持name是空的的情况
 		if(path == null)
@@ -4497,12 +4497,20 @@ public class DocController extends BaseController{
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
 		//如果是用于预览目的则不需要进行下载权限检查
-		if(forPreview == null)
+		if(preview == null)
 		{
-			forPreview = 0;
+			preview = "";
 		}
-		if(forPreview != 1)
+		switch(preview)
 		{
+		case "preview":
+			//TODO: preview不进行权限检查
+			break;
+		case "pdf":
+			//TODO: 用户如果没有下载权限，需要改成pdfViewOnly
+			break;
+		case "print":
+		default:
 			//检查用户是否有权限下载文件
 			if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 			{
@@ -4588,17 +4596,27 @@ public class DocController extends BaseController{
 		}
 		
 		String authCode = addDocDownloadAuthCode(reposAccess, null);
-
-		//TODO: 如果是视频文件，用于preview的情况下，需要进行转码，因此fileLink可能不是指向原始文件的，前端需要告知视频转换类型，否则默认就是mp4
-		if(forPreview == 1)
+		String fileLink = null;
+		switch(preview)
 		{
+		case "preview":
+			//TODO: 如果是视频文件，用于preview的情况下，需要进行转码，因此fileLink可能不是指向原始文件的，前端需要告知视频转换类型，否则默认就是mp4
 			if(videoConvertType != null && videoConvertType == 1)
 			{
 				tmpDoc = convertVideoToMP4(repos, tmpDoc);
 			}
+			fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);
+			break;
+		case "pdf":
+		case "pdfViewOnly":
+		case "print":
+			fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);
+			break;
+		default:
+			fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);
+			break;
 		}
 		
-		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);
 		if(fileLink == null)
 		{
 			Log.debug("getDocFileLink() buildDocFileLink failed");
@@ -4608,6 +4626,7 @@ public class DocController extends BaseController{
 		}
 		
 		rt.setData(fileLink);
+		rt.setDataEx(preview); //回传preview方便前端进行进行逻辑控制
 		writeJson(rt, response);
 	}
 	
