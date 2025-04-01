@@ -1863,7 +1863,7 @@ function openOffice(docInfo, openInNewPage, preview)
         },
         success : function (ret) {
             if( "ok" == ret.status ){
-            	console.log("openOffice ret", ret);
+            	console.log("openOffice() ret", ret);
             	if(ret.dataEx == "office")
                 {
             		if(openInNewPage != "openInNewPage")
@@ -1890,7 +1890,8 @@ function openOffice(docInfo, openInNewPage, preview)
             	else
             	{
                 	console.log("previewOfficeInDialog getDocOfficeLink Failed (maybe office not supported or not installed)");
-                	showText(docInfo, openInNewPage);
+                	//showText(docInfo, openInNewPage);
+                	showErrorMessage(_Lang("获取文件信息失败", ":", ret.msgInfo));
             	}
             }
             else 
@@ -2152,7 +2153,7 @@ function openPdf(docInfo, openInNewPage, preview)
             rootName: docInfo.rootName,
             shareId: docInfo.shareId,
             authCode: docInfo.authCode,
-            urlStyle: urlStyle,
+            urlStyle: "REST",
             preview: preview,
             videoConvertType: docInfo.videoConvertType,
         },
@@ -2191,6 +2192,7 @@ function openPdf(docInfo, openInNewPage, preview)
 
 function showPdf(docInfo, openInNewPage)
 {
+	console.log("showPdf() docInfo:", docInfo);
 	if(openInNewPage == "openInNewPage")
 	{
 		showPdfInNewPage(docInfo);
@@ -2210,6 +2212,7 @@ function showPdf(docInfo, openInNewPage)
 
 function showPdfViewOnly(docInfo, openInNewPage)
 {
+	console.log("showPdfViewOnly() docInfo:", docInfo);
 	if(openInNewPage == "openInNewPage")
 	{
 		showPdfViewOnlyInNewPage(docInfo);
@@ -2229,6 +2232,7 @@ function showPdfViewOnly(docInfo, openInNewPage)
 
 function showPdfPrintOnly(docInfo, openInNewPage)
 {
+	console.log("showPdfPrintOnly() docInfo:", docInfo);
 	if(openInNewPage == "openInNewPage")
 	{
 		showPdfPrintOnlyInNewPage(docInfo);
@@ -2585,52 +2589,6 @@ function showZipInArtDialog(docInfo) {
 	window.artDialogList["ArtDialog" + docInfo.docId] = d;
 }
 
-function showPdfInDialog(docInfo)
-{
-	bootstrapQ.dialog({
-		id: "PdfViewer",
-		title: docInfo.name,
-		url: 'pdfViewerForBootstrap.html',
-		msg: _Lang('页面正在加载，请稍等...'),
-		foot: false,
-		big: true,
-		mstyle: "width:95%;height:95%;",
-		callback: function(){
-			PdfViewer.pdfViewerPageInit(docInfo);
-		},
-	});
-}
-function showPdfViewOnlyInDialog(docInfo)
-{
-	bootstrapQ.dialog({
-		id: "PdfViewer",
-		title: docInfo.name,
-		url: 'pdfViewerViewOnlyForBootstrap.html',
-		msg: _Lang('页面正在加载，请稍等...'),
-		foot: false,
-		big: true,
-		mstyle: "width:95%;height:95%;",
-		callback: function(){
-			PdfViewer.pdfViewerPageInit(docInfo);
-		},
-	});
-}
-function showPdfPrintOnlyInDialog(docInfo)
-{
-	bootstrapQ.dialog({
-		id: "PdfViewer",
-		title: docInfo.name,
-		url: 'pdfViewerPrintOnlyForBootstrap.html',
-		msg: _Lang('页面正在加载，请稍等...'),
-		foot: false,
-		big: true,
-		mstyle: "width:95%;height:95%;",
-		callback: function(){
-			PdfViewer.pdfViewerPageInit(docInfo);
-		},
-	});
-}
-
 function showPdfInArtDialog(docInfo) {
 	//获取窗口的高度并设置高度
 	var height =  getArtDialogInitHeight();
@@ -2686,7 +2644,7 @@ function showPdfPrintOnlyInArtDialog(docInfo) {
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerPrintOnly.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerPrintOnlyForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
@@ -2709,6 +2667,37 @@ function showPdfInDialog(docInfo)
 		id: "PdfViewer",
 		title: docInfo.name,
 		url: 'pdfViewerForBootstrap.html',
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		big: true,
+		mstyle: "width:95%;height:95%;",
+		callback: function(){
+			PdfViewer.pdfViewerPageInit(docInfo);
+		},
+	});
+}
+
+function showPdfViewOnlyInDialog(docInfo)
+{
+	bootstrapQ.dialog({
+		id: "PdfViewer",
+		title: docInfo.name,
+		url: 'pdfViewerViewOnlyForBootstrap.html',
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		big: true,
+		mstyle: "width:95%;height:95%;",
+		callback: function(){
+			PdfViewer.pdfViewerPageInit(docInfo);
+		},
+	});
+}
+function showPdfPrintOnlyInDialog(docInfo)
+{
+	bootstrapQ.dialog({
+		id: "PdfViewer",
+		title: docInfo.name,
+		url: 'pdfViewerPrintOnlyForBootstrap.html',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,

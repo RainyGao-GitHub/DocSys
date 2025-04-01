@@ -5953,6 +5953,44 @@ public class BaseFunction{
         return bos.toByteArray();
     }
     
+    protected String buildDocPdfLink(Doc doc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) {
+		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), encryptEn);
+		if(downloadDoc == null)
+		{
+			Log.debug("buildDownloadDocLink() buildDownloadDocInfo failed");
+			return null;
+		}
+		
+		String fileLink  = null;
+		if(urlStyle != null && urlStyle.equals("REST"))
+		{
+			if(authCode == null)
+			{
+				authCode = "0";
+			}
+			Integer shareId = doc.getShareId();
+			if(shareId == null)
+			{
+				shareId = 0;
+			}
+			fileLink = "/DocSystem/Doc/downloadDoc/" + doc.getVid() + "/" + downloadDoc.getPath() + "/" + downloadDoc.getName() +  "/" + downloadDoc.targetPath +  "/" + downloadDoc.targetName +"/" + authCode + "/" + shareId + "/" + downloadDoc.encryptEn;
+		}
+		else
+		{
+			fileLink = "/DocSystem/Doc/downloadDoc.do?vid=" + doc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName + "&encryptEn="+downloadDoc.encryptEn;	
+			if(authCode != null)
+			{
+				fileLink += "&authCode=" + authCode;
+			}
+			if(doc.getShareId() != null)
+			{
+				fileLink += "&shareId=" + doc.getShareId();				
+			}
+		}
+		return fileLink;
+	}
+
+    
 	protected String buildDownloadDocLink(Doc doc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) {
 		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), encryptEn);
 		if(downloadDoc == null)

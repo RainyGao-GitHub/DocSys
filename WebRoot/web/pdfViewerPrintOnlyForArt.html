@@ -68,47 +68,7 @@
     function showPDF(url)
    	{
     	console.log("showPDF() url:", url);
-    	$('.pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewerPrintOnly.html?file=' + url +
-        '" style="width:100%; height:100%;"></iframe>');
-    
-    	/* 浏览器有安全限制，无法主动触发打印
-    	// 生成唯一ID避免重复  
-        const iframeId = 'pdfViewerFrame-' + Date.now();  
-    	
-        $('.pdfPlayer').html('<iframe id="' + iframeId +'" frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer_print.html?file=' + url +
+        $('.pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewerPrintOnly.html?file=' + url +
             '" style="width:100%; height:100%;"></iframe>');
-        
-        // 监听iframe加载完成  
-        const viewerFrame = document.getElementById(iframeId);  
-        
-        viewerFrame.onload = function() {  
-            try {  
-                const pdfApp = viewerFrame.contentWindow.PDFViewerApplication;  
-                
-                // 监听PDF加载完成事件  
-                pdfApp.eventBus.on('pagesloaded', function pagesLoadedHandler() {  
-                    // 延迟确保渲染完成  
-                    setTimeout(() => {  
-                        pdfApp.print().catch(error => {  
-                            console.error('打印失败:', error);  
-                            alert('自动打印失败，请手动点击打印按钮');  
-                        });  
-                        // 移除事件监听  
-                        pdfApp.eventBus.off('pagesloaded', pagesLoadedHandler);  
-                    }, 500);  
-                });  
-                
-                // 异常处理  
-                viewerFrame.contentWindow.addEventListener('error', function(e) {  
-                    console.error('PDF加载错误:', e.error);  
-                    alert('文档加载失败，请检查文件格式');  
-                });  
-                
-            } catch (error) {  
-                console.error('API访问异常:', error);  
-                alert('浏览器安全限制，请手动点击打印按钮');  
-            }  
-        }; 
-        */ 
    	}
 </script>

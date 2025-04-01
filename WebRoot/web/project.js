@@ -491,6 +491,8 @@ function printDoc(treeNodes)
 		return;
 	}
 	
+	var doc = treeNodes[0];
+	doc.vid = gReposInfo.id;
 	openDoc(treeNodes[0], false, "openInArtDialog", "print", gShareId);
 }
 

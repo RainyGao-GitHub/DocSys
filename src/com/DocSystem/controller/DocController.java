@@ -4399,10 +4399,12 @@ public class DocController extends BaseController{
 			String rootPath, String rootName,
 			Integer shareId,
 			String urlStyle,
+			String preview,
+			Integer videoConvertType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.info("*************** getZipDocFileLink [" + path + name + "] ********************");		
-		Log.info("getZipDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " rootPath:" + rootPath + " rootName:" + rootName + " shareId:" + shareId);
+		Log.info("getZipDocFileLink reposId:" + reposId + " path:" + path + " name:" + name + " rootPath:" + rootPath + " rootName:" + rootName + " shareId:" + shareId + " preview:" + preview);
 
 		ReturnAjax rt = new ReturnAjax();
 		
@@ -4418,13 +4420,49 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-		
+
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
 
 		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, rootPath, rootName, null, null, true, localRootPath, localVRootPath, null, null);
 		Doc tempRootDoc = decryptRootZipDoc(repos, rootDoc);
+		
+		//获取用户权限
+		if(preview == null)
+		{
+			preview = "";
+		}
+		switch(preview)
+		{
+		case "preview":
+			//TODO: preview不进行权限检查
+			break;
+		case "pdf":
+			//TODO: 用户如果没有下载权限，需要改成pdfViewOnly
+			DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), rootDoc, reposAccess.getAuthMask());
+			if(docAuth == null)
+			{
+				preview = "pdfViewOnly";
+			}
+			else
+			{
+				Integer downloadEn = docAuth.getDownloadEn();
+				if(downloadEn == null || downloadEn.equals(0))
+				{
+					preview = "pdfViewOnly";
+				}
+			}
+			break;
+		case "print":
+		default:
+			//检查用户是否有权限下载文件
+			if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), rootDoc, reposAccess.getAuthMask(), rt) == false)
+			{
+				writeJson(rt, response);
+				return;
+			}
+		}
 		
 		//build tmpDoc
 		String tmpLocalRootPath = Path.getReposTmpPathForUnzip(repos, reposAccess.getAccessUser());
@@ -4438,9 +4476,27 @@ public class DocController extends BaseController{
 		checkAndExtractEntryFromCompressDoc(repos, tempRootDoc, tmpDoc);
 		
 		String authCode = addDocDownloadAuthCode(reposAccess, null);
+		String fileLink = null;
+		switch(preview)
+		{
+		case "preview":
+			//TODO: 如果是视频文件，用于preview的情况下，需要进行转码，因此fileLink可能不是指向原始文件的，前端需要告知视频转换类型，否则默认就是mp4
+			if(videoConvertType != null && videoConvertType == 1)
+			{
+				tmpDoc = convertVideoToMP4(repos, tmpDoc);
+			}
+			fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 0, rt);
+			break;
+		case "pdf":
+		case "pdfViewOnly":
+		case "print":
+			fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 0, rt);
+			break;
+		default:
+			fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 0, rt);
+			break;
+		}
 		
-		//TODO: 如果是视频文件，用于preview的情况下，需要进行转码，因此fileLink可能不是指向原始文件的，前端需要告知视频转换类型
-		String fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 0, rt);
 		if(fileLink == null)
 		{
 			Log.debug("getZipDocFileLink() buildDocFileLink failed");
@@ -4448,6 +4504,7 @@ public class DocController extends BaseController{
 		}
 			
 		rt.setData(fileLink);
+		rt.setDataEx(preview); //回传preview方便前端进行进行逻辑控制
 		writeJson(rt, response);
 	}
 
@@ -4508,6 +4565,19 @@ public class DocController extends BaseController{
 			break;
 		case "pdf":
 			//TODO: 用户如果没有下载权限，需要改成pdfViewOnly
+			DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
+			if(docAuth == null)
+			{
+				preview = "pdfViewOnly";
+			}
+			else
+			{
+				Integer downloadEn = docAuth.getDownloadEn();
+				if(downloadEn == null || downloadEn.equals(0))
+				{
+					preview = "pdfViewOnly";
+				}
+			}
 			break;
 		case "print":
 		default:
