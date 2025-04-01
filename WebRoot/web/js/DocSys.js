@@ -2147,6 +2147,9 @@ function openPdf(docInfo, openInNewPage, preview)
             name: docInfo.name,
             commitId: docInfo.commitId,
             historyType: docInfo.historyType,
+            isZip: docInfo.isZip,
+            rootPath: docInfo.rootPath,
+            rootName: docInfo.rootName,
             shareId: docInfo.shareId,
             authCode: docInfo.authCode,
             urlStyle: urlStyle,
@@ -2182,119 +2185,6 @@ function openPdf(docInfo, openInNewPage, preview)
         error : function () {
         	console.log("openPdf() 获取文件信息失败: 服务器异常");
         	showErrorMessage(_Lang("获取文件信息失败", ":", "服务器异常"));
-        }
-    });
-}
-
-function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, preview)
-{	
-	var fileLink = "";
-	var errorInfo = "";
-	console.log("getDocFileLinkBasic()  docInfo:", docInfo);
-    if(!docInfo || docInfo == null || docInfo.id == 0)
-    {
-    	//未定义需要显示的文件
-    	errorInfo = "请选择文件";
-    	errorCallback && errorCallback(errorInfo);
-    	return;
-    }
-    
-    if(preview == undefined)
-    {
-    	preview = "";
-    }
-  	
-	$.ajax({
-        url : "/DocSystem/Doc/getDocFileLink.do",
-        type : "post",
-        dataType : "json",
-        data : {
-        	reposId: docInfo.vid,
-            path: docInfo.path,
-            name: docInfo.name,
-            commitId: docInfo.commitId,
-            historyType: docInfo.historyType,
-            shareId: docInfo.shareId,
-            authCode: docInfo.authCode,
-            urlStyle: urlStyle,
-            preview: preview,
-            videoConvertType: docInfo.videoConvertType,
-        },
-        success : function (ret) {
-        	console.log("getDocFileLinkBasic ret",ret);
-        	if( "ok" == ret.status )
-        	{
-        		var docLink = ret.data;
-        		var fileLink = buildFullLink(docLink);
-        		successCallback &&successCallback(fileLink);
-            }
-            else 
-            {
-            	console.log(ret.msgInfo);
-            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
-            	errorCallback && errorCallback(errorInfo);
-            }
-        },
-        error : function () {
-        	errorInfo = "获取文件信息失败：服务器异常";
-        	errorCallback && errorCallback(errorInfo);
-        }
-    });
-}
-//获取压缩文件的文件链接接口
-function getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, preview)
-{	
-	var fileLink = "";
-	var errorInfo = "";
-	console.log("getZipDocFileLink()  docInfo:", docInfo);
-    if(!docInfo || docInfo == null || docInfo.id == 0)
-    {
-    	//未定义需要显示的文件
-    	errorInfo = "请选择文件";
-    	errorCallback && errorCallback(errorInfo);
-    	return;
-    }
-    
-    if(preview == undefined)
-    {
-    	preview = "";
-    }
-  	
-	$.ajax({
-        url : "/DocSystem/Doc/getZipDocFileLink.do",
-        type : "post",
-        dataType : "json",
-        data : {
-        	reposId: docInfo.vid,
-            path: docInfo.path,
-            name: docInfo.name,
-            isZip: docInfo.isZip,
-            rootPath: docInfo.rootPath,
-            rootName: docInfo.rootName,
-            shareId: docInfo.shareId,
-            authCode: docInfo.authCode,
-            urlStyle: urlStyle,
-            preview: preview,
-            videoConvertType: docInfo.videoConvertType,
-        },
-        success : function (ret) {
-        	console.log("getZipDocFileLink ret",ret);
-        	if( "ok" == ret.status )
-        	{
-        		var docLink = ret.data;
-        		var fileLink = buildFullLink(docLink);
-        		successCallback &&successCallback(fileLink);
-            }
-            else 
-            {
-            	console.log(ret.msgInfo);
-            	errorInfo = "获取文件信息失败：" + ret.msgInfo;
-            	errorCallback && errorCallback(errorInfo);
-            }
-        },
-        error : function () {
-        	errorInfo = "获取文件信息失败：服务器异常";
-        	errorCallback && errorCallback(errorInfo);
         }
     });
 }
