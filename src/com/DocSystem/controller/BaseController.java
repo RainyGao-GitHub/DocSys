@@ -2789,7 +2789,7 @@ public class BaseController  extends BaseFunction{
 		
 		Log.printObject("ldapLoginCheck() ldapLoginUser:", ldapLoginUser);
 		//获取数据库用户
-		User dbUser = getUserByName(userName);
+		User dbUser = getUserByName(ldapLoginUser.getName());
 		if(dbUser == null)
 		{
 			//Add LDAP User into DB
@@ -2824,7 +2824,7 @@ public class BaseController  extends BaseFunction{
 			else
 			{
 				//重新读取user信息，因为需要userId，否则后续的逻辑会出现问题
-				dbUser = getUserByName(userName);
+				dbUser = getUserByName(ldapLoginUser.getName());
 			}
 		}
 		
