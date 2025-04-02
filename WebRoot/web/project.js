@@ -1338,7 +1338,7 @@ function getAndShowDoc(node, openMode, edit)
         		//openMode == 2则需要打开文件
         		if(openMode == 2)
         		{
-          		  openDoc(gDocInfo, false, "openInArtDialog", "office", gShareId);
+          		  openDoc(gDocInfo, false, "openInArtDialog", "open", gShareId);
         		}
         		//当前文件处于打开状态，则不会进行预览
                 previewDoc(gDocInfo, gShowType);
@@ -1496,7 +1496,7 @@ function DocOnDblClick()
 	if(gDocInfoInPreview.type == 1)
 	{
     	//open doc in dialog
-    	openDoc(gDocInfoInPreview, true, "openInArtDialog", "office", gShareId);
+    	openDoc(gDocInfoInPreview, true, "openInArtDialog", "open", gShareId);
 	}
 	else
 	{
@@ -2524,7 +2524,7 @@ function dropInner(treeId, nodes, targetNode) {
 	  if(gDocInfo.docId == treeNode.id)
 	  {
 		  //直接用gDocInfo打开文件
-		  openDoc(gDocInfo, false, "openInArtDialog", "office", gShareId);
+		  openDoc(gDocInfo, false, "openInArtDialog", "open", gShareId);
 		  
 		  //预览gDocInfo(该接口会自行判断是否需要更新gDocInfoInPreview)
 		  previewDoc(gDocInfo);
@@ -4891,7 +4891,7 @@ function contextMenuInit()
 							}
 							else
 							{
-								openDoc(curRightClickedTreeNode, true, "openInNewPage", "office", gShareId);
+								openDoc(curRightClickedTreeNode, true, "openInNewPage", "open", gShareId);
 							}
 						}
 					},
@@ -4962,7 +4962,7 @@ function contextMenuInit()
 					{divider: true},
 					{text: _Lang('预览'), action: function(e){
 							e.preventDefault();
-							openDoc(curRightClickedTreeNode, true, "openInArtDialog", "pdf", gShareId);
+							openDoc(curRightClickedTreeNode, true, "openInArtDialog", "preview", gShareId);
 						}
 					},
 					{divider: true},
@@ -5124,7 +5124,7 @@ function contextMenuInit()
 							}
 							else
 							{
-								openDoc(parentNode, true, "openInNewPage", "office", gShareId);
+								openDoc(parentNode, true, "openInNewPage", "open", gShareId);
 							}
 						}
 					},
@@ -5350,7 +5350,7 @@ function contextMenuInit()
 							}
 							else
 							{
-								openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);
+								openDoc(curRightClickedDocListNode, true, "openInNewPage", "open", gShareId);
 							}
 						}
 					},
@@ -5400,7 +5400,7 @@ function contextMenuInit()
 		   			{divider: true},				
 					{text: _Lang('预览'), action: function(e){
 							e.preventDefault();
-							openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
+							openDoc(curRightClickedDocListNode, true, "openInArtDialog", "preview", gShareId);
 						}
 					},	
 					{divider: true},
@@ -5598,7 +5598,7 @@ function contextMenuInit()
 								}
 								else
 								{
-									openDoc(curRightClickedDocListNode, true, "openInNewPage", "office", gShareId);
+									openDoc(curRightClickedDocListNode, true, "openInNewPage", "open", gShareId);
 								}
 							}
 						},
@@ -5669,7 +5669,7 @@ function contextMenuInit()
 						{divider: true},
 						{text: _Lang('预览'), action: function(e){
 								e.preventDefault();
-								openDoc(curRightClickedDocListNode, true, "openInArtDialog", "pdf", gShareId);
+								openDoc(curRightClickedDocListNode, true, "openInArtDialog", "preview", gShareId);
 							}
 						},
 						{divider: true},
@@ -5797,7 +5797,7 @@ function contextMenuInit()
 							}
 							else
 							{
-								openDoc(gDocInfo, true, "openInNewPage", "office", gShareId);
+								openDoc(gDocInfo, true, "openInNewPage", "open", gShareId);
 							}
 						}
 					},
@@ -5847,7 +5847,7 @@ function contextMenuInit()
 		   			{divider: true},
 					{text: _Lang('预览'), action: function(e){
 							e.preventDefault();
-							openDoc(gDocInfo, true, "openInArtDialog", "pdf", gShareId);
+							openDoc(gDocInfo, true, "openInArtDialog", "preview", gShareId);
 						}
 					},
 					{divider: true},

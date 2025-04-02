@@ -1719,11 +1719,29 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId, authCode
 	}
 	else if(isPdf(docInfo.fileSuffix))
 	{
+		//TODO: pdf文件preview参数要进行修改
+		switch(preview)
+		{
+		case "open":
+		case "preview":
+			preview = "pdf";
+			break;
+		}
 		docInfo.fileLink = ""; //copyDocInfo的fileLink不是RESTLink，因此需要清空，保证showPdf接口重新获取RESTLINK
 		openPdf(docInfo, openInNewPage, preview);
 	}
 	else if(isOffice(docInfo.fileSuffix))
 	{
+		//TODO: office文件preview参数要进行修改
+		switch(preview)
+		{
+		case "open":
+			preview = "office";
+			break;
+		case "preview":
+			preview = "pdf";
+			break;
+		}
 		openOffice(docInfo, openInNewPage, preview);
 	}
 	else if(isCad(docInfo.fileSuffix))

@@ -4431,13 +4431,10 @@ public class DocController extends BaseController{
 		//获取用户权限
 		if(preview == null)
 		{
-			preview = "";
+			preview = "open";
 		}
 		switch(preview)
 		{
-		case "preview":
-			//TODO: preview不进行权限检查
-			break;
 		case "pdf":
 			//TODO: 用户如果没有下载权限，需要改成pdfViewOnly
 			DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), rootDoc, reposAccess.getAuthMask());
@@ -4455,13 +4452,18 @@ public class DocController extends BaseController{
 			}
 			break;
 		case "print":
-		default:
 			//检查用户是否有权限下载文件
 			if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), rootDoc, reposAccess.getAuthMask(), rt) == false)
 			{
 				writeJson(rt, response);
 				return;
 			}
+			break;
+		case "open":
+		case "preview":
+		default:
+			//TODO: preview和open本质上并没有什么区别，不进行权限检查
+			break;
 		}
 		
 		//build tmpDoc
@@ -4556,13 +4558,10 @@ public class DocController extends BaseController{
 		//如果是用于预览目的则不需要进行下载权限检查
 		if(preview == null)
 		{
-			preview = "";
+			preview = "open";
 		}
 		switch(preview)
 		{
-		case "preview":
-			//TODO: preview不进行权限检查
-			break;
 		case "pdf":
 			//TODO: 用户如果没有下载权限，需要改成pdfViewOnly
 			DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
@@ -4580,13 +4579,18 @@ public class DocController extends BaseController{
 			}
 			break;
 		case "print":
-		default:
 			//检查用户是否有权限下载文件
 			if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
 			{
 				writeJson(rt, response);
 				return;
 			}
+			break;
+		case "open":
+		case "preview":
+		default:
+			//TODO: preview和open本质上并没有什么区别，不进行权限检查
+			break;
 		}
 		
 		doc.setShareId(shareId);
