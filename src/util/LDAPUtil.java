@@ -376,13 +376,21 @@ public class LDAPUtil
 //        {
 //        	user = ldapLoginCheck(realUserName, pwd, systemLdapConfig.ldapConfigList.get(0), checkResult);
 //        }
-    	user  =  multiLdapLoginCheck(domain, realUserName, pwd, systemLdapConfig, checkResult);
-		
-		//TODO: 保留原始的用户名，避免多域登录时存在重名用户
+    	user  =  multiLdapLoginCheck(domain, realUserName, pwd, systemLdapConfig, checkResult);		
         if(user != null)
         {
-        	//TODO: 将用户名替换成小写，以便权限一致
-        	user.setName(userName.toLowerCase().replace("\\", "/"));
+        	//TODO: LDAP不区分大小写，因此用户名统一成domain/realUserName
+        	String userAccount = null;
+        	if(domain == null)
+        	{
+        		userAccount = realUserName.toLowerCase();
+        	}
+        	else
+        	{
+        		userAccount = domain.toLowerCase() + "/" + realUserName.toLowerCase();
+        	}
+        	Log.debug("ldapLoginCheck() userAccount:" + userAccount);
+        	user.setName(userAccount);
 			checkResult.status = LdapLoginCheckResult.Success;
         }
         return user;
