@@ -4428,42 +4428,13 @@ public class DocController extends BaseController{
 		Doc rootDoc = buildBasicDoc(reposId, null, null, reposPath, rootPath, rootName, null, null, true, localRootPath, localVRootPath, null, null);
 		Doc tempRootDoc = decryptRootZipDoc(repos, rootDoc);
 		
-		//获取用户权限
+		//TODO: 根据用户的权限获取真实的preview值，前端需要该值进行逻辑判断
+		preview = checkAndGetRealPreivewValue(preview, repos, rootDoc, reposAccess, rt);
 		if(preview == null)
 		{
-			preview = "open";
-		}
-		switch(preview)
-		{
-		case "pdf":
-			//TODO: 用户如果没有下载权限，需要改成pdfViewOnly
-			DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), rootDoc, reposAccess.getAuthMask());
-			if(docAuth == null)
-			{
-				preview = "pdfViewOnly";
-			}
-			else
-			{
-				Integer downloadEn = docAuth.getDownloadEn();
-				if(downloadEn == null || downloadEn.equals(0))
-				{
-					preview = "pdfViewOnly";
-				}
-			}
-			break;
-		case "print":
-			//检查用户是否有权限下载文件
-			if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), rootDoc, reposAccess.getAuthMask(), rt) == false)
-			{
-				writeJson(rt, response);
-				return;
-			}
-			break;
-		case "open":
-		case "preview":
-		default:
-			//TODO: preview和open本质上并没有什么区别，不进行权限检查
-			break;
+			Log.info("用户预览权限检查失败");
+			writeJson(rt, response);			
+			return;
 		}
 		
 		//build tmpDoc
@@ -4555,42 +4526,13 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
-		//如果是用于预览目的则不需要进行下载权限检查
+		//TODO: 根据用户的权限获取真实的preview值，前端需要该值进行逻辑判断
+		preview = checkAndGetRealPreivewValue(preview, repos, doc, reposAccess, rt);
 		if(preview == null)
 		{
-			preview = "open";
-		}
-		switch(preview)
-		{
-		case "pdf":
-			//TODO: 用户如果没有下载权限，需要改成pdfViewOnly
-			DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
-			if(docAuth == null)
-			{
-				preview = "pdfViewOnly";
-			}
-			else
-			{
-				Integer downloadEn = docAuth.getDownloadEn();
-				if(downloadEn == null || downloadEn.equals(0))
-				{
-					preview = "pdfViewOnly";
-				}
-			}
-			break;
-		case "print":
-			//检查用户是否有权限下载文件
-			if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
-			{
-				writeJson(rt, response);
-				return;
-			}
-			break;
-		case "open":
-		case "preview":
-		default:
-			//TODO: preview和open本质上并没有什么区别，不进行权限检查
-			break;
+			Log.info("用户预览权限检查失败");
+			writeJson(rt, response);			
+			return;
 		}
 		
 		doc.setShareId(shareId);
@@ -4703,7 +4645,7 @@ public class DocController extends BaseController{
 		rt.setDataEx(preview); //回传preview方便前端进行进行逻辑控制
 		writeJson(rt, response);
 	}
-	
+
 	private Doc convertVideoToMP4(Repos repos, Doc doc) 
 	{
 		//TODO: 视频预览文件统一放到指定路径下
