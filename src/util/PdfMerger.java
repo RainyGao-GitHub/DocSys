@@ -2,6 +2,9 @@ package util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.pdfbox.multipdf.PDFMergerUtility;  
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -10,7 +13,7 @@ import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 public class PdfMerger {  
 
     // 核心合并方法  
-    public static void mergePdfFiles(String[] inputPaths, String outputPath) throws Exception {  
+    public static void mergePdfFiles(List<String> inputPaths, String outputPath) throws Exception {  
         PDFMergerUtility merger = new PDFMergerUtility();  
         
         try {  
@@ -31,10 +34,11 @@ public class PdfMerger {
     }  
     
     public static void main(String[] args) throws Exception {  
-        String[] files = {  
-            "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/images.pdf",  
-            "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/text.pdf",  
-        };  
+        List<String> files = new ArrayList<String>(
+        		Arrays.asList(  
+        				"C:/N-20N3PF2E7EB0-Data/ragao/Desktop/images.pdf",  
+        				"C:/N-20N3PF2E7EB0-Data/ragao/Desktop/text.pdf"  
+        				));  
         
         try {  
             PdfMerger.mergePdfFiles(files, "C:/N-20N3PF2E7EB0-Data/ragao/Desktop/merged.pdf");  

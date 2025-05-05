@@ -4487,6 +4487,7 @@ public class DocController extends BaseController{
 			Integer shareId,
 			String urlStyle,
 			String preview,
+			String printList,		//文件列表（用于打印需求）
 			Integer videoConvertType,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -4625,8 +4626,35 @@ public class DocController extends BaseController{
 			break;
 		case "pdf":
 		case "pdfViewOnly":
+			fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);			
+			break;
 		case "print":
-			fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);
+			if(printList != null && printList.isEmpty() == false)
+			{
+				//如果打印列表非空，表示多个文件一起打印
+				List<Doc> docList = getDocListFromDownloadList(repos, printList);
+				for(Doc subDoc: docList)
+				{
+					//检查用户是否有权限下载文件
+					if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), subDoc, reposAccess.getAuthMask(), rt) == false)
+					{
+						writeJson(rt, response);
+						return;
+					}
+					
+					//检查访问密码
+					if(checkUserAccessPwd(repos, subDoc, session, rt) == false)
+					{
+						writeJson(rt, response);
+						return;
+					}					
+				}
+				fileLink = buildDocPdfLinkWithDocList(tmpDoc, docList, authCode, urlStyle, 1, rt);
+			}
+			else
+			{
+				fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);
+			}
 			break;
 		default:
 			fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);

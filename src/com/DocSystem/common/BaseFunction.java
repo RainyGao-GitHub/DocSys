@@ -56,6 +56,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import util.DateFormat;
 import util.LDAPUtil;
+import util.PdfMerger;
 import util.ReadProperties;
 import util.ReturnAjax;
 import util.Encrypt.DES;
@@ -5953,7 +5954,35 @@ public class BaseFunction{
         return bos.toByteArray();
     }
     
-    protected String buildDocPdfLink(Doc doc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) {
+
+	private String buildDocPdfLinkWithDocList(Doc tmpDoc, List<Doc> docList, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) 
+	{
+		//TODO: 遍历所有文件并逐个生成pdf文件
+		List<String> pdfFileList = new ArrayList<String>();
+		for(Doc subDoc: docList)
+		{
+			
+		}
+		//合并成一个pdf文件
+		String fileLink = mergePdfFiles(pdfFileList, tmpDoc, authCode, urlStyle, encryptEn, rt);
+		return fileLink;
+	}
+	
+    private String mergePdfFiles(List<String> pdfFileList, Doc tmpDoc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) 
+    {
+        try {  
+            PdfMerger.mergePdfFiles(pdfFileList, tmpDoc.getLocalRootPath() + tmpDoc.getPath() + tmpDoc.getName());  
+            Log.debug("PDF合并成功");  
+        } catch (Exception e) {  
+            Log.debug("合并失败: " + e.getMessage());  
+            docSysErrorLog("PDF合并失败", rt);  
+            return null;
+        }
+        
+        return buildDocPdfLink(tmpDoc, authCode, urlStyle, encryptEn, rt);
+	}
+
+	protected String buildDocPdfLink(Doc doc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) {
 		Doc downloadDoc = buildDownloadDocInfo(doc.getVid(), doc.getPath(), doc.getName(), doc.getLocalRootPath() + doc.getPath(), doc.getName(), encryptEn);
 		if(downloadDoc == null)
 		{
