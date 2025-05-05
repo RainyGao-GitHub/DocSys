@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
@@ -55,10 +56,12 @@ import org.redisson.api.RedissonClient;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import util.DateFormat;
+import util.ImageToPdfConverter;
 import util.LDAPUtil;
 import util.PdfMerger;
 import util.ReadProperties;
 import util.ReturnAjax;
+import util.TextToPdfConverter;
 import util.Encrypt.DES;
 import util.LuceneUtil.LuceneUtil2;
 
@@ -108,6 +111,7 @@ import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.SyncSourceLock;
 import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.BussinessBase;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -5954,32 +5958,107 @@ public class BaseFunction{
         return bos.toByteArray();
     }
     
-
-	private String buildDocPdfLinkWithDocList(Doc tmpDoc, List<Doc> docList, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) 
+	public String generatePdfFileWithDocList(Repos repos, Doc tmpDoc, List<Doc> docList, ReturnAjax rt) 
 	{
 		//TODO: 遍历所有文件并逐个生成pdf文件
 		List<String> pdfFileList = new ArrayList<String>();
 		for(Doc subDoc: docList)
 		{
-			
+			String pdfFilePath = convertDocToPdfFile(repos, subDoc, tmpDoc.getLocalRootPath(), rt);
+			if(pdfFilePath != null)
+			{
+				pdfFileList.add(pdfFilePath);
+			}
 		}
-		//合并成一个pdf文件
-		String fileLink = mergePdfFiles(pdfFileList, tmpDoc, authCode, urlStyle, encryptEn, rt);
-		return fileLink;
+			
+		return mergePdfFiles(pdfFileList, tmpDoc.getLocalRootPath() + tmpDoc.getPath() + tmpDoc.getName());
 	}
 	
-    private String mergePdfFiles(List<String> pdfFileList, Doc tmpDoc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) 
+	protected static String buildOfficeEditorKey(Doc doc) {
+		String keystr = doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime();
+		Log.debug(keystr);
+		return keystr.hashCode() + "";
+	}
+	
+    private String convertDocToPdfFile(Repos repos, Doc doc, String tmpLocalRootPath, ReturnAjax rt) 
+    {
+		String fileSuffix = FileUtil.getFileSuffix(doc.getName());
+		if(fileSuffix == null)
+		{
+			Log.debug("convertDocToPdfFile() 未知文件类型");
+			return null;
+		}
+		
+		if(FileUtil.isOffice(fileSuffix))
+		{
+			return convertOfficeToPdf(repos, doc, doc.getLocalRootPath() + doc.getPath() + doc.getName(), tmpLocalRootPath + doc.getPath(), doc.getName() + ".pdf", rt);
+		}
+		
+		if(FileUtil.isText(fileSuffix))
+		{
+			return convertTextToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tmpLocalRootPath + doc.getPath() + doc.getName() + ".pdf");
+		}
+
+		if(FileUtil.isPicture(fileSuffix))
+		{
+			return convertImageToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tmpLocalRootPath + doc.getPath() + doc.getName() + ".pdf");			
+		}
+		
+		docSysErrorLog("该文件类型不支持打印", rt);
+		return null;
+    }
+
+	private String convertOfficeToPdf(Repos repos, Doc doc, String inputPath, String dstPath, String dstName, ReturnAjax rt) 
+	{
+		//Do convert
+		String localEntryPath = Path.getReposRealPath(repos) + doc.getPath() + doc.getName();
+		if(BussinessBase.convertToPdfEx(buildOfficeEditorKey(doc), doc, localEntryPath, dstPath, dstName, rt) == false)
+		{
+			docSysErrorLog("预览文件生成失败", rt);
+			return null;
+		}
+		return dstPath + dstName;
+	}
+
+	private String convertImageToPdf(String inputPath, String outputPath) 
+	{
+        String[] images = {inputPath};  
+            
+        try {  
+            ImageToPdfConverter.convertImagesToPdf(images, outputPath);  
+            Log.debug("PDF生成成功");  
+        } catch (Exception e) {  
+            Log.debug("生成失败: " + e.getMessage());  
+            Log.debug(e);  
+            return null;
+        } 
+        return outputPath;
+	}
+	
+	private String convertTextToPdf(String inputPath, String outputPath) 
+	{
+        try {  
+            TextToPdfConverter.convertTextToPdf(inputPath, outputPath); 
+            Log.debug("PDF生成成功");  
+        } catch (IOException e) {  
+        	Log.debug("转换失败: " + e.getMessage());  
+        	Log.debug(e);
+        	return null;
+        }
+        return outputPath;
+	}
+
+	private String mergePdfFiles(List<String> pdfFileList, String outputPath)
     {
         try {  
-            PdfMerger.mergePdfFiles(pdfFileList, tmpDoc.getLocalRootPath() + tmpDoc.getPath() + tmpDoc.getName());  
+            PdfMerger.mergePdfFiles(pdfFileList, outputPath);  
             Log.debug("PDF合并成功");  
         } catch (Exception e) {  
             Log.debug("合并失败: " + e.getMessage());  
-            docSysErrorLog("PDF合并失败", rt);  
+            Log.info("PDF合并失败");  
             return null;
         }
-        
-        return buildDocPdfLink(tmpDoc, authCode, urlStyle, encryptEn, rt);
+        return outputPath;
 	}
 
 	protected String buildDocPdfLink(Doc doc, String authCode, String urlStyle, Integer encryptEn, ReturnAjax rt) {

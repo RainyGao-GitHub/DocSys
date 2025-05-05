@@ -4536,6 +4536,56 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//打印多个文件
+		if(printList != null && printList.isEmpty() == false && preview.equals("print"))
+		{
+			//如果打印列表非空，表示多个文件一起打印
+			List<Doc> docList = getDocListFromDownloadList(repos, printList);
+			for(Doc subDoc: docList)
+			{
+				//检查用户是否有文件读取权限
+				if(checkUseAccessRight(repos, reposAccess.getAccessUserId(), subDoc, reposAccess.getAuthMask(), rt) == false)
+				{
+					writeJson(rt, response);	
+					return;
+				}
+				
+				//检查访问密码
+				if(checkUserAccessPwd(repos, subDoc, session, rt) == false)
+				{
+					writeJson(rt, response);
+					return;
+				}					
+			}
+			
+			//TODO: 生成pdf文件
+			String tempLocalRootPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
+			Doc tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
+			tmpDoc.setShareId(shareId);			
+			String pdfFilePath = generatePdfFileWithDocList(repos, tmpDoc, docList, rt);
+			if(pdfFilePath == null)
+			{
+				Log.debug("getDocFileLink() generatePdfFileWithDocList failed");
+				rt.setError("Failed to buildDocFileLink");
+				writeJson(rt, response);
+				return;				
+			}
+			String authCode = addDocDownloadAuthCode(reposAccess, null);	
+			String fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);
+			if(fileLink == null)
+			{
+				Log.debug("getDocFileLink() buildDocPdfLink failed");
+				rt.setError("Failed to buildDocFileLink");
+				writeJson(rt, response);
+				return;
+			}
+			
+			rt.setData(fileLink);
+			rt.setDataEx(preview); //回传preview方便前端进行进行逻辑控制
+			writeJson(rt, response);
+			return;
+		}
+		
 		doc.setShareId(shareId);
 		path = doc.getPath();
 		name = doc.getName();
@@ -4629,32 +4679,7 @@ public class DocController extends BaseController{
 			fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);			
 			break;
 		case "print":
-			if(printList != null && printList.isEmpty() == false)
-			{
-				//如果打印列表非空，表示多个文件一起打印
-				List<Doc> docList = getDocListFromDownloadList(repos, printList);
-				for(Doc subDoc: docList)
-				{
-					//检查用户是否有权限下载文件
-					if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), subDoc, reposAccess.getAuthMask(), rt) == false)
-					{
-						writeJson(rt, response);
-						return;
-					}
-					
-					//检查访问密码
-					if(checkUserAccessPwd(repos, subDoc, session, rt) == false)
-					{
-						writeJson(rt, response);
-						return;
-					}					
-				}
-				fileLink = buildDocPdfLinkWithDocList(tmpDoc, docList, authCode, urlStyle, 1, rt);
-			}
-			else
-			{
-				fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);
-			}
+			fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);
 			break;
 		default:
 			fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);

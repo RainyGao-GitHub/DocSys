@@ -22116,12 +22116,6 @@ public class BaseController  extends BaseFunction{
 		return fileLink;
 	}
 	
-	protected static String buildOfficeEditorKey(Doc doc) {
-		String keystr = doc.getLocalRootPath() + doc.getDocId() + "_" + doc.getSize() + "_" + doc.getLatestEditTime();
-		Log.debug(keystr);
-		return keystr.hashCode() + "";
-	}
-	
 	@SuppressWarnings("rawtypes")
 	protected HashMap<String, String> buildQueryParamForObj(User obj, Integer pageIndex, Integer pageSize) {
 		HashMap<String, String> param = new HashMap<String,String>();
