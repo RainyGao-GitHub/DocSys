@@ -491,9 +491,55 @@ function printDoc(treeNodes)
 		return;
 	}
 	
+	//TODO: 暂时使用第一个文件作为打印的展示信息
 	var doc = treeNodes[0];
 	doc.vid = gReposInfo.id;
-	openDoc(treeNodes[0], false, "openInArtDialog", "print", gShareId);
+	
+	var printList = buildPrintDocList(treeNodes); //构造打包的文件列表
+	
+	doPrintDoc(doc, printList, gShareId);
+}
+
+function buildPrintDocList(treeNodes)
+{
+	if(treeNodes.length < 2)
+	{
+		return "";
+	}
+	
+	var printList = "[";
+	var count = 0;
+	console.log("buildPrintDocList fileNum:" + treeNodes.length);
+	for( var i = 0 ; i < treeNodes.length ; i++ )
+	{ 				
+		var treeNode = treeNodes[i];
+			if(treeNode && treeNode != null)
+   		{
+				if(count == 0)
+				{
+					printList += "{"
+				}
+				else
+				{
+					printList += ",{";						
+				}
+				printList += "\"path\":\"" + treeNode.path + "\",";						
+				printList += "\"name\":\"" + treeNode.name + "\",";						
+				printList += "\"type\":\"" + (treeNode.isParent == true? 2: 1) + "\"";						
+				printList += "}"
+	 			
+				count++;
+ 				if(count > 1000)
+ 				{
+ 					//buildSubContext 每次最多1000个文件
+ 					break;
+ 				}
+   		}
+	}
+	
+	printList += "]";
+	console.log("buildPrintDocList printList:" + printList);
+	return (printList);
 }
 
 /*文件上传实现*/

@@ -4539,6 +4539,7 @@ public class DocController extends BaseController{
 		//打印多个文件
 		if(printList != null && printList.isEmpty() == false && preview.equals("print"))
 		{
+			Log.info("getDocFileLink printList:" + printList);
 			//如果打印列表非空，表示多个文件一起打印
 			List<Doc> docList = getDocListFromDownloadList(repos, printList);
 			for(Doc subDoc: docList)

@@ -2142,6 +2142,70 @@ function showZip(docInfo, openInNewPage)
 	}
 }
 
+//TODO: doPrintDoc本质上就是在ArtDialog里显示pdf文件，后台会提供pdf文件link
+function doPrintDoc(doc, printList, shareId, authCode)
+{
+	console.log("doPrintDoc() shareId:" + shareId + " authCode:" + authCode);
+	console.log("doPrintDoc() doc:",doc);
+	console.log("doPrintDoc() printList:",printList);
+	
+	if(doc == null || doc.type == 2)
+	{
+		//Folder do nothing
+		return;
+	}
+	
+	//copy do to docInfo
+	var docInfo = copyDocInfo(doc, shareId, authCode);
+	console.log("doPrintDoc() docInfo:", docInfo);
+	
+    var url = "/DocSystem/Doc/getDocFileLink.do";
+    if(docInfo.isZip && docInfo.isZip == 1)
+    {
+        url = "/DocSystem/Doc/getZipDocFileLink.do";    	
+    }
+	
+	$.ajax({
+        url : url,
+        type : "post",
+        dataType : "json",
+        data : {
+        	reposId: docInfo.vid,
+            path: docInfo.path,
+            name: docInfo.name,
+            commitId: docInfo.commitId,
+            historyType: docInfo.historyType,
+            isZip: docInfo.isZip,
+            rootPath: docInfo.rootPath,
+            rootName: docInfo.rootName,
+            shareId: docInfo.shareId,
+            authCode: docInfo.authCode,
+            urlStyle: "REST",
+            preview: "print",
+            printList: printList,
+            videoConvertType: docInfo.videoConvertType,
+        },
+        success : function (ret) {
+        	console.log("doPrintDoc ret",ret);
+            if( "ok" == ret.status )
+            {
+            	console.log("doPrintDoc ret", ret);
+            	docInfo.fileLink = ret.data;
+    			showPdfPrintOnly(docInfo, "openInArtDialog");
+            }
+            else 
+            {
+            	console.log("doPrintDoc() 获取文件信息失败:" + ret.msgInfo);
+            	showErrorMessage(_Lang("获取文件信息失败", ":", ret.msgInfo));
+            }
+        },
+        error : function () {
+        	console.log("doPrintDoc() 获取文件信息失败: 服务器异常");
+        	showErrorMessage(_Lang("获取文件信息失败", ":", "服务器异常"));
+        }
+    });
+}
+
 function openPdf(docInfo, openInNewPage, preview)
 {
 	console.log("openPdf preview:" + preview);
