@@ -269,6 +269,12 @@ public class Path {
 		return userTmpDir;
 	}
 	
+	public static String getReposTmpPathForPrint(Repos repos, String path, String name) {
+		String userTmpDir = repos.getPath() + repos.getId() +  "/tmp/print/" +  path.hashCode() + "_" + name + "/";
+		FileUtil.createDir(userTmpDir);
+		return userTmpDir;
+	}
+	
 	public static String getReposTmpPathForTextEdit(Repos repos, User login_user, boolean isRealDoc) {
 		if(isRealDoc)
 		{

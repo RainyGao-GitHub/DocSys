@@ -5957,17 +5957,164 @@ public class BaseFunction{
         bos.close();
         return bos.toByteArray();
     }
-    
+
+	public Doc getVideoDocInfoWithConvertType(Repos repos, String path, String name, Integer convertType) 
+	{
+		if(repos == null || convertType == null || path == null || name == null)
+		{
+			return null;
+		}
+		
+		if(repos.encryptType != null && repos.encryptType != 0)
+		{
+			//加密的仓库不支持视频转换方式
+			return null;
+		}
+		
+		try {	
+			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
+			path = Base64Util.base64Decode(path);
+			if(path == null)
+			{
+				return null;
+			}
+
+			name = new String(name.getBytes("ISO8859-1"),"UTF-8");
+			name = Base64Util.base64Decode(name);
+			if(name == null)
+			{
+				return null;
+			}
+			
+			String imgPreviewPath = Path.getReposTmpPathForVideoPreview(repos, path, name);
+			String localRootPath = Path.getReposRealPath(repos);
+			
+			return generateVideoWithConvertType(localRootPath + path, name, imgPreviewPath, convertType);			
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private Doc generateVideoWithConvertType(String localFilePath, String name, String imgPreviewPath, Integer convertType) 
+	{
+		Doc targetDoc = new Doc();
+		targetDoc.setLocalRootPath(imgPreviewPath);
+		targetDoc.setName(convertType + "_" + name);
+		if(FileUtil.isFileExist(imgPreviewPath + convertType + "_" + name) == true)
+		{
+			return targetDoc;
+		}
+		
+		switch(convertType)
+		{
+		case 1:	//Convert to mp4
+			String fileSuffix = FileUtil.getFileSuffix(name);
+			if(fileSuffix == null || fileSuffix.isEmpty())
+			{
+				return null;
+			}
+			if(fileSuffix.equals("mp4") || fileSuffix.equals("mov"))
+			{
+				FileUtil.copyFile(localFilePath + name, imgPreviewPath + convertType + "_" + name, false);
+			}
+			else
+			{
+				if(CovertVideoUtil.convertVideoToMp4(localFilePath + name, imgPreviewPath + convertType + "_" + name) == false)
+				{
+					return null;
+				}			
+			}
+			break;
+		default:
+			return null;
+		}
+		
+		if(FileUtil.isFileExist(imgPreviewPath + convertType + "_" + name) == true)
+		{
+			return targetDoc;
+		}
+		
+		return null;
+	}
+	
+	public Doc convertVideoToMP4(Repos repos, Doc doc) 
+	{
+		//TODO: 视频预览文件统一放到指定路径下
+		String imgPreviewPath = Path.getReposTmpPathForVideoPreview(repos, doc.getPath(), doc.getName());
+		Doc newDoc = generateVideoWithConvertType(doc.getLocalRootPath() + doc.getPath(), doc.getName(), imgPreviewPath, 1);
+		if(newDoc == null)
+		{
+			return doc;
+		}
+		
+		doc.setLocalRootPath(newDoc.getLocalRootPath());
+		doc.setPath("");
+		doc.setName(newDoc.getName());
+		return doc;
+	}
+	
+	protected Doc convertDocToPdfDoc(Repos repos, Doc doc, ReturnAjax rt) 
+	{
+		//TODO: 用于打印的pdf文件统一放到指定路径下
+		String tempPdfFolder = Path.getReposTmpPathForPrint(repos, doc.getPath(), doc.getName());		
+	    
+		Doc targetDoc = new Doc();
+		targetDoc.setLocalRootPath(tempPdfFolder);
+		targetDoc.setName(doc.getName() + ".pdf");
+		
+    	String fileSuffix = FileUtil.getFileSuffix(doc.getName());
+		if(fileSuffix == null)
+		{
+			Log.debug("convertDocToPdfFile() 未知文件类型");
+			return null;
+		}
+
+		String pdfFilePath = null;
+		if(FileUtil.isPdf(fileSuffix))
+		{
+			return doc;
+		}
+		else if(FileUtil.isOffice(fileSuffix))
+		{
+			pdfFilePath = convertOfficeToPdf(repos, doc, doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder, targetDoc.getName(), rt);
+		}
+		else if(FileUtil.isText(fileSuffix))
+		{
+			pdfFilePath = convertTextToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());
+		}
+		else if(FileUtil.isPicture(fileSuffix))
+		{
+			pdfFilePath = convertImageToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());			
+		}
+		else
+		{
+			docSysErrorLog("该文件类型不支持PDF转换", rt);
+			return null;
+		}
+		
+		if(pdfFilePath == null)
+		{
+			docSysErrorLog("PDF转换失败", rt);			
+			return null;
+		}
+		
+		doc.setLocalRootPath(targetDoc.getLocalRootPath());
+		doc.setPath("");
+		doc.setName(targetDoc.getName());
+		return doc;
+	}
+	
 	public String generatePdfFileWithDocList(Repos repos, Doc tmpDoc, List<Doc> docList, ReturnAjax rt) 
 	{
 		//TODO: 遍历所有文件并逐个生成pdf文件
 		List<String> pdfFileList = new ArrayList<String>();
 		for(Doc subDoc: docList)
 		{
-			String pdfFilePath = convertDocToPdfFile(repos, subDoc, tmpDoc.getLocalRootPath(), rt);
-			if(pdfFilePath != null)
+		    Doc pdfDoc = convertDocToPdfDoc(repos, subDoc, rt);
+			if(pdfDoc != null)
 			{
-				pdfFileList.add(pdfFilePath);
+				pdfFileList.add(pdfDoc.getLocalRootPath() + pdfDoc.getPath() + pdfDoc.getName());
 			}
 		}
 			
@@ -5979,34 +6126,6 @@ public class BaseFunction{
 		Log.debug(keystr);
 		return keystr.hashCode() + "";
 	}
-	
-    private String convertDocToPdfFile(Repos repos, Doc doc, String tmpLocalRootPath, ReturnAjax rt) 
-    {
-		String fileSuffix = FileUtil.getFileSuffix(doc.getName());
-		if(fileSuffix == null)
-		{
-			Log.debug("convertDocToPdfFile() 未知文件类型");
-			return null;
-		}
-		
-		if(FileUtil.isOffice(fileSuffix))
-		{
-			return convertOfficeToPdf(repos, doc, doc.getLocalRootPath() + doc.getPath() + doc.getName(), tmpLocalRootPath + doc.getPath(), doc.getName() + ".pdf", rt);
-		}
-		
-		if(FileUtil.isText(fileSuffix))
-		{
-			return convertTextToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tmpLocalRootPath + doc.getPath() + doc.getName() + ".pdf");
-		}
-
-		if(FileUtil.isPicture(fileSuffix))
-		{
-			return convertImageToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tmpLocalRootPath + doc.getPath() + doc.getName() + ".pdf");			
-		}
-		
-		docSysErrorLog("该文件类型不支持打印", rt);
-		return null;
-    }
 
 	private String convertOfficeToPdf(Repos repos, Doc doc, String inputPath, String dstPath, String dstName, ReturnAjax rt) 
 	{

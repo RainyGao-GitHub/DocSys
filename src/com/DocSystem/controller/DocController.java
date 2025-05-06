@@ -2940,85 +2940,6 @@ public class DocController extends BaseController{
 		}
 	}
 	
-	private Doc getVideoDocInfoWithConvertType(Repos repos, String path, String name, Integer convertType) 
-	{
-		if(repos == null || convertType == null || path == null || name == null)
-		{
-			return null;
-		}
-		
-		if(repos.encryptType != null && repos.encryptType != 0)
-		{
-			//加密的仓库不支持视频转换方式
-			return null;
-		}
-		
-		try {	
-			path = new String(path.getBytes("ISO8859-1"),"UTF-8");	
-			path = Base64Util.base64Decode(path);
-			if(path == null)
-			{
-				return null;
-			}
-
-			name = new String(name.getBytes("ISO8859-1"),"UTF-8");
-			name = Base64Util.base64Decode(name);
-			if(name == null)
-			{
-				return null;
-			}
-			
-			String imgPreviewPath = Path.getReposTmpPathForVideoPreview(repos, path, name);
-			String localRootPath = Path.getReposRealPath(repos);
-			
-			return generateVideoWithConvertType(localRootPath + path, name, imgPreviewPath, convertType);			
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	private Doc generateVideoWithConvertType(String localFilePath, String name, String imgPreviewPath, Integer convertType) 
-	{
-		Doc targetDoc = new Doc();
-		targetDoc.setLocalRootPath(imgPreviewPath);
-		targetDoc.setName(convertType + "_" + name);
-		if(FileUtil.isFileExist(imgPreviewPath + convertType + "_" + name) == true)
-		{
-			return targetDoc;
-		}
-		
-		switch(convertType)
-		{
-		case 1:	//Convert to mp4
-			String fileSuffix = FileUtil.getFileSuffix(name);
-			if(fileSuffix == null || fileSuffix.isEmpty())
-			{
-				return null;
-			}
-			if(fileSuffix.equals("mp4") || fileSuffix.equals("mov"))
-			{
-				FileUtil.copyFile(localFilePath + name, imgPreviewPath + convertType + "_" + name, false);
-			}
-			else
-			{
-				if(CovertVideoUtil.convertVideoToMp4(localFilePath + name, imgPreviewPath + convertType + "_" + name) == false)
-				{
-					return null;
-				}			
-			}
-			break;
-		default:
-			return null;
-		}
-		
-		if(FileUtil.isFileExist(imgPreviewPath + convertType + "_" + name) == true)
-		{
-			return targetDoc;
-		}
-		
-		return null;
-	}
 	//图片文件获取接口: 可以通过resolutionLevel指定分辨率等级
 	@RequestMapping(value="/downloadImg/{vid}/{path}/{name}/{targetPath}/{targetName}/{authCode}/{shareId}/{encryptEn}/{resolutionLevel}", method=RequestMethod.GET)
 	public void downloadImg(@PathVariable("vid") Integer vid, @PathVariable("path") String path, @PathVariable("name") String name, @PathVariable("targetPath") String targetPath,@PathVariable("targetName") String targetName,
@@ -4536,7 +4457,7 @@ public class DocController extends BaseController{
 			return;
 		}
 		
-		//打印多个文件
+		////////////打印多个文件 Start
 		if(printList != null && printList.isEmpty() == false && preview.equals("print"))
 		{
 			Log.info("getDocFileLink printList:" + printList);
@@ -4560,8 +4481,8 @@ public class DocController extends BaseController{
 			}
 			
 			//TODO: 生成pdf文件
-			String tempLocalRootPath = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
-			Doc tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);	
+			String tempLocalRootPath = Path.getReposTmpPathForPrint(repos, doc.getPath(), doc.getName());
+			Doc tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);
 			tmpDoc.setShareId(shareId);			
 			String pdfFilePath = generatePdfFileWithDocList(repos, tmpDoc, docList, rt);
 			if(pdfFilePath == null)
@@ -4586,6 +4507,7 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
+		////////////打印多个文件 End
 		
 		doc.setShareId(shareId);
 		path = doc.getPath();
@@ -4680,7 +4602,11 @@ public class DocController extends BaseController{
 			fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);			
 			break;
 		case "print":
-			fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);
+			tmpDoc = convertDocToPdfDoc(repos, tmpDoc, rt);
+			if(tmpDoc != null)
+			{
+				fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);
+			}
 			break;
 		default:
 			fileLink = buildDownloadDocLink(tmpDoc, authCode, urlStyle, 1, rt);
@@ -4698,22 +4624,6 @@ public class DocController extends BaseController{
 		rt.setData(fileLink);
 		rt.setDataEx(preview); //回传preview方便前端进行进行逻辑控制
 		writeJson(rt, response);
-	}
-
-	private Doc convertVideoToMP4(Repos repos, Doc doc) 
-	{
-		//TODO: 视频预览文件统一放到指定路径下
-		String imgPreviewPath = Path.getReposTmpPathForVideoPreview(repos, doc.getPath(), doc.getName());
-		Doc newDoc = generateVideoWithConvertType(doc.getLocalRootPath() + doc.getPath(), doc.getName(), imgPreviewPath, 1);
-		if(newDoc == null)
-		{
-			return doc;
-		}
-		
-		doc.setLocalRootPath(newDoc.getLocalRootPath());
-		doc.setPath("");
-		doc.setName(newDoc.getName());
-		return doc;
 	}
 
 	@RequestMapping("/getDocFileLinkRS.do")
