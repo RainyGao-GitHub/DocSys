@@ -249,4 +249,7 @@ public interface Channel {
     		int nFontFlag,
     		boolean needThumbnails,
     		boolean force);
+
+	//Convert OfficeFile to pdf file
+	boolean convertOfficeToPdf(Doc doc, String localEntryPath, String dstPath, String dstName, ReturnAjax rt);
 }

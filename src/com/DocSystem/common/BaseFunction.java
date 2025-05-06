@@ -29,8 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -111,7 +109,6 @@ import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.SyncSourceLock;
 import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.entity.User;
-import com.DocSystem.websocket.BussinessBase;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -6130,8 +6127,7 @@ public class BaseFunction{
 	private String convertOfficeToPdf(Repos repos, Doc doc, String inputPath, String dstPath, String dstName, ReturnAjax rt) 
 	{
 		//Do convert
-		String localEntryPath = Path.getReposRealPath(repos) + doc.getPath() + doc.getName();
-		if(BussinessBase.convertToPdfEx(buildOfficeEditorKey(doc), doc, localEntryPath, dstPath, dstName, rt) == false)
+		if(channel.convertOfficeToPdf(doc, inputPath, dstPath, dstName, rt) == false)
 		{
 			docSysErrorLog("预览文件生成失败", rt);
 			return null;
