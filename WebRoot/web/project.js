@@ -531,7 +531,7 @@ function buildPrintDocList(treeNodes)
 				count++;
  				if(count > 1000)
  				{
- 					//buildSubContext 每次最多1000个文件
+ 					//每次最多1000个文件
  					break;
  				}
    		}
@@ -4851,6 +4851,12 @@ function contextMenuInit()
 					e.preventDefault();
 					var treeNodes = getSelectedNodes();
 					downloadDoc(treeNodes,true,1);
+				}
+		},
+		{text: _Lang('打印'), action: function(e){
+					e.preventDefault();
+					var treeNodes = getSelectedNodes();
+					printDoc(treeNodes,true,1);
 				}
 		},
 		{divider: true},
