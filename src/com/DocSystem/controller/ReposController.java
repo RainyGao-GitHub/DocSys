@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -41,7 +42,6 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
-import com.DocSystem.common.entity.ReposSyncupConfig;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.common.remoteStorage.RemoteStorageSession;
 import com.DocSystem.controller.BaseController;
@@ -2360,6 +2360,8 @@ public class ReposController extends BaseController{
 	/**************** 获取 doc 所有的 用户/用户组权限  ******************/
 	@RequestMapping("/getDocAuthList.do")
 	public void getDocAuthList(Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			Integer userId,	//获取指定用户的权限
+			Integer groupId,//获取指定用户组的权限	
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** getDocAuthList.do ***********************");
@@ -2397,10 +2399,130 @@ public class ReposController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
+		List <DocAuth> docAuthList = null;
+		if(userId != null)
+		{
+			//如果指定了用户信息
+			docAuthList = getDocAuthListForUser(repos, doc, userId);
+		}
+		else if(groupId != null)
+		{
+			//如果指定了用户组信息
+			docAuthList = getDocAuthListForGroup(repos, doc, groupId);		
+		}
+		else
+		{
+			//如果没有指定用户或者用户组信息
+			docAuthList = getDocAuthListForAllUsers(repos, doc);				
+		}
+		Log.printObject("docAuthList:",docAuthList);
+
+		rt.setData(docAuthList);
+		writeJson(rt, response);
+	}
+
+	private List<DocAuth> getDocAuthListForUser(Repos repos, Doc doc, Integer userId) 
+	{
+		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
 		
+		//Step1: 获取包含userId的所有组
+		Map<Integer, Integer> groupIds = getUserGroups(userId);
+		
+		//Step2: 先取出所有的配置，过滤出包含userId和groupId的权限
+		List <DocAuth> allDocAuthList = reposService.getAllDocAuthList(repos.getId());
+		if(allDocAuthList != null)
+		{
+			//add the docAuth to docAuthList which docId is not 0
+			for(int i=0;i<allDocAuthList.size();i++)
+			{
+				DocAuth tmpDocAuth = allDocAuthList.get(i);
+				if(tmpDocAuth == null)
+				{
+					Log.debug("getDocAuthList() allDocAuthList[" + i+ "] is null");
+					continue;
+				}
+				
+				if((tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId().equals(userId)) ||
+					(tmpDocAuth.getGroupId() != null && groupIds.get(tmpDocAuth.getGroupId()) != null))
+				{
+					if(doc.getDocId() == 0)	//如果是根目录，那么显示所有的权限
+					{
+						//获取User的真实的权限
+						Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
+						DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
+						docAuthList.add(docAuth);						
+					}
+					else if(doc.getDocId().equals(tmpDocAuth.getDocId()))
+					{
+						//获取User的真实的权限
+						DocAuth docAuth = getUserDispDocAuth(repos, userId, doc);
+						docAuthList.add(docAuth);
+					}		
+				}
+			}
+		}
+		
+		return docAuthList;
+	}
+
+	private List<DocAuth> getDocAuthListForGroup(Repos repos, Doc doc, Integer groupId) 
+	{
+		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
+		
+		//先取出所有的配置，然后根据groupId进行groupId和docId进行过滤
+		List <DocAuth> allDocAuthList = reposService.getAllDocAuthList(repos.getId());
+		if(allDocAuthList != null)
+		{
+			//add the docAuth to docAuthList which docId is not 0
+			for(int i=0;i<allDocAuthList.size();i++)
+			{
+				DocAuth tmpDocAuth = allDocAuthList.get(i);
+				if(tmpDocAuth == null)
+				{
+					Log.debug("getDocAuthList() allDocAuthList[" + i+ "] is null");
+					continue;
+				}
+				
+				if(tmpDocAuth.getGroupId() != null)
+				{
+					if(groupId.equals(tmpDocAuth.getGroupId()))
+					{
+						if(doc.getDocId() == 0)	//如果是根目录，那么显示所有的权限
+						{
+							//获取Group的真实的权限
+							Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
+							DocAuth docAuth = getGroupDispDocAuth(repos, groupId, tmpDoc);
+							docAuthList.add(docAuth);
+							
+						}
+						else if(doc.getDocId().equals(tmpDocAuth.getDocId()))
+						{
+							//获取Group的真实的权限
+							DocAuth docAuth = getGroupDispDocAuth(repos, groupId, doc);
+							docAuthList.add(docAuth);
+						}
+					}
+				}					
+			}
+		}		
+		return docAuthList;
+	}
+
+	private Doc getDocInfoFromDocAuth(DocAuth docAuth) 
+	{
+		Doc doc = new Doc();
+		doc.setVid(docAuth.getReposId());
+		doc.setDocId(docAuth.getDocId());
+		doc.setPath(docAuth.getDocPath());
+		doc.setName(docAuth.getDocName());
+		return doc;
+	}
+
+	private List<DocAuth> getDocAuthListForAllUsers(Repos repos, Doc doc) 
+	{
 		//获取DocAuthList
 		//Step1: 获取仓库可访问用户和组列表
-		List <ReposAuth> reposAuthList = getReposAuthList(reposId);
+		List <ReposAuth> reposAuthList = getReposAuthList(repos.getId());
 		Log.debug("getDocAuthList() reposAuthList size is "+ reposAuthList.size());
 		Log.printObject("reposAuthList:", reposAuthList);
 		
@@ -2430,43 +2552,7 @@ public class ReposController extends BaseController{
 				docAuthList.add(docAuth);
 			}	
 		}
-		
-		//如果是根目录，则要将仓库下其他的 直接设置 显示出来
-//		if(docId == null || docId == 0)
-//		{
-//			List <DocAuth> allDocAuthList = reposService.getAllDocAuthList(reposId);
-//			if(allDocAuthList != null)
-//			{
-//				//add the docAuth to docAuthList which docId is not 0
-//				for(int i=0;i<allDocAuthList.size();i++)
-//				{
-//					DocAuth tmpDocAuth = allDocAuthList.get(i);
-//					if(tmpDocAuth == null)
-//					{
-//						Log.debug("getDocAuthList() allDocAuthList[" + i+ "] is null");
-//						continue;
-//					}
-//					
-//					//非组权限的时候需要判断是否时任意用户权限
-//					if(tmpDocAuth.getGroupId() == null)
-//					{
-//						if(tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId() == 0)
-//						{
-//							tmpDocAuth.setUserName("任意用户");
-//						}
-//					}
-//					
-//					if(tmpDocAuth.getDocId() != null && tmpDocAuth.getDocId() != 0)	//过滤掉docId = 0的权限（已经在里面了）
-//					{
-//						docAuthList.add(tmpDocAuth);						
-//					}
-//				}
-//			}
-//		}
-		Log.printObject("docAuthList:",docAuthList);
-
-		rt.setData(docAuthList);
-		writeJson(rt, response);
+		return docAuthList;
 	}
 
 	private List<ReposAuth> getReposAuthList(Integer reposId) {
