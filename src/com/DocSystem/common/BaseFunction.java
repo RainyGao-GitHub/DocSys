@@ -6051,7 +6051,7 @@ public class BaseFunction{
 		return doc;
 	}
 	
-	protected Doc convertDocToPdfDoc(Repos repos, Doc doc, ReturnAjax rt) 
+	protected Doc convertDocToPdfDoc(Repos repos, Doc doc) 
 	{
 		//TODO: 用于打印的pdf文件统一放到指定路径下
 		String tempPdfFolder = Path.getReposTmpPathForPrint(repos, doc.getPath(), doc.getName());		
@@ -6072,27 +6072,27 @@ public class BaseFunction{
 		{
 			return doc;
 		}
-		else if(FileUtil.isOffice(fileSuffix))
+		else if(FileUtil.isOffice(fileSuffix) || FileUtil.isText(fileSuffix))
 		{
-			pdfFilePath = convertOfficeToPdf(repos, doc, doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder, targetDoc.getName(), rt);
+			pdfFilePath = convertOfficeToPdf(repos, doc, doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder, targetDoc.getName());
 		}
-		else if(FileUtil.isText(fileSuffix))
-		{
-			pdfFilePath = convertTextToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());
-		}
+//		else if(FileUtil.isText(fileSuffix))
+//		{
+//			pdfFilePath = convertTextToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());
+//		}
 		else if(FileUtil.isPicture(fileSuffix))
 		{
 			pdfFilePath = convertImageToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());			
 		}
 		else
 		{
-			docSysErrorLog("该文件类型不支持PDF转换", rt);
+			Log.info("convertDocToPdfDoc() 该文件类型不支持PDF转换");
 			return null;
 		}
 		
 		if(pdfFilePath == null)
 		{
-			docSysErrorLog("PDF转换失败", rt);			
+			Log.info("convertDocToPdfDoc() PDF转换失败");			
 			return null;
 		}
 		
@@ -6102,13 +6102,13 @@ public class BaseFunction{
 		return doc;
 	}
 	
-	public String generatePdfFileWithDocList(Repos repos, Doc tmpDoc, List<Doc> docList, ReturnAjax rt) 
+	public String generatePdfFileWithDocList(Repos repos, Doc tmpDoc, List<Doc> docList) 
 	{
 		//TODO: 遍历所有文件并逐个生成pdf文件
 		List<String> pdfFileList = new ArrayList<String>();
 		for(Doc subDoc: docList)
 		{
-		    Doc pdfDoc = convertDocToPdfDoc(repos, subDoc, rt);
+		    Doc pdfDoc = convertDocToPdfDoc(repos, subDoc);
 			if(pdfDoc != null)
 			{
 				pdfFileList.add(pdfDoc.getLocalRootPath() + pdfDoc.getPath() + pdfDoc.getName());
@@ -6124,12 +6124,12 @@ public class BaseFunction{
 		return keystr.hashCode() + "";
 	}
 
-	private String convertOfficeToPdf(Repos repos, Doc doc, String inputPath, String dstPath, String dstName, ReturnAjax rt) 
+	private String convertOfficeToPdf(Repos repos, Doc doc, String inputPath, String dstPath, String dstName) 
 	{
 		//Do convert
-		if(channel.convertOfficeToPdf(doc, inputPath, dstPath, dstName, rt) == false)
+		if(channel.convertOfficeToPdf(doc, inputPath, dstPath, dstName) == false)
 		{
-			docSysErrorLog("预览文件生成失败", rt);
+			Log.info("convertOfficeToPdf() convertOfficeToPdf failed");
 			return null;
 		}
 		return dstPath + dstName;
@@ -6155,7 +6155,7 @@ public class BaseFunction{
         try {  
             TextToPdfConverter.convertTextToPdf(inputPath, outputPath); 
             Log.debug("PDF生成成功");  
-        } catch (IOException e) {  
+        } catch (Exception e) {  
         	Log.debug("转换失败: " + e.getMessage());  
         	Log.debug(e);
         	return null;

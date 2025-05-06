@@ -4484,7 +4484,7 @@ public class DocController extends BaseController{
 			String tempLocalRootPath = Path.getReposTmpPathForPrint(repos, doc.getPath(), doc.getName());
 			Doc tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);
 			tmpDoc.setShareId(shareId);			
-			String pdfFilePath = generatePdfFileWithDocList(repos, tmpDoc, docList, rt);
+			String pdfFilePath = generatePdfFileWithDocList(repos, tmpDoc, docList);
 			if(pdfFilePath == null)
 			{
 				Log.debug("getDocFileLink() generatePdfFileWithDocList failed");
@@ -4602,7 +4602,7 @@ public class DocController extends BaseController{
 			fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);			
 			break;
 		case "print":
-			tmpDoc = convertDocToPdfDoc(repos, tmpDoc, rt);
+			tmpDoc = convertDocToPdfDoc(repos, tmpDoc);
 			if(tmpDoc != null)
 			{
 				fileLink = buildDocPdfLink(tmpDoc, authCode, urlStyle, 1, rt);

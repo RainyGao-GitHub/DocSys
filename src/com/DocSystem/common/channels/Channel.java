@@ -251,5 +251,5 @@ public interface Channel {
     		boolean force);
 
 	//Convert OfficeFile to pdf file
-	boolean convertOfficeToPdf(Doc doc, String localEntryPath, String dstPath, String dstName, ReturnAjax rt);
+	boolean convertOfficeToPdf(Doc doc, String localEntryPath, String dstPath, String dstName);
 }
