@@ -6072,14 +6072,14 @@ public class BaseFunction{
 		{
 			return doc;
 		}
-		else if(FileUtil.isOffice(fileSuffix) || FileUtil.isText(fileSuffix))
+		else if(FileUtil.isOffice(fileSuffix))
 		{
 			pdfFilePath = convertOfficeToPdf(repos, doc, doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder, targetDoc.getName());
 		}
-//		else if(FileUtil.isText(fileSuffix))
-//		{
-//			pdfFilePath = convertTextToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());
-//		}
+		else if(FileUtil.isText(fileSuffix))
+		{
+			pdfFilePath = convertTextToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());
+		}
 		else if(FileUtil.isPicture(fileSuffix))
 		{
 			pdfFilePath = convertImageToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());			
