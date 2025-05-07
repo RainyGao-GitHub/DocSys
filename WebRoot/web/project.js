@@ -3635,7 +3635,7 @@ function backToParentDocEx()
 
 //回车键监听函数，该event已经过兼容性处理
 function EnterKeyListenerForSearchDoc(event){
-	console.log("enter key listener for SearchDoc");
+	//console.log("enter key listener for SearchDoc");
 	if (event.keyCode == 13)
 	{
 		var isFocus=$("#searchWord").is(":focus");
