@@ -2528,13 +2528,59 @@ function dropInner(treeId, nodes, targetNode) {
 	  }
   }
 
+  //实现Shift多选功能
+  var firstSelectedNode = null;
+  function handleShiftClick(currentNode) 
+  {
+	  console.log("handleShiftClick() currentNode:", currentNode);	
+	  if (firstSelectedNode == null) 
+	  {
+		  // 首次选择时记录锚点
+		  firstSelectedNode = currentNode;
+	  } 
+	  else 
+	  {
+		  // 获取节点列表并找到起止位置
+		  var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		  var allNodes = treeObj.getNodes();
+		  var startIdx = getIndexInNodes(firstSelectedNode, allNodes);
+		  var endIdx = getIndexInNodes(currentNode, allNodes);
+		  if(startIdx >= 0 && endIdx >= 0)
+		  {
+			  // 确定选择范围
+			  var [start, end] = [Math.min(startIdx, endIdx), Math.max(startIdx, endIdx)];
+			  
+			  for(var i=start; i< end+1; i++)
+			  {
+				  // 批量选中节点
+				  treeObj.selectNode(allNodes[i], true);
+			  }
+		  }
+		  firstSelectedNode = null; // 重置锚点
+	  }
+  }
+  function getIndexInNodes(currNode, nodes)
+  {
+	  for(var i=0; i<nodes.length; i++)
+	  {
+		  if(nodes[i].id == currNode.id)
+		  {
+			  return i;
+		  }
+	  }
+	  return -1;
+  }
   //为了能够让外部接口能够调用zTree的callback，需要记录当前treeNode等变量
   function zTreeOnClick(event, treeId, treeNode)
   {
-	  console.log("zTreeOnClick() treeId:" + treeId);
+	  console.log("zTreeOnClick() treeId:" + treeId);	  
+      if (event.shiftKey) 
+      {
+          // Shift按下时拦截默认点击事件
+          handleShiftClick(treeNode);
+      }
 	  
 	  DocListState = 0;
-
 	  if(!gDocInfo.docId || gDocInfo.docId == 0)
 	  {
 	  		//没有处于打开状态的文件，直接打开文件，摘要模式
