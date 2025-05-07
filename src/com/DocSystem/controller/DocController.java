@@ -2,7 +2,6 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +28,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.Base64Util;
-import com.DocSystem.common.CovertVideoUtil;
 import com.DocSystem.common.EVENT;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.FolderUploadAction;
