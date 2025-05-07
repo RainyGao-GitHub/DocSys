@@ -133,6 +133,7 @@ function getReposInfo(callback){
                 //显示编辑按键和增加用户按键
                 $("#btnAddReposUser").show();
                 $("#btnAddReposGroup").show();
+                $("#btnExportData").show();
             }else {
                 $("#projectName").text(_Lang("项目名"));
                 
@@ -140,6 +141,7 @@ function getReposInfo(callback){
                 //隐藏编辑按键和增加用户按键
                 $("#btnAddReposUser").hide();
 			    $("#btnAddReposGroup").hide();
+			    $("#btnExportData").hide();
 			    $("#btnSaveAuth").hide();
 			    $("#btnCancelSaveAuth").hide();
 			    showErrorMessage({
@@ -154,6 +156,7 @@ function getReposInfo(callback){
             //隐藏编辑按键和增加用户按键
             $("#btnAddReposUser").hide();
 		    $("#btnAddReposGroup").hide();
+		    $("#btnExportData").hide();
 		    $("#btnSaveAuth").hide();
 		    $("#btnCancelSaveAuth").hide();
 		    showErrorMessage({
@@ -164,6 +167,60 @@ function getReposInfo(callback){
         	});
         }
     });
+}
+
+var gDocAuthList = undefined;	//用于导出数据
+//导出权限配置
+function downloadFile(filename, content) 
+{
+	  // 创建Blob对象并生成临时URL
+	  const blob = new Blob([content], { type: 'text/plain' });
+	  const url = URL.createObjectURL(blob);
+
+	  // 创建隐藏的下载链接
+	  const link = document.createElement('a');
+	  link.href = url;
+	  link.download = filename;
+	  
+	  // 触发点击后清理资源
+	  link.addEventListener('click', () => {
+	    setTimeout(() => URL.revokeObjectURL(url), 100);
+	  });
+
+	  document.body.appendChild(link);
+	  link.click();
+	  document.body.removeChild(link);
+}
+function exportDocAuthList() 
+{
+	  // 定义CSV列头（与数据结构严格对应）
+	  const headers = [
+	    '用户名', '组', '路径', 
+	    '管理员权限', '读权限', '写权限', 
+	    '增加权限', '删除权限', '下载/分享权限',
+	    '上传限制(MB)', '可继承'
+	  ];
+
+	  // 转换数据行
+	  const csvRows = gDocAuthList.map(d => {
+	    return [
+	      d.userName,        // 字符串类型直接输出
+	      d.groupName,
+	      `"${ (d.docPath+d.docName).replace(/"/g, '""')}"`,  // 路径可能存在特殊字符
+	      d.isAdmin == 1 ? 'Y' : 'N',           // 布尔转语义
+	      d.access == 1 ? 'Y' : 'N',
+	      d.editEn == 1 ? 'Y' : 'N',
+	      d.addEn == 1 ? 'Y' : 'N',
+	      d.deleteEn == 1 ? 'Y' : 'N',
+	      d.downloadEn == 1 ? 'Y' : 'N',
+	      d.uploadSize,         // 数字处理
+	      d.heritable == 1 ? 'Y' : 'N'
+	    ].join(',');
+	  });
+
+	  // 组装完整CSV内容
+	  const content = [headers.join(','), ...csvRows].join('\n');
+	  downloadFile('DocAuthList.csv', '\uFEFF' + content, 'text/csv;charset=utf-8');
 }
 
 function showDiskSpaceInfo(reposInfo)
@@ -411,6 +468,7 @@ function editAuth() {
 	console.log("editAuth");
 	$("#btnAddReposUser").hide();
 	$("#btnAddReposGroup").hide();
+	$("#btnExportData").hide();
     $("#btnSaveAuth").show();
     $("#btnCancelSaveAuth").show();
     //使能用户列表的第一个复选框
@@ -422,6 +480,7 @@ function saveAuth() {
 	console.log("saveAuth");
 	$("#btnAddReposUser").show();
 	$("#btnAddReposGroup").show();
+	$("#btnExportData").show();
     $("#btnSaveAuth").hide();
     $("#btnCancelSaveAuth").hide();
     //Disable用户列表的第一个复选框
@@ -469,6 +528,7 @@ function cancelSaveAuth() {
 	console.log("cancelSaveAuth");
 	$("#btnAddReposUser").show();
 	$("#btnAddReposGroup").show();
+	$("#btnExportData").show();
     $("#btnSaveAuth").hide();
     $("#btnCancelSaveAuth").hide();
     //disable用户列表的第一个复选框
@@ -1993,6 +2053,7 @@ function showDocAuthList(userId, groupId)
                     //显示编辑按键和增加用户按键
                     $("#btnAddReposUser").show();
 			    	$("#btnAddReposGroup").show();
+			    	$("#btnExportData").show();
 			        $("#btnSaveAuth").hide();
 			        $("#btnCancelSaveAuth").hide();
                 	showUserList(ret.data);
@@ -2002,6 +2063,7 @@ function showDocAuthList(userId, groupId)
                     //隐藏编辑按键和增加用户按键
                     $("#btnAddReposUser").hide();
 			    	$("#btnAddReposGroup").hide();
+			    	$("#btnExportData").hide();
 			        $("#btnSaveAuth").hide();
 			        $("#btnCancelSaveAuth").hide();
 			        showErrorMessage({
@@ -2016,6 +2078,7 @@ function showDocAuthList(userId, groupId)
                 //隐藏编辑按键和增加用户按键
                 $("#btnAddReposUser").hide();
 		    	$("#btnAddReposGroup").hide();
+		    	$("#btnExportData").hide();
 		        $("#btnSaveAuth").hide();
 		        $("#btnCancelSaveAuth").hide();
 		        showErrorMessage({
@@ -2029,7 +2092,6 @@ function showDocAuthList(userId, groupId)
 
 
 //根据获取到的目录权限用户列表数据，绘制列表
-var gDocAuthList = undefined;	//用于导出数据
 function showUserList(data)
 {
 	console.log("showUserList");
