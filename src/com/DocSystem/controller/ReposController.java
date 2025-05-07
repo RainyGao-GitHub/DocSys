@@ -24,9 +24,11 @@ import util.ReturnAjax;
 import util.LuceneUtil.LuceneUtil2;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
+import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
+import com.DocSystem.entity.UserGroup;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
@@ -2445,24 +2447,47 @@ public class ReposController extends BaseController{
 				if((tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId().equals(userId)) ||
 					(tmpDocAuth.getGroupId() != null && groupIds.get(tmpDocAuth.getGroupId()) != null))
 				{
-					if(doc.getDocId() == 0)	//如果是根目录，那么显示所有的权限
-					{
-						//获取User的真实的权限
-						Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
-						DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
-						docAuthList.add(docAuth);						
-					}
-					else if(doc.getDocId().equals(tmpDocAuth.getDocId()))
-					{
-						//获取User的真实的权限
-						DocAuth docAuth = getUserDispDocAuth(repos, userId, doc);
-						docAuthList.add(docAuth);
-					}		
+					////////目前对于用户的权限，直接获取所有的，所以不用docId进行过滤
+//					if(doc.getDocId() == 0)	//如果是根目录，那么显示所有的权限
+//					{
+//						//获取User的真实的权限
+//						Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
+//						DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
+//						docAuthList.add(docAuth);						
+//					}
+//					else if(doc.getDocId().equals(tmpDocAuth.getDocId()))
+//					{
+//						//获取User的真实的权限
+//						DocAuth docAuth = getUserDispDocAuth(repos, userId, doc);
+//						docAuthList.add(docAuth);
+//					}		
+					//获取User的真实的权限
+					Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
+					DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
+					docAuthList.add(docAuth);						
 				}
 			}
 		}
 		
 		return docAuthList;
+	}
+
+	private Map<Integer, Integer> getUserGroups(Integer userId) 
+	{
+		HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
+
+		//根据UserId获取所有goupMember, 根据groupId来确定所在的组Ids
+		GroupMember groupMember = new GroupMember();
+		groupMember.setUserId(userId);
+		List<GroupMember> list = userService.getGroupMemberListByGroupMemberInfo(groupMember);
+		if(list != null && list.size() > 0)
+		{
+			for(GroupMember Member: list)
+			{
+				map.put(Member.getGroupId(), Member.getGroupId());
+			}
+		}
+		return map;
 	}
 
 	private List<DocAuth> getDocAuthListForGroup(Repos repos, Doc doc, Integer groupId) 
@@ -2483,25 +2508,28 @@ public class ReposController extends BaseController{
 					continue;
 				}
 				
-				if(tmpDocAuth.getGroupId() != null)
+				if(tmpDocAuth.getGroupId() != null && groupId.equals(tmpDocAuth.getGroupId()))
 				{
-					if(groupId.equals(tmpDocAuth.getGroupId()))
-					{
-						if(doc.getDocId() == 0)	//如果是根目录，那么显示所有的权限
-						{
-							//获取Group的真实的权限
-							Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
-							DocAuth docAuth = getGroupDispDocAuth(repos, groupId, tmpDoc);
-							docAuthList.add(docAuth);
-							
-						}
-						else if(doc.getDocId().equals(tmpDocAuth.getDocId()))
-						{
-							//获取Group的真实的权限
-							DocAuth docAuth = getGroupDispDocAuth(repos, groupId, doc);
-							docAuthList.add(docAuth);
-						}
-					}
+					////////目前对于用户组的权限，直接获取所有的，所以不用docId进行过滤
+//					if(doc.getDocId() == 0)	//如果是根目录，那么显示所有的权限
+//					{
+//						//获取Group的真实的权限
+//						Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
+//						DocAuth docAuth = getGroupDispDocAuth(repos, groupId, tmpDoc);
+//						docAuthList.add(docAuth);
+//						
+//					}
+//					else if(doc.getDocId().equals(tmpDocAuth.getDocId()))
+//					{
+//						//获取Group的真实的权限
+//						DocAuth docAuth = getGroupDispDocAuth(repos, groupId, doc);
+//						docAuthList.add(docAuth);
+//					}
+					//获取Group的真实的权限
+					Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
+					DocAuth docAuth = getGroupDispDocAuth(repos, groupId, tmpDoc);
+					docAuthList.add(docAuth);
+
 				}					
 			}
 		}		

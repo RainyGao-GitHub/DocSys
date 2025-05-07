@@ -553,7 +553,7 @@ function zTreeOnClick(event, treeId, treeNode) {
     console.log("zTreeOnClick()");
     if ( curDoc != treeNode.id ){
     	curDoc = treeNode.id;
-    	showAuthList();
+    	showDocAuthList(undefined, undefined);
     	getCurDocVersionIgnore();
     }
     //alert(curDoc);
@@ -1932,13 +1932,37 @@ function getCurDocVersionIgnore()
 function showAuthList()
 {
 	console.log("showAuthList()");
-var docId = curDoc;
-console.log("docId:" + docId);
-	showDocAuthList();
+	var docId = curDoc;
+	console.log("docId:" + docId);
+	showDocAuthList(gUserId, gGroupId);
 }
 
-function showDocAuthList(){
-   	console.log("showDocAuthList()");
+function showUserDocAuths(userId)
+{
+	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+	treeObj.cancelSelectedNode();
+	curDoc = -1;
+	showDocAuthList(userId, undefined);
+}
+
+function showGroupDocAuths(groupId)
+{
+	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+	treeObj.cancelSelectedNode();
+	curDoc = -1;
+	showDocAuthList(undefined, groupId);
+}
+
+//用于保存后的刷新用途
+var gUserId = undefined;
+var gGroupId = undefined;
+function showDocAuthList(userId, groupId)
+{
+   	console.log("showDocAuthList() userId:" + userId + " groupId:" + groupId);
+   	
+   	gUserId = userId;
+   	gGroupId = groupId;
+   	
 	var docId = curDoc;
 	var parentPath = "";
 	var docName = "";
@@ -1961,6 +1985,8 @@ function showDocAuthList(){
             	docId: docId,
             	path: parentPath,
             	name: docName,
+            	userId: userId,
+            	groupId: groupId,
             },
             success : function (ret) {
                 if( "ok" == ret.status ){
@@ -2003,9 +2029,14 @@ function showDocAuthList(){
 
 
 //根据获取到的目录权限用户列表数据，绘制列表
-function showUserList(data){
+var gDocAuthList = undefined;	//用于导出数据
+function showUserList(data)
+{
 	console.log("showUserList");
 	console.log(data);
+	
+	//保存docAuthList需要用于导出
+	gDocAuthList = data;
 	
 	var c = $("#reposAuthArea").children();
 	$(c).remove();
@@ -2054,12 +2085,12 @@ function showUserList(data){
 			+"	</i> "
 			+"	<i class='cell username w10'>"
 			+"		<span class='name'>"
-			+"			<a id='User"+i+"' value='"+userId+"' href='javascript:void(0)'>"+d.userName+"</a>"
+			+"			<a id='User"+i+"' value='"+userId+"' onclick='showUserDocAuths(" + userId + ")'>"+d.userName+"</a>"
 			+"		</span>"
 			+"	</i>"
 			+"	<i class='cell groupname w10'>"
 			+"		<span class='name'>"
-			+"			<a id='Group"+i+"' value='"+groupId+"' href='javascript:void(0)'>"+d.groupName+"</a>"
+			+"			<a id='Group"+i+"' value='"+groupId+"' onclick='showGroupDocAuths(" + groupId + ")'>"+d.groupName+"</a>"
 			+"		</span>"
 			+"	</i>"
 			+"	<i class='cell docpath w15'>"
