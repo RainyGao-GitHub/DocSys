@@ -2530,9 +2530,9 @@ function dropInner(treeId, nodes, targetNode) {
 
   //实现Shift多选功能
   var firstSelectedNode = null;
-  function handleShiftClick(currentNode) 
+  function handleShiftClick(event, currentNode) 
   {
-	  console.log("handleShiftClick() currentNode:", currentNode);	
+	  //console.log("handleShiftClick() currentNode:", currentNode);
 	  if (firstSelectedNode == null) 
 	  {
 		  // 首次选择时记录锚点
@@ -2540,23 +2540,49 @@ function dropInner(treeId, nodes, targetNode) {
 	  } 
 	  else 
 	  {
-		  // 获取节点列表并找到起止位置
-		  var treeObj = $.fn.zTree.getZTreeObj("doctree");
-		  var allNodes = treeObj.getNodes();
-		  var startIdx = getIndexInNodes(firstSelectedNode, allNodes);
-		  var endIdx = getIndexInNodes(currentNode, allNodes);
-		  if(startIdx >= 0 && endIdx >= 0)
-		  {
-			  // 确定选择范围
-			  var [start, end] = [Math.min(startIdx, endIdx), Math.max(startIdx, endIdx)];
-			  
-			  for(var i=start; i< end+1; i++)
+		  if (event.shiftKey) 
+	      {
+			  //shift多选要求两个节点在同一级目录下
+			  //console.log("handleShiftClick() firstSelectedNode.pid:" + firstSelectedNode.pid + " currentNode.pid:" + currentNode.pid);			  
+			  if(firstSelectedNode.pid !== currentNode.pid)
 			  {
-				  // 批量选中节点
-				  treeObj.selectNode(allNodes[i], true);
+				  //console.log("handleShiftClick() firstSelectedNode.pid:" + firstSelectedNode.pid + " currentNode.pid:" + currentNode.pid + "不在同一级目录");			  
+				  firstSelectedNode = currentNode;
 			  }
+			  else
+			  {
+				  // 获取节点列表并找到起止位置
+				  var treeObj = $.fn.zTree.getZTreeObj("doctree");
+				  //var allNodes = treeObj.getNodes();
+				  var nodes = treeObj.getNodesByParam("pid", firstSelectedNode.pid, null);			  			  
+				  //console.log("handleShiftClick() nodes:", nodes);			  
+				  
+				  //var startIdx = getIndexInNodes(firstSelectedNode, nodes);
+				  var startIdx = treeObj.getNodeIndex(firstSelectedNode);
+				  console.log("handleShiftClick() startIdx:", startIdx);			  
+				  
+				  //var endIdx = getIndexInNodes(currentNode, nodes);
+				  var endIdx = treeObj.getNodeIndex(currentNode);
+				  //console.log("handleShiftClick() endIdx:", endIdx);			  
+				  
+				  if(startIdx >= 0 && endIdx >= 0)
+				  {
+					  // 确定选择范围
+					  var [start, end] = [Math.min(startIdx, endIdx), Math.max(startIdx, endIdx)];
+					  
+					  for(var i=start; i< end+1; i++)
+					  {
+						  // 批量选中节点
+						  treeObj.selectNode(nodes[i], true);
+					  }
+				  }
+				  firstSelectedNode = null; // 重置锚点
+			  }
+	      }
+		  else
+		  {
+			  firstSelectedNode = currentNode;
 		  }
-		  firstSelectedNode = null; // 重置锚点
 	  }
   }
   function getIndexInNodes(currNode, nodes)
@@ -2574,12 +2600,10 @@ function dropInner(treeId, nodes, targetNode) {
   function zTreeOnClick(event, treeId, treeNode)
   {
 	  console.log("zTreeOnClick() treeId:" + treeId);	  
-      if (event.shiftKey) 
-      {
-          // Shift按下时拦截默认点击事件
-          handleShiftClick(treeNode);
-      }
-	  
+      
+	  //Shift多选实现
+      handleShiftClick(event, treeNode);
+      
 	  DocListState = 0;
 	  if(!gDocInfo.docId || gDocInfo.docId == 0)
 	  {
