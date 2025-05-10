@@ -6076,10 +6076,11 @@ public class BaseFunction{
 		{
 			pdfFilePath = convertOfficeToPdf(repos, doc, doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder, targetDoc.getName());
 		}
-		else if(FileUtil.isText(fileSuffix))
-		{
-			pdfFilePath = convertTextToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());
-		}
+		//TODO: 目前文本文件里也涉及多种字体的问题，直接使用指定字体库会出现不兼容问题，暂时屏蔽掉
+//		else if(FileUtil.isText(fileSuffix))
+//		{
+//			pdfFilePath = convertTextToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());
+//		}
 		else if(FileUtil.isPicture(fileSuffix))
 		{
 			pdfFilePath = convertImageToPdf(doc.getLocalRootPath() + doc.getPath() + doc.getName(), tempPdfFolder + targetDoc.getName());			
