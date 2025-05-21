@@ -133,6 +133,7 @@ function getReposInfo(callback){
                 //显示编辑按键和增加用户按键
                 $("#btnAddReposUser").show();
                 $("#btnAddReposGroup").show();
+                $("#btnQueryReposUserAuth").show();
                 $("#btnExportData").show();
             }else {
                 $("#projectName").text(_Lang("项目名"));
@@ -141,6 +142,7 @@ function getReposInfo(callback){
                 //隐藏编辑按键和增加用户按键
                 $("#btnAddReposUser").hide();
 			    $("#btnAddReposGroup").hide();
+			    $("#btnQueryReposUserAuth").hide();
 			    $("#btnExportData").hide();
 			    $("#btnSaveAuth").hide();
 			    $("#btnCancelSaveAuth").hide();
@@ -156,6 +158,7 @@ function getReposInfo(callback){
             //隐藏编辑按键和增加用户按键
             $("#btnAddReposUser").hide();
 		    $("#btnAddReposGroup").hide();
+		    $("#btnQueryReposUserAuth").hide();
 		    $("#btnExportData").hide();
 		    $("#btnSaveAuth").hide();
 		    $("#btnCancelSaveAuth").hide();
@@ -468,6 +471,7 @@ function editAuth() {
 	console.log("editAuth");
 	$("#btnAddReposUser").hide();
 	$("#btnAddReposGroup").hide();
+	$("#btnQueryReposUserAuth").hide();
 	$("#btnExportData").hide();
     $("#btnSaveAuth").show();
     $("#btnCancelSaveAuth").show();
@@ -480,6 +484,7 @@ function saveAuth() {
 	console.log("saveAuth");
 	$("#btnAddReposUser").show();
 	$("#btnAddReposGroup").show();
+	$("#btnQueryReposUserAuth").show();
 	$("#btnExportData").show();
     $("#btnSaveAuth").hide();
     $("#btnCancelSaveAuth").hide();
@@ -528,6 +533,7 @@ function cancelSaveAuth() {
 	console.log("cancelSaveAuth");
 	$("#btnAddReposUser").show();
 	$("#btnAddReposGroup").show();
+	$("#btnQueryReposUserAuth").show();
 	$("#btnExportData").show();
     $("#btnSaveAuth").hide();
     $("#btnCancelSaveAuth").hide();
@@ -2053,6 +2059,7 @@ function showDocAuthList(userId, groupId)
                     //显示编辑按键和增加用户按键
                     $("#btnAddReposUser").show();
 			    	$("#btnAddReposGroup").show();
+			    	$("#btnQueryReposUserAuth").show();
 			    	$("#btnExportData").show();
 			        $("#btnSaveAuth").hide();
 			        $("#btnCancelSaveAuth").hide();
@@ -2063,6 +2070,7 @@ function showDocAuthList(userId, groupId)
                     //隐藏编辑按键和增加用户按键
                     $("#btnAddReposUser").hide();
 			    	$("#btnAddReposGroup").hide();
+			    	$("#btnQueryReposUserAuth").hide();
 			    	$("#btnExportData").hide();
 			        $("#btnSaveAuth").hide();
 			        $("#btnCancelSaveAuth").hide();
@@ -2078,6 +2086,7 @@ function showDocAuthList(userId, groupId)
                 //隐藏编辑按键和增加用户按键
                 $("#btnAddReposUser").hide();
 		    	$("#btnAddReposGroup").hide();
+		    	$("#btnQueryReposUserAuth").hide();
 		    	$("#btnExportData").hide();
 		        $("#btnSaveAuth").hide();
 		        $("#btnCancelSaveAuth").hide();
@@ -2545,6 +2554,18 @@ bootstrapQ.dialog({
 	id: 'addReposUser',
 	title: _Lang('添加访问用户'),
 	url: 'addReposUser' + langExt + '.html',
+	msg: _Lang('页面正在加载，请稍等') + '...',
+		foot: false,
+		big: true,
+	}, null);
+}
+
+function showQueryReposUserAuthPanel(){
+	console.log("showQueryUserAuthPanel");
+bootstrapQ.dialog({
+	id: 'queryReposUserAuth',
+	title: _Lang('查询用户权限'),
+	url: 'queryReposUserAuth' + langExt + '.html',
 	msg: _Lang('页面正在加载，请稍等') + '...',
 		foot: false,
 		big: true,

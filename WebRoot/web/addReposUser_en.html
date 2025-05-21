@@ -4,13 +4,13 @@
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li style="margin-top: 0px;">
-							<i class="cell username w30"><input type="input" class="form-control" id="search-reposMember" placeholder="请输入关键字"></i>
-							<i class="cell operation w10"><button onclick="searchReposMember()" class="btn btn-md btn-primary" style="margin-left: 5px;">搜索</button></i>						
+							<i class="cell username w30"><input type="input" class="form-control" id="search-reposMember" placeholder="Please entry keyword"></i>
+							<i class="cell operation w10"><button onclick="searchReposMember()" class="btn btn-md btn-primary" style="margin-left: 5px;">Search</button></i>						
 						</li>
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell username w15" >用户名</i>
-							<i class="cell username w15">名字</i>
-							<i class="cell operation w10">操作</i>						
+							<i class="cell username w15" >Account</i>
+							<i class="cell username w15">Name</i>
+							<i class="cell operation w10">Operation</i>						
 						</li>
 					</div>
                		<div class="panel-body eventset-list" id="reposAllUsers">
@@ -64,7 +64,7 @@
 	                }
 	            },
 	            error : function () {
-	               alert('服务器异常：获取仓库用户列表失败！');
+	               alert('Serve Exception: Failed to get user list!');
 	            }
     	});
 
@@ -74,15 +74,15 @@
 			var c = $("#reposAllUsers").children();
 			$(c).remove();
 			if(data.length==0){
-				$("#reposAllUsers").append("<p>暂无数据</p>");
+				$("#reposAllUsers").append("<p>No Data</p>");
 			}
 			
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
-				var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>添加</a>";
+				var opBtn = "		<a href='javascript:void(0)' onclick='addReposUser("+d.userId+");' class='mybtn-primary'>Add</a>";
 				if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
 				{
-					opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.userId+");' disabled='disabled'>删除</a>";
+					opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.userId+");' disabled='disabled'>Remove</a>";
 				}
 													
 				var se = "<li value="+ i +">"
@@ -131,7 +131,7 @@
 	                }
 	            },
 	            error : function () {
-	               showErrorMessage('服务器异常：添加用户失败！');
+	               showErrorMessage('Server Exception: Failed to add user!');
 	            }
 	    });
 	}
@@ -141,10 +141,10 @@
 	{
 			qiao.bs.confirm({
 	 	    	id: 'deleteReposAuthConfirm',
-	 	        msg: "是否删除该用户的仓库权限设置?",
+	 	        msg: "Remove user from this repository?",
 	 	        close: false,		
-	 	        okbtn: "删除",
-	 	        qubtn: "取消",
+	 	        okbtn: "Remove",
+	 	        qubtn: "Cancel",
 	 	    },function () {
 	 	    	
 	 	    	//alert("点击了确定");
@@ -181,7 +181,7 @@
 	                }
 	            },
 	            error : function () {
-	               showErrorMessage('服务器异常：移除用户失败！');
+	               showErrorMessage('Server Exception: Failed to remove user!');
 	            }
 	    });
 	}

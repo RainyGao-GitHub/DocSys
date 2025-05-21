@@ -1,0 +1,109 @@
+<div style="height:550px;overflow-y:auto">
+        <div class="manual-right width:80%" >
+            <div class="manual-article">
+               <div class="article-body editor-content"  id="doc" style="min-height: 650px">
+               		<div class="panel-body eventset-list" >	
+	               		<li style="margin-top: 0px;">
+							<i class="cell username w30"><input type="input" class="form-control" id="search-reposMember" placeholder="Please enter keyword"></i>
+							<i class="cell operation w10"><button onclick="searchReposMember()" class="btn btn-md btn-primary" style="margin-left: 5px;">Search</button></i>						
+						</li>
+	               		<li class="eventset-tit" style="margin-top: 0px;">
+							<i class="cell username w15" >Account</i>
+							<i class="cell username w15">Name</i>
+							<i class="cell operation w10">Operation</i>						
+						</li>
+					</div>
+               		<div class="panel-body eventset-list" id="reposAllUsers">
+			 			<!-- 用户列表区域-->
+					</div>
+			 </div>
+			</div>
+		</div>
+</div>
+
+<script type="text/javascript">
+	function queryReposUserAuthPageInit()
+	{
+		console.log("queryReposUserAuthPageInit");
+		reposMemberSearchWord = "";
+		showReposAllUserList();		
+	}
+
+        
+    //页面初始化代码    
+    $(function(){
+		queryReposUserAuthPageInit();
+	});
+
+    var reposMemberSearchWord = "";
+    function searchReposMember()
+    {
+    	reposMemberSearchWord =  $("#search-reposMember").val();
+    	showReposAllUserList(gReposId);
+    }
+
+	function showReposAllUserList(){
+	   	console.log("showReposAllUserList()");
+	   	var vid = getQueryString("vid");
+	
+	    $.ajax({
+	            url : "/DocSystem/Repos/getReposAllUsers.do",
+	            type : "post",
+	            dataType : "json",
+	            data : {
+	            	searchWord: reposMemberSearchWord,
+	                reposId : vid,
+	            },
+	            success : function (ret) {
+	                if( "ok" == ret.status ){
+	                    showUserList(ret.data);
+	                }
+	                else
+	                {
+	                	alert("Error:" + ret.msgInfo);
+	                }
+	            },
+	            error : function () {
+	               alert('Server exception: Failed to get user list!');
+	            }
+    	});
+
+		//根据获取到的目录权限用户列表数据，绘制列表
+		function showUserList(data){
+			console.log(data);
+			var c = $("#reposAllUsers").children();
+			$(c).remove();
+			if(data.length==0){
+				$("#reposAllUsers").append("<p>No Data</p>");
+			}
+			
+			for(var i=0;i<data.length;i++){
+				var d = data[i];
+				var opBtn = "		<a href='javascript:void(0)' onclick='queryReposUserAuth("+d.userId+");' class='mybtn-primary'>Query</a>";								
+				var se = "<li value="+ i +">"
+					+"	<i class='cell username w15'>"
+					+"		<span class='name'>"
+					+"			<a id='UserName"+i+"' href='javascript:void(0)'>"+d.userName+"</a>"
+					+"		</span>"
+					+"	</i>"
+					+"	<i class='cell realname w15'>"
+					+"		<span class='name'>"
+					+"			<a id='RealName"+i+"' href='javascript:void(0)'>"+d.realName+"</a>"
+					+"		</span>"
+					+"	</i>"
+					+"	<i class='cell operation w10'>"
+					+		opBtn
+					+"	</i>"
+					+"</li>";
+				
+				$("#reposAllUsers").append(se);
+			}
+		}
+	}
+
+	function queryReposUserAuth(userId)
+	{
+	   	console.log("queryReposUserAuth(" + userId+")");
+	   	showUserDocAuths(userId);
+	}
+</script>

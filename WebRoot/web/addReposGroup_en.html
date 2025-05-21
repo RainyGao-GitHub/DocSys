@@ -4,8 +4,8 @@
                <div class="article-body editor-content"  id="doc" style="min-height: 650px">
                		<div class="panel-body eventset-list" >	
 	               		<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell Groupname w15">组名称</i>
-							<i class="cell operation w10">操作</i>						
+							<i class="cell Groupname w15">Group</i>
+							<i class="cell operation w10">Operation</i>						
 						</li>
 					</div>
                		<div class="panel-body eventset-list" id="reposAllGroups">
@@ -51,7 +51,7 @@ function showReposAllGroupList(){
                 }
             },
             error : function () {
-               alert('服务器异常：获取仓库用户列表失败！');
+               alert('Server Exception: Failed to get user list!');
             }
     });
 
@@ -62,15 +62,15 @@ function showReposAllGroupList(){
 		var c = $("#reposAllGroups").children();
 		$(c).remove();
 		if(data.length==0){
-			$("#reposAllGroups").append("<p>暂无数据</p>");
+			$("#reposAllGroups").append("<p>No Data</p>");
 		}
 		
 		for(var i=0;i<data.length;i++){
 			var d = data[i];
-			var opBtn = "		<a href='javascript:void(0)' onclick='addReposGroup("+d.groupId+");' class='mybtn-primary'>添加</a>";
+			var opBtn = "		<a href='javascript:void(0)' onclick='addReposGroup("+d.groupId+");' class='mybtn-primary'>Add</a>";
 			if(d.id > 0) //已是仓库用户的，操作按键显示为，已添加
 			{
-				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.groupId+");' disabled='disabled'>删除</a>";
+				opBtn = "		<a href='javascript:void(0)' class='mybtn' onclick='deleteReposAuthConfirm("+d.id+ "," +d.groupId+");' disabled='disabled'>Remove</a>";
 			}
 												
 			var se = "<li value="+ i +">"
@@ -114,7 +114,7 @@ function addReposGroup(groupId)
                 }
             },
             error : function () {
-               showErrorMessage('服务器异常：添加用户组失败！');
+               showErrorMessage('Server Exception: Failed to add group!');
             }
     });
 }
@@ -124,10 +124,10 @@ function deleteReposAuthConfirm(reposAuthId,groupId)
 {
 		qiao.bs.confirm({
  	    	id: 'deleteReposAuthConfirm',
- 	        msg: "是否删除该用户的仓库权限设置?",
+ 	        msg: "Remove group from this repository?",
  	        close: false,		
- 	        okbtn: "删除",
- 	        qubtn: "取消",
+ 	        okbtn: "Remove",
+ 	        qubtn: "Cancel",
  	    },function () {
  	    	
  	    	//alert("点击了确定");
@@ -164,7 +164,7 @@ function deleteReposAuth(reposAuthId,groupId)
                 }
             },
             error : function () {
-               showErrorMessage('服务器异常：移除用户组失败！');
+               showErrorMessage('Sever Exception: Failed to remove group!');
             }
     });
 }

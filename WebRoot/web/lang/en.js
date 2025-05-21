@@ -262,6 +262,8 @@ function lang(str)
 		"清除失败" : "Clean Failed",
 		
 		"获取仓库用户列表失败" : "Failed to get user list",
+		"查询用户权限" : "Query user rights",
+		
 		
 		"暂无数据" : "No Data",
 		"管理员" : "Admin",
