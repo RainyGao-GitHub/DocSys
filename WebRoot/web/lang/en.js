@@ -517,6 +517,9 @@ function lang(str)
 		"文件可能被删除，是否允许删除？" 			: "Local files may be deleted, please confirm",
 		"该操作将拉取目录下的所有文件，是否允许？" 	: "All files under this folder will be pulled, please confirm",
 		
+		//文件编辑
+		'文件尚未保存，是否关闭当前窗口？' 			: "Changes were not saved, Do you want to exit?",
+		
 		//常用服务器管理
 		"本地服务器" : "Local Server",
 		"获取常用服务器列表失败" : "Failed to get server list",		

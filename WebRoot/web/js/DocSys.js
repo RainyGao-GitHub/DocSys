@@ -3004,7 +3004,7 @@ function showOfficeInArtDialog(docInfo) {
 						// 获取该元素的禁用状态，开启则提示，禁用则直接关闭窗口即可
 						let check = $(saveButton).prop("disabled");
 						if (!check) {
-							qiao.bs.confirm('文件尚未保存，是否关闭当前窗口？', function () {
+							qiao.bs.confirm(_Lang('文件尚未保存，是否关闭当前窗口？'), function () {
 								d.close();
 							});
 							return false;
