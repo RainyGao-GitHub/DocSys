@@ -8,17 +8,22 @@ import java.util.List;
 
 import org.apache.pdfbox.multipdf.PDFMergerUtility;  
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;  
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
+
+import com.DocSystem.common.Log;  
 
 public class PdfMerger {  
 
     // 核心合并方法  
     public static void mergePdfFiles(List<String> inputPaths, String outputPath) throws Exception {  
-        PDFMergerUtility merger = new PDFMergerUtility();  
-        
+		Log.debug("mergePdfFiles() outputPath:" + outputPath);
+
+    	PDFMergerUtility merger = new PDFMergerUtility();          
         try {  
             // 添加需要合并的文件  
-            for (String path : inputPaths) {  
+            for (String path : inputPaths) 
+            {
+				Log.debug("mergePdfFiles() path:" + path);
                 try (PDDocument doc = PDDocument.load(new File(path))) {  
                     merger.addSource(new File(path));  
                 }  

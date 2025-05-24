@@ -6055,7 +6055,9 @@ public class BaseFunction{
 	{
 		//TODO: 用于打印的pdf文件统一放到指定路径下
 		String tempPdfFolder = Path.getReposTmpPathForPrint(repos, doc.getPath(), doc.getName());		
-	    
+		
+		Log.debug("convertDocToPdfDoc() ReposTmpPathForPrint:" + tempPdfFolder);
+		
 		Doc targetDoc = new Doc();
 		targetDoc.setLocalRootPath(tempPdfFolder);
 		targetDoc.setName(doc.getName() + ".pdf");
@@ -6096,10 +6098,12 @@ public class BaseFunction{
 			Log.info("convertDocToPdfDoc() PDF转换失败");			
 			return null;
 		}
-		
+		Log.debug("convertDocToPdfFile() pdfFilePath:" + pdfFilePath);
+				
 		doc.setLocalRootPath(targetDoc.getLocalRootPath());
 		doc.setPath("");
 		doc.setName(targetDoc.getName());
+		Log.debug("convertDocToPdfFile() return pdfDocInfo:" + doc.getLocalRootPath() + doc.getPath() + doc.getName());		
 		return doc;
 	}
 	
@@ -6109,13 +6113,21 @@ public class BaseFunction{
 		List<String> pdfFileList = new ArrayList<String>();
 		for(Doc subDoc: docList)
 		{
+			Log.debug("generatePdfFileWithDocList() subDoc:" + subDoc.getLocalRootPath() + subDoc.getPath() + subDoc.getName());
 		    Doc pdfDoc = convertDocToPdfDoc(repos, subDoc);
 			if(pdfDoc != null)
 			{
 				pdfFileList.add(pdfDoc.getLocalRootPath() + pdfDoc.getPath() + pdfDoc.getName());
+				Log.debug("generatePdfFileWithDocList() subPdfDoc:" + pdfDoc.getLocalRootPath() + pdfDoc.getPath() + pdfDoc.getName());
 			}
 		}
-			
+		
+		File tmpDocFolder = new File(tmpDoc.getLocalRootPath() + tmpDoc.getPath());
+		if(tmpDocFolder.exists() == false)
+		{
+			tmpDocFolder.mkdirs();
+		}
+		
 		return mergePdfFiles(pdfFileList, tmpDoc.getLocalRootPath() + tmpDoc.getPath() + tmpDoc.getName());
 	}
 	

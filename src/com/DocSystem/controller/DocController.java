@@ -4480,6 +4480,7 @@ public class DocController extends BaseController{
 			
 			//TODO: 生成pdf文件
 			String tempLocalRootPath = Path.getReposTmpPathForPrint(repos, doc.getPath(), doc.getName());
+			Log.debug("getDocFileLink() reposTmpPathForPrint:" + tempLocalRootPath);			
 			Doc tmpDoc = buildBasicDoc(reposId, doc.getDocId(), doc.getPid(), reposPath, path, name, doc.getLevel(), 1, true, tempLocalRootPath, localVRootPath, null, null);
 			tmpDoc.setShareId(shareId);			
 			String pdfFilePath = generatePdfFileWithDocList(repos, tmpDoc, docList);
