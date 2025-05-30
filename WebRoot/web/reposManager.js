@@ -2019,16 +2019,17 @@ function showGroupDocAuths(groupId)
 	showDocAuthList(undefined, groupId);
 }
 
+function showDocumentDocAuths(docId, docPath, docName)
+{
+	curDoc = docId;
+	showDocAuthList(undefined, undefined, docId, docPath, docName);
+}
+
 //用于保存后的刷新用途
 var gUserId = undefined;
 var gGroupId = undefined;
 function showDocAuthList(userId, groupId)
 {
-   	console.log("showDocAuthList() userId:" + userId + " groupId:" + groupId);
-   	
-   	gUserId = userId;
-   	gGroupId = groupId;
-   	
 	var docId = curDoc;
 	var parentPath = "";
 	var docName = "";
@@ -2038,7 +2039,16 @@ function showDocAuthList(userId, groupId)
 		parentPath = node.path;
 		docName = node.name;
 	}
-	console.log("docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
+	showDocAuthList(userId, groupId, docId, docPath, docName)
+}
+function showDocAuthList(userId, groupId, docId, parentPath, docName)
+{
+   	console.log("showDocAuthList() userId:" + userId + " groupId:" + groupId);
+   	
+   	gUserId = userId;
+   	gGroupId = groupId;
+   	
+	console.log("showDocAuthList() docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
 	
 	var vid = getQueryString("vid");
 	
@@ -2166,7 +2176,7 @@ function showUserList(data)
 			+"	</i>"
 			+"	<i class='cell docpath w15'>"
 			+"		<span class='name'>"
-			+"			<a id='Doc"+i+"' value='"+d.docId+"' href='javascript:void(0)'>"+ "/" + d.docPath+d.docName+"</a>"
+			+"			<a id='Doc"+i+"' value='"+d.docId+"' onclick='showDocumentDocAuths(" + d.docId + ",\"" + d.docPath + "\",\"" + d.docName + "\")'>"+ "/" + d.docPath+d.docName+"</a>"
 //				+"			<a id='Doc"+i+"' value='"+d.docId+"' href='javascript:void(0)'>"+reposName+"::"+d.docPath+d.docName+"</a>"
 			+"		</span>"
 			+"	</i>"
