@@ -2022,7 +2022,7 @@ function showGroupDocAuths(groupId)
 function showDocumentDocAuths(docId, docPath, docName)
 {
 	curDoc = docId;
-	showDocAuthList(undefined, undefined, docId, docPath, docName);
+	showDocAuthListBase(undefined, undefined, docId, docPath, docName);
 }
 
 //用于保存后的刷新用途
@@ -2039,16 +2039,16 @@ function showDocAuthList(userId, groupId)
 		parentPath = node.path;
 		docName = node.name;
 	}
-	showDocAuthList(userId, groupId, docId, docPath, docName)
+	showDocAuthListBase(userId, groupId, docId, parentPath, docName)
 }
-function showDocAuthList(userId, groupId, docId, parentPath, docName)
+function showDocAuthListBase(userId, groupId, docId, parentPath, docName)
 {
-   	console.log("showDocAuthList() userId:" + userId + " groupId:" + groupId);
+   	console.log("showDocAuthListBase() userId:" + userId + " groupId:" + groupId);
    	
    	gUserId = userId;
    	gGroupId = groupId;
    	
-	console.log("showDocAuthList() docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
+	console.log("showDocAuthListBase() docId:" + docId + " parentPath:" +  parentPath + " docName:" + docName);
 	
 	var vid = getQueryString("vid");
 	
