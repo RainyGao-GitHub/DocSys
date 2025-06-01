@@ -2021,7 +2021,6 @@ function showGroupDocAuths(groupId)
 
 function showDocumentDocAuths(docId, docPath, docName)
 {
-	curDoc = docId;
 	showDocAuthListBase(undefined, undefined, docId, docPath, docName);
 }
 

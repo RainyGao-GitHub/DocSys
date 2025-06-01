@@ -2444,27 +2444,22 @@ public class ReposController extends BaseController{
 					continue;
 				}
 				
-				if((tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId().equals(userId)) ||
-					(tmpDocAuth.getGroupId() != null && groupIds.get(tmpDocAuth.getGroupId()) != null))
+				if(tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId().equals(userId))
 				{
-					////////目前对于用户的权限，直接获取所有的，所以不用docId进行过滤
-//					if(doc.getDocId() == 0)	//如果是根目录，那么显示所有的权限
-//					{
-//						//获取User的真实的权限
-//						Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
-//						DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
-//						docAuthList.add(docAuth);						
-//					}
-//					else if(doc.getDocId().equals(tmpDocAuth.getDocId()))
-//					{
-//						//获取User的真实的权限
-//						DocAuth docAuth = getUserDispDocAuth(repos, userId, doc);
-//						docAuthList.add(docAuth);
-//					}		
 					//获取User的真实的权限
 					Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
 					DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
-					docAuthList.add(docAuth);						
+					docAuthList.add(docAuth);
+				}
+				else if(tmpDocAuth.getGroupId() != null && groupIds.get(tmpDocAuth.getGroupId()) != null)
+				{	
+					//获取User的真实的权限
+					Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
+					DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
+					docAuthList.add(docAuth);
+					//获取Group的真实的权限(方便管理员进行权限推理)
+					DocAuth docAuthForGroup = getGroupDispDocAuth(repos, tmpDocAuth.getGroupId(), tmpDoc);
+					docAuthList.add(docAuthForGroup);				
 				}
 			}
 		}
