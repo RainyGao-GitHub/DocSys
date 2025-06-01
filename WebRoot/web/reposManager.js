@@ -2148,16 +2148,16 @@ function showUserList(data)
 		}
 		
 		var userId = "";
+		var groupId = "";
 		if(d.userId >= 0)
 		{
 			userId = d.userId;
-			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteUserReposAuthConfirm("+d.reposAuthId+ "," +userId+");'>" + _Lang('删除') + "</a>";
+			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteUserDocAuthConfirm("+ userId + "," + d.docId +");'>" + _Lang('删除') + "</a>";
 		}
-		var groupId = "";
-		if(d.groupId > 0)
+		else if(d.groupId > 0)
 		{
 			groupId = d.groupId;
-			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteGroupReposAuthConfirm("+d.reposAuthId+ "," +groupId+");'>" + _Lang("删除") + "</a>";				
+			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteGroupDocAuthConfirm("+ groupId + "," + d.docId +");'>" + _Lang("删除") + "</a>";				
 		}
 		var se = "<li value="+ i +">"
 			+"	<i class='cell select w5'>"
@@ -2412,6 +2412,123 @@ else
 	}
 }
 
+function deleteUserDocAuthConfirm(userId, docId)
+{
+   	console.log("deleteUserDocAuthConfirm()");
+	qiao.bs.confirm({
+    	id: 'deleteUserDocAuthConfirm',
+        title: _Lang("确认操作"),
+        msg: _Lang("是否删除该用户的权限设置") + "?",
+        close: false,		
+        okbtn: "删除",
+        qubtn: "取消",
+    },function () {
+    	//alert("点击了确定");
+    	deleteUserDocAuth(userId, docId);
+    	return true;   
+    },function(){
+    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+function deleteUserDocAuth(userId, docId)
+{	
+   	console.log("deleteUserDocAuth()");
+
+	var vid = getQueryString("vid");
+	$.ajax({
+        url : "/DocSystem/Repos/deleteDocAuth.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            userId: userId,
+            docId: docId,
+            reposId: vid,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+                showAuthList();
+            }
+            else
+            {
+            	showErrorMessage({
+	        		id: "idAlertDialog",	
+	        		title: _Lang("提示"),
+	        		okbtn: _Lang("确定"),
+	        		msg: _Lang("删除用户的权限设置失败", " : ", ret.msgInfo),
+            	});
+            }
+        },
+        error : function () {
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("删除用户的权限设置失败", " : ", "服务器异常"),
+        	});
+            }
+    });
+}
+
+function deleteGroupDocAuthConfirm(groupId, docId)
+{
+   	console.log("deleteGroupDocAuthConfirm()");
+	qiao.bs.confirm({
+    	id: 'deleteGroupDocAuthConfirm',
+        title: _Lang("确认操作"),
+        msg: _Lang("是否删除该用户组的权限设置") + "?",
+        close: false,		
+        okbtn: "删除",
+        qubtn: "取消",
+    },function () {
+    	//alert("点击了确定");
+    	deleteGroupDocAuth(groupId, docId);
+    	return true;   
+    },function(){
+    	//alert("点击了取消");
+ 	    	return true;
+ 	    }); 
+}
+
+function deleteGroupDocAuth(groupId, docId)
+{	
+   	console.log("deleteGroupDocAuth()");
+
+	var vid = getQueryString("vid");
+	$.ajax({
+        url : "/DocSystem/Repos/deleteDocAuth.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	groupId: groupId,
+            docId: docId,
+            reposId: vid,
+        },
+        success : function (ret) {
+            if( "ok" == ret.status ){
+                showAuthList();
+            }
+            else
+            {
+            	showErrorMessage({
+	        		id: "idAlertDialog",	
+	        		title: _Lang("提示"),
+	        		okbtn: _Lang("确定"),
+	        		msg: _Lang("删除用户组的权限设置失败", " : ", ret.msgInfo),
+            	});
+            }
+        },
+        error : function () {
+        	showErrorMessage({
+        		id: "idAlertDialog",	
+        		title: _Lang("提示"),
+        		okbtn: _Lang("确定"),
+        		msg: _Lang("删除用户组的权限设置失败", " : ", "服务器异常"),
+        	});
+            }
+    });
+}
 
 function deleteDocAuthConfirm(docAuthId)
 {
@@ -2437,8 +2554,8 @@ function deleteDocAuth(docAuthId)
 {	
    	console.log("deleteDocAuth()");
 
-var vid = getQueryString("vid");
-$.ajax({
+	var vid = getQueryString("vid");
+	$.ajax({
         url : "/DocSystem/Repos/deleteDocAuth.do",
         type : "post",
         dataType : "json",

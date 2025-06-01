@@ -2960,14 +2960,46 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//检查该用户是否设置了目录权限
-		if(reposService.deleteDocAuth(docAuthId) == 0)
+		if(docAuthId != null)
 		{
-			rt.setError("用户的目录权限设置删除失败！");
-			writeJson(rt, response);			
-			return;	
+			//检查该用户是否设置了目录权限
+			if(reposService.deleteDocAuth(docAuthId) == 0)
+			{
+				rt.setError("权限设置删除失败！");
+				writeJson(rt, response);			
+				return;	
+			}
+			writeJson(rt, response);		
 		}
-		writeJson(rt, response);		
+		else if(userId != null)
+		{
+			DocAuth queryUserDocAuth = new DocAuth();
+			queryUserDocAuth.setUserId(userId);
+			queryUserDocAuth.setReposId(reposId);			
+			queryUserDocAuth.setDocId(docId);
+			if(reposService.deleteDocAuthSelective(queryUserDocAuth) == 0)
+			{
+				rt.setError("用户的权限设置删除失败！");
+				writeJson(rt, response);			
+				return;	
+			}
+			writeJson(rt, response);	
+		}
+		else if(groupId != null)
+		{
+			DocAuth queryGroupDocAuth = new DocAuth();
+			queryGroupDocAuth.setGroupId(groupId);
+			queryGroupDocAuth.setReposId(reposId);			
+			queryGroupDocAuth.setDocId(docId);
+			if(reposService.deleteDocAuthSelective(queryGroupDocAuth) == 0)
+			{
+				rt.setError("用户组的权限设置删除失败！");
+				writeJson(rt, response);			
+				return;	
+			}
+			writeJson(rt, response);	
+		}
+		
 		
 		addSystemLog(request, login_user, "deleteDocAuth", "deleteDocAuth", "删除文件权限", null, "成功", repos, null, null, buildSystemLogDetailContent(rt));
 	}
