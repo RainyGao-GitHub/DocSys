@@ -2427,6 +2427,9 @@ public class ReposController extends BaseController{
 	{
 		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
 		
+		//避免用户权限显示多次
+		Map<String, Boolean> userDocAuthMap = new HashMap<String, Boolean>();
+		
 		//Step1: 获取包含userId的所有组
 		Map<Integer, Integer> groupIds = getUserGroups(userId);
 		
@@ -2444,19 +2447,28 @@ public class ReposController extends BaseController{
 					continue;
 				}
 				
+				Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);				
+				String userDocAuthHash = tmpDoc.getDocId() + "_" + userId;
+				
 				if(tmpDocAuth.getUserId() != null && tmpDocAuth.getUserId().equals(userId))
 				{
-					//获取User的真实的权限
-					Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
-					DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
-					docAuthList.add(docAuth);
+					if(userDocAuthMap.get(userDocAuthHash) == null)
+					{
+						//获取User的真实的权限					
+						DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
+						docAuthList.add(docAuth);
+						userDocAuthMap.put(userDocAuthHash, true);
+					}
 				}
 				else if(tmpDocAuth.getGroupId() != null && groupIds.get(tmpDocAuth.getGroupId()) != null)
 				{	
-					//获取User的真实的权限
-					Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
-					DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
-					docAuthList.add(docAuth);
+					if(userDocAuthMap.get(userDocAuthHash) == null)
+					{
+						//获取User的真实的权限
+						DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
+						docAuthList.add(docAuth);
+						userDocAuthMap.put(userDocAuthHash, true);						
+					}
 					//获取Group的真实的权限(方便管理员进行权限推理)
 					DocAuth docAuthForGroup = getGroupDispDocAuth(repos, tmpDocAuth.getGroupId(), tmpDoc);
 					docAuthList.add(docAuthForGroup);				
