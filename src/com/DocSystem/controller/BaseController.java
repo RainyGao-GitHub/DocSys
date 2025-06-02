@@ -10658,7 +10658,7 @@ public class BaseController  extends BaseFunction{
 		}
 		else
 		{
-			if(docAuth.getPriority() >= parentPriority)
+			if(docAuth.getPriority() != null && docAuth.getPriority() >= parentPriority)
 			{
 				//Use the docAuth
 				return docAuth;
