@@ -2458,6 +2458,8 @@ public class ReposController extends BaseController{
 						{
 							//获取User的真实的权限					
 							DocAuth docAuthForUser = getUserDispDocAuth(repos, userId, tmpDoc);
+							docAuthForUser.setGroupId(null);	//TODO: 避免由于权限来自于用户组，导致信息错误
+							docAuthForUser.setGroupName("");
 							docAuthList.add(docAuthForUser);
 							userDocAuthMap.put(userDocAuthHash, true);
 						}
@@ -2468,9 +2470,12 @@ public class ReposController extends BaseController{
 						{
 							//获取User的真实的权限					
 							DocAuth docAuthForUser = getUserDispDocAuth(repos, userId, tmpDoc);
+							docAuthForUser.setGroupId(null);	//TODO: 避免由于权限来自于用户组，导致信息错误
+							docAuthForUser.setGroupName("");
 							docAuthList.add(docAuthForUser);
 							userDocAuthMap.put(userDocAuthHash, true);
 						}
+						//TODO: 注意：任意用户的权限不可能来自用户组
 						DocAuth docAuthForAnyUser = getUserDispDocAuth(repos, tmpDocAuth.getUserId(), tmpDoc);
 						docAuthList.add(docAuthForAnyUser);
 					}
@@ -2481,11 +2486,15 @@ public class ReposController extends BaseController{
 					{
 						//获取User的真实的权限
 						DocAuth docAuthForUser = getUserDispDocAuth(repos, userId, tmpDoc);
+						docAuthForUser.setGroupId(null);	//TODO: 避免由于权限来自于用户组，导致信息错误
+						docAuthForUser.setGroupName("");
 						docAuthList.add(docAuthForUser);
 						userDocAuthMap.put(userDocAuthHash, true);						
 					}
 					//获取Group的真实的权限(方便管理员进行权限推理)
 					DocAuth docAuthForGroup = getGroupDispDocAuth(repos, tmpDocAuth.getGroupId(), tmpDoc);
+					docAuthForGroup.setUserId(null);	//TODO: 避免由于权限来自于任意用户，导致信息错误
+					docAuthForGroup.setUserName("");
 					docAuthList.add(docAuthForGroup);				
 				}
 			}
@@ -2542,10 +2551,13 @@ public class ReposController extends BaseController{
 					{
 						//获取Group的真实的权限
 						DocAuth docAuthForGroup = getGroupDispDocAuth(repos, groupId, tmpDoc);
+						docAuthForGroup.setUserId(null);	//TODO: 避免由于权限来自于任意用户，导致信息错误
+						docAuthForGroup.setUserName("");
 						docAuthList.add(docAuthForGroup);
 						groupDocAuthMap.put(groupDocAuthHash, true);
 					}
 					//获取任意用户的权限
+					//TODO: 注意：任意用户的权限不可能来自用户组
 					DocAuth docAuthForAnyUser = getUserDispDocAuth(repos, tmpDocAuth.getUserId(), tmpDoc);
 					docAuthList.add(docAuthForAnyUser);
 				}
@@ -2555,6 +2567,8 @@ public class ReposController extends BaseController{
 					{
 						//获取Group的真实的权限
 						DocAuth docAuthForGroup = getGroupDispDocAuth(repos, groupId, tmpDoc);
+						docAuthForGroup.setUserId(null);	//TODO: 避免由于权限来自于任意用户，导致信息错误
+						docAuthForGroup.setUserName("");
 						docAuthList.add(docAuthForGroup);
 						groupDocAuthMap.put(groupDocAuthHash, true);
 					}
@@ -2594,11 +2608,15 @@ public class ReposController extends BaseController{
 			DocAuth docAuth = null;
 			if(groupId != null && groupId != 0)
 			{
-				docAuth = getGroupDispDocAuth(repos, groupId, doc);					
+				docAuth = getGroupDispDocAuth(repos, groupId, doc);
+				docAuth.setUserId(null);	//TODO: 避免由于权限来自于任意用户，导致信息错误
+				docAuth.setUserName("");	
 			}
 			else if(userId!= null)	//It is user
 			{
-				docAuth = getUserDispDocAuth(repos, userId, doc);	
+				docAuth = getUserDispDocAuth(repos, userId, doc);
+				docAuth.setGroupId(null);	//TODO: 避免由于权限来自于用户组，导致信息错误
+				docAuth.setGroupName("");					
 			}
 			Log.printObject("docAuth:", docAuth);
 			
