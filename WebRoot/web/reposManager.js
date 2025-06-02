@@ -2149,28 +2149,15 @@ function showUserList(data)
 		
 		var userId = "";
 		var groupId = "";
-		if(d.userId > 0)	//用户的权限
-		{
-			userId = d.userId;
-			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteUserDocAuthConfirm("+ userId + "," + d.docId +");'>" + _Lang('删除') + "</a>";
-		}
-		else if(d.userId == 0) //任意用户的权限
-		{
-			if(d.groupId > 0)	//其实是组的权限，只是继承了任意用户的权限
-			{
-				groupId = d.groupId;
-				opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteGroupDocAuthConfirm("+ groupId + "," + d.docId +");'>" + _Lang("删除") + "</a>";				
-			}
-			else	//真正的任意用户权限
-			{
-				userId = d.userId;
-				opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteUserDocAuthConfirm("+ userId + "," + d.docId +");'>" + _Lang('删除') + "</a>";
-			}
-		}
-		else if(d.groupId > 0)
+		if(d.groupId !== undefined && d.groupId > 0)	//其实是组的权限，只是继承了任意用户的权限
 		{
 			groupId = d.groupId;
 			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteGroupDocAuthConfirm("+ groupId + "," + d.docId +");'>" + _Lang("删除") + "</a>";				
+		}
+		else if(d.userId >= 0)	//用户的权限
+		{
+			userId = d.userId;
+			opBtn = "<a href='javascript:void(0)' class='mybtn-primary' onclick='deleteUserDocAuthConfirm("+ userId + "," + d.docId +");'>" + _Lang('删除') + "</a>";
 		}
 		
 		var se = "<li value="+ i +">"

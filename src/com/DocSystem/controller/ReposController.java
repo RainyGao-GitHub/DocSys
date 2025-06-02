@@ -2455,8 +2455,10 @@ public class ReposController extends BaseController{
 					if(userDocAuthMap.get(userDocAuthHash) == null)
 					{
 						//获取User的真实的权限					
-						DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
-						docAuthList.add(docAuth);
+						DocAuth docAuthForUser = getUserDispDocAuth(repos, userId, tmpDoc);
+						docAuthForUser.setGroupId(null);	//清除组权限信息避免对前端造成影响
+						docAuthForUser.setGroupName(null);	//清除组权限信息避免对前端造成影响
+						docAuthList.add(docAuthForUser);
 						userDocAuthMap.put(userDocAuthHash, true);
 					}
 				}
@@ -2465,12 +2467,16 @@ public class ReposController extends BaseController{
 					if(userDocAuthMap.get(userDocAuthHash) == null)
 					{
 						//获取User的真实的权限
-						DocAuth docAuth = getUserDispDocAuth(repos, userId, tmpDoc);
-						docAuthList.add(docAuth);
+						DocAuth docAuthForUser = getUserDispDocAuth(repos, userId, tmpDoc);
+						docAuthForUser.setGroupId(null);	//清除组权限信息避免对前端造成影响
+						docAuthForUser.setGroupName(null);	//清除组权限信息避免对前端造成影响
+						docAuthList.add(docAuthForUser);
 						userDocAuthMap.put(userDocAuthHash, true);						
 					}
 					//获取Group的真实的权限(方便管理员进行权限推理)
 					DocAuth docAuthForGroup = getGroupDispDocAuth(repos, tmpDocAuth.getGroupId(), tmpDoc);
+					docAuthForGroup.setUserId(null);	//清除用户权限信息避免对前端造成影响
+					docAuthForGroup.setUserName(null);	//清除用户权限信息避免对前端造成影响
 					docAuthList.add(docAuthForGroup);				
 				}
 			}
@@ -2534,8 +2540,10 @@ public class ReposController extends BaseController{
 //					}
 					//获取Group的真实的权限
 					Doc tmpDoc = getDocInfoFromDocAuth(tmpDocAuth);
-					DocAuth docAuth = getGroupDispDocAuth(repos, groupId, tmpDoc);
-					docAuthList.add(docAuth);
+					DocAuth docAuthForGroup = getGroupDispDocAuth(repos, groupId, tmpDoc);
+					docAuthForGroup.setUserId(null);	//清除用户权限信息避免对前端造成影响
+					docAuthForGroup.setUserName(null);	//清除用户权限信息避免对前端造成影响
+					docAuthList.add(docAuthForGroup);
 
 				}					
 			}
@@ -2574,10 +2582,15 @@ public class ReposController extends BaseController{
 			if(groupId != null && groupId != 0)
 			{
 				docAuth = getGroupDispDocAuth(repos, groupId, doc);
+				docAuth.setUserId(null);	//清除用户权限信息避免对前端造成影响
+				docAuth.setUserName(null);	//清除用户权限信息避免对前端造成影响
+				
 			}
 			else if(userId!= null)	//It is user
 			{
 				docAuth = getUserDispDocAuth(repos, userId, doc);
+				docAuth.setGroupId(null);	//清除组权限信息避免对前端造成影响
+				docAuth.setGroupName(null);	//清除组权限信息避免对前端造成影响
 			}
 			Log.printObject("docAuth:", docAuth);
 			
