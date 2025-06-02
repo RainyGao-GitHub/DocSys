@@ -2405,15 +2405,7 @@ public class ReposController extends BaseController{
 		if(userId != null)
 		{
 			//如果指定了用户信息
-			User userInfo = userService.getUser(userId);
-			if(userInfo == null)
-			{
-				Log.debug("getDocAuthList() Failed to get userInfo for userId:" + userId);
-				rt.setError("用户不存在！");
-				writeJson(rt, response);	
-				return;
-			}
-			docAuthList = getDocAuthListForUser(repos, doc, userInfo);
+			docAuthList = getDocAuthListForUser(repos, doc, userId);
 		}
 		else if(groupId != null)
 		{
@@ -2431,7 +2423,7 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	private List<DocAuth> getDocAuthListForUser(Repos repos, Doc doc, User userInfo) 
+	private List<DocAuth> getDocAuthListForUser(Repos repos, Doc doc, Integer userId) 
 	{
 		List <DocAuth> docAuthList = new ArrayList<DocAuth>();
 		
@@ -2439,7 +2431,6 @@ public class ReposController extends BaseController{
 		Map<String, Boolean> userDocAuthMap = new HashMap<String, Boolean>();
 		
 		//Step1: 获取包含userId的所有组
-		Integer userId = userInfo.getId();
 		Map<Integer, Integer> groupIds = getUserGroups(userId);
 		
 		//Step2: 先取出所有的配置，过滤出包含userId和groupId的权限
