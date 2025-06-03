@@ -3,7 +3,11 @@ package com.DocSystem.common;
 import java.util.HashMap;
 import com.DocSystem.entity.Doc;
 
-public class HitDoc {
+public class HitDoc 
+{
+	public final static int HitType_FileName 	= 1;
+	public final static int HitType_FileContent = 2;
+	public final static int HitType_FileComment = 4;
 	
     private Doc doc = null;
     private String docPath = null;
