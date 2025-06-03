@@ -2502,8 +2502,8 @@ public class ReposController extends BaseController{
 			}
 		}
 		
-		docAuthListForUser.addAll(docAuthListForGroup);
-		docAuthListForUser.addAll(docAuthListForAnyUser);		
+		//docAuthListForUser.addAll(docAuthListForAnyUser);		
+		//docAuthListForUser.addAll(docAuthListForGroup);
 		return docAuthListForUser;
 	}
 
@@ -2581,7 +2581,7 @@ public class ReposController extends BaseController{
 			}
 		}		
 		
-		docAuthListForGroup.addAll(docAuthListForAnyUser);
+		//docAuthListForGroup.addAll(docAuthListForAnyUser);
 		return docAuthListForGroup;
 	}
 
@@ -2638,8 +2638,8 @@ public class ReposController extends BaseController{
 			}
 			Log.printObject("docAuth:", docAuth);			
 		}
-		docAuthListForUser.addAll(docAuthListForGroup);
 		docAuthListForUser.addAll(docAuthListForAnyUser);		
+		docAuthListForUser.addAll(docAuthListForGroup);
 		return docAuthListForUser;
 	}
 
