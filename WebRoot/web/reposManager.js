@@ -2108,12 +2108,42 @@ function showDocAuthListBase(userId, groupId, docId, parentPath, docName)
             }
 });
 
-
 //根据获取到的目录权限用户列表数据，绘制列表
 function showUserList(data)
 {
 	console.log("showUserList");
 	console.log(data);
+	
+	//对数据进行排序
+	data = data.sort((a, b) => {
+		  // 比较目录层级深度（'/'分割后的段数）
+		  const aPathDepth = a.docPath.split('/').filter(Boolean).length;
+		  const bPathDepth = b.docPath.split('/').filter(Boolean).length;
+		  
+		  if (aPathDepth !== bPathDepth) {
+		    return aPathDepth - bPathDepth;
+		  }
+		  
+		  // 先比较docPath长度
+		  if (a.docPath.length !== b.docPath.length) {
+		    return a.docPath.length - b.docPath.length;
+		  }
+		  
+		  // docPath长度相等时比较字母顺序
+		  if (a.docPath !== b.docPath) {
+		    return a.docPath.localeCompare(b.docPath);
+		  }
+		  
+		  // docPath完全相同时比较docName长度
+		  if (a.docName.length !== b.docName.length) {
+		    return a.docName.length - b.docName.length;
+		  }
+		  
+		  // 最后比较docName字母顺序
+		  return a.docName.localeCompare(b.docName);
+		});
+	
+	console.log("sorted data:", data);
 	
 	//保存docAuthList需要用于导出
 	gDocAuthList = data;
