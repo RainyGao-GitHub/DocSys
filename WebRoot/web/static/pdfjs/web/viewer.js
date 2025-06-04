@@ -139,7 +139,7 @@ var defaultOptions = {
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   printResolution: {
-    value: 150,
+    value: 300,
     kind: OptionKind.VIEWER
   },
   renderer: {
@@ -21877,7 +21877,7 @@ function PDFPrintService(pdfDocument, pagesOverview, printContainer, printResolu
   this.pdfDocument = pdfDocument;
   this.pagesOverview = pagesOverview;
   this.printContainer = printContainer;
-  this._printResolution = printResolution || 150;
+  this._printResolution = printResolution || 300;
   this._optionalContentConfigPromise = optionalContentConfigPromise || pdfDocument.getOptionalContentConfig();
   this.l10n = l10n;
   this.currentPage = -1;
