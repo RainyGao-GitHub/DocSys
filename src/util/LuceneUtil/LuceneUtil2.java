@@ -13,7 +13,9 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -29,9 +31,12 @@ import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.FieldInfo.IndexOptions;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -49,6 +54,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -246,12 +252,16 @@ public class LuceneUtil2   extends BaseFunction
 
 	static {
 	    // 配置字段类型（确保线程安全初始化）
-	    CONTENT_FIELD_TYPE.setIndexed(true);          // 建立索引
-	    CONTENT_FIELD_TYPE.setTokenized(true);        // 启用分词
+	    CONTENT_FIELD_TYPE.setIndexed(true);          			// 建立索引
+	    CONTENT_FIELD_TYPE.setStoreTermVectorPositions(true); 	// 关键：存储位置信息	    
+	    CONTENT_FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+	    CONTENT_FIELD_TYPE.setStoreTermVectors(true); 			// 存储词向量
+	    CONTENT_FIELD_TYPE.setStoreTermVectorPositions(true);
+	    CONTENT_FIELD_TYPE.setStoreTermVectorOffsets(true);
+	    CONTENT_FIELD_TYPE.setStoreTermVectorPayloads(true);
 	    CONTENT_FIELD_TYPE.setStored(false);          // 不存储原始内容
-	    CONTENT_FIELD_TYPE.setStoreTermVectors(true); // 存储词向量
-	    CONTENT_FIELD_TYPE.setStoreTermVectorPositions(true); // 关键：存储位置信息
-	    CONTENT_FIELD_TYPE.freeze();  // 冻结配置
+	    CONTENT_FIELD_TYPE.setTokenized(true);        // 启用分词
+	    CONTENT_FIELD_TYPE.freeze();  // 锁定配置
 	}
 
 	private static Document buildDocument(Doc doc, String content) {
@@ -858,6 +868,9 @@ public class LuceneUtil2   extends BaseFunction
 	        if(builder != null)
 	        {
 	        	TopDocs hits = isearcher.search(builder, 1000);
+	        	
+	        	Set<Term> queryTerms = extractQueryTerms(builder);
+	        	
 	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
 	        	{
 	        		Document hitDocument = isearcher.doc( scoreDoc.doc );
@@ -866,6 +879,32 @@ public class LuceneUtil2   extends BaseFunction
 		            {
 		            	continue;
 		            }
+		            
+		            // 新增：获取命中位置信息
+		            Terms terms = ireader.getTermVector(scoreDoc.doc, "content");
+		            if (terms != null && hitDoc != null) 
+		            {
+		                List<int[]> hitOffsets = new ArrayList<>();
+		                
+		                // 遍历所有词项
+		                TermsEnum termsEnum = terms.iterator();
+		                while (termsEnum.next() != null) {
+		                    BytesRef term = termsEnum.term();
+		                    // 只记录在查询条件中出现的词项
+		                    if (isTermInQuery(queryTerms, "content", term)) {
+		                        PostingsEnum dp = termsEnum.postings(null, PostingsEnum.OFFSETS);
+		                        while (dp.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
+		                            for (int i = 0; i < dp.freq(); i++) {
+		                                dp.nextPosition();
+		                                hitOffsets.add(new int[]{dp.startOffset(), dp.endOffset()});
+		                            }
+		                        }
+		                    }
+		                }
+		                // 将位置信息保存到 HitDoc 对象
+		                hitDoc.setOffsets(hitOffsets);
+		            }
+		            
 		            HitDoc.AddHitDocToSearchResult(searchResult,hitDoc, "multiSearch", weight, hitType);
 	        	}
 	        }
@@ -898,6 +937,22 @@ public class LuceneUtil2   extends BaseFunction
 			Log.debug(e);
 			return false;
 		}
+    }
+    
+ // 提取查询中所有的词项
+    private static Set<Term> extractQueryTerms(Query query) throws IOException {
+        Set<Term> terms = new HashSet<>();
+        query.createWeight(isearcher, ScoreMode.COMPLETE, 1f)
+             .extractTerms(terms);
+        return terms;
+    }
+    
+ // 检查词项是否在查询条件中
+    private static boolean isTermInQuery(Set<Term> queryTerms, String field, BytesRef termBytes) {
+        Term currentTerm = new Term(field, termBytes);
+        return queryTerms.stream().anyMatch(t -> 
+            t.field().equals(currentTerm.field()) && 
+            t.bytes().equals(currentTerm.bytes()));
     }
     
 

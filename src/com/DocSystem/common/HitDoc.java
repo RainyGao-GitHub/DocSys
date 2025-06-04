@@ -1,6 +1,8 @@
 package com.DocSystem.common;
 
 import java.util.HashMap;
+import java.util.List;
+
 import com.DocSystem.entity.Doc;
 
 public class HitDoc 
@@ -13,7 +15,7 @@ public class HitDoc
     private String docPath = null;
     private int hitCount = 0;
     private int hitType = 0; //0x00000001 02 04 文件名、文件内容、备注内容
-    
+        
     private HashMap<String, Integer> hitInfo = null;
     
     public void setDocPath(String docPath) {
@@ -118,4 +120,14 @@ public class HitDoc
 		
 		//System.out.println("AddHitDocToSearchResult() hitType:" + tempHitDoc.getHitType());	
 	}
+
+    public List<HitPosition> hitPositions;
+    public void setHitPositions(List<HitPosition> positions) {
+        this.hitPositions = positions;
+    }
+    
+    private List<int[]> offsets; // 存储命中位置 [start, end] 的列表
+    public void setOffsets(List<int[]> offsets) {
+        this.offsets = offsets;
+    }
 }
