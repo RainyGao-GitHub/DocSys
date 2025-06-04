@@ -2409,7 +2409,8 @@ var PDFViewerApplication = {
     var printContainer = this.appConfig.printContainer;
 
     var printResolution = _app_options.AppOptions.get("printResolution");
-
+    console.log("beforePrint() printResolution:" + printResolution);	
+    
     var optionalContentConfigPromise = this.pdfViewer.optionalContentConfigPromise;
     var printService = PDFPrintServiceFactory.instance.createPrintService(this.pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, this.l10n);
     this.printService = printService;
@@ -21846,6 +21847,7 @@ var dialog = null;
 var overlayManager = null;
 
 function renderPage(activeServiceOnEntry, pdfDocument, pageNumber, size, printResolution, optionalContentConfigPromise) {
+  console.log("renderPage() printResolution:" + printResolution);		
   var scratchCanvas = activeService.scratchCanvas;
   var PRINT_UNITS = printResolution / _pdfjsLib.PixelsPerInch.PDF;
   scratchCanvas.width = Math.floor(size.width * PRINT_UNITS);
