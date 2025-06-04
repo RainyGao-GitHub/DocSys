@@ -2,6 +2,7 @@ package com.DocSystem.common;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.DocSystem.entity.Doc;
 
@@ -121,13 +122,9 @@ public class HitDoc
 		//System.out.println("AddHitDocToSearchResult() hitType:" + tempHitDoc.getHitType());	
 	}
 
-    public List<HitPosition> hitPositions;
-    public void setHitPositions(List<HitPosition> positions) {
-        this.hitPositions = positions;
-    }
-    
-    private List<int[]> offsets; // 存储命中位置 [start, end] 的列表
-    public void setOffsets(List<int[]> offsets) {
-        this.offsets = offsets;
-    }
+    public Map<String, List<int[]>> positions;
+	public void setTermPositions(Map<String, List<int[]>> termPositions) {
+		this.positions = termPositions;
+		
+	}
 }
