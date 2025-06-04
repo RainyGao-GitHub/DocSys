@@ -23,6 +23,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
@@ -239,6 +240,19 @@ public class LuceneUtil2   extends BaseFunction
 			analyzer.close();
 		}
 	}
+	
+	//TODO: 自定义Lucene的FieldType, 支持存储词向量和位置信息，以便在文件内容中快速获取内容片段
+	private static final FieldType CONTENT_FIELD_TYPE = new FieldType();
+
+	static {
+	    // 配置字段类型（确保线程安全初始化）
+	    CONTENT_FIELD_TYPE.setIndexed(true);          // 建立索引
+	    CONTENT_FIELD_TYPE.setTokenized(true);        // 启用分词
+	    CONTENT_FIELD_TYPE.setStored(false);          // 不存储原始内容
+	    CONTENT_FIELD_TYPE.setStoreTermVectors(true); // 存储词向量
+	    CONTENT_FIELD_TYPE.setStoreTermVectorPositions(true); // 关键：存储位置信息
+	    CONTENT_FIELD_TYPE.freeze();  // 冻结配置
+	}
 
 	private static Document buildDocument(Doc doc, String content) {
 		Document document = new Document();
@@ -339,11 +353,18 @@ public class LuceneUtil2   extends BaseFunction
             document.add(new LongField("commitTime", doc.commitTime, Store.YES));
         }
         
-        //Content
-        if(content != null)
+//        //Content
+//        if(content != null)
+//        {
+//            document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	
+//        }        
+        // Content：修改为支持位置信息
+        if(content != null) 
         {
-            document.add(new TextField("content", content, Store.NO));	//Content有可能会很大，所以只切词不保存	
-        }        
+            // 使用自定义FieldType
+            Field contentField = new Field("content", content, CONTENT_FIELD_TYPE);
+            document.add(contentField);
+        }
 		return document;
 	}
 	
