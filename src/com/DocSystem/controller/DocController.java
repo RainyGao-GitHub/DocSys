@@ -7118,7 +7118,7 @@ public class DocController extends BaseController{
 		            	}
 		            }
 		            HitDoc hitDoc = BuildHitDocFromDoc(doc); 
-		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, searchStr, 3, SEARCH_MASK[0]); //文件名
+		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, searchStr, 3, HitDoc.HitType_FileName); //文件名
 		        	Log.printObject("databaseSearch() hitDoc:", hitDoc);
 		        }
 			}	

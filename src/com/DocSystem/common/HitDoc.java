@@ -8,9 +8,9 @@ import com.DocSystem.entity.Doc;
 
 public class HitDoc 
 {
-	public final static int HitType_FileName 	= 1;
-	public final static int HitType_FileContent = 2;
-	public final static int HitType_FileComment = 4;
+	public final static int HitType_FileName 	= 0x00000001;
+	public final static int HitType_FileContent = 0x00000002;
+	public final static int HitType_FileComment = 0x00000004;
 	
     private Doc doc = null;
     private String docPath = null;
@@ -122,9 +122,6 @@ public class HitDoc
 		//System.out.println("AddHitDocToSearchResult() hitType:" + tempHitDoc.getHitType());	
 	}
 
-    public Map<String, List<int[]>> positions;
-	public void setTermPositions(Map<String, List<int[]>> termPositions) {
-		this.positions = termPositions;
-		
-	}
+	//TODO: 搜索命中的单词在内容里的位置信息
+    public Map<String, List<int[]>> termPositions;
 }

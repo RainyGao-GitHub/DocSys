@@ -258,10 +258,9 @@ public class LuceneUtil2   extends BaseFunction
 	static {
 	    // 配置字段类型（确保线程安全初始化）
 	    CONTENT_FIELD_TYPE.setIndexed(true);          			// 建立索引
-	    CONTENT_FIELD_TYPE.setStoreTermVectorPositions(true); 	// 关键：存储位置信息	    
-	    CONTENT_FIELD_TYPE.setStoreTermVectors(true); 			// 存储词向量
 	    CONTENT_FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
-	    CONTENT_FIELD_TYPE.setStoreTermVectorPositions(true);
+	    CONTENT_FIELD_TYPE.setStoreTermVectors(true); 			// 存储词向量
+	    CONTENT_FIELD_TYPE.setStoreTermVectorPositions(true); 	// 关键：存储位置信息	    
 	    CONTENT_FIELD_TYPE.setStoreTermVectorOffsets(true);
 //	    CONTENT_FIELD_TYPE.setStoreTermVectorPayloads(true);		//似乎不需要
 	    CONTENT_FIELD_TYPE.setStored(false);          // 不存储原始内容
@@ -883,40 +882,14 @@ public class LuceneUtil2   extends BaseFunction
 		            	continue;
 		            }
 		            
-		            // 新增：获取位置信息
-		            Map<String, List<int[]>> termPositions = new HashMap<>(); // 字段名 -> [startOffset, endOffset]
-		            AtomicReader leafReader = SlowCompositeReaderWrapper.wrap(ireader);
-		            Fields fields = leafReader.getTermVectors(scoreDoc.doc);
-
-		            if (fields != null) {
-		                for (String field : fields) {
-		                    Terms terms = fields.terms(field);
-		                    if (terms == null) continue;
-		                    
-		                    TermsEnum termsEnum = terms.iterator(null);
-		                    BytesRef text;
-		                    while ((text = termsEnum.next()) != null) {
-		                        // 只保留命中词的位置
-		                        if (!isTermHitInQuery(text, field, conditions)) continue; 
-		                        
-		                        DocsAndPositionsEnum dpEnum = termsEnum.docsAndPositions(
-		                            null, null, DocsAndPositionsEnum.FLAG_OFFSETS
-		                        );
-		                        if (dpEnum == null) continue;
-		                        
-		                        dpEnum.advance(scoreDoc.doc);
-		                        List<int[]> positions = new ArrayList<>();
-		                        for (int i = 0; i < dpEnum.freq(); i++) {
-		                            int start = dpEnum.startOffset();
-		                            int end = dpEnum.endOffset();
-		                            positions.add(new int[]{start, end});
-		                        }
-		                        termPositions.put(field, positions);
-		                    }
-		                }
+		            //获取命中词的位置信息，需要额外的时间，如果没有必要，建议不要获取
+		            switch(hitType)
+		            {
+		            case HitDoc.HitType_FileContent:
+		            case HitDoc.HitType_FileComment:
+		            	hitDoc.termPositions = getTermPositions(ireader, scoreDoc, conditions);
+		            	break;
 		            }
-		            // 将位置信息存入 hitDoc（假设 HitDoc 新增了 setTermPositions 方法）
-		            hitDoc.setTermPositions(termPositions);
 		            
 		            HitDoc.AddHitDocToSearchResult(searchResult,hitDoc, "multiSearch", weight, hitType);
 	        	}
@@ -952,13 +925,59 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
- // 辅助方法：检查词项是否在查询中被匹配
-    private static boolean isTermHitInQuery(BytesRef termBytes, String field, 
-                                           List<QueryCondition> conditions) {
+    private static Map<String, List<int[]>> getTermPositions(DirectoryReader ireader, ScoreDoc scoreDoc, List<QueryCondition> conditions) throws Exception 
+ 	{
+        //获取位置信息
+        Map<String, List<int[]>> termPositions = new HashMap<>(); // 字段名 -> [startOffset, endOffset]
+        
+        //保证ireader时原子操作
+        AtomicReader leafReader = SlowCompositeReaderWrapper.wrap(ireader);
+        
+        //获取当前文档的所有词向量
+        Fields fields = leafReader.getTermVectors(scoreDoc.doc);
+        if (fields != null) 
+        {
+            for (String field : fields) 
+            {
+                Terms terms = fields.terms(field);
+                if (terms == null) continue;
+                
+                TermsEnum termsEnum = terms.iterator(null);
+                BytesRef text;
+                while ((text = termsEnum.next()) != null) 
+                {
+                    // 只保留命中词的位置
+                    if (!isTermHitInQuery(text, field, conditions)) continue; 
+                    
+                    DocsAndPositionsEnum dpEnum = termsEnum.docsAndPositions(null, null, DocsAndPositionsEnum.FLAG_OFFSETS);
+                    if (dpEnum == null) continue;
+                    
+                    //获取命中词的位置信息
+                    dpEnum.advance(scoreDoc.doc);
+                    List<int[]> positions = new ArrayList<>();
+                    for (int i = 0; i < dpEnum.freq(); i++) 
+                    {
+                        int start = dpEnum.startOffset();
+                        int end = dpEnum.endOffset();
+                        positions.add(new int[]{start, end});
+                        Log.debug("getTermPositions() termp pos[" + i +"] at [" + start + "," + end + "]");
+                    }
+                    termPositions.put(field, positions);
+                }
+            }
+        }
+        return termPositions;
+	}
+
+	// 辅助方法：检查词项是否在查询中被匹配
+    private static boolean isTermHitInQuery(BytesRef termBytes, String field, List<QueryCondition> conditions) 
+    {
         String termText = termBytes.utf8ToString();
-        for (QueryCondition cond : conditions) {
-            if (cond.getField().equals(field) && 
-                cond.getValue().toString().contains(termText)) {
+        for (QueryCondition cond : conditions) 
+        {
+            if (cond.getField().equals(field) && cond.getValue().toString().contains(termText)) 
+            {
+            	Log.debug("isTermHitInQuery() term:" + termText + " was in query condition field:" + field + " value:" + cond.getValue());
                 return true;
             }
         }

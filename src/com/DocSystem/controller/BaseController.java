@@ -23849,14 +23849,13 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//文件搜索接口
-	protected static final int[] SEARCH_MASK = { 0x00000001, 0x00000002, 0x00000004};	//DocName RDOC VDOC
 	protected boolean luceneSearch(Repos repos, List<QueryCondition> preConditions, String searchWord, String path, HashMap<String, HitDoc> searchResult, int searchMask) 
 	{
 		//文件名通配符搜索（带空格）
-		if((searchMask & SEARCH_MASK[0]) > 0)
+		if((searchMask & HitDoc.HitType_FileName) > 0)
 		{
 			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord);
-			LuceneUtil2.search(repos, preConditions, "nameForSearch", searchWord.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 100, SEARCH_MASK[0]); 	//Search By DocName
+			LuceneUtil2.search(repos, preConditions, "nameForSearch", searchWord.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 100, HitDoc.HitType_FileName); 	//Search By DocName
 			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord + " count:" + searchResult.size());
 		}
 		
@@ -23867,40 +23866,40 @@ public class BaseController  extends BaseFunction{
 			String searchStr = keyWords[i];
 			if(!searchStr.isEmpty())
 			{
-				if((searchMask & SEARCH_MASK[0]) > 0)
+				if((searchMask & HitDoc.HitType_FileName) > 0)
 				{
 					//0x00000001; //文件内容
 					//文件名通配符搜索（不切词搜索）
 					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr);
-					LuceneUtil2.search(repos, preConditions, "nameForSearch", searchStr.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 1, SEARCH_MASK[0]);	//Search By FileName
+					LuceneUtil2.search(repos, preConditions, "nameForSearch", searchStr.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 1, HitDoc.HitType_FileName);	//Search By FileName
 					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr + " count:" + searchResult.size());
 
 					//文件名智能搜索（切词搜索）
 					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr);
-					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Term, 1, SEARCH_MASK[0]);	//Search By FileName
+					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Term, 1, HitDoc.HitType_FileName);	//Search By FileName
 					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
-				if((searchMask & SEARCH_MASK[1]) > 0)
+				if((searchMask & HitDoc.HitType_FileContent) > 0)
 				{
 					//0x00000002; //文件内容搜索
 					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr);
 					//Search By FileContent
-					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[1]);
+					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, HitDoc.HitType_FileContent);
 					if(ret == false  ||  searchResult.size() == 0)
 					{
-						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[1]);
+						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, HitDoc.HitType_FileContent);
 					}
 					
 					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
-				if((searchMask & SEARCH_MASK[2]) > 0)
+				if((searchMask & HitDoc.HitType_FileComment) > 0)
 				{	
 					//0x00000004; //文件备注搜索
 					Log.debug("luceneSearch() 文件备注智能搜索:" + searchStr);
-					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[2]);
+					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, HitDoc.HitType_FileComment);
 					if(ret == false ||  searchResult.size() == 0)
 					{
-						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, SEARCH_MASK[2]);						
+						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 0, HitDoc.HitType_FileComment);						
 					}
 					Log.debug("luceneSearch() 文件备注智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
