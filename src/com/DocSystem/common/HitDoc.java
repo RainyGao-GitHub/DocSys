@@ -94,6 +94,31 @@ public class HitDoc
 		else
 		{	
 			tempHitDoc.settHitType(tempHitDoc.getHitType() | hitType);	//增加hitType
+
+			//合并position信息
+			switch(hitType)
+			{
+			case HitDoc.HitType_FileContent:
+				if(tempHitDoc.termPositionsForRDoc == null)
+				{
+					tempHitDoc.termPositionsForRDoc = hitDoc.termPositionsForRDoc;
+				}
+				else if(hitDoc.termPositionsForRDoc != null)
+				{
+					tempHitDoc.termPositionsForRDoc.putAll(hitDoc.termPositionsForRDoc);
+				}
+				break;
+			case HitDoc.HitType_FileComment:
+				if(tempHitDoc.termPositionsForVDoc == null)
+				{
+					tempHitDoc.termPositionsForVDoc = hitDoc.termPositionsForVDoc;
+				}
+				else if(hitDoc.termPositionsForVDoc != null)
+				{
+					tempHitDoc.termPositionsForVDoc.putAll(hitDoc.termPositionsForVDoc);
+				}
+				break;
+			}
 			
 			HashMap<String, Integer> hitInfo = tempHitDoc.getHitInfo();
 			Doc doc = tempHitDoc.getDoc();
@@ -123,5 +148,6 @@ public class HitDoc
 	}
 
 	//TODO: 搜索命中的单词在内容里的位置信息
-    public Map<String, List<int[]>> termPositions;
+    public Map<String, List<int[]>> termPositionsForRDoc;
+    public Map<String, List<int[]>> termPositionsForVDoc;
 }

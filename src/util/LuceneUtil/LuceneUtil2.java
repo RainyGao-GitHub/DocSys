@@ -886,8 +886,10 @@ public class LuceneUtil2   extends BaseFunction
 		            switch(hitType)
 		            {
 		            case HitDoc.HitType_FileContent:
+		            	hitDoc.termPositionsForRDoc = getTermPositions(ireader, scoreDoc, conditions);
+		            	break;
 		            case HitDoc.HitType_FileComment:
-		            	hitDoc.termPositions = getTermPositions(ireader, scoreDoc, conditions);
+		            	hitDoc.termPositionsForVDoc = getTermPositions(ireader, scoreDoc, conditions);
 		            	break;
 		            }
 		            
@@ -949,18 +951,20 @@ public class LuceneUtil2   extends BaseFunction
                     // 只保留命中词的位置
                     if (!isTermHitInQuery(text, field, conditions)) continue; 
                     
-                    DocsAndPositionsEnum dpEnum = termsEnum.docsAndPositions(null, null, DocsAndPositionsEnum.FLAG_OFFSETS);
-                    if (dpEnum == null) continue;
+                    DocsAndPositionsEnum postingsEnum = termsEnum.docsAndPositions(null, null, DocsAndPositionsEnum.FLAG_OFFSETS);
+                    if (postingsEnum == null) continue;
                     
                     //获取命中词的位置信息
-                    dpEnum.advance(scoreDoc.doc);
+                    postingsEnum.advance(scoreDoc.doc);
                     List<int[]> positions = new ArrayList<>();
-                    for (int i = 0; i < dpEnum.freq(); i++) 
+                    for (int i = 0; i < postingsEnum.freq(); i++) 
                     {
-                        int start = dpEnum.startOffset();
-                        int end = dpEnum.endOffset();
-                        positions.add(new int[]{start, end});
-                        Log.debug("getTermPositions() termp pos[" + i +"] at [" + start + "," + end + "]");
+                        int pos = postingsEnum.nextPosition();  // 必须先调用这个来定位到位置
+                        // 现在才能获取偏移
+                        int startOffset = postingsEnum.startOffset();
+                        int endOffset = postingsEnum.endOffset();
+                        positions.add(new int[]{startOffset, endOffset});
+                        Log.debug("getTermPositions() termp pos[" + i +"] at [" + startOffset + "," + endOffset + "]");
                     }
                     termPositions.put(field, positions);
                 }
