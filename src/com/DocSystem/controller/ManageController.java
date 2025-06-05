@@ -2527,13 +2527,11 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		//获取All Groups
-		List <UserGroup> allGroups = getAllGroups();
-		
+		//获取All Groups		
 		List <UserGroup> GroupList = null;
 		if(userName == null || userName.isEmpty())
 		{
-			GroupList = allGroups;
+			GroupList = getAllGroups();
 		}
 		else
 		{
@@ -2548,14 +2546,17 @@ public class ManageController extends BaseController{
 				for(GroupMember Member: list)
 				{
 					userGroups.put(Member.getGroupId(), Member.getGroupId());
+					Log.debug("user:" + userName + " was in group:" +  Member.getGroupId());
 				}
 			
 				//遍历allGroups，如果group在userGroups中，加入列表
 				GroupList = new ArrayList<UserGroup>();
+				List <UserGroup> allGroups = getAllGroups();
 				for(UserGroup group : allGroups)
 				{
 					if(userGroups.get(group.getId()) != null)
 					{
+						Log.debug("add groupId:" + group.getId() + " groupName:" + group.getName() + " to list");						
 						GroupList.add(group);
 					}
 				}
