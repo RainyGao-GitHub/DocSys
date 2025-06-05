@@ -4,10 +4,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -2504,11 +2506,11 @@ public class ManageController extends BaseController{
 	
 	/********** 获取用户组列表 ***************/
 	@RequestMapping("/getGroupList.do")
-	public void getGroupList(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getGroupList(String userName, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** getGroupList.do ***********************");
 		
-		Log.debug("getGroupList()");
+		Log.debug("getGroupList() userName:" + userName);
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
@@ -2525,8 +2527,40 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		//获取All UserList
-		List <UserGroup> GroupList = getAllGroups();
+		//获取All Groups
+		List <UserGroup> allGroups = getAllGroups();
+		
+		List <UserGroup> GroupList = null;
+		if(userName == null || userName.isEmpty())
+		{
+			GroupList = allGroups;
+		}
+		else
+		{
+			//根据UserId获取所有goupMember, 根据groupId来确定所在的组Ids
+			HashMap<Integer, Integer> userGroups = new HashMap<Integer, Integer>();
+			GroupMember groupMember = new GroupMember();
+			groupMember.setUserName(userName);
+			List<GroupMember> list = userService.getGroupMemberListByGroupMemberInfo(groupMember);
+			if(list != null && list.size() > 0)
+			{
+				//构建用户所在的所有组Map
+				for(GroupMember Member: list)
+				{
+					userGroups.put(Member.getGroupId(), Member.getGroupId());
+				}
+			
+				//遍历allGroups，如果group在userGroups中，加入列表
+				GroupList = new ArrayList<UserGroup>();
+				for(UserGroup group : allGroups)
+				{
+					if(userGroups.get(group.getId()) != null)
+					{
+						GroupList.add(group);
+					}
+				}
+			}
+		}
 		
 		rt.setData(GroupList);
 		writeJson(rt, response);

@@ -5521,12 +5521,23 @@ function showReposManagerPage(e, reposId){
 }
 
 //用户组管理
+//成员管理
+var groupSearchWord = "";	//清除搜索关键字
+function searchGroup()
+{
+	groupSearchWord = $("#search-groupSearchWord").val();
+	showGroupList();
+}
+
 function showGroupList(){
 	$.ajax({
         url : "/DocSystem/Manage/getGroupList.do",
         type : "post",
         dataType : "json",
-        data : {},
+        data : {
+            // 新增用户名搜索条件
+            userName: groupSearchWord,
+        },
         success : function (ret) {
             if( "ok" == ret.status )
             {
