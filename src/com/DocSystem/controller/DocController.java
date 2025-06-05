@@ -7041,7 +7041,11 @@ public class DocController extends BaseController{
 		searchContext.pid = pid;
 		searchContext.path = path;
 		searchContext.searchWord = searchWord;
-		searchContext.sort = sort;
+		searchContext.sort = sort;		
+		//TODO: 获取命中词的上下文配置
+		searchContext.chunkSize = 100;
+		searchContext.maxContentSize = 1000;
+		searchContext.convertToBase64 = true;
 		channel.searchDocAsync(reposList, searchContext);
 		
 		//对搜索结果进行统一排序
