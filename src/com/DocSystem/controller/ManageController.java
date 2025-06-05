@@ -2535,34 +2535,40 @@ public class ManageController extends BaseController{
 		}
 		else
 		{
-			//根据UserId获取所有goupMember, 根据groupId来确定所在的组Ids
-			HashMap<Integer, Integer> userGroups = new HashMap<Integer, Integer>();
-			GroupMember groupMember = new GroupMember();
-			groupMember.setUserName(userName);
-			List<GroupMember> list = userService.getGroupMemberListByGroupMemberInfo(groupMember);
-			if(list != null && list.size() > 0)
+			//由于groupMember里的用户名可以是空的，所以要用userId来查询
+			User qUser = new User();
+			qUser.setName(userName);
+			List <User> UserList = userService.getUserListByUserInfo(qUser);
+			if(UserList != null && UserList.size() > 0)
 			{
-				//构建用户所在的所有组Map
-				for(GroupMember Member: list)
+				//根据UserId获取所有goupMember, 根据groupId来确定所在的组Ids
+				HashMap<Integer, Integer> userGroups = new HashMap<Integer, Integer>();
+				GroupMember groupMember = new GroupMember();
+				groupMember.setUserId(UserList.get(0).getId());
+				List<GroupMember> list = userService.getGroupMemberListByGroupMemberInfo(groupMember);
+				if(list != null && list.size() > 0)
 				{
-					userGroups.put(Member.getGroupId(), Member.getGroupId());
-					Log.debug("user:" + userName + " was in group:" +  Member.getGroupId());
-				}
-			
-				//遍历allGroups，如果group在userGroups中，加入列表
-				GroupList = new ArrayList<UserGroup>();
-				List <UserGroup> allGroups = getAllGroups();
-				for(UserGroup group : allGroups)
-				{
-					if(userGroups.get(group.getId()) != null)
+					//构建用户所在的所有组Map
+					for(GroupMember Member: list)
 					{
-						Log.debug("add groupId:" + group.getId() + " groupName:" + group.getName() + " to list");						
-						GroupList.add(group);
+						userGroups.put(Member.getGroupId(), Member.getGroupId());
+						Log.debug("user:" + userName + " was in group:" +  Member.getGroupId());
+					}
+				
+					//遍历allGroups，如果group在userGroups中，加入列表
+					GroupList = new ArrayList<UserGroup>();
+					List <UserGroup> allGroups = getAllGroups();
+					for(UserGroup group : allGroups)
+					{
+						if(userGroups.get(group.getId()) != null)
+						{
+							Log.debug("add groupId:" + group.getId() + " groupName:" + group.getName() + " to list");						
+							GroupList.add(group);
+						}
 					}
 				}
 			}
-		}
-		
+		}		
 		rt.setData(GroupList);
 		writeJson(rt, response);
 	}
