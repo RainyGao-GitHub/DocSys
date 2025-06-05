@@ -955,9 +955,11 @@ public class LuceneUtil2   extends BaseFunction
                     if (postingsEnum == null) continue;
                     
                     //获取命中词的位置信息
-                    postingsEnum.advance(scoreDoc.doc);
+                    int advancedDoc = postingsEnum.advance(scoreDoc.doc);
+                    if (advancedDoc != scoreDoc.doc) continue;  // Skip if document not found
+                    
                     List<int[]> positions = new ArrayList<>();
-                    for (int i = 0; i < postingsEnum.freq(); i++) 
+                	for (int i = 0; i < postingsEnum.freq(); i++) 
                     {
                         int pos = postingsEnum.nextPosition();  // 必须先调用这个来定位到位置
                         // 现在才能获取偏移
