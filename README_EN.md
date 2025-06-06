@@ -11,6 +11,7 @@ MxsDoc is a web based document storage and management system.
 - History Management
 - Office Edit and Preview
 - WPS Edit and Preview
+- AI Chat
 - ZIP/RAR/7z/tar/tgz Preview and Download
 - Sharing Management
 - Remote Storage: FTP/SFTP/SMB/GIT/SVN/MXSDOC
@@ -66,6 +67,10 @@ History data was stored in SVN/GIT Repository, You can access the SVN/GIT Reposi
 ### Online Edit
 Online Edit was supported for Text/Office/WPS Files without any dependency (No requirement on third party Office software)
 ![Online Edit](https://images.gitee.com/uploads/images/2020/0613/105732_88ed0a73_1558129.png "docsys_仓库主页2.png")
+
+### AI Chat
+Supports integration with various AI large models such as Deepseek and Ollama to enhance the intelligence of your knowledge base.
+![AI Chat](WebRoot/web/images/AI%E6%8E%A5%E5%85%A5.jpeg)
 
 ### Sharing Management
 Support to share file or folder with permission and password control. 
