@@ -54,14 +54,8 @@ public class LLMUtil {
 
 		//获取url和basedn
 		String LLMConfigUrl = configs[0].trim();
-		URLInfo urlInfo = getUrlInfoFromUrl(LLMConfigUrl);
-		if(urlInfo == null)
-		{
-			Log.debug("parseLLMConfig() LLMConfigUrl error:" + LLMConfigUrl);
-			return null;
-		}
 		
-		config.url = urlInfo.prefix + urlInfo.params[0] + "/";
+		config.url = LLMConfigUrl;
 		config.name = config.settings.getString("name");
 		config.apikey = config.settings.getString("apikey");
 		return config;
