@@ -1,4 +1,4 @@
-# MxsDoc
+![输入图片说明](WebRoot/web/images/AI%E6%8E%A5%E5%85%A5.jpeg)# MxsDoc
 
 [中文 ](README.md) | [English](README_EN.md)
 
@@ -33,6 +33,10 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 ### 在线编辑
 支持各种文本文件在线编辑，支持Office/WPS文件协同编辑，无任何外部依赖（无需安装和部署其他Office编辑软件或系统）
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0613/105732_88ed0a73_1558129.png "docsys_仓库主页2.png")
+
+### 支持AI接入
+支持接入Deepseek、Ollama等AI大模型
+![输入图片说明](WebRoot/web/images/AI%E6%8E%A5%E5%85%A5.jpeg)
 
 ### 文件分享
 支持文件和目录分享，支持访问权限设置和密码访问控制
