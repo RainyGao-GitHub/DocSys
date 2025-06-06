@@ -108,6 +108,15 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
+	                    <td>AI Settings</td>
+	                    <td>
+							<input type="text" class="form-control" id="llmConfig" name="llmConfig" value="{{value.llmConfig}}" disabled="disabled" placeholder="https://api.deepseek.com/v1/chat/completions; apikey=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;">
+	                    </td>
+	                    <td class="edit">
+	                      	<button onclick="llmTest()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
+	                    </td>
+	                  </tr>
+	                  <tr>
 	                    <td>Max Upload Thread</td>
 	                    <td>
 			            	<select class="form-control" id="maxThreadCount" style="width: 100%" disabled="disabled">   
