@@ -1404,7 +1404,7 @@ public class ManageController extends BaseController{
 		
 		if(llmConfig != null)
 		{
-			applySystemLLMConfig(ldapConfig);			
+			applySystemLLMConfig(llmConfig);			
 		}
 		
 		if(indexDBStorePath != null)
@@ -1738,13 +1738,9 @@ public class ManageController extends BaseController{
 		
 		testResult += "2. 访问测试<br/>";
 		try 
-		{
-			String url = systemllmConfig.llmConfigList.get(0).url;
-			String apikey = systemllmConfig.llmConfigList.get(0).apikey;
-			Log.debug("llmTest() url:" + url + " apikey:" + apikey);
-			
+		{			
 			LLMAccessCheckResult checkResult = new LLMAccessCheckResult();
-			boolean ret = LLMUtil.llmAccessCheck(url, apikey, systemllmConfig.llmConfigList.get(0), checkResult);
+			boolean ret = LLMUtil.llmAccessCheck(systemllmConfig, checkResult);
 			if(ret == true)
 			{
 				testResult += "AI大模型访问测试成功<br/>";

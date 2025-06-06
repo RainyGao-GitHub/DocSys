@@ -2438,7 +2438,7 @@ public class BaseFunction{
 	//LLM
 	protected static void initLLMConfig() {
 		Log.debug("initLLMConfig() ");
-		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "LLMConfig");
+		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "llmConfig");
 		if(value != null)
 		{
 			applySystemLLMConfig(value);
@@ -5361,7 +5361,7 @@ public class BaseFunction{
 	//获取LLM设置
 	protected static String getLLMConfig() {
 		String LLMConfig = null;
-		LLMConfig = ReadProperties.read("docSysConfig.properties", "LLMConfig");
+		LLMConfig = ReadProperties.read("docSysConfig.properties", "llmConfig");
 		if(LLMConfig != null && !LLMConfig.isEmpty())
 		{
 			return LLMConfig;

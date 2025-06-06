@@ -102,9 +102,29 @@ public class LLMUtil {
 		return urlInfo;
 	}
 
-	public static boolean llmAccessCheck(String url, String apikey, LLMConfig llmConfig, LLMAccessCheckResult checkResult) 
+	public static boolean llmAccessCheck(SystemLLMConfig systemLLMConfig, LLMAccessCheckResult checkResult) 
 	{
-		Log.info("llmAccessCheck() AI接入测试未实现");
+		if(systemLLMConfig.enabled == false)
+		{
+			checkResult.info = ("llmAccessCheck() systemLLMConfig was not enabled!");
+			Log.info(checkResult.info);
+			return false;
+		}
+		
+		if(systemLLMConfig.llmConfigList == null)
+		{
+			checkResult.info = "llmAccessCheck() systemLLMConfig.llmConfigList is null!";
+			Log.info(checkResult.info);
+			return false;
+		}
+
+		for(LLMConfig llmConfig : systemLLMConfig.llmConfigList)
+		{
+			Log.debug("llmAccessCheck() start test for " + llmConfig.url + " apikey:" + llmConfig.apikey);
+		}
+				
+		checkResult.info = "llmAccessCheck() AI接入测试未实现";
+		Log.info(checkResult.info );
 		return false;
 	}
 }
