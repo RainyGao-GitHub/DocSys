@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 import util.DateFormat;
 import util.LDAPUtil;
+import util.LLMUtil;
 import util.ReadProperties;
 import util.ReturnAjax;
 import com.DocSystem.entity.DocAuth;
@@ -57,10 +58,11 @@ import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
-import com.DocSystem.common.entity.LDAPConfig;
+import com.DocSystem.common.entity.LLMAccessCheckResult;
 import com.DocSystem.common.entity.LdapLoginCheckResult;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.SystemLDAPConfig;
+import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.controller.BaseController;
 
@@ -899,6 +901,7 @@ public class ManageController extends BaseController{
 		String javaHome = getJavaHome();
 		String officeEditorApi = Path.getOfficeEditorApi();
 		String ldapConfig = getLdapConfig();
+		String llmConfig = getLLMConfig();		
 		Integer maxThreadCount = getMaxThreadCount();
 		Integer redisEn = getRedisEn();
 		String redisUrl = getRedisUrl();
@@ -913,6 +916,7 @@ public class ManageController extends BaseController{
 		config.put("tomcatPath", tomcatPath);
 		config.put("javaHome", javaHome);
 		config.put("ldapConfig", ldapConfig);
+		config.put("llmConfig", llmConfig);
 		config.put("logLevel", Log.logLevel);
 		config.put("logFile", Log.logFileConfig);
 		config.put("maxThreadCount", maxThreadCount);	
@@ -1174,6 +1178,7 @@ public class ManageController extends BaseController{
 			String indexDBStorePath,
 			String salesDataStorePath,
 			String ldapConfig,
+			String llmConfig,
 			Integer logLevel,
 			String logFile,
 			Integer maxThreadCount,
@@ -1191,7 +1196,9 @@ public class ManageController extends BaseController{
 				+ " indexDBStorePath:" + indexDBStorePath 
 				+ " salesDataStorePath:" + salesDataStorePath 
 				+ " maxThreadCount:" + maxThreadCount 
-				+ " ldapConfig:" + ldapConfig + " logLevel:" + logLevel + " logFile:" + logFile
+				+ " ldapConfig:" + ldapConfig
+				+ " llmConfig:" + llmConfig
+				+ " logLevel:" + logLevel + " logFile:" + logFile
 				+ " redisEn:" + redisEn + " redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
@@ -1212,6 +1219,7 @@ public class ManageController extends BaseController{
 			indexDBStorePath == null &&
 			salesDataStorePath == null &&
 			ldapConfig == null &&
+			llmConfig == null &&
 			logLevel == null &&
 			logFile == null &&
 			maxThreadCount == null &&
@@ -1311,6 +1319,21 @@ public class ManageController extends BaseController{
 			}
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "ldapConfig", ldapConfig);
 		}
+		if(llmConfig != null)
+		{
+			if(!llmConfig.isEmpty())
+			{
+				if(docSysType == constants.DocSys_Professional_Edition)
+				{
+					docSysErrorLog("专业版不支持AI接入，请购买企业版！", rt);
+				}
+				else if(docSysType == constants.DocSys_Personal_Edition)
+				{
+					docSysErrorLog("个人版不支持AI接入，请购买企业版！", rt);
+				}
+			}
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "llmConfig", llmConfig);
+		}
 		
 		if(maxThreadCount != null)
 		{			
@@ -1377,6 +1400,11 @@ public class ManageController extends BaseController{
 		if(ldapConfig != null)
 		{
 			applySystemLdapConfig(ldapConfig);			
+		}
+		
+		if(llmConfig != null)
+		{
+			applySystemLLMConfig(ldapConfig);			
 		}
 		
 		if(indexDBStorePath != null)
@@ -1658,6 +1686,84 @@ public class ManageController extends BaseController{
 			testResult += baos.toString();
 		}
 
+		rt.setMsgInfo(testResult);				
+		writeJson(rt, response);
+	}
+	
+	@RequestMapping("/llmTest.do")
+	public void llmTest(String llmConfig, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** llmTest.do ***********************");
+		
+		Log.debug("llmTest() llmConfig:" + llmConfig);
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)		
+		{
+			writeJson(rt, response);			
+			return;
+		}
+		
+		String testResult = "1. 配置解析<br/>";
+		if(llmConfig == null || llmConfig.isEmpty())
+		{
+			testResult += "配置内容为空<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);		
+			return;
+		}	
+		
+		SystemLLMConfig systemllmConfig = LLMUtil.getSystemLLMConfig(llmConfig);
+		if(systemllmConfig == null)
+		{
+			testResult += "解析失败:<br/>";
+			testResult += llmConfig + "<br/>";
+			
+			rt.setError(testResult);
+			writeJson(rt, response);			
+			return;
+		}
+		systemllmConfig.enabled = true;
+		
+		testResult += "解析成功:<br/>" ;
+		testResult += JSON.toJSONString(systemllmConfig) + "<br/><br/>";
+		
+		if(systemllmConfig.llmConfigList.isEmpty())
+		{
+			testResult += "配置错误<br/>";
+			rt.setError(testResult);
+			writeJson(rt, response);			
+			return;
+		}
+		
+		testResult += "2. 访问测试<br/>";
+		try 
+		{
+			String url = systemllmConfig.llmConfigList.get(0).url;
+			String apikey = systemllmConfig.llmConfigList.get(0).apikey;
+			Log.debug("llmTest() url:" + url + " apikey:" + apikey);
+			
+			LLMAccessCheckResult checkResult = new LLMAccessCheckResult();
+			boolean ret = LLMUtil.llmAccessCheck(url, apikey, systemllmConfig.llmConfigList.get(0), checkResult);
+			if(ret == true)
+			{
+				testResult += "AI大模型访问测试成功<br/>";
+			}
+			else
+			{
+				testResult += "AI大模型访问测试失败:<br/>";
+				testResult += checkResult.info + "<br/>";
+			}
+		}
+		catch(Exception e)
+		{
+			Log.debug(e);
+			testResult += "AI大模型访问测试失败<br/>";
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			e.printStackTrace(new PrintStream(baos));			
+			testResult += baos.toString();
+		}
+		
 		rt.setMsgInfo(testResult);				
 		writeJson(rt, response);
 	}

@@ -1460,8 +1460,8 @@ function updateSystemInfo(tomcatPath,
         		$("#systemLogStorePath").val(systemInfo.systemLogStorePath);
         		$("#indexDBStorePath").val(systemInfo.indexDBStorePath);
         		$("#salesDataStorePath").val(systemInfo.salesDataStorePath);
-        		$("#ldapConfig").vllmConfigal(systemInfo.ldapConfig);
-        		$("#llmConfig").vllmConfigal(systemInfo.llmConfig);
+        		$("#ldapConfig").val(systemInfo.ldapConfig);
+        		$("#llmConfig").val(systemInfo.llmConfig);
         		$("#maxThreadCount").val(systemInfo.maxThreadCount);
         		$("#logLevel").val(systemInfo.logLevel);
         		$("#logFile").val(systemInfo.logFile);

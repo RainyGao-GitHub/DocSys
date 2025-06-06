@@ -203,6 +203,7 @@ public class BaseController  extends BaseFunction{
 		String preClusterServerUrl = clusterServerUrl;
 		String preClusterDBUrl = clusterDbUrl;
 		String preClusterLdapConfig = clusterLdapConfig;
+		String preClusterLLMConfig = clusterLLMConfig;
 		String preClusterOfficeEditor = clusterOfficeEditor;
 		
 		int isRedisEn = getRedisEn();
@@ -281,11 +282,13 @@ public class BaseController  extends BaseFunction{
 		clusterDbUrl = ReadProperties.getValue("jdbc.properties", "db.url");
 		clusterOfficeEditor = Path.getOfficeEditorApi();
 		clusterLdapConfig = getLdapConfig();		
+		clusterLLMConfig = getLLMConfig();		
 		if(isClusterConfigChanged("redisUrl", preRedisUrl, redisUrl) ||
 				isClusterConfigChanged("clusterServerUrl", preClusterServerUrl, clusterServerUrl) ||
 				isClusterConfigChanged("DB_URL", preClusterDBUrl, clusterDbUrl) || 
 				isClusterConfigChanged("OfficeEditor", preClusterOfficeEditor, clusterOfficeEditor) || 
-				isClusterConfigChanged("LdapConfig", preClusterLdapConfig, clusterLdapConfig))
+				isClusterConfigChanged("LdapConfig", preClusterLdapConfig, clusterLdapConfig) ||
+				isClusterConfigChanged("LLMConfig", preClusterLLMConfig, clusterLLMConfig))
 		{
 			return true;
 		}
@@ -14187,6 +14190,7 @@ public class BaseController  extends BaseFunction{
 				initDocSysDataPath();
 				initRedis();		
 				initLdapConfig();
+				initLLMConfig();
 				clusterServerUrl = getClusterServerUrl();
 				
 			}
@@ -15047,6 +15051,9 @@ public class BaseController  extends BaseFunction{
 		buket = redisClient.getBucket("ldapConfig");
 		buket.delete();
 		
+		buket = redisClient.getBucket("LLMConfig");
+		buket.delete();
+		
 		buket = redisClient.getBucket("OfficeEditor");
 		buket.delete();
 	}
@@ -15069,6 +15076,13 @@ public class BaseController  extends BaseFunction{
 			//Check LDAP
 			String ldapConfig = getLdapConfig();
 			if(clusterDeployCheckGlobal_ConfigCheck("ldapConfig", ldapConfig) == false)
+			{
+				redisSyncUnlock(lockName, lockInfo);				
+				return false;
+			}
+			//Check LLM
+			String LLMConfig = getLLMConfig();
+			if(clusterDeployCheckGlobal_ConfigCheck("LLMConfig", LLMConfig) == false)
 			{
 				redisSyncUnlock(lockName, lockInfo);				
 				return false;

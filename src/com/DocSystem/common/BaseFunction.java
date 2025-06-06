@@ -56,6 +56,7 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 import util.DateFormat;
 import util.ImageToPdfConverter;
 import util.LDAPUtil;
+import util.LLMUtil;
 import util.PdfMerger;
 import util.ReadProperties;
 import util.ReturnAjax;
@@ -108,6 +109,7 @@ import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.ReposExtConfigDigest;
 import com.DocSystem.entity.SyncSourceLock;
 import com.DocSystem.common.entity.SystemLDAPConfig;
+import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.entity.User;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -163,6 +165,9 @@ public class BaseFunction{
     
     //系统LDAP设置
     public static SystemLDAPConfig systemLdapConfig = null;
+
+    //系统LLM设置
+    public static SystemLLMConfig systemLLMConfig = null;
 		
 	public static int OSType = OS.UNKOWN; //
 
@@ -227,6 +232,7 @@ public class BaseFunction{
 	//用于检测集群相关的配置是否发生了变化（在initRedis接口中使用）
     protected static String clusterDbUrl = null;
     protected static String clusterLdapConfig = null;
+    protected static String clusterLLMConfig = null;
     protected static String clusterOfficeEditor = null;
     protected static final Object gClusterDeployCheckSyncLock = new Object(); //用于保证集群检测的唯一性
 
@@ -319,6 +325,7 @@ public class BaseFunction{
 		initSystemLicenseInfo();
     	initOfficeLicenseInfo();
     	initLdapConfig();
+    	initLLMConfig();
 		serverHost = getServerHost();
 		clusterServerUrl = getClusterServerUrl();
 
@@ -2427,6 +2434,16 @@ public class BaseFunction{
 			applySystemLdapConfig(value);
 		}		
 	}
+	
+	//LLM
+	protected static void initLLMConfig() {
+		Log.debug("initLLMConfig() ");
+		String value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "LLMConfig");
+		if(value != null)
+		{
+			applySystemLLMConfig(value);
+		}		
+	}
 		
 	protected static void applySystemLdapConfig(String systemLdapConfigStr) {
 		//UPdate系统ldapConfig
@@ -2440,6 +2457,21 @@ public class BaseFunction{
 			else
 			{
 				systemLdapConfig.enabled = false;				
+			}		
+		}
+	}
+	protected static void applySystemLLMConfig(String systemLLMConfigStr) {
+		//UPdate系统LLMConfig
+		systemLLMConfig = LLMUtil.getSystemLLMConfig(systemLLMConfigStr);
+		if(systemLLMConfig != null)
+		{
+			if(docSysType == constants.DocSys_Enterprise_Edition)
+			{
+				systemLLMConfig.enabled = true;
+			}
+			else
+			{
+				systemLLMConfig.enabled = false;				
 			}		
 		}
 	}
@@ -5324,6 +5356,17 @@ public class BaseFunction{
         	return ldapConfig;
         }
 
+		return null;
+	}
+	//获取LLM设置
+	protected static String getLLMConfig() {
+		String LLMConfig = null;
+		LLMConfig = ReadProperties.read("docSysConfig.properties", "LLMConfig");
+		if(LLMConfig != null && !LLMConfig.isEmpty())
+		{
+			return LLMConfig;
+		}
+		
 		return null;
 	}
 
