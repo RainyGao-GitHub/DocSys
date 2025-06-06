@@ -1,4 +1,4 @@
-![输入图片说明](WebRoot/web/images/AI%E6%8E%A5%E5%85%A5.jpeg)# MxsDoc
+# MxsDoc
 
 [中文 ](README.md) | [English](README_EN.md)
 
