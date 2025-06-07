@@ -122,10 +122,10 @@ public class LLMUtil {
 
 		for(LLMConfig llmConfig : systemLLMConfig.llmConfigList)
 		{
-			checkResult.info = "测试AI大模型[" + llmConfig.name + "] [" + llmConfig.url+ "] [" +llmConfig.apikey+ "]<br>";
+			checkResult.info += "开始测试AI大模型[" + llmConfig.name + "] [" + llmConfig.url+ "] [" +llmConfig.apikey+ "]<br>";
 			Log.debug("llmAccessCheck() start test for " + llmConfig.url + " apikey:" + llmConfig.apikey);
-			String answer = AIChatTest(llmConfig.url, llmConfig.apikey, llmConfig.name, "你好，请简单介绍一下你自己?");
-			checkResult.info = answer + "<br>";
+			String answer = AIChatTest(llmConfig.url, llmConfig.apikey, llmConfig.moduleName, "你好，请简单介绍一下你自己?");
+			checkResult.info += answer + "<br>";
 		}				
 		return true;
 	}
@@ -156,8 +156,8 @@ public class LLMUtil {
 
         Response<AiMessage> chatResponse = chatModel.generate(userMessage);
 
-        System.out.println(chatResponse);
         String answer = chatResponse.content().text();
+        Log.debug("AIChatTest() answer:" + answer);
         return answer;
 	}
 }
