@@ -45,6 +45,7 @@ import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.GenericTask;
+import com.DocSystem.common.entity.LLMConfig;
 import com.DocSystem.common.remoteStorage.RemoteStorageSession;
 import com.DocSystem.controller.BaseController;
 
@@ -60,7 +61,7 @@ Something you need to know
 @RequestMapping("/Repos")
 public class ReposController extends BaseController{
 	
-	/****------ Ajax Interfaces For Repository Controller ------------------***/ 
+	/****------ Ajax Interfaces For Repository Controller ------------------***/ 	
 	/****************** get DocSysConfig **************/
 	@RequestMapping("/getDocSysConfig.do")
 	public void getDocSysConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response){
@@ -71,6 +72,97 @@ public class ReposController extends BaseController{
 		config.put("defaultReposStorePath", Path.getDefaultReposRootPath(OSType));
 		rt.setData(config);
 		writeJson(rt, response);
+	}
+	
+	/****************** AI LLM Chat **************/
+	@RequestMapping("/AIChat.do")
+	public void AIChat( Integer LLMIndex, String LLMName, 	//用户选择的大模型，如果未指定Index那么根据Name来确定选择的AI大模型
+						String query, 						//用户的问题
+						String queryMode, String queryExt,	//如果指定了queryMode， 那么需要进行额外的处理，queryExt是扩展信息，根据queryMode确定(比如：文件列表)
+						HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** AIChat.do ***********************");
+		Log.debug("AIChat() LLM Index:" + LLMIndex + " LLMName:" + LLMName + " queryMode:" + queryMode + " query:" + query + " queryExt:" + queryExt);
+		ReturnAjax rt = new ReturnAjax();
+		
+		User login_user = getLoginUser(session, request, response, rt);
+		if(login_user == null)
+		{
+			rt.setError("用户未登录，请先登录！");
+			writeJson(rt, response);			
+			return;
+		}
+		
+		if(systemLicenseInfoCheck(rt) == false)
+		{
+			writeJson(rt, response);	
+			return;
+		}
+		
+		LLMConfig llmConfig = getLLMConfigByIndexOrName(LLMIndex, LLMName, rt);
+		if(llmConfig == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
+		String answer = channel.AIChat(query, queryMode, queryExt, llmConfig, rt);
+		if(answer != null)
+		{
+			rt.setData(answer);
+		}
+		else
+		{
+			rt.setError("Failed to complete the chat");
+		}
+		writeJson(rt, response);
+	}
+
+	private LLMConfig getLLMConfigByIndexOrName(Integer LLMIndex, String LLMName, ReturnAjax rt) 
+	{
+		if(systemLLMConfig == null)
+		{
+			rt.setError("systemLLMConfig is null");
+			return null;
+		}
+		
+		if(systemLLMConfig.enabled == false)
+		{
+			rt.setError("systemLLMConfig was not enabled");
+			return null;
+		}
+		
+		if(systemLLMConfig.llmConfigList == null || systemLLMConfig.llmConfigList.size() == 0)
+		{
+			rt.setError("There is no available AI");			
+			return null;
+		}
+		
+		if(LLMIndex != null)
+		{
+			if(LLMIndex < systemLLMConfig.llmConfigList.size())
+			{
+				return systemLLMConfig.llmConfigList.get(LLMIndex);
+			}
+			rt.setError("Failed to find the AI[" + LLMIndex +"]");
+			return null;
+		}
+		
+		if(LLMName == null)
+		{
+			rt.setError("Please select an AI for chat");
+			return null;
+		}
+		
+		for(LLMConfig config : systemLLMConfig.llmConfigList)
+		{
+			if(config.name.equals(LLMName))
+			{
+				return config;
+			}
+		}
+		rt.setError("Failed to find the AI[" + LLMName +"]");		
+		return null;
 	}
 
 	/****************** get Repository List **************/
@@ -89,7 +181,8 @@ public class ReposController extends BaseController{
 		
 		if(systemLicenseInfoCheck(rt) == false)
 		{
-			writeJson(rt, response);			
+			writeJson(rt, response);
+			return;
 		}
 		
 		Integer UserId = login_user.getId();

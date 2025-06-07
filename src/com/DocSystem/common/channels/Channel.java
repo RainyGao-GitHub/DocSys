@@ -13,6 +13,7 @@ import com.DocSystem.common.CommitAction.CommitAction;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
+import com.DocSystem.common.entity.LLMConfig;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposFullBackupTask;
@@ -252,4 +253,7 @@ public interface Channel {
 
 	//Convert OfficeFile to pdf file
 	boolean convertOfficeToPdf(Doc doc, String localEntryPath, String dstPath, String dstName);
+
+	//AIChat接口
+	String AIChat(String query, String queryMode, String queryExt, LLMConfig llmConfig, ReturnAjax rt);
 }
