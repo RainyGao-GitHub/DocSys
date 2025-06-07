@@ -1744,6 +1744,7 @@ public class ManageController extends BaseController{
 			if(ret == true)
 			{
 				testResult += "AI大模型访问测试成功<br/>";
+				testResult += checkResult.info;
 			}
 			else
 			{

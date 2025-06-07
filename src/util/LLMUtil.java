@@ -6,6 +6,13 @@ import com.DocSystem.common.entity.LLMAccessCheckResult;
 import com.DocSystem.common.entity.LLMConfig;
 import com.DocSystem.common.entity.SystemLLMConfig;
 
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.TextContent;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.output.Response;
+
 public class LLMUtil {
 
 	public static SystemLLMConfig getSystemLLMConfig(String systemLLMConfigStr) 
@@ -57,6 +64,7 @@ public class LLMUtil {
 		
 		config.url = LLMConfigUrl;
 		config.name = config.settings.getString("name");
+		config.moduleName = config.settings.getString("moduleName");
 		config.apikey = config.settings.getString("apikey");
 		return config;
 	}
@@ -114,11 +122,42 @@ public class LLMUtil {
 
 		for(LLMConfig llmConfig : systemLLMConfig.llmConfigList)
 		{
+			checkResult.info = "测试AI大模型[" + llmConfig.name + "] [" + llmConfig.url+ "] [" +llmConfig.apikey+ "]<br>";
 			Log.debug("llmAccessCheck() start test for " + llmConfig.url + " apikey:" + llmConfig.apikey);
-		}
+			String answer = AIChatTest(llmConfig.url, llmConfig.apikey, llmConfig.name, "你好，请简单介绍一下你自己?");
+			checkResult.info = answer + "<br>";
+		}				
+		return true;
+	}
+
+	private static String AIChatTest(String url, String apikey, String modelName, String query) 
+	{
+		//String deepSeekModel = "deepseek-chat";
+		//		"https://api.deepseek.com"
+		//		apiKey = "sk-1c5db7f9212f474fb03f8ead78ea739d";
+		
+		//String llama321b = "llama3.2:1b";
+		//		baseUrl = "http://localhost:11434/v1/";
+		//		apiKey = "sk-";
 				
-		checkResult.info = "llmAccessCheck() AI接入测试未实现";
-		Log.info(checkResult.info );
-		return false;
+        ChatLanguageModel chatModel = OpenAiChatModel.builder()
+        		.baseUrl(url)
+        		.apiKey(apikey)
+        		.modelName(modelName)
+        		.temperature(0.7)
+        		.maxTokens(1000)
+                .logRequests(true)
+                .build();
+
+        
+        UserMessage userMessage = UserMessage.from(
+                TextContent.from(query)
+        );
+
+        Response<AiMessage> chatResponse = chatModel.generate(userMessage);
+
+        System.out.println(chatResponse);
+        String answer = chatResponse.content().text();
+        return answer;
 	}
 }
