@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> AI 助手 </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .message-container {
+            scroll-behavior: smooth;
+            height: calc(100vh - 200px);
+        }
+        .user-message {
+            animation: slideIn 0.3s ease-out;
+        }
+        .ai-message {
+            animation: slideIn 0.3s ease-out 0.1s;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="max-w-4xl mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-6"> AI 助手 </h1>
+        
+        <div id="messages" class="message-container bg-white rounded-lg shadow p-4 mb-4 overflow-y-auto"></div>
+        
+        <div class="flex gap-2">
+            <input 
+                type="text" 
+                id="inputMessage" 
+                placeholder="输入你的问题..."
+                class="flex-1 border border-gray-300 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autocomplete="off"
+            >
+            <button 
+                id="sendBtn" 
+                class="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition"
+            >
+                发送
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const messagesContainer = document.getElementById('messages');
+        const inputMessage = document.getElementById('inputMessage');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // API端点配置 (需要替换为您的实际后端URL)
+        const API_ENDPOINT = 'https://your-langchain-backend.com/chat';
+
+        // 添加消息到界面
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 
+                'user-message bg-blue-100 p-4 rounded-lg mb-2 max-w-[80%] self-end' : 
+                'ai-message bg-gray-100 p-4 rounded-lg mb-2 max-w-[80%]';
+            messageDiv.textContent = text;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 发送消息到LangChain后端
+        async function sendMessage() {
+            const message = inputMessage.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            inputMessage.value = '';
+            sendBtn.disabled = true;
+            
+            try {
+                // 模拟思考过程
+                const thinking = document.createElement('div');
+                thinking.className = 'ai-message bg-gray-100 p-4 rounded-lg mb-2 max-w-[80%]';
+                thinking.textContent = '思考中...';
+                messagesContainer.appendChild(thinking);
+                
+                const response = await fetch("/DocSystem/Repos/AIChat.do", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                    	data:{
+                    		query: message,
+                    		LLMIndex: 0,
+                        	// 可以在此添加更多参数
+                    	}
+                    })
+                });
+
+                messagesContainer.removeChild(thinking);
+                
+                if (!response.ok) {
+                    throw new Error(`请求失败: ${response.status}`);
+                }
+
+                const ret = await response.json();
+                if("ok" == ret.status)
+                {
+                	addMessage(ret.data, false);
+                }
+                else
+                {
+                	console.error('请求出错:', ret.msgInfo);
+                    addMessage(`出错: ${ret.msgInfo}`, false);
+                }
+            } catch (error) {
+                console.error('请求出错:', ret.msgInfo);
+                addMessage(`出错: ${ret.msgInfo}`, false);
+            } finally {
+                sendBtn.disabled = false;
+                inputMessage.focus();
+            }
+        }
+
+        // 事件监听
+        sendBtn.addEventListener('click', sendMessage);
+        inputMessage.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // 添加欢迎信息
+        addMessage('你好！我是 AI 助手，有什么可以帮您的吗？', false);
+        inputMessage.focus();
+    </script>
+</body>
+</html>
