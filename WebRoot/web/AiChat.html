@@ -107,8 +107,8 @@
                     addMessage(`出错: ${ret.msgInfo}`, false);
                 }
             } catch (error) {
-                console.error('请求出错:', ret.msgInfo);
-                addMessage(`出错: ${ret.msgInfo}`, false);
+                console.error('请求出错:', error);
+                addMessage(`出错: ${error.message}`, false);
             } finally {
                 sendBtn.disabled = false;
                 inputMessage.focus();

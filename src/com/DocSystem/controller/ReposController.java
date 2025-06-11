@@ -38,6 +38,7 @@ import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.entity.AIChatContext;
 import com.DocSystem.common.entity.AIChatRequest;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
@@ -111,6 +112,7 @@ public class ReposController extends BaseController{
 		}
 		
 		//构造ChatContext
+		req.context = new AIChatContext();
 		List<Repos> reposList = new ArrayList<Repos>();
 		if(req.reposId == null || req.reposId == -1)
 		{
