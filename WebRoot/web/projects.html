@@ -179,11 +179,18 @@
     <div id="visibleOnSmall" class="visible-xs"></div>
 </div>
 <!-- 新增AI聊天机器人图标 -->
-<div id="ai-chat-icon" title="AI">
+<div id="ai-chat-icon" title="AI" onclick="openAiChat();">
     <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <text x="50%" y="60%" text-anchor="middle" font-weight="bold" font-size="12" fill="white">AI</text>
     </svg>
 </div>
+<script>
+    // Add click event to open the AI chat page
+    function openAiChat()
+    {
+        window.open('/DocSystem/web/AiChat.html', '_blank');
+    }
+</script>
 <script type="text/html" id="tmpl-projects">
     <ul>
 	{{each list as repos i}}
