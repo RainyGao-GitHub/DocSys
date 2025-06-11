@@ -10,6 +10,7 @@ import javax.servlet.http.HttpSession;
 import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.CommitAction.CommitAction;
+import com.DocSystem.common.entity.AIChatRequest;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
@@ -255,5 +256,5 @@ public interface Channel {
 	boolean convertOfficeToPdf(Doc doc, String localEntryPath, String dstPath, String dstName);
 
 	//AIChat接口
-	String AIChat(String query, String queryMode, String queryExt, LLMConfig llmConfig, ReturnAjax rt);
+	String AIChat(AIChatRequest chatReq, LLMConfig llmConfig, ReturnAjax rt);
 }

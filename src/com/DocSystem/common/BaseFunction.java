@@ -2465,14 +2465,15 @@ public class BaseFunction{
 		systemLLMConfig = LLMUtil.getSystemLLMConfig(systemLLMConfigStr);
 		if(systemLLMConfig != null)
 		{
-			if(docSysType == constants.DocSys_Enterprise_Edition)
-			{
-				systemLLMConfig.enabled = true;
-			}
-			else
-			{
-				systemLLMConfig.enabled = false;				
-			}		
+			systemLLMConfig.enabled = true;
+//			if(docSysType == constants.DocSys_Enterprise_Edition)
+//			{
+//				systemLLMConfig.enabled = true;
+//			}
+//			else
+//			{
+//				systemLLMConfig.enabled = false;				
+//			}		
 		}
 	}
 

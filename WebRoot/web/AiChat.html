@@ -84,12 +84,10 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                    	data:{
                     		query: message,
                     		LLMIndex: 0,
-                        	// 可以在此添加更多参数
-                    	}
-                    })
+                    		LLMName: "deepseek"
+                    	})
                 });
 
                 messagesContainer.removeChild(thinking);

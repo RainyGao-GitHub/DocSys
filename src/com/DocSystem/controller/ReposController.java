@@ -17,6 +17,7 @@ import javax.servlet.http.HttpSession;
 
 import org.redisson.api.RBucket;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import util.DateFormat;
@@ -37,6 +38,7 @@ import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.entity.AIChatRequest;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.EncryptConfig;
@@ -76,13 +78,15 @@ public class ReposController extends BaseController{
 	
 	/****************** AI LLM Chat **************/
 	@RequestMapping("/AIChat.do")
-	public void AIChat( Integer LLMIndex, String LLMName, 	//用户选择的大模型，如果未指定Index那么根据Name来确定选择的AI大模型
-						String query, 						//用户的问题
-						String queryMode, String queryExt,	//如果指定了queryMode， 那么需要进行额外的处理，queryExt是扩展信息，根据queryMode确定(比如：文件列表)
-						HttpSession session,HttpServletRequest request,HttpServletResponse response)
+//	public void AIChat( Integer LLMIndex, String LLMName, 	//用户选择的大模型，如果未指定Index那么根据Name来确定选择的AI大模型
+//						String query, 						//用户的问题
+//						String queryMode, String queryExt,	//如果指定了queryMode， 那么需要进行额外的处理，queryExt是扩展信息，根据queryMode确定(比如：文件列表)
+//						HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void AIChat( @RequestBody AIChatRequest req,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** AIChat.do ***********************");
-		Log.debug("AIChat() LLM Index:" + LLMIndex + " LLMName:" + LLMName + " queryMode:" + queryMode + " query:" + query + " queryExt:" + queryExt);
+		Log.debug("AIChat() question:" + req.query + " LLMIndex:" + req.LLMIndex + " LLMName:" + req.LLMName);
 		ReturnAjax rt = new ReturnAjax();
 		
 		User login_user = getLoginUser(session, request, response, rt);
@@ -99,21 +103,39 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		LLMConfig llmConfig = getLLMConfigByIndexOrName(LLMIndex, LLMName, rt);
+		LLMConfig llmConfig = getLLMConfigByIndexOrName(req.LLMIndex, req.LLMName, rt);
 		if(llmConfig == null)
 		{
 			writeJson(rt, response);
 			return;
 		}
 		
-		String answer = channel.AIChat(query, queryMode, queryExt, llmConfig, rt);
+		//构造ChatContext
+		List<Repos> reposList = new ArrayList<Repos>();
+		if(req.reposId == null || req.reposId == -1)
+		{
+			//Do search all AccessableRepos
+			reposList = getAccessableReposList(login_user.getId());
+		}
+		else
+		{
+			Repos repos = getReposEx(req.reposId);
+			if(repos != null)
+			{
+				reposList.add(repos);
+			}
+			req.context.repos = repos;
+		}
+		req.context.reposList = reposList;
+		
+		String answer = channel.AIChat(req, llmConfig, rt);
 		if(answer != null)
 		{
 			rt.setData(answer);
 		}
 		else
 		{
-			rt.setError("Failed to complete the chat");
+			rt.setError("Chat Failed");
 		}
 		writeJson(rt, response);
 	}
