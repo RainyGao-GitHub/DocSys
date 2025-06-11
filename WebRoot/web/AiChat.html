@@ -3,127 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> AI 助手 </title>
+    <title>AI聊天界面</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script>
     <style>
-        .message-container {
-            scroll-behavior: smooth;
-            height: calc(100vh - 200px);
+        .message-box {
+            max-width: 85%;
         }
-        .user-message {
-            animation: slideIn 0.3s ease-out;
+        .user-message-box {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+            border-top-right-radius: 0;
         }
-        .ai-message {
-            animation: slideIn 0.3s ease-out 0.1s;
+        .assistant-message-box {
+            background-color: #dcfce7;
+            color: #065f46;
+            border-top-left-radius: 0;
         }
-        @keyframes slideIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .copy-button {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .message-container:hover .copy-button {
+            opacity: 1;
+        }
+        .hljs {
+            padding: 1.25rem;
+            border-radius: 0.375rem;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        td, th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        .typing-indicator {
+            animation: pulse 1.5s infinite;
+        }
+        .message-transition {
+            transition: all 0.3s ease-out;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        .message-visible {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
-    <div class="max-w-4xl mx-auto p-4">
-        <h1 class="text-3xl font-bold text-center mb-6"> AI 助手 </h1>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="flex flex-col h-full w-full max-w-3xl bg-white rounded-lg border shadow-sm" style="height: 90vh;">
+        <!-- 标题栏 -->
+        <div class="border-b p-4 flex items-center justify-between">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot text-blue-500">
+                    <path d="M12 8V4H8"/>
+                    <rect width="16" height="12" x="4" y="8" rx="2"/>
+                    <path d="M2 14h2"/>
+                    <path d="M20 14h2"/>
+                    <path d="M15 13v2"/>
+                    <path d="M9 13v2"/>
+                </svg>
+                AI聊天助手
+            </h1>
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                <span class="text-sm text-gray-500">已连接</span>
+            </div>
+        </div>
         
-        <div id="messages" class="message-container bg-white rounded-lg shadow p-4 mb-4 overflow-y-auto"></div>
+        <!-- 消息容器 -->
+        <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-6"></div>
         
-        <div class="flex gap-2">
-            <input 
-                type="text" 
-                id="inputMessage" 
-                placeholder="输入你的问题..."
-                class="flex-1 border border-gray-300 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                autocomplete="off"
-            >
-            <button 
-                id="sendBtn" 
-                class="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition"
-            >
-                发送
-            </button>
+        <!-- 输入区域 -->
+        <div class="border-t p-4 bg-gray-50">
+            <form id="chat-form" class="flex gap-2">
+                <input 
+                    type="text"
+                    id="message-input"
+                    placeholder="输入消息..."
+                    class="flex-1 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send">
+                        <path d="m22 2-7 20-4-9-9-4Z"/>
+                        <path d="M22 2 11 13"/>
+                    </svg>
+                    发送
+                </button>
+            </form>
+            <p class="text-xs text-gray-500 mt-2">支持Markdown渲染，特殊字符将被安全解析</p>
         </div>
     </div>
 
     <script>
-        const messagesContainer = document.getElementById('messages');
-        const inputMessage = document.getElementById('inputMessage');
-        const sendBtn = document.getElementById('sendBtn');
+        // 模拟数据库
+        const knowledgeBase = {
+            "greeting": `您好！我是AI助手，随时为您提供帮助。您有任何问题都可以向我提问。`,
+            "markdown": `**Markdown**支持以下元素：
+- **加粗文本**
+- _斜体文本_
+- ~~删除线~~
+- \`行内代码\`
+- 代码块：
+\`\`\`js
+function hello() {
+    console.log("Hello, World!");
+}
+\`\`\`
+- 表格：
+| 产品 | 价格 | 库存 |
+| ---- | ---- | ---- |
+| 手机 | ¥2999 | 120 |
+| 耳机 | ¥499 | 350 |
+            `,
+            "help": `我可以帮助您解决以下问题：
+1. **技术问题** - 编程、调试、算法等
+2. **学习支持** - 数学、科学、语言学习
+3. **内容创作** - 写作、编辑、文案策划
+4. **日常工作** - 邮件草稿、文档摘要、翻译
 
-        // API端点配置 (需要替换为您的实际后端URL)
-        const API_ENDPOINT = 'https://your-langchain-backend.com/chat';
+随时告诉我您需要哪方面的帮助！`,
+            "error": `抱歉，我无法理解您的问题。您可以尝试：
+- 用更简明的语言重新提问
+- 提供更多上下文信息
+- 将问题分解为多个小问题
 
-        // 添加消息到界面
-        function addMessage(text, isUser) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = isUser ? 
-                'user-message bg-blue-100 p-4 rounded-lg mb-2 max-w-[80%] self-end' : 
-                'ai-message bg-gray-100 p-4 rounded-lg mb-2 max-w-[80%]';
-            messageDiv.textContent = text;
-            messagesContainer.appendChild(messageDiv);
+或者您可以选择以下主题：
+1. Markdown示例
+2. 功能介绍
+3. 帮助文档`
+        };
+
+        // 可能的响应数据
+        const responses = {
+            "greeting": knowledgeBase.greeting,
+            "markdown": knowledgeBase.markdown,
+            "help": knowledgeBase.help,
+            "error": knowledgeBase.error,
+            "date": `今天是 **${new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}**，星期${'日一二三四五六'[new Date().getDay()]}。`,
+            "quote": `**每日一句：**\n\n"技术的价值不在于它多么先进，而在于它解决了多么基本的问题。"\n\n– 一位AI研究者`,
+            "code": `**Python代码示例** - 计算斐波那契数列：
+\`\`\`python
+def fibonacci(n):
+    """返回斐波那契数列的前n项"""
+    a, b = 0, 1
+    result = []
+    for _ in range(n):
+        result.append(a)
+        a, b = b, a + b
+    return result
+
+print(fibonacci(10))  # [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+\`\`\``
+        };
+
+        // 初始化Highlight.js
+        hljs.highlightAll();
+
+        // DOM元素引用
+        const messagesContainer = document.getElementById('messages-container');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+
+        // 初始消息
+        let messages = [
+            { id: "1", content: responses.greeting, role: "assistant" },
+            { id: "2", content: responses.quote, role: "assistant" }
+        ];
+
+        // 渲染消息
+        function renderMessages() {
+            messagesContainer.innerHTML = '';
+            
+            messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `flex flex-col group message-container ${message.role === 'user' ? 'items-end' : 'items-start'} message-transition`;
+                
+                const messageHeader = document.createElement('div');
+                messageHeader.className = 'flex items-start gap-2 mb-1';
+                
+                // 图标
+                const icon = document.createElement('div');
+                icon.className = 'mt-1 flex-shrink-0';
+                if (message.role === 'user') {
+                    icon.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user text-blue-500">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    `;
+                } else {
+                    icon.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot text-green-500">
+                            <path d="M12 8V4H8"/>
+                            <rect width="16" height="12" x="4" y="8" rx="2"/>
+                            <path d="M2 14h2"/>
+                            <path d="M20 14h2"/>
+                            <path d="M15 13v2"/>
+                            <path d="M9 13v2"/>
+                        </svg>
+                    `;
+                }
+                
+                const roleText = document.createElement('span');
+                roleText.className = 'font-medium';
+                roleText.textContent = message.role === 'user' ? '您' : 'AI助手';
+                
+                messageHeader.appendChild(icon);
+                messageHeader.appendChild(roleText);
+                
+                // 消息内容
+                const contentContainer = document.createElement('div');
+                contentContainer.className = `message-box p-4 rounded-lg prose ${
+                    message.role === 'user' 
+                        ? 'user-message-box bg-blue-100 text-blue-900' 
+                        : 'assistant-message-box bg-green-100 text-green-900'
+                }`;
+                
+                // 使用文档片段处理内容
+                const fragment = document.createDocumentFragment();
+                
+                // 使用Marked.js安全解析Markdown
+                const sanitizedContent = marked.parse(message.content);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = sanitizedContent;
+                
+                // 处理代码块添加复制按钮
+                tempDiv.querySelectorAll('pre').forEach(pre => {
+                    const container = document.createElement('div');
+                    container.className = 'relative';
+                    
+                    // 创建克隆副本以避免DOM冲突
+                    const preClone = pre.cloneNode(true);
+                    
+                    const button = document.createElement('button');
+                    button.className = 'copy-button absolute top-2 right-2 bg-white hover:bg-gray-100 rounded p-1 shadow';
+                    button.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                        </svg>
+                    `;
+                    
+                    // 复制功能
+                    button.addEventListener('click', () => {
+                        const code = preClone.querySelector('code')?.innerText || '';
+                        navigator.clipboard.writeText(code);
+                        button.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
+                                <path d="M20 6 9 17l-5-5"/>
+                            </svg>
+                        `;
+                        setTimeout(() => {
+                            button.innerHTML = `
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                                </svg>
+                            `;
+                        }, 1500);
+                    });
+                    
+                    container.appendChild(preClone);
+                    container.appendChild(button);
+                    
+                    // 替换原始pre元素
+                    pre.replaceWith(container);
+                });
+                
+                // 表格响应式处理
+                tempDiv.querySelectorAll('table').forEach(table => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'overflow-x-auto';
+                    wrapper.appendChild(table.cloneNode(true));
+                    table.replaceWith(wrapper);
+                });
+                
+                // 将处理后的内容添加到片段
+                while (tempDiv.firstChild) {
+                    fragment.appendChild(tempDiv.firstChild);
+                }
+                
+                // 将片段添加到内容容器
+                contentContainer.appendChild(fragment);
+                
+                // 高亮代码
+                contentContainer.querySelectorAll('pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+                
+                // 组合元素
+                messageElement.appendChild(messageHeader);
+                messageElement.appendChild(contentContainer);
+                messagesContainer.appendChild(messageElement);
+                
+                // 添加动画类触发过渡
+                setTimeout(() => {
+                    messageElement.classList.add('message-visible');
+                }, 50);
+            });
+            
+            // 滚动到底部
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // 发送消息到LangChain后端
-        async function sendMessage() {
-            const message = inputMessage.value.trim();
-            if (!message) return;
-
-            addMessage(message, true);
-            inputMessage.value = '';
-            sendBtn.disabled = true;
+        // 模拟AI响应
+        function getAiResponse(userMessage) {
+            const lowerCaseMessage = userMessage.toLowerCase();
             
-            try {
-                // 模拟思考过程
-                const thinking = document.createElement('div');
-                thinking.className = 'ai-message bg-gray-100 p-4 rounded-lg mb-2 max-w-[80%]';
-                thinking.textContent = '思考中...';
-                messagesContainer.appendChild(thinking);
-                
-                const response = await fetch("/DocSystem/Repos/AIChat.do", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                    		query: message,
-                    		LLMIndex: 0,
-                    		LLMName: "deepseek"
-                    	})
-                });
-
-                messagesContainer.removeChild(thinking);
-                
-                if (!response.ok) {
-                    throw new Error(`请求失败: ${response.status}`);
-                }
-
-                const ret = await response.json();
-                if("ok" == ret.status)
-                {
-                	addMessage(ret.data, false);
-                }
-                else
-                {
-                	console.error('请求出错:', ret.msgInfo);
-                    addMessage(`出错: ${ret.msgInfo}`, false);
-                }
-            } catch (error) {
-                console.error('请求出错:', error);
-                addMessage(`出错: ${error.message}`, false);
-            } finally {
-                sendBtn.disabled = false;
-                inputMessage.focus();
+            if (lowerCaseMessage.includes('markdown') || lowerCaseMessage.includes('示例')) {
+                return responses.markdown;
             }
+            if (lowerCaseMessage.includes('帮助') || lowerCaseMessage.includes('功能')) {
+                return responses.help;
+            }
+            if (lowerCaseMessage.includes('日期') || lowerCaseMessage.includes('时间')) {
+                return responses.date;
+            }
+            if (lowerCaseMessage.includes('代码') || lowerCaseMessage.includes('python')) {
+                return responses.code;
+            }
+            
+            // 40%的机率返回markdown示例，否则返回随机响应
+            return Math.random() > 0.6 ? responses.markdown : 
+                   Math.random() > 0.5 ? responses.quote : responses.help;
         }
 
-        // 事件监听
-        sendBtn.addEventListener('click', sendMessage);
-        inputMessage.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+        // 表单提交处理
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = messageInput.value.trim();
+            if (!input) return;
+            
+            // 添加用户消息
+            const newUserMessage = {
+                id: Date.now().toString(),
+                content: input,
+                role: "user"
+            };
+            
+            messages = [...messages, newUserMessage];
+            messageInput.value = '';
+            renderMessages();
+            
+            // 显示加载状态
+            const loadingMessage = {
+                id: "loading",
+                content: '<div class="flex items-center gap-2 text-gray-500"><span class="typing-indicator">思考中</span><div class="flex gap-1"><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"></div><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div></div></div>',
+                role: "assistant"
+            };
+            
+            messages = [...messages, loadingMessage];
+            renderMessages();
+            
+            // 模拟AI响应延迟
+            setTimeout(() => {
+                // 移除加载状态
+                messages = messages.filter(msg => msg.id !== "loading");
+                
+                // 添加AI响应
+                const aiResponse = {
+                    id: (Date.now() + 1).toString(),
+                    content: getAiResponse(input),
+                    role: "assistant"
+                };
+                
+                messages = [...messages, aiResponse];
+                renderMessages();
+            }, 1500);
         });
 
-        // 添加欢迎信息
-        addMessage('你好！我是 AI 助手，有什么可以帮您的吗？', false);
-        inputMessage.focus();
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            // 配置Marked.js
+            marked.setOptions({
+                gfm: true,
+                breaks: true,
+                smartypants: true,
+                xhtml: true
+            });
+            
+            renderMessages();
+            
+            // 初始演示消息
+            setTimeout(() => {
+                const demoResponse = {
+                    id: (Date.now() + 2).toString(),
+                    content: `您也可以向我提问特定主题，例如：
+- "显示Markdown示例"
+- "你能做什么"
+- "今天日期"
+- "展示一个代码示例"`,
+                    role: "assistant"
+                };
+                messages = [...messages, demoResponse];
+                renderMessages();
+            }, 3000);
+        });
     </script>
 </body>
 </html>
