@@ -103,7 +103,7 @@
                     发送
                 </button>
             </form>
-            <p class="text-xs text-gray-500 mt-2">支持Markdown渲染，特殊字符将被安全解析</p>
+            <p class="text-xs text-gray-500 mt-2">AI助手的回复不一定正确，请注意甄别</p>
         </div>
     </div>
 
@@ -111,62 +111,11 @@
         // 模拟数据库
         const knowledgeBase = {
             "greeting": `您好！我是AI助手，随时为您提供帮助。您有任何问题都可以向我提问。`,
-            "markdown": `**Markdown**支持以下元素：
-- **加粗文本**
-- _斜体文本_
-- ~~删除线~~
-- \`行内代码\`
-- 代码块：
-\`\`\`js
-function hello() {
-    console.log("Hello, World!");
-}
-\`\`\`
-- 表格：
-| 产品 | 价格 | 库存 |
-| ---- | ---- | ---- |
-| 手机 | ¥2999 | 120 |
-| 耳机 | ¥499 | 350 |
-            `,
-            "help": `我可以帮助您解决以下问题：
-1. **技术问题** - 编程、调试、算法等
-2. **学习支持** - 数学、科学、语言学习
-3. **内容创作** - 写作、编辑、文案策划
-4. **日常工作** - 邮件草稿、文档摘要、翻译
-
-随时告诉我您需要哪方面的帮助！`,
-            "error": `抱歉，我无法理解您的问题。您可以尝试：
-- 用更简明的语言重新提问
-- 提供更多上下文信息
-- 将问题分解为多个小问题
-
-或者您可以选择以下主题：
-1. Markdown示例
-2. 功能介绍
-3. 帮助文档`
         };
 
         // 可能的响应数据
         const responses = {
             "greeting": knowledgeBase.greeting,
-            "markdown": knowledgeBase.markdown,
-            "help": knowledgeBase.help,
-            "error": knowledgeBase.error,
-            "date": `今天是 **${new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}**，星期${'日一二三四五六'[new Date().getDay()]}。`,
-            "quote": `**每日一句：**\n\n"技术的价值不在于它多么先进，而在于它解决了多么基本的问题。"\n\n– 一位AI研究者`,
-            "code": `**Python代码示例** - 计算斐波那契数列：
-\`\`\`python
-def fibonacci(n):
-    """返回斐波那契数列的前n项"""
-    a, b = 0, 1
-    result = []
-    for _ in range(n):
-        result.append(a)
-        a, b = b, a + b
-    return result
-
-print(fibonacci(10))  # [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
-\`\`\``
         };
 
         // 初始化Highlight.js
@@ -180,7 +129,6 @@ print(fibonacci(10))  # [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
         // 初始消息
         let messages = [
             { id: "1", content: responses.greeting, role: "assistant" },
-            { id: "2", content: responses.quote, role: "assistant" }
         ];
 
         // 渲染消息
@@ -415,22 +363,7 @@ print(fibonacci(10))  # [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
                 xhtml: true
             });
             
-            renderMessages();
-            
-            // 初始演示消息
-            setTimeout(() => {
-                const demoResponse = {
-                    id: (Date.now() + 2).toString(),
-                    content: `您也可以向我提问特定主题，例如：
-- "显示Markdown示例"
-- "你能做什么"
-- "今天日期"
-- "展示一个代码示例"`,
-                    role: "assistant"
-                };
-                messages = [...messages, demoResponse];
-                renderMessages();
-            }, 3000);
+            renderMessages();           
         });
     </script>
 </body>
