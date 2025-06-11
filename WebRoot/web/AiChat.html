@@ -342,48 +342,81 @@ print(fibonacci(10))  # [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
         }
 
         // 表单提交处理
-        chatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const input = messageInput.value.trim();
-            if (!input) return;
-            
-            // 添加用户消息
-            const newUserMessage = {
-                id: Date.now().toString(),
-                content: input,
-                role: "user"
-            };
-            
-            messages = [...messages, newUserMessage];
-            messageInput.value = '';
-            renderMessages();
-            
-            // 显示加载状态
-            const loadingMessage = {
-                id: "loading",
-                content: '<div class="flex items-center gap-2 text-gray-500"><span class="typing-indicator">思考中</span><div class="flex gap-1"><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"></div><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div></div></div>',
-                role: "assistant"
-            };
-            
-            messages = [...messages, loadingMessage];
-            renderMessages();
-            
-            // 模拟AI响应延迟
-            setTimeout(() => {
-                // 移除加载状态
-                messages = messages.filter(msg => msg.id !== "loading");
-                
-                // 添加AI响应
-                const aiResponse = {
-                    id: (Date.now() + 1).toString(),
-                    content: getAiResponse(input),
-                    role: "assistant"
-                };
-                
-                messages = [...messages, aiResponse];
-                renderMessages();
-            }, 1500);
-        });
+        chatForm.addEventListener('submit', async (e) => {
+		    e.preventDefault();
+		    const input = messageInput.value.trim();
+		    if (!input) return;
+		
+		    // 添加用户消息
+		    const newUserMessage = {
+		        id: Date.now().toString(),
+		        content: input,
+		        role: "user"
+		    };
+		    messages = [...messages, newUserMessage];
+		    renderMessages();
+		
+		    // 显示加载状态
+		    const loadingMessage = {
+		        id: "loading_" + Date.now(), // 使用唯一ID
+		        content: '<div class="flex items-center gap-2 text-gray-500"><span class="typing-indicator">思考中</span><div class="flex gap-1"><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"></div><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div></div></div>',
+		        role: "assistant"
+		    };
+		    messages = [...messages, loadingMessage];
+		    renderMessages();
+		
+		    try {
+		        // 发送请求到后端
+		        const response = await fetch("/DocSystem/Repos/AIChat.do", {
+		            method: 'POST',
+		            headers: { 'Content-Type': 'application/json' },
+		            body: JSON.stringify({
+		                query: input,
+		                LLMIndex: 0,
+		                LLMName: "deepseek"
+		            })
+		        });
+		
+		        // 移除加载消息
+		        messages = messages.filter(msg => msg.id !== loadingMessage.id);
+		
+		        if (!response.ok) {
+		            throw new Error(`请求失败: ${response.status}`);
+		        }
+		
+		        const ret = await response.json();
+		
+		        if ("ok" == ret.status) {
+		            // 添加AI响应消息
+		            const aiResponse = {
+		                id: (Date.now() + 1).toString(),
+		                content: ret.data,
+		                role: "assistant"
+		            };
+		            messages = [...messages, aiResponse];
+		        } else {
+		            // 添加错误消息
+		            const errorMessage = {
+		                id: (Date.now() + 1).toString(),
+		                content: `出错: ${ret.msgInfo}`,
+		                role: "assistant"
+		            };
+		            messages = [...messages, errorMessage];
+		        }
+		    } catch (error) {
+		        // 移除加载消息
+		        messages = messages.filter(msg => msg.id !== loadingMessage.id);
+		        // 添加错误消息
+		        const errorMessage = {
+		            id: (Date.now() + 1).toString(),
+		            content: `出错: ${error.message}`,
+		            role: "assistant"
+		        };
+		        messages = [...messages, errorMessage];
+		    } finally {
+		        renderMessages();
+		    }
+		});
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
