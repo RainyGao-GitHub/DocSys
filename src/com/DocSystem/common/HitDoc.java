@@ -116,6 +116,7 @@ public class HitDoc
 					
 					String hitTermText = entry.getKey();
 					hitScore += weight * hitTermText.length() / orgSearchWord.length();
+					Log.debug("caculateHitScore() hitTermText:" + hitTermText + " hitScore:" + hitScore + " hitType:" + hitType);
 				}
 			}
 			if(hitScore > weight)
@@ -147,6 +148,7 @@ public class HitDoc
 						hitTermInfo.put(hitTermText, 1);
 						//更新积分
 						hitScore += weight * hitTermText.length() / orgSearchWord.length();
+						Log.debug("caculateHitScore() hitTermText:" + hitTermText + " hitScore:" + hitScore + " hitType:" + hitType);
 					}
 				}
 			}
