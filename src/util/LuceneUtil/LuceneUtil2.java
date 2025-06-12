@@ -76,6 +76,7 @@ import org.apache.poi.xssf.extractor.XSSFExcelExtractor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.bytedeco.librealsense.context;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.DocSystem.common.ActionContext;
@@ -625,7 +626,9 @@ public class LuceneUtil2   extends BaseFunction
     } 
 
 
-	public static boolean smartSearch(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
+	public static boolean smartSearch(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, 
+			int searchType, int hitType, 
+			HashMap<String, HitDoc> searchResult, DocSearchContext context)
 	{
 		Log.debug("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 
@@ -668,7 +671,7 @@ public class LuceneUtil2   extends BaseFunction
 		
 		if(list.size() > 0)
 		{
-			return search(repos, preConditions, field, list, pathFilter, indexLib, searchResult, searchType, weight, hitType);
+			return search(repos, preConditions, field, list, pathFilter, indexLib, searchType, hitType, searchResult, context);
 		}
 		
 		return false;
@@ -702,7 +705,17 @@ public class LuceneUtil2   extends BaseFunction
 		*/
     }
 	
-	public static boolean smartSearchEx(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
+	public static boolean smartSearchEx(
+			Repos repos, 
+			List<QueryCondition> preConditions, 
+			String field, 
+			String str, 
+			String pathFilter, 
+			String indexLib, 
+			int searchType, 
+			int hitType, 
+			HashMap<String, HitDoc> searchResult, 
+			DocSearchContext context)
 	{
 		Log.debug("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
 
@@ -753,7 +766,7 @@ public class LuceneUtil2   extends BaseFunction
 					list.remove(0);
 				}
 			}
-			return search(repos, preConditions, field, list, pathFilter, indexLib, searchResult, searchType, weight, hitType);
+			return search(repos, preConditions, field, list, pathFilter, indexLib, searchType, hitType, searchResult, context);
 		}
 		
 		return false;
@@ -800,7 +813,7 @@ public class LuceneUtil2   extends BaseFunction
 		{
 			return false;
 		}
-	    return multiSearch(repos, conditions, indexLib, weight, hitType, searchResult, context);
+	    return multiSearch(repos, conditions, indexLib, hitType, searchResult, context);
     }
     
     /**
@@ -812,13 +825,16 @@ public class LuceneUtil2   extends BaseFunction
      * @param strList: 关键字列表
      * @param indexLib: 索引库名字
      */
-    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, List<String> strList, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
+    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, List<String> strList, String pathFilter, 
+    		String indexLib, 
+    		int searchType, int hitType, 
+    		HashMap<String, HitDoc> searchResult, DocSearchContext context)
 	{
 		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
 		for(int i = 0; i < strList.size(); i++)
 		{
 			String str = strList.get(i);
-			Log.debug("search() subKeyWord[" + i + "]:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);						
+			Log.debug("search() subKeyWord[" + i + "]:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " pathFilter:" + pathFilter);						
 			if(str != null && !str.isEmpty())
 			{
 				QueryCondition condition = new QueryCondition();
@@ -847,14 +863,14 @@ public class LuceneUtil2   extends BaseFunction
 		{
 			return false;
 		}
-	    return multiSearch(repos, conditions, indexLib, searchResult, weight, hitType);
+	    return multiSearch(repos, conditions, indexLib, hitType, searchResult, context);
     }
     
     public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String indexLib, 
-    		int weight, int hitType, 
+    		int hitType, 
     		HashMap<String, HitDoc> searchResult, DocSearchContext context)
 	{
-		Log.debug("multiSearch() indexLib:" + indexLib + " weight:" + weight + " hitType:" + hitType);
+		Log.debug("multiSearch() indexLib:" + indexLib + " hitType:" + hitType);
 		
 	    Directory directory = null;
         DirectoryReader ireader = null;
@@ -887,7 +903,7 @@ public class LuceneUtil2   extends BaseFunction
 		            }
 		            
 		            //收集单词命中信息，在AddHitDocToSearchResult的时候，需要基于该信息统计命中积分
-		            collectHitTermInfo(hitDoc, weight, hitType);
+		            collectHitTermInfo(ireader, scoreDoc, conditions, hitType, hitDoc);
 		            
 		            //获取命中词的位置信息，需要额外的时间，如果没有必要，建议不要获取
 		            switch(hitType)
@@ -900,7 +916,7 @@ public class LuceneUtil2   extends BaseFunction
 		            	break;
 		            }
 		            
-		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, "multiSearch", weight, hitType);
+		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, hitType, context);
 	        	}
 	        }
 	        
@@ -934,7 +950,41 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
-    private static Map<String, List<int[]>> getTermPositions(DirectoryReader ireader, ScoreDoc scoreDoc, List<QueryCondition> conditions) throws Exception 
+    private static void collectHitTermInfo(DirectoryReader ireader, ScoreDoc scoreDoc, List<QueryCondition> conditions, int hitType, HitDoc hitDoc) throws IOException 
+    {
+        //获取位置信息
+        Map<String, Integer> termHitInfo = new HashMap<>(); //hitType
+        
+        //保证ireader时原子操作
+        AtomicReader leafReader = SlowCompositeReaderWrapper.wrap(ireader);
+        
+        //获取当前文档的所有词向量
+        Fields fields = leafReader.getTermVectors(scoreDoc.doc);
+        if (fields != null) 
+        {
+            for (String field : fields) 
+            {
+                Terms terms = fields.terms(field);
+                if (terms == null) continue;
+                
+                TermsEnum termsEnum = terms.iterator(null);
+                BytesRef text;
+                while ((text = termsEnum.next()) != null) 
+                {
+                	String termText = text.utf8ToString();
+                    if (!isTermHitInQuery(termText, field, conditions))
+                    { 
+                    	termHitInfo.put(termText, 1);
+                    }
+                }
+            }
+        }
+        hitDoc.setHitTermInfo(hitType, termHitInfo);
+	}
+
+
+
+	private static Map<String, List<int[]>> getTermPositions(DirectoryReader ireader, ScoreDoc scoreDoc, List<QueryCondition> conditions) throws Exception 
  	{
         //获取位置信息
         Map<String, List<int[]>> termPositions = new HashMap<>(); // 字段名 -> [startOffset, endOffset]
@@ -956,7 +1006,8 @@ public class LuceneUtil2   extends BaseFunction
                 while ((text = termsEnum.next()) != null) 
                 {
                     // 只保留命中词的位置
-                    if (!isTermHitInQuery(text, field, conditions)) continue; 
+                	String termText = text.utf8ToString();
+                    if (!isTermHitInQuery(termText, field, conditions)) continue; 
                     
                     DocsAndPositionsEnum postingsEnum = termsEnum.docsAndPositions(null, null, DocsAndPositionsEnum.FLAG_OFFSETS);
                     if (postingsEnum == null) continue;
@@ -983,9 +1034,8 @@ public class LuceneUtil2   extends BaseFunction
 	}
 
 	// 辅助方法：检查词项是否在查询中被匹配
-    private static boolean isTermHitInQuery(BytesRef termBytes, String field, List<QueryCondition> conditions) 
+    private static boolean isTermHitInQuery(String termText, String field, List<QueryCondition> conditions) 
     {
-        String termText = termBytes.utf8ToString();
         for (QueryCondition cond : conditions) 
         {
             if (cond.getField().equals(field) && cond.getValue().toString().contains(termText)) 
@@ -1143,39 +1193,6 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		return query;
 	}
-	
-    protected static void combineSubSearchResults(List<HashMap<String, HitDoc>> subSearcResults,
-			HashMap<String, HitDoc> searchResult) {
-    	for(HitDoc hitDoc: subSearcResults.get(0).values())
-        {
-    		HitDoc result = getHitDocFromSearchResults(subSearcResults, hitDoc);
-    		if(result != null)
-    		{
-    			searchResult.put(result.getDocPath(), result);
-    		}
-        }
-	}
-    
-    
-
-	private static HitDoc getHitDocFromSearchResults(List<HashMap<String, HitDoc>> subSearcResults, HitDoc hitDoc) 
-	{
-		for(int i=1; i<subSearcResults.size(); i++)
-		{
-			HitDoc tempHitDoc = subSearcResults.get(i).get(hitDoc.getDocPath());
-			if(tempHitDoc == null)
-			{
-				return null;
-			}
-			
-			//总是取最小的hitCount作为搜索结果
-			if(hitDoc.getHitCount() > tempHitDoc.getHitCount())
-			{
-				hitDoc = tempHitDoc;
-			}
-		}
-		return hitDoc;
-	}
 
 	public static HitDoc BuildHitDocFromDocument(Repos repos, Document hitDocument) 
     {
@@ -1189,8 +1206,8 @@ public class LuceneUtil2   extends BaseFunction
     			
     	//Set HitDoc
     	HitDoc hitDoc = new HitDoc();
-    	hitDoc.setDoc(doc);
-    	hitDoc.setDocPath(docPath);
+    	hitDoc.doc = (doc);
+    	hitDoc.docPath = (docPath);
     	
     	return hitDoc;
 	}
@@ -1253,8 +1270,8 @@ public class LuceneUtil2   extends BaseFunction
 	    	
 	    	//Set HitDoc
 	    	HitDoc hitDoc = new HitDoc();
-	    	hitDoc.setDoc(doc);
-	    	hitDoc.setDocPath(docPath);
+	    	hitDoc.doc = (doc);
+	    	hitDoc.docPath = (docPath);
 	    	
 	    	return hitDoc;
         } catch (Exception e) {

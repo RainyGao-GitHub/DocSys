@@ -3,6 +3,7 @@ package com.DocSystem.common;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.DocSystem.entity.Doc;
 import com.DocSystem.websocket.entity.DocSearchContext;
@@ -13,94 +14,174 @@ public class HitDoc
 	public final static int HitType_FileContent = 0x00000002;
 	public final static int HitType_FileComment = 0x00000004;
 	
-    private Doc doc = null;
-    private String docPath = null;
-    private int hitCount = 0;
-    private int hitType = 0; //0x00000001 02 04 文件名、文件内容、备注内容
+    public Doc doc = null;
+    public String docPath = null;
+    
+    //搜索类型
+    public int hitType = 0; //0x00000001 02 04 文件名、文件内容、备注内容
     
     //命中词信息
-    private HashMap<String, Integer> hitTermInfo = null;
-	public int hitScore;	//命中积分
+    private Map<String, Integer> hitTermInfo_FileName = null;
+    private Map<String, Integer> hitTermInfo_FileContent = null;
+    private Map<String, Integer> hitTermInfo_FileComment = null;
+    //命中积分
+	public int hitScore_FileName;		//命中积分
+	public int hitScore_FileContent;	//命中积分
+	public int hitScore_FileComment;	//命中积分
     
 	//TODO: 搜索命中的单词在内容里的位置信息
     public Map<String, List<int[]>> termPositionsForRDoc;
     public Map<String, List<int[]>> termPositionsForVDoc;
     
-    public void setDocPath(String docPath) {
-		this.docPath = docPath;
-	}
-	
-	public String getDocPath()
+    public void setHitScore(int hitType, int newHitScore) 
 	{
-		return docPath;
+		switch(hitType)
+		{
+		case HitDoc.HitType_FileName:
+			hitScore_FileName = newHitScore;
+			break;
+		case HitDoc.HitType_FileContent:
+			hitScore_FileContent = newHitScore;
+			break;
+		case HitDoc.HitType_FileComment:
+			hitScore_FileComment = newHitScore;
+			break;
+		}		
 	}
 	
-    
-	public void setDoc(Doc doc) {
-		this.doc = doc;
-	}
-	
-	public Doc getDoc()
+	public Integer getHitScore(int hitType) 
 	{
-		return doc;
+		switch(hitType)
+		{
+		case HitDoc.HitType_FileName:
+			return hitScore_FileName;
+		case HitDoc.HitType_FileContent:
+			return hitScore_FileContent;
+		case HitDoc.HitType_FileComment:
+			return hitScore_FileComment;
+		}		
+		return null;
 	}
 	
-	public void setHitTermInfo(HashMap<String, Integer> HitTermInfo) {
-		this.hitTermInfo = HitTermInfo;
-	}
-	
-	public HashMap<String, Integer> getHitTermInfo()
+	public int getTotalHitScore() 
 	{
-		return hitTermInfo;
+		return hitScore_FileName + hitScore_FileContent + hitScore_FileComment;
+	}
+	
+	public void setHitTermInfo(int hitType, Map<String, Integer> newHitTermInfo) 
+	{
+		switch(hitType)
+		{
+		case HitDoc.HitType_FileName:
+			hitTermInfo_FileName = newHitTermInfo;
+			break;
+		case HitDoc.HitType_FileContent:
+			hitTermInfo_FileContent = newHitTermInfo;
+			break;
+		case HitDoc.HitType_FileComment:
+			hitTermInfo_FileComment = newHitTermInfo;
+			break;
+		}
 	}
 
-	public int getHitCount() 
+	public Map<String, Integer> getHitTermInfo(int hitType) 
 	{
-		return hitCount;
+		switch(hitType)
+		{
+		case HitDoc.HitType_FileName:
+			return hitTermInfo_FileName;
+		case HitDoc.HitType_FileContent:
+			return hitTermInfo_FileContent;
+		case HitDoc.HitType_FileComment:
+			return hitTermInfo_FileComment;
+		}		
+		return null;
 	}
 	
-	public void setHitCount(int hitCount) {
-		this.hitCount = hitCount;
-	}
-	
-	public int getHitType() 
+	private static int caculateHitScore(Map<String, Integer> newHitTermInfo, Map<String, Integer> hitTermInfo, int weight, int hitType, String orgSearchWord, HitDoc hitDoc)
 	{
-		return hitType;
+		//如果hitTermInfo为空表示首次计算，否则表示更新
+		if(hitTermInfo == null)
+		{
+			int hitScore = 0;
+			if(newHitTermInfo != null)
+			{
+				for(Entry<String, Integer> entry : newHitTermInfo.entrySet())
+				{
+					//已满分，不再累积
+					if(hitScore > weight)
+					{
+						break;
+					}
+					
+					String hitTermText = entry.getKey();
+					hitScore += weight * hitTermText.length() / orgSearchWord.length();
+				}
+			}
+			if(hitScore > weight)
+			{
+				hitScore =  weight;
+			}
+			hitDoc.setHitTermInfo(hitType, newHitTermInfo);
+			return hitScore;
+		}
+		
+		//hitTermInfo非空，则更新积分
+		int hitScore = hitDoc.getHitScore(hitType);
+		if(hitScore < weight)
+		{
+			if(newHitTermInfo != null)
+			{
+				for(Entry<String, Integer> entry : newHitTermInfo.entrySet())
+				{
+					//已满分，不再累积
+					if(hitScore > weight)
+					{
+						break;
+					}
+
+					String hitTermText = entry.getKey();
+					if(hitTermInfo.get(hitTermText) == null)
+					{
+						//避免重复计算积分
+						hitTermInfo.put(hitTermText, 1);
+						//更新积分
+						hitScore += weight * hitTermText.length() / orgSearchWord.length();
+					}
+				}
+			}
+			if(hitScore > weight)
+			{
+				hitScore = weight;
+			}
+		}
+		return hitScore;
 	}
-	
-	public void settHitType(int hitType) {
-		this.hitType = hitType;
-	}
-	
-	/***********************  全文搜索接口 
-	 * @param weight *******************************************/
+    
 	public static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc newHitDoc, int hitType, DocSearchContext context) 
 	{
 		//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " searchWord:" + keyWord);
-		HitDoc hitDoc = searchResult.get(newHitDoc.getDocPath());
+		HitDoc hitDoc = searchResult.get(newHitDoc.docPath);
 		
 		int weight = context.getHitWeight(hitType);
 		
 		if(hitDoc == null)
 		{
-			//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " is the first hit result for searchWord:" + keyWord);	
-			Doc doc = newHitDoc.getDoc();
+			hitDoc = newHitDoc;
+			
+			hitDoc.hitType = hitType; //设置hitType
 			
 			//根据命中词的信息计算积分
-			newHitDoc.hitScore = caculateHitScore(newHitDoc, null, weight, hitType);
-			
-			//Set HitDoc
-			newHitDoc.setDoc(doc);
-			newHitDoc.settHitType(hitType); //设置hitType
-			searchResult.put(newHitDoc.getDocPath(), newHitDoc);
-			hitDoc = newHitDoc;
+			hitDoc.setHitScore(hitType, caculateHitScore(newHitDoc.getHitTermInfo(hitType), null, weight, hitType, context.searchWord, hitDoc));
+
+			searchResult.put(hitDoc.docPath, hitDoc);
 		}
 		else
 		{	
-			hitDoc.settHitType(hitDoc.getHitType() | hitType);	//增加hitType
+			hitDoc.hitType = hitDoc.hitType | hitType;	//增加hitType
 
 			//将HitTermInfo和原来的HitTermInfo进行合并，并计算出当前积分
-			hitDoc.hitScore = caculateHitScore(newHitDoc, hitDoc, weight, hitType);
+			hitDoc.setHitScore(hitType, caculateHitScore(newHitDoc.getHitTermInfo(hitType), hitDoc.getHitTermInfo(hitType), weight, hitType, context.searchWord, hitDoc));
 			
 			//合并position信息
 			switch(hitType)
@@ -129,11 +210,5 @@ public class HitDoc
 		}
 		
 		//System.out.println("AddHitDocToSearchResult() hitType:" + tempHitDoc.getHitType());	
-	}
-
-	private static int caculateHitScore(HitDoc newHitDoc, HitDoc hitDoc, int weight, int hitType)
-	{
-		// TODO Auto-generated method stub
-		return 0;
 	}
 }
