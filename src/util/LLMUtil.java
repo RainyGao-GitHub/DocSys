@@ -64,7 +64,7 @@ public class LLMUtil {
 		
 		config.url = LLMConfigUrl;
 		config.name = config.settings.getString("name");
-		config.moduleName = config.settings.getString("moduleName");
+		config.modelName = config.settings.getString("modelName");
 		config.apikey = config.settings.getString("apikey");
 		return config;
 	}
@@ -124,7 +124,7 @@ public class LLMUtil {
 		{
 			checkResult.info += "开始测试AI大模型[" + llmConfig.name + "] [" + llmConfig.url+ "] [" +llmConfig.apikey+ "]<br>";
 			Log.debug("llmAccessCheck() start test for " + llmConfig.url + " apikey:" + llmConfig.apikey);
-			String answer = AIChatTest(llmConfig.url, llmConfig.apikey, llmConfig.moduleName, "你好，请简单介绍一下你自己?");
+			String answer = AIChatTest(llmConfig.url, llmConfig.apikey, llmConfig.modelName, "你好，请简单介绍一下你自己?");
 			checkResult.info += answer + "<br>";
 		}				
 		return true;

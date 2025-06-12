@@ -782,9 +782,19 @@ public class LuceneUtil2   extends BaseFunction
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, int searchType, int weight, int hitType, HashMap<String, HitDoc> searchResult, DocSearchContext context)
+    public static boolean search(
+    		Repos repos, 
+    		List<QueryCondition> preConditions, 
+    		String field, 
+    		String str, 
+    		String pathFilter, 
+    		String indexLib, 
+    		int searchType,
+    		int hitType, 
+    		HashMap<String, HitDoc> searchResult, 
+    		DocSearchContext context)
 	{
-		Log.debug("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);		
+		Log.debug("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib  + " pathFilter:" + pathFilter + " searchType:"+ searchType + " hitType:" + hitType);		
 		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
 		if(str != null && !str.isEmpty())
 		{
@@ -825,10 +835,17 @@ public class LuceneUtil2   extends BaseFunction
      * @param strList: 关键字列表
      * @param indexLib: 索引库名字
      */
-    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, List<String> strList, String pathFilter, 
+    public static boolean search(
+    		Repos repos, 
+    		List<QueryCondition> preConditions, 
+    		String field, 
+    		List<String> strList, 
+    		String pathFilter, 
     		String indexLib, 
-    		int searchType, int hitType, 
-    		HashMap<String, HitDoc> searchResult, DocSearchContext context)
+    		int searchType, 
+    		int hitType, 
+    		HashMap<String, HitDoc> searchResult, 
+    		DocSearchContext context)
 	{
 		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
 		for(int i = 0; i < strList.size(); i++)
@@ -866,9 +883,13 @@ public class LuceneUtil2   extends BaseFunction
 	    return multiSearch(repos, conditions, indexLib, hitType, searchResult, context);
     }
     
-    public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String indexLib, 
+    public static boolean multiSearch(
+    		Repos repos, 
+    		List<QueryCondition> conditions, 
+    		String indexLib, 
     		int hitType, 
-    		HashMap<String, HitDoc> searchResult, DocSearchContext context)
+    		HashMap<String, HitDoc> searchResult, 
+    		DocSearchContext context)
 	{
 		Log.debug("multiSearch() indexLib:" + indexLib + " hitType:" + hitType);
 		
