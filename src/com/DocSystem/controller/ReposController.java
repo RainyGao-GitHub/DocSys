@@ -29,7 +29,6 @@ import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
-import com.DocSystem.entity.UserGroup;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.entity.ReposAuth;
