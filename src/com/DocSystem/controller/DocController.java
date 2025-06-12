@@ -7123,7 +7123,7 @@ public class DocController extends BaseController{
 		            	}
 		            }
 		            HitDoc hitDoc = LuceneUtil2.BuildHitDocFromDoc(doc); 
-		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, searchStr, HitDoc.HitType_FileName, context); //文件名
+		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, HitDoc.HitType_FileName, context); //文件名
 		        	Log.printObject("databaseSearch() hitDoc:", hitDoc);
 		        }
 			}	

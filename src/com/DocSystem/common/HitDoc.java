@@ -158,7 +158,11 @@ public class HitDoc
 		return hitScore;
 	}
     
-	public static void AddHitDocToSearchResult(HashMap<String, HitDoc> searchResult, HitDoc newHitDoc, int hitType, DocSearchContext context) 
+	public static void AddHitDocToSearchResult(
+			HashMap<String, HitDoc> searchResult, 
+			HitDoc newHitDoc, 
+			int hitType, 
+			DocSearchContext context) 
 	{
 		//System.out.println("AddHitDocToSearchResult() docPath:" + hitDoc.getDocPath() + " searchWord:" + keyWord);
 		HitDoc hitDoc = searchResult.get(newHitDoc.docPath);

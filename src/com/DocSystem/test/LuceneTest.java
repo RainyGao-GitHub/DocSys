@@ -19,6 +19,8 @@ import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.Log;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.websocket.entity.DocSearchContext;
+
 import util.LuceneUtil.LuceneUtil2;
 
 class LuceneTest  
@@ -113,7 +115,8 @@ class LuceneTest
  			int searchType = 5; //
  			int weight = 1;
  			int hitType = 2; //文件内容
- 			LuceneUtil2.search(repos, null, "国家" , "", "content", "doc", searchType, weight, hitType, searchResult, searchContext);
+ 			DocSearchContext searchContext = new DocSearchContext();
+			LuceneUtil2.search(repos, null, "国家" , "", "content", "doc", searchType, hitType, searchResult, searchContext );
          	
          	System.out.println("*********** Delete Index Test *********** ");
             	//LuceneUtil2.deleteIndexForDoc(1,"doc");
@@ -121,7 +124,7 @@ class LuceneTest
             	LuceneUtil2.deleteDoc(doc, "doc");
             	System.out.println("************* Search Test after delete****************");
             	hitType = 4; //文件备注
-            	LuceneUtil2.search(repos, null, "国家" , "", "content", "doc", searchResult, searchType, weight, hitType);
+            	LuceneUtil2.search(repos, null, "国家" , "", "content", "doc", searchType, hitType, searchResult, searchContext);
          } catch (Exception e) {
  			// TODO Auto-generated catch block
  			Log.debug(e);
