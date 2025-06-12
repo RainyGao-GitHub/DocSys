@@ -7122,8 +7122,15 @@ public class DocController extends BaseController{
 		            		continue;
 		            	}
 		            }
-		            HitDoc hitDoc = LuceneUtil2.BuildHitDocFromDoc(doc); 
-		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, HitDoc.HitType_FileName, context); //文件名
+		            HitDoc newHitDoc = LuceneUtil2.BuildHitDocFromDoc(doc); 
+		            newHitDoc.hitType = (HitDoc.HitType_FileName);
+		            newHitDoc.setHitScore(HitDoc.HitType_FileName, context.getHitWeight(HitDoc.HitType_FileName));
+		            HitDoc hitDoc = searchResult.get(newHitDoc.docPath);
+		            if(hitDoc == null)
+		            {
+		            	hitDoc = newHitDoc;
+		            	searchResult.put(newHitDoc.docPath, newHitDoc);
+		            }
 		        	Log.printObject("databaseSearch() hitDoc:", hitDoc);
 		        }
 			}	

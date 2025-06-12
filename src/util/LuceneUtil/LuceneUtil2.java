@@ -917,27 +917,21 @@ public class LuceneUtil2   extends BaseFunction
 	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
 	        	{
 	        		Document hitDocument = isearcher.doc( scoreDoc.doc );
-		            HitDoc hitDoc = BuildHitDocFromDocument(repos, hitDocument);
-		            if(hitDoc == null)
+		            HitDoc newHitDoc = BuildHitDocFromDocument(repos, hitDocument);
+		            if(newHitDoc == null)
 		            {
 		            	continue;
 		            }
 		            
-		            //收集单词命中信息，在AddHitDocToSearchResult的时候，需要基于该信息统计命中积分
-		            collectHitTermInfo(ireader, scoreDoc, conditions, hitType, hitDoc);
-		            
-		            //获取命中词的位置信息，需要额外的时间，如果没有必要，建议不要获取
-		            switch(hitType)
+		            HitDoc hitDoc = searchResult.get(newHitDoc.docPath);
+		            if(hitDoc == null)
 		            {
-		            case HitDoc.HitType_FileContent:
-		            	hitDoc.termPositionsForRDoc = getTermPositions(ireader, scoreDoc, conditions);
-		            	break;
-		            case HitDoc.HitType_FileComment:
-		            	hitDoc.termPositionsForVDoc = getTermPositions(ireader, scoreDoc, conditions);
-		            	break;
+		            	hitDoc = newHitDoc;
+		            	searchResult.put(newHitDoc.docPath, newHitDoc);
 		            }
 		            
-		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, hitType, context);
+		            //收集词命中信息并更新命中积分
+		            collectHitTermInfo(ireader, scoreDoc, conditions, hitType, hitDoc, context);
 	        	}
 	        }
 	        
@@ -971,10 +965,18 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
-    private static void collectHitTermInfo(DirectoryReader ireader, ScoreDoc scoreDoc, List<QueryCondition> conditions, int hitType, HitDoc hitDoc) throws IOException 
+    private static void collectHitTermInfo(DirectoryReader ireader, ScoreDoc scoreDoc, List<QueryCondition> conditions, int hitType, HitDoc hitDoc, DocSearchContext context) throws IOException 
     {
-        //获取位置信息
-        Map<String, Integer> termHitInfo = new HashMap<>(); //hitType
+    	int weight = context.getHitWeight(hitType);
+    	String orgSearchWord = context.searchWord;
+    	
+        //获取或创建词命中信息
+        Map<String, Integer> termHitInfo = hitDoc.getHitTermInfo(hitType);
+        if(termHitInfo == null)
+        {
+        	termHitInfo = new HashMap<String, Integer>();
+        	hitDoc.setHitTermInfo(hitType, termHitInfo);
+        }
         
         //保证ireader时原子操作
         AtomicReader leafReader = SlowCompositeReaderWrapper.wrap(ireader);
@@ -992,67 +994,83 @@ public class LuceneUtil2   extends BaseFunction
                 BytesRef text;
                 while ((text = termsEnum.next()) != null) 
                 {
-                	String termText = text.utf8ToString();
-                    if (!isTermHitInQuery(termText, field, conditions))
-                    { 
-                    	termHitInfo.put(termText, 1);
-                    }
+                	String hitTermText = text.utf8ToString();
+                	//词命中信息只需要统计一次
+                	if(termHitInfo.get(hitTermText) == null)
+                	{
+                		if (!isTermHitInQuery(hitTermText, field, conditions))
+                		{	 
+                			termHitInfo.put(hitTermText, 1);
+                			
+                			//更新命中积分
+    						hitDoc.setHitScore(hitType, caculateHitScore(hitDoc.getHitScore(hitType), weight, hitTermText, orgSearchWord));
+                			
+        		            //获取命中词的位置信息，需要额外的时间，如果没有必要，建议不要获取
+        		            switch(hitType)
+        		            {
+        		            case HitDoc.HitType_FileContent:
+        		            	hitDoc.termPositionsForRDoc = hitDoc.termPositionsForRDoc != null? hitDoc.termPositionsForRDoc : new HashMap<String, List<int[]>>();
+        		            	getHitTermPositions(scoreDoc, termsEnum, field, hitDoc.termPositionsForRDoc);
+        		            	break;
+        		            case HitDoc.HitType_FileComment:
+        		            	hitDoc.termPositionsForVDoc = hitDoc.termPositionsForVDoc != null? hitDoc.termPositionsForVDoc : new HashMap<String, List<int[]>>();
+        		            	getHitTermPositions(scoreDoc, termsEnum, field, hitDoc.termPositionsForVDoc);
+        		            	break;
+        		            }
+                		}
+                	}
                 }
             }
         }
         hitDoc.setHitTermInfo(hitType, termHitInfo);
 	}
-
-
-
-	private static Map<String, List<int[]>> getTermPositions(DirectoryReader ireader, ScoreDoc scoreDoc, List<QueryCondition> conditions) throws Exception 
- 	{
-        //获取位置信息
-        Map<String, List<int[]>> termPositions = new HashMap<>(); // 字段名 -> [startOffset, endOffset]
-        
-        //保证ireader时原子操作
-        AtomicReader leafReader = SlowCompositeReaderWrapper.wrap(ireader);
-        
-        //获取当前文档的所有词向量
-        Fields fields = leafReader.getTermVectors(scoreDoc.doc);
-        if (fields != null) 
-        {
-            for (String field : fields) 
-            {
-                Terms terms = fields.terms(field);
-                if (terms == null) continue;
-                
-                TermsEnum termsEnum = terms.iterator(null);
-                BytesRef text;
-                while ((text = termsEnum.next()) != null) 
-                {
-                    // 只保留命中词的位置
-                	String termText = text.utf8ToString();
-                    if (!isTermHitInQuery(termText, field, conditions)) continue; 
-                    
-                    DocsAndPositionsEnum postingsEnum = termsEnum.docsAndPositions(null, null, DocsAndPositionsEnum.FLAG_OFFSETS);
-                    if (postingsEnum == null) continue;
-                    
-                    //获取命中词的位置信息
-                    int advancedDoc = postingsEnum.advance(scoreDoc.doc);
-                    if (advancedDoc != scoreDoc.doc) continue;  // Skip if document not found
-                    
-                    List<int[]> positions = new ArrayList<>();
-                	for (int i = 0; i < postingsEnum.freq(); i++) 
-                    {
-                        int pos = postingsEnum.nextPosition();  // 必须先调用这个来定位到位置
-                        // 现在才能获取偏移
-                        int startOffset = postingsEnum.startOffset();
-                        int endOffset = postingsEnum.endOffset();
-                        positions.add(new int[]{startOffset, endOffset});
-                        Log.debug("getTermPositions() termp pos[" + i +"] at [" + startOffset + "," + endOffset + "]");
-                    }
-                    termPositions.put(field, positions);
-                }
-            }
-        }
-        return termPositions;
+    
+	private static int caculateHitScore(int curHitScore, int weight, String hitTermText, String orgSearchWord)
+	{
+		if(curHitScore > weight)
+		{
+			return weight;
+		}
+		
+		int newHitScore = curHitScore + weight * hitTermText.length() / orgSearchWord.length();
+		Log.debug("caculateHitScore() hitTermText:" + hitTermText + " newHitScore:" + newHitScore);
+		
+		if(newHitScore > weight)
+		{
+			return weight;
+		}
+		return newHitScore;
 	}
+
+	private static void getHitTermPositions(ScoreDoc scoreDoc, TermsEnum termsEnum, String field, Map<String, List<int[]>> termPositions) throws IOException 
+	{
+        DocsAndPositionsEnum postingsEnum = termsEnum.docsAndPositions(null, null, DocsAndPositionsEnum.FLAG_OFFSETS);
+        if (postingsEnum == null) 
+        {
+        	return;
+        }
+        
+        //获取命中词的位置信息
+        int advancedDoc = postingsEnum.advance(scoreDoc.doc);
+        if (advancedDoc != scoreDoc.doc) 
+        {
+        	return;  // Skip if document not found
+        }
+        
+        List<int[]> positions = new ArrayList<>();
+    	for (int i = 0; i < postingsEnum.freq(); i++) 
+        {
+            int pos = postingsEnum.nextPosition();  // 必须先调用这个来定位到位置
+            // 现在才能获取偏移
+            int startOffset = postingsEnum.startOffset();
+            int endOffset = postingsEnum.endOffset();
+            positions.add(new int[]{startOffset, endOffset});
+            Log.debug("getTermPositions() termp pos[" + i +"] at [" + startOffset + "," + endOffset + "]");
+        }
+        termPositions.put(field, positions);
+     }
+
+
 
 	// 辅助方法：检查词项是否在查询中被匹配
     private static boolean isTermHitInQuery(String termText, String field, List<QueryCondition> conditions) 
