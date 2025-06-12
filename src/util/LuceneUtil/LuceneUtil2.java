@@ -93,6 +93,8 @@ import com.DocSystem.common.entity.QueryCondition;
 import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.Repos;
+import com.DocSystem.websocket.entity.DocSearchContext;
+
 import java.math.BigDecimal;
 
 import util.FileUtil.FileUtils2;
@@ -767,7 +769,7 @@ public class LuceneUtil2   extends BaseFunction
      * @param str: 关键字
      * @param indexLib: 索引库名字
      */
-    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, HashMap<String, HitDoc> searchResult, int searchType, int weight, int hitType)
+    public static boolean search(Repos repos, List<QueryCondition> preConditions, String field, String str, String pathFilter, String indexLib, int searchType, int weight, int hitType, HashMap<String, HitDoc> searchResult, DocSearchContext context)
 	{
 		Log.debug("search() keyWord:" + str + " field:" + field + " indexLib:" + indexLib + " searchType:"+ searchType + " weight:" + weight + " pathFilter:" + pathFilter);		
 		List<QueryCondition> conditions = new ArrayList<QueryCondition>();
@@ -798,7 +800,7 @@ public class LuceneUtil2   extends BaseFunction
 		{
 			return false;
 		}
-	    return multiSearch(repos, conditions, indexLib, searchResult, weight, hitType);
+	    return multiSearch(repos, conditions, indexLib, weight, hitType, searchResult, context);
     }
     
     /**
@@ -848,9 +850,11 @@ public class LuceneUtil2   extends BaseFunction
 	    return multiSearch(repos, conditions, indexLib, searchResult, weight, hitType);
     }
     
-    public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String indexLib, HashMap<String, HitDoc> searchResult, int weight, int hitType)
+    public static boolean multiSearch(Repos repos, List<QueryCondition> conditions, String indexLib, 
+    		int weight, int hitType, 
+    		HashMap<String, HitDoc> searchResult, DocSearchContext context)
 	{
-		Log.debug("multiSearch() indexLib:" + indexLib + " weight:" + weight);
+		Log.debug("multiSearch() indexLib:" + indexLib + " weight:" + weight + " hitType:" + hitType);
 		
 	    Directory directory = null;
         DirectoryReader ireader = null;
@@ -882,6 +886,9 @@ public class LuceneUtil2   extends BaseFunction
 		            	continue;
 		            }
 		            
+		            //收集单词命中信息，在AddHitDocToSearchResult的时候，需要基于该信息统计命中积分
+		            collectHitTermInfo(hitDoc, weight, hitType);
+		            
 		            //获取命中词的位置信息，需要额外的时间，如果没有必要，建议不要获取
 		            switch(hitType)
 		            {
@@ -893,7 +900,7 @@ public class LuceneUtil2   extends BaseFunction
 		            	break;
 		            }
 		            
-		            HitDoc.AddHitDocToSearchResult(searchResult,hitDoc, "multiSearch", weight, hitType);
+		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, "multiSearch", weight, hitType);
 	        	}
 	        }
 	        
@@ -1170,10 +1177,23 @@ public class LuceneUtil2   extends BaseFunction
 		return hitDoc;
 	}
 
-	private static HitDoc BuildHitDocFromDocument(Repos repos, Document hitDocument) 
+	public static HitDoc BuildHitDocFromDocument(Repos repos, Document hitDocument) 
     {
     	return BuildHitDocFromDocument_FS(repos, hitDocument);
  	}
+	
+	public static HitDoc BuildHitDocFromDoc(Doc doc) 
+	{
+    	//Set Doc Path
+    	String docPath = doc.getPath() + doc.getName();
+    			
+    	//Set HitDoc
+    	HitDoc hitDoc = new HitDoc();
+    	hitDoc.setDoc(doc);
+    	hitDoc.setDocPath(docPath);
+    	
+    	return hitDoc;
+	}
 
 	private static HitDoc BuildHitDocFromDocument_FS(Repos repos, Document hitDocument) {
     	//Log.debug("BuildHitDocFromDocument_FS hitDocument docId:" + hitDocument.get("docId") + " pid:" + hitDocument.get("pid")  + " path:" + hitDocument.get("path") + " name:" + hitDocument.get("name") + " type:" + hitDocument.get("type") + " size:" + hitDocument.get("size") + " latestEditTime:" + hitDocument.get("latestEditTime"));

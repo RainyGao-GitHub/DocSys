@@ -113,7 +113,7 @@ class LuceneTest
  			int searchType = 5; //
  			int weight = 1;
  			int hitType = 2; //文件内容
- 			LuceneUtil2.search(repos, null, "国家" , "", "content", "doc", searchResult, searchType, weight, hitType);
+ 			LuceneUtil2.search(repos, null, "国家" , "", "content", "doc", searchType, weight, hitType, searchResult, searchContext);
          	
          	System.out.println("*********** Delete Index Test *********** ");
             	//LuceneUtil2.deleteIndexForDoc(1,"doc");

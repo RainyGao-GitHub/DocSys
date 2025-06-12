@@ -161,6 +161,7 @@ import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
 import com.DocSystem.websocket.entity.DocPullContext;
 import com.DocSystem.websocket.entity.DocPushContext;
+import com.DocSystem.websocket.entity.DocSearchContext;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -23863,13 +23864,13 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	//文件搜索接口
-	protected boolean luceneSearch(Repos repos, List<QueryCondition> preConditions, String searchWord, String path, HashMap<String, HitDoc> searchResult, int searchMask) 
+	protected boolean luceneSearch(Repos repos, List<QueryCondition> preConditions, String searchWord, String path, int searchMask, HashMap<String, HitDoc> searchResult, DocSearchContext context) 
 	{
 		//文件名通配符搜索（带空格）
 		if((searchMask & HitDoc.HitType_FileName) > 0)
 		{
 			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord);
-			LuceneUtil2.search(repos, preConditions, "nameForSearch", searchWord.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 100, HitDoc.HitType_FileName); 	//Search By DocName
+			LuceneUtil2.search(repos, preConditions, "nameForSearch", searchWord.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, HitDoc.HitType_FileName, context); 	//Search By DocName
 			Log.debug("luceneSearch() 文件名通配符搜索（带空格）:" + searchWord + " count:" + searchResult.size());
 		}
 		
@@ -23886,12 +23887,12 @@ public class BaseController  extends BaseFunction{
 					//0x00000001; //文件内容
 					//文件名通配符搜索（不切词搜索）
 					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr);
-					LuceneUtil2.search(repos, preConditions, "nameForSearch", searchStr.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, 100, HitDoc.HitType_FileName);	//Search By FileName
+					LuceneUtil2.search(repos, preConditions, "nameForSearch", searchStr.toLowerCase(), path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Wildcard, HitDoc.HitType_FileName, context);	//Search By FileName
 					Log.debug("luceneSearch() 文件名通配符搜索（不带空格）:" + searchStr + " count:" + searchResult.size());
 
 					//文件名智能搜索（切词搜索）
 					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr);
-					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Term, 100, HitDoc.HitType_FileName);	//Search By FileName
+					LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_DOC_NAME), searchResult, QueryCondition.SEARCH_TYPE_Term, HitDoc.HitType_FileName, context);	//Search By FileName
 					Log.debug("luceneSearch() 文件名智能搜索:" + searchStr + " count:" + searchResult.size());
 				}
 				//根据文件内容查找
@@ -23900,10 +23901,10 @@ public class BaseController  extends BaseFunction{
 					//0x00000002; //文件内容搜索
 					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr);
 					//Search By FileContent
-					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 100, HitDoc.HitType_FileContent);
+					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, HitDoc.HitType_FileContent, context);
 					if(ret == false  ||  searchResult.size() == 0)
 					{
-						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, 100, HitDoc.HitType_FileContent);
+						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), searchResult, QueryCondition.SEARCH_TYPE_Term, HitDoc.HitType_FileContent, context);
 					}
 					
 					Log.debug("luceneSearch() 文件内容智能搜索:" + searchStr + " count:" + searchResult.size());

@@ -61,6 +61,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import util.ReturnAjax;
 import util.FileUtil.CompressPic;
+import util.LuceneUtil.LuceneUtil2;
 
 /*
 1、文件节点
@@ -7084,7 +7085,7 @@ public class DocController extends BaseController{
     }
 
 	@SuppressWarnings("unused")
-	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, String path, HashMap<String, HitDoc> searchResult) 
+	private void databaseSearch(Repos repos, Integer pDocId, String searchWord, String path, HashMap<String, HitDoc> searchResult, DocSearchContext context) 
 	{
 		String [] keyWords = searchWord.split(" ");
 		
@@ -7121,24 +7122,12 @@ public class DocController extends BaseController{
 		            		continue;
 		            	}
 		            }
-		            HitDoc hitDoc = BuildHitDocFromDoc(doc); 
-		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, searchStr, 3, HitDoc.HitType_FileName); //文件名
+		            HitDoc hitDoc = LuceneUtil2.BuildHitDocFromDoc(doc); 
+		            HitDoc.AddHitDocToSearchResult(searchResult, hitDoc, searchStr, HitDoc.HitType_FileName, context); //文件名
 		        	Log.printObject("databaseSearch() hitDoc:", hitDoc);
 		        }
 			}	
 		}
-	}
-
-	private HitDoc BuildHitDocFromDoc(Doc doc) {
-    	//Set Doc Path
-    	String docPath = doc.getPath() + doc.getName();
-    			
-    	//Set HitDoc
-    	HitDoc hitDoc = new HitDoc();
-    	hitDoc.setDoc(doc);
-    	hitDoc.setDocPath(docPath);
-    	
-    	return hitDoc;
 	}
 	
 	/****************   get Zip InitMenu ******************/
