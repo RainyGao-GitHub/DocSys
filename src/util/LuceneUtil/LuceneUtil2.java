@@ -913,6 +913,21 @@ public class LuceneUtil2   extends BaseFunction
 	        if(builder != null)
 	        {
 	        	TopDocs hits = isearcher.search(builder, 1000);
+	        	//构造查询条件HashMap, 提高collectTermInfo的性能
+	        	Map<String, Map<String, String>> queryConditionMaps = new HashMap<String, Map<String, String>>();
+	        	if(hits.scoreDocs.length > 0)
+	        	{
+	                for (QueryCondition cond : conditions) 
+	                {
+	                	Map<String, String> queryConditionMap = queryConditionMaps.get(cond.getField());
+	                	if(queryConditionMap == null)
+	                	{
+	                		queryConditionMap = new HashMap<String, String>();
+	                		queryConditionMaps.put(cond.getField(), queryConditionMap);
+	                	}
+	                	queryConditionMap.put(cond.getValue().toString(), cond.getValue().toString());
+	                }
+	        	}
 	        	
 	        	for ( ScoreDoc scoreDoc : hits.scoreDocs )
 	        	{
@@ -931,7 +946,7 @@ public class LuceneUtil2   extends BaseFunction
 		            }
 		            
 		            //收集词命中信息并更新命中积分
-		            collectHitTermInfo(ireader, scoreDoc, conditions, hitType, hitDoc, context);
+		            collectHitTermInfo(ireader, scoreDoc, queryConditionMaps, hitType, hitDoc, context);
 	        	}
 	        }
 	        
@@ -965,12 +980,17 @@ public class LuceneUtil2   extends BaseFunction
 		}
     }
     
-    private static void collectHitTermInfo(DirectoryReader ireader, ScoreDoc scoreDoc, List<QueryCondition> conditions, int hitType, HitDoc hitDoc, DocSearchContext context) throws IOException 
+    private static void collectHitTermInfo(DirectoryReader ireader, ScoreDoc scoreDoc, Map<String, Map<String, String>> queryConditionMaps, int hitType, HitDoc hitDoc, DocSearchContext context) throws IOException 
     {
     	int weight = context.getHitWeight(hitType);
-    	String orgSearchWord = context.searchWord;
+    	//对于文件名而言，如果积分满了就不需要再收集命中信息了
+    	if(hitType == HitDoc.HitType_FileName && hitDoc.getHitScore(hitType) >= weight)
+    	{
+    		Log.debug("collectHitTermInfo() 文件名搜索命中积分已满, hitScore[" + hitType + "]" + hitDoc.getHitScore(hitType));
+    		return;
+    	}
     	
-        //获取或创建词命中信息
+    	//获取或创建词命中信息Hash表，避免重复收集
         Map<String, Integer> termHitInfo = hitDoc.getHitTermInfo(hitType);
         if(termHitInfo == null)
         {
@@ -978,15 +998,25 @@ public class LuceneUtil2   extends BaseFunction
         	hitDoc.setHitTermInfo(hitType, termHitInfo);
         }
         
+        //构造查询条件
+        
         //保证ireader时原子操作
         AtomicReader leafReader = SlowCompositeReaderWrapper.wrap(ireader);
         
-        //获取当前文档的所有词向量
+        //TODO: 这里的逻辑有点问题，怎么能查所有field呢?
         Fields fields = leafReader.getTermVectors(scoreDoc.doc);
         if (fields != null) 
         {
+        	//查询所有的field
             for (String field : fields) 
             {
+            	Map<String, String> queryConditionMap = queryConditionMaps.get(field);
+            	if(queryConditionMap == null || queryConditionMap.size() == 0)
+            	{
+            		continue;
+            	}
+            	
+            	//获取词向量
                 Terms terms = fields.terms(field);
                 if (terms == null) continue;
                 
@@ -998,13 +1028,15 @@ public class LuceneUtil2   extends BaseFunction
                 	//词命中信息只需要统计一次
                 	if(termHitInfo.get(hitTermText) == null)
                 	{
-                		if (!isTermHitInQuery(hitTermText, field, conditions))
+                		if (!isTermHitInQuery(hitTermText, field, queryConditionMap, context))
                 		{	 
                 			termHitInfo.put(hitTermText, 1);
                 			
                 			//更新命中积分
-    						hitDoc.setHitScore(hitType, caculateHitScore(hitDoc.getHitScore(hitType), weight, hitTermText, orgSearchWord));
-                			
+                			Log.debug("collectHitTermInfo() 命中[" + hitTermText + "], before hitScore[" + hitType + "]" + hitDoc.getHitScore(hitType));
+    						hitDoc.setHitScore(hitType, caculateHitScore(hitDoc.getHitScore(hitType), weight, hitTermText, context.searchWord));
+    						Log.debug("collectHitTermInfo() 命中[" + hitTermText + "], after hitScore[" + hitType + "]" + hitDoc.getHitScore(hitType));
+    						
         		            //获取命中词的位置信息，需要额外的时间，如果没有必要，建议不要获取
         		            switch(hitType)
         		            {
@@ -1025,7 +1057,7 @@ public class LuceneUtil2   extends BaseFunction
         hitDoc.setHitTermInfo(hitType, termHitInfo);
 	}
     
-	private static int caculateHitScore(int curHitScore, int weight, String hitTermText, String orgSearchWord)
+	public static int caculateHitScore(int curHitScore, int weight, String hitTermText, String orgSearchWord)
 	{
 		if(curHitScore > weight)
 		{
@@ -1073,15 +1105,14 @@ public class LuceneUtil2   extends BaseFunction
 
 
 	// 辅助方法：检查词项是否在查询中被匹配
-    private static boolean isTermHitInQuery(String termText, String field, List<QueryCondition> conditions) 
+    private static boolean isTermHitInQuery(String termText, String field, Map<String, String> queryConditionMap, DocSearchContext context) 
     {
-        for (QueryCondition cond : conditions) 
-        {
-            if (cond.getField().equals(field) && cond.getValue().toString().contains(termText)) 
-            {
-            	Log.debug("isTermHitInQuery() term:" + termText + " was in query condition field:" + field + " value:" + cond.getValue());
-                return true;
-            }
+    	//TODO: 直接看命中的字段是否在搜索内容里，似乎更直接一点
+    	//if(queryConditionMap.get(termText) != null)
+    	if(context.searchWord.contains(termText))
+    	{
+    		Log.debug("isTermHitInQuery() [" + termText + "] was hit with query condition's field [" + field + "]");
+    		return true;
         }
         return false;
     }

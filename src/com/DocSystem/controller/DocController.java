@@ -7122,15 +7122,20 @@ public class DocController extends BaseController{
 		            		continue;
 		            	}
 		            }
+		            //计算命中积分
+		            int hitType = HitDoc.HitType_FileName;
+		            int weight = context.getHitWeight(hitType);
 		            HitDoc newHitDoc = LuceneUtil2.BuildHitDocFromDoc(doc); 
-		            newHitDoc.hitType = (HitDoc.HitType_FileName);
-		            newHitDoc.setHitScore(HitDoc.HitType_FileName, context.getHitWeight(HitDoc.HitType_FileName));
 		            HitDoc hitDoc = searchResult.get(newHitDoc.docPath);
 		            if(hitDoc == null)
 		            {
 		            	hitDoc = newHitDoc;
 		            	searchResult.put(newHitDoc.docPath, newHitDoc);
 		            }
+		            hitDoc.hitType = hitDoc.hitType | hitType;
+		            hitDoc.setHitScore(hitType, LuceneUtil2.caculateHitScore(hitDoc.getHitScore(hitType), weight, searchStr, context.searchWord));
+		            Log.debug("databaseSearch() 命中[" + searchStr + "], hitScore[" + hitType + "]" + newHitDoc.getHitScore(hitType));
+		            
 		        	Log.printObject("databaseSearch() hitDoc:", hitDoc);
 		        }
 			}	
