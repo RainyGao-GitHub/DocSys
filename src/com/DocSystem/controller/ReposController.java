@@ -1,6 +1,7 @@
 package com.DocSystem.controller;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -128,34 +129,36 @@ public class ReposController extends BaseController{
 	    response.setHeader("Connection", "keep-alive");
 	    
 	    try (PrintWriter writer = response.getWriter()) {
-	        // 构造ChatContext
-	        req.context = new AIChatContext();
-	        List<Repos> reposList = new ArrayList<>();
-	        if (req.reposId == null || req.reposId == -1) {
-	            reposList = getAccessableReposList(login_user.getId());
-	        } else {
-	            Repos repos = getReposEx(req.reposId);
-	            if (repos != null) reposList.add(repos);
-	            req.context.repos = repos;
-	        }
-	        req.context.reposList = reposList;
-	        
-	        // 搜索文档
-	        DocSearchContext searchContext = new DocSearchContext();
-	        searchContext.pid = 0;
-	        searchContext.path = "";
-	        searchContext.searchWord = req.query;
-	        searchContext.searchWordInLowerCase = req.query.toLowerCase();        
-	        searchContext.sort = null;        
-	        searchContext.chunkSize = 200;
-	        searchContext.maxContentSize = 2000;
-	        searchContext.convertToBase64 = false;
-	        channel.searchDocAsync(req.context.reposList, searchContext);
-	        List<Doc> searchResult = searchContext.result;
-	        Collections.sort(searchResult);
-	        
-	        // 构建查询消息
-	        String queryMsg = buildQueryMessage(req.query, searchResult);
+//	        // 构造ChatContext
+//	        req.context = new AIChatContext();
+//	        List<Repos> reposList = new ArrayList<>();
+//	        if (req.reposId == null || req.reposId == -1) {
+//	            reposList = getAccessableReposList(login_user.getId());
+//	        } else {
+//	            Repos repos = getReposEx(req.reposId);
+//	            if (repos != null) reposList.add(repos);
+//	            req.context.repos = repos;
+//	        }
+//	        req.context.reposList = reposList;
+//	        
+//	        // 搜索文档
+//	        DocSearchContext searchContext = new DocSearchContext();
+//	        searchContext.pid = 0;
+//	        searchContext.path = "";
+//	        searchContext.searchWord = req.query;
+//	        searchContext.searchWordInLowerCase = req.query.toLowerCase();        
+//	        searchContext.sort = null;        
+//	        searchContext.chunkSize = 200;
+//	        searchContext.maxContentSize = 2000;
+//	        searchContext.convertToBase64 = false;
+//	        channel.searchDocAsync(req.context.reposList, searchContext);
+//	        List<Doc> searchResult = searchContext.result;
+//	        Collections.sort(searchResult);
+//	        
+//	        // 构建查询消息
+//	        String queryMsg = buildQueryMessage(req.query, searchResult);
+
+	    	String queryMsg = req.query;
 	        
 	        // 创建流式聊天模型
 	        OpenAiStreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
@@ -170,21 +173,38 @@ public class ReposController extends BaseController{
 	        // 创建消息处理器
 	        StreamingResponseHandler<AiMessage> messageHandler = new StreamingResponseHandler<AiMessage>() {
 	            @Override
-	            public void onNext(String messagePart) {
-	                writer.write("data: " + JSONObject.escape(messagePart) + "\n\n");
-	                writer.flush();
+	            public void onNext(String token) {
+	                try {
+	                    // 发送 token
+	                    response.getWriter().write("data: " + token + "\n\n");
+	                    response.flushBuffer();
+	                } catch (IOException e) {
+	                    Log.error(e);
+	                }
 	            }
-	            
+
 	            @Override
-	            public void onComplete(Response<AiMessage> response) {
-	                writer.write("event: complete\ndata: \n\n");
-	                writer.flush();
+	            public void onComplete(Response<AiMessage> responseMsg) {
+	                try {
+	                    // 发送结束标记
+	                    response.getWriter().write("event: end\n");
+	                    response.getWriter().write("data: \n\n");
+	                    response.flushBuffer();
+	                } catch (IOException e) {
+	                    Log.error(e);
+	                }
 	            }
-	            
+
 	            @Override
-	            public void onError(Throwable throwable) {
-	                writer.write("event: error\ndata: " + JSONObject.escape(throwable.getMessage()) + "\n\n");
-	                writer.flush();
+	            public void onError(Throwable error) {
+	                try {
+	                    // 发送错误信息
+	                    response.getWriter().write("event: error\n");
+	                    response.getWriter().write("data: " + error.getMessage() + "\n\n");
+	                    response.flushBuffer();
+	                } catch (IOException e) {
+	                    Log.error(e);
+	                }
 	            }
 	        };
 	        

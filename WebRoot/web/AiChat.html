@@ -57,6 +57,19 @@
             opacity: 1;
             transform: translateY(0);
         }
+        @keyframes cursorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background-color: currentColor;
+            vertical-align: middle;
+            margin-left: 2px;
+            animation: cursorBlink 1s step-end infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
@@ -183,66 +196,52 @@
                 // 使用文档片段处理内容
                 const fragment = document.createDocumentFragment();
                 
-                // 如果是流式响应消息且仍在加载中，添加闪烁光标
-                if (message.id.startsWith("streaming-msg-") && !message.content) {
-                    contentContainer.innerHTML = `
-                        <div class="flex items-center text-gray-500">
-                            <span class="typing-indicator">思考中</span>
-                            <div class="flex gap-1 ml-2">
-                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"></div>
-                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
-                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
-                            </div>
-                        </div>
+                // 使用Marked.js安全解析Markdown
+                const sanitizedContent = marked.parse(message.content);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = sanitizedContent;
+                
+                // 处理代码块添加复制按钮
+                tempDiv.querySelectorAll('pre').forEach(pre => {
+                    const container = document.createElement('div');
+                    container.className = 'relative';
+                    
+                    // 创建克隆副本以避免DOM冲突
+                    const preClone = pre.cloneNode(true);
+                    
+                    const button = document.createElement('button');
+                    button.className = 'copy-button absolute top-2 right-2 bg-white hover:bg-gray-100 rounded p-1 shadow';
+                    button.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                        </svg>
                     `;
-                } else {
-	                // 使用Marked.js安全解析Markdown
-	                const sanitizedContent = marked.parse(message.content);
-	                const tempDiv = document.createElement('div');
-	                tempDiv.innerHTML = sanitizedContent;
-	                
-	                // 处理代码块添加复制按钮
-	                tempDiv.querySelectorAll('pre').forEach(pre => {
-	                    const container = document.createElement('div');
-	                    container.className = 'relative';
-	                    
-	                    // 创建克隆副本以避免DOM冲突
-	                    const preClone = pre.cloneNode(true);
-	                    
-	                    const button = document.createElement('button');
-	                    button.className = 'copy-button absolute top-2 right-2 bg-white hover:bg-gray-100 rounded p-1 shadow';
-	                    button.innerHTML = `
-	                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
-	                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-	                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-	                        </svg>
-	                    `;
-	                    
-	                    // 复制功能
-	                    button.addEventListener('click', () => {
-	                        const code = preClone.querySelector('code')?.innerText || '';
-	                        navigator.clipboard.writeText(code);
-	                        button.innerHTML = `
-	                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
-	                                <path d="M20 6 9 17l-5-5"/>
-	                            </svg>
-	                        `;
-	                        setTimeout(() => {
-	                            button.innerHTML = `
-	                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
-	                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-	                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-	                                </svg>
-	                            `;
-	                        }, 1500);
-	                    });
-	                    
-	                    container.appendChild(preClone);
-	                    container.appendChild(button);
-	                    
-	                    // 替换原始pre元素
-	                    pre.replaceWith(container);
-	                }
+                    
+                    // 复制功能
+                    button.addEventListener('click', () => {
+                        const code = preClone.querySelector('code')?.innerText || '';
+                        navigator.clipboard.writeText(code);
+                        button.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
+                                <path d="M20 6 9 17l-5-5"/>
+                            </svg>
+                        `;
+                        setTimeout(() => {
+                            button.innerHTML = `
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                                </svg>
+                            `;
+                        }, 1500);
+                    });
+                    
+                    container.appendChild(preClone);
+                    container.appendChild(button);
+                    
+                    // 替换原始pre元素
+                    pre.replaceWith(container);
                 });
                 
                 // 表格响应式处理
@@ -281,112 +280,124 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-     	// 发送消息到后端API
-		async function sendToBackend(userInput) {
-		    try {
-		        // 创建流式消息容器
-		        const newAiMessage = {
-		            id: "streaming-msg-" + Date.now(),
-		            content: "",
-		            role: "assistant"
-		        };
-		        messages = [...messages, newAiMessage];
-		        renderMessages();
-		        
-		        // 调用后端流式API
-		        const response = await fetch("/DocSystem/Repos/AIChat.do", {
-		            method: 'POST',
-		            headers: { 'Content-Type': 'application/json' },
-		            body: JSON.stringify({
-		                query: userInput,
-		                LLMIndex: 0,
-		                LLMName: "deepseek"
-		            })
-		        });
-		        
-		        if (!response.ok || !response.body) {
-		            throw new Error(`请求失败: ${response.status}`);
-		        }
-		        
-		        // 创建流式读取器
-		        const reader = response.body.getReader();
-		        const decoder = new TextDecoder("utf-8");
-		        let messageBuffer = "";
-		        let messagePrefix = `id:${newAiMessage.id} `;
-		        
-		        // 读取流数据
-		        const readStream = async () => {
-		            while (true) {
-		                const { value, done } = await reader.read();
-		                if (done) {
-		                    // 移除加载状态
-		                    messages = messages.filter(msg => msg.id !== "loading");
-		                    renderMessages();
-		                    return;
-		                }
-		                
-		                const chunk = decoder.decode(value, { stream: true });
-		                messageBuffer += chunk;
-		                
-		                // 处理消息部分
-		                while (messageBuffer.indexOf("\n\n") !== -1) {
-		                    const messageEnd = messageBuffer.indexOf("\n\n");
-		                    const fullMessage = messageBuffer.substring(0, messageEnd);
-		                    messageBuffer = messageBuffer.substring(messageEnd + 2);
-		                    
-		                    // 检查事件类型
-		                    if (fullMessage.startsWith("event:")) {
-		                        const lines = fullMessage.split("\n");
-		                        let eventType = "message";
-		                        let eventData = "";
-		                        
-		                        for (const line of lines) {
-		                            if (line.startsWith("event:")) {
-		                                eventType = line.substring(6).trim();
-		                            } else if (line.startsWith("data:")) {
-		                                eventData = line.substring(5).trim();
-		                            }
-		                        }
-		                        
-		                        if (eventType === "complete") {
-		                            // 完成标记
-		                        } else if (eventType === "error") {
-		                            // 错误处理
-		                            messages = messages.map(msg => 
-		                                msg.id === newAiMessage.id ? 
-		                                { ...msg, content: "⚠️ 错误: " + eventData } : msg
-		                            );
-		                            renderMessages();
-		                        }
-		                    } 
-		                    // 处理数据块
-		                    else if (fullMessage.startsWith("data:")) {
-		                        const content = fullMessage.substring(5).trim();
-		                        if (content) {
-		                            messages = messages.map(msg => 
-		                                msg.id === newAiMessage.id ? 
-		                                { ...msg, content: msg.content + content } : msg
-		                            );
-		                            renderMessages();
-		                        }
-		                    }
-		                }
-		            }
-		        };
-		        
-		        readStream();
-		        
-		    } catch (error) {
-		        // 错误处理
-		        messages = messages.map(msg => 
-		            msg.id === newAiMessage.id ? 
-		            { ...msg, content: "⚠️ 连接错误: " + error.message } : msg
-		        );
-		        renderMessages();
-		    }
-		}
+        // 流式接收消息的函数
+        async function streamResponse(userInput, messageId) {
+            try {
+                const response = await fetch("/DocSystem/Repos/AIChat.do", {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        // 告诉后端我们希望使用流式传输
+                        'Accept': 'text/event-stream'
+                    },
+                    body: JSON.stringify({
+                        query: userInput,
+                        LLMIndex: 0,
+                        LLMName: "deepseek",
+                        // 新增流式传输标志
+                        stream: true
+                    })
+                });
 
-        // 表单提交处理
+                // 创建流式读取器
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                // 初始化消息内容
+                messages = messages.map(msg => 
+                    msg.id === messageId ? {...msg, content: '<div class="cursor"></div>'} : msg
+                );
+                renderMessages();
+                
+                let messageContent = '';
+                let buffer = '';
+                
+                // 设置超时时间
+                const timeout = setTimeout(() => {
+                    addErrorIndicator(messageId);
+                }, 30000); // 30秒超时
+                
+                // 流式读取数据
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    
+                    clearTimeout(timeout); // 收到数据时清除超时
+                    
+                    // 解码并处理数据块
+                    buffer += decoder.decode(value, { stream: true });
+                    
+                    // 处理可能的分块（按换行分割）
+                    const chunks = buffer.split('\n\n');
+                    buffer = chunks.pop() || '';
+                    
+                    for (const chunk of chunks) {
+                        if (!chunk.trim()) continue;
+                        
+                        try {
+                            // 解析消息内容
+                            const eventData = chunk.split('\n')
+                                .filter(line => line.includes(':'))
+                                .reduce((acc, line) => {
+                                    const [key, value] = line.split(':');
+                                    acc[key.trim()] = value.trim();
+                                    return acc;
+                                }, {});
+                            
+                            // 如果收到数据事件
+                            if (eventData.data) {
+                                messageContent += eventData.data;
+                                
+                                // 更新消息内容（带光标）
+                                messages = messages.map(msg => 
+                                    msg.id === messageId 
+                                        ? {...msg, content: marked.parse(messageContent) + '<div class="cursor"></div>'} 
+                                        : msg
+                                );
+                                renderMessages();
+                            }
+                            
+                            // 如果收到结束事件
+                            if (eventData.event === 'end') {
+                                // 移除光标
+                                messages = messages.map(msg => 
+                                    msg.id === messageId 
+                                        ? {...msg, content: marked.parse(messageContent)} 
+                                        : msg
+                                );
+                                renderMessages();
+                                return;
+                            }
+                        } catch (e) {
+                            console.error('流数据处理错误:', e);
+                        }
+                    }
+                }
+                
+                // 如果没有收到结束事件，确保更新消息内容
+                messages = messages.map(msg => 
+                    msg.id === messageId 
+                        ? {...msg, content: marked.parse(messageContent)} 
+                        : msg
+                );
+                renderMessages();
+            } catch (error) {
+                console.error('流式响应错误:', error);
+                addErrorIndicator(messageId, error.message);
+            }
+        }
+        
+        // 添加错误指示器
+        function addErrorIndicator(messageId, errorMsg = "请求出错") {
+            messages = messages.map(msg => 
+                msg.id === messageId 
+                    ? {...msg, content: `⚠️ <strong>${errorMsg}</strong> 请重试`} 
+                    : msg
+            );
+            renderMessages();
+        }
+        
+        // 表单提交处理（修改后）
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = messageInput.value.trim();
@@ -402,43 +413,18 @@
             messageInput.value = '';
             renderMessages();
             
-            // 显示加载状态
-            const loadingMessage = {
-                id: "loading",
-                content: '<div class="flex items-center gap-2 text-gray-500"><span class="typing-indicator">思考中</span><div class="flex gap-1"><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"></div><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div><div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div></div></div>',
+            // 添加AI消息（初始状态带光标）
+            const aiMessageId = (Date.now() + 1).toString();
+            const newAssistantMessage = {
+                id: aiMessageId,
+                content: '<div class="cursor"></div>',
                 role: "assistant"
             };
-            messages = [...messages, loadingMessage];
+            messages = [...messages, newAssistantMessage];
             renderMessages();
             
-            // 获取真实的API响应
-            try {
-                const aiResponseContent = await sendToBackend(input);
-                
-                // 移除加载状态
-                messages = messages.filter(msg => msg.id !== "loading");
-                
-                // 添加AI响应
-                const aiResponse = {
-                    id: (Date.now() + 1).toString(),
-                    content: aiResponseContent,
-                    role: "assistant"
-                };
-                messages = [...messages, aiResponse];
-            } catch (error) {
-                // 移除加载状态
-                messages = messages.filter(msg => msg.id !== "loading");
-                
-                // 添加错误消息
-                const errorMessage = {
-                    id: (Date.now() + 1).toString(),
-                    content: `出错: ${error.message}`,
-                    role: "assistant"
-                };
-                messages = [...messages, errorMessage];
-            }
-            
-            renderMessages();
+            // 发起流式请求
+            await streamResponse(input, aiMessageId);
         });
 
         // 初始化页面
