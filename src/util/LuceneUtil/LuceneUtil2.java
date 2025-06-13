@@ -913,8 +913,7 @@ public class LuceneUtil2   extends BaseFunction
 	        if(builder != null)
 	        {
 	        	TopDocs hits = isearcher.search(builder, 1000);
-	        	//构造查询条件HashMap, 提高collectTermInfo的性能
-	        	if(hits.scoreDocs.length > 0)
+	        	if(hits != null && hits.scoreDocs != null && hits.scoreDocs.length > 0)
 	        	{
 	        		//只有content和nameForSearch的才需要收集termHitInfo
 		        	Map<String, String> termHitInfoFields = new HashMap<String, String>();	 
@@ -937,6 +936,7 @@ public class LuceneUtil2   extends BaseFunction
 			            	searchResult.put(newHitDoc.docPath, newHitDoc);
 			            }
 			            hitDoc.hitType = hitDoc.hitType | hitType;
+			            Log.debug("multiSearch() [" + hitDoc.docPath + "] was hit on indexLib:" + indexLib + " hitType:" + hitType);
 			            
 			            //收集词命中信息并更新命中积分
 			            collectHitTermInfo(ireader, scoreDoc, termHitInfoFields, hitType, hitDoc, context);
@@ -981,7 +981,7 @@ public class LuceneUtil2   extends BaseFunction
         Map<String, Integer> termHitInfo = hitDoc.getHitTermInfo(hitType);
         if(termHitInfo != null)
         {
-    		Log.debug("collectHitTermInfo() termHitInfo[" + hitType +"] 已收集, 跳过!");        	
+    		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] termHitInfo[" + hitType +"] 已收集, 跳过!");        	
         	return;
         }	
         
@@ -996,9 +996,10 @@ public class LuceneUtil2   extends BaseFunction
         Fields fields = leafReader.getTermVectors(scoreDoc.doc);
         if (fields != null) 
         {
-        	//查询所有的field
-            for (String field : fields) 
-            {	
+        	//遍历所有field
+        	for (String field : fields) 
+            {
+        		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] field:" + field);     
             	//只收集termHitInfoFields里的
             	if(termHitInfoFields.get(field) == null)
             	{
@@ -1007,24 +1008,31 @@ public class LuceneUtil2   extends BaseFunction
             	
             	//获取词向量
                 Terms terms = fields.terms(field);
-                if (terms == null) continue;
+                if (terms == null) 
+                {
+            		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] field:" + field + " 没有词向量信息!");
+                	continue;
+                }
                 
                 TermsEnum termsEnum = terms.iterator(null);
                 BytesRef text;
                 while ((text = termsEnum.next()) != null) 
                 {
                 	String hitTermText = text.utf8ToString();
+//            		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] field:" + field + " 词向量:" + hitTermText);
+
                 	//词命中信息只需要统计一次
                 	if(termHitInfo.get(hitTermText) == null)
                 	{
-                		if (isTermHitInQuery(hitTermText, field, context))
+//                		if(isTermHitInQuery(hitTermText, field, context))
+                		if(context.searchWordInLowerCase.indexOf(hitTermText.toLowerCase()) >= 0)
                 		{	 
                 			termHitInfo.put(hitTermText, 1);
                 			
                 			//更新命中积分
-                			Log.debug("collectHitTermInfo() 命中[" + hitTermText + "], before hitScore[" + hitType + "]" + hitDoc.getHitScore(hitType));
+                			Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] 命中[" + hitTermText + "], before hitScore[" + hitType + "]" + hitDoc.getHitScore(hitType));
     						hitDoc.setHitScore(hitType, caculateHitScore(hitDoc.getHitScore(hitType), weight, hitTermText, context.searchWord));
-    						Log.debug("collectHitTermInfo() 命中[" + hitTermText + "], after hitScore[" + hitType + "]" + hitDoc.getHitScore(hitType));
+    						Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] 命中[" + hitTermText + "], after hitScore[" + hitType + "]" + hitDoc.getHitScore(hitType));
     						
         		            //获取命中词的位置信息，需要额外的时间，如果没有必要，建议不要获取
         		            switch(hitType)
@@ -1085,7 +1093,7 @@ public class LuceneUtil2   extends BaseFunction
             int startOffset = postingsEnum.startOffset();
             int endOffset = postingsEnum.endOffset();
             positions.add(new int[]{startOffset, endOffset});
-            Log.debug("getTermPositions() termp pos[" + i +"] at [" + startOffset + "," + endOffset + "]");
+            Log.debug("getHitTermPositions() hitTerm pos[" + i +"] at [" + startOffset + "," + endOffset + "]");
         }
         termPositions.put(field, positions);
      }
@@ -1097,7 +1105,7 @@ public class LuceneUtil2   extends BaseFunction
     {
     	//TODO: 直接看命中的字段是否在搜索内容里，似乎更直接一点
     	//if(queryConditionMap.get(termText) != null)
-    	if(context.searchWord.contains(termText))
+    	if(context.searchWordInLowerCase.contains(termText.toLowerCase()))
     	{
     		Log.debug("isTermHitInQuery() [" + termText + "] was hit with query condition's field [" + field + "]");
     		return true;
