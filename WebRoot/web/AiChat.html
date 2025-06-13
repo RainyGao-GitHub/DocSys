@@ -183,52 +183,66 @@
                 // 使用文档片段处理内容
                 const fragment = document.createDocumentFragment();
                 
-                // 使用Marked.js安全解析Markdown
-                const sanitizedContent = marked.parse(message.content);
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = sanitizedContent;
-                
-                // 处理代码块添加复制按钮
-                tempDiv.querySelectorAll('pre').forEach(pre => {
-                    const container = document.createElement('div');
-                    container.className = 'relative';
-                    
-                    // 创建克隆副本以避免DOM冲突
-                    const preClone = pre.cloneNode(true);
-                    
-                    const button = document.createElement('button');
-                    button.className = 'copy-button absolute top-2 right-2 bg-white hover:bg-gray-100 rounded p-1 shadow';
-                    button.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
-                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                        </svg>
+                // 如果是流式响应消息且仍在加载中，添加闪烁光标
+                if (message.id.startsWith("streaming-msg-") && !message.content) {
+                    contentContainer.innerHTML = `
+                        <div class="flex items-center text-gray-500">
+                            <span class="typing-indicator">思考中</span>
+                            <div class="flex gap-1 ml-2">
+                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"></div>
+                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+                            </div>
+                        </div>
                     `;
-                    
-                    // 复制功能
-                    button.addEventListener('click', () => {
-                        const code = preClone.querySelector('code')?.innerText || '';
-                        navigator.clipboard.writeText(code);
-                        button.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
-                                <path d="M20 6 9 17l-5-5"/>
-                            </svg>
-                        `;
-                        setTimeout(() => {
-                            button.innerHTML = `
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                                </svg>
-                            `;
-                        }, 1500);
-                    });
-                    
-                    container.appendChild(preClone);
-                    container.appendChild(button);
-                    
-                    // 替换原始pre元素
-                    pre.replaceWith(container);
+                } else {
+	                // 使用Marked.js安全解析Markdown
+	                const sanitizedContent = marked.parse(message.content);
+	                const tempDiv = document.createElement('div');
+	                tempDiv.innerHTML = sanitizedContent;
+	                
+	                // 处理代码块添加复制按钮
+	                tempDiv.querySelectorAll('pre').forEach(pre => {
+	                    const container = document.createElement('div');
+	                    container.className = 'relative';
+	                    
+	                    // 创建克隆副本以避免DOM冲突
+	                    const preClone = pre.cloneNode(true);
+	                    
+	                    const button = document.createElement('button');
+	                    button.className = 'copy-button absolute top-2 right-2 bg-white hover:bg-gray-100 rounded p-1 shadow';
+	                    button.innerHTML = `
+	                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+	                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+	                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+	                        </svg>
+	                    `;
+	                    
+	                    // 复制功能
+	                    button.addEventListener('click', () => {
+	                        const code = preClone.querySelector('code')?.innerText || '';
+	                        navigator.clipboard.writeText(code);
+	                        button.innerHTML = `
+	                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
+	                                <path d="M20 6 9 17l-5-5"/>
+	                            </svg>
+	                        `;
+	                        setTimeout(() => {
+	                            button.innerHTML = `
+	                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+	                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+	                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+	                                </svg>
+	                            `;
+	                        }, 1500);
+	                    });
+	                    
+	                    container.appendChild(preClone);
+	                    container.appendChild(button);
+	                    
+	                    // 替换原始pre元素
+	                    pre.replaceWith(container);
+	                }
                 });
                 
                 // 表格响应式处理
@@ -268,35 +282,109 @@
         }
 
      	// 发送消息到后端API
-        async function sendToBackend(userInput) {
-            try {
-                // 调用后端API
-                const response = await fetch("/DocSystem/Repos/AIChat.do", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        query: userInput,
-                        LLMIndex: 0,
-                        LLMName: "deepseek"
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`请求失败: ${response.status}`);
-                }
-
-                const ret = await response.json();
-                
-                if ("ok" === ret.status) {
-                    return ret.data;  // 返回AI响应内容
-                } else {
-                    throw new Error(ret.msgInfo || "未知错误");
-                }
-            } catch (error) {
-                console.error('API请求错误:', error);
-                return `出错: ${error.message}`;
-            }
-        }
+		async function sendToBackend(userInput) {
+		    try {
+		        // 创建流式消息容器
+		        const newAiMessage = {
+		            id: "streaming-msg-" + Date.now(),
+		            content: "",
+		            role: "assistant"
+		        };
+		        messages = [...messages, newAiMessage];
+		        renderMessages();
+		        
+		        // 调用后端流式API
+		        const response = await fetch("/DocSystem/Repos/AIChat.do", {
+		            method: 'POST',
+		            headers: { 'Content-Type': 'application/json' },
+		            body: JSON.stringify({
+		                query: userInput,
+		                LLMIndex: 0,
+		                LLMName: "deepseek"
+		            })
+		        });
+		        
+		        if (!response.ok || !response.body) {
+		            throw new Error(`请求失败: ${response.status}`);
+		        }
+		        
+		        // 创建流式读取器
+		        const reader = response.body.getReader();
+		        const decoder = new TextDecoder("utf-8");
+		        let messageBuffer = "";
+		        let messagePrefix = `id:${newAiMessage.id} `;
+		        
+		        // 读取流数据
+		        const readStream = async () => {
+		            while (true) {
+		                const { value, done } = await reader.read();
+		                if (done) {
+		                    // 移除加载状态
+		                    messages = messages.filter(msg => msg.id !== "loading");
+		                    renderMessages();
+		                    return;
+		                }
+		                
+		                const chunk = decoder.decode(value, { stream: true });
+		                messageBuffer += chunk;
+		                
+		                // 处理消息部分
+		                while (messageBuffer.indexOf("\n\n") !== -1) {
+		                    const messageEnd = messageBuffer.indexOf("\n\n");
+		                    const fullMessage = messageBuffer.substring(0, messageEnd);
+		                    messageBuffer = messageBuffer.substring(messageEnd + 2);
+		                    
+		                    // 检查事件类型
+		                    if (fullMessage.startsWith("event:")) {
+		                        const lines = fullMessage.split("\n");
+		                        let eventType = "message";
+		                        let eventData = "";
+		                        
+		                        for (const line of lines) {
+		                            if (line.startsWith("event:")) {
+		                                eventType = line.substring(6).trim();
+		                            } else if (line.startsWith("data:")) {
+		                                eventData = line.substring(5).trim();
+		                            }
+		                        }
+		                        
+		                        if (eventType === "complete") {
+		                            // 完成标记
+		                        } else if (eventType === "error") {
+		                            // 错误处理
+		                            messages = messages.map(msg => 
+		                                msg.id === newAiMessage.id ? 
+		                                { ...msg, content: "⚠️ 错误: " + eventData } : msg
+		                            );
+		                            renderMessages();
+		                        }
+		                    } 
+		                    // 处理数据块
+		                    else if (fullMessage.startsWith("data:")) {
+		                        const content = fullMessage.substring(5).trim();
+		                        if (content) {
+		                            messages = messages.map(msg => 
+		                                msg.id === newAiMessage.id ? 
+		                                { ...msg, content: msg.content + content } : msg
+		                            );
+		                            renderMessages();
+		                        }
+		                    }
+		                }
+		            }
+		        };
+		        
+		        readStream();
+		        
+		    } catch (error) {
+		        // 错误处理
+		        messages = messages.map(msg => 
+		            msg.id === newAiMessage.id ? 
+		            { ...msg, content: "⚠️ 连接错误: " + error.message } : msg
+		        );
+		        renderMessages();
+		    }
+		}
 
         // 表单提交处理
         chatForm.addEventListener('submit', async (e) => {

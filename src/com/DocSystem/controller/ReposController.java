@@ -1,7 +1,9 @@
 package com.DocSystem.controller;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +31,17 @@ import com.DocSystem.entity.GroupMember;
 import com.DocSystem.entity.Repos;
 import com.DocSystem.entity.Doc;
 import com.DocSystem.entity.User;
+import com.DocSystem.websocket.entity.DocSearchContext;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.TextContent;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.model.output.Response;
+
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
@@ -110,35 +121,98 @@ public class ReposController extends BaseController{
 			return;
 		}
 		
-		//构造ChatContext
-		req.context = new AIChatContext();
-		List<Repos> reposList = new ArrayList<Repos>();
-		if(req.reposId == null || req.reposId == -1)
+	    // 设置响应头为流式传输
+	    response.setContentType("text/event-stream");
+	    response.setCharacterEncoding("UTF-8");
+	    response.setHeader("Cache-Control", "no-cache");
+	    response.setHeader("Connection", "keep-alive");
+	    
+	    try (PrintWriter writer = response.getWriter()) {
+	        // 构造ChatContext
+	        req.context = new AIChatContext();
+	        List<Repos> reposList = new ArrayList<>();
+	        if (req.reposId == null || req.reposId == -1) {
+	            reposList = getAccessableReposList(login_user.getId());
+	        } else {
+	            Repos repos = getReposEx(req.reposId);
+	            if (repos != null) reposList.add(repos);
+	            req.context.repos = repos;
+	        }
+	        req.context.reposList = reposList;
+	        
+	        // 搜索文档
+	        DocSearchContext searchContext = new DocSearchContext();
+	        searchContext.pid = 0;
+	        searchContext.path = "";
+	        searchContext.searchWord = req.query;
+	        searchContext.searchWordInLowerCase = req.query.toLowerCase();        
+	        searchContext.sort = null;        
+	        searchContext.chunkSize = 200;
+	        searchContext.maxContentSize = 2000;
+	        searchContext.convertToBase64 = false;
+	        channel.searchDocAsync(req.context.reposList, searchContext);
+	        List<Doc> searchResult = searchContext.result;
+	        Collections.sort(searchResult);
+	        
+	        // 构建查询消息
+	        String queryMsg = buildQueryMessage(req.query, searchResult);
+	        
+	        // 创建流式聊天模型
+	        OpenAiStreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
+	            .baseUrl(llmConfig.url)
+	            .apiKey(llmConfig.apikey)
+	            .modelName(llmConfig.modelName)
+	            .temperature(0.7)
+	            .maxTokens(8192)
+	            .logRequests(true)
+	            .build();
+	        
+	        // 创建消息处理器
+	        StreamingResponseHandler<AiMessage> messageHandler = new StreamingResponseHandler<AiMessage>() {
+	            @Override
+	            public void onNext(String messagePart) {
+	                writer.write("data: " + JSONObject.escape(messagePart) + "\n\n");
+	                writer.flush();
+	            }
+	            
+	            @Override
+	            public void onComplete(Response<AiMessage> response) {
+	                writer.write("event: complete\ndata: \n\n");
+	                writer.flush();
+	            }
+	            
+	            @Override
+	            public void onError(Throwable throwable) {
+	                writer.write("event: error\ndata: " + JSONObject.escape(throwable.getMessage()) + "\n\n");
+	                writer.flush();
+	            }
+	        };
+	        
+	        // 启动流式响应
+	        UserMessage userMessage = UserMessage.from(TextContent.from(queryMsg));
+	        chatModel.generate(userMessage, messageHandler);
+	        
+	    } catch (Exception e) {
+	        Log.error(e);
+	    }
+	}
+	
+	private String buildQueryMessage(String query, List<Doc> searchResult) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(query + "\r\n");
+		for(Doc doc : searchResult)
 		{
-			//Do search all AccessableRepos
-			reposList = getAccessableReposList(login_user.getId());
-		}
-		else
-		{
-			Repos repos = getReposEx(req.reposId);
-			if(repos != null)
+			sb.append("document path:" + doc.getPath() + doc.getName() + "\r\n");
+			sb.append("document link: http://localhost:8100/DocSystem" + "\r\n");
+			if(doc.getContent() != null)
 			{
-				reposList.add(repos);
-			}
-			req.context.repos = repos;
+				sb.append("document content:\r\n");
+				sb.append(doc.getContent() + "\r\n");
+			}			
 		}
-		req.context.reposList = reposList;
-		
-		String answer = channel.AIChat(req, llmConfig, rt);
-		if(answer != null)
-		{
-			rt.setData(answer);
-		}
-		else
-		{
-			rt.setError("Chat Failed");
-		}
-		writeJson(rt, response);
+		String queryMsg = sb.toString();        
+        Log.debug("AIChat() queryMsg:" + queryMsg);
+        return queryMsg;
 	}
 
 	private LLMConfig getLLMConfigByIndexOrName(Integer LLMIndex, String LLMName, ReturnAjax rt) 
