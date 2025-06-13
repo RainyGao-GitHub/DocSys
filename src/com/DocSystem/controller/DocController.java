@@ -7042,6 +7042,7 @@ public class DocController extends BaseController{
 		searchContext.pid = pid;
 		searchContext.path = path;
 		searchContext.searchWord = searchWord;
+		searchContext.searchWordInLowerCase = searchWord.toLowerCase();
 		searchContext.sort = sort;		
 		//TODO: 获取命中词的上下文配置
 		searchContext.chunkSize = 100;
