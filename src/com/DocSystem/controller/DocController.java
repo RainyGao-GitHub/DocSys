@@ -7133,8 +7133,9 @@ public class DocController extends BaseController{
 		            	searchResult.put(newHitDoc.docPath, newHitDoc);
 		            }
 		            hitDoc.hitType = hitDoc.hitType | hitType;
+		            Log.debug("databaseSearch() 命中[" + searchStr + "], before hitScore[" + hitType + "]" + newHitDoc.getHitScore(hitType));
 		            hitDoc.setHitScore(hitType, LuceneUtil2.caculateHitScore(hitDoc.getHitScore(hitType), weight, searchStr, context.searchWord));
-		            Log.debug("databaseSearch() 命中[" + searchStr + "], hitScore[" + hitType + "]" + newHitDoc.getHitScore(hitType));
+		            Log.debug("databaseSearch() 命中[" + searchStr + "], after hitScore[" + hitType + "]" + newHitDoc.getHitScore(hitType));
 		            
 		        	Log.printObject("databaseSearch() hitDoc:", hitDoc);
 		        }
