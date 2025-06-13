@@ -936,6 +936,7 @@ public class LuceneUtil2   extends BaseFunction
 			            	hitDoc = newHitDoc;
 			            	searchResult.put(newHitDoc.docPath, newHitDoc);
 			            }
+			            hitDoc.hitType = hitDoc.hitType | hitType;
 			            
 			            //收集词命中信息并更新命中积分
 			            collectHitTermInfo(ireader, scoreDoc, termHitInfoFields, hitType, hitDoc, context);
