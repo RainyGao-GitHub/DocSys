@@ -166,7 +166,7 @@ public class ReposController extends BaseController{
 	            .apiKey(llmConfig.apikey)
 	            .modelName(llmConfig.modelName)
 	            .temperature(0.7)
-	            .maxTokens(8192)
+	            .maxTokens(1024)
 	            .logRequests(true)
 	            .build();
 	        
