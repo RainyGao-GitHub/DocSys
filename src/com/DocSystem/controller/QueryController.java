@@ -1,17 +1,26 @@
 package com.DocSystem.controller;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.output.Response;
 
 import com.DocSystem.common.Log;
@@ -29,10 +38,10 @@ Something you need to know
 @RequestMapping("/Query")
 public class QueryController extends BaseController{
 
-	/****------ Ajax Interfaces For RAG Controller ------------------***/ 
+	/****------ fetch Interfaces For RAG Controller ------------------***/
 	/****************** add DocSysRagMesage **************/
 	@RequestMapping("/addDocSysRagMessage.do")
-	public void addDocSysRagMessage(String modelName, String query, String apiKey, HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public ResponseBodyEmitter addDocSysRagMessage(String modelName, String query, String apiKey, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		Log.infoHead("******************addDocSysRagMessage.do ***********************");
 		Log.infoHead("modelName: " + modelName + " query: " + query);
 		ReturnAjax rt = new ReturnAjax();		
@@ -43,7 +52,6 @@ public class QueryController extends BaseController{
 		
 		if (modelName.equals(deepSeekModel)) {
 			baseUrl = "https://api.deepseek.com";
-					
 		}
 		if (modelName.equals(llama321b)) {
 			baseUrl = "http://localhost:11434/v1/";
@@ -51,7 +59,7 @@ public class QueryController extends BaseController{
 			
 		}	
 		Log.infoHead("modelName: " + modelName + " query: " + query + " baseUrl:" + baseUrl + " apiKy: " + apiKey);
-        ChatLanguageModel chatModel = OpenAiChatModel.builder()
+		StreamingChatLanguageModel chatModel = OpenAiStreamingChatModel.builder()
         		.baseUrl(baseUrl)
         		.apiKey(apiKey)
         		.modelName(modelName)
@@ -65,12 +73,31 @@ public class QueryController extends BaseController{
                 TextContent.from(query)
         );
 
-        Response<AiMessage> chatResponse = chatModel.generate(userMessage);
+        ResponseBodyEmitter emitter = new ResponseBodyEmitter();
+        chatModel.generate(userMessage, new StreamingResponseHandler<AiMessage>() {
+            @Override
+            public void onNext(String token) {
+                System.out.println("onNext(): " + token);
+                try {
+					emitter.send(token);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+            }
 
-        System.out.println(chatResponse);
-        String answer = chatResponse.content().text();
-		config.put("answer", answer);
-		rt.setData(config);
-		writeJson(rt, response);
+            @Override
+            public void onComplete(Response<AiMessage> resp) {
+                System.out.println("onComplete(): " + resp);
+				emitter.complete();
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                error.printStackTrace();
+                emitter.completeWithError(error);
+            }
+        });
+        return emitter;
+
 	}
 }
