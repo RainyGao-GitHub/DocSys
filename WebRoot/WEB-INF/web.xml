@@ -87,7 +87,8 @@
 </filter>  
 <filter-mapping>  
     <filter-name>encodingFilter</filter-name>  
-    <url-pattern>/*</url-pattern>  
+    <url-pattern>/*</url-pattern>
+    <dispatcher>ASYNC</dispatcher>
 </filter-mapping>  
   
 <!-- 配置session超时时间，单位分钟 -->  

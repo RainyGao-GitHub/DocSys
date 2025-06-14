@@ -22,6 +22,7 @@ import org.redisson.api.RBucket;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import util.DateFormat;
 import util.ReturnAjax;
@@ -89,46 +90,75 @@ public class ReposController extends BaseController{
 	}
 	
 	/****************** AI LLM Chat **************/
-	@RequestMapping("/AIChat.do")
+	@RequestMapping(value="/AIChat.do", produces = "text/event-stream;charset=UTF-8")
 //	public void AIChat( Integer LLMIndex, String LLMName, 	//用户选择的大模型，如果未指定Index那么根据Name来确定选择的AI大模型
 //						String query, 						//用户的问题
 //						String queryMode, String queryExt,	//如果指定了queryMode， 那么需要进行额外的处理，queryExt是扩展信息，根据queryMode确定(比如：文件列表)
 //						HttpSession session,HttpServletRequest request,HttpServletResponse response)
-	public void AIChat( @RequestBody AIChatRequest req,
+	public SseEmitter AIChat( @RequestBody AIChatRequest req,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** AIChat.do ***********************");
-		Log.debug("AIChat() question:" + req.query + " LLMIndex:" + req.LLMIndex + " LLMName:" + req.LLMName);
+		Log.infoHead("AIChat() question:" + req.query + " LLMIndex:" + req.LLMIndex + " LLMName:" + req.LLMName);
+		SseEmitter emitter = new SseEmitter();
 		ReturnAjax rt = new ReturnAjax();
-		
 		User login_user = getLoginUser(session, request, response, rt);
-		if(login_user == null)
+		Log.info("*************** login user " + login_user + " ********************");	
+		if(login_user== null) 
 		{
-			rt.setError("用户未登录，请先登录！");
-			writeJson(rt, response);			
-			return;
+			try { 
+				emitter.send("用户未登录，请先登录！");
+			}
+			catch (IOException e)
+			{ 
+				e.printStackTrace();
+				emitter.completeWithError(e);
+			} 
+			emitter.complete();
+			return emitter; 
 		}
-		
+		  
 		if(systemLicenseInfoCheck(rt) == false)
 		{
-			writeJson(rt, response);	
-			return;
+			Log.info("*************** systemLicenseInfoCheck is false ********************");
+			try {
+				emitter.send(response.toString());
+			  	}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+				emitter.completeWithError(e);
+			}
+			emitter.complete();
+			return emitter;
 		}
 		
-		LLMConfig llmConfig = getLLMConfigByIndexOrName(req.LLMIndex, req.LLMName, rt);
-		if(llmConfig == null)
-		{
-			writeJson(rt, response);
-			return;
-		}
+		  LLMConfig llmConfig = getLLMConfigByIndexOrName(req.LLMIndex, req.LLMName, rt);
+		  Log.info("*************** llmConfig" + llmConfig+ " ********************");
+		  if(llmConfig == null)
+		  {
+			  try
+			  {
+				  emitter.send(response.toString());
+			  }
+			  catch(IOException e) 
+			  {
+				  e.printStackTrace();
+				  emitter.completeWithError(e);
+			  }
+			  emitter.complete();
+			  return emitter;
+		  }
 		
 	    // 设置响应头为流式传输
-	    response.setContentType("text/event-stream");
-	    response.setCharacterEncoding("UTF-8");
-	    response.setHeader("Cache-Control", "no-cache");
-	    response.setHeader("Connection", "keep-alive");
+		
+		  response.setContentType("text/event-stream");
+		  response.setCharacterEncoding("UTF-8");
+		  response.setHeader("Cache-Control","no-cache");
+		  response.setHeader("Connection", "keep-alive");
+		 
 	    
-	    try (PrintWriter writer = response.getWriter()) {
+	    try {
 //	        // 构造ChatContext
 //	        req.context = new AIChatContext();
 //	        List<Repos> reposList = new ArrayList<>();
@@ -162,9 +192,12 @@ public class ReposController extends BaseController{
 	        
 	        // 创建流式聊天模型
 	        OpenAiStreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
-	            .baseUrl(llmConfig.url)
-	            .apiKey(llmConfig.apikey)
-	            .modelName(llmConfig.modelName)
+//	            .baseUrl(llmConfig.url)
+//	            .apiKey(llmConfig.apikey)
+//	            .modelName(llmConfig.modelName)
+	            .baseUrl("https://api.deepseek.com")
+	            .apiKey("sk-356b806c5ab941ba894264de4c78de86")
+	            .modelName(req.LLMName)
 	            .temperature(0.7)
 	            .maxTokens(1024)
 	            .logRequests(true)
@@ -174,46 +207,37 @@ public class ReposController extends BaseController{
 	        StreamingResponseHandler<AiMessage> messageHandler = new StreamingResponseHandler<AiMessage>() {
 	            @Override
 	            public void onNext(String token) {
+	                System.out.println("onNext(): " + token);
 	                try {
-	                    // 发送 token
-	                    response.getWriter().write("data: " + token + "\n\n");
-	                    response.flushBuffer();
-	                } catch (IOException e) {
-	                    Log.error(e);
-	                }
+						emitter.send(token);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 	            }
 
 	            @Override
 	            public void onComplete(Response<AiMessage> responseMsg) {
-	                try {
-	                    // 发送结束标记
-	                    response.getWriter().write("event: end\n");
-	                    response.getWriter().write("data: \n\n");
-	                    response.flushBuffer();
-	                } catch (IOException e) {
-	                    Log.error(e);
-	                }
+	                System.out.println("onComplete(): " + responseMsg.content());
+					emitter.complete();
 	            }
 
 	            @Override
 	            public void onError(Throwable error) {
-	                try {
-	                    // 发送错误信息
-	                    response.getWriter().write("event: error\n");
-	                    response.getWriter().write("data: " + error.getMessage() + "\n\n");
-	                    response.flushBuffer();
-	                } catch (IOException e) {
-	                    Log.error(e);
-	                }
+	                error.printStackTrace();
+	                emitter.completeWithError(error);
 	            }
 	        };
 	        
 	        // 启动流式响应
 	        UserMessage userMessage = UserMessage.from(TextContent.from(queryMsg));
 	        chatModel.generate(userMessage, messageHandler);
+	        return emitter;
 	        
-	    } catch (Exception e) {
-	        Log.error(e);
+	    } catch (Exception error) {
+	        Log.error(error);
+            error.printStackTrace();
+            emitter.completeWithError(error);
+	        return emitter;
 	    }
 	}
 	

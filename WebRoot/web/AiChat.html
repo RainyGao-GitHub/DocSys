@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script> -->
     <style>
         .message-box {
             max-width: 85%;
@@ -197,7 +197,7 @@
                 const fragment = document.createDocumentFragment();
                 
                 // 使用Marked.js安全解析Markdown
-                const sanitizedContent = marked.parse(message.content);
+                const sanitizedContent = message.content;
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = sanitizedContent;
                 
@@ -283,7 +283,8 @@
         // 流式接收消息的函数
         async function streamResponse(userInput, messageId) {
             try {
-                const response = await fetch("/DocSystem/Repos/AIChat.do", {
+            	const url = "/DocSystem/Repos/AIChat.do";
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -291,17 +292,16 @@
                         'Accept': 'text/event-stream'
                     },
                     body: JSON.stringify({
-                        query: userInput,
-                        LLMIndex: 0,
-                        LLMName: "deepseek",
-                        // 新增流式传输标志
-                        stream: true
+                    	 query: userInput,
+                    	 LLMIndex: 0,
+                    	 LLMName: "deepseek-chat",
+                    	 stream: true
                     })
                 });
 
                 // 创建流式读取器
                 const reader = response.body.getReader();
-                const decoder = new TextDecoder();
+                const decoder = new TextDecoder("utf-8");
                 
                 // 初始化消息内容
                 messages = messages.map(msg => 
@@ -330,7 +330,6 @@
                     // 处理可能的分块（按换行分割）
                     const chunks = buffer.split('\n\n');
                     buffer = chunks.pop() || '';
-                    
                     for (const chunk of chunks) {
                         if (!chunk.trim()) continue;
                         
@@ -346,12 +345,16 @@
                             
                             // 如果收到数据事件
                             if (eventData.data) {
-                                messageContent += eventData.data;
+                            	console.log(eventData.data);
+                            	if (eventData.data.length === 0) continue;
+                            	let parsedMessage = JSON.parse(eventData.data)
+
+                                messageContent += parsedMessage;
                                 
                                 // 更新消息内容（带光标）
                                 messages = messages.map(msg => 
                                     msg.id === messageId 
-                                        ? {...msg, content: marked.parse(messageContent) + '<div class="cursor"></div>'} 
+                                        ? {...msg, content: messageContent + '<div class="cursor"></div>'} 
                                         : msg
                                 );
                                 renderMessages();
@@ -362,7 +365,7 @@
                                 // 移除光标
                                 messages = messages.map(msg => 
                                     msg.id === messageId 
-                                        ? {...msg, content: marked.parse(messageContent)} 
+                                        ? {...msg, content: messageContent} 
                                         : msg
                                 );
                                 renderMessages();
@@ -377,7 +380,7 @@
                 // 如果没有收到结束事件，确保更新消息内容
                 messages = messages.map(msg => 
                     msg.id === messageId 
-                        ? {...msg, content: marked.parse(messageContent)} 
+                        ? {...msg, content: messageContent} 
                         : msg
                 );
                 renderMessages();
@@ -429,13 +432,6 @@
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
-            // 配置Marked.js
-            marked.setOptions({
-                gfm: true,
-                breaks: true,
-                smartypants: true,
-                xhtml: true
-            });
             
             renderMessages();           
         });
