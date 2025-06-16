@@ -352,21 +352,28 @@
                     const { value, done } = await reader.read();
                     if (done) break;
                     clearTimeout(timeout);
-        
+        			
+                    var received_data = decoder.decode(value, { stream: true });
+                    console.log("received_data:" + received_data);                    
+                    
                     buffer += decoder.decode(value, { stream: true });
                     
                     // 处理缓冲区中的事件
-                    while (buffer.includes('\n\n')) {
+                    while (buffer.includes('\n\n')) 
+                    {
+                        console.log("开始处理 buffer:" + buffer);
                         const eventEndIndex = buffer.indexOf('\n\n');
                         const eventChunk = buffer.substring(0, eventEndIndex);
+                        console.log("eventChunk:" + eventChunk);
+                        
                         buffer = buffer.substring(eventEndIndex + 2);
                         
                         if (!eventChunk.trim()) continue;
                         
                         // 提取数据字段
                         const dataLines = eventChunk.split('\n')
-                            .filter(line => line.startsWith('data: '))
-                            .map(line => line.substring(6).trim());
+                            .filter(line => line.startsWith('data:'))
+                            .map(line => line.substring(5).trim());
                         
                         const eventData = dataLines.join('\n');
                         
