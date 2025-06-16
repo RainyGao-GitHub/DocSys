@@ -95,29 +95,39 @@
         
         <!-- 消息容器 -->
         <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-6"></div>
-        
-        <!-- 输入区域 -->
-        <div class="border-t p-4 bg-gray-50">
-            <form id="chat-form" class="flex gap-2">
-                <input 
-                    type="text"
-                    id="message-input"
-                    placeholder="输入消息..."
-                    class="flex-1 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                <button
-                    type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center gap-2 transition-colors"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send">
-                        <path d="m22 2-7 20-4-9-9-4Z"/>
-                        <path d="M22 2 11 13"/>
-                    </svg>
-                    发送
-                </button>
-            </form>
-            <p class="text-xs text-gray-500 mt-2">AI助手的回复不一定正确，请注意甄别</p>
-        </div>
+                
+        <!-- AI模型选择下拉框 -->
+		<div class="border-b px-4 pb-2 pt-2 bg-gray-50 flex items-center gap-3">
+		    <label for="ai-model-select" class="text-sm font-medium text-gray-700">选择AI模型：</label>
+		    <select id="ai-model-select" class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 text-sm">
+		        <option value="deepseek-chat" selected>DeepSeek</option>
+		        <option value="ollama3">Ollama3</option>
+		    </select>
+		</div>
+		
+		<!-- 输入区域 -->
+		<div class="border-t p-4 bg-gray-50">
+		    <form id="chat-form" class="flex gap-2 items-end">
+		        <textarea
+		            id="message-input"
+		            placeholder="输入消息..."
+		            rows="1"
+		            class="flex-1 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-base leading-6"
+		            style="font-family:D-DINExp, DM Sans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;"
+		        ></textarea>
+		        <button
+		            type="submit"
+		            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center gap-2 transition-colors"
+		        >
+		            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send">
+		                <path d="m22 2-7 20-4-9-9-4Z"/>
+		                <path d="M22 2 11 13"/>
+		            </svg>
+		            发送
+		        </button>
+		    </form>
+		    <p class="text-xs text-gray-500 mt-2">AI助手的回复不一定正确，请注意甄别</p>
+		</div>
     </div>
 
     <script>
@@ -433,6 +443,22 @@
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
             
+        	// textarea 自适应高度 + Enter快捷键发送
+        	const textarea = document.getElementById('message-input');
+        	textarea.addEventListener('input', () => {
+        	    textarea.style.height = 'auto'; // 先重置再设
+        	    textarea.style.height = (textarea.scrollHeight) + 'px';
+        	});
+
+        	// 支持按Enter发送、Shift+Enter换行
+        	//textarea.addEventListener('keydown', (e) => {
+        	//    if (e.key === 'Enter' && !e.shiftKey) {
+        	//        e.preventDefault();
+        	//        // 触发表单提交
+        	//        chatForm.requestSubmit();
+        	//    }
+        	//});
+        	
             renderMessages();           
         });
     </script>
