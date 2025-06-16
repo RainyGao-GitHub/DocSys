@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script>
     <style>
         .message-box {
             max-width: 85%;
@@ -70,7 +70,24 @@
             margin-left: 2px;
             animation: cursorBlink 1s step-end infinite;
         }
+        .message-content {
+		    overflow-wrap: break-word;
+		    white-space: pre-wrap;
+		}
     </style>
+    
+    <!-- Marked配置 -->
+	<script>
+	// 配置Marked.js
+	marked.setOptions({
+	    gfm: true,
+	    breaks: true,
+	    smartLists: true,
+	    smartypants: true,
+	    // 自定义渲染器以实现特定功能
+	    renderer: new marked.Renderer()
+	});
+	</script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="flex flex-col h-full w-full max-w-3xl bg-white rounded-lg border shadow-sm" style="height: 90vh;">
@@ -155,10 +172,11 @@
 
         // 渲染消息
         function renderMessages() {
-            messagesContainer.innerHTML = '';
-            
-            messages.forEach(message => {
-                const messageElement = document.createElement('div');
+		    messagesContainer.innerHTML = '';
+		    messages.forEach(message => {
+		        const messageElement = document.createElement('div');
+		        messageElement.id = `message-${message.id}`;   // 设置ID
+                
                 messageElement.className = `flex flex-col group message-container ${message.role === 'user' ? 'items-end' : 'items-start'} message-transition`;
                 
                 const messageHeader = document.createElement('div');
@@ -292,112 +310,211 @@
         // 流式接收消息的函数
         async function streamResponse(userInput, messageId) {
             try {
-            	const url = "/DocSystem/Repos/AIChat.do";
+                const url = "/DocSystem/Repos/AIChat.do";
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        // 告诉后端我们希望使用流式传输
                         'Accept': 'text/event-stream'
                     },
                     body: JSON.stringify({
-                    	 query: userInput,
-                    	 LLMIndex: 0,
-                    	 LLMName: "deepseek-chat",
-                    	 stream: true
+                        query: userInput,
+                        LLMIndex: 0,
+                        LLMName: "deepseek-chat",
+                        stream: true
                     })
                 });
-
-                // 创建流式读取器
+        
+                if (!response.ok) {
+                    throw new Error(`请求失败：${response.status}`);
+                }
+        
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder("utf-8");
-                
-                // 初始化消息内容
-                messages = messages.map(msg => 
-                    msg.id === messageId ? {...msg, content: '<div class="cursor"></div>'} : msg
-                );
-                renderMessages();
-                
-                let messageContent = '';
+                let accumulatedContent = '';
                 let buffer = '';
-                
-                // 设置超时时间
+        
+                // 设置超时
                 const timeout = setTimeout(() => {
-                    addErrorIndicator(messageId);
-                }, 30000); // 30秒超时
+                    addErrorIndicator(messageId, "请求超时");
+                    reader.cancel();
+                }, 30000);
+        
+                // 查找目标消息
+                const targetMessage = messages.find(msg => msg.id === messageId);
+                if (!targetMessage) return;
                 
-                // 流式读取数据
+                // 初始光标状态
+                targetMessage.content = '<div class="cursor"></div>';
+                renderMessageById(messageId);
+        
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
-                    
-                    clearTimeout(timeout); // 收到数据时清除超时
-                    
-                    // 解码并处理数据块
+                    clearTimeout(timeout);
+        
                     buffer += decoder.decode(value, { stream: true });
                     
-                    // 处理可能的分块（按换行分割）
-                    const chunks = buffer.split('\n\n');
-                    buffer = chunks.pop() || '';
-                    for (const chunk of chunks) {
-                        if (!chunk.trim()) continue;
+                    // 处理缓冲区中的事件
+                    while (buffer.includes('\n\n')) {
+                        const eventEndIndex = buffer.indexOf('\n\n');
+                        const eventChunk = buffer.substring(0, eventEndIndex);
+                        buffer = buffer.substring(eventEndIndex + 2);
                         
-                        try {
-                            // 解析消息内容
-                            const eventData = chunk.split('\n')
-                                .filter(line => line.includes(':'))
-                                .reduce((acc, line) => {
-                                    const [key, value] = line.split(':');
-                                    acc[key.trim()] = value.trim();
-                                    return acc;
-                                }, {});
-                            
-                            // 如果收到数据事件
-                            if (eventData.data) {
-                            	console.log(eventData.data);
-                            	if (eventData.data.length === 0) continue;
-                            	let parsedMessage = JSON.parse(eventData.data)
-
-                                messageContent += parsedMessage;
-                                
-                                // 更新消息内容（带光标）
-                                messages = messages.map(msg => 
-                                    msg.id === messageId 
-                                        ? {...msg, content: messageContent + '<div class="cursor"></div>'} 
-                                        : msg
-                                );
-                                renderMessages();
-                            }
-                            
-                            // 如果收到结束事件
-                            if (eventData.event === 'end') {
-                                // 移除光标
-                                messages = messages.map(msg => 
-                                    msg.id === messageId 
-                                        ? {...msg, content: messageContent} 
-                                        : msg
-                                );
-                                renderMessages();
-                                return;
-                            }
-                        } catch (e) {
-                            console.error('流数据处理错误:', e);
-                        }
+                        if (!eventChunk.trim()) continue;
+                        
+                        // 提取数据字段
+                        const dataLines = eventChunk.split('\n')
+                            .filter(line => line.startsWith('data: '))
+                            .map(line => line.substring(6).trim());
+                        
+                        const eventData = dataLines.join('\n');
+                        
+                        // 打印接收到的数据块 (调试用)
+                        console.log('Received data chunk:', eventData);
+                        
+                        // 合并到消息内容
+                        accumulatedContent += eventData;
+                        
+                        // 更新消息内容
+                        targetMessage.content = accumulatedContent;
+                        
+                        // 渲染更新后的消息
+                        renderMessageById(messageId);
                     }
                 }
+        
+                // 处理剩余内容
+                if (buffer) {
+                    accumulatedContent += buffer;
+                    targetMessage.content = accumulatedContent;
+                    renderMessageById(messageId);
+                }
                 
-                // 如果没有收到结束事件，确保更新消息内容
-                messages = messages.map(msg => 
-                    msg.id === messageId 
-                        ? {...msg, content: messageContent} 
-                        : msg
-                );
-                renderMessages();
+                // 完成后移除光标
+                targetMessage.content = accumulatedContent;
+                renderMessageById(messageId);
+                
             } catch (error) {
                 console.error('流式响应错误:', error);
                 addErrorIndicator(messageId, error.message);
             }
         }
+        
+        // 渲染指定ID的消息 (修复后的核心函数)
+        function renderMessageById(messageId) {
+            const message = messages.find(msg => msg.id === messageId);
+            if (!message) return;
+            
+            const messageElement = document.getElementById(`message-${messageId}`);
+            if (!messageElement) {
+                console.warn(`Message element not found for ID: ${messageId}`);
+                renderMessages(); // 尝试重绘所有消息
+                return;
+            }
+            
+            // 找到内容容器
+            const contentContainer = messageElement.querySelector('.message-content');
+            if (!contentContainer) {
+                console.error('Message content container not found');
+                return;
+            }
+            
+            // 解析Markdown并设置内容
+            const htmlContent = marked.parse(message.content) || '';
+            contentContainer.innerHTML = htmlContent;
+            
+            // 高亮代码块
+            contentContainer.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+                addCopyButtonToCodeBlock(block);
+            });
+        }
+		
+		// 添加的函数：逐个字符显示内容
+		async function displayCharacterByCharacter(messageId, fullContent) {
+		    const targetMessage = messages.find(msg => msg.id === messageId);
+		    if (!targetMessage) return;
+		    
+		    // 如果内容没有变化，直接返回
+		    if (targetMessage.streamBuffer === fullContent) return;
+		    targetMessage.streamBuffer = fullContent;
+		    
+		    // 清空当前显示内容
+		    targetMessage.content = '';
+		    
+		    for (let i = 0; i < fullContent.length; i++) {
+		        // 更新消息内容并渲染
+		        targetMessage.content += fullContent.charAt(i);
+		        renderMessageById(messageId);
+		        
+		        // 随机延迟（15-50ms）以创造打字机效果
+		        const delay = Math.random() * 35 + 15;
+		        await new Promise(resolve => setTimeout(resolve, delay));
+		    }
+		}
+		
+		// 为代码块添加复制按钮
+		function addCopyButtonToCodeBlock(codeBlock) {
+		    if (codeBlock.parentElement.querySelector('.copy-button')) return;
+		    
+		    const preElement = codeBlock.closest('pre');
+		    if (!preElement) return;
+		    
+		    const container = document.createElement('div');
+		    container.className = 'relative';
+		    
+		    const button = document.createElement('button');
+		    button.className = 'copy-button absolute top-2 right-2 bg-white hover:bg-gray-100 rounded p-1 shadow';
+		    button.innerHTML = `
+		        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+		            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+		            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+		        </svg>
+		    `;
+		    
+		    // 复制功能
+		    button.addEventListener('click', () => {
+		        const code = codeBlock.innerText;
+		        navigator.clipboard.writeText(code);
+		        
+		        // 显示成功反馈
+		        button.innerHTML = `
+		            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
+		                <path d="M20 6 9 17l-5-5"/>
+		            </svg>
+		        `;
+		        setTimeout(() => {
+		            button.innerHTML = `
+		                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+		                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+		                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+		                </svg>
+		            `;
+		        }, 1500);
+		    });
+		    
+		    container.appendChild(preElement.cloneNode(true));
+		    container.appendChild(button);
+		    
+		    // 替换原始的pre元素
+		    preElement.replaceWith(container);
+		}
+ 
+		// 在创建消息元素时，给每个消息元素设置id
+		function createMessageElement(message) {
+		    // ... 原有的创建单个消息元素的代码，注意在顶层元素上加上id: `id="message-${message.id}"`
+		    const messageElement = document.createElement('div');
+		    messageElement.id = `message-${message.id}`;
+		    // ... 其他创建逻辑
+		
+		    // 注意：在内容容器上添加一个类名，以便更新内容时找到
+		    const contentContainer = document.createElement('div');
+		    contentContainer.className = 'message-content';
+		    // ... 将内容设置进去
+		
+		    return messageElement;
+		}
         
         // 添加错误指示器
         function addErrorIndicator(messageId, errorMsg = "请求出错") {
@@ -448,15 +565,6 @@
         	    textarea.style.height = 'auto'; // 先重置再设
         	    textarea.style.height = (textarea.scrollHeight) + 'px';
         	});
-
-        	// 支持按Enter发送、Shift+Enter换行
-        	//textarea.addEventListener('keydown', (e) => {
-        	//    if (e.key === 'Enter' && !e.shiftKey) {
-        	//        e.preventDefault();
-        	//        // 触发表单提交
-        	//        chatForm.requestSubmit();
-        	//    }
-        	//});
         	
             renderMessages();           
         });
