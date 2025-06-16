@@ -357,11 +357,26 @@
                         if (!eventChunk.trim()) continue;
                         
                         // 提取数据字段
-                        const dataLines = eventChunk.split('\n')
-                            .filter(line => line.startsWith('data:'))
-                            .map(line => line.substring(5).trim());
-                        
-                        const eventData = dataLines.join('\n');
+                        //const dataLines = eventChunk.split('\n')
+                        //    .filter(line => line.startsWith('data:'))
+                        //    .map(line => line.substring(5).trim());
+                        //const eventData = dataLines.join('\n');
+                        // 逐行处理引号问题
+                        let eventData = '';
+                        const lines = eventChunk.split('\n');
+                        for (const line of lines) {
+                            if (line.startsWith('data:')) {
+                                let content = line.substring(5).trim();
+                                
+                                // 处理引号：如果内容被引号包裹则移除
+                                if ((content.startsWith('"') && content.endsWith('"')) || 
+                                    (content.startsWith("'") && content.endsWith("'"))) {
+                                    content = content.substring(1, content.length - 1);
+                                }
+                                
+                                eventData += content;
+                            }
+                        }
                         
                         // 打印接收到的数据块 (调试用)
                         console.log('Received data chunk:', eventData);
