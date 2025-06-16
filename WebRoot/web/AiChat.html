@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -71,23 +72,23 @@
             animation: cursorBlink 1s step-end infinite;
         }
         .message-content {
-		    overflow-wrap: break-word;
-		    white-space: pre-wrap;
-		}
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+        }
     </style>
     
     <!-- Marked配置 -->
-	<script>
-	// 配置Marked.js
-	marked.setOptions({
-	    gfm: true,
-	    breaks: true,
-	    smartLists: true,
-	    smartypants: true,
-	    // 自定义渲染器以实现特定功能
-	    renderer: new marked.Renderer()
-	});
-	</script>
+    <script>
+    // 配置Marked.js
+    marked.setOptions({
+        gfm: true,
+        breaks: true,
+        smartLists: true,
+        smartypants: true,
+        // 自定义渲染器以实现特定功能
+        renderer: new marked.Renderer()
+    });
+    </script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="flex flex-col h-full w-full max-w-3xl bg-white rounded-lg border shadow-sm" style="height: 90vh;">
@@ -113,37 +114,37 @@
         <!-- 消息容器 -->
         <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-6"></div>
                 
-		<!-- AI模型选择下拉框 -->
-		<div class="border-t p-4 bg-gray-50" style="padding-bottom: 4px;">
-		    <select id="ai-model-select" class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 text-sm">
-		        <option value="deepseek-chat" selected>DeepSeek</option>
-		        <option value="ollama3">Ollama3</option>
-		    </select>
-		</div>
-		                
-		<!-- 输入区域 -->
-		<div class="p-4 bg-gray-50" style="padding-top: 0;">
-		    <form id="chat-form" class="flex gap-2 items-end">
-		        <textarea
-		            id="message-input"
-		            placeholder="输入消息..."
-		            rows="1"
-		            class="flex-1 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-base leading-6"
-		            style="font-family:D-DINExp, DM Sans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;"
-		        ></textarea>
-		        <button
-		            type="submit"
-		            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center gap-2 transition-colors"
-		        >
-		            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send">
-		                <path d="m22 2-7 20-4-9-9-4Z"/>
-		                <path d="M22 2 11 13"/>
-		            </svg>
-		            发送
-		        </button>
-		    </form>
-		    <p class="text-xs text-gray-500 mt-2">AI助手的回复不一定正确，请注意甄别</p>
-		</div>
+        <!-- AI模型选择下拉框 -->
+        <div class="border-t p-4 bg-gray-50" style="padding-bottom: 4px;">
+            <select id="ai-model-select" class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 text-sm">
+                <option value="deepseek-chat" selected>DeepSeek</option>
+                <option value="ollama3">Ollama3</option>
+            </select>
+        </div>
+                        
+        <!-- 输入区域 -->
+        <div class="p-4 bg-gray-50" style="padding-top: 0;">
+            <form id="chat-form" class="flex gap-2 items-end">
+                <textarea
+                    id="message-input"
+                    placeholder="输入消息..."
+                    rows="1"
+                    class="flex-1 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-base leading-6"
+                    style="font-family:D-DINExp, DM Sans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;"
+                ></textarea>
+                <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send">
+                        <path d="m22 2-7 20-4-9-9-4Z"/>
+                        <path d="M22 2 11 13"/>
+                    </svg>
+                    发送
+                </button>
+            </form>
+            <p class="text-xs text-gray-500 mt-2">AI助手的回复不一定正确，请注意甄别</p>
+        </div>
     </div>
 
     <script>
@@ -170,12 +171,59 @@
             { id: "1", content: responses.greeting, role: "assistant" },
         ];
 
+        // 为代码块添加复制按钮的函数
+        function addCopyButtonToCodeBlock(codeBlock) {
+            if (codeBlock.parentElement.querySelector('.copy-button')) return;
+            
+            const preElement = codeBlock.closest('pre');
+            if (!preElement) return;
+            
+            const container = document.createElement('div');
+            container.className = 'relative';
+            
+            const button = document.createElement('button');
+            button.className = 'copy-button absolute top-2 right-2 bg-white hover:bg-gray-100 rounded p-1 shadow';
+            button.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
+            `;
+            
+            // 复制功能
+            button.addEventListener('click', () => {
+                const code = codeBlock.innerText;
+                navigator.clipboard.writeText(code);
+                
+                // 显示成功反馈
+                button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
+                        <path d="M20 6 9 17l-5-5"/>
+                    </svg>
+                `;
+                setTimeout(() => {
+                    button.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                        </svg>
+                    `;
+                }, 1500);
+            });
+            
+            container.appendChild(preElement.cloneNode(true));
+            container.appendChild(button);
+            
+            // 替换原始的pre元素
+            preElement.replaceWith(container);
+        }
+
         // 渲染消息
         function renderMessages() {
-		    messagesContainer.innerHTML = '';
-		    messages.forEach(message => {
-		        const messageElement = document.createElement('div');
-		        messageElement.id = `message-${message.id}`;   // 设置ID
+            messagesContainer.innerHTML = '';
+            messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.id = `message-${message.id}`;
                 
                 messageElement.className = `flex flex-col group message-container ${message.role === 'user' ? 'items-end' : 'items-start'} message-transition`;
                 
@@ -212,84 +260,22 @@
                 messageHeader.appendChild(icon);
                 messageHeader.appendChild(roleText);
                 
-                // 消息内容
+                // 消息内容 - 修复：添加 message-content 类名
                 const contentContainer = document.createElement('div');
-                contentContainer.className = `message-box p-4 rounded-lg prose ${
+                contentContainer.className = `message-box p-4 rounded-lg prose message-content ${
                     message.role === 'user' 
                         ? 'user-message-box bg-blue-100 text-blue-900' 
                         : 'assistant-message-box bg-green-100 text-green-900'
                 }`;
                 
-                // 使用文档片段处理内容
-                const fragment = document.createDocumentFragment();
+                // 解析Markdown内容
+                const parsedContent = marked.parse(message.content);
+                contentContainer.innerHTML = parsedContent;
                 
-                // 使用Marked.js安全解析Markdown
-                const sanitizedContent = message.content;
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = sanitizedContent;
-                
-                // 处理代码块添加复制按钮
-                tempDiv.querySelectorAll('pre').forEach(pre => {
-                    const container = document.createElement('div');
-                    container.className = 'relative';
-                    
-                    // 创建克隆副本以避免DOM冲突
-                    const preClone = pre.cloneNode(true);
-                    
-                    const button = document.createElement('button');
-                    button.className = 'copy-button absolute top-2 right-2 bg-white hover:bg-gray-100 rounded p-1 shadow';
-                    button.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
-                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                        </svg>
-                    `;
-                    
-                    // 复制功能
-                    button.addEventListener('click', () => {
-                        const code = preClone.querySelector('code')?.innerText || '';
-                        navigator.clipboard.writeText(code);
-                        button.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
-                                <path d="M20 6 9 17l-5-5"/>
-                            </svg>
-                        `;
-                        setTimeout(() => {
-                            button.innerHTML = `
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                                </svg>
-                            `;
-                        }, 1500);
-                    });
-                    
-                    container.appendChild(preClone);
-                    container.appendChild(button);
-                    
-                    // 替换原始pre元素
-                    pre.replaceWith(container);
-                });
-                
-                // 表格响应式处理
-                tempDiv.querySelectorAll('table').forEach(table => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'overflow-x-auto';
-                    wrapper.appendChild(table.cloneNode(true));
-                    table.replaceWith(wrapper);
-                });
-                
-                // 将处理后的内容添加到片段
-                while (tempDiv.firstChild) {
-                    fragment.appendChild(tempDiv.firstChild);
-                }
-                
-                // 将片段添加到内容容器
-                contentContainer.appendChild(fragment);
-                
-                // 高亮代码
+                // 高亮代码块并添加复制按钮
                 contentContainer.querySelectorAll('pre code').forEach(block => {
                     hljs.highlightElement(block);
+                    addCopyButtonToCodeBlock(block);
                 });
                 
                 // 组合元素
@@ -346,13 +332,13 @@
                 
                 // 初始光标状态
                 targetMessage.content = '<div class="cursor"></div>';
-                renderMessageById(messageId);
+                renderMessages();
         
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
                     clearTimeout(timeout);
-        			
+                    
                     var received_data = decoder.decode(value, { stream: true });
                     console.log("received_data:" + received_data);                    
                     
@@ -400,7 +386,7 @@
                 
                 // 完成后移除光标
                 targetMessage.content = accumulatedContent;
-                renderMessageById(messageId);
+                renderMessages();
                 
             } catch (error) {
                 console.error('流式响应错误:', error);
@@ -408,120 +394,34 @@
             }
         }
         
-        // 渲染指定ID的消息 (修复后的核心函数)
+        // 渲染指定ID的消息（修复后的函数）
         function renderMessageById(messageId) {
             const message = messages.find(msg => msg.id === messageId);
             if (!message) return;
             
             const messageElement = document.getElementById(`message-${messageId}`);
-            if (!messageElement) {
-                console.warn(`Message element not found for ID: ${messageId}`);
-                renderMessages(); // 尝试重绘所有消息
-                return;
-            }
+            if (!messageElement) return;
             
-            // 找到内容容器
+            // 找到内容容器（使用正确的类名）
             const contentContainer = messageElement.querySelector('.message-content');
-            if (!contentContainer) {
-                console.error('Message content container not found');
-                return;
-            }
+            if (!contentContainer) return;
             
             // 解析Markdown并设置内容
             const htmlContent = marked.parse(message.content) || '';
             contentContainer.innerHTML = htmlContent;
             
-            // 高亮代码块
+            // 高亮代码块并添加复制按钮
             contentContainer.querySelectorAll('pre code').forEach(block => {
                 hljs.highlightElement(block);
                 addCopyButtonToCodeBlock(block);
             });
+            
+            // 高亮其他可能的内容
+            hljs.highlightAll();
+            
+            // 滚动到最新消息
+            messageElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
-		
-		// 添加的函数：逐个字符显示内容
-		async function displayCharacterByCharacter(messageId, fullContent) {
-		    const targetMessage = messages.find(msg => msg.id === messageId);
-		    if (!targetMessage) return;
-		    
-		    // 如果内容没有变化，直接返回
-		    if (targetMessage.streamBuffer === fullContent) return;
-		    targetMessage.streamBuffer = fullContent;
-		    
-		    // 清空当前显示内容
-		    targetMessage.content = '';
-		    
-		    for (let i = 0; i < fullContent.length; i++) {
-		        // 更新消息内容并渲染
-		        targetMessage.content += fullContent.charAt(i);
-		        renderMessageById(messageId);
-		        
-		        // 随机延迟（15-50ms）以创造打字机效果
-		        const delay = Math.random() * 35 + 15;
-		        await new Promise(resolve => setTimeout(resolve, delay));
-		    }
-		}
-		
-		// 为代码块添加复制按钮
-		function addCopyButtonToCodeBlock(codeBlock) {
-		    if (codeBlock.parentElement.querySelector('.copy-button')) return;
-		    
-		    const preElement = codeBlock.closest('pre');
-		    if (!preElement) return;
-		    
-		    const container = document.createElement('div');
-		    container.className = 'relative';
-		    
-		    const button = document.createElement('button');
-		    button.className = 'copy-button absolute top-2 right-2 bg-white hover:bg-gray-100 rounded p-1 shadow';
-		    button.innerHTML = `
-		        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
-		            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-		            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-		        </svg>
-		    `;
-		    
-		    // 复制功能
-		    button.addEventListener('click', () => {
-		        const code = codeBlock.innerText;
-		        navigator.clipboard.writeText(code);
-		        
-		        // 显示成功反馈
-		        button.innerHTML = `
-		            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
-		                <path d="M20 6 9 17l-5-5"/>
-		            </svg>
-		        `;
-		        setTimeout(() => {
-		            button.innerHTML = `
-		                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
-		                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-		                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-		                </svg>
-		            `;
-		        }, 1500);
-		    });
-		    
-		    container.appendChild(preElement.cloneNode(true));
-		    container.appendChild(button);
-		    
-		    // 替换原始的pre元素
-		    preElement.replaceWith(container);
-		}
- 
-		// 在创建消息元素时，给每个消息元素设置id
-		function createMessageElement(message) {
-		    // ... 原有的创建单个消息元素的代码，注意在顶层元素上加上id: `id="message-${message.id}"`
-		    const messageElement = document.createElement('div');
-		    messageElement.id = `message-${message.id}`;
-		    // ... 其他创建逻辑
-		
-		    // 注意：在内容容器上添加一个类名，以便更新内容时找到
-		    const contentContainer = document.createElement('div');
-		    contentContainer.className = 'message-content';
-		    // ... 将内容设置进去
-		
-		    return messageElement;
-		}
         
         // 添加错误指示器
         function addErrorIndicator(messageId, errorMsg = "请求出错") {
@@ -533,7 +433,7 @@
             renderMessages();
         }
         
-        // 表单提交处理（修改后）
+        // 表单提交处理
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = messageInput.value.trim();
@@ -566,13 +466,13 @@
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
             
-        	// textarea 自适应高度 + Enter快捷键发送
-        	const textarea = document.getElementById('message-input');
-        	textarea.addEventListener('input', () => {
-        	    textarea.style.height = 'auto'; // 先重置再设
-        	    textarea.style.height = (textarea.scrollHeight) + 'px';
-        	});
-        	
+            // textarea 自适应高度 + Enter快捷键发送
+            const textarea = document.getElementById('message-input');
+            textarea.addEventListener('input', () => {
+                textarea.style.height = 'auto'; // 先重置再设
+                textarea.style.height = (textarea.scrollHeight) + 'px';
+            });
+            
             renderMessages();           
         });
     </script>
