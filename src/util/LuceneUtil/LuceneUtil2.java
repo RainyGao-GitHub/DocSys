@@ -675,103 +675,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		
 		return false;
-		/*
-		if(list.size() == 1)
-		{
-			String searchStr = list.get(0);
-			Log.debug("smartSearch subSearchStr[0]:" + searchStr);
-			return search(repos, preConditions, field, searchStr, pathFilter, indexLib, searchResult, searchType, weight, hitType);
-		}
-		
-		List<HashMap<String, HitDoc>> subSearcResults = new ArrayList<HashMap<String, HitDoc>>();
-		for(int i=0; i<list.size(); i++)
-		{
-			HashMap<String, HitDoc> subSearchResult = new HashMap<String, HitDoc>();
-			String searchStr = list.get(i);
-			Log.debug("smartSearch subSearchStr[" + i + "]:" + searchStr);
-			search(repos, preConditions, field, searchStr, pathFilter, indexLib, subSearchResult, searchType, weight, hitType);
-			if(subSearchResult.size() <= 0)
-			{
-				//subSearchStr Not found
-				return false;
-			}
-			
-			//Add subSearchResult to results
-			subSearcResults.add(subSearchResult);
-		}
-		
-		combineSubSearchResults(subSearcResults, searchResult);		
-		return true;
-		*/
-    }
-	
-	public static boolean smartSearchEx(
-			Repos repos, 
-			List<QueryCondition> preConditions, 
-			String field, 
-			String str, 
-			String pathFilter, 
-			String indexLib, 
-			int searchType, 
-			int hitType, 
-			HashMap<String, HitDoc> searchResult, 
-			DocSearchContext context)
-	{
-		Log.debug("smartSearch() keyWord:" + str + " field:" + field + " indexLib:" + indexLib);
-
-		//利用Index的切词器将查询条件切词后进行精确查找
-		Analyzer analyzer = null;
-		TokenStream stream = null;
-
-		List <String> list = new ArrayList<String>();
-		try {
-			analyzer = new IKAnalyzer();;
-			stream = analyzer.tokenStream("field", new StringReader(str));
-			
-			//保存分词后的结果词汇
-			CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
-	
-			stream.reset(); //这句很重要
-	
-			while(stream.incrementToken()) {
-				Log.debug("smartSearch() subKeyword:" + cta.toString());
-				list.add(cta.toString());
-			}
-	
-			stream.end(); //这句很重要
-		} catch (Exception e) {
-			Log.debug(e);
-		} finally {
-			if(stream != null)
-			{
-				try {
-					stream.close();
-				} catch (IOException e1) {
-					Log.debug(e1);
-				}
-			}
-			if(analyzer != null)
-			{
-				analyzer.close();
-			}
-		}
-		
-		if(list.size() > 0)
-		{
-			//如果第一个字符和str相同，那么结果不一定存在，因此需要去掉整个字符串再搜索
-			if(list.size() > 1)
-			{
-				if(list.get(0).equals(str.toLowerCase()))
-				{
-					list.remove(0);
-				}
-			}
-			return search(repos, preConditions, field, list, pathFilter, indexLib, searchType, hitType, searchResult, context);
-		}
-		
-		return false;
-    }
-	
+    }	
     
     /**
      * 	关键字模糊查询， 返回docId List
@@ -858,6 +762,7 @@ public class LuceneUtil2   extends BaseFunction
 				condition.setField(field);
 				condition.setValue(str);
 				condition.setQueryType(searchType);
+				condition.setOccurType(Occur.SHOULD); //不应该是强制的
 				conditions.add(condition);
 			}
 		}
@@ -912,6 +817,8 @@ public class LuceneUtil2   extends BaseFunction
 	        BooleanQuery builder = buildBooleanQueryWithConditions(conditions);
 	        if(builder != null)
 	        {
+	        	builder.setMinimumNumberShouldMatch(1);	//conditions里面有可能全部是Should，那么至少要满足一个
+	        	
 	        	TopDocs hits = isearcher.search(builder, 1000);
 	        	if(hits != null && hits.scoreDocs != null && hits.scoreDocs.length > 0)
 	        	{

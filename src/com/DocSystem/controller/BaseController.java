@@ -23901,12 +23901,7 @@ public class BaseController  extends BaseFunction{
 					//0x00000002; //文件内容搜索
 					Log.debug("luceneSearch() 文件内容智能搜索, searchWord:" + searchStr);
 					//Search By FileContent
-					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), QueryCondition.SEARCH_TYPE_Term, HitDoc.HitType_FileContent, searchResult, context);
-					if(ret == false  ||  searchResult.size() == 0)
-					{
-						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), QueryCondition.SEARCH_TYPE_Term, HitDoc.HitType_FileContent, searchResult, context);
-					}
-					
+					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_R_DOC), QueryCondition.SEARCH_TYPE_Term, HitDoc.HitType_FileContent, searchResult, context);					
 					Log.debug("luceneSearch() 文件内容智能搜索, searchWord:" + searchStr + " searchResult.size():" + searchResult.size());
 				}
 				//根据文件备注查找
@@ -23915,10 +23910,6 @@ public class BaseController  extends BaseFunction{
 					//0x00000004; //文件备注搜索
 					Log.debug("luceneSearch() 文件备注智能搜索, searchWord:" + searchStr);
 					boolean ret = LuceneUtil2.smartSearch(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), QueryCondition.SEARCH_TYPE_Term, HitDoc.HitType_FileComment, searchResult, context);
-					if(ret == false ||  searchResult.size() == 0)
-					{
-						LuceneUtil2.smartSearchEx(repos, preConditions, "content", searchStr, path, getIndexLibPath(repos,INDEX_V_DOC), QueryCondition.SEARCH_TYPE_Term, HitDoc.HitType_FileComment, searchResult, context);						
-					}
 					Log.debug("luceneSearch() 文件备注智能搜索, searchWord:" + searchStr + " searchResult.size():" + searchResult.size());
 				}
 			}
