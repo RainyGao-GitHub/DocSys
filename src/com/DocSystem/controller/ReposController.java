@@ -315,13 +315,13 @@ public class ReposController extends BaseController{
 
 	private String buildDocAccessLink(Doc doc, String baseUrl) 
 	{
-		String encPath = Base64Util.base64EncodeURLSafe(doc.getPath());
+		String encPath = Base64Util.base64Encode(doc.getPath());
 		if(encPath == null)
 		{
 			return null;			
 		}
 		
-		String encName = Base64Util.base64EncodeURLSafe(doc.getName());
+		String encName = Base64Util.base64Encode(doc.getName());
 		if(encName == null)
 		{
 			return null;			
