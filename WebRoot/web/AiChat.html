@@ -300,7 +300,7 @@
         }
 
         // 流式接收消息的函数
-        async function streamResponse(userInput, messageId) {
+        async function streamResponse(userInput, messageId, model) {
             try {
                 const url = "/DocSystem/Repos/AIChat.do";
                 const response = await fetch(url, {
@@ -311,8 +311,8 @@
                     },
                     body: JSON.stringify({
                         query: userInput,
-                        LLMIndex: 0,
-                        LLMName: "deepseek-chat",
+                        LLMIndex: model.LLMIndex,
+                        LLMName: model.LLMName,
                         stream: true
                     })
                 });
@@ -460,6 +460,20 @@
             const input = messageInput.value.trim();
             if (!input) return;
             
+            // 检查模型是否已加载
+            if (!gAiModelList.length || modelSelect.value === "") {
+                messages.push({
+                    id: Date.now().toString(),
+                    content: "⚠️ 模型列表尚未加载完成，请稍后再试",
+                    role: "assistant"
+                });
+                renderMessages();
+                return;
+            }
+            
+            // 获取选中的模型
+            const selectedModel = gAiModelList.find(m => m.LLMIndex == modelSelect.value);
+            
             // 添加用户消息
             const newUserMessage = {
                 id: Date.now().toString(),
@@ -481,7 +495,7 @@
             renderMessages();
             
             // 发起流式请求
-            await streamResponse(input, aiMessageId);
+            await streamResponse(input, aiMessageId, selectedModel);
         });
 
 
