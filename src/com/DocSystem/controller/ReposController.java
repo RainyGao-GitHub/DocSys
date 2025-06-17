@@ -130,10 +130,6 @@ public class ReposController extends BaseController{
 	
 	/****************** AI LLM Chat **************/
 	@RequestMapping(value="/AIChat.do", produces = "text/event-stream;charset=UTF-8")
-//	public void AIChat( Integer LLMIndex, String LLMName, 	//用户选择的大模型，如果未指定Index那么根据Name来确定选择的AI大模型
-//						String query, 						//用户的问题
-//						String queryMode, String queryExt,	//如果指定了queryMode， 那么需要进行额外的处理，queryExt是扩展信息，根据queryMode确定(比如：文件列表)
-//						HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	public SseEmitter AIChat( @RequestBody AIChatRequest req,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -198,36 +194,34 @@ public class ReposController extends BaseController{
 		 
 	    
 	    try {
-//	        // 构造ChatContext
-//	        req.context = new AIChatContext();
-//	        List<Repos> reposList = new ArrayList<>();
-//	        if (req.reposId == null || req.reposId == -1) {
-//	            reposList = getAccessableReposList(login_user.getId());
-//	        } else {
-//	            Repos repos = getReposEx(req.reposId);
-//	            if (repos != null) reposList.add(repos);
-//	            req.context.repos = repos;
-//	        }
-//	        req.context.reposList = reposList;
-//	        
-//	        // 搜索文档
-//	        DocSearchContext searchContext = new DocSearchContext();
-//	        searchContext.pid = 0;
-//	        searchContext.path = "";
-//	        searchContext.searchWord = req.query;
-//	        searchContext.searchWordInLowerCase = req.query.toLowerCase();        
-//	        searchContext.sort = null;        
-//	        searchContext.chunkSize = 200;
-//	        searchContext.maxContentSize = 2000;
-//	        searchContext.convertToBase64 = false;
-//	        channel.searchDocAsync(req.context.reposList, searchContext);
-//	        List<Doc> searchResult = searchContext.result;
-//	        Collections.sort(searchResult);
-//	        
-//	        // 构建查询消息
-//	        String queryMsg = buildQueryMessage(req.query, searchResult);
-
-	    	String queryMsg = req.query;
+	        // 构造ChatContext
+	        req.context = new AIChatContext();
+	        List<Repos> reposList = new ArrayList<>();
+	        if (req.reposId == null || req.reposId == -1) {
+	            reposList = getAccessableReposList(login_user.getId());
+	        } else {
+	            Repos repos = getReposEx(req.reposId);
+	            if (repos != null) reposList.add(repos);
+	            req.context.repos = repos;
+	        }
+	        req.context.reposList = reposList;
+	        
+	        // 搜索文档
+	        DocSearchContext searchContext = new DocSearchContext();
+	        searchContext.pid = 0;
+	        searchContext.path = "";
+	        searchContext.searchWord = req.query;
+	        searchContext.searchWordInLowerCase = req.query.toLowerCase();        
+	        searchContext.sort = null;        
+	        searchContext.chunkSize = 200;
+	        searchContext.maxContentSize = 2000;
+	        searchContext.convertToBase64 = false;
+	        channel.searchDocAsync(req.context.reposList, searchContext);
+	        List<Doc> searchResult = searchContext.result;
+	        Collections.sort(searchResult);
+	        
+	        // 构建查询消息
+	        String queryMsg = buildQueryMessage(req.query, searchResult);
 	        
 	        // 创建流式聊天模型
 	        OpenAiStreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
