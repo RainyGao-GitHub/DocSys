@@ -276,7 +276,7 @@ public class ReposController extends BaseController{
 	private String buildQueryMessage(String query, List<Doc> searchResult, HttpServletRequest request) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(query + "\r\n");
-		
+		sb.append("以下是参考资料:\r\n");		
 		URLInfo urlInfo = getUrlInfoFromRequest(request);
 		String host = urlInfo.host;	 	
 	 	String baseUrl = null;
