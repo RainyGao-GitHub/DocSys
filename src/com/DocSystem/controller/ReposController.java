@@ -118,10 +118,13 @@ public class ReposController extends BaseController{
 		}	
 		
 		List<String> aiModelList = new ArrayList<String>();
-		for(LLMConfig llmConfig : systemLLMConfig.llmConfigList)
+//		for(LLMConfig llmConfig : systemLLMConfig.llmConfigList)
+		for(int i=0; i<systemLLMConfig.llmConfigList.size(); i++)
 		{
+			LLMConfig llmConfig = systemLLMConfig.llmConfigList.get(i);
 			aiModelList.add(llmConfig.name);
 		}
+		rt.setData(aiModelList);
 		writeJson(rt, response);
 	}
 	
@@ -228,12 +231,12 @@ public class ReposController extends BaseController{
 	        
 	        // 创建流式聊天模型
 	        OpenAiStreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
-//	            .baseUrl(llmConfig.url)
-//	            .apiKey(llmConfig.apikey)
-//	            .modelName(llmConfig.modelName)
-	            .baseUrl("https://api.deepseek.com")
-	            .apiKey("sk-356b806c5ab941ba894264de4c78de86")
-	            .modelName(req.LLMName)
+	            .baseUrl(llmConfig.url)
+	            .apiKey(llmConfig.apikey)
+	            .modelName(llmConfig.modelName)
+//	            .baseUrl("https://api.deepseek.com")
+//	            .apiKey("sk-356b806c5ab941ba894264de4c78de86")
+//	            .modelName(req.LLMName)
 	            .temperature(0.7)
 	            .maxTokens(1024)
 	            .logRequests(true)

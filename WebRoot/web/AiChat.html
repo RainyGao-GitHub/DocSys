@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script>
+    <script src="static/scripts/jquery.min.js"></script>    
     <style>
         .message-box {
             max-width: 85%;
@@ -117,8 +118,8 @@
         <!-- AI模型选择下拉框 -->
         <div class="border-t p-4 bg-gray-50" style="padding-bottom: 4px;">
             <select id="ai-model-select" class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 text-sm">
-                <option value="deepseek-chat" selected>DeepSeek</option>
-                <option value="ollama3">Ollama3</option>
+                <!-- 初始选项将被动态替换 -->
+                <option value="" disabled selected>正在加载模型...</option>
             </select>
         </div>
                         
@@ -148,6 +149,11 @@
     </div>
 
     <script>
+	    // 模型数据结构
+	    var gAiModelList = [];
+	    
+	    const modelSelect = document.getElementById('ai-model-select');
+	    
         // 模拟数据库
         const knowledgeBase = {
             "greeting": `您好！我是AI助手，随时为您提供帮助。您有任何问题都可以向我提问。`,
@@ -478,6 +484,33 @@
             await streamResponse(input, aiMessageId);
         });
 
+
+        
+        // 动态填充模型选择下拉框
+        function populateModelSelect(models) {
+            modelSelect.innerHTML = ''; // 清空加载中的消息
+            
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.LLMIndex;
+                option.textContent = model.LLMName;
+                modelSelect.appendChild(option);
+            });
+        }
+        
+        function buildAiModelList(modelList)
+        {
+        	var models = [];
+        	for(var i=0; i<modelList.length; i++)
+        	{
+        		var model = {};
+        		model.LLMIndex = i;
+        		model.LLMName = modelList[i];
+        		models.push(model);
+        	}
+        	return models;
+        }
+        
         //获取Ai模型列表
         function getAiModelList()
         {
@@ -490,9 +523,9 @@
                 success : function (ret) {
                     if(ret.status == "ok")
                     {
-                    	gAiModelList = ret.data;
+                    	gAiModelList = buildAiModelList(ret.data);
                     	console.log("getAiModelList aiModelList:", gAiModelList);
-                       	$('#ai-chat-icon').show();	//显示AI 图标
+                    	populateModelSelect(gAiModelList); //更新模型选择列表
                     }
                     else
                     {
@@ -508,6 +541,9 @@
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
             
+        	// 加载模型列表
+            getAiModelList();
+        	
             // textarea 自适应高度 + Enter快捷键发送
             const textarea = document.getElementById('message-input');
             textarea.addEventListener('input', () => {
