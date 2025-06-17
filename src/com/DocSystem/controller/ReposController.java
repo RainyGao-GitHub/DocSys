@@ -274,9 +274,16 @@ public class ReposController extends BaseController{
 	}
 	
 	private String buildQueryMessage(String query, List<Doc> searchResult, HttpServletRequest request) {
+		if(searchResult == null || searchResult.size() == 0)
+		{
+			Log.debug("buildQueryMessage() query:" + query);
+			return query;
+		}
+		
 		StringBuilder sb = new StringBuilder();
 		sb.append(query + "\r\n");
-		sb.append("以下是参考资料:\r\n");		
+		
+		//获取baseUrl用于构造文件访问链接
 		URLInfo urlInfo = getUrlInfoFromRequest(request);
 		String host = urlInfo.host;	 	
 	 	String baseUrl = null;
@@ -289,6 +296,8 @@ public class ReposController extends BaseController{
 	 		baseUrl = urlInfo.prefix + host + ":" + urlInfo.port;      			
 	 	}
 	 	
+	 	//构造参考资料内容
+	 	sb.append("以下是参考资料:\r\n");		
 		for(Doc doc : searchResult)
 		{
 			sb.append("document path:" + doc.getPath() + doc.getName() + "\r\n");			
@@ -300,7 +309,7 @@ public class ReposController extends BaseController{
 			}			
 		}
 		String queryMsg = sb.toString();        
-        Log.debug("AIChat() queryMsg:" + queryMsg);
+        Log.debug("buildQueryMessage() queryMsg:" + queryMsg);
         return queryMsg;
 	}
 
