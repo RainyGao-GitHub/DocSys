@@ -59,6 +59,7 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
+import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.common.entity.LLMConfig;
 import com.DocSystem.common.remoteStorage.RemoteStorageSession;
@@ -86,6 +87,41 @@ public class ReposController extends BaseController{
 		JSONObject config = new JSONObject();
 		config.put("defaultReposStorePath", Path.getDefaultReposRootPath(OSType));
 		rt.setData(config);
+		writeJson(rt, response);
+	}
+	
+	/****************** get DocSysConfig **************/
+	@RequestMapping("/getAiModelList.do")
+	public void getAiModelList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
+		Log.infoHead("****************** getAiModelList.do ***********************");
+		ReturnAjax rt = new ReturnAjax();		
+
+		if(systemLLMConfig == null)
+		{
+			rt.setError("系统未设置AI模型");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(false == systemLLMConfig.enabled)
+		{
+			rt.setError("AI功能未启用");
+			writeJson(rt, response);	
+			return;
+		}
+		
+		if(systemLLMConfig.llmConfigList == null || systemLLMConfig.llmConfigList.size() == 0)
+		{
+			rt.setError("没有可用的AI模型");
+			writeJson(rt, response);	
+			return;
+		}	
+		
+		List<String> aiModelList = new ArrayList<String>();
+		for(LLMConfig llmConfig : systemLLMConfig.llmConfigList)
+		{
+			aiModelList.add(llmConfig.name);
+		}
 		writeJson(rt, response);
 	}
 	

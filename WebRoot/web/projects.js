@@ -1,4 +1,5 @@
 var gDocSysConfig = null;
+var gAiModelList = null;
 var login_user = "";
 var gShareId;
 var gPageIndex = 1;
@@ -18,6 +19,7 @@ function pageInit()
 	}
 	
 	getDocSysConfig();
+	getAiModelList();
 
 	// 加载滚动到顶端功能
 	$("#scrollToTopDiv").load("goTop.html")
@@ -168,6 +170,31 @@ function getDocSysConfig()
     });
 }
 
+function getAiModelList()
+{
+	console.log("getAiModelList");
+    $.ajax({
+        url : "/DocSystem/Repos/getAiModelList.do",
+        type :"post",
+        dataType :"json",
+        data : null,
+        success : function (ret) {
+            if(ret.status == "ok")
+            {
+            	gAiModelList = ret.data;
+            	console.log("getAiModelList aiModelList:", gAiModelList);
+               	$('#ai-chat-icon').show();	//显示AI 图标
+            }
+            else
+            {
+            	console.log(ret.msgInfo);
+            }
+        },
+        error : function () {
+        	console.log('服务器异常:获取Ai模型列表失败');
+        }
+    });
+}
 
 function showReposList()
 {

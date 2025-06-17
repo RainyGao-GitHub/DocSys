@@ -478,6 +478,33 @@
             await streamResponse(input, aiMessageId);
         });
 
+        //获取Ai模型列表
+        function getAiModelList()
+        {
+        	console.log("getAiModelList");
+            $.ajax({
+                url : "/DocSystem/Repos/getAiModelList.do",
+                type :"post",
+                dataType :"json",
+                data : null,
+                success : function (ret) {
+                    if(ret.status == "ok")
+                    {
+                    	gAiModelList = ret.data;
+                    	console.log("getAiModelList aiModelList:", gAiModelList);
+                       	$('#ai-chat-icon').show();	//显示AI 图标
+                    }
+                    else
+                    {
+                    	console.log(ret.msgInfo);
+                    }
+                },
+                error : function () {
+                	console.log('服务器异常:获取Ai模型列表失败');
+                }
+            });
+        }
+        
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
             

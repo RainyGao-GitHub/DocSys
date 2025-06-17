@@ -92,8 +92,6 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		"pay/manualNotify",
 		"pay/refund",
 		"pay/downloadLicense",
-		//For Rag
-		"Query/addDocSysRagMessage",
 	};
 	
 	
