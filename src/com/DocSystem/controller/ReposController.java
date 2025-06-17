@@ -45,9 +45,11 @@ import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.output.Response;
 
 import com.DocSystem.entity.ReposAuth;
+import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
+import com.DocSystem.common.URLInfo;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
 import com.DocSystem.common.entity.AIChatContext;
@@ -221,16 +223,13 @@ public class ReposController extends BaseController{
 	        Collections.sort(searchResult);
 	        
 	        // 构建查询消息
-	        String queryMsg = buildQueryMessage(req.query, searchResult);
+	        String queryMsg = buildQueryMessage(req.query, searchResult, request);
 	        
 	        // 创建流式聊天模型
 	        OpenAiStreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
 	            .baseUrl(llmConfig.url)
 	            .apiKey(llmConfig.apikey)
 	            .modelName(llmConfig.modelName)
-//	            .baseUrl("https://api.deepseek.com")
-//	            .apiKey("sk-356b806c5ab941ba894264de4c78de86")
-//	            .modelName(req.LLMName)
 	            .temperature(0.7)
 	            .maxTokens(1024)
 	            .logRequests(true)
@@ -274,13 +273,26 @@ public class ReposController extends BaseController{
 	    }
 	}
 	
-	private String buildQueryMessage(String query, List<Doc> searchResult) {
+	private String buildQueryMessage(String query, List<Doc> searchResult, HttpServletRequest request) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(query + "\r\n");
+		
+		URLInfo urlInfo = getUrlInfoFromRequest(request);
+		String host = urlInfo.host;	 	
+	 	String baseUrl = null;
+	 	if(urlInfo.port == null || urlInfo.port.isEmpty())
+	 	{
+	 		baseUrl = urlInfo.prefix + host;        			
+	 	}
+	 	else
+	 	{
+	 		baseUrl = urlInfo.prefix + host + ":" + urlInfo.port;      			
+	 	}
+	 	
 		for(Doc doc : searchResult)
 		{
-			sb.append("document path:" + doc.getPath() + doc.getName() + "\r\n");
-			sb.append("document link: http://localhost:8100/DocSystem" + "\r\n");
+			sb.append("document path:" + doc.getPath() + doc.getName() + "\r\n");			
+			sb.append("document link:" + buildDocAccessLink(doc, baseUrl) + "\r\n");
 			if(doc.getContent() != null)
 			{
 				sb.append("document content:\r\n");
@@ -290,6 +302,22 @@ public class ReposController extends BaseController{
 		String queryMsg = sb.toString();        
         Log.debug("AIChat() queryMsg:" + queryMsg);
         return queryMsg;
+	}
+
+	private String buildDocAccessLink(Doc doc, String baseUrl) 
+	{
+		String encPath = Base64Util.base64EncodeURLSafe(doc.getPath());
+		if(encPath == null)
+		{
+			return null;			
+		}
+		
+		String encName = Base64Util.base64EncodeURLSafe(doc.getName());
+		if(encName == null)
+		{
+			return null;			
+		}	
+		return baseUrl + "/DocSystem/web/project.html?vid=" + doc.getVid() + "&doc=" + doc.getDocId() + "&path=" + encPath + "&name=" + encName;
 	}
 
 	private LLMConfig getLLMConfigByIndexOrName(Integer LLMIndex, String LLMName, ReturnAjax rt) 

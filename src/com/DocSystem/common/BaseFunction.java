@@ -5748,6 +5748,18 @@ public class BaseFunction{
 		return urlInfo;
 	}
 	
+	public URLInfo getUrlInfoFromRequest(HttpServletRequest request) {
+		String url = getUrlFromRequest(request);
+		Log.info("getUrlInfoFromRequest()", "url:" + url);		
+		URLInfo urlInfo =getUrlInfoFromUrl(url);
+		return urlInfo;
+	}
+
+	public String getUrlFromRequest(HttpServletRequest request) {
+        String url = request.getRequestURL().toString();
+        return url;
+	}
+	
     /**
      * 以流的方式
      * 发送文件和json对象
