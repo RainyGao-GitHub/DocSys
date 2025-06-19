@@ -814,11 +814,9 @@ public class LuceneUtil2   extends BaseFunction
 	        ireader = DirectoryReader.open(directory);
 	        isearcher = new IndexSearcher(ireader);
 
-	        BooleanQuery builder = buildBooleanQueryWithConditions(conditions);
+	        BooleanQuery builder = buildBooleanQueryWithConditions(conditions, 3); //要求至少命中30%
 	        if(builder != null)
-	        {
-	        	builder.setMinimumNumberShouldMatch(1);	//conditions里面有可能全部是Should，那么至少要满足一个
-	        	
+	        {	        	
 	        	TopDocs hits = isearcher.search(builder, 1000);
 	        	if(hits != null && hits.scoreDocs != null && hits.scoreDocs.length > 0)
 	        	{
@@ -882,6 +880,7 @@ public class LuceneUtil2   extends BaseFunction
     
     private static void collectHitTermInfo(DirectoryReader ireader, ScoreDoc scoreDoc, Map<String, String> termHitInfoFields, int hitType, HitDoc hitDoc, DocSearchContext context) throws IOException 
     {
+		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "]");        	
     	int weight = context.getHitWeight(hitType);
     	
     	//每个文件的命中信息只需要收集一次
@@ -1129,6 +1128,80 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		return null;
 	}
+    
+    //hitRateLevel 可以是 1-10: 表示10% 到 100%
+    public static BooleanQuery buildBooleanQueryWithConditions(List<QueryCondition> conditions, int hitRateLevel) 
+    {
+    	if(conditions == null || conditions.size() == 0)
+    	{
+    		return null;
+    	}
+    	
+    	int count = 0;
+    	BooleanQuery builder = new BooleanQuery();
+    	Query query = null;
+    	int occurTypeCount = 0;
+    	for(int i=0; i<conditions.size(); i++)
+    	{
+    		QueryCondition condition = conditions.get(i);
+    		String field = condition.getField();
+    		//Log.debug("buildBooleanQueryWithConditions field:" + field + " fieldType:" + condition.getFieldType());
+    		Object value = condition.getValue();
+    		Object endValue = condition.getEndValue();
+    		Occur occurType = condition.getOccurType();
+    		if(occurType == Occur.SHOULD)
+    		{
+    			occurTypeCount++;
+    		}
+    		switch(condition.getFieldType())
+    		{
+    		case QueryCondition.FIELD_TYPE_Integer:
+    			query = NumericRangeQuery.newIntRange(field, (Integer)value, (Integer)value, true,true);
+    			builder.add(query, occurType);
+    			count++;
+    			break;
+    		case QueryCondition.FIELD_TYPE_Integer_Range:
+    			query = NumericRangeQuery.newIntRange(field, (Integer)value, (Integer)endValue, true,true);
+    			builder.add(query, occurType);
+    			count++;
+    			break;
+    		case QueryCondition.FIELD_TYPE_Long:
+    			query = NumericRangeQuery.newLongRange(field, (Long)value, (Long)value, true,true);   
+    			builder.add(query, occurType);
+    			count++;
+    			break;
+    		case QueryCondition.FIELD_TYPE_Long_Range:
+    			query = NumericRangeQuery.newLongRange(field, (Long)value, (Long)endValue, true,true);   
+    			builder.add(query, occurType);
+    			count++;
+    			break;
+    		case QueryCondition.FIELD_TYPE_String:
+    			query = buidStringQuery(field, (String)value, condition.getQueryType());
+    			builder.add(query, occurType);
+    			count++;  
+    			break;
+    		}    		
+    	}
+    	if(count > 0)
+    	{
+    		if(occurTypeCount > 0)
+    		{
+    			//conditions里面的Should条件至少要命中一条
+    			int minShouldNum = (occurTypeCount * hitRateLevel) / 10;
+    			if(minShouldNum > occurTypeCount)
+    			{
+    				minShouldNum = occurTypeCount;
+    			}
+    			else if(minShouldNum < 1)
+    			{
+    				minShouldNum = 1;
+    			}
+    			builder.setMinimumNumberShouldMatch(minShouldNum);
+    		}
+    		return builder;
+    	}
+    	return null;
+    }
 
 	private static Query buidStringQuery(String field, String value, Integer queryType) {
 		Query query = null;
