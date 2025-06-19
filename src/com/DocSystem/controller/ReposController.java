@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -135,7 +136,24 @@ public class ReposController extends BaseController{
 	{
 		Log.infoHead("****************** AIChat.do ***********************");
 		Log.infoHead("AIChat() question:" + req.query + " LLMIndex:" + req.LLMIndex + " LLMName:" + req.LLMName);
-		SseEmitter emitter = new SseEmitter();
+		
+//		SseEmitter emitter = new SseEmitter();
+	    AtomicBoolean emitterActive = new AtomicBoolean(true);
+	    AtomicBoolean isCompleted = new AtomicBoolean(false);
+		SseEmitter emitter = new SseEmitter(300_000L); // 设置5分钟超时
+	    
+	    // 添加连接监听器
+	    emitter.onCompletion(() -> {
+	        isCompleted.set(true);
+	        Log.debug("SSE连接已关闭（正常完成）");
+	    });
+	    
+	    emitter.onTimeout(() -> {
+	        emitterActive.set(false);
+	        Log.warn("SSE连接超时关闭");
+	        emitter.complete();
+	    });
+		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
 		Log.info("*************** login user " + login_user + " ********************");	
@@ -144,9 +162,9 @@ public class ReposController extends BaseController{
 			try { 
 				emitter.send("用户未登录，请先登录！");
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{ 
-				e.printStackTrace();
+				Log.error(e);
 				emitter.completeWithError(e);
 			} 
 			emitter.complete();
@@ -159,9 +177,9 @@ public class ReposController extends BaseController{
 			try {
 				emitter.send(response.toString());
 			  	}
-			catch (IOException e)
+			catch (Exception e)
 			{
-				e.printStackTrace();
+				Log.error(e);
 				emitter.completeWithError(e);
 			}
 			emitter.complete();
@@ -176,9 +194,9 @@ public class ReposController extends BaseController{
 			  {
 				  emitter.send(response.toString());
 			  }
-			  catch(IOException e) 
+			  catch(Exception e) 
 			  {
-				  e.printStackTrace();
+				  Log.error(e);
 				  emitter.completeWithError(e);
 			  }
 			  emitter.complete();
@@ -236,25 +254,55 @@ public class ReposController extends BaseController{
 	        // 创建消息处理器
 	        StreamingResponseHandler<AiMessage> messageHandler = new StreamingResponseHandler<AiMessage>() {
 	            @Override
-	            public void onNext(String token) {
-	                System.out.println("onNext(): " + token);
+	            public void onNext(String token) 
+	            {
+	                Log.debug("onNext():" + token);
 	                try {
-						emitter.send(token);
-					} catch (IOException e) {
-						e.printStackTrace();
+	                	 if (emitterActive.get() && !isCompleted.get()) 
+	                	 {
+	                		 emitter.send(token);
+	                	 }
+					} 
+	                catch (Exception e) 
+	                {
+	                    // 遇到错误时标记为不活跃
+	                    emitterActive.set(false);
+	                    Log.error("发送SSE数据失败:" + e.getMessage());
 					}
 	            }
 
 	            @Override
-	            public void onComplete(Response<AiMessage> responseMsg) {
-	                System.out.println("onComplete(): " + responseMsg.content());
-					emitter.complete();
+	            public void onComplete(Response<AiMessage> responseMsg)
+	            {
+	                try
+	                {
+	                    if (emitterActive.get() && !isCompleted.get()) 
+	                    {
+	                        Log.debug("SSE流处理完成");
+	                        emitter.complete();
+	                    }
+	                } 
+	                catch (Exception e) 
+	                {
+	                    Log.error("关闭SSE流异常:" + e.getMessage());
+	                }
 	            }
 
 	            @Override
-	            public void onError(Throwable error) {
-	                error.printStackTrace();
-	                emitter.completeWithError(error);
+	            public void onError(Throwable error) 
+	            {
+	                try 
+	                {
+	                    if (emitterActive.get() && !isCompleted.get()) 
+	                    {
+	                        Log.error("SSE流处理错误");
+	                        emitter.completeWithError(error);
+	                    }
+	                } 
+	                catch (Exception e) 
+	                {
+	                    Log.error("关闭SSE流失败:" + e.getMessage());
+	                }
 	            }
 	        };
 	        
