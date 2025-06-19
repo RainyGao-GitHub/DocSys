@@ -145,18 +145,17 @@ public class ReposController extends BaseController{
 	    // 添加连接监听器
 	    emitter.onCompletion(() -> {
 	        isCompleted.set(true);
-	        Log.debug("SSE连接已关闭（正常完成）");
+	        Log.debug("AIChat()SSE连接已关闭（正常完成）");
 	    });
 	    
 	    emitter.onTimeout(() -> {
 	        emitterActive.set(false);
-	        Log.warn("SSE连接超时关闭");
+	        Log.warn("AIChat()SSE连接超时关闭");
 	        emitter.complete();
 	    });
 		
 		ReturnAjax rt = new ReturnAjax();
 		User login_user = getLoginUser(session, request, response, rt);
-		Log.info("*************** login user " + login_user + " ********************");	
 		if(login_user== null) 
 		{
 			try { 
@@ -187,9 +186,9 @@ public class ReposController extends BaseController{
 		}
 		
 		  LLMConfig llmConfig = getLLMConfigByIndexOrName(req.LLMIndex, req.LLMName, rt);
-		  Log.info("*************** llmConfig" + llmConfig+ " ********************");
 		  if(llmConfig == null)
 		  {
+			  Log.debug("AIChat() Failed to get llmConfig for " + req.LLMIndex + " " + req.LLMName);
 			  try
 			  {
 				  emitter.send(response.toString());
@@ -202,9 +201,10 @@ public class ReposController extends BaseController{
 			  emitter.complete();
 			  return emitter;
 		  }
+
+		  Log.debug("AIChat() llmConfig name:" + llmConfig.name + " url:" + llmConfig.url + " modelName:" + llmConfig.modelName );
 		
-	    // 设置响应头为流式传输
-		
+	    // 设置响应头为流式传输		
 		  response.setContentType("text/event-stream");
 		  response.setCharacterEncoding("UTF-8");
 		  response.setHeader("Cache-Control","no-cache");
@@ -267,7 +267,7 @@ public class ReposController extends BaseController{
 	                {
 	                    // 遇到错误时标记为不活跃
 	                    emitterActive.set(false);
-	                    Log.error("发送SSE数据失败:" + e.getMessage());
+	                    Log.error("AIChat() 发送SSE数据失败:" + e.getMessage());
 					}
 	            }
 
@@ -278,13 +278,13 @@ public class ReposController extends BaseController{
 	                {
 	                    if (emitterActive.get() && !isCompleted.get()) 
 	                    {
-	                        Log.debug("SSE流处理完成");
+	                        Log.debug("AIChat() SSE流处理完成");
 	                        emitter.complete();
 	                    }
 	                } 
 	                catch (Exception e) 
 	                {
-	                    Log.error("关闭SSE流异常:" + e.getMessage());
+	                    Log.error("AIChat() 关闭SSE流异常:" + e.getMessage());
 	                }
 	            }
 
@@ -295,13 +295,13 @@ public class ReposController extends BaseController{
 	                {
 	                    if (emitterActive.get() && !isCompleted.get()) 
 	                    {
-	                        Log.error("SSE流处理错误");
+	                        Log.error("AIChat() SSE流处理错误");
 	                        emitter.completeWithError(error);
 	                    }
 	                } 
 	                catch (Exception e) 
 	                {
-	                    Log.error("关闭SSE流失败:" + e.getMessage());
+	                    Log.error("AIChat() 关闭SSE流失败:" + e.getMessage());
 	                }
 	            }
 	        };
@@ -313,7 +313,6 @@ public class ReposController extends BaseController{
 	        
 	    } catch (Exception error) {
 	        Log.error(error);
-            error.printStackTrace();
             emitter.completeWithError(error);
 	        return emitter;
 	    }
