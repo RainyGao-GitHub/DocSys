@@ -7049,10 +7049,8 @@ public class DocController extends BaseController{
 		searchContext.maxContentSize = 1000;
 		searchContext.convertToBase64 = true;
 		channel.searchDocAsync(reposList, searchContext);
-		
-		//对搜索结果进行统一排序
 		List<Doc> searchResult = searchContext.result;
-		Collections.sort(searchResult);
+//		Collections.sort(searchResult);	//searchDocAsync已经排好序了
 		Integer total = searchResult.size();
 		rt.setData(searchResult);
 		rt.setDataEx(total);

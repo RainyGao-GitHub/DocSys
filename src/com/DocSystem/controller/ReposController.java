@@ -2,7 +2,6 @@ package com.DocSystem.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -61,7 +60,6 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
 import com.DocSystem.common.entity.ReposFullBackupTask;
-import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.common.entity.LLMConfig;
 import com.DocSystem.common.remoteStorage.RemoteStorageSession;
@@ -220,7 +218,7 @@ public class ReposController extends BaseController{
 	        searchContext.convertToBase64 = false;
 	        channel.searchDocAsync(req.context.reposList, searchContext);
 	        List<Doc> searchResult = searchContext.result;
-	        Collections.sort(searchResult);
+	        //Collections.sort(searchResult);	//searchDocAsync已经拍好序了
 	        
 	        // 构建查询消息
 	        String queryMsg = buildQueryMessage(req.query, searchResult, request);
@@ -301,10 +299,10 @@ public class ReposController extends BaseController{
 		for(Doc doc : searchResult)
 		{
 			sb.append("document path:" + doc.getPath() + doc.getName() + "\r\n");			
-			sb.append("document link:" + buildDocAccessLink(doc, baseUrl) + "\r\n");
+			//sb.append("document link:" + buildDocAccessLink(doc, baseUrl) + "\r\n");
 			if(doc.getContent() != null)
 			{
-				sb.append("document content:\r\n");
+				//sb.append("document content:\r\n");
 				sb.append(doc.getContent() + "\r\n");
 			}			
 		}
