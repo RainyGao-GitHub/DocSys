@@ -11114,6 +11114,11 @@ public class BaseController  extends BaseFunction{
 				content = readOfficeContent(repos, tmpDoc, offset, size);
 			}
 		}
+		//TODO: 需要尽量避免去读取文件来判断文件类型
+		else if(FileUtil.isPicture(fileSuffix) || FileUtil.isVideo(fileSuffix) || FileUtil.isZip(fileSuffix))
+		{
+			content = "";
+		}
 		else
 		{
 			if(isBinaryFile(repos, tmpDoc))

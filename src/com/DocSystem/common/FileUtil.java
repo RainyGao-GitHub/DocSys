@@ -1089,7 +1089,7 @@ public class FileUtil {
 		}
 	}
 	
-	protected static boolean isZip(String fileSuffix) {
+	public static boolean isZip(String fileSuffix) {
 		if(fileSuffix == null)
 		{
 			//"未知文件类型"
@@ -1238,7 +1238,7 @@ public class FileUtil {
 		return false;
 	}
 	
-	protected boolean isVideo(String fileSuffix) {
+	public static boolean isVideo(String fileSuffix) {
 		if(fileSuffix == null)
 		{
 			//"未知文件类型"
