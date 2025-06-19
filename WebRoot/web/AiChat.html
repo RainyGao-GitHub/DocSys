@@ -347,8 +347,7 @@
                     
                     var received_data = decoder.decode(value, { stream: true });
                     console.log("received_data:" + received_data);                    
-                    
-                    buffer += decoder.decode(value, { stream: true });
+                    buffer += received_data;
                     
                     // 处理缓冲区中的事件
                     while (buffer.includes('\n\n')) 
@@ -374,12 +373,18 @@
                             if (line.startsWith('data:')) {
                                 let content = line.substring(5).trim();
                                 
-                                // 处理引号：如果内容被引号包裹则移除
+                                // 去掉可能的引号
                                 if ((content.startsWith('"') && content.endsWith('"')) || 
                                     (content.startsWith("'") && content.endsWith("'"))) {
                                     content = content.substring(1, content.length - 1);
                                 }
-                                
+                                // 替换转义序列
+								content = content.replace(/\\n/g, '\n')
+								                 .replace(/\\t/g, '\t')
+								                 .replace(/\\r/g, '\r')
+								                 .replace(/\\b/g, '\b')
+								                 .replace(/\\f/g, '\f')
+								                 .replace(/\\\\/g, '\\');  // 两个反斜杠替换为一个
                                 eventData += content;
                             }
                         }
