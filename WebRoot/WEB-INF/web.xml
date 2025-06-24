@@ -88,6 +88,7 @@
 <filter-mapping>  
     <filter-name>encodingFilter</filter-name>  
     <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
     <dispatcher>ASYNC</dispatcher>
 </filter-mapping>  
   
