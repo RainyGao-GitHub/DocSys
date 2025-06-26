@@ -324,9 +324,8 @@ public class ReposController extends BaseController{
 		}
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append("你是MxsDoc文档管理系统的AI聊天助手，现在用户问了一个问题:\"" + query + "\",以下是根据用户的问题在MxsDoc文档系统里搜索到的相关文档，请结合以下资料回答一下用户的问题");
-		sb.append("以下是根据用户的问题在MxsDoc文档系统里搜索到的相关文档，请结合以下资料回答一下用户的问题，如果以下资料不满足用户的问题需求，请直接用你自己具备的知识回答他。");
-		
+		sb.append("你是MxsDoc文档管理系统的AI聊天助手，现在用户问了一个问题:\"" + query + "\"。" +
+				"以下是根据用户的问题在MxsDoc文档系统里搜索到的相关文档，请结合以下资料回答一下用户的问题。");		
 		//获取baseUrl用于构造文件访问链接
 		URLInfo urlInfo = getUrlInfoFromRequest(request);
 		String host = urlInfo.host;	 	
