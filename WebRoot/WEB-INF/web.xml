@@ -83,13 +83,14 @@
         <description>字符集编码</description>  
         <param-name>encoding</param-name>  
         <param-value>UTF-8</param-value>  
-    </init-param>  
+    </init-param>
+    <async-supported>true</async-supported>
 </filter>  
 <filter-mapping>  
     <filter-name>encodingFilter</filter-name>  
     <url-pattern>/*</url-pattern>
     <dispatcher>REQUEST</dispatcher>
-    <dispatcher>ASYNC</dispatcher>
+	<dispatcher>ASYNC</dispatcher>
 </filter-mapping>  
   
 <!-- 配置session超时时间，单位分钟 -->  
