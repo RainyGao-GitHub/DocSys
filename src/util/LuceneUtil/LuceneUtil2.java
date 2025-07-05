@@ -814,7 +814,7 @@ public class LuceneUtil2   extends BaseFunction
 	        ireader = DirectoryReader.open(directory);
 	        isearcher = new IndexSearcher(ireader);
 
-	        BooleanQuery builder = buildBooleanQueryWithConditions(conditions, 3); //要求至少命中30%
+	        BooleanQuery builder = buildBooleanQueryWithConditions(conditions, 8); //要求至少命中80%
 	        if(builder != null)
 	        {	        	
 	        	TopDocs hits = isearcher.search(builder, 1000);
