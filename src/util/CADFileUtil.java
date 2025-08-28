@@ -54,6 +54,7 @@ public class CADFileUtil{
      */
     public static boolean CADFileToPDF(String srcFile, String dstFile){
     	boolean ret = false;
+    	Image objImage = null;
     	try {
 	        CadRasterizationOptions cadRasterizationOptions = new CadRasterizationOptions();
 	        cadRasterizationOptions.setBackgroundColor(Color.getWhite());
@@ -61,12 +62,26 @@ public class CADFileUtil{
 	        cadRasterizationOptions.setPageHeight(1600);
 	        PdfOptions pdfOptions = new PdfOptions();
 	        pdfOptions.setVectorRasterizationOptions(cadRasterizationOptions);
-	        Image objImage = Image.load(srcFile);
+	        objImage = Image.load(srcFile);
 	        objImage.save(dstFile, pdfOptions);
 	        ret = true;
-    	} catch(Exception e) {
-    		Log.error(e);
     	}
+    	catch(Exception e)
+    	{
+    		Log.error(e);
+	    }
+    	finally 
+    	{
+	        if (objImage != null) {
+	            try {
+	                objImage.close(); // 手动关闭
+	            }
+	            catch (Exception e) 
+	            {
+	        		Log.error(e);
+	            }
+	        }
+	    }
     	return ret;
     }
 
