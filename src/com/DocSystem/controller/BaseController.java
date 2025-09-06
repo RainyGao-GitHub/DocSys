@@ -16133,7 +16133,7 @@ public class BaseController  extends BaseFunction{
 		}
 		Log.info("addDelayTaskForReposCacheClean delayTime:" + delayTime + " 秒后开始清理仓库缓存！" );		
 		
-		//备份线程可能被多次启动，避免出现多次备份，每次启动一个新备份线程都需要先关闭旧的备份线程
+		//仓库缓存清理线程可能被多次启动，避免出现清理任务，每次启动一个新线程都需要先关闭旧的线程
 		if(ReposCacheCleanTaskHashMap == null)
 		{
 			Log.info("addDelayTaskForReposCacheClean ReposCacheCleanTaskHashMap 未初始化");
@@ -16162,7 +16162,7 @@ public class BaseController  extends BaseFunction{
                     @Override
                     public void run() {
                         try {
-	                        Log.info("\n******** ReposCacheCleanDelayTask [" + createTime + "] for DataBase");
+	                        Log.info("\n******** ReposCacheCleanDelayTask [" + createTime + "]");
 	                        
 	                        //检查备份任务是否已被停止
 	                		ReposCacheCleanTask backupTask = ReposCacheCleanTaskHashMap.get(curTime);
@@ -16187,7 +16187,7 @@ public class BaseController  extends BaseFunction{
 	                		boolean ret = clearAllReposCache(curTime - CONST_DAY * 7);
 	                        if(ret == false)
 	                        {
-								docSysDebugLog("******** ReposCacheCleanDelayTask [" + createTime + "] for DataBase 执行失败", rt);		                       
+								docSysDebugLog("******** ReposCacheCleanDelayTask [" + createTime + "] 执行失败", rt);		                       
 		                		addSystemLog(serverIP, systemUser, "ReposCacheClean", "ReposCacheClean", "仓库缓存自动清除", null, "失败", null, null, null, buildSystemLogDetailContent(rt));
 
 	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
@@ -16196,7 +16196,7 @@ public class BaseController  extends BaseFunction{
 	                        }
 	                        else
 	                        {
-	                        	docSysDebugLog("******** ReposCacheCleanDelayTask [" + createTime + "] for DataBase 执行成功", rt);
+	                        	docSysDebugLog("******** ReposCacheCleanDelayTask [" + createTime + "] 执行成功", rt);
 		                		addSystemLog(serverIP, systemUser, "ReposCacheClean", "ReposCacheClean", "仓库缓存自动清除", null, "成功", null, null, null, buildSystemLogDetailContent(rt));
 
 	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
