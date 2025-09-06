@@ -332,15 +332,15 @@ function getDocInfoFromRequestParamStr()
 }
 
 //获取文件访问链接
-function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle)
+function getDocFileLink(docInfo, successCallback, errorCallback, urlStyle, preview)
 {
 	if(docInfo.isZip && docInfo.isZip == 1)
 	{
-		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, "");
+		getZipDocFileLink(docInfo, successCallback, errorCallback, urlStyle, preview);
 	}
 	else
 	{
-		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, "");
+		getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, preview);
 	}
 }
 

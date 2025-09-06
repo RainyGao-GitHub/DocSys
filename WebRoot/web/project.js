@@ -5072,7 +5072,8 @@ function contextMenuInit()
 						{text: _Lang('下载链接'), action: function(e){
 								e.preventDefault();
 								curRightClickedTreeNode.shareId = gShareId;
-						  		getDocFileLink(curRightClickedTreeNode, copyString, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
+						  		//要求获取RESTFUL风格的fileLink, 要求进行下载权限检查
+						  		getDocFileLink(curRightClickedTreeNode, copyString, showErrorMessage, "REST", "download");
 							}
 						},
 						]
