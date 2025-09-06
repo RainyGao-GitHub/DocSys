@@ -14370,6 +14370,9 @@ public class BaseController  extends BaseFunction{
 			
 			//start DataBase auto backup thread
 			addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
+			
+			//启动仓库缓存自动清理任务（每天执行一次）
+			addDelayTaskForReposCacheClean(10, 600L); //10分钟后开始清除仓库缓存
 		}
 		
 		FileUtil.saveDocContentToFile(ret, docSysIniPath,  "docSysIniState", "UTF-8");
