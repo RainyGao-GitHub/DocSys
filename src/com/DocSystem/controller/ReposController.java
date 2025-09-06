@@ -210,6 +210,8 @@ public class ReposController extends BaseController{
 		 
 	    
 	    try {
+	    	
+	    	/* 目前基于搜索的内容效果并不好，所有RAG没有实现之前，不如直接提供一个AIChat的渠道直接回答用户问题更方便一点
 	        // 构造ChatContext
 	        req.context = new AIChatContext();
 	        List<Repos> reposList = new ArrayList<>();
@@ -235,9 +237,11 @@ public class ReposController extends BaseController{
 	        channel.searchDocAsync(req.context.reposList, searchContext);
 	        List<Doc> searchResult = searchContext.result;
 	        //Collections.sort(searchResult);	//searchDocAsync已经拍好序了
-	        
 	        // 构建查询消息
 	        String queryMsg = buildQueryMessage(req.query, searchResult, request);
+	        */
+	    	
+	    	String queryMsg = req.query;
 	        
 	        // 创建流式聊天模型
 	        OpenAiStreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
