@@ -88,6 +88,7 @@ import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.RemoteStorageSyncupConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
+import com.DocSystem.common.entity.ReposCacheCleanTask;
 import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.ReposSyncupConfig;
 import com.DocSystem.common.entity.SearchIndexSyncupConfig;
@@ -300,6 +301,9 @@ public class BaseFunction{
 	//数据库备份任务HashMap
 	//数据库备份任务对系统性能影响不大，而且不存在存储冲突问题，因此不考虑集群的任务唯一性问题
 	protected static ConcurrentHashMap<Long, BackupTask> dbBackupTaskHashMap = new ConcurrentHashMap<Long, BackupTask>();
+
+	//数据库备份任务对系统性能影响不大，而且不存在存储冲突问题，因此不考虑集群的任务唯一性问题
+	protected static ConcurrentHashMap<Long, ReposCacheCleanTask> ReposCacheCleanTaskHashMap = new ConcurrentHashMap<Long, ReposCacheCleanTask>();
 
 	//集群心跳任务HashMap
 	protected static ConcurrentHashMap<Long, GenericTask> clusterBeatTaskHashMap = new ConcurrentHashMap<Long, GenericTask>();

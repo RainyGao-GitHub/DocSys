@@ -133,6 +133,7 @@ import com.DocSystem.common.entity.RemoteDocumentEditTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
 import com.DocSystem.common.entity.ReposAccess;
 import com.DocSystem.common.entity.ReposBackupConfig;
+import com.DocSystem.common.entity.ReposCacheCleanTask;
 import com.DocSystem.common.entity.ReposFullBackupTask;
 import com.DocSystem.common.entity.SftpConfig;
 import com.DocSystem.common.entity.SmbConfig;
@@ -14325,8 +14326,11 @@ public class BaseController  extends BaseFunction{
 				
 				initReposExtentionConfigEx();
 				
-				//start DataBase auto backup thread
+				//启动数据库自动备份任务（每天执行一次）
 				addDelayTaskForDBBackup(10, 300L); //5分钟后开始备份数据库
+				
+				//启动仓库缓存自动清理任务（每天执行一次）
+				addDelayTaskForReposCacheClean(10, 600L); //10分钟后开始清除仓库缓存
 								
 				FileUtil.saveDocContentToFile("ok", docSysIniPath,  "docSysIniState", "UTF-8");
 
@@ -16109,6 +16113,151 @@ public class BaseController  extends BaseFunction{
                 TimeUnit.SECONDS);
 	}
 	
+	//仓库缓存自动清理任务: 每天执行一次
+	public void addDelayTaskForReposCacheClean(int offsetMinute, Long forceStartDelay)
+	{
+		Long delayTime = getDelayTimeForNextReposCacheCleanTask(offsetMinute);
+		if(delayTime == null)
+		{
+			Log.info("addDelayTaskForReposCacheClean delayTime is null");			
+			return;
+		}
+		
+		if(forceStartDelay != null)
+		{
+			Log.info("addDelayTaskForReposCacheClean forceStartDelay:" + forceStartDelay + " 秒后强制开始清理仓库缓存！" );											
+			delayTime = forceStartDelay; //1分钟后执行第一次备份
+		}
+		Log.info("addDelayTaskForReposCacheClean delayTime:" + delayTime + " 秒后开始清理仓库缓存！" );		
+		
+		//备份线程可能被多次启动，避免出现多次备份，每次启动一个新备份线程都需要先关闭旧的备份线程
+		if(ReposCacheCleanTaskHashMap == null)
+		{
+			Log.info("addDelayTaskForReposCacheClean ReposCacheCleanTaskHashMap 未初始化");
+			return;
+		}
+		
+		long curTime = new Date().getTime();
+        Log.info("addDelayTaskForReposCacheClean() curTime:" + curTime);        
+		
+		//stopReposBackUpTasks
+		//go through all backupTask and close all task
+		for (ReposCacheCleanTask value : ReposCacheCleanTaskHashMap.values()) {
+			Log.debug("addDelayTaskForReposCacheClean() stop backupTask:" + value.createTime);			
+			value.stopFlag = true;
+		}
+		
+		//startReposBackupTask
+		ReposCacheCleanTask backupTask = new ReposCacheCleanTask();
+		backupTask.createTime = curTime;
+		ReposCacheCleanTaskHashMap.put(curTime, backupTask);
+
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.schedule(
+        		new Runnable() {
+        			long createTime = curTime;
+                    @Override
+                    public void run() {
+                        try {
+	                        Log.info("\n******** ReposCacheCleanDelayTask [" + createTime + "] for DataBase");
+	                        
+	                        //检查备份任务是否已被停止
+	                		ReposCacheCleanTask backupTask = ReposCacheCleanTaskHashMap.get(curTime);
+	                		if(backupTask == null)
+	                		{
+	                			Log.info("ReposCacheCleanDelayTask() there is no running backup task for [" + curTime + "]");						
+	                			return;
+	                		}
+	                		if(backupTask.stopFlag == true)
+	                		{
+	                			Log.info("ReposCacheCleanDelayTask() stop DelayTask:[" + curTime + "]");
+	                			return;
+	                		}	
+	                        
+	                        //将自己从任务备份任务表中删除
+	                		ReposCacheCleanTaskHashMap.remove(createTime);	                        
+	                        
+	                        //开始清除仓库缓存
+	                		Date date = new Date();
+	                		long curTime = date.getTime();
+	                		ReturnAjax rt = new ReturnAjax(curTime);	                		
+	                		boolean ret = clearAllReposCache(curTime - CONST_DAY * 7);
+	                        if(ret == false)
+	                        {
+								docSysDebugLog("******** ReposCacheCleanDelayTask [" + createTime + "] for DataBase 执行失败", rt);		                       
+		                		addSystemLog(serverIP, systemUser, "ReposCacheClean", "ReposCacheClean", "仓库缓存自动清除", null, "失败", null, null, null, buildSystemLogDetailContent(rt));
+
+	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+	                        	addDelayTaskForReposCacheClean(5, null);                      
+	                        	//注意: 仓库缓存自动清除失败就等待下一次清除，不重试
+	                        }
+	                        else
+	                        {
+	                        	docSysDebugLog("******** ReposCacheCleanDelayTask [" + createTime + "] for DataBase 执行成功", rt);
+		                		addSystemLog(serverIP, systemUser, "ReposCacheClean", "ReposCacheClean", "仓库缓存自动清除", null, "成功", null, null, null, buildSystemLogDetailContent(rt));
+
+	                        	//当前任务刚执行完，可能执行了一分钟不到，所以需要加上偏移时间
+	                        	addDelayTaskForReposCacheClean(5, null);                      
+	                        }
+                        	Log.info("******** ReposCacheCleanDelayTask [" + createTime + "] 执行结束\n");		                        
+                        } catch(Exception e) {
+                        	Log.info("******** ReposCacheCleanDelayTask [" + createTime + "] 执行异常\n");
+                        	Log.info(e);                        	
+                        }
+                        
+                    }
+                },
+                delayTime,
+                TimeUnit.SECONDS);
+	}
+	
+	//清除所有仓库指定时间前的缓存文件
+	boolean clearAllReposCache(long targetTime)
+	{
+		List<Repos> reposList = reposService.getAllReposList();
+		for(int i=0;i<reposList.size();i++)
+		{
+			Repos repos = reposList.get(i);
+			//清除7天前创建的缓存文件
+			clearReposCache(repos, targetTime);
+			Log.info("仓库 [" + repos.getName() + "] 缓存清除完成！");				
+		}
+		return true;
+	}
+	
+	//删除指定时间之前的文件
+	private void clearReposCache(Repos repos, long targetTime)
+	{
+		String reposTmpPath = Path.getReposTmpPath(repos);
+		clearReposCacheFolder(reposTmpPath, targetTime);
+	}
+	
+	private void clearReposCacheFolder(String cacheFolder, long targetTime) 
+	{
+		File file= new File(cacheFolder);
+        File[] tmp=file.listFiles();
+        if(tmp != null)
+        {
+	        for(int i=0;i<tmp.length;i++)
+	        {
+	        	String subPath = cacheFolder+"/"+tmp[i].getName();
+	        	File subFile = new File(subPath);
+	            if(subFile.exists())
+	            {
+	                if(subFile.isFile() && subFile.lastModified() < targetTime)
+	                {
+	                	Log.debug("clearReposCacheFolder() 缓存文件 【" + subPath+ "】已过期，清除!!!");
+	                	file.delete();
+	                }
+	                else
+	                {
+	                	clearReposCacheFolder(subPath, targetTime);
+	                }
+	            }
+	        }
+        }
+	}
+
 	protected void addDelayTaskForReposSyncUp(Repos repos, int offsetMinute, Long forceStartDelay) {
 		Long delayTime = getDelayTimeForNextReposSyncupTask(repos, offsetMinute);
 		if(delayTime == null)
@@ -16876,6 +17025,21 @@ public class BaseController  extends BaseFunction{
 		backupConfig.weekDay6 = 1;
 		backupConfig.weekDay7 = 1;
 		return getDelayTimeForNextAutoTask(backupConfig, offsetMinute);
+	}
+	
+	private Long getDelayTimeForNextReposCacheCleanTask(int offsetMinute)
+	{
+		//每天凌晨1:40备份
+		AutoTaskConfig config = new AutoTaskConfig();
+		config.executeTime = 60; //1:00
+		config.weekDay1 = 1;
+		config.weekDay2 = 1;
+		config.weekDay3 = 1;
+		config.weekDay4 = 1;
+		config.weekDay5 = 1;
+		config.weekDay6 = 1;
+		config.weekDay7 = 1;
+		return getDelayTimeForNextAutoTask(config, offsetMinute);
 	}
 	
 	private Long getDelayTimeForNextAutoTask(AutoTaskConfig autoTaskConfig, int offsetMinute) {
