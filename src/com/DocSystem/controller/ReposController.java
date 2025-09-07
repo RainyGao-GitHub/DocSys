@@ -242,7 +242,8 @@ public class ReposController extends BaseController{
 	        */
 	    	
 	    	String queryMsg = req.query;
-	        
+	    	Log.debug("AIChat() queryMsg:" + queryMsg);
+			
 	        // 创建流式聊天模型
 	        OpenAiStreamingChatModel chatModel = OpenAiStreamingChatModel.builder()
 	            .baseUrl(llmConfig.url)
