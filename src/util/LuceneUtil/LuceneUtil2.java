@@ -814,7 +814,8 @@ public class LuceneUtil2   extends BaseFunction
 	        ireader = DirectoryReader.open(directory);
 	        isearcher = new IndexSearcher(ireader);
 
-	        BooleanQuery builder = buildBooleanQueryWithConditions(conditions, 8); //要求至少命中80%
+	        int hitRateLevel = 8; //要求搜索条件至少命中80%
+	        BooleanQuery builder = buildBooleanQueryWithConditions(conditions, hitRateLevel);
 	        if(builder != null)
 	        {	        	
 	        	TopDocs hits = isearcher.search(builder, 1000);
@@ -845,6 +846,10 @@ public class LuceneUtil2   extends BaseFunction
 			            
 			            //收集词命中信息并更新命中积分
 			            collectHitTermInfo(ireader, scoreDoc, termHitInfoFields, hitType, hitDoc, context);
+			            //TODO: 当前搜索条件要求80%命中，那么理论上在当前hitType上至少有80%的得分
+			            //TODO: 但由于collectHitTermInfo依赖词向量信息，可能由于命中的文档当时没有建立词向量，导致统计后的积分为0
+			            //TODO: 所以如果积分小于80%的需要，补偿到80%
+			            correctHitScore(hitDoc, hitType, hitRateLevel, context);
 		        	}
 		        }
 	        }
@@ -877,8 +882,24 @@ public class LuceneUtil2   extends BaseFunction
 			return false;
 		}
     }
-    
-    private static void collectHitTermInfo(DirectoryReader ireader, ScoreDoc scoreDoc, Map<String, String> termHitInfoFields, int hitType, HitDoc hitDoc, DocSearchContext context) throws IOException 
+ 
+    //TODO: 根据hitRateLevel修正命中积分
+	private static void correctHitScore(HitDoc hitDoc, int hitType, int hitRateLevel, DocSearchContext context) 
+	{
+		//根据hitRateLevel计算baseHitScore
+		int weight = context.getHitWeight(hitType);
+		int baseHitScore = weight * hitRateLevel / 10;
+		
+		int curHitScore = hitDoc.getHitScore(hitType);
+		if(curHitScore < baseHitScore)
+		{
+			hitDoc.setHitScore(hitType, baseHitScore);
+		}		
+	}
+
+
+
+	private static void collectHitTermInfo(DirectoryReader ireader, ScoreDoc scoreDoc, Map<String, String> termHitInfoFields, int hitType, HitDoc hitDoc, DocSearchContext context) throws IOException 
     {
 		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "]");        	
     	int weight = context.getHitWeight(hitType);
