@@ -1513,7 +1513,7 @@ public class BaseFunction{
 			docLock.info[lockType] = info;
 			docLock.event[lockType] = event;
 			addDocLock(doc, docLock);
-			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] success lockType:" + lockType + " by " + login_user.getName());
+			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] 锁定成功 lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
 		}
 		else
@@ -1530,7 +1530,7 @@ public class BaseFunction{
 			docLock.info[lockType] = info;
 			docLock.event[lockType] = event;
 			updateDocLock(doc, docLock);
-			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] success lockType:" + lockType + " by " + login_user.getName());
+			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] 锁定成功 lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
 		}
 	}
