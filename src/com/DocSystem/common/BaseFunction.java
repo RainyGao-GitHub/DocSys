@@ -1513,7 +1513,7 @@ public class BaseFunction{
 			docLock.info[lockType] = info;
 			docLock.event[lockType] = event;
 			addDocLock(doc, docLock);
-			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] 锁定成功 lockType:" + lockType + " by " + login_user.getName());
+			Log.debug("doLockDoc() 锁定成功 【" + doc.getPath() + doc.getName() + "】 lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
 		}
 		else
@@ -1530,7 +1530,7 @@ public class BaseFunction{
 			docLock.info[lockType] = info;
 			docLock.event[lockType] = event;
 			updateDocLock(doc, docLock);
-			Log.debug("doLockDoc() [" + doc.getPath() + doc.getName() + "] 锁定成功 lockType:" + lockType + " by " + login_user.getName());
+			Log.debug("doLockDoc() 锁定成功 【" + doc.getPath() + doc.getName() + "】  lockType:" + lockType + " by " + login_user.getName());
 			return docLock;
 		}
 	}
@@ -2168,7 +2168,7 @@ public class BaseFunction{
 		DocLock curDocLock = getDocLock(doc);
 		if(curDocLock == null)
 		{
-			Log.debug("unlockDoc() curDocLock is null ");
+			Log.debug("unlockDoc() 解锁成功 【" + doc.getPath() + doc.getName() + "】 curDocLock is null ");
 			return true;
 		}
 		
@@ -2176,7 +2176,7 @@ public class BaseFunction{
 		if(curLockState == 0)
 		{
 			deleteDocLock(doc);
-			Log.debug("unlockDoc() doc was not locked:" + curDocLock.getState());			
+			Log.debug("unlockDoc() 解锁成功 【" + doc.getPath() + doc.getName() + "】 was not locked:" + curDocLock.getState());			
 			return true;
 		}
 		
@@ -2186,13 +2186,13 @@ public class BaseFunction{
 		if(newLockState == 0)
 		{
 			deleteDocLock(doc);
-			Log.debug("unlockDoc() success:[" + doc.getPath() + doc.getName() + "] newLockState:" + newLockState);
+			Log.debug("unlockDoc() 解锁成功 【" + doc.getPath() + doc.getName() + "】 newLockState:" + newLockState);
 			return true;
 		}
 		
 		curDocLock.setState(newLockState);
 		updateDocLock(doc, curDocLock);
-		Log.debug("unlockDoc() success:[" + doc.getPath() + doc.getName() + "] newLockState:" + newLockState);
+		Log.debug("unlockDoc() 解锁成功 【" + doc.getPath() + doc.getName() + "】 newLockState:" + newLockState);
 		return true;
 	}
 	
