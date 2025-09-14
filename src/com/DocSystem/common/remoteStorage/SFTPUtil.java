@@ -114,15 +114,20 @@ public class SFTPUtil {
     		directory = "/";
     	}
     	
+    	//TODO: sftp的ls接口是非线程安全的，所以需要顺序执行，避免死锁
+    	//TODO: 这个机制可能对于其他类型的远程存储也需要
     	Vector<?> list = null;
-        try {        	
-        	list = sftp.ls(directory);
-        } 
-        catch (Exception e) 
-        {
-        	Log.debug("listFiles() directory:" + directory + " 异常!");
-        	Log.debug(e);
-        }
+    	synchronized(sftp) 
+    	{
+	        try {        	
+	        	list = sftp.ls(directory);
+	        } 
+	        catch (Exception e) 
+	        {
+	        	Log.debug("listFiles() directory:" + directory + " 异常!");
+	        	Log.debug(e);
+	        }
+    	}
         return list;
     }
     

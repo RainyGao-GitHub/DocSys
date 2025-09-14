@@ -11,4 +11,5 @@ public class RemoteStorageSession
 	public MxsDocUtil mxsdoc;
 	public String authCode;
 	public boolean indexUpdateEn = true;
+	public String info;
 }
