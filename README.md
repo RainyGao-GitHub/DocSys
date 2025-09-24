@@ -10,7 +10,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 ### [一键安装](https://gitee.com/RainyGao/DocSys/blob/master/README.md#%E4%B8%80%E7%B3%BB%E7%BB%9F%E5%AE%89%E8%A3%85) [一键安装，立即使用] 
 
-### [立即体验](http://121.40.124.140:8100/DocSystem) [账号/密码: guest/guest]
+### [立即体验](http://dw.gofreeteam.com/DocSystem) [账号/密码: guest/guest]
 
 ### 全平台支持:Linux，Windows，Mac.
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0614/223719_03bd18e1_1558129.png "docsys_首页1.png")
@@ -57,7 +57,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 # 系统安装与升级
 ### 一、系统安装
 #### 1、一键安装包下载
-国内下载地址：[微云](http://121.40.124.140:8100/DocSystem/web/project.html?vid=46&shareId=884281120)
+国内下载地址：[微云](http://dw.gofreeteam.com/DocSystem/web/project.html?vid=46&shareId=884281120)
 
 国外下载地址：[GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
@@ -75,7 +75,7 @@ MxsDoc是基于Web的文件管理系统，支持权限管理、历史版本管�
 
 ### 二、系统升级
 #### 1、下载升级包【DocSystem.war】
-国内下载地址：[微云](http://121.40.124.140:8100/DocSystem/web/project.html?vid=46&shareId=884281120)
+国内下载地址：[微云](http://dw.gofreeteam.com/DocSystem/web/project.html?vid=46&shareId=884281120)
 
 国外下载地址：[GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
@@ -89,7 +89,7 @@ Linux系统下载【docsys-linux-x.xx.xx.tar.gz】
 
 Windows系统下载【docsys-win-x.xx.xx.zip】
 
-国内下载地址：[微云](http://121.40.124.140:8100/DocSystem/web/project.html?vid=46&shareId=884281120)
+国内下载地址：[微云](http://dw.gofreeteam.com/DocSystem/web/project.html?vid=46&shareId=884281120)
 
 国外下载地址：[GitHub](https://github.com/RainyGao-GitHub/DocSys/releases)
 
@@ -112,7 +112,7 @@ Windows系统下载【docsys-win-x.xx.xx.zip】
 ### 限制
 | 功能限制       |   个人版         | 专业版         | 企业版         |
 | ------------- |  -------------   | ------------- | -------------  |
-| 价格           | [免费](http://121.40.124.140:8100/DocSystem/web/sales/select.html)  | [购买](http://121.40.124.140:8100/DocSystem/web/sales/select.html) | [购买](http://121.40.124.140:8100/DocSystem/web/sales/select.html) |
+| 价格           | [免费](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)  | [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) | [购买](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) |
 | 文件管理功能     | +         |       +       |     +         |
 | 权限管理功能     | +         |       +       |     +         |
 | 用户管理功能     | +         |       +       |     +         |
@@ -159,7 +159,7 @@ Windows系统下载【docsys-win-x.xx.xx.zip】
 | 永久         |        9500元    |    12500元     |    18500元    |     26500元   |    35000元      |   50000元   |
 
 
-#### [更多购买方案](http://121.40.124.140:8100/DocSystem/web/sales/select.html)
+#### [更多购买方案](http://dw.gofreeteam.com/DocSystem/web/sales/select.html)
 
 # 技术咨询与购买 
 ## 购买与咨询 请加群 : 953982034
@@ -173,7 +173,7 @@ https://gitee.com/RainyGao/DocSys-Docs
 
 #### 1、证书下载
 
-[下载授权证书](http://121.40.124.140:8100/DocSystem/web/sales/select.html) 
+[下载授权证书](http://dw.gofreeteam.com/DocSystem/web/sales/select.html) 
 
 #### 2、证书安装
 
