@@ -2519,7 +2519,7 @@ function showOfficeInNewPage(docInfo)
     var urlParamStr = buildRequestParamStrForDoc(docInfo, langType);
     
     console.log("urlParamStr=" + urlParamStr);
-	var link = "/DocSystem/web/office.jsp?" + urlParamStr;
+	var link = "/DocSystem/web/office.html?" + urlParamStr;
     window.open(link);
 }
 
@@ -2967,15 +2967,34 @@ function showOfficeInDialog(docInfo)
 	bootstrapQ.dialog({
 		id: "OfficeEditor",
 		title: docInfo.name,
-		url: 'officeForBootstrap.jsp',
+		url: 'officeForBootstrap.html',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: "width:95%;height:95%;",
 		callback: function(){
-			setTimeout(function(){ OfficeEditor.PageInit(docInfo, langType); }, 2000); 
+			initOfficeDialogWhenReady(docInfo, langType, 100);
 		},
 	});
+}
+
+function initOfficeDialogWhenReady(docInfo, langType, retryCount)
+{
+	if(window.OfficeEditorLoader && OfficeEditorLoader.initBootstrapDialog)
+	{
+		OfficeEditorLoader.initBootstrapDialog(docInfo, langType);
+		return;
+	}
+
+	if(retryCount <= 0)
+	{
+		console.error("initOfficeDialogWhenReady() office editor loader not ready");
+		return;
+	}
+
+	setTimeout(function(){
+		initOfficeDialogWhenReady(docInfo, langType, retryCount - 1);
+	}, 100);
 }
 
 function showOfficeInArtDialog(docInfo) 
@@ -2991,7 +3010,7 @@ function showOfficeInArtDialog(docInfo)
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeForArt.jsp?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,

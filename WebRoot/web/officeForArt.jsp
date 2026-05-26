@@ -1,20 +1,13 @@
-<%@ page language="java"  import="com.DocSystem.controller.*" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
-<%
-String officeEditorApi = BaseController.getOfficeEditor(request);
-Integer officeEditorType = BaseController.getOfficeEditorType();
-Boolean isBussienss = BaseController.isBussienss();
-%>
-
-<script src="static/scripts/jquery.min.js"></script>
-<script type="text/javascript" src="js/common.js"></script>
-<script type="text/javascript" src="js/base64.js"></script>
-<script type="text/javascript" src="js/DocSys.js"></script>
-<script type="text/javascript" src="<%=officeEditorApi%>"></script>
-<script type="text/javascript" src=js/OfficeEditor.js></script>    
-<div id="placeholder" style="height: 100%"></div>
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>Redirecting...</title>
+</head>
+<body style="height: 100%; margin: 0;">
+	Redirecting...
+</body>
 <script type="text/javascript">
-	var officeEditorType = <%=officeEditorType%>;
-	$(document).ready(function() {
-    	OfficeEditor.initForArtDialog();
-    });
+	window.location.replace('officeForArt.html' + window.location.search);
 </script>
+</html>

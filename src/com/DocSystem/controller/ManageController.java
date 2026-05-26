@@ -117,6 +117,46 @@ public class ManageController extends BaseController{
 		rt.setData(ret);
 		writeJson(rt, response);
 	}
+
+	/********** 获取系统初始化配置 ***************/
+	@RequestMapping("/getDocSysInitConfig.do")
+	public void getDocSysInitConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getDocSysInitConfig.do ***********************");
+		ReturnAjax rt = new ReturnAjax();
+
+		JSONObject config = new JSONObject();
+		config.put("docSysInitState", getDocSysInitState());
+		config.put("docSysInitAuthCode", getDocSysInitAuthCode());
+		config.put("serverIP", getServerIP());
+
+		rt.setData(config);
+		writeJson(rt, response);
+	}
+
+	/********** 获取Office编辑器运行时配置 ***************/
+	@RequestMapping("/getOfficeEditorConfig.do")
+	public void getOfficeEditorConfig(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getOfficeEditorConfig.do ***********************");
+		ReturnAjax rt = new ReturnAjax();
+
+		String officeEditorApi = getOfficeEditor(request);
+		JSONObject config = new JSONObject();
+		config.put("officeEditorApi", officeEditorApi);
+		config.put("officeEditorType", getOfficeEditorType());
+
+		if(officeEditorApi == null || officeEditorApi.isEmpty())
+		{
+			rt.setError("Office编辑器不可用");
+			rt.setData(config);
+			writeJson(rt, response);
+			return;
+		}
+
+		rt.setData(config);
+		writeJson(rt, response);
+	}
 	
 	/********** 获取轮播图配置 ***************/
 	@RequestMapping("/getBannerConfig.do")

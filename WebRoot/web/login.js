@@ -97,7 +97,7 @@ function login(){
             	
             	if(ret.data == "needCheckDBSetting")
             	{
-            		window.location.href='/DocSystem/index.jsp'
+	            		window.location.href='/DocSystem/'
             	}
             }
         },

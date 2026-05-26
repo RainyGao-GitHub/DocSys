@@ -14208,7 +14208,7 @@ public class BaseController  extends BaseFunction{
 	};
 	static JSONArray[] ObjMemberListMap = {null,null,null,null,null,null,null,null,null,null,null};
 	
-	//index.jsp页面将根据该标志来确定	跳转到install还是index.html
+	//入口页将根据该标志来确定跳转到install还是index.html
 	protected static Integer docSysIniState = -1;
 	protected static String docSysInitAuthCode = null;
 	
