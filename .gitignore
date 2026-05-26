@@ -2,3 +2,9 @@
 *.iml
 /.idea/
 /src/rebel.xml
+/Docs
+/WebRoot/WEB-INF/lib
+/WebRoot/web/sales
+/WebRoot/web/static/office-editor
+/src/com/DocSystem/sales
+/src/com/DocSystem/websocket
