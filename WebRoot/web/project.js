@@ -2015,18 +2015,35 @@ function showDocHistory(node, historyType)
 
 	var title = getDocHistoryTitle(docName, docType, historyType);
 
-	//show HistoryLogs page
-	bootstrapQ.dialog({
-		id: "historyPage",
+	var historyDialogId = "ArtDialogHistory_" + historyType + "_" + docId + "_" + new Date().getTime();
+	var historyDialogData = {
+		vid: gReposInfo.id,
+		docId: docId,
+		pid: pid,
+		parentPath: parentPath,
+		docName: docName,
+		historyType: historyType,
+		shareId: gShareId,
+	};
+	var d = new artDialog({
+		id: historyDialogId,
 		title: title,
-		url: 'historyLogs' + langExt + '.html',
+		content: '<iframe frameborder="0" name="' + historyDialogId + '" src="historyLogsForArt' + langExt + '.html?dialogId=' + historyDialogId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: _Lang('页面正在加载，请稍侯') + '...',
-			foot: false,
-			big: true,
-			callback: function(){
-				DocHistory.historyLogsPageInit(gReposInfo.id, docId, pid, parentPath, docName, historyType);
-			},
-		});
+		foot: false,
+		big: true,
+		padding: 0,
+		width: getArtDialogMaxWidth() * 0.95,
+		height: getArtDialogMaxHeight() * 0.95,
+		resize: true,
+		drag: true,
+		data: historyDialogData,
+	});
+	if(window.artDialogList === undefined) {
+		window.artDialogList = {};
+	}
+	window.artDialogList[historyDialogId] = d;
+	$("." + historyDialogId + " .aui-footer").parent().remove();
 }
 
 /********************* 文件编辑接口 *********************************************/
