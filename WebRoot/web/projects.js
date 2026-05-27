@@ -304,13 +304,22 @@ function EnterKeyListenerForSearchDoc(event){
 var searchResults = [];
 function searchDoc(pageIndex)
 {
-	var searchWord = $("#searchWord").val();
+	var searchWordInputs = $("[id='searchWord']");
+	if(searchWordInputs.filter(":disabled").length > 0)
+	{
+		return;
+	}
+
+	var searchWord = searchWordInputs.eq(0).val();
 	var sort = "";
 	
    	$.ajax({
            url : "/DocSystem/Doc/searchDoc.do",
            type : "post",
            dataType : "json",
+           beforeSend : function () {
+		   	searchWordInputs.prop("disabled", true);
+		   },
            data : {
                searchWord:searchWord,
                sort:sort,
@@ -373,6 +382,9 @@ function searchDoc(pageIndex)
            		okbtn: _Lang("确定"),
            		msg: _Lang("文件搜索出错", " : ", "服务器异常")
            		});
+		   },
+		   complete : function () {
+		   	searchWordInputs.prop("disabled", false);
            }
        });
 }

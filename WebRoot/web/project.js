@@ -3746,7 +3746,13 @@ function EnterKeyListenerForSearchDoc(event){
 
 function searchDoc()
 {
-	var searchWord = $("#searchWord").val();
+	var searchWordInput = $("#searchWord");
+	if(searchWordInput.prop("disabled"))
+	{
+		return;
+	}
+
+	var searchWord = searchWordInput.val();
 	if(searchWord == "")
 	{
 		return;
@@ -3771,6 +3777,9 @@ function searchDoc()
            url : "/DocSystem/Doc/searchDoc.do",
            type : "post",
            dataType : "json",
+		   beforeSend : function () {
+		   	searchWordInput.prop("disabled", true);
+		   },
            data : {
                searchWord:searchWord,
                sort:sort,
@@ -3806,6 +3815,9 @@ function searchDoc()
            		okbtn: _Lang("确定"),
         		msg: _Lang("文件搜索失败", " : ", "服务器异常"),
            	});
+           },
+           complete : function () {
+		   	searchWordInput.prop("disabled", false);
            }
        });
 }
