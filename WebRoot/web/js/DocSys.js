@@ -2910,26 +2910,42 @@ function showTextInArtDialog(docInfo) {
 
 function getArtDialogInitWidth()
 {
+	var initWidth = 0;
 	if(gIsPC)
 	{
-		return window.screen.width/2;
+		initWidth = window.screen.width/2;
 	}
 	else
 	{
-		return window.screen.width*0.98;
+		initWidth = window.screen.width*0.98;
 	}
+
+	var maxWidth = getArtDialogMaxWidth();
+	if(maxWidth && maxWidth > 0)
+	{
+		initWidth = Math.min(initWidth, maxWidth);
+	}
+	return initWidth;
 }
 
 function getArtDialogInitHeight()
 {
+	var initHeight = 0;
 	if(gIsPC)
 	{
-		return window.screen.height/2;	
+		initHeight = window.screen.height/2;	
 	}
 	else
 	{
-		return window.screen.height*0.9;
+		initHeight = window.screen.height*0.9;
 	}	
+
+	var maxHeight = getArtDialogMaxHeight();
+	if(maxHeight && maxHeight > 0)
+	{
+		initHeight = Math.min(initHeight, maxHeight);
+	}
+	return initHeight;
 }
 
 function getArtDialogMaxWidth()

@@ -80,6 +80,7 @@
 			var entryPath = changeItem.entryPath;
 			console.log("viewHistory() commitId:" +commitId  + " reposId:" + reposId  + " entryPath:"+ entryPath + " historyType:" + historyType);
 		    var docInfo = buildBasicDoc(entryPath, "");
+		    docInfo.docId = "HistoryDetail_" + commitId + "_" + index + "_" + new Date().getTime();
 		    docInfo.vid = reposId;
 		    docInfo.type = 1;
 		    docInfo.isHistory = 1;
