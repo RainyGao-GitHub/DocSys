@@ -2025,6 +2025,7 @@ function showDocHistory(node, historyType)
 		historyType: historyType,
 		shareId: gShareId,
 	};
+	var width = getArtDialogInitWidth();
 	var d = new artDialog({
 		id: historyDialogId,
 		title: title,
@@ -2033,8 +2034,8 @@ function showDocHistory(node, historyType)
 		foot: false,
 		big: true,
 		padding: 0,
-		width: getArtDialogMaxWidth() * 0.95,
-		height: getArtDialogMaxHeight() * 0.95,
+		width: width,
+		height: Math.min(getArtDialogMaxHeight() * 0.85, 820),
 		resize: true,
 		drag: true,
 		data: historyDialogData,

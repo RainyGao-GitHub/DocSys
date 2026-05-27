@@ -42,15 +42,35 @@
 			margin: 0;
 			overflow: hidden;
 		}
+		.m-manual.manual-reader {
+			background: #fff;
+		}
 		.m-manual.manual-reader .manual-right {
+			position: relative;
+			left: 0 !important;
+			right: auto;
 			top: 0 !important;
+			bottom: auto;
+			width: 100%;
+			overflow: visible;
+		}
+		.m-manual.manual-reader .manual-article {
+			max-width: none;
+			padding: 0 16px;
+		}
+		.m-manual.manual-reader .article-body.editor-content {
+			min-height: auto !important;
+		}
+		#loadMoreHistoryBtn {
+			margin: 16px auto;
+			text-align: center;
 		}
 	</style>
 </head>
 
 <body class="m-manual manual-reader">
 	<div style="height:100%;overflow-y:auto">
-		<div class="manual-right width:80%">
+		<div class="manual-right">
 			<div class="manual-article">
 				<div class="article-body editor-content" id="history" style="min-height: 650px">
 					<div class="panel-body eventset-list">
