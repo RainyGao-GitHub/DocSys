@@ -24540,6 +24540,9 @@ public class BaseController  extends BaseFunction{
 			return;							
 		}
 
+		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
+		String localDocParentPath = localRootPath + path;
+
 		checkAndAddParentDoc(doc, rt);
 
 		//如果是分片文件，则保存分片文件
@@ -24547,8 +24550,16 @@ public class BaseController  extends BaseFunction{
 		{
 			//Save File chunk to tmp dir with name_chunkIndex
 			String fileChunkName = name + "_" + chunkIndex;
-			String userTmpDir = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
-			if(saveFileEx(uploadFile, fileLink, docData, userTmpDir,fileChunkName) == false)
+			if(hasEnoughDiskSpaceForUpload(chunkParentPath, rt) == false)
+			{
+				writeJson(rt, response);
+
+				//upload failed
+				uploadAfterHandler(0, doc, name, null, null, null, reposAccess, context, rt);
+				return;
+			}
+
+			if(saveFileEx(uploadFile, fileLink, docData, chunkParentPath,fileChunkName) == false)
 			{
 				docSysErrorLog("分片文件 " + fileChunkName +  " 暂存失败!", rt);
 				writeJson(rt, response);
@@ -24574,10 +24585,18 @@ public class BaseController  extends BaseFunction{
 				return;
 			}
 		}
+
+		if(hasEnoughDiskSpaceForUpload(localDocParentPath, rt) == false)
+		{
+			writeJson(rt, response);
+
+			//upload failed
+			uploadAfterHandler(0, doc, name, chunkIndex, chunkNum, chunkParentPath, reposAccess, context, rt);
+			return;
+		}
 		
 		//文件上传结束（如果是分片上传那么文件已经存入分片文件中）
 		String commitUser = reposAccess.getAccessUser().getName();
-		String chunkParentPath = Path.getReposTmpPathForUpload(repos,reposAccess.getAccessUser());
 			
 		int ret = 0;
 	
@@ -24613,6 +24632,14 @@ public class BaseController  extends BaseFunction{
 		if(null != chunkIndex)
 		{
 			String fileChunkName = name + "_" + chunkIndex;
+			if(hasEnoughDiskSpaceForUpload(chunkTmpPath, rt) == false)
+			{
+				writeJson(rt, response);
+				
+				addSystemLog(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				return;
+			}
+
 			if(saveFileEx(uploadFile, fileLink, docData, chunkTmpPath, fileChunkName) == false)
 			{
 				docSysDebugLog("saveDocToDisk() 分片文件 " + fileChunkName +  " 暂存失败!", rt);
@@ -24642,6 +24669,14 @@ public class BaseController  extends BaseFunction{
 		//非分片或者是已经收到最后一个分片文件
 		if(null == chunkNum)	//非分片上传
 		{
+			if(hasEnoughDiskSpaceForUpload(localDiskPath + path, rt) == false)
+			{
+				writeJson(rt, response);
+				
+				addSystemLog(request, accessUser, event, event, eventName, queryId, "失败", null, null, null, buildSystemLogDetailContent(rt));	
+				return;
+			}
+
 			if(saveFileEx(uploadFile, fileLink, docData, localDiskPath + path, name) == false)
 			{
 				docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
@@ -24663,6 +24698,14 @@ public class BaseController  extends BaseFunction{
 		
 		if(chunkNum == 1)	//单个分片文件直接复制
 		{
+			if(hasEnoughDiskSpaceForUpload(localParentPath, rt) == false)
+			{
+				writeJson(rt, response);
+				docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 磁盘空间校验失败!", rt);
+				addSystemLog(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+				return;
+			}
+
 			String chunk0Path = chunkTmpPath + name + "_0";
 			if(new File(chunk0Path).exists() == false)
 			{
@@ -24686,6 +24729,14 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//多个则需要进行合并
+		if(hasEnoughDiskSpaceForUpload(localParentPath, rt) == false)
+		{
+			writeJson(rt, response);
+			docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 磁盘空间校验失败!", rt);
+			addSystemLog(request, accessUser, event, event, eventName, queryId, "失败",  null, null, null, buildSystemLogDetailContent(rt));	
+			return;
+		}
+
 		combineChunks(localParentPath,name,chunkNum,chunkSize,chunkTmpPath);
 		deleteChunks(name,chunkIndex, chunkNum,chunkTmpPath);
 		//Verify the size and FileCheckSum
@@ -25315,6 +25366,49 @@ public class BaseController  extends BaseFunction{
 		
 		//说明不需要进行文件存储
 		return true;
+	}
+
+	private boolean hasEnoughDiskSpaceForUpload(String targetPath, ReturnAjax rt)
+	{
+		File diskCheckPath = getExistingPathForDiskSpaceCheck(targetPath);
+		if(diskCheckPath == null)
+		{
+			return true;
+		}
+
+		long totalSpace = diskCheckPath.getTotalSpace();
+		if(totalSpace <= 0)
+		{
+			return true;
+		}
+
+		long usableSpace = diskCheckPath.getUsableSpace();
+		double freePercent = usableSpace * 100.0d / totalSpace;
+		if(freePercent < 10.0d)
+		{
+			docSysErrorLog("目标磁盘剩余空间不足10%，已禁止上传，请先清理磁盘空间", rt);
+			return false;
+		}
+		return true;
+	}
+
+	private File getExistingPathForDiskSpaceCheck(String targetPath)
+	{
+		if(targetPath == null || targetPath.isEmpty())
+		{
+			return null;
+		}
+
+		File file = new File(targetPath).getAbsoluteFile();
+		while(file != null)
+		{
+			if(file.exists())
+			{
+				return file;
+			}
+			file = file.getParentFile();
+		}
+		return null;
 	}
 	
 	protected String getUsageName(Integer usage) {
