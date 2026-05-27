@@ -34,6 +34,28 @@
 			console.log("loadMoreHistory() curCommitId:" + curCommitId);
 			showHistoryLogList(reposId, docId, pid, parentPath, docName, historyType);	
 		}
+
+		function buildHistoryVersionLabel(versionIndex)
+		{
+			if(versionIndex == 0)
+			{
+				switch(langType)
+				{
+				case "en":
+					return "Latest";
+				default:
+					return "最新";
+				}
+			}
+
+			switch(langType)
+			{
+			case "en":
+				return "Prev " + versionIndex;
+			default:
+				return "前" + versionIndex + "版";
+			}
+		}
 		
 		
 		function showHistoryDetail(index)
@@ -827,8 +849,7 @@
 				
 				for(var i=startIndex; i<data.length; i++){
 					var d = data[i];
-					//var version = "V" + (data.length - i);
-					var version = "V" + curVersion;
+					var version = buildHistoryVersionLabel(curVersion);
 					curVersion++;
 					var commitId = d.commitId;
 					var commitUser = d.commitUser;
