@@ -39,22 +39,47 @@
 		function showHistoryDetail(index)
 		{
 			var commitId = $("#commitId" + index).attr("value");
+			var version = $("#commitId" + index).text();
 		   	console.log("showHistoryDetail() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
 
-			var title = _Lang("历史详情");
+			var title = _Lang("历史详情") + " [" + version + "]";
+			var historyDetailDialogId = "ArtDialogHistoryDetail_" + historyType + "_" + docId + "_" + commitId + "_" + new Date().getTime();
+			var historyDetailDialogData = {
+				commitId: commitId,
+				vid: reposId,
+				docId: docId,
+				parentPath: parentPath,
+				docName: docName,
+				historyType: historyType,
+				shareId: gShareId,
+			};
+			var width = Math.min(getArtDialogInitWidth(), getArtDialogMaxWidth());
+			var height = Math.min(getArtDialogInitHeight(), getArtDialogMaxHeight());
+			if(typeof artDialog === "undefined")
+			{
+				showErrorMessage(_Lang("历史详情页面打开失败", ":", "artDialog is not defined"));
+				return;
+			}
 
-		   	//show historyDetails page
-			bootstrapQ.dialog({
-				id: "historyDetailPage",
+			var d = new artDialog({
+				id: historyDetailDialogId,
 				title: title,
-				url: 'historyDetails' + langExt + '.html',
+				content: '<iframe frameborder="0" name="' + historyDetailDialogId + '" src="historyDetailsForArt' + langExt + '.html?dialogId=' + historyDetailDialogId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 				msg: _Lang('页面正在加载，请稍等...'),
 				foot: false,
 				big: true,
-				callback: function(){
-					DocHistoryDetail.historyDetailsPageInit(commitId, reposId, docId, parentPath, docName, historyType);
-				},
-			});		
+				padding: 0,
+				width: width,
+				height: height,
+				resize: true,
+				drag: true,
+				data: historyDetailDialogData,
+			});
+			if(window.artDialogList === undefined) {
+				window.artDialogList = {};
+			}
+			window.artDialogList[historyDetailDialogId] = d;
+			$("." + historyDetailDialogId + " .aui-footer").parent().remove();
 		}
 		
 		//view VDocHistory

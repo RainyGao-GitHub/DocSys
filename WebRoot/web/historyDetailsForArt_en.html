@@ -3,8 +3,8 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
-	<title>历史版本</title>
-	<script type="text/javascript" src="lang/ch.js"></script>
+	<title>History Detail</title>
+	<script type="text/javascript" src="lang/en.js"></script>
 	<link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 	<link href="static/bootstrapQ/qiao.css" rel="stylesheet">
 	<link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
@@ -12,34 +12,17 @@
 	<link href="static/styles/kancloud.css" rel="stylesheet">
 	<link rel="stylesheet" href="static/freeTeam/css/resetV2.css" type="text/css" media="screen" />
 	<link rel="stylesheet" href="static/freeTeam/css/boot-css/bootstrap.custom.css" type="text/css" media="screen" />
-	<link rel="stylesheet" href="css/artDialog.css">
 	<link rel="stylesheet" type="text/css" href="css/style.css">
 	<script type="text/javascript">
 		var gShareId;
-
-		function formatTime(time){
-			var now = new Date(time);
-			var year=now.getFullYear();
-			var month=now.getMonth()+1;
-			var date=now.getDate();
-			var hh=now.getHours();
-			var mm=now.getMinutes();
-			var ss=now.getSeconds();
-
-			return year+"-"+month+"-"+date + " " + hh+":"+mm+":"+ss;
-		}
 	</script>
 	<script src="static/artDialog/lib/jquery-1.10.2.js" type="text/javascript"></script>
 	<script src="static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 	<script src="static/bootstrapQ/qiao.js" type="text/javascript"></script>
-	<script src="static/artDialog/dist/dialog.js"></script>
-	<script src="static/artDialog/dist/dialog-plus.js"></script>
-	<script type="text/javascript" src="js/artDialog.js"></script>
 	<script type="text/javascript" src="js/common.js"></script>
 	<script type="text/javascript" src="js/base64.js"></script>
 	<script type="text/javascript" src="js/DocSys.js"></script>
 	<script type="text/javascript" src="js/DocHistoryDetail.js"></script>
-	<script type="text/javascript" src="js/DocHistory.js"></script>
 	<style type="text/css">
 		html, body {
 			height: 100%;
@@ -65,37 +48,29 @@
 		.m-manual.manual-reader .article-body.editor-content {
 			min-height: auto !important;
 		}
-		#loadMoreHistoryBtn {
-			margin: 16px auto;
-			text-align: center;
-		}
 	</style>
 </head>
 
 <body class="m-manual manual-reader">
 	<div style="height:100%;overflow-y:auto">
 		<div class="manual-right">
-			<div class="manual-article">
-				<div class="article-body editor-content" id="history" style="min-height: 650px">
-					<div class="panel-body eventset-list">
-						<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell commitId w10">版本号</i>
-							<i class="cell commitMsg w30">提交信息</i>
-							<i class="cell commitUser w13">提交人</i>
-							<i class="cell commitTime w10">提交时间</i>
-							<i class="cell operation w10">操作</i>
-						</li>
-					</div>
-					<div class="panel-body eventset-list" id="historyLogs">
-						<!-- 列表区域 -->
-					</div>
-					<div id="loadMoreHistoryBtn" onclick="DocHistory.loadMoreHistory();" style="margin-left:40%;display:none;">加载更多</div>
+	    	<div class="manual-article">
+	        	<div class="article-body editor-content" id="historyDetail" style="min-height: 650px">
+	            	<div class="panel-body eventset-list">	
+	            		<li class="eventset-tit" style="margin-top: 0px;">
+							<i class="cell changeType w10">ChangeType</i>
+							<i class="cell changeContent w30">ChangeContent</i>
+							<i class="cell operation w10">Operation</i>						
+					</li>
+				</div>
+	               	<div class="panel-body eventset-list" id="historyDetails">
+		 				<!-- list area -->
 				</div>
 			</div>
 		</div>
 	</div>
 	<script type="text/javascript">
-		function initHistoryLogsForArtDialog()
+		function initHistoryDetailsForArtDialog()
 		{
 			var dialogId = getQueryString("dialogId");
 			var artDialogInstance = null;
@@ -110,17 +85,17 @@
 
 			if(artDialogInstance == null || artDialogInstance.config == null || artDialogInstance.config.data == null)
 			{
-				$("#historyLogs").html("<p>历史页面初始化失败</p>");
+				$("#historyDetails").html("<p>Failed to initialize history detail page</p>");
 				return;
 			}
 
-			var historyDialogData = artDialogInstance.config.data;
-			gShareId = historyDialogData.shareId;
-			DocHistory.historyLogsPageInit(historyDialogData.vid, historyDialogData.docId, historyDialogData.pid, historyDialogData.parentPath, historyDialogData.docName, historyDialogData.historyType);
+			var historyDetailDialogData = artDialogInstance.config.data;
+			gShareId = historyDetailDialogData.shareId;
+			DocHistoryDetail.historyDetailsPageInit(historyDetailDialogData.commitId, historyDetailDialogData.vid, historyDetailDialogData.docId, historyDetailDialogData.parentPath, historyDetailDialogData.docName, historyDetailDialogData.historyType);
 		}
 
 		$(document).ready(function () {
-			initHistoryLogsForArtDialog();
+			initHistoryDetailsForArtDialog();
 		});
 	</script>
 </body>

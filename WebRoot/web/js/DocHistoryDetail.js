@@ -28,6 +28,50 @@
 			}
 			showHistoryDetailList(commitId, reposId, docId, parentPath, docName, historyType);	
 		}
+
+		function getCurrentHistoryDetailArtDialog()
+		{
+			var dialogId = getQueryString("dialogId");
+			if(dialogId == undefined || dialogId == "")
+			{
+				return null;
+			}
+
+			var artDialogInstance = null;
+			if(window.top.artDialogList)
+			{
+				artDialogInstance = window.top.artDialogList[dialogId];
+			}
+			if(artDialogInstance == null && window.parent.artDialogList)
+			{
+				artDialogInstance = window.parent.artDialogList[dialogId];
+			}
+			return artDialogInstance;
+		}
+
+		function closeHistoryDetailDialog()
+		{
+			var dialogId = getQueryString("dialogId");
+			var artDialogInstance = getCurrentHistoryDetailArtDialog();
+			if(artDialogInstance != null)
+			{
+				artDialogInstance.close();
+				if(dialogId != undefined && dialogId != "")
+				{
+					if(window.top.artDialogList && window.top.artDialogList[dialogId])
+					{
+						delete window.top.artDialogList[dialogId];
+					}
+					if(window.parent.artDialogList && window.parent.artDialogList[dialogId])
+					{
+						delete window.parent.artDialogList[dialogId];
+					}
+				}
+				return;
+			}
+
+			closeBootstrapDialog("historyDetailPage");
+		}
 		
 		function viewHistory(index)
 		{			
@@ -346,12 +390,12 @@
 	                }
 	                else
 	                {
-		                closeBootstrapDialog("historyDetailPage");
+		                closeHistoryDetailDialog();
 	                	showErrorMessage(_Lang("获取历史详情失败", ":", ret.msgInfo));
 	                }
 	            },
 	            error : function () {
-	                closeBootstrapDialog("historyDetailPage");
+	                closeHistoryDetailDialog();
 	                showErrorMessage(_Lang("获取历史详情失败", ":", "服务器异常"));
 	            }
 	        });
