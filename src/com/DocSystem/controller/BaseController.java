@@ -25373,17 +25373,20 @@ public class BaseController  extends BaseFunction{
 		File diskCheckPath = getExistingPathForDiskSpaceCheck(targetPath);
 		if(diskCheckPath == null)
 		{
+			Log.info("hasEnoughDiskSpaceForUpload() 目标磁盘空间检查异常: diskCheckPath == null");
 			return true;
 		}
 
 		long totalSpace = diskCheckPath.getTotalSpace();
 		if(totalSpace <= 0)
 		{
+			Log.info("hasEnoughDiskSpaceForUpload() 目标磁盘空间检查异常: totalSpace = " + totalSpace);
 			return true;
 		}
 
 		long usableSpace = diskCheckPath.getUsableSpace();
 		double freePercent = usableSpace * 100.0d / totalSpace;
+		Log.debug("hasEnoughDiskSpaceForUpload() freePercent:" + freePercent);
 		if(freePercent < 10.0d)
 		{
 			docSysErrorLog("目标磁盘剩余空间不足10%，已禁止上传，请先清理磁盘空间", rt);
