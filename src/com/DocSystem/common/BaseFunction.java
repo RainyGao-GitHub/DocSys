@@ -44,6 +44,7 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -5844,7 +5845,78 @@ public class BaseFunction{
 		String path = Path.getSystemLogStorePath(OSType) + indexLibName + "/";
 		return path;
 	}
-	
+
+	@SuppressWarnings("deprecation")
+	protected static List<SystemLog> querySystemLogsByTimeRange(Long startTime, Long endTime)
+	{
+		List<SystemLog> allLogs = new ArrayList<SystemLog>();
+
+		if(startTime == null || endTime == null)
+		{
+			return allLogs;
+		}
+
+		Date startDate = new Date(startTime);
+		Date endDate = new Date(endTime);
+
+		int startYear = startDate.getYear();
+		int startMonth = startDate.getMonth();
+		int endYear = endDate.getYear();
+		int endMonth = endDate.getMonth();
+
+		int curYear = startYear;
+		int curMonth = startMonth;
+		while(curYear < endYear || (curYear == endYear && curMonth <= endMonth))
+		{
+			String indexLib = Path.getSystemLogStorePath(OSType) + "SystemLog-" + curYear + "-" + curMonth + "/";
+
+			File dir = new File(indexLib);
+			if(dir.exists())
+			{
+				Directory directory = null;
+				DirectoryReader ireader = null;
+				IndexSearcher isearcher = null;
+				try {
+					directory = FSDirectory.open(dir);
+					ireader = DirectoryReader.open(directory);
+					isearcher = new IndexSearcher(ireader);
+
+					BooleanQuery builder = new BooleanQuery();
+					Query query = NumericRangeQuery.newLongRange("time", startTime, endTime, true, true);
+					builder.add(query, Occur.MUST);
+
+					TopDocs hits = isearcher.search(builder, 500000);
+					for(ScoreDoc scoreDoc : hits.scoreDocs)
+					{
+						Document document = isearcher.doc(scoreDoc.doc);
+						SystemLog log = new SystemLog();
+						LuceneUtil2.buildObjectForDocument(log, document);
+						allLogs.add(log);
+					}
+				} catch (Exception e) {
+					errorLog("querySystemLogsByTimeRange() 异常 indexLib:" + indexLib);
+					errorLog(e);
+				} finally {
+					if(ireader != null) {
+						try { ireader.close(); } catch (Exception e1) { errorLog(e1); }
+					}
+					if(directory != null) {
+						try { directory.close(); } catch (Exception e1) { errorLog(e1); }
+					}
+				}
+			}
+
+			curMonth++;
+			if(curMonth > 11)
+			{
+				curMonth = 0;
+				curYear++;
+			}
+		}
+
+		return allLogs;
+	}
+
 	protected static String getIndexLibPathForPreferLink() {
 		return Path.getDataStorePath(OSType) + "UserPreferLink/";
 	}

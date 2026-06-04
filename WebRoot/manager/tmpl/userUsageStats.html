@@ -1,0 +1,61 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="widget">
+            <div class="widget-head">
+                <div class="pull-left">用户使用统计</div>
+                <div class="widget-icons pull-right">
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <button onclick="setUsageStatsTimeRange('today')" id="btn-today" class="btn btn-sm btn-primary">今天</button>
+                            <button onclick="setUsageStatsTimeRange('yesterday')" id="btn-yesterday" class="btn btn-sm btn-default">昨天</button>
+                            <button onclick="setUsageStatsTimeRange('last7days')" id="btn-last7days" class="btn btn-sm btn-default">近7天</button>
+                            <button onclick="setUsageStatsTimeRange('last30days')" id="btn-last30days" class="btn btn-sm btn-default">近30天</button>
+                        </div>
+                        <div class="form-group" style="margin-left:10px;">
+                            <input type="date" id="usageStatsStartDate" class="form-control" style="width:140px;display:inline;">
+                            <span> ~ </span>
+                            <input type="date" id="usageStatsEndDate" class="form-control" style="width:140px;display:inline;">
+                            <button onclick="setUsageStatsTimeRange('custom')" class="btn btn-md btn-primary" style="margin-left:5px;">查询</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+                {{if list.length == 0}}
+                <div class="alert alert-info" style="text-align:center;">
+                    所选时间范围内暂无用户活动记录。
+                </div>
+                {{else}}
+                <table class="table table-striped table-bordered table-hover" id="userUsageStatsTable">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>用户名</th>
+                        <th>登录次数</th>
+                        <th>登录总时长</th>
+                        <th>上传次数</th>
+                        <th>下载次数</th>
+                        <th>编辑次数</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{each list as value i}}
+                    <tr>
+                        <td>{{i + 1}}</td>
+                        <td>{{value.userName}}</td>
+                        <td>{{value.loginCount}}</td>
+                        <td>{{value.formatedDuration}}</td>
+                        <td>{{value.uploadCount}}</td>
+                        <td>{{value.downloadCount}}</td>
+                        <td>{{value.editCount}}</td>
+                    </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>

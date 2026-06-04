@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -7346,8 +7347,139 @@ public class DocController extends BaseController{
 		rt.setDataEx(list.size());
         writeJson(rt, response);
 	}
-	
-	/* 
+
+	//用户使用统计查询
+	@RequestMapping("/queryUserUsageStats.do")
+	public void queryUserUsageStats(
+			Long startTime, Long endTime,
+			String authCode,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("*********** queryUserUsageStats *******************");
+		Log.info("queryUserUsageStats startTime:" + startTime + " endTime:" + endTime);
+
+		ReturnAjax rt = new ReturnAjax();
+
+		User accessUser = userAccessCheck(authCode, null, session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		if(startTime == null || endTime == null)
+		{
+			docSysErrorLog("startTime and endTime must not be null", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		List<SystemLog> allLogs = querySystemLogsByTimeRange(startTime, endTime);
+		Log.info("queryUserUsageStats total logs fetched: " + (allLogs != null ? allLogs.size() : 0));
+
+		Map<String, UserUsageStats> statsMap = new HashMap<String, UserUsageStats>();
+
+		if(allLogs != null)
+		{
+			for(SystemLog log : allLogs)
+			{
+				String userName = log.userName;
+				if(userName == null || userName.isEmpty())
+				{
+					continue;
+				}
+
+				UserUsageStats stats = statsMap.get(userName);
+				if(stats == null)
+				{
+					stats = new UserUsageStats();
+					stats.userName = userName;
+					stats.loginEvents = new ArrayList<Long>();
+					stats.logoutEvents = new ArrayList<Long>();
+					statsMap.put(userName, stats);
+				}
+
+				String event = log.event;
+				String result = log.result;
+
+				if("login".equals(event) && "成功".equals(result))
+				{
+					stats.loginCount++;
+					if(log.time != null) {
+						stats.loginEvents.add(log.time);
+					}
+				}
+				else if("logout".equals(event))
+				{
+					if(log.time != null) {
+						stats.logoutEvents.add(log.time);
+					}
+				}
+				else if("uploadDoc".equals(event))
+				{
+					stats.uploadCount++;
+				}
+				else if("downloadDocPrepare".equals(event))
+				{
+					stats.downloadCount++;
+				}
+				else if("updateDocContent".equals(event))
+				{
+					stats.editCount++;
+				}
+			}
+		}
+
+		//计算每个用户的登录时长 (FIFO匹配 login->logout)
+		for(UserUsageStats stats : statsMap.values())
+		{
+			Collections.sort(stats.loginEvents);
+			Collections.sort(stats.logoutEvents);
+
+			int logoutIdx = 0;
+			long totalDuration = 0;
+			for(Long loginTime : stats.loginEvents)
+			{
+				while(logoutIdx < stats.logoutEvents.size()
+						&& stats.logoutEvents.get(logoutIdx) <= loginTime)
+				{
+					logoutIdx++;
+				}
+				if(logoutIdx < stats.logoutEvents.size())
+				{
+					totalDuration += (stats.logoutEvents.get(logoutIdx) - loginTime);
+					logoutIdx++;
+				}
+			}
+			stats.loginDuration = totalDuration;
+			stats.loginEvents = null;
+			stats.logoutEvents = null;
+		}
+
+		List<UserUsageStats> resultList = new ArrayList<UserUsageStats>(statsMap.values());
+		Collections.sort(resultList, new Comparator<UserUsageStats>() {
+			public int compare(UserUsageStats a, UserUsageStats b) {
+				return a.userName.compareTo(b.userName);
+			}
+		});
+
+		rt.setData(resultList);
+		rt.setDataEx(resultList.size());
+		writeJson(rt, response);
+	}
+
+	public static class UserUsageStats {
+		public String userName;
+		public int loginCount;
+		public long loginDuration;
+		public int uploadCount;
+		public int downloadCount;
+		public int editCount;
+		public transient List<Long> loginEvents;
+		public transient List<Long> logoutEvents;
+	}
+
+	/*
 	 *   大文件搜索启动接口
 	 *   该接口将会触发大文件搜索任务，相同的目录6小时内只会启动一次
 	 */

@@ -262,6 +262,11 @@ function showContentPage(curPath) {
             systemLogSearchWord = "";	//清除搜索关键字
             showSystemLogList();
             break;
+        case "userUsageStats":
+            title = _Lang("使用统计");
+            $("#nav li[data-eb-params=userUsageStats]>a").addClass("open");
+            initUsageStatsTimeRange();
+            break;
         case "system":
         case "systemEmailConfig":
         case "systemSmsConfig":
@@ -4160,6 +4165,112 @@ function deleteSystemLog(id, time, pageIndex, index){
         	showErrorMessage(_Lang("删除失败", ":", "服务器异常"));
         }
     });
+}
+
+// --- 用户使用统计 ---
+var usageStatsStartTime = 0;
+var usageStatsEndTime = 0;
+
+function initUsageStatsTimeRange() {
+    setUsageStatsTimeRange("today");
+}
+
+function setUsageStatsTimeRange(range) {
+    $("#btn-today, #btn-yesterday, #btn-last7days, #btn-last30days").removeClass("btn-primary").addClass("btn-default");
+
+    var now = new Date();
+    var startDate, endDate;
+
+    switch(range) {
+        case "today":
+            $("#btn-today").removeClass("btn-default").addClass("btn-primary");
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "yesterday":
+            $("#btn-yesterday").removeClass("btn-default").addClass("btn-primary");
+            var yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            startDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0);
+            endDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999);
+            break;
+        case "last7days":
+            $("#btn-last7days").removeClass("btn-default").addClass("btn-primary");
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "last30days":
+            $("#btn-last30days").removeClass("btn-default").addClass("btn-primary");
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29, 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "custom":
+            var startStr = $("#usageStatsStartDate").val();
+            var endStr = $("#usageStatsEndDate").val();
+            if(!startStr || !endStr) {
+                showErrorMessage(_Lang("请选择开始和结束日期"));
+                return;
+            }
+            startDate = new Date(startStr + "T00:00:00");
+            endDate = new Date(endStr + "T23:59:59");
+            break;
+        default:
+            return;
+    }
+    usageStatsStartTime = startDate.getTime();
+    usageStatsEndTime = endDate.getTime();
+
+    $("#usageStatsStartDate").val(formatDateStr(startDate));
+    $("#usageStatsEndDate").val(formatDateStr(endDate));
+
+    queryUserUsageStats();
+}
+
+function formatDateStr(date) {
+    return date.getFullYear() + "-"
+        + ("0" + (date.getMonth() + 1)).slice(-2) + "-"
+        + ("0" + date.getDate()).slice(-2);
+}
+
+function queryUserUsageStats() {
+    console.log("queryUserUsageStats startTime:" + usageStatsStartTime + " endTime:" + usageStatsEndTime);
+    $("#container").html(_Lang("载入中..."));
+
+    $.ajax({
+        url : "/DocSystem/Doc/queryUserUsageStats.do",
+        type : "post",
+        dataType : "json",
+        data : {
+            startTime: usageStatsStartTime,
+            endTime: usageStatsEndTime
+        },
+        success : function (ret) {
+            console.log("queryUserUsageStats ret", ret);
+            if("ok" == ret.status) {
+                var list = ret.data || [];
+                for(var i = 0; i < list.length; i++) {
+                    list[i].formatedDuration = formatDuration(list[i].loginDuration);
+                }
+                $Func.render($("#container"), "userUsageStats" + langExt, {"list": list});
+            } else {
+                showErrorMessage(_Lang("查询失败", ":", ret.msgInfo));
+                $Func.render($("#container"), "userUsageStats" + langExt, {"list": []});
+            }
+        },
+        error : function () {
+            showErrorMessage(_Lang("查询失败", ":", "服务器异常"));
+            $Func.render($("#container"), "userUsageStats" + langExt, {"list": []});
+        }
+    });
+}
+
+function formatDuration(millis) {
+    if(!millis || millis <= 0) return "0:00:00";
+    var totalSeconds = Math.floor(millis / 1000);
+    var hours = Math.floor(totalSeconds / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = totalSeconds % 60;
+    return hours + ":" + ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);
 }
 
 var orderSearchWord = "";
