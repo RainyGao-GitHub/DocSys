@@ -7456,7 +7456,16 @@ public class DocController extends BaseController{
 			stats.logoutEvents = null;
 		}
 
-		List<UserUsageStats> resultList = new ArrayList<UserUsageStats>(statsMap.values());
+		//过滤：排除无登录记录的用户（包含系统内置用户）
+		List<UserUsageStats> resultList = new ArrayList<UserUsageStats>();
+		for(UserUsageStats stats : statsMap.values())
+		{
+			if(stats.loginCount == 0)
+			{
+				continue;
+			}
+			resultList.add(stats);
+		}
 		Collections.sort(resultList, new Comparator<UserUsageStats>() {
 			public int compare(UserUsageStats a, UserUsageStats b) {
 				return a.userName.compareTo(b.userName);
