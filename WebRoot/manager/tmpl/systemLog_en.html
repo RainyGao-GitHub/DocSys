@@ -6,6 +6,17 @@
               <div class="widget-icons pull-right">
                   <div class="form-inline">
                       <div class="form-group">
+                          <button onclick="setSystemLogTimeRange('today')" id="systemLog-btn-today" class="btn btn-sm btn-default">Today</button>
+                          <button onclick="setSystemLogTimeRange('yesterday')" id="systemLog-btn-yesterday" class="btn btn-sm btn-default">Yesterday</button>
+                          <button onclick="setSystemLogTimeRange('last7days')" id="systemLog-btn-last7days" class="btn btn-sm btn-default">Last 7 Days</button>
+                          <button onclick="setSystemLogTimeRange('last30days')" id="systemLog-btn-last30days" class="btn btn-sm btn-default">Last 30 Days</button>
+                      </div>
+                      <div class="form-group" style="margin-left:10px;">
+                          <input type="date" id="systemLogStartDate" class="form-control" style="width:140px;display:inline;" onfocus="clearSystemLogQuickButtons()">
+                          <span> ~ </span>
+                          <input type="date" id="systemLogEndDate" class="form-control" style="width:140px;display:inline;">
+                      </div>
+                      <div class="form-group" style="margin-left:10px;">
                           <input type="input" class="form-control" id="search-systemLog" placeholder="search log...">
                       </div>
                       <button onclick="searchSystemLog()" class="btn btn-md btn-primary" style="margin-left: 0px;">Search</button>

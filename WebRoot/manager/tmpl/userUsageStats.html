@@ -6,13 +6,13 @@
                 <div class="widget-icons pull-right">
                     <div class="form-inline">
                         <div class="form-group">
-                            <button onclick="setUsageStatsTimeRange('today')" id="btn-today" class="btn btn-sm btn-primary">今天</button>
+                            <button onclick="setUsageStatsTimeRange('today')" id="btn-today" class="btn btn-sm btn-default">今天</button>
                             <button onclick="setUsageStatsTimeRange('yesterday')" id="btn-yesterday" class="btn btn-sm btn-default">昨天</button>
                             <button onclick="setUsageStatsTimeRange('last7days')" id="btn-last7days" class="btn btn-sm btn-default">近7天</button>
                             <button onclick="setUsageStatsTimeRange('last30days')" id="btn-last30days" class="btn btn-sm btn-default">近30天</button>
                         </div>
                         <div class="form-group" style="margin-left:10px;">
-                            <input type="date" id="usageStatsStartDate" class="form-control" style="width:140px;display:inline;">
+                            <input type="date" id="usageStatsStartDate" class="form-control" style="width:140px;display:inline;" onfocus="clearUsageStatsQuickButtons()">
                             <span> ~ </span>
                             <input type="date" id="usageStatsEndDate" class="form-control" style="width:140px;display:inline;">
                             <button onclick="setUsageStatsTimeRange('custom')" class="btn btn-md btn-primary" style="margin-left:5px;">查询</button>

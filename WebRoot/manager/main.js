@@ -260,7 +260,7 @@ function showContentPage(curPath) {
             title = _Lang("日志管理");
             $("#nav li[data-eb-params=systemLog]>a").addClass("open");
             systemLogSearchWord = "";	//清除搜索关键字
-            showSystemLogList();
+            initSystemLogTimeRange();
             break;
         case "userUsageStats":
             title = _Lang("使用统计");
@@ -3930,9 +3930,108 @@ function doQueryGenerateOfficeFontsTask(taskId, nextDelayTime)
 }
 
 var systemLogSearchWord = "";
+var systemLogStartTime = 0;
+var systemLogEndTime = 0;
+var systemLogActiveRange = "today";
+
+function clearSystemLogQuickButtons() {
+    systemLogActiveRange = "custom";
+    $("#systemLog-btn-today, #systemLog-btn-yesterday, #systemLog-btn-last7days, #systemLog-btn-last30days").removeClass("btn-primary").addClass("btn-default");
+}
+
+function highlightSystemLogButton() {
+    //模板渲染后恢复按钮高亮和日期值
+    $("#systemLog-btn-today, #systemLog-btn-yesterday, #systemLog-btn-last7days, #systemLog-btn-last30days").removeClass("btn-primary").addClass("btn-default");
+    if(systemLogActiveRange != "custom") {
+        $("#systemLog-btn-" + systemLogActiveRange).removeClass("btn-default").addClass("btn-primary");
+    }
+    //恢复日期输入框的值（模板渲染会清空）
+    $("#systemLogStartDate").val(formatDateStr(new Date(systemLogStartTime)));
+    $("#systemLogEndDate").val(formatDateStr(new Date(systemLogEndTime)));
+    //恢复搜索关键字（模板渲染会清空）
+    $("#search-systemLog").val(systemLogSearchWord);
+}
+
+function initSystemLogTimeRange() {
+    setSystemLogTimeRange("today");
+}
+
+function setSystemLogTimeRange(range) {
+    systemLogActiveRange = range;
+    var now = new Date();
+    var startDate, endDate;
+
+    //先高亮按钮（渲染前），渲染后 SystemLogListDisplay 会重新调 highlightSystemLogButton
+    highlightSystemLogButton();
+
+    switch(range) {
+        case "today":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "yesterday":
+            var yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            startDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0);
+            endDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999);
+            break;
+        case "last7days":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "last30days":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29, 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "custom":
+            var startStr = $("#systemLogStartDate").val();
+            var endStr = $("#systemLogEndDate").val();
+            if(!startStr || !endStr) {
+                showErrorMessage(_Lang("请选择开始和结束日期"));
+                return;
+            }
+            startDate = new Date(startStr + "T00:00:00");
+            endDate = new Date(endStr + "T23:59:59");
+            break;
+        default:
+            return;
+    }
+    systemLogStartTime = startDate.getTime();
+    systemLogEndTime = endDate.getTime();
+
+    $("#systemLogStartDate").val(formatDateStr(startDate));
+    $("#systemLogEndDate").val(formatDateStr(endDate));
+
+    showSystemLogList();
+}
+
 function searchSystemLog()
 {
 	systemLogSearchWord = $("#search-systemLog").val();
+
+	//检查是否修改了自定义日期
+	var startStr = $("#systemLogStartDate").val();
+	var endStr = $("#systemLogEndDate").val();
+	var hasStart = (startStr && startStr.length > 0);
+	var hasEnd = (endStr && endStr.length > 0);
+
+	if(hasStart || hasEnd)
+	{
+		//只要动了日期输入框，必须开始和结束日期都指定
+		if(!hasStart || !hasEnd)
+		{
+			showErrorMessage(_Lang("请选择开始和结束日期"));
+			return;
+		}
+		var newStart = new Date(startStr + "T00:00:00").getTime();
+		var newEnd = new Date(endStr + "T23:59:59").getTime();
+		if(newStart != systemLogStartTime || newEnd != systemLogEndTime)
+		{
+			systemLogStartTime = newStart;
+			systemLogEndTime = newEnd;
+			systemLogActiveRange = "custom";
+		}
+	}
 	showSystemLogList();
 }
 
@@ -3940,18 +4039,20 @@ function showSystemLogList(pageIndex){
 	var pageSize = gPageSize;
 	pageIndex = pageIndex ? pageIndex : 0;
 	gPageIndex = pageIndex;
-	
+
 	$.ajax({
-        url : "/DocSystem/Bussiness/getSystemLogList.do",
+        url : "/DocSystem/Manage/getSystemLogList.do",
         type : "post",
         dataType : "json",
         data : {
             searchWord: systemLogSearchWord,
+            startTime: systemLogStartTime,
+            endTime: systemLogEndTime,
         	pageIndex: pageIndex,
         	pageSize: pageSize
         },
         success : function (ret) {
-        	console.log("getSystemLogList ret",ret);
+        	console.log("querySystemLog ret",ret);
             if( "ok" == ret.status )
             {
             	SystemLogListDisplay(ret.data, pageIndex, pageSize, function(){
@@ -3983,10 +4084,10 @@ function showSystemLogList(pageIndex){
                     });
                 });
             }
-            else 
+            else
             {
                 console.log(ret.msgInfo);
-	        	showErrorMessage(_Lang("查询失败", ":", ret.msgInfo));	                
+	        	showErrorMessage(_Lang("查询失败", ":", ret.msgInfo));
             }
         },
         error : function () {
@@ -4008,7 +4109,10 @@ function SystemLogListDisplay(list, pageIndex, pageSize, callback)
 		formatSystemLogContent(node);
     }
    	console.log("SystemLogListDisplay list", list);
-    $Func.render($("#container"),"systemLog" + langExt,{"list":list}, callback);
+    $Func.render($("#container"),"systemLog" + langExt,{"list":list}, function(){
+        highlightSystemLogButton();
+        if(callback) callback();
+    });
 }
 
 function formatSystemLogContent(node)
@@ -4170,37 +4274,51 @@ function deleteSystemLog(id, time, pageIndex, index){
 // --- 用户使用统计 ---
 var usageStatsStartTime = 0;
 var usageStatsEndTime = 0;
+var usageStatsActiveRange = "today";
+
+function clearUsageStatsQuickButtons() {
+    usageStatsActiveRange = "custom";
+    $("#btn-today, #btn-yesterday, #btn-last7days, #btn-last30days").removeClass("btn-primary").addClass("btn-default");
+}
+
+function highlightUsageStatsButton() {
+    //模板渲染后恢复按钮高亮和日期值
+    $("#btn-today, #btn-yesterday, #btn-last7days, #btn-last30days").removeClass("btn-primary").addClass("btn-default");
+    if(usageStatsActiveRange != "custom") {
+        $("#btn-" + usageStatsActiveRange).removeClass("btn-default").addClass("btn-primary");
+    }
+    //恢复日期输入框的值（模板渲染会清空）
+    $("#usageStatsStartDate").val(formatDateStr(new Date(usageStatsStartTime)));
+    $("#usageStatsEndDate").val(formatDateStr(new Date(usageStatsEndTime)));
+}
 
 function initUsageStatsTimeRange() {
     setUsageStatsTimeRange("today");
 }
 
 function setUsageStatsTimeRange(range) {
-    $("#btn-today, #btn-yesterday, #btn-last7days, #btn-last30days").removeClass("btn-primary").addClass("btn-default");
+    usageStatsActiveRange = range;
+    highlightUsageStatsButton();
 
     var now = new Date();
     var startDate, endDate;
 
     switch(range) {
         case "today":
-            $("#btn-today").removeClass("btn-default").addClass("btn-primary");
             startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
             endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
             break;
         case "yesterday":
-            $("#btn-yesterday").removeClass("btn-default").addClass("btn-primary");
             var yesterday = new Date(now);
             yesterday.setDate(yesterday.getDate() - 1);
             startDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0);
             endDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999);
             break;
         case "last7days":
-            $("#btn-last7days").removeClass("btn-default").addClass("btn-primary");
             startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
             endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
             break;
         case "last30days":
-            $("#btn-last30days").removeClass("btn-default").addClass("btn-primary");
             startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29, 0, 0, 0, 0);
             endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
             break;
@@ -4251,7 +4369,9 @@ function queryUserUsageStats() {
                 for(var i = 0; i < list.length; i++) {
                     list[i].formatedDuration = formatDuration(list[i].loginDuration);
                 }
-                $Func.render($("#container"), "userUsageStats" + langExt, {"list": list});
+                $Func.render($("#container"), "userUsageStats" + langExt, {"list": list}, function(){
+                    highlightUsageStatsButton();
+                });
             } else {
                 showErrorMessage(_Lang("查询失败", ":", ret.msgInfo));
                 $Func.render($("#container"), "userUsageStats" + langExt, {"list": []});

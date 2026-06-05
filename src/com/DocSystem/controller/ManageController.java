@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -60,6 +61,7 @@ import com.DocSystem.common.entity.LLMAccessCheckResult;
 import com.DocSystem.common.entity.LdapLoginCheckResult;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.SystemAllowedNetworkConfig;
+import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.common.entity.LongTermTask;
@@ -3285,5 +3287,75 @@ public class ManageController extends BaseController{
         writeJson(rt, response);		
 		addSystemLog(request, login_user, "cleanLogFile", "cleanLogFile", "清除调试日志", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 	}
+
+	//系统日志列表查询（支持时间范围、搜索、分页）
+	@RequestMapping("/getSystemLogList.do")
+	public void getSystemLogList(
+			Long startTime, Long endTime,
+			String searchWord,
+			Integer pageIndex, Integer pageSize,
+			String authCode,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("*********** getSystemLogList *******************");
+		Log.info("getSystemLogList startTime:" + startTime + " endTime:" + endTime
+				+ " searchWord:" + searchWord + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
+
+		ReturnAjax rt = new ReturnAjax();
+
+		User accessUser = userAccessCheck(authCode, null, session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		if(startTime == null || endTime == null)
+		{
+			docSysErrorLog("startTime and endTime must not be null", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		List<SystemLog> allLogs = querySystemLogsByTimeRange(startTime, endTime);
+		Log.info("getSystemLogList total logs fetched: " + (allLogs != null ? allLogs.size() : 0));
+
+		//搜索过滤
+		List<SystemLog> filteredList = new ArrayList<SystemLog>();
+		if(allLogs != null)
+		{
+			for(SystemLog log : allLogs)
+			{
+				if(searchWord != null && !searchWord.isEmpty())
+				{
+					boolean matched = false;
+					if(log.userName != null && log.userName.contains(searchWord)) matched = true;
+					else if(log.action != null && log.action.contains(searchWord)) matched = true;
+					else if(log.content != null && log.content.contains(searchWord)) matched = true;
+					else if(log.event != null && log.event.contains(searchWord)) matched = true;
+					if(!matched) continue;
+				}
+				filteredList.add(log);
+			}
+		}
+
+		//分页
+		int total = filteredList.size();
+		int pIndex = (pageIndex != null) ? pageIndex : 0;
+		int pSize = (pageSize != null && pageSize > 0) ? pageSize : 20;
+		int fromIndex = pIndex * pSize;
+		int toIndex = Math.min(fromIndex + pSize, total);
+
+		List<SystemLog> pageList = new ArrayList<SystemLog>();
+		if(fromIndex < total)
+		{
+			pageList = new ArrayList<SystemLog>(filteredList.subList(fromIndex, toIndex));
+		}
+
+		rt.setData(pageList);
+		rt.setDataEx(total);
+		writeJson(rt, response);
+	}
+
 
 }
