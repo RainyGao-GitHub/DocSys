@@ -517,39 +517,20 @@
                 	    var targetPath = ret.data.targetPath;
                 	    var deleteFlag = ret.msgData;
             	   		
-                	    path = encodeURI(path);
-                	    name = encodeURI(name);
-                	    targetName = encodeURI(targetName);
-            		   	targetPath = encodeURI(targetPath);
-            		   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag + "&encryptEn=1";
-            		   	if(gShareId)
-            		   	{
-            		   		url += "&shareId=" + gShareId;
-            		   	}
-            		   	
             		   	var delayTime = getDownloadDelayTime();
             		   	if(delayTime > 0)
             		   	{
-            		   		console.log("downloadDocPrepare 延时启动文件下载: " + SubContext.name);
+            		   		console.log("downloadDocPrepare 延时启动分片下载: " + SubContext.name);
             		   		//延时启动下载
 	            		   	setTimeout(function(){
-	            		   		console.log("downloadDocPrepare download start for " + SubContext.name);
-	            		   		window.location.href = url;
-	            		   		
-	    						$('.downloadFile'+SubContextIndex).removeClass('is-downloading');
-	    						$('.downloadFile'+SubContextIndex).addClass('is-success');
-	    						$(".downloadInfo"+SubContextIndex).hide();
-	            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
+	            		   		console.log("downloadDocPrepare chunked download start for " + SubContext.name);
+	            		   		startChunkedDownload(SubContext, vid, path, name, targetPath, targetName, deleteFlag, ret.msgInfo);
 	                	   	}, delayTime);
             		   	}
             		   	else
             		   	{
-            		   		console.log("downloadDocPrepare download start for " + SubContext.name);
-            		   		window.location.href = url;
-            		   		$('.downloadFile'+SubContextIndex).removeClass('is-downloading');
-    						$('.downloadFile'+SubContextIndex).addClass('is-success');
-    						$(".downloadInfo"+SubContextIndex).hide();
-            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
+            		   		console.log("downloadDocPrepare chunked download start for " + SubContext.name);
+            		   		startChunkedDownload(SubContext, vid, path, name, targetPath, targetName, deleteFlag, ret.msgInfo);
             		   	}
                 	   	return;
                    }
@@ -664,39 +645,20 @@
                 	    var targetPath = ret.data.targetPath;
                 	    var deleteFlag = ret.msgData;
             	   		
-                	    path = encodeURI(path);
-                	    name = encodeURI(name);
-                	    targetName = encodeURI(targetName);
-            		   	targetPath = encodeURI(targetPath);
-            		   	var url = "/DocSystem/Doc/downloadDoc.do?vid=" + vid + "&path=" + path + "&name=" + name + "&targetPath=" + targetPath + "&targetName=" + targetName + "&deleteFlag="+deleteFlag + "&encryptEn=1";
-            		   	if(gShareId)
-            		   	{
-            		   		url += "&shareId=" + gShareId;
-            		   	}
-            		   	
             		   	var delayTime = getDownloadDelayTime();
             		   	if(delayTime > 0)
             		   	{
-            		   		console.log("doQueryDownloadPrepareTask 延时启动文件下载: " + SubContext.name);
+            		   		console.log("doQueryDownloadPrepareTask 延时启动分片下载: " + SubContext.name);
             		   		//延时启动下载
 	            		   	setTimeout(function(){
-	            		   		console.log("doQueryDownloadPrepareTask download start for " + SubContext.name);
-	            		   		window.location.href = url;
-	            		   		
-	    						$('.downloadFile'+SubContextIndex).removeClass('is-downloading');
-	    						$('.downloadFile'+SubContextIndex).addClass('is-success');
-	    						$(".downloadInfo"+SubContextIndex).hide();
-	            		   		downloadSuccessHandler(SubContext, ret.msgInfo);
+	            		   		console.log("doQueryDownloadPrepareTask chunked download start for " + SubContext.name);
+	            		   		startChunkedDownload(SubContext, vid, path, name, targetPath, targetName, deleteFlag, ret.msgInfo);
 	                	   	}, delayTime);
             		   	}
             		   	else
             		   	{
-            		   		console.log("doQueryDownloadPrepareTask download start for " + SubContext.name);
-            		   		window.location.href = url;
-            		   		$('.downloadFile'+SubContextIndex).removeClass('is-downloading');
-    						$('.downloadFile'+SubContextIndex).addClass('is-success');
-    						$(".downloadInfo"+SubContextIndex).hide();
-            		   		downloadSuccessHandler(SubContext, _Lang(ret.msgInfo));
+            		   		console.log("doQueryDownloadPrepareTask chunked download start for " + SubContext.name);
+            		   		startChunkedDownload(SubContext, vid, path, name, targetPath, targetName, deleteFlag, ret.msgInfo);
             		   	}
                 	   	return;
                    }
@@ -939,6 +901,219 @@
       		}
   		}
   		
+		// 分片下载单个文件（带进度）
+		function downloadFileWithChunks(SubContext, url, callback)
+		{
+			var SubContextIndex = SubContext.index;
+			var chunkSize = 1 * 1024 * 1024; // 每块1MB
+			
+			console.log("downloadFileWithChunks() start for: " + SubContext.name + " url:" + url);
+			
+			// 第一步：HEAD请求获取文件大小
+			$.ajax({
+				url: url,
+				type: 'HEAD',
+				timeout: 10000,
+				success: function(data, textStatus, jqXHR) {
+					var fileSize = parseInt(jqXHR.getResponseHeader('Content-Length'), 10);
+					if (!fileSize || fileSize <= 0) {
+						// HEAD失败，降级为直接下载
+						console.log("downloadFileWithChunks() HEAD failed, fallback to direct download");
+						directDownload(url, SubContext, callback);
+						return;
+					}
+					
+					console.log("downloadFileWithChunks() fileSize: " + fileSize + " bytes for " + SubContext.name);
+					$(".downloadInfo" + SubContextIndex).text(_Lang("下载中") + " 0%");
+					
+					// 第二步：分片下载
+					var numberOfChunks = Math.ceil(fileSize / chunkSize);
+					var downloadedChunks = 0;
+					var fileContent = new Uint8Array(fileSize);
+					var offset = 0;
+					var failedChunks = 0;
+					var maxRetries = 3;
+					
+					function downloadChunk(chunkIndex, retryCount) {
+						if (SubContext.stopFlag == true) {
+							console.log("downloadFileWithChunks() 下载已取消", SubContext);
+							return;
+						}
+						
+						var startByte = chunkIndex * chunkSize;
+						var endByte = Math.min(startByte + chunkSize - 1, fileSize - 1);
+						
+						// 使用原生XMLHttpRequest处理arraybuffer，jQuery的$.ajax对此支持不佳
+						var xhr = new XMLHttpRequest();
+						xhr.open('GET', url, true);
+						xhr.responseType = 'arraybuffer';
+						xhr.setRequestHeader('Range', 'bytes=' + startByte + '-' + endByte);
+						
+						xhr.onload = function() {
+							if (SubContext.stopFlag == true) {
+								return;
+							}
+							
+							if (xhr.status === 200 || xhr.status === 206) {
+								var chunk = new Uint8Array(xhr.response);
+								if (chunk.length === 0) {
+									console.log("downloadFileWithChunks() chunk " + chunkIndex + " returned empty data, retryCount:" + retryCount);
+									if (retryCount < maxRetries) {
+										setTimeout(function() {
+											downloadChunk(chunkIndex, retryCount + 1);
+										}, 1000 * (retryCount + 1));
+									} else {
+										console.log("downloadFileWithChunks() chunk retry exhausted, fallback to direct download");
+										directDownload(url, SubContext, callback);
+									}
+									return;
+								}
+								
+								fileContent.set(chunk, startByte);
+								downloadedChunks++;
+								
+								// 更新进度
+								var progress = Math.round((downloadedChunks / numberOfChunks) * 100);
+								$(".downloadInfo" + SubContextIndex).text(_Lang("下载中") + " " + progress + "%");
+								$('.downloadFile' + SubContextIndex + ' .el-progress-bar__inner')[0].style.width = progress + '%';
+								
+								// 下载下一个分片
+								if (downloadedChunks < numberOfChunks) {
+									setTimeout(function() {
+										downloadChunk(downloadedChunks, 0);
+									}, 10);
+								} else {
+									// 所有分片下载完成
+									console.log("downloadFileWithChunks() all chunks downloaded for " + SubContext.name);
+									finishDownload(fileContent, SubContext, callback);
+								}
+							} else {
+								console.log("downloadFileWithChunks() chunk " + chunkIndex + " HTTP " + xhr.status + " retryCount:" + retryCount);
+								if (retryCount < maxRetries) {
+									setTimeout(function() {
+										downloadChunk(chunkIndex, retryCount + 1);
+									}, 1000 * (retryCount + 1));
+								} else {
+									console.log("downloadFileWithChunks() chunk retry exhausted, fallback to direct download");
+									directDownload(url, SubContext, callback);
+								}
+							}
+						};
+						
+						xhr.onerror = function() {
+							console.log("downloadFileWithChunks() chunk " + chunkIndex + " network error, retryCount:" + retryCount);
+							if (retryCount < maxRetries) {
+								setTimeout(function() {
+									downloadChunk(chunkIndex, retryCount + 1);
+								}, 1000 * (retryCount + 1));
+							} else {
+								console.log("downloadFileWithChunks() chunk retry exhausted, fallback to direct download");
+								directDownload(url, SubContext, callback);
+							}
+						};
+						
+						xhr.ontimeout = function() {
+							console.log("downloadFileWithChunks() chunk " + chunkIndex + " timeout, retryCount:" + retryCount);
+							if (retryCount < maxRetries) {
+								setTimeout(function() {
+									downloadChunk(chunkIndex, retryCount + 1);
+								}, 1000 * (retryCount + 1));
+							} else {
+								console.log("downloadFileWithChunks() chunk retry exhausted, fallback to direct download");
+								directDownload(url, SubContext, callback);
+							}
+						};
+						
+						xhr.timeout = 30000; // 每个分片30秒超时
+						xhr.send();
+					}
+					
+					// 开始下载第一个分片
+					downloadChunk(0, 0);
+				},
+				error: function() {
+					// HEAD失败，降级为直接下载
+					console.log("downloadFileWithChunks() HEAD request failed, fallback to direct download");
+					directDownload(url, SubContext, callback);
+				}
+			});
+		}
+		
+		// 完成下载：合并数据并触发浏览器保存
+		function finishDownload(fileContent, SubContext, callback)
+		{
+			var SubContextIndex = SubContext.index;
+			var blob = new Blob([fileContent], { type: 'application/octet-stream' });
+			var downloadUrl = window.URL.createObjectURL(blob);
+			
+			var a = document.createElement('a');
+			a.href = downloadUrl;
+			a.download = SubContext.name;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			
+			// 延迟释放URL
+			setTimeout(function() {
+				window.URL.revokeObjectURL(downloadUrl);
+			}, 1000);
+			
+			$('.downloadFile' + SubContextIndex).removeClass('is-downloading');
+			$('.downloadFile' + SubContextIndex).addClass('is-success');
+			$(".downloadInfo" + SubContextIndex).hide();
+			
+			console.log("finishDownload() success for " + SubContext.name);
+			if (callback) {
+				callback(true, null);
+			}
+		}
+		
+		// 降级方案：直接浏览器下载（原方式）
+		function directDownload(url, SubContext, callback)
+		{
+			var SubContextIndex = SubContext.index;
+			console.log("directDownload() for " + SubContext.name + " url:" + url);
+			
+			window.location.href = url;
+			
+			$('.downloadFile' + SubContextIndex).removeClass('is-downloading');
+			$('.downloadFile' + SubContextIndex).addClass('is-success');
+			$(".downloadInfo" + SubContextIndex).hide();
+			
+			if (callback) {
+				callback(true, null);
+			}
+		}
+		
+		// 构建分片下载URL并启动分片下载
+		function startChunkedDownload(SubContext, vid, path, name, targetPath, targetName, deleteFlag, msgInfo)
+		{
+			var encodedPath = encodeURI(path);
+			var encodedName = encodeURI(name);
+			var encodedTargetName = encodeURI(targetName);
+			var encodedTargetPath = encodeURI(targetPath);
+			
+			var url = "/DocSystem/Doc/downloadDocChunked.do?vid=" + vid 
+				+ "&path=" + encodedPath 
+				+ "&name=" + encodedName 
+				+ "&targetPath=" + encodedTargetPath 
+				+ "&targetName=" + encodedTargetName 
+				+ "&deleteFlag=" + deleteFlag 
+				+ "&encryptEn=1";
+			
+			if (gShareId) {
+				url += "&shareId=" + gShareId;
+			}
+			
+			downloadFileWithChunks(SubContext, url, function(success, errMsg) {
+				if (success) {
+					downloadSuccessHandler(SubContext, msgInfo);
+				} else {
+					downloadErrorHandler(SubContext, errMsg || _Lang("下载失败"));
+				}
+			});
+		}
+
 		function stopDownload(index)
 		{
 			console.log("stopDownload() index:" + index,SubContextList[index]);

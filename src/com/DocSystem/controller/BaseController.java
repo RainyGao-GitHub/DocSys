@@ -2498,6 +2498,127 @@ public class BaseController  extends BaseFunction{
 		}
 	}
 	
+	/**************** 支持分片下载（Range请求）的文件发送方法 ******************/
+	protected void sendFileToWebPageWithRange(String localParentPath, String fileName, String showName, 
+			ReturnAjax rt, HttpServletResponse response, HttpServletRequest request, String disposition) throws Exception {
+		
+		String dstPath = localParentPath + fileName;
+		
+		//检查文件是否存在
+		File file = new File(dstPath);
+		if(!file.exists())
+		{	
+			docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		long fileLength = file.length();
+		
+		Log.debug("sendFileToWebPageWithRange() showName before convert:" + showName);
+		showName = getFileNameForWeb(request, showName);
+		
+		String contentDisposition;
+		if(disposition == null || disposition.isEmpty())
+		{
+			contentDisposition = "attachment;filename=\"" + showName + "\"";
+		}
+		else
+		{
+			contentDisposition = disposition + ";filename=\"" + showName + "\"";
+		}
+		
+		// 告诉客户端支持分片下载
+		response.setHeader("Accept-Ranges", "bytes");
+		response.setHeader("Content-Disposition", contentDisposition);
+		response.setHeader("Content-Type", "application/octet-stream");
+		
+		// 获取客户端请求的Range
+		String range = request.getHeader("Range");
+		
+		if (range != null && range.trim().length() > 0 && !"null".equals(range)) {
+			// 处理Range请求（分片下载）
+			long startByte = 0;
+			long endByte = fileLength - 1;
+			
+			String rangBytes = range.replaceAll("bytes=", "");
+			if (rangBytes.endsWith("-")) {
+				// bytes=270000-
+				startByte = Long.parseLong(rangBytes.substring(0, rangBytes.indexOf("-")));
+			} else if (rangBytes.startsWith("-")) {
+				// bytes=-5000 (最后N字节)
+				long suffixLength = Long.parseLong(rangBytes.substring(1));
+				startByte = fileLength - suffixLength;
+			} else {
+				// bytes=270000-320000
+				String[] parts = rangBytes.split("-");
+				startByte = Long.parseLong(parts[0]);
+				if (parts.length > 1 && parts[1].length() > 0) {
+					endByte = Long.parseLong(parts[1]);
+				}
+			}
+			
+			long contentLength = endByte - startByte + 1;
+			
+			response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+			response.setHeader("Content-Length", String.valueOf(contentLength));
+			String contentRange = "bytes " + startByte + "-" + endByte + "/" + fileLength;
+			response.setHeader("Content-Range", contentRange);
+			
+			Log.debug("sendFileToWebPageWithRange() Range: " + range + " -> start:" + startByte + " end:" + endByte + " contentLength:" + contentLength);
+			
+			// 用RandomAccessFile实现断点读取
+			java.io.RandomAccessFile raf = null;
+			OutputStream out = null;
+			try {
+				raf = new java.io.RandomAccessFile(file, "r");
+				raf.seek(startByte);
+				out = response.getOutputStream();
+				
+				byte[] buffer = new byte[8192];
+				long bytesToRead = contentLength;
+				int bytesRead;
+				while (bytesToRead > 0 && (bytesRead = raf.read(buffer, 0, (int) Math.min(buffer.length, bytesToRead))) != -1) {
+					out.write(buffer, 0, bytesRead);
+					bytesToRead -= bytesRead;
+				}
+				
+				out.flush();
+			} finally {
+				if (raf != null) {
+					try { raf.close(); } catch (Exception e) {}
+				}
+				if (out != null) {
+					try { out.close(); } catch (Exception e) {}
+				}
+			}
+		} else {
+			// 完整文件下载（无Range请求）
+			response.setHeader("Content-Length", String.valueOf(fileLength));
+			response.setHeader("Content-Range", "bytes 0-" + (fileLength - 1) + "/" + fileLength);
+			
+			FileInputStream in = null;
+			OutputStream out = null;
+			try {
+				in = new FileInputStream(dstPath);
+				out = response.getOutputStream();
+				byte buffer[] = new byte[8192];
+				int len = 0;
+				while ((len = in.read(buffer)) > 0) {
+					out.write(buffer, 0, len);
+				}
+				out.flush();
+			} finally {
+				if (in != null) {
+					try { in.close(); } catch (Exception e) {}
+				}
+				if (out != null) {
+					try { out.close(); } catch (Exception e) {}
+				}
+			}
+		}
+	}
+	
     //获取UserAgent接口，即判断目前用户使用了哪种浏览器
 	private String getFileNameForWeb(HttpServletRequest request, String showName) throws UnsupportedEncodingException {
 		//解决中文编码问题

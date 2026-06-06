@@ -2789,6 +2789,174 @@ public class DocController extends BaseController{
 		//addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");			
 	}
 	
+	/**************** downloadDocChunked: 支持分片下载（Range请求），配合前端实现进度展示 ******************/
+	@RequestMapping("/downloadDocChunked.do")
+	public void downloadDocChunked(Integer vid, String reposPath, String targetPath, String targetName, 
+			Integer deleteFlag, //是否删除已下载文件  0:不删除 1:删除
+			Integer shareId,
+			String authCode,
+			Integer encryptEn,	//是否检查文件被加密
+			HttpServletResponse response, HttpServletRequest request, HttpSession session) throws Exception
+	{
+		Log.infoHead("************** downloadDocChunked.do ****************");
+		Log.info("downloadDocChunked  reposPath:" + reposPath + " targetPath:" + targetPath + " targetName:" + targetName + " shareId:" + shareId + " authCode:" + authCode + " encryptEn:" + encryptEn);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = null;
+		
+		if(authCode != null)
+		{
+			if(checkAuthCode(authCode, null, rt) == null)
+			{
+				throw new Exception(rt.getMsgInfo());
+			}
+		}
+		else
+		{
+			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
+			if(reposAccess == null)
+			{
+				docSysErrorLog("非法仓库访问！", rt);
+				throw new Exception(rt.getMsgInfo());
+			}
+		}
+		
+		if(targetPath == null || targetName == null)
+		{
+			docSysErrorLog("目标路径不能为空！", rt);
+			throw new Exception(rt.getMsgInfo());
+		}
+		
+		targetPath = new String(targetPath.getBytes("ISO8859-1"),"UTF-8");	
+		targetPath = Base64Util.base64Decode(targetPath);
+		if(targetPath == null)
+		{
+			docSysErrorLog("目标路径解码失败！", rt);
+			throw new Exception(rt.getMsgInfo());
+		}
+	
+		targetName = new String(targetName.getBytes("ISO8859-1"),"UTF-8");	
+		targetName = Base64Util.base64Decode(targetName);
+		if(targetName == null)
+		{
+			docSysErrorLog("目标文件名解码失败！", rt);
+			throw new Exception(rt.getMsgInfo());
+		}
+	
+		Log.info("downloadDocChunked targetPath:" + targetPath + " targetName:" + targetName);
+		
+		// 与downloadDoc.do保持一致的路径解析逻辑，但使用支持Range的发送方法
+		if(encryptEn == null || encryptEn == 0 || vid == null)	//非加密仓库，targetPath就是实际文件路径
+		{
+			sendTargetToWebPageChunked(targetPath, targetName, targetPath, rt, response, request, false, null);
+		}
+		else
+		{
+			Repos repos = getReposEx(vid);
+			sendTargetToWebPageExChunked(repos, targetPath, targetName, rt, response, request, deleteFlag, null);
+		}
+	}
+	
+	// 支持Range分片下载的sendTargetToWebPageEx（处理加密仓库的解密逻辑）
+	protected void sendTargetToWebPageExChunked(Repos repos, String targetPath, String targetName, ReturnAjax rt,
+			HttpServletResponse response, HttpServletRequest request, Integer deleteFlag, String disposition) throws Exception 
+	{	
+		if(repos == null)	//虚拟仓库，targetPath直接作为临时目录
+		{
+			sendTargetToWebPageChunked(targetPath, targetName, targetPath, rt, response, request, false, null);				
+		}
+		else
+		{
+			if(repos.encryptType == null || repos.encryptType == 0)
+			{
+				String tmpDir = targetPath;
+				if(deleteFlag == null || deleteFlag == 0)	//targetPath不是临时目录，不能用于目录压缩
+				{
+					tmpDir = Path.getReposTmpPathForDownload(repos);			
+				}
+				sendTargetToWebPageChunked(targetPath, targetName, tmpDir, rt, response, request, false, null);
+			}
+			else
+			{
+				if(deleteFlag != null && deleteFlag == 1)	//临时文件和目录可以直接加密
+				{
+					decryptFileOrDir(repos, targetPath, targetName);					
+					sendTargetToWebPageChunked(targetPath, targetName, targetPath, rt, response, request, false, null);
+				}
+				else
+				{
+					String tmpTargetPath = Path.getReposTmpPathForDecrypt(repos);
+					String tmpTargetName = targetName;
+					if(tmpTargetName == null || tmpTargetName.isEmpty())
+					{
+						tmpTargetName = repos.getName();
+					}
+					FileUtil.copyFileOrDir(targetPath + targetName, tmpTargetPath + tmpTargetName, true);
+					decryptFileOrDir(repos, tmpTargetPath, tmpTargetName);
+					sendTargetToWebPageChunked(tmpTargetPath, tmpTargetName, tmpTargetPath, rt, response, request, false, null);
+					//tmpDirForDecrypt 用完后删除
+					FileUtil.delDir(tmpTargetPath);
+				}
+			}
+		}
+		
+		if(deleteFlag != null && deleteFlag == 1)
+		{
+			// 分片下载场景下会有多次请求（HEAD + 多次 Range GET），
+			// 只有非 Range 且非 HEAD 的完整下载请求才执行删除，避免提前删文件导致后续分片请求失败
+			String range = request.getHeader("Range");
+			boolean isRangeRequest = (range != null && !range.isEmpty() && !"null".equals(range));
+			boolean isHeadRequest = "HEAD".equalsIgnoreCase(request.getMethod());
+			if(!isRangeRequest && !isHeadRequest)
+			{
+				FileUtil.delFileOrDir(targetPath + targetName);
+			}
+		}
+	}
+	
+	// 支持Range分片下载的sendTargetToWebPage（处理目录压缩 + 文件发送）
+	protected void sendTargetToWebPageChunked(String localParentPath, String targetName, String tmpDir, ReturnAjax rt,
+			HttpServletResponse response, HttpServletRequest request, boolean deleteEnable, String disposition) throws Exception 
+	{
+		File localEntry = new File(localParentPath, targetName);
+		if(false == localEntry.exists())
+		{
+			docSysErrorLog("文件 " + localParentPath + targetName + " 不存在！", rt);
+			throw new Exception(rt.getMsgInfo());
+		}
+
+		// 目录：先压缩
+		if(localEntry.isDirectory())
+		{
+			String zipFileName = targetName + ".zip";
+			if(doCompressDir(localParentPath, targetName, tmpDir, zipFileName, rt) == false)
+			{
+				docSysErrorLog("压缩目录失败：" + localParentPath + targetName, rt);
+				throw new Exception(rt.getMsgInfo());
+			}
+			
+			sendFileToWebPageWithRange(tmpDir, zipFileName, zipFileName, rt, response, request, disposition); 
+			
+			// 分片下载场景：只有非Range非HEAD的完整请求才删除临时zip
+			String range = request.getHeader("Range");
+			boolean isRangeRequest = (range != null && !range.isEmpty() && !"null".equals(range));
+			boolean isHeadRequest = "HEAD".equalsIgnoreCase(request.getMethod());
+			if(!isRangeRequest && !isHeadRequest)
+			{
+				FileUtil.delFile(tmpDir + zipFileName);
+			}
+		}
+		else	// 文件：直接用Range支持的方式发送
+		{
+			sendFileToWebPageWithRange(localParentPath, targetName, targetName, rt, response, request, disposition); 			
+		}
+		
+		if(deleteEnable)
+		{
+			FileUtil.delFileOrDir(localParentPath + targetName);
+		}
+	}
+	
 	/**************** download Doc Without LoginCheck ******************/
 	@RequestMapping("/downloadDocEx.do")
 	public void downloadDocEx(Integer vid, String reposPath, String targetPath, String targetName, 
