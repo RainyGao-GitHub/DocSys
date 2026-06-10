@@ -14425,6 +14425,9 @@ public class BaseController  extends BaseFunction{
 		officeType = getOfficeType(officeEditorApi);
 		Log.info("docSysInit() officeEditorApi:" + officeEditorApi);
 		
+		isOnlyOfficeUsed = Path.getIsOnlyOfficeUsed();
+		Log.info("docSysInit() isOnlyOfficeUsed:" + isOnlyOfficeUsed);
+		
 		serverIP = IPUtil.getIpAddress();
 		serverMAC = IPUtil.getMacAddress();
 		Log.info("docSysInit() serverIP:" + serverIP + " serverMAC:" + serverMAC);
@@ -22691,6 +22694,8 @@ public class BaseController  extends BaseFunction{
 
 		String salesDataStorePath = Path.getSaleDataStorePath(OSType);
 		systemInfo.put("salesDataStorePath", salesDataStorePath);
+		
+		systemInfo.put("isOnlyOfficeUsed", isOnlyOfficeUsed ? 1 : 0);
 		
 		return systemInfo;
 	}

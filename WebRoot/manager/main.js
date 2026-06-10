@@ -369,6 +369,11 @@ function selectRedisEn()
 	}		
 }
 
+function selectIsOnlyOfficeUsed()
+{
+	// 仅用于切换复选框状态，无额外联动逻辑
+}
+
 function downloadLogFile(){
 	$.ajax({
         url : "/DocSystem/Manage/downloadLogFile.do",
@@ -1248,6 +1253,7 @@ function enableSystemInfoSet(){
 	$("#logLevel").attr('disabled',false);		
 	$("#outputToFileEn").attr('disabled',false);
 	$("#redisEn").attr('disabled',false);
+	$("#isOnlyOfficeUsed").attr('disabled',false);
 	if(systemInfo.outputToFileEn == 1)
 	{
 		$("#logFile").attr('disabled',false);
@@ -1284,6 +1290,7 @@ function cancelSystemInfoSet(){
 	$("#redisEn").attr('disabled',true);
 	$("#redisUrl").attr('disabled',true);
 	$("#clusterServerUrl").attr('disabled',true);
+	$("#isOnlyOfficeUsed").attr('disabled',true);
 	
 	$("#tomcatPath").val(systemInfo.tomcatPath);
 	$("#javaHome").val(systemInfo.javaHome);
@@ -1318,6 +1325,14 @@ function cancelSystemInfoSet(){
 	{
 		$("#redisEn").prop("checked", false);			
 	}
+	if(systemInfo.isOnlyOfficeUsed == 1)
+	{
+		$("#isOnlyOfficeUsed").prop("checked", true);
+	}
+	else
+	{
+		$("#isOnlyOfficeUsed").prop("checked", false);			
+	}
 }
 
 function saveSystemInfoSet(){
@@ -1348,6 +1363,7 @@ function saveSystemInfoSet(){
 	$("#redisEn").attr('disabled',true);
 	$("#redisUrl").attr('disabled',true);
 	$("#clusterServerUrl").attr('disabled',true);
+	$("#isOnlyOfficeUsed").attr('disabled',true);
 	
 	var tomcatPath = $("#tomcatPath").val();
 	var javaHome = $("#javaHome").val();
@@ -1376,6 +1392,7 @@ function saveSystemInfoSet(){
 		redisUrl =  $("#redisUrl").val();
 		clusterServerUrl =  $("#clusterServerUrl").val();
 	}
+	var isOnlyOfficeUsed = $("#isOnlyOfficeUsed").is(':checked')? 1: 0;
 	
 	updateSystemInfo(tomcatPath, 
 			javaHome, 
@@ -1394,7 +1411,8 @@ function saveSystemInfoSet(){
 			maxThreadCount,
 			redisEn,
 			redisUrl,
-			clusterServerUrl);
+			clusterServerUrl,
+			isOnlyOfficeUsed);
 }
 
 function updateSystemInfo(tomcatPath, 
@@ -1414,7 +1432,8 @@ function updateSystemInfo(tomcatPath,
 		maxThreadCount,
 		redisEn,
 		redisUrl,
-		clusterServerUrl)
+		clusterServerUrl,
+		isOnlyOfficeUsed)
 {
 	$.ajax({
         url : "/DocSystem/Manage/setSystemInfo.do",
@@ -1438,6 +1457,7 @@ function updateSystemInfo(tomcatPath,
         	redisEn: redisEn,
         	redisUrl: redisUrl,
         	clusterServerUrl: clusterServerUrl,
+        	isOnlyOfficeUsed: isOnlyOfficeUsed,
         },
         success : function (ret) {
         	console.log("setSystemInfo ret:",ret);
@@ -1461,6 +1481,7 @@ function updateSystemInfo(tomcatPath,
         		systemInfo.redisEn = redisEn;
         		systemInfo.redisUrl = redisUrl;
         		systemInfo.clusterServerUrl = clusterServerUrl;
+        		systemInfo.isOnlyOfficeUsed = isOnlyOfficeUsed;
         		showErrorMessage(_Lang("更新成功！"));
             }
             else 
@@ -1500,6 +1521,14 @@ function updateSystemInfo(tomcatPath,
         		}
         		$("#redisUrl").val(systemInfo.redisUrl);
         		$("#clusterServerUrl").val(systemInfo.clusterServerUrl);
+        		if(systemInfo.isOnlyOfficeUsed == 1)
+        		{
+        			$("#isOnlyOfficeUsed").prop("checked", true);
+        		}
+        		else
+        		{
+        			$("#isOnlyOfficeUsed").prop("checked",false);			
+        		}
             }
         },
         error : function () {
@@ -1573,6 +1602,10 @@ function showSystemUpgrade(){
         		if(systemInfo.redisEn == undefined)
             	{
             		systemInfo.redisEn = 0;	//defulat info
+            	}
+        		if(systemInfo.isOnlyOfficeUsed == undefined)
+            	{
+            		systemInfo.isOnlyOfficeUsed = 0;	//default use FileConverter
             	}
         		
             	$Func.render($("#container"),"systemUpgrade" + langExt,{"value":systemInfo});

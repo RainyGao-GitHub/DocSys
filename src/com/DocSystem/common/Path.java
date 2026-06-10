@@ -578,6 +578,16 @@ public class Path {
 		return officeEditorApi;
 	}
 	
+	//获取是否使用OnlyOffice转换引擎的配置（默认false=使用内置Java FileConverter）
+	public static boolean getIsOnlyOfficeUsed() {
+		String val = ReadProperties.read("docSysConfig.properties", "isOnlyOfficeUsed");
+		if(val == null || val.isEmpty())
+		{
+			return false; // 默认使用FileConverter
+		}
+		return "1".equals(val) || "true".equalsIgnoreCase(val);
+	}
+	
 	public static Integer getLogLevel() {
 		String logLevelString = ReadProperties.read("docSysConfig.properties", "logLevel");
 		if(logLevelString != null && !logLevelString.isEmpty())

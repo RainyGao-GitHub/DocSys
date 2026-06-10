@@ -965,6 +965,7 @@ public class ManageController extends BaseController{
 		config.put("maxThreadCount", maxThreadCount);	
 		config.put("systemDisabled", systemDisabled);
 		config.put("officeDisabled", officeDisabled);
+		config.put("isOnlyOfficeUsed", isOnlyOfficeUsed ? 1 : 0);
 		config.put("redisEn", redisEn);
 		config.put("redisUrl", redisUrl);
 		config.put("clusterServerUrl", clusterServerUrl);
@@ -1229,6 +1230,7 @@ public class ManageController extends BaseController{
 			Integer redisEn,
 			String redisUrl,
 			String clusterServerUrl,
+			Integer isOnlyOfficeUsed,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** setSystemInfo.do ***********************");
@@ -1244,7 +1246,8 @@ public class ManageController extends BaseController{
 				+ " allowedNetworkConfig:" + allowedNetworkConfig
 				+ " llmConfig:" + llmConfig
 				+ " logLevel:" + logLevel + " logFile:" + logFile
-				+ " redisEn:" + redisEn + " redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl);
+				+ " redisEn:" + redisEn + " redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl
+				+ " isOnlyOfficeUsed:" + isOnlyOfficeUsed);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
@@ -1271,7 +1274,8 @@ public class ManageController extends BaseController{
 			maxThreadCount == null &&
 			redisEn == null &&
 			redisUrl == null &&
-			clusterServerUrl == null)	
+			clusterServerUrl == null &&
+			isOnlyOfficeUsed == null)	
 		{
 			docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
@@ -1433,6 +1437,12 @@ public class ManageController extends BaseController{
 		if(clusterServerUrl != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "serverUrl", clusterServerUrl);
+		}
+		
+		if(isOnlyOfficeUsed != null)
+		{
+			BaseFunction.isOnlyOfficeUsed = (isOnlyOfficeUsed == 1);
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "isOnlyOfficeUsed", isOnlyOfficeUsed+"");
 		}
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)

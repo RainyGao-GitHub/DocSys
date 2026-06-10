@@ -169,6 +169,9 @@ public class BaseFunction{
     public static OfficeLicense officeLicenseInfo = null;
     public static Integer officeType = 0; //0:内置 1:外置
     
+    //Office转换引擎选择：true=使用OnlyOffice(x2t), false=使用内置Java FileConverter
+    public static boolean isOnlyOfficeUsed = false;
+    
     //系统LDAP设置
     public static SystemLDAPConfig systemLdapConfig = null;
     
