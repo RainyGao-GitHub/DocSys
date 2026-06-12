@@ -950,6 +950,62 @@ public class DocController extends BaseController{
 		}).start();
 	}
 	
+	/****************   clear OfficeEdit Cache ******************/
+	@RequestMapping("/clearOfficeEditCache.do")
+	public void clearOfficeEditCache(
+			Integer reposId, String path, String name,
+			Integer shareId,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("************** clearOfficeEditCache [" + path + name + "] ****************");
+		Log.info("clearOfficeEditCache reposId:" + reposId + " path:" + path + " name:" + name + " shareId:" + shareId);
+		
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, null, null);
+		
+		//获取文件系统实际Doc信息，用于生成正确的dockey
+		Doc fsDoc = fsGetDoc(repos, doc);
+		if(fsDoc == null || fsDoc.getType() != 1)
+		{
+			docSysErrorLog("clearOfficeEditCache() 文件不存在或不是文件类型", rt);
+			writeJson(rt, response);
+			return;
+		}
+		
+		String dockey = buildOfficeEditorKey(fsDoc);
+		String officeEditPath = Path.getOfficeEditPath(dockey, fsDoc);
+		Log.info("clearOfficeEditCache() dockey:" + dockey + " officeEditPath:" + officeEditPath);
+		
+		if(FileUtil.delDir(officeEditPath))
+		{
+			Log.info("clearOfficeEditCache() 清除缓存成功: " + officeEditPath);
+			rt.setData("ok");
+		}
+		else
+		{
+			Log.info("clearOfficeEditCache() 缓存目录不存在或删除失败: " + officeEditPath);
+			rt.setData("ok"); //目录不存在也算成功
+		}
+		
+		writeJson(rt, response);
+	}
 	
 	/****************   Feeback  ******************/
 	@RequestMapping("/feeback.do")

@@ -207,8 +207,52 @@ var OfficeEditor = (function () {
         };
         
         var onError = function (event) {
-            if (event)
-                innerAlert(event.data);
+            var errorCode = -1;
+            var errorDesc = "未知错误";
+            if (event && event.data) {
+                errorCode = event.data.errorCode;
+                errorDesc = event.data.errorDescription;
+            }
+            innerAlert("onError() errorCode:" + errorCode + " errorDesc:" + errorDesc, event);
+            
+            //清除缓存标志，避免重复弹窗
+            if(window._officeEditCacheClearFlag === true)
+            {
+            	return;
+            }
+            window._officeEditCacheClearFlag = true;
+            
+            //Office编辑器加载出错时，给用户提供清除缓存的选择
+            {
+            	var msg = "Office编辑器加载失败（errorCode=" + errorCode + "），是否清除缓存后重试？\n（清除缓存会重新生成编辑器数据，可能解决文件打开异常问题）";
+            	if(confirm(msg))
+            	{
+            		$.ajax({
+            			url : "/DocSystem/Doc/clearOfficeEditCache.do",
+            			type : "post",
+            			dataType : "json",
+            			data : {
+            				reposId: docInfo.vid,
+            				path: docInfo.path,
+            				name: docInfo.name,
+            				shareId: docInfo.shareId
+            			},
+            			success : function (ret) {
+            				if("ok" == ret.status)
+            				{
+            					location.reload(true);
+            				}
+            				else
+            				{
+            					alert("清除缓存失败：" + (ret.msgInfo || "未知错误"));
+            				}
+            			},
+            			error : function () {
+            				alert("清除缓存失败：服务器异常");
+            			}
+            		});
+            	}
+            }
         };
 
         var onOutdatedVersion = function (event) {
@@ -267,6 +311,22 @@ var OfficeEditor = (function () {
                     "lang": lang,
                     "user": user,
                     "spellcheck": false,
+                    "customization": {
+                        "logo": {
+                            "image": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4NiIgaGVpZ2h0PSIyMCI+PHRleHQgeD0iMCIgeT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzMzMyI+TVhTRE9DPC90ZXh0Pjwvc3ZnPg==",
+                            "imageDark": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4NiIgaGVpZ2h0PSIyMCI+PHRleHQgeD0iMCIgeT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2NjYyI+TVhTRE9DPC90ZXh0Pjwvc3ZnPg==",
+                            "url": "http://dw.gofreeteam.com"
+                        },
+                        "help": false,
+                        "customer": {
+                            "name": "杭州圆图网络技术有限公司",
+                            "address": "杭州市滨江区信诚路857号",
+                            "mail": "652055239@qq.com",
+                            "www": "dw.gofreeteam.com",
+                            "phone": "+86 13777479349",
+                            "logo": ""
+                        }
+                    }
                 },
     		    "events": {
     		    	"onError": onError,
