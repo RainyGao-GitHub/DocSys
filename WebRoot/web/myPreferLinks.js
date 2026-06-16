@@ -540,6 +540,48 @@ $(function () {
 	pageInit();
 });
 
+//显示链接的二维码，方便手机扫码访问
+function showLinkQrCode(el)
+{
+	var url = $(el).data('qrUrl');
+	var name = $(el).data('qrName') || url;
+	
+	//移除旧的modal
+	$('#qrcodeLinkModal').remove();
+	
+	var modalHtml = 
+		'<div class="modal fade" id="qrcodeLinkModal" tabindex="-1" role="dialog">' +
+		'<div class="modal-dialog modal-sm" role="document">' +
+		'<div class="modal-content">' +
+		'<div class="modal-header">' +
+		'<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+		'<h4 class="modal-title nowrap ellipsis">' + name + '</h4>' +
+		'</div>' +
+		'<div class="modal-body text-center">' +
+		'<div id="qrcodeLinkContainer"></div>' +
+		'<p style="margin-top:12px;word-break:break-all;font-size:12px;color:#999;">' + url + '</p>' +
+		'</div>' +
+		'</div></div></div>';
+	
+	$('body').append(modalHtml);
+	$('#qrcodeLinkModal').modal('show');
+	
+	//生成二维码
+	new QRCode(document.getElementById('qrcodeLinkContainer'), {
+		text: url,
+		width: 200,
+		height: 200,
+		colorDark: '#000000',
+		colorLight: '#ffffff',
+		correctLevel: QRCode.CorrectLevel.M
+	});
+	
+	//关闭时清理
+	$('#qrcodeLinkModal').on('hidden.bs.modal', function() {
+		$(this).remove();
+	});
+}
+
 function showFeebackPanel()
 {
 	console.log("showFeebackPanel");

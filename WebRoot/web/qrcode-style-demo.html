@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0">
+    <title>二维码链接展示 - 风格对比</title>
+    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body { background: #f5f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+        .page-header { background: #fff; padding: 30px 0; margin-bottom: 30px; border-bottom: 1px solid #e8e8e8; text-align: center; }
+        .page-header h1 { font-size: 24px; color: #333; margin: 0; }
+        .page-header p { color: #999; margin: 8px 0 0; font-size: 14px; }
+        .section { margin-bottom: 40px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 16px; padding-left: 4px; border-left: 3px solid #2ABB9B; padding: 0 0 0 12px; }
+        .section-desc { color: #888; font-size: 13px; margin: -8px 0 16px 16px; }
+
+        /* ========== Style A: 大图标卡片（当前方案） ========== */
+        .card-a { background: #fff; border-radius: 8px; padding: 16px; display: flex; align-items: center; cursor: pointer; transition: box-shadow .2s; margin-bottom: 10px; }
+        .card-a:hover { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-a .icon-box { width: 50px; height: 50px; border-radius: 8px; background: rgba(42,185,155,.08); display: flex; align-items: center; justify-content: center; position: relative; margin-right: 14px; flex-shrink: 0; }
+        .card-a .icon-box .qr-icon { font-size: 26px; color: #2ABB9B; position: relative; z-index: 2; }
+        .card-a .icon-box .globe-bg { position: absolute; font-size: 44px; color: rgba(42,185,155,.10); z-index: 1; }
+        .card-a .link-info { flex: 1; min-width: 0; }
+        .card-a .link-info .name { font-size: 14px; color: #333; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-a .link-info .url { font-size: 12px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+        /* ========== Style B: 右上角徽标 ========== */
+        .card-b { background: #fff; border-radius: 8px; padding: 16px; display: flex; align-items: center; position: relative; cursor: pointer; transition: box-shadow .2s; margin-bottom: 10px; }
+        .card-b:hover { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-b .icon-box { width: 44px; height: 44px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0; color: #fff; font-size: 20px; }
+        .card-b .qr-badge { position: absolute; top: -4px; right: -4px; width: 26px; height: 26px; background: #fff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,.15); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: #2ABB9B; z-index: 3; transition: transform .2s; }
+        .card-b .qr-badge:hover { transform: scale(1.15); }
+        .card-b .link-info { flex: 1; min-width: 0; }
+        .card-b .link-info .name { font-size: 14px; color: #333; font-weight: 500; }
+        .card-b .link-info .url { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+        /* ========== Style C: 右侧专用按钮 ========== */
+        .card-c { background: #fff; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; transition: box-shadow .2s; margin-bottom: 10px; }
+        .card-c:hover { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-c .icon-box { width: 40px; height: 40px; border-radius: 6px; background: #f0f2f5; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; font-size: 18px; color: #666; }
+        .card-c .link-info { flex: 1; min-width: 0; cursor: pointer; }
+        .card-c .link-info .name { font-size: 14px; color: #333; font-weight: 500; }
+        .card-c .link-info .url { font-size: 12px; color: #aaa; margin-top: 2px; }
+        .card-c .qr-btn { width: 36px; height: 36px; border-radius: 6px; border: 1.5px solid #e0e0e0; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2ABB9B; font-size: 18px; flex-shrink: 0; margin-left: 12px; transition: all .2s; }
+        .card-c .qr-btn:hover { border-color: #2ABB9B; background: rgba(42,185,155,.06); }
+
+        /* ========== Style D: 悬停浮层 ========== */
+        .card-d { background: #fff; border-radius: 8px; padding: 16px; display: flex; align-items: center; position: relative; cursor: pointer; transition: box-shadow .2s; margin-bottom: 10px; overflow: hidden; }
+        .card-d:hover { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-d .icon-box { width: 44px; height: 44px; border-radius: 8px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0; color: #fff; font-size: 20px; }
+        .card-d .link-info { flex: 1; min-width: 0; }
+        .card-d .link-info .name { font-size: 14px; color: #333; font-weight: 500; }
+        .card-d .link-info .url { font-size: 12px; color: #aaa; margin-top: 2px; }
+        .card-d .qr-hover { position: absolute; right: -60px; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: #2ABB9B; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; transition: right .3s cubic-bezier(.4,0,.2,1); opacity: 0; }
+        .card-d:hover .qr-hover { right: 16px; opacity: 1; }
+
+        /* ========== Style E: 链接内联图标 ========== */
+        .card-e { background: #fff; border-radius: 8px; padding: 16px; display: flex; align-items: center; transition: box-shadow .2s; margin-bottom: 10px; }
+        .card-e:hover { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-e .icon-box { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; color: #fff; font-size: 16px; }
+        .card-e .link-info { flex: 1; min-width: 0; cursor: pointer; }
+        .card-e .link-info .name-row { display: flex; align-items: center; gap: 8px; }
+        .card-e .link-info .name { font-size: 14px; color: #333; font-weight: 500; }
+        .card-e .link-info .qr-inline { font-size: 16px; color: #2ABB9B; cursor: pointer; opacity: .6; transition: opacity .2s; flex-shrink: 0; }
+        .card-e .link-info .qr-inline:hover { opacity: 1; }
+        .card-e .link-info .url { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+        /* ========== Style F: 左右分栏 ========== */
+        .card-f { background: #fff; border-radius: 10px; overflow: hidden; display: flex; transition: box-shadow .2s; margin-bottom: 10px; height: 72px; }
+        .card-f:hover { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-f .qr-left { width: 72px; background: linear-gradient(135deg, #2ABB9B 0%, #1a8a6e 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: filter .2s; }
+        .card-f .qr-left:hover { filter: brightness(1.1); }
+        .card-f .qr-left .qr-icon { font-size: 30px; color: #fff; }
+        .card-f .link-right { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; min-width: 0; }
+        .card-f .link-right .name { font-size: 14px; color: #333; font-weight: 500; }
+        .card-f .link-right .url { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+        /* ========== Style G: 底部状态栏 ========== */
+        .card-g { background: #fff; border-radius: 10px; overflow: hidden; transition: box-shadow .2s; margin-bottom: 10px; }
+        .card-g:hover { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+        .card-g .card-top { padding: 14px 16px 10px; display: flex; align-items: center; cursor: pointer; }
+        .card-g .card-top .icon-box { width: 38px; height: 38px; border-radius: 6px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; color: #fff; font-size: 17px; }
+        .card-g .card-top .link-info { flex: 1; min-width: 0; }
+        .card-g .card-top .link-info .name { font-size: 14px; color: #333; font-weight: 500; }
+        .card-g .card-top .link-info .url { font-size: 12px; color: #aaa; margin-top: 2px; }
+        .card-g .card-bottom { border-top: 1px solid #f0f0f0; padding: 6px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; font-size: 12px; color: #aaa; }
+        .card-g .card-bottom .qr-foot { display: flex; align-items: center; gap: 4px; cursor: pointer; color: #2ABB9B; font-size: 12px; transition: color .2s; }
+        .card-g .card-bottom .qr-foot:hover { color: #1a8a6e; }
+        .card-g .card-bottom .qr-foot i { font-size: 16px; }
+
+        /* Modal QR */
+        .modal-qr canvas, .modal-qr img { display: block; margin: 0 auto; }
+        .modal-qr .url-text { margin-top: 10px; word-break: break-all; font-size: 12px; color: #999; text-align: center; }
+
+        .recommend-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 8px; }
+        .badge-good { background: #e6f7ee; color: #2ABB9B; }
+        .badge-ok { background: #fff7e6; color: #fa8c16; }
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+    <h1><i class="fa fa-qrcode" style="color:#2ABB9B;"></i> 二维码链接展示 - 风格对比</h1>
+    <p>点击各方案中的二维码图标可查看效果 | 选择你喜欢的风格后我们来实现</p>
+</div>
+
+<div class="container" style="max-width: 700px;">
+
+    <!-- Style A -->
+    <div class="section">
+        <div class="section-title">方案A：大图标卡片 <span class="recommend-badge badge-ok">当前方案</span></div>
+        <div class="section-desc">二维码作为左侧主图标（50×50），地球图标做背景水印</div>
+        <div class="card-a" id="cardA">
+            <div class="icon-box" data-qr-url="https://www.baidu.com" data-qr-name="百度" onclick="event.stopPropagation();showQr(this);">
+                <i class="fa fa-qrcode qr-icon"></i>
+                <i class="fa fa-globe globe-bg"></i>
+            </div>
+            <div class="link-info">
+                <div class="name">百度</div>
+                <div class="url">https://www.baidu.com</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Style B -->
+    <div class="section">
+        <div class="section-title">方案B：右上角角标</div>
+        <div class="section-desc">网站图标在左侧，二维码以小圆角标浮在卡片右上角</div>
+        <div class="card-b">
+            <div class="icon-box"><i class="fa fa-google"></i></div>
+            <div class="link-info" onclick="window.open('https://www.google.com')">
+                <div class="name">Google</div>
+                <div class="url">https://www.google.com</div>
+            </div>
+            <div class="qr-badge" data-qr-url="https://www.google.com" data-qr-name="Google" onclick="event.stopPropagation();showQr(this);">
+                <i class="fa fa-qrcode"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Style C -->
+    <div class="section">
+        <div class="section-title">方案C：右侧专用按钮 <span class="recommend-badge badge-good">推荐</span></div>
+        <div class="section-desc">卡片右侧独立二维码按钮，与内容区有明确分隔</div>
+        <div class="card-c">
+            <div class="icon-box"><i class="fa fa-github"></i></div>
+            <div class="link-info" onclick="window.open('https://www.github.com')">
+                <div class="name">GitHub</div>
+                <div class="url">https://www.github.com</div>
+            </div>
+            <div class="qr-btn" data-qr-url="https://www.github.com" data-qr-name="GitHub" onclick="event.stopPropagation();showQr(this);">
+                <i class="fa fa-qrcode"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Style D -->
+    <div class="section">
+        <div class="section-title">方案D：悬停滑出</div>
+        <div class="section-desc">鼠标悬停时二维码图标从右侧滑入，平时隐藏</div>
+        <div class="card-d" onclick="window.open('https://www.bilibili.com')">
+            <div class="icon-box"><i class="fa fa-play"></i></div>
+            <div class="link-info">
+                <div class="name">哔哩哔哩</div>
+                <div class="url">https://www.bilibili.com</div>
+            </div>
+            <div class="qr-hover" data-qr-url="https://www.bilibili.com" data-qr-name="哔哩哔哩" onclick="event.stopPropagation();showQr(this);">
+                <i class="fa fa-qrcode"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Style E -->
+    <div class="section">
+        <div class="section-title">方案E：标题内联图标</div>
+        <div class="section-desc">二维码小图标直接跟在链接名称后面，最简洁</div>
+        <div class="card-e">
+            <div class="icon-box"><i class="fa fa-weixin"></i></div>
+            <div class="link-info" onclick="window.open('https://www.zhihu.com')">
+                <div class="name-row">
+                    <span class="name">知乎</span>
+                    <i class="fa fa-qrcode qr-inline" data-qr-url="https://www.zhihu.com" data-qr-name="知乎" onclick="event.stopPropagation();showQr(this);" title="扫码打开"></i>
+                </div>
+                <div class="url">https://www.zhihu.com</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Style F -->
+    <div class="section">
+        <div class="section-title">方案F：左侧色块</div>
+        <div class="section-desc">卡片左侧为专属二维码色块区域，右侧为链接信息</div>
+        <div class="card-f">
+            <div class="qr-left" data-qr-url="https://www.taobao.com" data-qr-name="淘宝" onclick="event.stopPropagation();showQr(this);">
+                <i class="fa fa-qrcode qr-icon"></i>
+            </div>
+            <div class="link-right" onclick="window.open('https://www.taobao.com')">
+                <div class="name">淘宝</div>
+                <div class="url">https://www.taobao.com</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Style G -->
+    <div class="section">
+        <div class="section-title">方案G：底部操作栏</div>
+        <div class="section-desc">二维码入口放在卡片底部操作栏，与分享、编辑等操作并列</div>
+        <div class="card-g">
+            <div class="card-top" onclick="window.open('https://www.jd.com')">
+                <div class="icon-box"><i class="fa fa-shopping-cart"></i></div>
+                <div class="link-info">
+                    <div class="name">京东</div>
+                    <div class="url">https://www.jd.com</div>
+                </div>
+            </div>
+            <div class="card-bottom">
+                <span class="qr-foot" data-qr-url="https://www.jd.com" data-qr-name="京东" onclick="event.stopPropagation();showQr(this);">
+                    <i class="fa fa-qrcode"></i> 手机扫码
+                </span>
+                <span><i class="fa fa-share-alt"></i> 分享</span>
+                <span><i class="fa fa-edit"></i> 编辑</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- QR Code Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title nowrap ellipsis" id="qrModalTitle"></h4>
+            </div>
+            <div class="modal-body text-center modal-qr">
+                <div id="qrContainer"></div>
+                <p class="url-text" id="qrModalUrl"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="static/scripts/jquery.min.js"></script>
+<script src="static/bootstrap/js/bootstrap.min.js"></script>
+<script src="js/qrcode.js"></script>
+<script>
+function showQr(el) {
+    var url = $(el).data('qrUrl');
+    var name = $(el).data('qrName') || url;
+    $('#qrContainer').empty();
+    $('#qrModalTitle').text(name);
+    $('#qrModalUrl').text(url);
+    $('#qrModal').modal('show');
+    new QRCode(document.getElementById('qrContainer'), {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+    });
+}
+</script>
+</body>
+</html>

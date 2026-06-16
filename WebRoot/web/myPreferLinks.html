@@ -54,6 +54,39 @@
         .breakAll{word-break:break-all;}            
         /* 超出部分显示省略号 */
         .ellipsis{text-overflow:ellipsis;overflow:hidden;}
+        
+        /* 二维码角标（图标视图卡片右上角） */
+        .smart-container .box .qr-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 28px;
+            height: 28px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #2ABB9B;
+            z-index: 5;
+            transition: transform 0.2s, box-shadow 0.2s;
+            user-select: none;
+        }
+        .smart-container .box .qr-badge:hover {
+            transform: scale(1.2);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.25);
+            color: #1a9a7a;
+        }
+        /* 修复summary浮层拦截角标点击：非悬停时穿透，悬停时恢复 */
+        .smart-container .summary {
+            pointer-events: none;
+        }
+        .smart-container li:hover .summary {
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body>
@@ -173,6 +206,9 @@
                     <a href="{{preferLink.url}}" title="{{preferLink.url}}" target="_blank">{{preferLink.showName}}</a>
 					<ul class="pull-right">
 				    	<li>
+							<span class="btn" title="二维码" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="showLinkQrCode(this);">
+								<i class="fa fa-qrcode {{preferLink.btnIconStyle}}"></i>
+							</span>
            					<span class="btn" title="分享" onclick="sharePreferLink({{i}});">
 								<i class="icons share {{preferLink.btnIconStyle}}"></i>
 							</span>
@@ -208,7 +244,10 @@
                 	<i class="fa fa-internet-explorer" style="color:#2ABB9B;"></i>
             	</div>
             	<h4>{{preferLink.showName}}</h4>
-            	<span></span>
+            	<span>{{preferLink.url}}</span>
+				<span class="qr-badge" title="二维码" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="event.stopPropagation();showLinkQrCode(this);">
+					<i class="fa fa-qrcode"></i>
+				</span>
         	</a>
         	<p class="summary hidden-xs hidden-sm hidden-md">
             	<a href="{{preferLink.url}}" target="_blank" class="text">
@@ -228,6 +267,9 @@
                 <h4 class="s-title">
                     <i class="{{preferLink.iconType}} {{preferLink.iconStyle}}"></i>
                     <a href="{{preferLink.url}}" title="{{preferLink.url}}" target="_blank">{{preferLink.showName}}</a>
+					<span class="btn pull-right" title="二维码" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="showLinkQrCode(this);" style="margin-right:15px;">
+						<i class="fa fa-qrcode"></i>
+					</span>
                 </h4>
                 <div class="s-content">
                     <p>{{# preferLink.content}}</p>
@@ -252,7 +294,10 @@
                 	<i class="fa fa-internet-explorer" style="color:#2ABB9B;"></i>
             	</div>
             	<h4>{{preferLink.showName}}</h4>
-            	<span></span>
+            	<span>{{preferLink.url}}</span>
+				<span class="qr-badge" title="二维码" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="event.stopPropagation();showLinkQrCode(this);">
+					<i class="fa fa-qrcode"></i>
+				</span>
         	</a>
         	<p class="summary hidden-xs hidden-sm hidden-md">
             	<a href="{{preferLink.url}}" target="_blank" class="text">
