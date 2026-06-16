@@ -128,6 +128,30 @@ function searchPreferLink(pageIndex)
 	getSharedPreferLinks();
 }
 
+//取名称首字符（作为头像文字）
+function getFirstChar(name)
+{
+	if(!name || name.length == 0) return '?';
+	return name.charAt(0).toUpperCase();
+}
+
+//根据名称生成固定颜色（用于头像背景）
+function getAvatarColor(name)
+{
+	var colors = [
+		'#E91E63','#9C27B0','#673AB7','#3F51B5','#2196F3',
+		'#0097A7','#00897B','#43A047','#689F38','#F4511E',
+		'#EF6C00','#F9A825','#C0CA33','#00ACC1','#1E88E5',
+		'#5C6BC0','#8E24AA','#D81B60','#3949AB','#039BE5'
+	];
+	var hash = 0;
+	for(var i = 0; i < name.length; i++){
+		hash = name.charCodeAt(i) + ((hash << 5) - hash);
+		hash = hash & hash;
+	}
+	return colors[Math.abs(hash) % colors.length];
+}
+
 function showPreferLinkList(list)
 {
 	console.log("showPreferLinkList");
@@ -142,6 +166,9 @@ function showPreferLinkList(list)
     		{
     			jsonObj.showName = jsonObj.name;
     		}
+    		
+    		jsonObj.firstChar = getFirstChar(jsonObj.showName);
+    		jsonObj.avatarColor = getAvatarColor(jsonObj.showName);
     		
     		jsonObj.iconType = "icons webpage";
     		if(jsonObj.type == 2)
@@ -199,8 +226,9 @@ function showSharedPreferLinkList(list)
    		{
    			jsonObj.showName = jsonObj.name;
    		}
-   		
-   		jsonObj.iconType = "icons webpage";
+   		   		jsonObj.firstChar = getFirstChar(jsonObj.showName);
+   		jsonObj.avatarColor = getAvatarColor(jsonObj.showName);
+   		   		jsonObj.iconType = "icons webpage";
    		if(jsonObj.type == 2)
    		{
    			jsonObj.iconType = "icons weblink";
