@@ -56,7 +56,7 @@
         /* 超出部分显示省略号 */
         .ellipsis{text-overflow:ellipsis;overflow:hidden;}
         
-        /* QR code badge (top-right corner of icon view card) */
+        /* QR code badge (top-right corner, Style B) */
         .smart-container .box .qr-badge {
             position: absolute;
             top: 6px;
@@ -88,22 +88,12 @@
         .smart-container li:hover .summary {
             pointer-events: auto;
         }
-        /* Truncate long URLs with ellipsis to prevent layout wrapping */
-        .smart-container .box span {
+        /* Truncate long URLs with ellipsis */
+        .smart-container .box > span {
             display: block;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-        /* First-char avatar (replaces globe icon) */
-        .avatar-box {
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px !important;
-            color: #fff !important;
-            border-radius: 8px;
-            font-weight: 600;
         }
     </style>
 </head>
@@ -258,8 +248,8 @@
 	{{each list as preferLink i}}
     	<li>
         	<a href="{{preferLink.url}}" target="_blank" class="box" title="" >
-             	<div class="pull-left imgbox avatar-box" style="background-color:{{preferLink.avatarColor}};">
-                	<span>{{preferLink.firstChar}}</span>
+            	<div class="pull-left imgbox">
+                	<i class="fa fa-internet-explorer" style="color:#2ABB9B;"></i>
             	</div>
             	<h4>{{preferLink.showName}}</h4>
             	<span>{{preferLink.url}}</span>
@@ -308,8 +298,8 @@
 	{{each list as preferLink i}}
     	<li>
         	<a href="{{preferLink.url}}" target="_blank" class="box" title="" >
-             	<div class="pull-left imgbox avatar-box" style="background-color:{{preferLink.avatarColor}};">
-                	<span>{{preferLink.firstChar}}</span>
+            	<div class="pull-left imgbox">
+                	<i class="fa fa-internet-explorer" style="color:#2ABB9B;"></i>
             	</div>
             	<h4>{{preferLink.showName}}</h4>
             	<span>{{preferLink.url}}</span>
