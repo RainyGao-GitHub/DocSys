@@ -608,6 +608,8 @@ function showLinkQrCode(el)
 		colorLight: '#ffffff',
 		correctLevel: QRCode.CorrectLevel.M
 	});
+	// 二维码居中显示
+	$('#qrcodeLinkContainer').find('img,canvas').css({display:'block', margin:'0 auto'});
 	
 	//关闭时清理
 	$('#qrcodeLinkModal').on('hidden.bs.modal', function() {
