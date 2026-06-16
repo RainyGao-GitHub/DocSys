@@ -56,11 +56,9 @@
         /* 超出部分显示省略号 */
         .ellipsis{text-overflow:ellipsis;overflow:hidden;}
         
-        /* QR code badge (top-right corner, Style B) */
-        .smart-container .box .qr-badge {
+        /* QR code badge (sibling of .box in li, z-index above summary, JS positions it) */
+        .qr-badge {
             position: absolute;
-            top: 6px;
-            right: 6px;
             width: 28px;
             height: 28px;
             background: #fff;
@@ -72,21 +70,14 @@
             cursor: pointer;
             font-size: 14px;
             color: #2ABB9B;
-            z-index: 5;
+            z-index: 10;
             transition: transform 0.2s, box-shadow 0.2s;
             user-select: none;
         }
-        .smart-container .box .qr-badge:hover {
+        .qr-badge:hover {
             transform: scale(1.2);
             box-shadow: 0 3px 12px rgba(0,0,0,0.25);
             color: #1a9a7a;
-        }
-        /* Fix summary overlay blocking badge clicks */
-        .smart-container .summary {
-            pointer-events: none;
-        }
-        .smart-container li:hover .summary {
-            pointer-events: auto;
         }
         /* Truncate long URLs with ellipsis */
         .smart-container .box > span {
@@ -253,15 +244,15 @@
             	</div>
             	<h4>{{preferLink.showName}}</h4>
             	<span>{{preferLink.url}}</span>
-				<span class="qr-badge" title="QR Code" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="event.stopPropagation();showLinkQrCode(this);">
-					<i class="fa fa-qrcode"></i>
-				</span>
         	</a>
         	<p class="summary hidden-xs hidden-sm hidden-md">
             	<a href="{{preferLink.url}}" target="_blank" class="text">
                 	{{  preferLink.content }}
             	</a>
         	</p>
+			<span class="qr-badge" title="QR Code" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="showLinkQrCode(this);">
+				<i class="fa fa-qrcode"></i>
+			</span>
     	</li>
     {{/each}}
     </ul>
@@ -303,15 +294,15 @@
             	</div>
             	<h4>{{preferLink.showName}}</h4>
             	<span>{{preferLink.url}}</span>
-				<span class="qr-badge" title="QR Code" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="event.stopPropagation();showLinkQrCode(this);">
-					<i class="fa fa-qrcode"></i>
-				</span>
         	</a>
         	<p class="summary hidden-xs hidden-sm hidden-md">
             	<a href="{{preferLink.url}}" target="_blank" class="text">
                 	{{  preferLink.content }}
             	</a>
         	</p>
+			<span class="qr-badge" title="QR Code" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="showLinkQrCode(this);">
+				<i class="fa fa-qrcode"></i>
+			</span>
     	</li>
     {{/each}}
     </ul>

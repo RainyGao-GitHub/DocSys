@@ -55,11 +55,9 @@
         /* 超出部分显示省略号 */
         .ellipsis{text-overflow:ellipsis;overflow:hidden;}
         
-        /* 二维码角标（图标视图卡片右上角，方案B） */
-        .smart-container .box .qr-badge {
+        /* 二维码角标（li内.box的兄弟节点，z-index高于summary，JS自动对齐位置） */
+        .qr-badge {
             position: absolute;
-            top: 6px;
-            right: 6px;
             width: 28px;
             height: 28px;
             background: #fff;
@@ -71,21 +69,14 @@
             cursor: pointer;
             font-size: 14px;
             color: #2ABB9B;
-            z-index: 5;
+            z-index: 10;
             transition: transform 0.2s, box-shadow 0.2s;
             user-select: none;
         }
-        .smart-container .box .qr-badge:hover {
+        .qr-badge:hover {
             transform: scale(1.2);
             box-shadow: 0 3px 12px rgba(0,0,0,0.25);
             color: #1a9a7a;
-        }
-        /* 修复summary浮层拦截角标点击：非悬停时穿透，悬停时恢复 */
-        .smart-container .summary {
-            pointer-events: none;
-        }
-        .smart-container li:hover .summary {
-            pointer-events: auto;
         }
         /* 网址过长时截断显示省略号 */
         .smart-container .box > span {
@@ -252,15 +243,15 @@
             	</div>
             	<h4>{{preferLink.showName}}</h4>
             	<span>{{preferLink.url}}</span>
-				<span class="qr-badge" title="二维码" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="event.stopPropagation();showLinkQrCode(this);">
-					<i class="fa fa-qrcode"></i>
-				</span>
         	</a>
         	<p class="summary hidden-xs hidden-sm hidden-md">
             	<a href="{{preferLink.url}}" target="_blank" class="text">
                 	{{  preferLink.content }}
             	</a>
         	</p>
+			<span class="qr-badge" title="二维码" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="showLinkQrCode(this);">
+				<i class="fa fa-qrcode"></i>
+			</span>
     	</li>
     {{/each}}
     </ul>
@@ -302,15 +293,15 @@
             	</div>
             	<h4>{{preferLink.showName}}</h4>
             	<span>{{preferLink.url}}</span>
-				<span class="qr-badge" title="二维码" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="event.stopPropagation();showLinkQrCode(this);">
-					<i class="fa fa-qrcode"></i>
-				</span>
         	</a>
         	<p class="summary hidden-xs hidden-sm hidden-md">
             	<a href="{{preferLink.url}}" target="_blank" class="text">
                 	{{  preferLink.content }}
             	</a>
         	</p>
+			<span class="qr-badge" title="二维码" data-qr-url="{{preferLink.url}}" data-qr-name="{{preferLink.showName}}" onclick="showLinkQrCode(this);">
+				<i class="fa fa-qrcode"></i>
+			</span>
     	</li>
     {{/each}}
     </ul>

@@ -206,6 +206,7 @@ function showPreferLinkList(list)
     	}
         
         $("#preferLink-box").html(html);
+        setTimeout(positionQrBadges, 50);
 	}
 }
 
@@ -264,7 +265,8 @@ function showSharedPreferLinkList(list)
    	}
        
     $("#sharedPreferLink-box").html(html);
-    $("#sharedPreferLink-box").show();    	
+    $("#sharedPreferLink-box").show();
+    setTimeout(positionQrBadges, 50);
 }
 
 function userLogout()
@@ -566,6 +568,9 @@ function getSharedPreferLinks()
 
 $(function () {
 	pageInit();
+	$(window).on('resize', function(){
+		setTimeout(positionQrBadges, 100);
+	});
 });
 
 //显示链接的二维码，方便手机扫码访问
@@ -607,6 +612,23 @@ function showLinkQrCode(el)
 	//关闭时清理
 	$('#qrcodeLinkModal').on('hidden.bs.modal', function() {
 		$(this).remove();
+	});
+}
+
+//自动对齐二维码角标到卡片的右上角（角标是.box的兄弟节点，z-index高于summary）
+function positionQrBadges()
+{
+	$('.smart-container .project-box li .qr-badge').each(function(){
+		var $badge = $(this);
+		var $box = $badge.siblings('.box');
+		if(!$box.length) return;
+		var boxLeft = $box.position().left;
+		var boxTop  = $box.position().top;
+		// badge宽28px，.box的padding-top=15px，角标距卡片右/上各6px（border-box下box宽235px含padding）
+		$badge.css({
+			left: (boxLeft + 235 - 28 - 6) + 'px',
+			top:  (boxTop  + 15 + 6) + 'px'
+		});
 	});
 }
 
