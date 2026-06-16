@@ -87,6 +87,13 @@
         .smart-container li:hover .summary {
             pointer-events: auto;
         }
+        /* 网址过长时截断显示省略号，避免换行影响布局 */
+        .smart-container .box span {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
