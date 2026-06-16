@@ -624,10 +624,12 @@ function positionQrBadges()
 		if(!$box.length) return;
 		var boxLeft = $box.position().left;
 		var boxTop  = $box.position().top;
-		// badge宽28px，.box的padding-top=15px，角标距卡片右/上各6px（border-box下box宽235px含padding）
+		var boxWidth = $box.outerWidth();                      // 动态获取卡片实际宽度
+		var padTop   = parseInt($box.css('padding-top')) || 15; // 动态获取上padding
+		// 角标宽28px，距卡片右边6px，距卡片内容区顶部6px
 		$badge.css({
-			left: (boxLeft + 235 - 28 - 6) + 'px',
-			top:  (boxTop  + 15 + 6) + 'px'
+			left: (boxLeft + boxWidth - 28 - 6) + 'px',
+			top:  (boxTop  + padTop + 6) + 'px'
 		});
 	});
 }
