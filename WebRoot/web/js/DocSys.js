@@ -3026,7 +3026,7 @@ function showOfficeInArtDialog(docInfo)
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="officeForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads allow-popups-to-escape-sandbox"></iframe>',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
