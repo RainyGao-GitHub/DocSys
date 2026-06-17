@@ -83,6 +83,8 @@ public class constants {
 	public final static int AVS_OFFICESTUDIO_FILE_CANVAS_WORD = AVS_OFFICESTUDIO_FILE_CANVAS + 0x0001;
 	public final static int AVS_OFFICESTUDIO_FILE_CANVAS_SPREADSHEET = AVS_OFFICESTUDIO_FILE_CANVAS + 0x0002;
 	public final static int AVS_OFFICESTUDIO_FILE_CANVAS_PRESENTATION = AVS_OFFICESTUDIO_FILE_CANVAS + 0x0003;
+	public final static int AVS_OFFICESTUDIO_FILE_CANVAS_PDF		  =	AVS_OFFICESTUDIO_FILE_CANVAS + 0x0004;
+
 
 	public final static int NO_ERROR = 0;
 	public final static int UNKNOWN = -1;
