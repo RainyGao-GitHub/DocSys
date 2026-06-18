@@ -40,6 +40,105 @@ See https://github.com/adobe-type-tools/cmap-resources
 		e.preventDefault();
 		e.stopPropagation();
 	});
+
+  (function () {
+    function getViewerQueryParam(name) {
+      var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+      var result = window.location.search.substr(1).match(reg);
+      if (result != null) {
+        return decodeURIComponent(result[2]);
+      }
+      return null;
+    }
+
+    function parseViewerBoolean(value, defaultValue) {
+      if (value == undefined || value == null || value === '') {
+        return defaultValue;
+      }
+
+      value = ('' + value).toLowerCase();
+      if (value == '1' || value == 'true' || value == 'yes' || value == 'on') {
+        return true;
+      }
+      if (value == '0' || value == 'false' || value == 'no' || value == 'off') {
+        return false;
+      }
+      return defaultValue;
+    }
+
+    var viewerMode = (getViewerQueryParam('viewerMode') || '').replace(/[^a-z]/ig, '').toLowerCase();
+    var viewerConfig = {
+      showPrint: true,
+      showDownload: false,
+      showSidebarViewButtons: true,
+      showSecondaryPresentationMode: true,
+      showToolbarViewerLeft: true,
+      showToolbarViewerMiddle: true,
+      showPresentationMode: true,
+      showSecondaryToolbarToggle: true
+    };
+
+    if (viewerMode == 'viewonly') {
+      viewerConfig.showPrint = false;
+    } else if (viewerMode == 'printonly') {
+      viewerConfig.showSidebarViewButtons = false;
+      viewerConfig.showSecondaryPresentationMode = false;
+      viewerConfig.showToolbarViewerLeft = false;
+      viewerConfig.showToolbarViewerMiddle = false;
+      viewerConfig.showPresentationMode = false;
+      viewerConfig.showSecondaryToolbarToggle = false;
+    }
+
+    viewerConfig.showPrint = parseViewerBoolean(getViewerQueryParam('showPrint'), viewerConfig.showPrint);
+    viewerConfig.showDownload = parseViewerBoolean(getViewerQueryParam('showDownload'), viewerConfig.showDownload);
+
+    var hiddenSelectors = [];
+    if (viewerConfig.showPrint == false) {
+      hiddenSelectors.push('#print', '#secondaryPrint');
+    }
+    if (viewerConfig.showDownload == false) {
+      hiddenSelectors.push('#download', '#secondaryDownload');
+    }
+    if (viewerConfig.showSidebarViewButtons == false) {
+      hiddenSelectors.push('#sidebarViewButtons');
+    }
+    if (viewerConfig.showSecondaryPresentationMode == false) {
+      hiddenSelectors.push('#secondaryPresentationMode');
+    }
+    if (viewerConfig.showToolbarViewerLeft == false) {
+      hiddenSelectors.push('#toolbarViewerLeft');
+    }
+    if (viewerConfig.showToolbarViewerMiddle == false) {
+      hiddenSelectors.push('#toolbarViewerMiddle');
+    }
+    if (viewerConfig.showPresentationMode == false) {
+      hiddenSelectors.push('#presentationMode');
+    }
+    if (viewerConfig.showSecondaryToolbarToggle == false) {
+      hiddenSelectors.push('#secondaryToolbarToggle');
+    }
+
+    if (hiddenSelectors.length > 0) {
+      var styleEl = document.createElement('style');
+      styleEl.type = 'text/css';
+      styleEl.appendChild(document.createTextNode(hiddenSelectors.join(',\n') + ' { display: none !important; }'));
+      document.head.appendChild(styleEl);
+    }
+
+    window.DocSysPdfViewerConfig = viewerConfig;
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.DocSysPdfViewerConfig && window.DocSysPdfViewerConfig.showDownload) {
+        var downloadBtn = document.getElementById('download');
+        if (downloadBtn) {
+          downloadBtn.style.display = '';
+        }
+        var secondaryDownloadBtn = document.getElementById('secondaryDownload');
+        if (secondaryDownloadBtn) {
+          secondaryDownloadBtn.style.display = '';
+        }
+      }
+    });
+  })();
   </script>		
   </head>
 

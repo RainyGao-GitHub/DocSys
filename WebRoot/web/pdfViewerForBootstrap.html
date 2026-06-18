@@ -11,11 +11,15 @@ document.getElementById('pdfPlayer').style.height = height + "px";
 //PdfViewer类
 var PdfViewer = (function () {
 	var docInfo = {};
+	var viewerOptions = {};
 	
 	function pdfViewerPageInit(Input_doc)
 	{
 		console.log("pdfViewerPageInit InputDoc:", Input_doc);
 		docInfo = Input_doc;
+		viewerOptions.viewerMode = docInfo.pdfViewerMode;
+		viewerOptions.showPrint = docInfo.pdfShowPrint;
+		viewerOptions.showDownload = docInfo.pdfShowDownload;
 		
 	    var fileLink = docInfo.fileLink;	    
 	    if(!fileLink || fileLink == null || fileLink == "")
@@ -31,8 +35,46 @@ var PdfViewer = (function () {
 	function showPDF(url)
 	{
 		//注意：pdfjs会把url中的参数部分去掉，所以传入的方式需要使用REST风格的路径
-		$('#pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="static/pdfjs/web/viewer.html?file=' + url +
+		$('#pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="' + buildPdfViewerSrc(url) +
 		'" style="width:100%; height:100%;"></iframe>');
+	}
+
+	function buildPdfViewerSrc(url)
+	{
+		var src = 'static/pdfjs/web/viewer.html?file=' + url;
+		var viewerMode = viewerOptions.viewerMode;
+		var showPrint = viewerOptions.showPrint;
+		var showDownload = viewerOptions.showDownload;
+
+		if((viewerMode == undefined || viewerMode == null || viewerMode == "") && getQueryString)
+		{
+			viewerMode = getQueryString('viewerMode');
+		}
+		if((showPrint == undefined || showPrint == null || showPrint == "") && getQueryString)
+		{
+			showPrint = getQueryString('showPrint');
+		}
+		if((showDownload == undefined || showDownload == null || showDownload == "") && getQueryString)
+		{
+			showDownload = getQueryString('showDownload');
+		}
+
+		if(viewerMode && viewerMode != "")
+		{
+			src += '&viewerMode=' + encodeURIComponent(viewerMode);
+		}
+
+		if(showPrint != undefined && showPrint != null && showPrint != "")
+		{
+			src += '&showPrint=' + encodeURIComponent(showPrint);
+		}
+
+		if(showDownload != undefined && showDownload != null && showDownload != "")
+		{
+			src += '&showDownload=' + encodeURIComponent(showDownload);
+		}
+
+		return src;
 	}
 	
 	//开放给外部的调用接口

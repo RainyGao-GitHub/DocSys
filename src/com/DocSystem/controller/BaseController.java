@@ -10216,6 +10216,8 @@ public class BaseController  extends BaseFunction{
 			}
 			break;
 		case "pdfAuto":	//根据用户权限决定用户真实的权限
+		case "pdf":		//PDF查看也需要根据下载权限决定是否显示打印/下载按钮
+		case "print":	//打印也需要根据下载权限决定是否显示打印按钮
 			//TODO: 用户如果没有下载权限，需要改成pdfViewOnly
 			DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 			if(docAuth == null)
@@ -10237,8 +10239,6 @@ public class BaseController  extends BaseFunction{
 			break;
 		case "open":
 		case "preview":
-		case "print":
-		case "pdf":			
 		default:
 			//TODO: preview和open本质上并没有什么区别，不进行权限检查
 			break;

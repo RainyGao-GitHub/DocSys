@@ -2202,7 +2202,16 @@ function doPrintDoc(doc, printList, shareId, authCode)
             {
             	console.log("doPrintDoc ret", ret);
             	docInfo.fileLink = ret.data;
-    			showPdfPrintOnly(docInfo, "openInArtDialog");
+            	//用户如果没有下载权限，打印页面也应该隐藏打印按钮，防止通过打印绕过下载权限控制
+            	//优先使用后端返回的 dataEx，因为后端已根据 downloadEn 做了权限判断
+            	if(ret.dataEx == "pdfViewOnly")
+            	{
+            		showPdfViewOnly(docInfo, "openInArtDialog");
+            	}
+            	else
+            	{
+    				showPdfPrintOnly(docInfo, "openInArtDialog");
+            	}
             }
             else 
             {
@@ -2468,6 +2477,41 @@ function showPdfInNewPage(docInfo, fileLink)
 	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/pdfViewer.html?" + urlParamStr);
 }
 
+function buildPdfViewerControlParamStr(viewerMode, showPrint, showDownload)
+{
+	var urlParamStr = "";
+	var andFlag = "";
+
+	if(viewerMode != undefined && viewerMode != null && viewerMode != "")
+	{
+		urlParamStr += "viewerMode=" + encodeURIComponent(viewerMode);
+		andFlag = "&";
+	}
+
+	if(showPrint != undefined && showPrint != null && showPrint != "")
+	{
+		urlParamStr += andFlag + "showPrint=" + showPrint;
+		andFlag = "&";
+	}
+
+	if(showDownload != undefined && showDownload != null && showDownload != "")
+	{
+		urlParamStr += andFlag + "showDownload=" + showDownload;
+		andFlag = "&";
+	}
+
+	return urlParamStr;
+}
+
+function buildPdfViewerDialogDocInfo(docInfo, viewerMode, showPrint, showDownload)
+{
+	var viewerDocInfo = $.extend({}, docInfo);
+	viewerDocInfo.pdfViewerMode = viewerMode;
+	viewerDocInfo.pdfShowPrint = showPrint;
+	viewerDocInfo.pdfShowDownload = showDownload;
+	return viewerDocInfo;
+}
+
 function showPdfViewOnlyInNewPage(docInfo, fileLink)
 {
 	console.log("showPdfViewOnlyInNewPage docInfo:", docInfo);
@@ -2476,7 +2520,8 @@ function showPdfViewOnlyInNewPage(docInfo, fileLink)
 		docInfo.fileLink = fileLink;
 	}
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/pdfViewerViewOnly.html?" + urlParamStr);
+	var viewerParamStr = buildPdfViewerControlParamStr("viewOnly", 0, 0);
+	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/pdfViewer.html?" + viewerParamStr + "&" + urlParamStr);
 }
 
 function showPdfPrintOnlyInNewPage(docInfo, fileLink)
@@ -2487,7 +2532,8 @@ function showPdfPrintOnlyInNewPage(docInfo, fileLink)
 		docInfo.fileLink = fileLink;
 	}
 	var urlParamStr = buildRequestParamStrForDoc(docInfo);
-	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/pdfViewerPrintOnly.html?" + urlParamStr);
+	var viewerParamStr = buildPdfViewerControlParamStr("printOnly", 1, 0);
+	window.open(getMxsdocServerUrl(docInfo) + "/DocSystem/web/pdfViewer.html?" + viewerParamStr + "&" + urlParamStr);
 }
 
 
@@ -2711,10 +2757,11 @@ function showPdfViewOnlyInArtDialog(docInfo) {
 	//获取窗口的高度并设置高度
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();
+	var viewerParamStr = buildPdfViewerControlParamStr("viewOnly", 0, 0);
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerViewOnlyForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerForArt.html?docid=' + docInfo.docId + '&' + viewerParamStr + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
@@ -2735,10 +2782,11 @@ function showPdfPrintOnlyInArtDialog(docInfo) {
 	//获取窗口的高度并设置高度
 	var height =  getArtDialogInitHeight();
 	var width = getArtDialogInitWidth();
+	var viewerParamStr = buildPdfViewerControlParamStr("printOnly", 1, 0);
 	var d = new artDialog({
 		id: "ArtDialog" + docInfo.docId,
 		title: docInfo.name,
-		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerPrintOnlyForArt.html?docid=' + docInfo.docId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content: '<iframe frameborder="0" name="ArtDialog' + docInfo.docId + '" src="pdfViewerForArt.html?docid=' + docInfo.docId + '&' + viewerParamStr + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
@@ -2773,31 +2821,33 @@ function showPdfInDialog(docInfo)
 
 function showPdfViewOnlyInDialog(docInfo)
 {
+	var viewerDocInfo = buildPdfViewerDialogDocInfo(docInfo, "viewOnly", 0, 0);
 	bootstrapQ.dialog({
 		id: "PdfViewer",
 		title: docInfo.name,
-		url: 'pdfViewerViewOnlyForBootstrap.html',
+		url: 'pdfViewerForBootstrap.html',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: "width:95%;height:95%;",
 		callback: function(){
-			PdfViewer.pdfViewerPageInit(docInfo);
+			PdfViewer.pdfViewerPageInit(viewerDocInfo);
 		},
 	});
 }
 function showPdfPrintOnlyInDialog(docInfo)
 {
+	var viewerDocInfo = buildPdfViewerDialogDocInfo(docInfo, "printOnly", 1, 0);
 	bootstrapQ.dialog({
 		id: "PdfViewer",
 		title: docInfo.name,
-		url: 'pdfViewerPrintOnlyForBootstrap.html',
+		url: 'pdfViewerForBootstrap.html',
 		msg: _Lang('页面正在加载，请稍等...'),
 		foot: false,
 		big: true,
 		mstyle: "width:95%;height:95%;",
 		callback: function(){
-			PdfViewer.pdfViewerPageInit(docInfo);
+			PdfViewer.pdfViewerPageInit(viewerDocInfo);
 		},
 	});
 }
