@@ -10215,10 +10215,22 @@ public class BaseController  extends BaseFunction{
 				return null;
 			}
 			break;
+		case "print":	//打印需要根据下载权限决定是否允许
+		{
+			//打印本质上就是下载，用户如果没有下载权限则禁止打印
+			DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
+			if(docAuth == null || docAuth.getDownloadEn() == null || docAuth.getDownloadEn().equals(0))
+			{
+				docSysErrorLog("没有下载权限，禁止打印！", rt);
+				return null;
+			}
+			// 有下载权限，允许打印
+			break;
+		}
 		case "pdfAuto":	//根据用户权限决定用户真实的权限
 		case "pdf":		//PDF查看也需要根据下载权限决定是否显示打印/下载按钮
-		case "print":	//打印也需要根据下载权限决定是否显示打印按钮
 			//TODO: 用户如果没有下载权限，需要改成pdfViewOnly
+		{
 			DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 			if(docAuth == null)
 			{
@@ -10231,12 +10243,14 @@ public class BaseController  extends BaseFunction{
 				{
 					preview = "pdfViewOnly";
 				}
-				else
+				else if("pdfAuto".equals(preview))
 				{
-					preview = "pdf";					
+					preview = "pdf";
 				}
+				// pdf有权限时保持原值
 			}
 			break;
+		}
 		case "open":
 		case "preview":
 		default:
