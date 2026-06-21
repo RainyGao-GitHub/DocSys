@@ -240,18 +240,6 @@ public interface Channel {
 
 	public boolean initOfficeEditorFonts(boolean needThumbnails);
 
-	public void generateFont(
-			boolean bIsUseSystemFonts,
-			String strAllFontsWebFolder,
-    		String strAllFontsFolder,
-    		String strThumbnailsFolder,
-    		String strFontsSelectionBinFolder,
-    		String fontsOutputFolder,
-    		String orgFontFolders,
-    		int nFontFlag,
-    		boolean needThumbnails,
-    		boolean force) throws Exception;
-
 	//Convert OfficeFile to pdf file
 	boolean convertOfficeToPdf(Doc doc, String localEntryPath, String dstPath, String dstName);
 

@@ -14570,9 +14570,6 @@ public class BaseController  extends BaseFunction{
 				addDelayTaskForReposCacheClean(10, 600L); //10分钟后开始清除仓库缓存
 								
 				FileUtil.saveDocContentToFile("ok", docSysIniPath,  "docSysIniState", "UTF-8");
-
-				//TODO: 初始化OfficeFonts
-				initOfficeEditorFonts();
 				
 				return "ok";
 			}
@@ -14613,21 +14610,8 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		FileUtil.saveDocContentToFile(ret, docSysIniPath,  "docSysIniState", "UTF-8");
-		
-		//TODO: 初始化OfficeFonts
-		initOfficeEditorFonts();
-		
+
 		return ret;
-	}
-	
-	private boolean initOfficeEditorFonts() 
-	{
-		Log.info("initOfficeEditorFonts()");
-		if(channel == null)
-		{
-			return true;
-		}
-		return channel.initOfficeEditorFonts(false);
 	}
 
 	protected void restartClusterServer() {

@@ -53,24 +53,13 @@
 	                  <tr>
 	                    <td>OfficeEditor</td>
 	                    <td>
-	                    	<input type="text" class="form-control" id="officeEditorApi" name="officeEditorApi" value="{{value.officeEditorApi}}" disabled="disabled" placeholder="http://localhost:88\web-apps\apps\api\documents\api.js">
+			            	<div><span style="margin-right:5px"><input type="checkbox" id="isOnlyOfficeUsed" {{if value.isOnlyOfficeUsed == 1}} checked="checked" {{/if}}  onclick="selectIsOnlyOfficeUsed()" disabled="disabled"/></span>OnlyOffice</div>
 	                    </td>
 	                    <td class="edit">
-	                      	<button onclick="installOffice()" data-id="" class="btn btn-lg btn-warning examine_ban">安装...</button>	                      	
-	                      	<button onclick="onlineInstallOfficeConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">在线安装</button>
 	                      	<button onclick="addOfficeFonts()" data-id="" class="btn btn-lg btn-warning examine_ban">添加字体...</button>	                      	
 	                      	<button onclick="generateOfficeFontsConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">重置字体库</button>
 	                      	<button id="btnDisableOffice" onclick="disableOffice()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.officeDisabled == 1}} style="display:none" {{/if}}>禁用</button>
 	                      	<button id="btnEnableOffice" onclick="enableOffice()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.officeDisabled == 0}} style="display:none" {{/if}}>启用</button>
-	                    </td>
-	                  </tr>
-	                  <tr>
-	                    <td>Office转换引擎</td>
-	                    <td>
-			            	<div><span style="margin-right:5px"><input type="checkbox" id="isOnlyOfficeUsed" {{if value.isOnlyOfficeUsed == 1}} checked="checked" {{/if}}  onclick="selectIsOnlyOfficeUsed()" disabled="disabled"/></span>使用OnlyOffice(x2t)进行文件转换</div>
-	                    	<span style="color:#888;font-size:12px;">勾选使用OnlyOffice内置的x2t转换引擎，取消勾选则使用Java FileConverter。保存后立即生效。</span>
-			            </td>
-	                    <td class="edit">
 	                    </td>
 	                  </tr>
 	                  <tr>

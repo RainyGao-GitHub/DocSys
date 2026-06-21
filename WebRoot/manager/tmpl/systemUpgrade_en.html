@@ -53,11 +53,9 @@
 	                  <tr>
 	                    <td>OfficeEditor</td>
 	                    <td>
-	                    	<input type="text" class="form-control" id="officeEditorApi" name="officeEditorApi" value="{{value.officeEditorApi}}" disabled="disabled" placeholder="http://localhost:88\web-apps\apps\api\documents\api.js">
+			            	<div><span style="margin-right:5px"><input type="checkbox" id="isOnlyOfficeUsed" {{if value.isOnlyOfficeUsed == 1}} checked="checked" {{/if}}  onclick="selectIsOnlyOfficeUsed()" disabled="disabled"/></span>OnlyOffice</div>
 	                    </td>
 	                    <td class="edit">
-	                      	<button onclick="installOffice()" data-id="" class="btn btn-lg btn-warning examine_ban">Install...</button>	                      	
-	                      	<button onclick="onlineInstallOfficeConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">Online Install</button>
 	                      	<button onclick="addOfficeFonts()" data-id="" class="btn btn-lg btn-warning examine_ban">Install Fonts...</button>	                      	
 	                      	<button onclick="generateOfficeFontsConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">Reset Fonts</button>
 	                      	<button id="btnDisableOffice" onclick="disableOffice()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.officeDisabled == 1}} style="display:none" {{/if}}>Disable</button>
