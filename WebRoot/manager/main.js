@@ -4450,7 +4450,7 @@ function showOrderList(pageIndex){
         	console.log("getOrderList ret",ret);
             if( "ok" == ret.status )
             {
-            	OrderListDisplay(ret.data, pageIndex, pageSize, function(){
+            	OrderListDisplay(ret.data || [], pageIndex, pageSize, function(){
 
                     // 渲染分页
                     var total = ret.dataEx;
@@ -4628,7 +4628,7 @@ function showLicenseList(pageIndex){
         	console.log("getLicenseList ret",ret);
             if( "ok" == ret.status )
             {
-            	LicenseListDisplay(ret.data, pageIndex, pageSize, function(){
+            	LicenseListDisplay(ret.data || [], pageIndex, pageSize, function(){
 
                     // 渲染分页
                     var total = ret.dataEx;
