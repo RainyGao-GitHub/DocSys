@@ -77,6 +77,7 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		//For Sales
 		"Sales/checkLicense",
 		"Sales/applyFreeLicense",
+		"Sales/manualActivateLicense",
 		//For Office Editor
 		"Bussiness/saveDoc",
 		//For remote Access
