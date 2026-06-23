@@ -370,8 +370,52 @@ function getDocFileLinkForPreview(docInfo, successCallback, errorCallback, urlSt
 	}
 }
 
+// 打印专用：支持透传 printList，preview 固定为 "print"
+function getDocFileLinkForPrint(docInfo, successCallback, errorCallback, urlStyle)
+{
+	var errorInfo = "";
+	var url = (docInfo.isZip && docInfo.isZip == 1)
+		? "/DocSystem/Doc/getZipDocFileLink.do"
+		: "/DocSystem/Doc/getDocFileLink.do";
+
+	$.ajax({
+		url: url,
+		type: "post",
+		dataType: "json",
+		data: {
+			reposId: docInfo.vid,
+			path: docInfo.path,
+			name: docInfo.name,
+			commitId: docInfo.commitId,
+			historyType: docInfo.historyType,
+			isZip: docInfo.isZip,
+			rootPath: docInfo.rootPath,
+			rootName: docInfo.rootName,
+			shareId: docInfo.shareId,
+			authCode: docInfo.authCode,
+			urlStyle: urlStyle,
+			preview: "print",
+			printList: docInfo.printList,
+			videoConvertType: docInfo.videoConvertType,
+		},
+		success: function(ret) {
+			console.log("getDocFileLinkForPrint ret", ret);
+			if ("ok" == ret.status) {
+				var fileLink = buildFullLink(ret.data);
+				// 后端可能返回 pdfViewOnly（无下载权限），通过 dataEx 传回
+				successCallback && successCallback(fileLink, ret.dataEx);
+			} else {
+				errorCallback && errorCallback(ret.msgInfo || "获取文件信息失败");
+			}
+		},
+		error: function() {
+			errorCallback && errorCallback("服务器异常");
+		}
+	});
+}
+
 function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, preview)
-{	
+{
 	var fileLink = "";
 	var errorInfo = "";
 	console.log("getDocFileLinkBasic()  docInfo:", docInfo);
@@ -2159,71 +2203,22 @@ function doPrintDoc(doc, printList, shareId, authCode)
 	console.log("doPrintDoc() shareId:" + shareId + " authCode:" + authCode);
 	console.log("doPrintDoc() doc:",doc);
 	console.log("doPrintDoc() printList:",printList);
-	
+
 	if(doc == null || doc.type == 2)
 	{
 		//Folder do nothing
 		return;
 	}
-	
+
 	//copy do to docInfo
 	var docInfo = copyDocInfo(doc, shareId, authCode);
 	console.log("doPrintDoc() docInfo:", docInfo);
-	
-    var url = "/DocSystem/Doc/getDocFileLink.do";
-    if(docInfo.isZip && docInfo.isZip == 1)
-    {
-        url = "/DocSystem/Doc/getZipDocFileLink.do";    	
-    }
-	
-	$.ajax({
-        url : url,
-        type : "post",
-        dataType : "json",
-        data : {
-        	reposId: docInfo.vid,
-            path: docInfo.path,
-            name: docInfo.name,
-            commitId: docInfo.commitId,
-            historyType: docInfo.historyType,
-            isZip: docInfo.isZip,
-            rootPath: docInfo.rootPath,
-            rootName: docInfo.rootName,
-            shareId: docInfo.shareId,
-            authCode: docInfo.authCode,
-            urlStyle: "REST",
-            preview: "print",
-            printList: printList,
-            videoConvertType: docInfo.videoConvertType,
-        },
-        success : function (ret) {
-        	console.log("doPrintDoc ret",ret);
-            if( "ok" == ret.status )
-            {
-            	console.log("doPrintDoc ret", ret);
-            	docInfo.fileLink = ret.data;
-            	//用户如果没有下载权限，打印页面也应该隐藏打印按钮，防止通过打印绕过下载权限控制
-            	//优先使用后端返回的 dataEx，因为后端已根据 downloadEn 做了权限判断
-            	if(ret.dataEx == "pdfViewOnly")
-            	{
-            		showPdfViewOnly(docInfo, "openInArtDialog");
-            	}
-            	else
-            	{
-    				showPdfPrintOnly(docInfo, "openInArtDialog");
-            	}
-            }
-            else 
-            {
-            	console.log("doPrintDoc() 获取文件信息失败:" + ret.msgInfo);
-            	showErrorMessage(_Lang("获取文件信息失败", ":", ret.msgInfo));
-            }
-        },
-        error : function () {
-        	console.log("doPrintDoc() 获取文件信息失败: 服务器异常");
-        	showErrorMessage(_Lang("获取文件信息失败", ":", "服务器异常"));
-        }
-    });
+
+	// 把 printList 存入 docInfo，供 pdfViewerForArt.html 页面内部使用
+	docInfo.printList = printList;
+
+	// 立即弹出窗口，页面内部负责发请求并显示 loading/error
+	showPdfPrintOnly(docInfo, "openInArtDialog");
 }
 
 function openPdf(docInfo, openInNewPage, preview)

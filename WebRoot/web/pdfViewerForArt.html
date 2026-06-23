@@ -10,11 +10,47 @@
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
 <script type="text/javascript" src="js/DocSys.js"></script>
+
+<style>
+#printLoadingBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 200px;
+    font-size: 16px;
+    color: #555;
+}
+#printLoadingBox .print-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #ddd;
+    border-top-color: #337ab7;
+    border-radius: 50%;
+    animation: printSpin 0.8s linear infinite;
+    margin-bottom: 16px;
+}
+@keyframes printSpin { to { transform: rotate(360deg); } }
+#printLoadingBox .print-error-icon {
+    font-size: 36px;
+    color: #e74c3c;
+    margin-bottom: 12px;
+}
+#printLoadingBox .print-error-msg {
+    color: #e74c3c;
+    font-size: 14px;
+    max-width: 80%;
+    text-align: center;
+    word-break: break-all;
+}
+</style>
+
 <div id="pdfPlayer" class="pdfPlayer" style="width: 100%; height:1200px;"></div>
 
 <script type="text/javascript">
     function GetRequest() {
-        var url = location.search; //获取url中"?"符后的字串
+        var url = location.search;
         var theRequest = {};
         if (url.indexOf("?") !== -1) {
             var str = url.substr(1);
@@ -39,7 +75,7 @@
 	var var_win_height = $(window).height();
 
     $(document).ready(function () {
-        resetPlayerSize(); 
+        resetPlayerSize();
         viewDoc();
     });
 
@@ -51,49 +87,90 @@
         var_win_height = $(window).height();
         $(".pdfPlayer").css({ "height": var_win_height + "px" });
     }
-    
+
+    function showLoading() {
+        $('#pdfPlayer').html(
+            '<div id="printLoadingBox">' +
+                '<div class="print-spinner"></div>' +
+                '<span>文档转换中，请稍候...</span>' +
+            '</div>'
+        );
+    }
+
+    function showPrintError(msg) {
+        $('#pdfPlayer').html(
+            '<div id="printLoadingBox">' +
+                '<div class="print-error-icon">&#10006;</div>' +
+                '<div class="print-error-msg">' + (msg || '获取文件失败') + '</div>' +
+            '</div>'
+        );
+    }
+
    	function viewDoc()
    	{
-	    var fileLink = docInfo.fileLink;	    
+	    var fileLink = docInfo.fileLink;
 	    if(!fileLink || fileLink == null || fileLink == "")
 	    {
-	    	getDocFileLinkForPreview(docInfo, showPDF, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink    	
+	    	// 有 printList 说明是打印流程（可能需要后台转换），走打印专用通道
+	    	if(docInfo.printList !== undefined && docInfo.printList !== null)
+	    	{
+	    		showLoading();
+	    		getDocFileLinkForPrint(docInfo, function(link, dataEx) {
+	    			if(dataEx == "pdfViewOnly")
+	    			{
+	    				// 无下载权限，切换为只读模式查看
+	    				docInfo.fileLink = link;
+	    				var viewerMode = "viewOnly";
+	    				var src = buildPdfViewerSrc(link, viewerMode, 0, 0);
+	    				$('#pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="' + src + '" style="width:100%; height:100%;"></iframe>');
+	    			}
+	    			else
+	    			{
+	    				showPDF(link);
+	    			}
+	    		}, function(errMsg) {
+	    			showPrintError(errMsg);
+	    		}, "REST");
+	    	}
+	    	else
+	    	{
+	    		getDocFileLinkForPreview(docInfo, showPDF, showErrorMessage, "REST");
+	    	}
 	    }
 	    else
 	    {
 	    	showPDF(fileLink);
 	    }
-   	}   
-    
+   	}
+
     function showPDF(url)
    	{
     	console.log("showPDF() url:", url);
-            $('.pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="' + buildPdfViewerSrc(url) +
-            '" style="width:100%; height:100%;"></iframe>');
+        var src = buildPdfViewerSrc(url, null, null, null);
+        $('.pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="' + src + '" style="width:100%; height:100%;"></iframe>');
    	}
 
-    function buildPdfViewerSrc(url)
+    function buildPdfViewerSrc(url, viewerMode, showPrint, showDownload)
     {
         var src = 'static/pdfjs/web/viewer.html?file=' + url;
-        var viewerMode = getQueryString('viewerMode');
-        var showPrint = getQueryString('showPrint');
-        var showDownload = getQueryString('showDownload');
 
-        if(viewerMode && viewerMode != "")
+        // 优先使用传入参数，其次从 URL querystring 读取
+        var vm = (viewerMode != null && viewerMode !== undefined) ? viewerMode : getQueryString('viewerMode');
+        var sp = (showPrint != null && showPrint !== undefined) ? showPrint : getQueryString('showPrint');
+        var sd = (showDownload != null && showDownload !== undefined) ? showDownload : getQueryString('showDownload');
+
+        if(vm && vm != "")
         {
-            src += '&viewerMode=' + encodeURIComponent(viewerMode);
+            src += '&viewerMode=' + encodeURIComponent(vm);
         }
-
-        if(showPrint != undefined && showPrint != null && showPrint != "")
+        if(sp != undefined && sp != null && sp != "")
         {
-            src += '&showPrint=' + encodeURIComponent(showPrint);
+            src += '&showPrint=' + encodeURIComponent(sp);
         }
-
-        if(showDownload != undefined && showDownload != null && showDownload != "")
+        if(sd != undefined && sd != null && sd != "")
         {
-            src += '&showDownload=' + encodeURIComponent(showDownload);
+            src += '&showDownload=' + encodeURIComponent(sd);
         }
-
         return src;
     }
 </script>
