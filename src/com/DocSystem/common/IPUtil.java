@@ -4,6 +4,8 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.Collections;
+import java.util.Enumeration;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -37,6 +39,20 @@ public class IPUtil {
 		String macStr = "00-00-00-00-00-00";
 		try {
 			NetworkInterface networkInterface = NetworkInterface.getByInetAddress(ip);
+			// Linux上hostname可能解析到127.0.1.1（hosts文件别名），该地址未绑定真实网卡，getByInetAddress返回null
+			// 此时回退到枚举所有接口，取第一个非回环且有MAC的接口
+			if (networkInterface == null || networkInterface.isLoopback()) {
+				Enumeration<NetworkInterface> allIfs = NetworkInterface.getNetworkInterfaces();
+				if (allIfs != null) {
+					for (NetworkInterface ni : Collections.list(allIfs)) {
+						if (!ni.isLoopback() && ni.isUp() && ni.getHardwareAddress() != null) {
+							networkInterface = ni;
+							break;
+						}
+					}
+				}
+			}
+			if (networkInterface == null) return macStr;
 			byte[] mac = networkInterface.getHardwareAddress();
 			if(mac != null && mac.length > 0)
 			{
@@ -50,7 +66,7 @@ public class IPUtil {
 					int temp = mac[i] & 0xFF;
 					macStr += Integer.toHexString(temp);
 				}
-			}			
+			}
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
