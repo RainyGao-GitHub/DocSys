@@ -847,9 +847,9 @@ public class ReposController extends BaseController{
 
 	/****************   delete a Repository ******************/
 	@RequestMapping("/deleteRepos.do")
-	public void deleteRepos(Integer vid,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+	public void deleteRepos(Integer vid, Integer deleteData, HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		Log.infoHead("****************** deleteRepos.do ***********************");
-		Log.debug("deleteRepos vid: " + vid);
+		Log.debug("deleteRepos vid: " + vid + " deleteData: " + deleteData);
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
@@ -893,26 +893,29 @@ public class ReposController extends BaseController{
 		//DB delete success
 		//Delete related doc auth Setting
 		DocAuth docAuth = new DocAuth();
-		docAuth.setReposId(vid);			
+		docAuth.setReposId(vid);
 		reposService.deleteDocAuthSelective(docAuth);
 
 		//Delete related repos auth Setting
 		ReposAuth reposAuth = new ReposAuth();
-		reposAuth.setReposId(vid);			
+		reposAuth.setReposId(vid);
 		reposService.deleteReposAuthSelective(reposAuth);
 
-		//Delete Repos LocalDir
-		deleteReposLocalDir(repos);
-		
-		//Delete Repos LocalVerRepos
-		deleteLocalVerRepos(repos, true);
-		deleteLocalVerRepos(repos, false);
-		
-		//Delete IndexLib
-    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,0));
-		LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,1));
-    	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
-		
+		if(deleteData != null && deleteData == 1)
+		{
+			//Delete Repos LocalDir
+			deleteReposLocalDir(repos);
+
+			//Delete Repos LocalVerRepos
+			deleteLocalVerRepos(repos, true);
+			deleteLocalVerRepos(repos, false);
+
+			//Delete IndexLib
+        	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,0));
+			LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,1));
+        	LuceneUtil2.deleteIndexLib(getIndexLibPath(repos,2));
+		}
+
 		deleteReposRemoteStorageConfig(repos);
 
 		deleteReposRemoteServerConfig(repos);

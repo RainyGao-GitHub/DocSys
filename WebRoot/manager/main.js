@@ -5497,27 +5497,30 @@ function clearAllReposCache()
 }
 
 function delReposConfirm(id)
-{	
+{
 	console.log("delReposConfirm");
+	var checkboxHtml = '<br/><div style="margin-top:12px;"><label style="font-weight:normal;font-size:14px;"><input type="checkbox" id="chkDeleteReposData" style="margin-right:6px;">' + _Lang("同时删除仓库数据（删除后无法恢复）") + '</label></div>';
 	qiao.bs.confirm({
 		id: "delReposConfirmDialog",
         title: _Lang("删除仓库"),
-        msg: _Lang("是否删除仓库，仓库数据将无法恢复？"),
+        msg: _Lang("确认删除仓库？仓库记录将从系统中移除。") + checkboxHtml,
         okbtn: _Lang("删除"),
         qubtn: _Lang("取消"),
     },function () {
-    	delRepos(id);
-    	return true;   
+    	var deleteData = $("#chkDeleteReposData").is(":checked") ? 1 : 0;
+    	delRepos(id, deleteData);
+    	return true;
     });
 }
 
-function delRepos(reposId){
+function delRepos(reposId, deleteData){
     $.ajax({
         url : "/DocSystem/Repos/deleteRepos.do",
         type : "post",
         dataType : "json",
         data : {
              vid : reposId,
+             deleteData : deleteData || 0,
         },
         success : function (ret) {
             if( "ok" == ret.status ){
