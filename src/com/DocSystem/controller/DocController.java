@@ -2639,14 +2639,16 @@ public class DocController extends BaseController{
 		int lockType = DocLock.LOCK_TYPE_FORCE;
 		String lockInfo = "remoteStorageCheckOut() syncLock [" + doc.getPath() + doc.getName() + "] at repos[" + repos.getName() + "]";
 		docLock = lockDoc(doc, lockType, 2*60*60*1000, accessUser, rt, true,lockInfo, EVENT.remoteStorageCheckOut);	//lock 2 Hours 2*60*60*1000
-		
+
 		if(docLock == null)
 		{
 			docSysDebugLog("remoteStorageCheckOut() lock doc [" + doc.getPath() + doc.getName() + "] Failed", rt);
 			return false;
 		}
-		
-		channel.remoteStoragePull(remote, repos, doc, accessUser, commitId, recurcive, pullType, skipDelete, rt);
+
+		ReposAccess checkOutAccess = new ReposAccess();
+		checkOutAccess.setAccessUser(accessUser);
+		channel.remoteStoragePull(remote, repos, doc, checkOutAccess, commitId, recurcive, pullType, skipDelete, rt);
 		DocPullContext pullResult = (DocPullContext) rt.getDataEx();
 	    if(pullResult != null && pullResult.successCount > 0)
 	    {
