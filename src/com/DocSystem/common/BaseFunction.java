@@ -3072,15 +3072,23 @@ public class BaseFunction{
 	public static String getRealTimeBackupOffsetPathForVirtualDoc(Repos repos, RemoteStorageConfig remote, Date date) {
 		if(remote.isVerRepos)
 		{
-			return "Backup/" + serverIP + "-" + serverMAC + "-" + repos.getId() + "/data/vdata/";			
+			return "Backup/" + serverIP + "-" + serverMAC + "-" + repos.getId() + "/data/vdata/";
 		}
-		
-		//实时备份按日期分目录（并在日期目录下创建目录），避免产生太多目录		
+
+		//实时备份按日期分目录（并在日期目录下创建目录），避免产生太多目录
 		String backupDate = DateFormat.dateFormat1(date); //2021-11-25
 		String backupTime = DateFormat.dateTimeFormat2(date); //9-33-05
-		return "RealTimeBackup/"  + serverIP + "-" + serverMAC + "-" + repos.getId() + "/vdata/" + backupDate + "/" + backupTime + "/"; 
+		return "RealTimeBackup/"  + serverIP + "-" + serverMAC + "-" + repos.getId() + "/vdata/" + backupDate + "/" + backupTime + "/";
 	}
-	
+
+	//磁盘历史版本(verCtrl=3)的存储偏移路径: 相对于固定的仓库目录(<id>_DISK_RRepos/, 已在 verReposInfo 根中)。
+	//每次提交一个独立的 日期/时间戳 子目录, 存放本次改动文件的整文件副本。与备份不同, 这里不带IP/MAC(历史存储位置固定)。
+	public static String getDiskHistoryOffsetPathForRealDoc(Repos repos, Date date) {
+		String backupDate = DateFormat.dateFormat1(date); //2021-11-25
+		String backupTime = DateFormat.dateTimeFormat2(date); //20211125091005
+		return backupDate + "/" + backupTime + "/";
+	}
+
 	protected static boolean isFSM(Repos repos) {
 		return repos.getType() < 3;
 	}
@@ -3602,6 +3610,7 @@ public class BaseFunction{
 	private static RemoteStorageConfig parseRemoteStorageConfigForDisk(String remoteStorage) {
 		RemoteStorageConfig remote = new RemoteStorageConfig();
 		remote.protocol = "file";
+		remote.rootPath = "";	//file后端的根由FILE.localRootPath表示, rootPath必须为""而非null(否则拼路径时会出现"null"前缀, 如 addDirsToRemoteStorage)
 		remote.FILE = new LocalConfig();
 		remote.FILE.localRootPath = Path.dirPathFormat(remoteStorage.substring("file://".length()));
 		return remote;

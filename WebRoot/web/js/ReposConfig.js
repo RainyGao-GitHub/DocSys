@@ -1420,25 +1420,23 @@ var ReposConfig = (function () {
 		if(verCtrlEnable == 0)
 		{
 			MyJquery.select("repos-verCtrl", 0); //关闭verCtrl
-			
-			//we will not support advanced option again
-			//MyJquery.hide("verCtrlConfigDiv"); //隐藏 高级选项
-			//MyJquery.hide("showVerCtrlConfig"); //隐藏(显示高级选项)提示
-			//MyJquery.setValue("showVerCtrlConfig", 0);
-			//MyJquery.setText("showVerCtrlConfig", "显示高级选项");
+
+			MyJquery.hide("verCtrlConfigDiv"); //隐藏 高级选项
+			MyJquery.hide("showVerCtrlConfig"); //隐藏(显示高级选项)提示
+			MyJquery.setValue("showVerCtrlConfig", 0);
+			MyJquery.setText("showVerCtrlConfig", _Lang("显示高级选项"));
 		}
 		else
-		{	
-			if(MyJquery.getValue("repos-verCtrl") == 0)	//设置版本控制为GIT
+		{
+			if(MyJquery.getValue("repos-verCtrl") == 0)	//默认设置版本控制为GIT, 用户可在高级选项中改为 SVN/磁盘
 			{
 				MyJquery.select("repos-verCtrl", 2);
 			}
 
-			//we will not support advanced option again
-			//MyJquery.hide("verCtrlConfigDiv"); //隐藏 高级选项
-			//MyJquery.show("showVerCtrlConfig");	//显示(显示高级选项)提示
-			//MyJquery.setValue("showVerCtrlConfig", 0);
-			//MyJquery.setText("showVerCtrlConfig", "显示高级选项");
+			MyJquery.hide("verCtrlConfigDiv"); //默认收起 高级选项
+			MyJquery.show("showVerCtrlConfig");	//显示(显示高级选项)提示, 让用户可选择 SVN/GIT/磁盘
+			MyJquery.setValue("showVerCtrlConfig", 0);
+			MyJquery.setText("showVerCtrlConfig", _Lang("显示高级选项"));
 		}
 		
 		doSelectVerCtrl();
@@ -1471,6 +1469,16 @@ var ReposConfig = (function () {
 		console.log("doSelectVerCtrl verCtrl:" + verCtrl + " isRemote:" + isRemote);
 		
 		//alert(verCtrl);
+		if(verCtrl == 3)	//磁盘历史版本: 仅本地, 只需"磁盘历史根路径", 隐藏远程svn/git相关项
+		{
+			$("#verCtrl-isRemote").prop("checked", false);	//强制本地
+			MyJquery.hide("verCtrl-isRemoteSetting");
+			MyJquery.show("verCtrl-localVerRepos");
+			MyJquery.hide("verCtrl-remoteVerRepos");
+			MyJquery.show("verCtrl-verReposSetting");
+			return;
+		}
+
 		if(verCtrl != 0) 			//show verRepos info
 		{
 			if(isRemote == 0)

@@ -711,16 +711,20 @@ public class Path {
 				reposName = id + "_SVN_RRepos";
 			}
 			else if(verCtrl == 2)
-			{ 
+			{
 				if(isRemote !=null && isRemote == 1)
 				{
-					reposName = id + "_GIT_RRepos_Remote";					
+					reposName = id + "_GIT_RRepos_Remote";
 				}
 				else
 				{
 
 					reposName = id + "_GIT_RRepos";
 				}
+			}
+			else if(verCtrl == 3)	//磁盘历史版本: 存储位置固定, 与IP无关
+			{
+				reposName = id + "_DISK_RRepos";
 			}
 		}
 		else
@@ -734,12 +738,16 @@ public class Path {
 				if(isRemote != null && isRemote == 1)
 				{
 
-					reposName = id + "_GIT_VRepos_Remote";					
+					reposName = id + "_GIT_VRepos_Remote";
 				}
 				else
 				{
 					reposName = id + "_GIT_VRepos";
 				}
+			}
+			else if(verCtrl == 3)	//磁盘历史版本: 存储位置固定, 与IP无关
+			{
+				reposName = id + "_DISK_VRepos";
 			}
 		}
 		return reposName;

@@ -1994,9 +1994,34 @@ public class BaseController  extends BaseFunction{
 		{
 			return createGitLocalRepos(repos, isRealDoc, rt);
 		}
+		else if(verCtrl == 3)
+		{
+			return createDiskLocalVerRepos(repos, isRealDoc, rt);
+		}
 		return null;
 	}
-	
+
+	//磁盘历史版本: 历史文件以整文件副本形式存储在本地磁盘的时间戳目录下, 历史账本走Lucene(CommitLog/CommitEntry)
+	//存储位置与GIT/SVN同规则(<localSvnPath或默认>/<id>_DISK_RRepos|VRepos/), 这里预创建仓库目录, 既能尽早暴露路径/权限问题, 也避免首次提交时静默失败
+	protected String createDiskLocalVerRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
+		Log.debug("createDiskLocalVerRepos isRealDoc:"+isRealDoc);
+
+		String localVerReposPath = Path.getLocalVerReposPath(repos, isRealDoc);
+		File dir = new File(localVerReposPath);
+		if(dir.exists())
+		{
+			docSysDebugLog("磁盘历史仓库:" + localVerReposPath + " 已存在，已直接设置！", rt);
+			return localVerReposPath;
+		}
+
+		if(dir.mkdirs() == false)
+		{
+			docSysErrorLog("磁盘历史仓库:" + localVerReposPath + " 创建失败！", rt);
+			return null;
+		}
+		return localVerReposPath;
+	}
+
 	public String createGitLocalRepos(Repos repos, boolean isRealDoc, ReturnAjax rt) {
 		Log.debug("createGitLocalRepos isRealDoc:"+isRealDoc);	
 
@@ -4811,8 +4836,8 @@ public class BaseController  extends BaseFunction{
 		String verReposURL = null;
 		String verReposUserName = "";
 		String verReposPwd = "";
-		
-		if(repos.getIsRemote() != null && repos.getIsRemote() == 1)	//远程仓库
+
+		if(verCtrl != 3 && repos.getIsRemote() != null && repos.getIsRemote() == 1)	//远程仓库 (磁盘模式无远程，防御性降级到本地)
 		{
 			verReposURL = repos.getSvnPath();
 			if(verReposURL == null || verReposURL.isEmpty())
@@ -4822,6 +4847,12 @@ public class BaseController  extends BaseFunction{
 			}
 			verReposUserName = repos.getSvnUser();
 			verReposPwd = repos.getSvnPwd();
+		}
+		else if(verCtrl == 3)
+		{
+			//磁盘模式: 历史存储位置固定, 与GIT/SVN同规则 -> <localSvnPath或默认>/<id>_DISK_RRepos/
+			//注意: file:// 串不带 ;userName=;pwd=, parseRemoteStorageConfigForDisk 直接取 file:// 后子串当 localRootPath
+			return "file://" + Path.getLocalVerReposPath(repos, true);
 		}
 		else
 		{
@@ -4959,12 +4990,30 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected void insertCommit(Repos repos, Doc doc, ActionContext context, String revision, String errorInfo, int historyType) {
+		ensureDiskHistoryOffsetPath(repos, context, historyType);
 		insertCommit(
-				repos, doc, 
+				repos, doc,
 				context.startTime, null,
 				context.user.getId(), context.user.getName(),
 				context.commitId, context.commitMsg, context.commitUser,
-				context.offsetPath, revision, errorInfo, historyType);	
+				context.offsetPath, revision, errorInfo, historyType);
+	}
+
+	//磁盘历史版本(verCtrl=3): RealDoc 主历史每次提交需要一个独立时间戳目录, 且 FSM 阶段 insertCommit 与异步阶段 updateCommit 必须共用同一 offsetPath。
+	//因 context 为同一对象引用, 这里在 FSM 首次 insertCommit 时生成一次并写入 context.offsetPath, 后续 updateCommit/diskDocCommit 直接复用。
+	protected void ensureDiskHistoryOffsetPath(Repos repos, ActionContext context, int historyType) {
+		if(historyType != HistoryType_RealDoc)
+		{
+			return;
+		}
+		if(context == null || (context.offsetPath != null && context.offsetPath.isEmpty() == false))
+		{
+			return;
+		}
+		if(repos.getVerCtrl() != null && repos.getVerCtrl() == 3)
+		{
+			context.offsetPath = getDiskHistoryOffsetPathForRealDoc(repos, new Date());
+		}
 	}
 	
 	private void insertCommit(Repos repos, Doc doc, FolderUploadAction action, int historyType) {
@@ -7279,10 +7328,16 @@ public class BaseController  extends BaseFunction{
 		
 		
 		if(repos.getVerCtrl() == 0)
-		{	
+		{
 			return false;
 		}
-		
+
+		//磁盘历史版本(verCtrl=3): 工作副本本身即数据源, 没有传统 verRepos 可同步, 不纳入"从版本库同步到工作副本"逻辑
+		if(repos.getVerCtrl() == 3)
+		{
+			return false;
+		}
+
 //		if(repos.getIsRemote() == null)
 //		{
 //			return false;
@@ -8723,7 +8778,21 @@ public class BaseController  extends BaseFunction{
 		Repos repos = action.getRepos();
 		Doc doc = action.getDoc();
 		Doc newDoc = action.getNewDoc();
-		
+
+		//磁盘历史版本(verCtrl=3): 异步提交时 action.getDoc() 不一定带 offsetPath, 而 diskDocCommit 的 push 依赖 doc.offsetPath。
+		//从 action.context.offsetPath(FSM 阶段已生成)补回, 保证 push 目录与 CommitLog 记录的 verReposOffsetPath 一致。
+		if(repos.getVerCtrl() != null && repos.getVerCtrl() == 3 && action.context != null && action.context.offsetPath != null)
+		{
+			if(doc != null)
+			{
+				doc.offsetPath = action.context.offsetPath;
+			}
+			if(newDoc != null)
+			{
+				newDoc.offsetPath = action.context.offsetPath;
+			}
+		}
+
 		String revision = null;
 		boolean isRealDoc = true;
 
@@ -12672,7 +12741,11 @@ public class BaseController  extends BaseFunction{
 		{
 			revision = gitDocCommit(repos, doc, commitMsg, commitUser, rt, localChangesRootPath, subDocCommitFlag, commitActionList, commitActionListFake);
 		}
-		
+		else if(verCtrl == 3)
+		{
+			revision = diskDocCommit(repos, doc, commitMsg, commitUser, rt);
+		}
+
 		if(revision != null && doc.getIsRealDoc())
 		{
 			updateVerReposDbEntry(repos, commitActionList, revision);
@@ -12680,8 +12753,56 @@ public class BaseController  extends BaseFunction{
 		}
 		return revision;
 	}
-	
-	private static void updateVerReposDbEntry(Repos repos, List<CommitAction> actionList, String revision) 
+
+	//磁盘历史版本(verCtrl=3): 把本次改动文件以整文件副本推送到 file:// 后端的时间戳目录(doc.offsetPath)。
+	//复用 remoteStoragePush(与实时本地备份同机制), 取回侧 verReposCheckOut 已数据驱动支持 file://+offsetPath。
+	//返回值: 推送成功返回 doc.offsetPath 作为 revision(非 null 即成功; 取回不依赖 revision, 只用 offsetPath 定位)。
+	protected String diskDocCommit(Repos repos, Doc doc, String commitMsg, String commitUser, ReturnAjax rt)
+	{
+		Log.debug("diskDocCommit() for doc:[" + doc.getPath() + doc.getName() + "]");
+		if(channel == null)
+		{
+			docSysDebugLog("diskDocCommit 非商业版本不支持磁盘历史版本", rt);
+			return null;
+		}
+
+		if(doc.offsetPath == null || doc.offsetPath.isEmpty())
+		{
+			Log.debug("diskDocCommit() doc.offsetPath not set, skip");
+			return null;
+		}
+
+		//解析 file:// 后端(与取回侧 getHistoryVerReposConfig 同一解析函数, 保证两侧一致)
+		String verReposInfo = buildVerReposInfoForRealDoc(repos);
+		RemoteStorageConfig remote = parseRemoteStorageConfig(verReposInfo, null);
+		if(remote == null)
+		{
+			Log.debug("diskDocCommit() failed to parse verReposInfo:" + verReposInfo);
+			return null;
+		}
+		remote.remoteStorageIndexLib = Path.getReposIndexLibPath(repos) + "DiskHistory/Doc";
+
+		//push options: 每次提交一个全新时间戳目录, 不做远端检查, 不删除(历史快照只增不删)
+		boolean recurcive = true;
+		int pushType = constants.PushType.pushLocalChangedWithoutRemoteCheck;
+		boolean skipDelete = true;
+
+		User accessUser = new User();
+		accessUser.setName(commitUser);
+		ReposAccess diskHistoryAccess = new ReposAccess();
+		diskHistoryAccess.setAccessUser(accessUser);
+
+		boolean ret = channel.remoteStoragePush(remote, repos, doc, diskHistoryAccess, commitMsg, recurcive, pushType, skipDelete, rt);
+		DocPushContext pushResult = (DocPushContext) rt.getDataEx();
+		if(ret && pushResult != null && pushResult.successCount > 0)
+		{
+			return doc.offsetPath;
+		}
+		Log.debug("diskDocCommit() push failed or nothing pushed for [" + doc.getPath() + doc.getName() + "]");
+		return null;
+	}
+
+	private static void updateVerReposDbEntry(Repos repos, List<CommitAction> actionList, String revision)
 	{
 		for(int i=0; i<actionList.size(); i++)
 		{
@@ -13311,10 +13432,10 @@ public class BaseController  extends BaseFunction{
 		//基于commitLog的历史的文件可以存储在任意偏移的位置，因此历史版本里可能包含offsetPath，需要指定给doc
 		doc.offsetPath = commit.verReposOffsetPath;
 		return channel.remoteStorageCheckOut(
-				historyVerReposConfig, 
-				repos, doc, 
-				tmpLocalRootPath, localParentPath, targetName, 
-				commit.verReposRevision, 
+				historyVerReposConfig,
+				repos, doc,
+				tmpLocalRootPath, localParentPath, targetName,
+				commit.verReposRevision,
 				constants.PullType.pullRemoteChangedOrLocalChanged, 
 				true,
 				includeList,
