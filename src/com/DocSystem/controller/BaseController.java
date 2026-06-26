@@ -24388,6 +24388,11 @@ public class BaseController  extends BaseFunction{
 
 		//TODO: insertCommit
 		//注意: 这里commitInfo里还没有版本仓库的信息，需要在版本仓库commit完成后再修改[无论成功失败都要记录，除非该仓库没有版本管理]
+		//磁盘历史版本(verCtrl=3): folder upload 走 action.offsetPath(不经过 ensureDiskHistoryOffsetPath), 需在 insertCommit 前生成, 使 CommitLog 记录正确的 verReposOffsetPath
+		if(repos.getVerCtrl() != null && repos.getVerCtrl() == 3 && (action.offsetPath == null || action.offsetPath.isEmpty()))
+		{
+			action.offsetPath = getDiskHistoryOffsetPathForRealDoc(repos, new Date());
+		}
 		insertCommit(repos, doc, action, HistoryType_RealDoc);
 		
 		if(isLocalChanged(action.localChangesRootPath) == false)
@@ -24408,7 +24413,12 @@ public class BaseController  extends BaseFunction{
 				//提交版本
 				ReturnAjax rt = new ReturnAjax();
 				List<CommitAction> commitActionList = new ArrayList<CommitAction>();
-				List<CommitAction> commitActionListFake = new ArrayList<CommitAction>();			
+				List<CommitAction> commitActionListFake = new ArrayList<CommitAction>();
+				//磁盘历史版本(verCtrl=3): 从 action.offsetPath 补回 doc.offsetPath, 使 diskDocCommit 能 push 到正确的时间戳目录
+				if(repos.getVerCtrl() != null && repos.getVerCtrl() == 3 && action.offsetPath != null)
+				{
+					doc.offsetPath = action.offsetPath;
+				}
 				String revision = verReposDocCommit(repos, false, doc, commitMsg, commitUser, rt , localChangesRootPath, 2, commitActionList, commitActionListFake);
 				//更新commitInfo的版本提交信息: 将revision写入commitInfo中
 				updateCommit(repos, doc, action, revision, rt.getDebugLog(), HistoryType_RealDoc);
