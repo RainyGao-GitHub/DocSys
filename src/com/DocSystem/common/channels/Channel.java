@@ -88,20 +88,20 @@ public interface Channel {
 			Repos repos, Doc doc,
 			String commitId);
 	boolean remoteStoragePull(
-			RemoteStorageConfig remote, 
-			Repos repos, Doc doc, 
-			User accessUser, 
-			String commitId, 
-			boolean recurcive, 
-			int pullType, 
+			RemoteStorageConfig remote,
+			Repos repos, Doc doc,
+			ReposAccess reposAccess,
+			String commitId,
+			boolean recurcive,
+			int pullType,
 			boolean skipDelete,
 			ReturnAjax rt);
 	boolean remoteStoragePush(
-			RemoteStorageConfig remote, 
-			Repos repos, Doc doc, 
-			User accessUser, 
-			String commitMsg, 
-			boolean recurcive, 
+			RemoteStorageConfig remote,
+			Repos repos, Doc doc,
+			ReposAccess reposAccess,
+			String commitMsg,
+			boolean recurcive,
 			int pushType,
 			boolean skipDelete,
 			ReturnAjax rt);

@@ -241,7 +241,18 @@ public class DocController extends BaseController{
 		}
 		//禁用远程操作，否则会存在远程推送的回环（造成死循环）
 		repos.disableRemoteAction = true;
-		
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc parentDoc = buildBasicDoc(reposId, null, null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, null, null);
+		if(checkUserAddRight(repos, reposAccess.getAccessUser().getId(), parentDoc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "addDocRS", "addDocRS", "新增", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "新增 [" + path + name + "]";
@@ -364,7 +375,16 @@ public class DocController extends BaseController{
 		repos.disableRemoteAction = true;
 		
 		
-		//TODO: 需要检查用户是否有文件的删除权限
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, null, null);
+		if(checkUserDeleteRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDocRS", "deleteDocRS", "删除", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
 		deleteDocFromRepos(
 				"deleteDocRS", "deleteDocRS", "删除", taskId,
 				repos, path, name, null, type, null,
@@ -1937,7 +1957,16 @@ public class DocController extends BaseController{
 			commitMsg = "上传文件 [" + path + name + "]";
 		}
 		
-		//TODO: 需要检查用户是否有文件的写入或增加权限
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, null, null);
+		if(checkUserEditRight(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "uploadDocRS", "uploadDocRS", "文件上传", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
 		saveDocToRepos(
 				"uploadDocRS", "uploadDocRS", "文件上传", taskId,
 				repos, path, name, size, type, checkSum,
