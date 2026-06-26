@@ -1953,6 +1953,20 @@ public class ManageController extends BaseController{
 		Log.debug("upgradeSystem() " + queryTask.info);
 	}
 	
+	/**************** getSystemVersion ******************/
+	@RequestMapping("/getSystemVersion.do")
+	public void getSystemVersion(HttpServletResponse response)
+	{
+		ReturnAjax rt = new ReturnAjax();
+		String version = FileUtil.readDocContentFromFile(docSysWebPath, "version");
+		if(version == null)
+		{
+			version = "";
+		}
+		rt.setOk(version);
+		writeJson(rt, response);
+	}
+
 	/**************** queryLongTermTask ******************/
 	@RequestMapping("/queryLongTermTask.do")
 	public void queryLongTermTask(

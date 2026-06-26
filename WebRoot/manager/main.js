@@ -2607,15 +2607,18 @@ var SystemUpgrade = (function () {
                 taskId: taskId,
             },
             success : function (ret) {
-        	   console.log("doQuerySystemUpgradePrepareTask() ret:",ret);        
+        	   console.log("doQuerySystemUpgradePrepareTask() ret:",ret);
                if( "ok" == ret.status )
-               {    
+               {
             	   var task = ret.data;
            	       if(task.status == 200)
             	   {
 	           			console.log("SystemUpgradePrepareSuccessHandler() 升级准备工作已完成，等待升级");
 	           			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " +  _Lang("开始升级，请稍候..."));
 	           			gStatus = 0;
+	           			// 切换到阶段2：服务器即将重启，改轮询 getSystemVersion 接口
+	           			var oldVersion = $('#systemVersion').val() || "";
+	           			startPollVersionAfterRestart(oldVersion);
            	        	return;
             	   }
            	       startSystemUpgradePrepareTask(task.id, nextDelayTime);
@@ -2630,13 +2633,71 @@ var SystemUpgrade = (function () {
         	   	console.log("系统升级失败:服务器异常");
 				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + + _Lang("升级失败", ":", "服务器异常"));
             }
-    	});	
+    	});
 	}
-	
+
+	// ---- 阶段2：服务器重启后检测版本 ----
+	var _upgradePollingTimer = null;
+
+	function startPollVersionAfterRestart(oldVersion) {
+		var deadline = new Date().getTime() + 5 * 60 * 1000; // 5分钟超时
+		doPollVersionAfterRestart(oldVersion, deadline, false);
+	}
+
+	function doPollVersionAfterRestart(oldVersion, deadline, serverWentDown) {
+		if (new Date().getTime() > deadline) {
+			console.log("doPollVersionAfterRestart() 超时");
+			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级超时，请刷新页面确认升级结果"));
+			return;
+		}
+
+		$.ajax({
+			url: "/DocSystem/Manage/getSystemVersion.do",
+			type: "post",
+			dataType: "json",
+			timeout: 4000,
+			success: function(ret) {
+				if ("ok" == ret.status) {
+					if (!serverWentDown) {
+						// 服务器还没重启，继续等待
+						$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("服务器即将重启，请稍候..."));
+						_upgradePollingTimer = setTimeout(function() {
+							doPollVersionAfterRestart(oldVersion, deadline, false);
+						}, 5000);
+					} else {
+						// 服务器已重启恢复
+						var newVersion = ret.data || "";
+						console.log("doPollVersionAfterRestart() 服务器已恢复，新版本：" + newVersion);
+						$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级成功！当前版本：") + newVersion);
+					}
+				} else {
+					_upgradePollingTimer = setTimeout(function() {
+						doPollVersionAfterRestart(oldVersion, deadline, serverWentDown);
+					}, 5000);
+				}
+			},
+			error: function() {
+				// 请求失败 = 服务器已下线
+				if (!serverWentDown) {
+					console.log("doPollVersionAfterRestart() 服务器已下线，等待重启...");
+					$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("服务器重启中，请稍候..."));
+				}
+				_upgradePollingTimer = setTimeout(function() {
+					doPollVersionAfterRestart(oldVersion, deadline, true);
+				}, 5000);
+			}
+		});
+	}
+	// ---- 阶段2 end ----
+
 	function stop(){
+    	if (_upgradePollingTimer != null) {
+    		clearTimeout(_upgradePollingTimer);
+    		_upgradePollingTimer = null;
+    	}
     	if(_status < 2)	//上传中
     	{
-    		SystemUpgradeFileUpload.stopAllUpload();	        	
+    		SystemUpgradeFileUpload.stopAllUpload();
     	}
     	else
     	{

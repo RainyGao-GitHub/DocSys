@@ -31,13 +31,14 @@ public class MyInterceptor extends HandlerInterceptorAdapter{
 		//意见反馈
 		"feeback",
 		//系统管理
-		"Manage/getSystemLog", 
+		"Manage/getSystemLog",
 		"Manage/importDBData",
 		"Manage/docSysInit",
 		"Manage/getBannerConfig",
 		"Manage/clusterServerLoopbackTest",
 		"Manage/clusterServerJoinApply",
 		"Manage/clusterServerTest",
+		"Manage/getSystemVersion",
 		//文件分享
 		"Doc/getDocShare",
 		"Repos/getRepos",
