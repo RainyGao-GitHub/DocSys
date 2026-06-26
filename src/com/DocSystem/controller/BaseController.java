@@ -24805,11 +24805,16 @@ public class BaseController  extends BaseFunction{
 			{
 				docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存失败!", rt);
 				docSysErrorLog("文件 " + name +  " 保存失败!", rt);
-			
+
 				writeJson(rt, response);
-				
-				addSystemLog(request, accessUser, event, event, eventName, queryId, "失败", null, null, null, buildSystemLogDetailContent(rt));	
+
+				addSystemLog(request, accessUser, event, event, eventName, queryId, "失败", null, null, null, buildSystemLogDetailContent(rt));
 				return;
+			}
+
+			if(type != null && type == 2)
+			{
+				FileUtil.createDir(localDiskPath + path + name + "/");
 			}
 
 			docSysDebugLog("saveDocToDisk() 文件 [" + path + name +  "] 保存成功!", rt);
