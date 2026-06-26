@@ -20230,6 +20230,7 @@ public class BaseController  extends BaseFunction{
         String rootPath = rootDoc.getPath() + rootDoc.getName() + "/";
 
         List <Doc> subDocList = new ArrayList<Doc>();
+        HashMap<Long, Doc> subDocHashMap = new HashMap<Long, Doc>();
         RandomAccessFile randomAccessFile = null;
         IInArchive inArchive = null;
         try {
@@ -20239,11 +20240,11 @@ public class BaseController  extends BaseFunction{
 
             // Getting simple interface of the archive inArchive
             ISimpleInArchive simpleInArchive = inArchive.getSimpleInterface();
-            
-            for (int i = 0; i < simpleInArchive.getArchiveItems().length; i++) 
+
+            for (int i = 0; i < simpleInArchive.getArchiveItems().length; i++)
             {
             	ISimpleInArchiveItem entry = simpleInArchive.getArchiveItems()[i];
-            	Log.debug("getSubDocListForCompressFile path:" + entry.getPath() + " size:" + entry.getSize() + " packedSize:" + entry.getPackedSize()); 
+            	Log.debug("getSubDocListForCompressFile path:" + entry.getPath() + " size:" + entry.getSize() + " packedSize:" + entry.getPackedSize());
             	//TODO: SevenZip跨平台有中文乱码Bug，目前没有找到指定charset的接口，期待新版本
             	//String entryPath = (String) inArchive.getProperty(i, PropID.PATH);
             	String entryPath = entry.getPath().replace("\\", "/");
@@ -20251,7 +20252,15 @@ public class BaseController  extends BaseFunction{
 
             	String subDocPath = rootPath + entryPath.replace("\\", "/");
             	Doc subDoc = buildBasicDocFromCompressEntry(rootDoc, subDocPath, entry);
+            	subDocHashMap.put(subDoc.getDocId(), subDoc);
             	subDocList.add(subDoc);
+            }
+
+            //注意由于entryList只包含文件，因此直接生成docList会导致父节点丢失，造成前端目录树混乱，因此需要检查并添加父节点
+            List<Doc> parentDocListForAdd = checkAndGetParentDocListForAdd(subDocList, rootDoc, subDocHashMap);
+            if(parentDocListForAdd.size() > 0)
+            {
+            	subDocList.addAll(parentDocListForAdd);
             }
         } catch (Exception e) {
             errorLog("getSubDocListForCompressFile(Repos, Doc, String, String, ReturnAjax)() Error occurs");
