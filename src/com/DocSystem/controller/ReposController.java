@@ -1750,20 +1750,24 @@ public class ReposController extends BaseController{
 		}
 		else
 		{
-			if(isBackupConfigChanged(oldAutoBackupConfig.localBackupConfig, newAutoBackupConfig.localBackupConfig))
+			if(isBackupConfigChanged(
+					oldAutoBackupConfig != null ? oldAutoBackupConfig.localBackupConfig : null,
+					newAutoBackupConfig != null ? newAutoBackupConfig.localBackupConfig : null))
 			{
 				clearLocalBackupIndexLib = true;
 				Log.debug("checkAndClearOldBackupIndexLib() localBackupConfig changed:");
-				Log.printObject("checkAndClearOldBackupIndexLib() oldLocalBackupConfig:", oldAutoBackupConfig.localBackupConfig);				
-				Log.printObject("checkAndClearOldBackupIndexLib() newLocalBackupConfig:", newAutoBackupConfig.localBackupConfig);				
+				Log.printObject("checkAndClearOldBackupIndexLib() oldLocalBackupConfig:", oldAutoBackupConfig != null ? oldAutoBackupConfig.localBackupConfig : null);
+				Log.printObject("checkAndClearOldBackupIndexLib() newLocalBackupConfig:", newAutoBackupConfig != null ? newAutoBackupConfig.localBackupConfig : null);
 			}
-			
-			if(isBackupConfigChanged(oldAutoBackupConfig.remoteBackupConfig, newAutoBackupConfig.remoteBackupConfig))
+
+			if(isBackupConfigChanged(
+					oldAutoBackupConfig != null ? oldAutoBackupConfig.remoteBackupConfig : null,
+					newAutoBackupConfig != null ? newAutoBackupConfig.remoteBackupConfig : null))
 			{
 				clearRemoteBackupIndexLib = true;
 				Log.debug("checkAndClearOldBackupIndexLib() remoteBackupConfig changed:");
-				Log.printObject("checkAndClearOldBackupIndexLib() oldRemoteBackupConfig:", oldAutoBackupConfig.remoteBackupConfig);				
-				Log.printObject("checkAndClearOldBackupIndexLib() newRemoteBackupConfig:", newAutoBackupConfig.remoteBackupConfig);				
+				Log.printObject("checkAndClearOldBackupIndexLib() oldRemoteBackupConfig:", oldAutoBackupConfig != null ? oldAutoBackupConfig.remoteBackupConfig : null);
+				Log.printObject("checkAndClearOldBackupIndexLib() newRemoteBackupConfig:", newAutoBackupConfig != null ? newAutoBackupConfig.remoteBackupConfig : null);
 			}
 		}
 		
