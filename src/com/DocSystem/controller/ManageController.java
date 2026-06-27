@@ -1963,7 +1963,7 @@ public class ManageController extends BaseController{
 		{
 			version = "";
 		}
-		rt.setOk(version);
+		rt.setData(version);
 		writeJson(rt, response);
 	}
 
