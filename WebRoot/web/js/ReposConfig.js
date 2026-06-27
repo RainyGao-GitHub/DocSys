@@ -1469,13 +1469,19 @@ var ReposConfig = (function () {
 		console.log("doSelectVerCtrl verCtrl:" + verCtrl + " isRemote:" + isRemote);
 		
 		//alert(verCtrl);
-		if(verCtrl == 3)	//磁盘历史版本: 仅本地, 只需"磁盘历史根路径", 隐藏远程svn/git相关项
+		if(verCtrl == 3)	//磁盘历史版本: 仅本地, 勾选"自定义"后才显示根路径输入框
 		{
-			$("#verCtrl-isRemote").prop("checked", false);	//强制本地
-			MyJquery.hide("verCtrl-isRemoteSetting");
-			MyJquery.show("verCtrl-localVerRepos");
 			MyJquery.hide("verCtrl-remoteVerRepos");
+			MyJquery.show("verCtrl-isRemoteSetting");
 			MyJquery.show("verCtrl-verReposSetting");
+			if(isRemote == 0)
+			{
+				MyJquery.hide("verCtrl-localVerRepos");
+			}
+			else
+			{
+				MyJquery.show("verCtrl-localVerRepos");
+			}
 			return;
 		}
 
