@@ -2011,6 +2011,7 @@ public class BaseController  extends BaseFunction{
 		if(dir.exists())
 		{
 			docSysDebugLog("磁盘历史仓库:" + localVerReposPath + " 已存在，已直接设置！", rt);
+			setReposHistoryFormat(repos, false);
 			return localVerReposPath;
 		}
 
@@ -2019,6 +2020,10 @@ public class BaseController  extends BaseFunction{
 			docSysErrorLog("磁盘历史仓库:" + localVerReposPath + " 创建失败！", rt);
 			return null;
 		}
+		// 确保 isLegacyReposHistory 走新格式分支（Lucene CommitLog）
+		// updateReposInfo 触发的 initVerRepos 不会像 addRepos 那样先调 setReposHistoryFormat，
+		// 故此处主动补建，对 addRepos 路径也是幂等的
+		setReposHistoryFormat(repos, false);
 		return localVerReposPath;
 	}
 
