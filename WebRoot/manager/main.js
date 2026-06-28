@@ -2616,9 +2616,9 @@ var SystemUpgrade = (function () {
 	           			console.log("SystemUpgradePrepareSuccessHandler() 升级准备工作已完成，等待升级");
 	           			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " +  _Lang("开始升级，请稍候..."));
 	           			gStatus = 0;
-	           			// 切换到阶段2：服务器即将重启，改轮询 getSystemVersion 接口
+	           			// 切换到阶段2：系统即将重启，改为定时轮询 getSystemVersion 确认升级结果
 	           			var oldVersion = $('#systemVersion').val() || "";
-	           			startPollVersionAfterRestart(oldVersion);
+	           			startPollVersionAfterRestart(oldVersion, 5000); //5秒后开始查询
            	        	return;
             	   }
            	       startSystemUpgradePrepareTask(task.id, nextDelayTime);
@@ -2636,55 +2636,56 @@ var SystemUpgrade = (function () {
     	});
 	}
 
-	// ---- 阶段2：服务器重启后检测版本 ----
+	// ---- 阶段2：系统重启后定时轮询版本号，确认升级是否成功 ----
+	// 系统重启期间后台接口返回不可靠(连接拒绝/404/超时等)，因此由前端定时器自己驱动查询，
+	// 接口异常则继续等待，直到版本号发生变化(说明新系统已成功启动)
 	var _upgradePollingTimer = null;
 
-	function startPollVersionAfterRestart(oldVersion) {
-		var deadline = new Date().getTime() + 5 * 60 * 1000; // 5分钟超时
-		doPollVersionAfterRestart(oldVersion, deadline, false);
-	}
-
-	function doPollVersionAfterRestart(oldVersion, deadline, serverWentDown) {
-		if (new Date().getTime() > deadline) {
-			console.log("doPollVersionAfterRestart() 超时");
-			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级超时，请刷新页面确认升级结果"));
-			return;
+	function startPollVersionAfterRestart(oldVersion, delayTime)
+	{
+		console.log("startPollVersionAfterRestart() oldVersion:" + oldVersion + " delayTime:" + delayTime);
+		var nextDelayTime = delayTime; //每次增加5s
+		if(nextDelayTime < 60000) //最长1分钟
+		{
+			nextDelayTime += 5000;
 		}
 
+		_upgradePollingTimer = setTimeout(function () {
+			console.log("timerForPollVersionAfterRestart triggered!");
+			doPollVersionAfterRestart(oldVersion, nextDelayTime);
+		}, delayTime);
+	}
+
+	function doPollVersionAfterRestart(oldVersion, nextDelayTime)
+	{
+		console.log("doPollVersionAfterRestart() oldVersion:" + oldVersion + " nextDelayTime:" + nextDelayTime);
+
 		$.ajax({
-			url: "/DocSystem/Manage/getSystemVersion.do",
-			type: "post",
-			dataType: "json",
-			timeout: 4000,
-			success: function(ret) {
-				if ("ok" == ret.status) {
-					if (!serverWentDown) {
-						// 服务器还没重启，继续等待
-						$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("服务器即将重启，请稍候..."));
-						_upgradePollingTimer = setTimeout(function() {
-							doPollVersionAfterRestart(oldVersion, deadline, false);
-						}, 5000);
-					} else {
-						// 服务器已重启恢复
-						var newVersion = ret.data || "";
-						console.log("doPollVersionAfterRestart() 服务器已恢复，新版本：" + newVersion);
+			url : "/DocSystem/Manage/getSystemVersion.do",
+			type : "post",
+			dataType : "json",
+			success : function (ret) {
+				console.log("doPollVersionAfterRestart() ret:", ret);
+				if("ok" == ret.status)
+				{
+					var newVersion = ret.data;
+					if(newVersion != null && newVersion != "" && newVersion != oldVersion)
+					{
+						//版本号已变更，说明新系统已成功启动
+						console.log("doPollVersionAfterRestart() 升级成功，新版本：" + newVersion);
 						$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级成功！当前版本：") + newVersion);
+						return;
 					}
-				} else {
-					_upgradePollingTimer = setTimeout(function() {
-						doPollVersionAfterRestart(oldVersion, deadline, serverWentDown);
-					}, 5000);
 				}
+				//版本号未变更(旧系统尚未停止)，继续等待
+				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("系统重启中，请稍候..."));
+				startPollVersionAfterRestart(oldVersion, nextDelayTime);
 			},
-			error: function() {
-				// 请求失败 = 服务器已下线
-				if (!serverWentDown) {
-					console.log("doPollVersionAfterRestart() 服务器已下线，等待重启...");
-					$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("服务器重启中，请稍候..."));
-				}
-				_upgradePollingTimer = setTimeout(function() {
-					doPollVersionAfterRestart(oldVersion, deadline, true);
-				}, 5000);
+			error : function () {
+				//系统重启中，接口暂时不可访问(连接拒绝/404/超时等)，继续等待
+				console.log("doPollVersionAfterRestart() 系统重启中，接口暂不可用，继续等待...");
+				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("系统重启中，请稍候..."));
+				startPollVersionAfterRestart(oldVersion, nextDelayTime);
 			}
 		});
 	}
