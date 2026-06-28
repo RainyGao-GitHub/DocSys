@@ -2630,8 +2630,13 @@ var SystemUpgrade = (function () {
                }
             },
             error : function () {	//后台异常
-        	   	console.log("系统升级失败:服务器异常");
-				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + + _Lang("升级失败", ":", "服务器异常"));
+        	   	//queryLongTermTask请求失败(502/超时/连接拒绝等)，说明服务器已不可达。
+        	   	//由于准备完成(status=200)后monitor.sh会立即重启服务器，存在"服务器已开始重启、
+        	   	//但前端尚未轮询到status=200"的竞态，此时不能判为失败，应切到阶段2按版本轮询确认升级结果。
+        	   	console.log("doQuerySystemUpgradePrepareTask() 服务器不可达，可能已开始重启，切换到版本轮询");
+				var oldVersion = $('#systemVersion').val() || "";
+				gStatus = 0;
+				startPollVersionAfterRestart(oldVersion, 5000); //5秒后开始查询
             }
     	});
 	}
