@@ -15,6 +15,7 @@ apply_changes JS→Java 全量移植（Word 线）。当前在 **W2-4 Section（
 
 ## 开工约束
 - 先确认仓库 dirty 状态；有改动先提交再开工（本任务如此）。提交归属见 CLAUDE.md「仓库结构」。
+- **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
 - W2-4 代码已写完并跑通：新增 `JChangesSectionPropChanges.java`、`JChangesParagraphSectionPr.java`（`doctrenderer/jmerge/word/change/`）、`JSectionCodec.java`（`doctrenderer/jmerge/word/props/`）+ 7 修改文件（JModel/JBinIdAllocator/JChangesApplier/JChangesFactory/JDocumentReader/JDocumentWriter/JParaItemReader）。
