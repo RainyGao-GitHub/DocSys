@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第二个节点完成**：**W4-1b SdtPr 嵌套表单对象完成（9/10/12/13/14/15/21/22/23）**。下一个节点：**W4 桶其余**（OLE/oMath base=26/SmartArt/修订/Slicer/Pivot/DataValidation），或按计划切 PPT/Excel 缺口。
+apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第三个节点完成**：**W4 修订（段/run 级 PrChange/ReviewInfo/ReviewType/ContentReviewInfo）完成**。下一个节点：**W4 桶其余**（OLE/oMath base=26/SmartArt/Slicer/Pivot/DataValidation），或按计划切 PPT/Excel 缺口。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -18,6 +18,14 @@ apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第二个节�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **W4 修订（段/run 级 PrChange/ReviewInfo/ReviewType/ContentReviewInfo）完成（W4 defer 桶第三节点）**（2026-08-29）：
+  - 新增：JChangesParagraphRevision（PrChange 3|35 + PrReviewInfo 3|36）、JChangesRunRevision（ReviewType 28|34 + PrChange 28|35 + PrReviewInfo 28|38 + ContentReviewInfo 28|39），替换 6 个 JChangesBaseSkipProperty 静默丢弃
+  - 字节格式忠实蓝本（ParagraphChanges.js/RunChanges.js）：PrChange=Long nFlags(bit0=New.PrChange缺/bit1=New.ReviewInfo缺/bit2=Old.PrChange缺/bit3=Old.ReviewInfo缺)+CParaPr/CTextPr+CReviewInfo；ReviewType 无 nFlags 门位恒读 New/Old 四段；PrReviewInfo/ContentReviewInfo=ObjectProperty（后者 IsCreateEmptyObject=true，undef 也建空 CReviewInfo）
+  - 复用：readParaPr/readTextPr/readReviewInfo（JPropReader）+ writeTrackRevisionHeader + revisionIdSeq + mergeRead2Props；新增 writeParaPrChangeRecord/writeRunPrChangeRecord/writeRunInsDelRecord（JPropWriter）+ SerPropType.R 补 Del/Ins/rPrChange/MoveFrom/MoveTo 常量
+  - 宿主模型：JModel.Paragraph 增 prChange/prChangeReviewInfo；JModel.Run 增 prChange/prChangeReviewInfo/reviewType/reviewInfo
+  - applier：injectParagraphPrChange/injectRunPrChange/injectRunReviewType（editMap+idMap 双路径），assignRevIdForObj 扩到 Paragraph/Run
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（4-bit gate/恒读四段/IsCreateEmptyObject 覆写均核对）；`TestJChangesW4Revised` 27/27 + W4-1a 37/37 + W4-1b 87/87 + W3-5~13 全绿（33/41/10/32/7/10/31/40/21）+ W2-6 10/10
+
 - **W4-1b SdtPr 嵌套表单对象完成（W4 defer 桶第二节点；9/10/12/13/14/15/21/22/23，SdtPr 全部 24 sub 真实实现）**（2026-08-29）：
   - 新增：JChangesSdtPr 六嵌套对象对偶读器 readCheckBoxPr/readComboBoxPr/readDatePickerPr/readTextFormPr/readFormPr/readPictureFormPr（字段读序一一对偶 SdtPr.js ReadFromBinary），替换 W4-1a 的 9 个 UnsupportedOperationException fail-loud defer
   - 基类语义忠实（HistoryCommon.js:4273 CChangesBaseObjectProperty）：New/Old undef 且 IsCreateEmptyObject=false（各子未 override）→ 无字节；★Old present 照样消费读进弃对象防流错位
