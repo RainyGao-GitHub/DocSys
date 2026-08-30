@@ -18,6 +18,12 @@ apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第五个节�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **Slide_RemoveFromSpTree(1117|13) 真实注册 + ApplyContent.remove 对齐蓝本 identity 语义完成**（2026-08-30，office aeb084de / test 4544374）：
+  - JSlideChangesFactory：Slide_RemoveFromSpTree 由 ⏭ fallback SKIP（删除形状不生效）改真实注册为 `JChartChanges.ApplyContent(→slide.spTree)`，与 AddToSpTree(12) 同宿主导流路径（蓝本 Slide.js:145-146 二者都映射 `oClass.cSld.spTree`）
+  - JChartChanges.ApplyContent.apply() remove 分支：『下标硬删 arr.remove(pos)』改为蓝本 `CChangesDrawingsContentPresentation.Load()` remove 分支的 **identity 语义**——先试 `aContent[Pos]===item` 处 splice，不符则从尾部反向扫第一个 `===item` 处 splice，删一即 break
+  - 忠实性核对：`CChangesBaseContentChange.ReadFromBinary`(HistoryCommon:3937) 恒设 `UseArray=true` 按 nCount 填 PosArray → Java `posList.get(i)` 与 JS `this.PosArray[nIndex]` 完全一致，无单 pos/数组基准分歧；5 个 ApplyContent 现有消费者全为 `isAdd=true`（add 路径），此改动不波及
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实；新增 `TestJSlideRemoveFromSpTree` 13/13（Pos命中/反向扫/仅一条删空/多id各删/id解析不到不NPE）；回归 TestJSlideChangesApplier 12/12(noFactory/noHost/error 全0) + TestJSlideMergeGolden 12/12
+
 - **Slide 文本属性 11 类由 SkipProperty 改真实 Word 实现完成**（2026-08-30，office ad38513e）：
   - JSlideChangesFactory：TextPr Bold/Italic/HighLight/Value/RFonts(Ascii/HAnsi/EastAsia)/Lang/Unifill + ParaRun OnStartSplit/OnEndSplit 由 SkipProperty/StringProperty stub 改指向 Word 侧 `JTextPrPropChanges.*` 真实类
   - 复用前提：`JTextPrPropChanges.Base.tp()` 同时 dispatch `JModel.Run` 与 `JBinIdAllocator.JParTextPrNode`，Slide 宿主可直接复用不 no-op（编辑前已核实，避开「看似移植实则 no-op」陷阱）
