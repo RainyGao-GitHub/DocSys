@@ -18,6 +18,31 @@ apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第五个节�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **Shape_SetBDeleted(1104|1) 完成**（2026-08-30，office 0a1b39a3 / test cad96ae）：
+  - CShape 的 SetBDeleted 是渲染相关变更（bDeleted 决定形状是否渲染，非纯外观），原走 DRAWING_PARENT_1104_Sub1 SkipProperty 静默丢弃，改为真实读+落位
+  - 蓝本 v7.0.1.71 GraphicObjectBase.js:45 CChangesDrawingsBool（nFlags bit1=New undef/bit2=New true），与 SetWordShape(1104|10)/Xfrm flipH/V 同格式
+  - JChangesShape 扩 case 1（reader 读位打包 Bool + apply 写 ShapeHost.bDeleted）；JModel.ShapeHost 增 bDeleted；JChangesFactory 注册 TYPE_Shape|1 并移除失效的 DRAWING_PARENT_1104_Sub1（与 TYPE_Shape|1 同 key，已被覆盖）
+  - 验收（轻量）：编译零错误 + 蓝本对照忠实；`TestJChangesW36` 42/42（新增 Shape_SetBDeleted 断言）+ 回归 ParaDrawing6 21/21 + ApplierRun noHost/noFactory/createReadError 全 0
+  - **SkipProperty 残余扫查结论**：Word 线已无遗漏。剩余 SkipProperty 均为有意边界——ImageShape 容器 graph（1107|1/4/5/6）与 DrawingML 父类 ref（1113|2, 1000|106）属不透明对象图、Section Header/Footer ref（12-17）为几何优先 DEFERRED，皆非 Word 文本保真缺口
+
+- **W4 ParaDrawing 剩余 6 sub 完成**（2026-08-30，office aaeff82c / test 47c70c3）：
+  - JChangesFactory：SetWrapPolygon(5|11)/SetParent(5|15)/SetParaMath(5|16)/SetSizeRelH(5|18)/SetSizeRelV(5|19)/Form(5|20) 由 SkipProperty 改真实类
+  - 三种字节格式（蓝本 v7.0.1.71 ParaDrawingChanges.js 逐分支对照）：
+    - WrapPolygon/Parent → readObject(Format.js:757)=Bool(isReal)+[String2 id]，经 resolver.getById 解析（新 JChangesDrawingObjectRef）
+    - ParaMath → ★自定义 nFlags bit1=New undef/bit2=Old undef + String2 id（新 JChangesDrawingParaMath，非标准 0x02/0x04）
+    - SizeRelH/V → ★裸格式（无 nFlags）Bool(undef)→[Long From+Double Pct]（新 JChangesDrawingSizeRel）
+    - Form → CChangesBaseBoolValue，复用 JChangesDrawingBoolProperty 加 FORM 分支（并补上原 apply() 漏掉的 case FORM 落位）
+  - JModel.Drawing 增 6 字段（wrappingPolygon/parent/paraMath/sizeRelH{From,Pct}/sizeRelV{From,Pct}/drawingForm），apply 写入并置 dirty
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实；`TestJChangesParaDrawing6` 21/21 + 回归 W27FontFamily 27/27 + W27Split 18/18 + W41a/W41b 无失败 + ApplierRun noHost/noFactory/createReadError 全 0（id 漂移探针全绿）
+
+- **W2-7 ParaRun split/数学断点 4 类完成**（2026-08-30，office 334601ac / test b1bd5f7）：
+  - JTextPrPropChanges：新增 OnStartSplit(28|40)、OnEndSplit(28|41)、MathAlnAt(28|42)、MathForcedBreak(28|43)
+  - OnStartSplit/OnEndSplit：CChangesBase，协作编辑信令，apply=no-op
+  - MathAlnAt：★自定义 nFlags（bit1=New undef/bit2=Old undef，非标准 0x02/0x04）；apply 复刻 Apply_AlnAt：仅 brk 已存在时写 brk.alnAt
+  - MathForcedBreak：CChangesBase，nFlags bit1=bInsert/bit2=alnAt undef；apply=Redo（bInsert→建 brk；else→brk=null）
+  - JChangesFactory：4 条由 SkipProperty 改真实类；HistoryItemType：4 行注释更新
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实；`TestJChangesW27Split` 18/18 + 回归 W27FontFamily 27/27 + W4Ole 22/22 + W41a 37/37 + W41b 87/87 全绿
+
 - **W2-7 字体族整体属性完成（204 系列节点）**（2026-08-30，office 11a273cf / test 7a3d150）：
   - JTextPrPropChanges：新增 RFontsAscii/HAnsi/CS/EastAsiaTheme（nFlags bit1=Color/bit2=New undef/bit4=Old undef + String2 New/Old，落 run.Pr.RFonts.*Theme；TextPr 31-34 与 ParaRun 45-48 共用同字节格式）+ MathStyle（LongProperty→run.MathPrp.sty）+ MathPrp（ObjectProperty，IsCreateEmptyObject=true→undef 建空 CMPrp；CMPrp/CMathBreak 自长格式）
   - JModel：Run 增 mathPrp（恒 new JMPrp()，镜像 JS new CMPrp()）+ JMPrp/JMPrpBreak 模型类
