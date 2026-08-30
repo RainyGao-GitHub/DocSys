@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第四个节点完成**：**W4 OLE（ImageShape OLE 图片对象 7 sub）完成**。下一个节点：**W4 桶其余**（oMath base=26/SmartArt/DataValidation），或按计划切 PPT/Excel 缺口。
+apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第五个节点完成**：**W4 oMath（base=26，57 sub，树读取+变更+护栏）完成**。**下一个节点已切到 W2-7（字体族整体属性）完成**（RFonts 主题 4 变体 + MathStyle/MathPrp）。待续：**W4 桶其余**（SmartArt/修订/DataValidation），或按计划切 PPT/Excel 缺口。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -18,6 +18,21 @@ apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第四个节�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **W2-7 字体族整体属性完成（204 系列节点）**（2026-08-30，office 11a273cf / test 7a3d150）：
+  - JTextPrPropChanges：新增 RFontsAscii/HAnsi/CS/EastAsiaTheme（nFlags bit1=Color/bit2=New undef/bit4=Old undef + String2 New/Old，落 run.Pr.RFonts.*Theme；TextPr 31-34 与 ParaRun 45-48 共用同字节格式）+ MathStyle（LongProperty→run.MathPrp.sty）+ MathPrp（ObjectProperty，IsCreateEmptyObject=true→undef 建空 CMPrp；CMPrp/CMathBreak 自长格式）
+  - JModel：Run 增 mathPrp（恒 new JMPrp()，镜像 JS new CMPrp()）+ JMPrp/JMPrpBreak 模型类
+  - JChangesFactory：10 条 SkipProperty 注册改真实类（TextPr 31-34 + ParaRun 32/33/45-48）；HistoryItemType 10 处注释修正
+  - 蓝本 sdkjs v7.0.1.71：RunChanges.js CChangesRunRFontsThemeBase(2632)/AsciiTheme(2698)/MathStyle(1987)/MathPrp(2016)；mathContent.js CMPrp(945)；borderBox.js CMathBreak(109)；HistoryCommon.js CChangesBaseObjectProperty(4259)/LongProperty(4348)
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实；`TestJChangesW27FontFamily` 27/27 + 回归 ApplierRun 19/19 + W3-5~13 全绿 + W4-1a/b/Ole/oMath/修订 全绿
+
+- **W4 oMath（base=26，57 sub，树读取+变更+护栏）完成（W4 defer 桶第五节点）**（2026-08-30，office d944d688 / test ec05208）：
+  - JMathReader：镜像 Serialize2.js ReadMathArg ~30 handler，id 分配顺序与 JS Get_NewId() 精确一致；Delimiter/EqArr/Matrix 用两步法（先收 offset 再 alloc，Seek2 读内容）；alloc 改 package-private
+  - JModel：新增 CEqArray、CDelimiter.hideBegOper/hideEndOper（Integer）、CLimit.lim（CMathContent）字段；CMathContent.content 改 List<Elem>（允许 Run 入内容列表）；补 import JProps
+  - JBinIdAllocator：readParContent 前置 OMathPara(8)/OMath(9)/MRun(25) 分支
+  - JChangesMath：57 sub 统一 dispatcher；LongProperty/BoolProperty/ContentChange/RFontsName/HighLight/ReviewType/ObjectProperty/GroupChrPr/MatrixAddRm/ColumnJc/Interval 七大格式
+  - JChangesFactory：注册 57 条（TYPE_Math | 101~1401）；HistoryItemType 801/802 注释修正（LongProperty, raw_HideBegOperator）
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（sdkjs v7.0.1.71）；`TestJChangesW4OMath` 90/90 + W4Ole 22/22 + W4-1a 37/37 + W4-1b 87/87 + ApplierRun 19/19 + W3-12 40/40 + W3-13 21/21 全绿
+
 - **W4 OLE（ImageShape OLE 图片对象 7 sub）完成（W4 defer 桶第四节点）**（2026-08-30）：
   - 新增：JChangesImageShapeOle（单 dispatcher），替换 ImageShape 1107|7-13 的 6 个 SkipProperty 静默丢弃（其中 7-13 原未注册/跳过）
   - 字节格式忠实蓝本（OleObject.js + DrawingsChanges.js）：SetData(7)/SetApplicationId(8)/SetObjectFile(10)=CChangesDrawingsString(Long nFlags+String2 New/Old)；SetPixSizes(9)=CChangesDrawingsObjectNoId→COleSize(双 Long w/h)；SetOleType(11)=CChangesDrawingsLong；SetBinaryData(12)=CChangesOleObjectBinary(GetBool(hasData)+[Long len+Buffer])；SetMathObject(13)=CChangesDrawingsObject(String2 id→resolver 解析对象，同 Drawing.graphicObj 约定)
@@ -98,5 +113,6 @@ apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第四个节�
   - 验收（轻量）：编译零错误；`TestJChangesW36` 41/41 + W3-5 回归 33/33
 
 ## 下一步
-1. **W4 桶其余节点**（OLE/oMath base=26/SmartArt/修订/Slicer/Pivot/DataValidation），或按计划切 PPT/Excel 缺口。
-2. 重型三门回归压到最后一环（验收节奏见「开工约束」）。
+1. **W4 桶其余节点**（SmartArt/修订/Slicer/Pivot/DataValidation——其中修订已完成、Slicer/Pivot/DataValidation 属 Excel 族、SmartArt 属 DrawingML），或按计划切 PPT/Excel 缺口。
+2. oMath writer（JMathWriter）延迟到 dirty 路径有真实 fixture 再实现。
+3. 重型三门回归压到最后一环（验收节奏见「开工约束」）。
