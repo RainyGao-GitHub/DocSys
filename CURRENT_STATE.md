@@ -18,6 +18,12 @@ apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第五个节�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **Slide 文本属性 11 类由 SkipProperty 改真实 Word 实现完成**（2026-08-30，office ad38513e）：
+  - JSlideChangesFactory：TextPr Bold/Italic/HighLight/Value/RFonts(Ascii/HAnsi/EastAsia)/Lang/Unifill + ParaRun OnStartSplit/OnEndSplit 由 SkipProperty/StringProperty stub 改指向 Word 侧 `JTextPrPropChanges.*` 真实类
+  - 复用前提：`JTextPrPropChanges.Base.tp()` 同时 dispatch `JModel.Run` 与 `JBinIdAllocator.JParTextPrNode`，Slide 宿主可直接复用不 no-op（编辑前已核实，避开「看似移植实则 no-op」陷阱）
+  - 保持不动：TextPr sub=4（未知语义，fixture×1）SkipProperty；ParaRun_ReviewType SkipProperty；ParaRun_Lang_Val JChangesBaseStringProperty
+  - 验收（轻量）：编译零错误；`TestJSlideChangesApplier` 12/12（noFactory=0/noHost=0/error=0，368 项无字节错位）+ `TestJSlideMergeGolden` 12/12（slide2 非空文本节点与 Nashorn golden 完全等价）+ `TestJSlideTextMutation` 5/5（RunText 重建+目标 run 改值+其余保留）
+
 - **Shape_SetBDeleted(1104|1) 完成**（2026-08-30，office 0a1b39a3 / test cad96ae）：
   - CShape 的 SetBDeleted 是渲染相关变更（bDeleted 决定形状是否渲染，非纯外观），原走 DRAWING_PARENT_1104_Sub1 SkipProperty 静默丢弃，改为真实读+落位
   - 蓝本 v7.0.1.71 GraphicObjectBase.js:45 CChangesDrawingsBool（nFlags bit1=New undef/bit2=New true），与 SetWordShape(1104|10)/Xfrm flipH/V 同格式
