@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第五个节点完成**：**W4 oMath（base=26，57 sub，树读取+变更+护栏）完成**。**下一个节点已切到 W2-7（字体族整体属性）完成**（RFonts 主题 4 变体 + MathStyle/MathPrp）。待续：**W4 桶其余**（SmartArt/修订/DataValidation），或按计划切 PPT/Excel 缺口。
+apply_changes JS→Java 全量移植（当前 Slide 线，按 2026-08-27 验收节奏逐节点推进）。**P2 完成**：**TextBody SetBodyPr(1110|1)/SetLstStyle(1110|2) 完整建模**（CBodyPr 20 属性+prstTxWarp+textFit；TextListStyle 10 级 CParaPr）。**下一个节点 P3：SpPr_SetEffectPr(1089|7)**（shadow/glow/reflection；当前安全跳过）。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -23,6 +23,13 @@ apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第五个节�
   - JChartChanges.ApplyContent.apply() remove 分支：『下标硬删 arr.remove(pos)』改为蓝本 `CChangesDrawingsContentPresentation.Load()` remove 分支的 **identity 语义**——先试 `aContent[Pos]===item` 处 splice，不符则从尾部反向扫第一个 `===item` 处 splice，删一即 break
   - 忠实性核对：`CChangesBaseContentChange.ReadFromBinary`(HistoryCommon:3937) 恒设 `UseArray=true` 按 nCount 填 PosArray → Java `posList.get(i)` 与 JS `this.PosArray[nIndex]` 完全一致，无单 pos/数组基准分歧；5 个 ApplyContent 现有消费者全为 `isAdd=true`（add 路径），此改动不波及
   - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实；新增 `TestJSlideRemoveFromSpTree` 13/13（Pos命中/反向扫/仅一条删空/多id各删/id解析不到不NPE）；回归 TestJSlideChangesApplier 12/12(noFactory/noHost/error 全0) + TestJSlideMergeGolden 12/12
+
+- **P2 TextBody SetBodyPr/SetLstStyle 完整建模完成**（2026-08-30，office 8c9d835e / test 63c6731）：
+  - 蓝本 sdkjs v7.0.1.71：`CChangesDrawingsObjectNoId`(DrawingsChanges.js:298) → `CChangesBaseObjectProperty`(HistoryCommon:4273) nFlags+New/Old 内联对象；New=CBodyPr(Format.js:10011)/New=TextListStyle(Format.js:11531)
+  - 新增：`JBodyPrModel`（CBodyPr 20 属性+prstTxWarp+textFit 模型+readBodyPr）/`JTextListStyleModel`（10 级模型+readTextListStyle）/`JSlideChangesTextBodyObjectNoId`（ObjectNoId 变更类，sub=1→bodyPr，sub=2→lstStyle）
+  - 复用关键：CParaPr 是全局类——TextListStyle 与 Word 共用同一 `Read_FromBinary`(Styles.js:16799)，故 `JTextListStyleModel` 直接复用 Word `JPropReader.readParaPr`+`JParaPr`，不重新建模（忠实性依据：format.js:11537 `new CParaPr()` 直接引用全局 CParaPr）
+  - TextBody 增 bodyPr/lstStyle 字段（JSlideModel）；factory 1110|1/2 由 SkipProperty 改真实建模
+  - 验收（轻量）：编译零告警 + 蓝本逐字段对照忠实；新增 `TestJSlideTextBodyP2` 38/38（bodyPr 20属性+prstTxWarp preset/avLst+textFit type/fontScale/lnSpcReduction、lstStyle 10级 0/2 级有值其余 null、nFlags=0 时 New+Old 只 New 施加、未知 sub 安全）；回归 TestJSlideChangesApplier 12/12(skipByType={}) + TestJSlideTextMutation 5/5 + TestSlideBodyPrCodec 3/3 + TestJSlideContentRoundTrip 10/10 + TestJSlideMergeGolden 12/12
 
 - **Slide 文本属性 11 类由 SkipProperty 改真实 Word 实现完成**（2026-08-30，office ad38513e）：
   - JSlideChangesFactory：TextPr Bold/Italic/HighLight/Value/RFonts(Ascii/HAnsi/EastAsia)/Lang/Unifill + ParaRun OnStartSplit/OnEndSplit 由 SkipProperty/StringProperty stub 改指向 Word 侧 `JTextPrPropChanges.*` 真实类
@@ -150,6 +157,6 @@ apply_changes JS→Java 全量移植（Word 线）。**W4 defer 桶第五个节�
   - 验收（轻量）：编译零错误；`TestJChangesW36` 41/41 + W3-5 回归 33/33
 
 ## 下一步
-1. **W4 桶其余节点**（SmartArt/修订/Slicer/Pivot/DataValidation——其中修订已完成、Slicer/Pivot/DataValidation 属 Excel 族、SmartArt 属 DrawingML），或按计划切 PPT/Excel 缺口。
-2. oMath writer（JMathWriter）延迟到 dirty 路径有真实 fixture 再实现。
+1. **P3：SpPr_SetEffectPr(1089|7)**——shadow/glow/reflection，当前安全跳过。蓝本 Format.js CEffectProperties.Read_FromBinary(7614)→CEffectLst(7747) 8 种效果；决策点：完整建模 8 效果 vs 先按 T6.5.8d 现状安全跳过（CEffectProperties 结构复杂、简单编辑极少命中）。
+2. 其后按 Slide 清单推进：P4 Slide 装饰(1117|1-10,13-16 背景/切换/计时/layout)、P5 图表装饰(DLbls/CatAx·ValAx SetTitle/SetTxPr)、P6 Notes(1129)、P7 自定义几何(1108|7 AddPath/1109 Path)、P8 TextPr para-mark apply(4|1,2,8)。
 3. 重型三门回归压到最后一环（验收节奏见「开工约束」）。
