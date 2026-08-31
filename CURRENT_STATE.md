@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R4b 完成**：**AutoFilter(class=8) Apply(action=5) 两求值分支**——ColorFilter=ThemeColor（新建 JXlsyThemePalette 语义解析 PPTX clrScheme→RGB）+ DynamicFilter 日期范围（default→false / Val·MaxVal presence-gated）。**下一步：E3-R1 Worksheet 长尾 action**（`ChangeMerge(25)=合并单元格`最迫切；见清单 §2/§10）。
+apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R1 进行中**：Worksheet(class=1) 长尾 action。**ChangeMerge(25)=合并单元格已闭环**（merge/unmerge/change 三态 → MergeCells(7) 分节 A1 ref 增删；护栏 TestJXlsyMergeApply 31/31）。**下一步：E3-R1 余下 action**（AddCols/ShiftCells/MoveRange/Hide/SetTabColor/Frozen/Gridlines/Group/DataValidation 等；见清单 §2/§10）。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -18,6 +18,15 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **E3-R1 Worksheet(class=1) ChangeMerge(25)=合并单元格 apply 完成**（2026-09-01，office 70931a47 / test 512295b）：
+  - 缺口：`parseWorksheetChange` 对 action 25 fail-loud；合并单元格 range 存放在 Worksheet 分节的 **MergeCells(7)** 容器（子记录 MergeCell(8)，body=裸 UTF-16LE A1 ref 如 "A1:B2"）。结构建模仿已通的 ChangeHyperlink(26) 但更简（MergeCell 无子字段）
+  - 变更语义（蓝本 UndoRedo.js:2967 redo，bUndo=false）：oData=`UndoRedoData_FromTo`（Workbook.js:4005，仅 from(0)/to(1) 两 BBox，copyRange/sheetIdTo=null 不序列化）；`from≠null`→删 bbox==from 的合并、`to≠null`→加合并 to。**merge=只 to / unmerge=只 from / change·move=两者**
+  - reader（`JXlsyChangeReader`）：`ACTION_WS_CHANGE_MERGE=25` 常量 + case→`parseChangeMerge`；`parseBBoxObj` 重构抽 `readBBox4`（dataClassType+len+成员 c1:0/r1:1/c2:2/r2:3）；产 `JXlsyChangeItem.mergeFrom*/mergeTo*`（-1=null）
+  - apply（`JXlsyApplyChanges`）：`applyChangeMerge` 找 WS_MERGECELLS(7) raw→`parseMergeCellsBody`（`[8][len:4][UTF-16LE ref]`）→List<String>；hasFrom 删 `rangeName(from)`、hasTo 去重+加 `rangeName(to)`→`serializeMergeCellsBody`（对偶 WriteMergeCells：`isOneCell`(无冒号)跳过 + WriteByte(8)+WriteString2）→`updateMergeCellsRaw`（删旧节点，body 空则不插；否则插在 Hyperlinks(5) 后、无则 SheetData(9) 后——对偶 WriteWorksheet 元素序）
+  - ★忠实边界：`WriteMergeCells` 的 `getDisjointMerged` 重叠归一化未移植（仅重叠输入触发，编辑器阻止重叠；每条 ChangeMerge 携离散非重叠范围）；list 增删（A1 ref 相等）是 mergeManager.add/removeElement 忠实核心
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（reader/apply 各方法标 OrgPath）；新增 `TestJXlsyMergeApply` 31/31（A 解析 merge/unmerge/change 三态 + B body 往返/字节布局/isOneCell 跳过 + C applyChangeMerge 合并·取消·改移·去重·插入顺序[Hyperlinks 后 / 无则 SheetData 后]，反射调私有 parse/serialize/apply）；回归 TestJXlsyAutoFilterApply 52/52 + TestJXlsyCellError 35/35 + TestJXlsyCommentApply 19/19 + TestJXlsyDefinedNames 21/21 + TestJXlsyThemeFilter 22/22 全绿，TestT8XlsyMergeGolden 与既有 5-fail baseline 一致（不新增失败）
+  - ⚠ [UNVALIDATED-E2E]：现有样例均无合并动作，验证为合成 round-trip（自指基线），只证字节格式忠实、非 MS Office 端到端；纳入清单 §10「去 [UNVALIDATED]」贯穿项
+
 - **E3-R4b AutoFilter(class=8) Apply(action=5) 两求值分支完成**（2026-08-31，office 431268f4 / test 2d8da5e）：
   - 缺口：AF Apply 的两个求值分支此前均 fail-loud——① DynamicFilter 日期范围 `isHideValueDynamic` 走 `default: throw`（自创逻辑）；② ColorFilter filter 色为 theme 型时 `applyAfColorFilter` 直接 throw。清单原判「框架已在仅补求值」，调查后两半工作量不同（用户 2026-08-31 裁定：两半都做、为 ColorFilter 建主题调色板，不留 fail-loud）
   - **Half 1 DynamicFilter 日期范围**（蓝本 WorkbookElems.js:9339 isHideValue / :9400 Write_ToBinary2 / Serialize.js:1941 WriteDynamicFilter）：`isHideValueDynamic` default→`return false`（对偶 JS `var res=false; switch{above/below}; return res`，日期类型编辑器不隐藏）；`DecodedFilter` 增 `dynValSet/dynMaxVal/dynMaxValSet`，decode case 75 三字段 presence-gated 读回（MaxVal 不再丢弃）；`buildDynamicBody` 对偶 WriteDynamicFilter null-gated（Type 恒写、Val/MaxVal 仅存在才写）——**日期 filter 不再产 JS 会省略的伪 `Val=0.0`**。above/belowAverage 现有语义不变（init 恒算出 Val）
@@ -226,7 +235,9 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
    权威可勾选清单：`devDocs/apply_changes-JS移植Java-Excel修改类型清单.md`（office 仓库；原
    `Excel_apply_changes剩余DEFRRED清单.md` 已于 2026-08-31 并入此文件并删除，避免命名二义）。
    缺口见 §10 待办汇总 E3-R1..R7：~~E3-R4 Cell Error 值~~（✅ 完成 2026-08-31）→ ~~E3-R2b Workbook DefinedNamesChange(7)~~（✅ 完成 2026-08-31）→
-   ~~E3-R4b ColorFilter ThemeColor + DynamicFilter 日期求值~~（✅ 完成 2026-08-31）→ **E3-R1 Worksheet 长尾 action（下一个，ChangeMerge=合并单元格最迫切）** /
+   ~~E3-R4b ColorFilter ThemeColor + DynamicFilter 日期求值~~（✅ 完成 2026-08-31）→ **E3-R1 Worksheet 长尾 action（进行中）**：
+   ~~ChangeMerge(25)=合并单元格~~（✅ 完成 2026-09-01，TestJXlsyMergeApply 31/31）→ 余下 AddCols(5)/ShiftCells(6-9)/MoveRange(13)/Hide(19)/
+   SetTabColor(27)/ChangeFrozenCell(30)/DisplayGridlines·Headings(31-32)/Group(33-38)/DataValidation 等（见清单 §2）/
    E3-R5 Slicer/PivotTables/PivotFields（Pivot 须先定 scope）/ E3-R6 ProtectedRange/ProtectedWorkbook/NamedSheetViews /
    E3-R7 Drawing 变更（复用 PPT DrawingML）。
 2. **重型三门回归压到最后一环**（验收节奏见「开工约束」）：category A 全部清零后进最终三门回归。
