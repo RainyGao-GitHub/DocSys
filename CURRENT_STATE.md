@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（当前 Slide 线，按 2026-08-27 验收节奏逐节点推进）。**P2 完成**：**TextBody SetBodyPr(1110|1)/SetLstStyle(1110|2) 完整建模**（CBodyPr 20 属性+prstTxWarp+textFit；TextListStyle 10 级 CParaPr）。**下一个节点 P3：SpPr_SetEffectPr(1089|7)**（shadow/glow/reflection；当前安全跳过）。
+apply_changes JS→Java 全量移植（当前 Slide 线，按 2026-08-27 验收节奏逐节点推进）。**P4 完成**：**Slide 装饰(1117|1-10,13-16) 完整建模**（SetComments/SetShow/SetShowPhAnim/SetShowMasterSp/SetLayout/SetNum/SetTransition/SetSize/SetBg/SetLocks/SetCSldName/SetClrMapOverride/SetNotes/SetTiming；ObjectNoId 嵌套读取器+SetLocks 6×readObject）。**下一个节点 P5：图表装饰(DLbls/CatAx·ValAx SetTitle/SetTxPr)**。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -18,11 +18,27 @@ apply_changes JS→Java 全量移植（当前 Slide 线，按 2026-08-27 验收�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **P4 Slide 装饰(1117|1-10,13-16) 完整建模完成**（2026-08-30）：
+  - 蓝本 sdkjs v7.0.1.71：Slide.js changesFactory 91-109 → CSlide 各 sub；HistoryCommon.js 2865-2880 变更类型表
+  - 14 sub 接线（JSlideChangesFactory 275-309）：SetShow/SetShowPhAnim/SetShowMasterSp→`JChartChanges.ApplyBool`、SetNum→`ApplyLong`、SetTransition/SetSize/SetBg→`JSlideChangesSlideObjectNoId`、SetLocks→`JSlideChangesSlideSetLocks`、SetCSldName→`ApplyString`、SetComments/SetLayout/SetClrMapOverride/SetNotes/SetTiming→`ApplyObjectRef`
+  - 新增：`JSlideChangesSlideObjectNoId`（ObjectNoId 变更类，sub7→transition/sub8→size/sub9→bg，nFlags 门 New/Old）、`JSlideChangesSlideSetLocks`（6×readObject，无 nFlags 头——蓝本 CChangesDrawingSlideLocks DrawingsChanges.js:761）、`JSlideSlideReader`（readBgPr/readBg/readBaseCoords/readSlideTransition/readSlideLocks）
+  - JSlideModel.Slide 增 16 字段（show/showMasterPhAnim/showMasterSp/num/transition/width/height/bg/6 lock/slideComments/layout/cSldName/clrMap/notes/timing）
+  - ★**修正常量**：RemoveFromSpTree 由误标 `|13` 更正为 `|11`（蓝本 HistoryCommon.js:2875-2877，原 `|13` 与 SetCSldName 冲突），SetCSldName=`|13`
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实；`TestJSlideSlideDecoration` 33/33（14 sub 读取+wiring 值断言）；回归 `TestJSlideRemoveFromSpTree` 13/13（常量修正后重新编译首跑 13/13，先前失败为陈旧 .class）、Applier 12/12、MergeGolden 12/12
+
 - **Slide_RemoveFromSpTree(1117|13) 真实注册 + ApplyContent.remove 对齐蓝本 identity 语义完成**（2026-08-30，office aeb084de / test 4544374）：
   - JSlideChangesFactory：Slide_RemoveFromSpTree 由 ⏭ fallback SKIP（删除形状不生效）改真实注册为 `JChartChanges.ApplyContent(→slide.spTree)`，与 AddToSpTree(12) 同宿主导流路径（蓝本 Slide.js:145-146 二者都映射 `oClass.cSld.spTree`）
   - JChartChanges.ApplyContent.apply() remove 分支：『下标硬删 arr.remove(pos)』改为蓝本 `CChangesDrawingsContentPresentation.Load()` remove 分支的 **identity 语义**——先试 `aContent[Pos]===item` 处 splice，不符则从尾部反向扫第一个 `===item` 处 splice，删一即 break
   - 忠实性核对：`CChangesBaseContentChange.ReadFromBinary`(HistoryCommon:3937) 恒设 `UseArray=true` 按 nCount 填 PosArray → Java `posList.get(i)` 与 JS `this.PosArray[nIndex]` 完全一致，无单 pos/数组基准分歧；5 个 ApplyContent 现有消费者全为 `isAdd=true`（add 路径），此改动不波及
   - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实；新增 `TestJSlideRemoveFromSpTree` 13/13（Pos命中/反向扫/仅一条删空/多id各删/id解析不到不NPE）；回归 TestJSlideChangesApplier 12/12(noFactory/noHost/error 全0) + TestJSlideMergeGolden 12/12
+
+- **P3 SpPr_SetEffectPr(1089|7) 完整建模完成**（2026-08-31，office 4579062a / test 30c015b）：
+  - 蓝本 sdkjs v7.0.1.71：CEffectProperties.Read_FromBinary(Format.js:7614)→CEffectLst(Format.js:7747)→8效果类；WriteEffect(SerializeWriter.js:2578)/WriteEffectLst(4307)
+  - JSlideSpPrModel：新增 EffectPr/EffectLst + 8效果类(Blur/FillOverlay/Glow/InnerShdw/OuterShdw/PrstShdw/Reflection/SoftEdge) + EFFECT_* 常量
+  - JSlideSpPrReader：readEffectPr/readEffectLst/8个per-effect读取方法；skipEffect 从旧stub改为真实dispatch（修复readBlipFill编译漏洞）
+  - JSlideSpPrWriter：移除rawBytes透传stub，新增buildEffectPrRecord/writeEffectPr_toSub/writeEffectLst/8个writeEffect_*方法
+  - 接线：JSlideChangesSpPrObjectNoId private readEffectPr→委托JSlideSpPrReader.readEffectPr；JSlideContentReader writeEffectPrRaw_toSub→writeEffectPr_toSub
+  - 验收（轻量）：编译零错误 + 蓝本逐字段对照忠实；新增 TestJSlideSpPrEffectPr 40/40；回归 Applier 12/12(error=0) + MergeGolden 12/12 + ContentRoundTrip 10/10 + TextMutation 5/5 + TextBodyP2 38/38 + RemoveFromSpTree 13/13
 
 - **P2 TextBody SetBodyPr/SetLstStyle 完整建模完成**（2026-08-30，office 8c9d835e / test 63c6731）：
   - 蓝本 sdkjs v7.0.1.71：`CChangesDrawingsObjectNoId`(DrawingsChanges.js:298) → `CChangesBaseObjectProperty`(HistoryCommon:4273) nFlags+New/Old 内联对象；New=CBodyPr(Format.js:10011)/New=TextListStyle(Format.js:11531)
@@ -157,6 +173,6 @@ apply_changes JS→Java 全量移植（当前 Slide 线，按 2026-08-27 验收�
   - 验收（轻量）：编译零错误；`TestJChangesW36` 41/41 + W3-5 回归 33/33
 
 ## 下一步
-1. **P3：SpPr_SetEffectPr(1089|7)**——shadow/glow/reflection，当前安全跳过。蓝本 Format.js CEffectProperties.Read_FromBinary(7614)→CEffectLst(7747) 8 种效果；决策点：完整建模 8 效果 vs 先按 T6.5.8d 现状安全跳过（CEffectProperties 结构复杂、简单编辑极少命中）。
-2. 其后按 Slide 清单推进：P4 Slide 装饰(1117|1-10,13-16 背景/切换/计时/layout)、P5 图表装饰(DLbls/CatAx·ValAx SetTitle/SetTxPr)、P6 Notes(1129)、P7 自定义几何(1108|7 AddPath/1109 Path)、P8 TextPr para-mark apply(4|1,2,8)。
+1. **P5：图表装饰**——DLbls/CatAx·ValAx SetTitle/SetTxPr。蓝本 Slide.js changesFactory 各图表装饰 sub。
+2. 其后按 Slide 清单推进：P6 Notes(1129)、P7 自定义几何(1108|7 AddPath/1109 Path)、P8 TextPr para-mark apply(4|1,2,8)。
 3. 重型三门回归压到最后一环（验收节奏见「开工约束」）。
