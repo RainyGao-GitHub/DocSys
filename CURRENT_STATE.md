@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（当前 Slide 线，按 2026-08-27 验收节奏逐节点推进）。**P4 完成**：**Slide 装饰(1117|1-10,13-16) 完整建模**（SetComments/SetShow/SetShowPhAnim/SetShowMasterSp/SetLayout/SetNum/SetTransition/SetSize/SetBg/SetLocks/SetCSldName/SetClrMapOverride/SetNotes/SetTiming；ObjectNoId 嵌套读取器+SetLocks 6×readObject）。**下一个节点 P5：图表装饰(DLbls/CatAx·ValAx SetTitle/SetTxPr)**。
+apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R4b 完成**：**AutoFilter(class=8) Apply(action=5) 两求值分支**——ColorFilter=ThemeColor（新建 JXlsyThemePalette 语义解析 PPTX clrScheme→RGB）+ DynamicFilter 日期范围（default→false / Val·MaxVal presence-gated）。**下一步：E3-R1 Worksheet 长尾 action**（`ChangeMerge(25)=合并单元格`最迫切；见清单 §2/§10）。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -18,6 +18,46 @@ apply_changes JS→Java 全量移植（当前 Slide 线，按 2026-08-27 验收�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **E3-R4b AutoFilter(class=8) Apply(action=5) 两求值分支完成**（2026-08-31，office 431268f4 / test 2d8da5e）：
+  - 缺口：AF Apply 的两个求值分支此前均 fail-loud——① DynamicFilter 日期范围 `isHideValueDynamic` 走 `default: throw`（自创逻辑）；② ColorFilter filter 色为 theme 型时 `applyAfColorFilter` 直接 throw。清单原判「框架已在仅补求值」，调查后两半工作量不同（用户 2026-08-31 裁定：两半都做、为 ColorFilter 建主题调色板，不留 fail-loud）
+  - **Half 1 DynamicFilter 日期范围**（蓝本 WorkbookElems.js:9339 isHideValue / :9400 Write_ToBinary2 / Serialize.js:1941 WriteDynamicFilter）：`isHideValueDynamic` default→`return false`（对偶 JS `var res=false; switch{above/below}; return res`，日期类型编辑器不隐藏）；`DecodedFilter` 增 `dynValSet/dynMaxVal/dynMaxValSet`，decode case 75 三字段 presence-gated 读回（MaxVal 不再丢弃）；`buildDynamicBody` 对偶 WriteDynamicFilter null-gated（Type 恒写、Val/MaxVal 仅存在才写）——**日期 filter 不再产 JS 会省略的伪 `Val=0.0`**。above/belowAverage 现有语义不变（init 恒算出 Val）
+  - **Half 2 ColorFilter ThemeColor**（新建 `JXlsyThemePalette` 语义解析器，office core）：`parse` 扫 MT_OTHER 顶层 Read1 记录找 Theme(5)→PPTX theme blob→`ReadThemeElements`→`ReadClrScheme`→`ReadUniColor`（srgbClr 直接 RGB / sysClr lastClr）逐槽解析出基础 RGB；`resolveExcelTheme` 对偶 `ThemeColor.rebuild`（WorkbookElems.js:542）——`map_themeExcel_to_themePresentation[excelIdx]`→槽→基础 RGB→tint≠0 走 `rgb2hsl/hsl2rgb`（对偶 `AscFormat.CColorModifiers`，g_nHSLMaxValue=255）。`extractRgbFromColorVar` 扩展 theme 型（offset4==0x02）：读 themeIdx+可选 tint(0x03/0x05/8B)→`palette.resolveExcelTheme`；`applyAfColorFilter` 双侧 palette-aware 比 RGB，删 ThemeColor fail-loud 块
+  - apply() 懒加载：仅存在 AF Apply(8/5) 变更时才 `JXlsyThemePalette.parse(MT_OTHER 原始字节)`；`PALETTE_HOLDER` ThreadLocal 传入解析路径，finally remove
+  - ★忠实性：`resolveExcelTheme` 对「缺槽/不可解析槽（SCHEME/PRST/STYLE/NONE 或空色）」fail-loud（JS rebuild 静默产黑，但本路径 [UNVALIDATED-E2E]，宁暴露不确定性，遵「Java 路径报错不降级」）；`readUniColor` 解析失败返回 -1 哨兵不抛（避免与本次 ColorFilter 无关的槽误爆），真正 resolve 到该槽才 fail-loud；palette==null 遇 theme 色 → IllegalStateException
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（每方法标 OrgPath）；新增 `TestJXlsyThemeFilter` 22/22（独立-oracle 合成字节：①日期不隐藏 ②日期 filter 只落 Type 无伪 Val ③Type+Val+MaxVal 三字段 Double 往返 ④above/below 语义不变 ⑤14 槽 clrScheme 逐 excelIdx 命中 map 槽 RGB ⑥tint 精确手算锚点[黑+0.5→0x7F7F7F/白-0.5→0x7F7F7F/灰保持灰/tint=0≡null] ⑦filter vs cell theme 同/异 idx→不隐藏/隐藏 ⑧palette==null 抛异常）；回归 TestJXlsyAutoFilterApply 52/52 + TestJXlsyCellError 35/35 + TestJXlsyCommentApply 19/19 + TestJXlsyDefinedNames 21/21 全绿，TestT8XlsyMergeGolden 与既有 5-fail baseline 一致（不新增失败）
+  - ⚠ [UNVALIDATED-E2E]：无真实 fixture，验证为合成 round-trip（自指基线），只证字节格式 + 解析数学忠实、非 MS Office 端到端；纳入清单 §10「去 [UNVALIDATED]」贯穿项
+
+- **E3-R2b Workbook DefinedNamesChange(action=7) apply 完成**（2026-08-31，office 50fb3d0b / test 0f33884）：
+  - 缺口：`JXlsyChangeReader.parseWorkbookChange` 对 action 7 走 recordDrop("DEFERRED") → apply fail-loud。定义名称存放在 **Workbook 分节（MT_WORKBOOK=3）** 的 DefinedNames(3) 子记录；apply 侧此前从不改动 Workbook 分节（rebuildXlsy 只重建 WORKSHEETS/SHAREDSTRINGS/STYLES，MT_WORKBOOK 原样透传）
+  - 变更语义（蓝本 UndoRedo.js:2411 UndoRedoWorkbook redo，bUndo=false）：oData=UndoRedoData_FromTo{from,to}；`to==null`→删 from、`from==null`→增 to、两者非空→改（同名原地/改名删旧+追加末尾）。match key=(sheetId, name.toLowerCase())
+  - **新建 `JXlsyWorkbookModel`**（office core，MT_WORKBOOK 第 4 可重建分节，参照 JXlsyTableModel）：parse 读 4B outerLen 包裹→顶层 Read1 记录（保原序 raw）→深解析 DefinedNames(3) 为 DefName 列表；toBytes 原序 re-emit、DefinedNames(3) 用列表重写；无 DefinedNames 记录且需新增时插在 BookViews(1) 后。byte-exact 自证
+  - reader `parseWorkbookDefinedNames`：FromTo(dataType=5)→DefinedName(dataType=39, {name:0,ref:1,sheetId:2,type:4,isXLNM:5})；产 JXlsyChangeItem.wbDefNameFrom/To
+  - apply `applyDefinedNamesChange`：sheetId(runtime GUID)→sheetIdMap→LocalSheetId(0-based wsIndex，null=工作簿级)；增/删/改调 wbModel；**★hidden**：addDefName/setUndoDefName 恒置 false（非 null）→ 落盘恒写 Hidden(3)=false，故所有 to 名 hidden=Boolean.FALSE；**★_xlnm. 前缀**：仅 Print_Area 本地 xlnm 名回加前缀（对偶 WriteDefinedNames:3417），其余 isXLNM 名 fail-loud；未知 sheetId fail-loud
+  - rebuildXlsy 增 `byte[] newWbBytes` 参数，8e delta/8f totalSize/8f secBytes 三处比照 MT_STYLES 加 MT_WORKBOOK 分支（懒加载：仅存在 action=7 变更时建 wbModel，否则 null 走原透传）
+  - ★忠实性：type 字段(c_oAscDefNameType)不进 XLSY DefinedName 二进制，读入即丢（WriteDefinedName 无 type 字段）
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（每方法标 OrgPath）；新增 `TestJXlsyDefinedNames` 21/21（①无改动 byte-exact ②add+1/Name/Ref 框 ③edit 改 ref 原地 ④delete -1 ⑤Print_Area+isXLNM 前缀 ⑥未知 sheetId 抛异常，⑤⑥反射走 apply 全路径）；回归 TestJXlsyCellError 35/35 + TestJXlsyAutoFilterApply 52/52 + TestJXlsyCommentApply 19/19 全绿
+  - ⚠ [UNVALIDATED-E2E]：无真实 fixture，验证为合成 round-trip（自指基线），只证字节格式忠实、非 MS Office 端到端；纳入清单 §10「去 [UNVALIDATED]」贯穿项
+
+- **E3-R4 Cell 错误值 apply 完成（Excel 长尾线首节点）**（2026-08-31，office ca289e08 / test 4f0a339）：
+  - 缺口：`JXlsyApplyChanges.applyCellItem` case 3（cellValueType=3 Error）原直接抛"尚未实现"。变更流把错误字符串放在 CCellValue.text(g_oCCellValueProperties.text=0)、type=CellValueType.Error(3)
+  - JXlsbWorksheetData：新增 `makeErrorValueBytes`/`errorStringToBErr`/`bErrToErrorString`。字符串↔BErr 单字节映射逐条对偶 x2t **Bes.cpp** fromString/toString（大写比较）：#NULL!=0x00 #DIV/0!=0x07 #VALUE!=0x0F #REF!=0x17 #NAME?=0x1D #NUM!=0x24 #N/A=0x2A #GETTING_DATA=0x2B
+  - JXlsyApplyChanges：case 3 写 `upsertCell(row,col,rt_CELL_ERROR, makeErrorValueBytes(text))`（body=col4+style4+BErr1+flags2=11B，BErr@offset8）；缺错误串抛 IllegalStateException。decodeCellValue 补 rt_CELL_ERROR/rt_FMLA_ERROR 读回分支
+  - ★忠实性：未识别错误串 / #UNSUPPORTED_FUNCTION!（非标准 XLSB 错误，x2t 亦不映射）→ 抛异常，遵「Java 路径报错不降级」，不静默写 0=#NULL! 产错值
+  - 验收（轻量）：编译零错误 + 蓝本逐字段对照 Bes.cpp 忠实；新增 `TestJXlsyCellError` 35/35（8 串→字节对照权威表 + round-trip + 大小写不敏感 + 单字节 + null/空/未识别/#UNSUPPORTED_FUNCTION! 抛异常 + upsertCell 端到端字节布局）；回归 TestJXlsyCommentApply 19/19 + TestJXlsyAutoFilterApply 52/52 全绿
+  - ⚠ 既存基线问题（与本节点无关，stash/javac 双向确认）：`TestT8XlsyMergeGolden` 5 fail（[批注增删改] fixture 预存）、`TestT722CellChangeApplier` 编译雷（`reader.unsupportedCount` 字段→方法，Eclipse Unresolved compilation problem，memory 已记）
+
+- **P8 段标(endParaRPr) rPr 变更写出完成**（2026-08-31，office a891e0d5 / test 082781f）：
+  - 缺口：apply 侧 ad38513e 已把段标属性变更落到 `JParTextPrNode.prObj`（JTextPr），但**写出侧从不消费**——段落 Rec(1) endParaRPr 在 apply/merge 路径为原样透传 Raw，applied 的 Bold/Italic/Highlight 被丢弃
+  - ★**范围修正**（偏离旧记「4|1 Bold/4|2 Italic/4|8 HighLight」）：4|8 是误判——演示编辑器高亮 `AddToParagraph(ParaTextPr{HighlightColor: CreateUniColorRGB})` 发 **CUniColor（TextPr|30）**，从不发 Word HighLight(JColor,sub8)；DrawingML `WriteHighlightColor` 只从 rPr.HighlightColor 发**子记录12**，Word HighLight 在 DrawingML **无表示**。故段标可忠实往返高亮 = **4|30 HighlightColor(CUniColor)**；4|8 保持 apply-only、写出 no-op（忠实）
+  - JSlideChangesFactory：`TextPr_HighlightColor(4|30)` 注册 → `JTextPrPropChanges.WholeHighlightColor`（复用 W3-4 建的类，`Base.tp()` 同 dispatch JParTextPrNode）
+  - JSlideModelBuilder：新 `ParaMarkLink`（JParTextPrNode↔Rec(1)）+ `paraMarkLinks` + navShapes 捕获 `endParaRPrRec=firstRec(paraSeq,1)` + allocShape 配对 + `materializeIdMapParaMarks()`（对偶 run 的 materializeIdMapProps，合并进 bare content 的 Raw body）
+  - JSlideRunPropsCodec：新 `mergeContent(bareContent, delta)`（Bold=attr1/Italic=attr7/Underline=attr18/FontSize=attr17 + HighlightColor=子记录12）+ `setSub`；bare content 格式（0xFA attrs 0xFB subs，无外层 Rec 头，区别 mergeRPr 的 0xFB+Rec(0) rest）
+  - JSlideRunPropsWriter：抽出 `writeUniColor`（buildUniFill DRY，字节等价）+ 新 `writeHighlightColorContent`（蓝本 WriteHighlightColor：0xFA 0xFB + Rec(0){WriteUniColor}）
+  - JMergeEngine PPTT 路径：materializeIdMapProps 旁增 materializeIdMapParaMarks
+  - 蓝本 sdkjs v7.0.1.71：WriteRunProperties(2164)/WriteHighlightColor(2254)/WriteUniColor(2398)；CChangesParaTextPrHighlightColor(ParaTextPrChanges.js:536)
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实；`TestJSlideEndParaRPr` 22/22（A apply 派发 4|30→prObj.highlightColor + B 写出 mergeContent SRGB/SCHEME/子记录12/attr 顺序，独立 mini-parser 交叉校验 + 无 delta 逐字节不变）；回归 Applier 12/12(noHost/error/noFactory=0) + MergeGolden 12/12(零 id 漂移) + TextMutation 5/5 + ContentRoundTrip 10/10 + SpPrEffectPr 40 + TextBodyP2 38 全绿
+  - ⚠ 边界未覆盖：空段落/initial-kept-para 无 binary endParaRPr Rec，段标写出不触及（如需另从零构造 Rec(1)）；无真实含段标高亮 fixture，验证为合成 round-trip
+
 - **P4 Slide 装饰(1117|1-10,13-16) 完整建模完成**（2026-08-30）：
   - 蓝本 sdkjs v7.0.1.71：Slide.js changesFactory 91-109 → CSlide 各 sub；HistoryCommon.js 2865-2880 变更类型表
   - 14 sub 接线（JSlideChangesFactory 275-309）：SetShow/SetShowPhAnim/SetShowMasterSp→`JChartChanges.ApplyBool`、SetNum→`ApplyLong`、SetTransition/SetSize/SetBg→`JSlideChangesSlideObjectNoId`、SetLocks→`JSlideChangesSlideSetLocks`、SetCSldName→`ApplyString`、SetComments/SetLayout/SetClrMapOverride/SetNotes/SetTiming→`ApplyObjectRef`
@@ -172,7 +212,22 @@ apply_changes JS→Java 全量移植（当前 Slide 线，按 2026-08-27 验收�
   - JModel 增 4 宿主类（extends OpaqueObject）；HistoryItemType 增常量；JChangesFactory 注册全部 sub；JChangesApplier.createFactoryObject 增 case 1104/1106/1123/1029
   - 验收（轻量）：编译零错误；`TestJChangesW36` 41/41 + W3-5 回归 33/33
 
+- **P5 图表装饰：JDlbls(1042) 全量建模 + CatAx_SetTitle/SetTxPr(1111|21-22) 完成**（2026-08-31，office 60a7baf3 / test 3f3694d）：
+  - JChartObjects: 新增 JDlbls（15字段：8 Bool / 1 Content dLbl 列表 / 1 Long dLblPos / 1 String separator / 4 ObjectRef leaderLines/numFmt/spPr/txPr）
+  - JChartObjects: JBaseAx 新增 title/txPr 字段（1111|21-22；CAxisBase.prototype.setTitle/setTxPr 恒用 CatAx 常量 → JValAx 也走 1111 收到这两个变更）
+  - ChartHistoryItemType: 新增 DLbls_* 15 个常量 + CatAx_SetTitle/SetTxPr；ValAx 注释修正（无 1112 sub）
+  - JSlideChangesApplier: createFactoryObject case 1042 → JDlbls
+  - JSlideChangesFactory: DLbls 15 sub 注册（含 DLbls_SetDLbl 走 ApplyContent 内联 JChangesBaseSkipProperty fallback，规避 SKIP_CTOR 前向引用编译错）+ CatAx_SetTitle/SetTxPr 注册
+  - ★ 测试坑：str2() 须写**字节数**（len×2）而非字符数——BinStreamReader.GetString2 读字节数前缀（GetLong()→字节数→GetString2LE(byteLen)），写字符数导致流错位全部 noHost
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（sdkjs v7.0.1.71 ChartFormat.js CDLbls changesFactory + CAxisBase.prototype）；TestJChartDecoration 41/41（8 Bool + 1 Long + 1 String + 4 ObjectRef + 1 Content + CatAx/JValAx title/txPr）
+
 ## 下一步
-1. **P5：图表装饰**——DLbls/CatAx·ValAx SetTitle/SetTxPr。蓝本 Slide.js changesFactory 各图表装饰 sub。
-2. 其后按 Slide 清单推进：P6 Notes(1129)、P7 自定义几何(1108|7 AddPath/1109 Path)、P8 TextPr para-mark apply(4|1,2,8)。
-3. 重型三门回归压到最后一环（验收节奏见「开工约束」）。
+1. **Excel 长尾逐节点推进**（2026-08-31 全量盘点：Slide 已收官、Word 残余 Skip 全为有意边界，缺口全在 Excel）。
+   权威可勾选清单：`devDocs/apply_changes-JS移植Java-Excel修改类型清单.md`（office 仓库；原
+   `Excel_apply_changes剩余DEFRRED清单.md` 已于 2026-08-31 并入此文件并删除，避免命名二义）。
+   缺口见 §10 待办汇总 E3-R1..R7：~~E3-R4 Cell Error 值~~（✅ 完成 2026-08-31）→ ~~E3-R2b Workbook DefinedNamesChange(7)~~（✅ 完成 2026-08-31）→
+   ~~E3-R4b ColorFilter ThemeColor + DynamicFilter 日期求值~~（✅ 完成 2026-08-31）→ **E3-R1 Worksheet 长尾 action（下一个，ChangeMerge=合并单元格最迫切）** /
+   E3-R5 Slicer/PivotTables/PivotFields（Pivot 须先定 scope）/ E3-R6 ProtectedRange/ProtectedWorkbook/NamedSheetViews /
+   E3-R7 Drawing 变更（复用 PPT DrawingML）。
+2. **重型三门回归压到最后一环**（验收节奏见「开工约束」）：category A 全部清零后进最终三门回归。
+3. （备忘）P8 边界遗留：空段落/initial-kept-para 段标写出未覆盖；4|8 Word HighLight 保持 apply-only 写出 no-op（DrawingML 无表示，忠实）。
