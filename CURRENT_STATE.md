@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R1 进行中**：Worksheet(class=1) 长尾 action。已闭环：**ChangeMerge(25)=合并单元格**（merge/unmerge/change 三态 → MergeCells(7) 分节 A1 ref 增删；护栏 TestJXlsyMergeApply 31/31）、**SheetView 屏显布尔簇(31/32/54)**（SetDisplayGridlines/Headings/ShowZeros → SheetViews(22) 两级 Read1；护栏 TestJXlsySheetViewApply 23/23）、**SheetPr summary 布尔(37/38)**（SetSummaryRight/SetSummaryBelow → SheetPr(24)→OutlinePr(13)→attr 三级 Read1；护栏 TestJXlsySummaryBool 27/27）、**SetTabColor(27)**（ws.sheetPr.TabColor → SheetPr(24)→TabColor(9) 直属两级 Read1，body=WriteColorSpreadsheet；护栏 TestJXlsySetTabColor 37/37）、**ChangeFrozenCell(30)=冻结窗格**（redo=Data.to → `_updateFreezePane(to.c1,to.r1)`，落 SheetViews(22)→SheetView(23)→Pane(19)，对偶 WriteSheetViewPane，(0,0)=清除；护栏 TestJXlsyChangeFrozenCell 40/40）、**GroupCol/CollapsedCol(35/36)=列大纲级别/折叠**（IndexSimpleProp 只含 index+oNewVal 标量，redo GroupCol→col.setOutlineLevel(clamp[0,7])/CollapsedCol→col.setCollapsed，落 Cols(2)→Col(3) OutLevel(7,仅>0)/Collapsed(8,仅真)；护栏 TestJXlsyGroupCol 26/26）、**Hide(19)=工作表可见性**（FromTo(bool)，redo=Data.to → ws.setHidden，落 WorksheetProp(1)→State(2) [Byte][EVisibleType]；护栏 TestJXlsyHide 13/13）、**AddCols(5)=插入列**（FromToRowCol，redo=ws.insertColsBefore(from, to-from+1)，data 路径 addCols 对称取反 removeCols：col>=from 的 cell 右移 count，无删除/无 ROW_HDR 变动/cell-only；护栏 TestJXlsyAddCols 32/32）、**ShiftCells(6-9)=四方向单元格搬移**（BBox，redo=deleteCellsShiftLeft/Up、addCellsShiftRight/Bottom，data 路径 shiftCellsLeft/Right=行区间列向搬移+Top/Bottom=列区间跨行搬移(snapshot/putRowCells 同 sortRows)，cell-only 保留 ROW_HDR；护栏 TestJXlsyShiftCells 81/81）、**MoveRange(13)=区块搬移**（FromTo(from/to BBox+copyRange+sheetIdTo)，redo=ws._moveRange，data 路径 moveRange snapshot-first 区块搬移：剪切清源/复制留源、目标带恒覆写、sheetIdTo 跨表、同表 from==to 早退，cell-only；护栏 TestJXlsyMoveRange 54/54）、**DataValidation(48/49/50)=数据验证增删改**（UndoRedoData_DataValidation{id,to}，Add/Change/Delete → XLSY DataValidations(32) 分节，session-local id→index map 追踪会话新增项、文件已载项 Change/Delete fail-loud；serializeDvXlsy 8 恒写+7 null-gated；护栏 TestJXlsyDataValidationApply 54/54）。**下一步：E3-R1 余下 action**（DataValidation/ChangeHyperlink 等；见清单 §2/§10）。
+apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R1 已实质完成**（Worksheet class=1 全部可实现 action 均已闭环，Pivot/Slicer action 40-47/51 属 E3-R5 scope）；**E3-R7 Drawing 变更已完成**（bNoDrawing=false 清洁解析 + drawingSkips 跳过，不 fail-loud，[DRAWING-ORACLE-PENDING]）；**E3-R2 SheetAdd 工作簿内复制场景已完成**（wbSheetIdFrom 深克隆路径，wbOptSheet 仍 fail-loud）；**E3-R5 Slicer/PivotTables/PivotFields 已完成**（skipODataNoop，object model 缺失，变更跳过不 fail-loud）。**Excel category A 缺口已全部清零，下一步：进最终重型三门回归 / 去 [UNVALIDATED-E2E]**（见清单 §10）。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -18,6 +18,26 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **E3-R5 Slicer(15)/PivotTables(16)/PivotFields(17) 变更跳过完成**（2026-09-02，office `ebe76640` / test `bdd31aa`）：
+  - 缺口：三类原落在 `parseOne` 末尾 `else` 兜底 `recordDrop("unhandled-class-action")` → apply fail-loud，阻塞所有含 pivot/slicer 变更的 Excel 文件。
+  - 蓝本调查（sdkjs v7.0.1，UndoRedo.js）：`UndoRedoPivotTables`(L3819)/`UndoRedoPivotFields`(L4036) 均调 `ws.getPivotTableById(Data.pivot)`+`pivotTable.stashCurReportRange()`（30+/12 action types，须完整 pivot 对象模型 + 布局重算）；`UndoRedoSlicer`(L4117) 调 `oModel.getSlicerByName(Data.name)`（20+ action types，须 slicer 对象模型）。三者均非二进制层可实现的编辑。
+  - 实现：`JXlsyChangeReader` 新增 `else if (classType==15||16||17)` 分支 → 记入新 `pivotSlicerSkips` 列表（"cls=X act=Y"）+ `skipODataNoop`（消费 oData 字节不进 drops）；`else` 兜底保留给真正未知 class。`JXlsyApplyChanges` 对 `pivotSlicerSkips` 非空时打印 stderr 警告，不抛异常（同 drawingSkips 范式）。cell/worksheet 变更在同 buffer 中照常应用。
+  - 验收（轻量）：编译零错误 + 蓝本对照忠实（OrgPath 标注三 UndoRedo 类）；新增 `TestJXlsyPivotSlicerSkip` 15/15（A1-A3 单条 15/16/17→pivotSlicerSkips=1/drops=0/items=0 + A4 三条混合=3 + A5 skip 条目含 cls/act + A6 多条累计）；回归 AutoFilter 52/52 + CellError 35/35 + Comment 19/19 + DefinedNames 21/21 全绿
+  - ⚠ [PIVOT-SLICER-MODEL-PENDING]：object model 缺失，变更跳过不应用不 fail-loud；[UNVALIDATED-E2E]：无真实 fixture，合成 round-trip
+
+- **E3-R2 SheetAdd wbSheetIdFrom 工作簿内复制场景完成**（2026-09-02，office `dd120fdc` / test `451eb65`）：
+  - 缺口：`applySheetAdd` 对 `wbSheetIdFrom≠null`（工作簿内 sheet 复制）直接 throw；wbOptSheet（剪贴板粘贴）亦 throw。
+  - 实现：wbSheetIdFrom≠null 路径——按 sheetIdMap 找源 wsIdx，深克隆 `Cont` 树（`deepCloneWorksheetCont` / `deepCloneWsNode`：替换 WS_WORKSHEETPROP body 为新名/新 internalSid，重置所有 WS_XLSBPOS(35) 为 MAX_VALUE，其余 Raw 按 `.clone()` 字节复制，Cont 递归处理）；克隆 XLSB 数据（`cloneXlsbData`：逐条 body 独立复制）；插入、shiftXlsbMap、rebuild maps。wbOptSheet 仍 fail-loud。
+  - 验收（轻量）：编译零错误；新增 `TestJXlsySheetAddCopy` 15/15（A1 deepCloneWorksheetCont 替换 WS_WORKSHEETPROP 名/sid + A2 WS_XLSBPOS 重置 MAX_VALUE + A3 Cont 树引用独立；B1 apply 后 2 sheet + B2 insertBefore=0 克隆在前 + B3 alias 注册 + B4 空新建 smoke + B5 opt_sheet 仍 throw）；回归 AutoFilter 52/52 + CellError 35/35 + Comment 19/19 + DefinedNames 21/21 全绿
+  - ⚠ [UNVALIDATED-E2E]：无真实含 sheet 复制变更 fixture，合成 round-trip
+
+- **E3-R7 Drawing 变更(bNoDrawing=false)清洁解析完成**（2026-09-02，office `6bfd8220` / test `12c0330`）：
+  - 缺口：`parseOne` 对 `!noDrawing` 一律 `recordDrop`（"drawing/AscDFH-family"）→ apply fail-loud，阻塞所有含 drawing 变更的 Excel 文件。
+  - 实现：`!noDrawing` 分支改为：读 `String2` changedObjectId（4B 字节数 + UTF-16LE）+ `GetLong` nChangesType（base<<16|sub），记入新 `drawingSkips` 列表（不进 `drops`），return；外层 `s.Seek2(itemEnd)` 消费剩余 change_data 字节。apply() 对 `drawingSkips` 非空时打印 stderr 警告，不抛异常。
+  - oracle 问题：`sChangedObjectId` 为运行时 `g_oIdCounter` 瞬态 ID，未持久化到 XLSY binary；Java 侧 oracle 映射（ID→drawing blob 位置）未实现，故当前跳过变更；cell/worksheet 变更在同 buffer 中照常应用。[DRAWING-ORACLE-PENDING]
+  - 验收（轻量）：编译零错误 + 蓝本格式对照忠实（OrgPath: UndoRedo.js ~L252-260 / History.js ~L525）；新增 TestJXlsyDrawingSkip 14/14（A1 单条跳过/A2 id+base+sub 提取/A3 两条/A4 空 id/A5 截断边界保护）；回归 ProtectedWorkbook 57/57 + ProtectedRange 25/25 + GroupRow 39/39 + DataValidation 54/54 + FitToPage 20/20 + AutoFilter 52/52 + CellError 35/35 + CommentApply 19/19 + DefinedNames 21/21 + MoveRange 54/54 + ShiftCells 81/81 全绿
+  - ⚠ [DRAWING-ORACLE-PENDING]：oracle 基础设施缺失，drawing 变更跳过不应用；[UNVALIDATED-E2E]：无真实 fixture
+
 - **E3-R1 Worksheet(class=1) SetFitToPage(39) + ProtectedRange(56/57) apply 完成**（2026-09-02，office `1fdabc5b` / test `83c3864`）：
   - SetFitToPage(39)：`UndoRedoData_FromTo(bool,bool)` → 落 SheetPr(24)→PageSetUpPr(10)→FitToPage(12)（1字节 WriteBool）；复用 parseSummaryBoolChange 读取路径，新增 applyFitToPageChange（PageSetUpPr 容器代替 OutlinePr，升序插在 TabColor(9) 之后/OutlinePr(13) 之前）；护栏 TestJXlsyFitToPage 20/20
   - AddProtectedRange(56)/DelProtectedRange(57)：`UndoRedoData_ProtectedRange{id:0(数值),to:2(SER_OBJECT)}`，落 ProtectedRanges(42)→ProtectedRange(43)（Read2 attr：AlgorithmName/SpinCount/HashValue/SaltValue/Name/SqRef）；session-local prId→prName map 追踪本会话新增 PR，Delete 靠 Name(4) 字段匹配，文件既存 PR → fail-loud；prList 空→删节点；护栏 TestJXlsyProtectedRange 25/25
@@ -123,6 +143,13 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
   - ★忠实边界：`WriteMergeCells` 的 `getDisjointMerged` 重叠归一化未移植（仅重叠输入触发，编辑器阻止重叠；每条 ChangeMerge 携离散非重叠范围）；list 增删（A1 ref 相等）是 mergeManager.add/removeElement 忠实核心
   - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（reader/apply 各方法标 OrgPath）；新增 `TestJXlsyMergeApply` 31/31（A 解析 merge/unmerge/change 三态 + B body 往返/字节布局/isOneCell 跳过 + C applyChangeMerge 合并·取消·改移·去重·插入顺序[Hyperlinks 后 / 无则 SheetData 后]，反射调私有 parse/serialize/apply）；回归 TestJXlsyAutoFilterApply 52/52 + TestJXlsyCellError 35/35 + TestJXlsyCommentApply 19/19 + TestJXlsyDefinedNames 21/21 + TestJXlsyThemeFilter 22/22 全绿，TestT8XlsyMergeGolden 与既有 5-fail baseline 一致（不新增失败）
   - ⚠ [UNVALIDATED-E2E]：现有样例均无合并动作，验证为合成 round-trip（自指基线），只证字节格式忠实、非 MS Office 端到端；纳入清单 §10「去 [UNVALIDATED]」贯穿项
+
+- **E3-R6 class=19/21/22 ProtectedRange 属性编辑 + ProtectedWorkbook + NamedSheetViews 完成**（2026-09-01，office 404aee68 / test 46871fc）：
+  - class=19 UndoRedoProtectedRange 属性变更：SetSqref(1) fail-loud；SetName(2)→Name(4)/AlgorithmName(3)→AlgoName(0)/HashValue(4)→Hash(2)/SaltValue(5)→Salt(3)/SpinCount(6)→Spin(1) 落 ProtectedRanges(42)→PR(43) Read2 body upsert；prSessionMaps 按 wsIdx/prId 追踪名称 + 回写 updatePrRaw；updateSingleRead2Prop 新 helper
+  - class=21 UndoRedoProtectedWorkbook：wire format 同 UndoRedoData_ProtectedRange(id=null/to=属性值)；动 23-34 个 workbook protection 属性（LockStructure/Windows/Revision/AlgorithmName/SpinCount/HashValue/SaltValue/Password 等）→ JXlsyWorkbookModel WorkbookProtection(21) Rec 新建/在位 upsert；wbModel 懒加载触发条件扩展含 class=21；applyProtectedWorkbookChange
+  - class=22 UndoRedoNamedSheetViews：DeleteFilter(2) redo 是 JS no-op → skipODataNoop；SetName(1) 涉 PPTX binary writer → fail-loud skipOData
+  - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（标 OrgPath）；新建 TestJXlsyProtectedWorkbook 57/57（A 解析 9 项：LockStructure bool/AlgoName byte/SpinCount Long/HashValue Var + NSV DeleteFilter noop/SetName fail-loud + PR SetName/SetSqref fail-loud；B apply 6 项：创建 WbProt Rec/追加第二属性/覆写已有/SpinCount Long/HashValue Variable/round-trip toBytes 自证）；回归 AutoFilterApply 52/52 + DefinedNames 21/21 + CommentApply 19/19 + ProtectedRange 25/25 全绿
+  - ⚠ [UNVALIDATED-E2E]：无真实 fixture，合成 round-trip
 
 - **E3-R4b AutoFilter(class=8) Apply(action=5) 两求值分支完成**（2026-08-31，office 431268f4 / test 2d8da5e）：
   - 缺口：AF Apply 的两个求值分支此前均 fail-loud——① DynamicFilter 日期范围 `isHideValueDynamic` 走 `default: throw`（自创逻辑）；② ColorFilter filter 色为 theme 型时 `applyAfColorFilter` 直接 throw。清单原判「框架已在仅补求值」，调查后两半工作量不同（用户 2026-08-31 裁定：两半都做、为 ColorFilter 建主题调色板，不留 fail-loud）
@@ -334,8 +361,9 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
    缺口见 §10 待办汇总 E3-R1..R7：~~E3-R4 Cell Error 值~~（✅ 完成 2026-08-31）→ ~~E3-R2b Workbook DefinedNamesChange(7)~~（✅ 完成 2026-08-31）→
    ~~E3-R4b ColorFilter ThemeColor + DynamicFilter 日期求值~~（✅ 完成 2026-08-31）→ **E3-R1 Worksheet 长尾 action（进行中）**：
    ~~ChangeMerge(25)=合并单元格~~（✅ 完成 2026-09-01，TestJXlsyMergeApply 31/31）→ ~~SheetView 屏显布尔簇(31/32/54)~~（✅ 完成 2026-09-01，TestJXlsySheetViewApply 23/23）→ ~~SheetPr summary 布尔(37/38)~~（✅ 完成 2026-09-01，TestJXlsySummaryBool 27/27）→ ~~SetTabColor(27)~~（✅ 完成 2026-09-01，TestJXlsySetTabColor 37/37）→ ~~ChangeFrozenCell(30)~~（✅ 完成 2026-09-01，TestJXlsyChangeFrozenCell 40/40）→ ~~GroupCol/CollapsedCol(35/36)~~（✅ 完成 2026-09-01，TestJXlsyGroupCol 26/26）→ ~~Hide(19)~~（✅ 完成 2026-09-01，TestJXlsyHide 13/13）→ ~~AddCols(5)~~（✅ 完成 2026-09-01，TestJXlsyAddCols 32/32）→ ~~ShiftCells(6-9)~~（✅ 完成 2026-09-01，TestJXlsyShiftCells 81/81）→ ~~MoveRange(13)~~（✅ 完成 2026-09-01，TestJXlsyMoveRange 54/54）→ 余下
-   ~~GroupRow/CollapsedRow(33/34)~~（✅ 完成 2026-09-02，TestJXlsyGroupRow 39/39）→ ~~DataValidation(48/49/50)~~（✅ 完成 2026-09-02，TestJXlsyDataValidationApply 54/54）→ ~~SetFitToPage(39)+ProtectedRange(56/57)~~（✅ 完成 2026-09-02，TestJXlsyFitToPage 20/20 + TestJXlsyProtectedRange 25/25）→ ChangeHyperlink 等（见清单 §2）/
-   E3-R5 Slicer/PivotTables/PivotFields（Pivot 须先定 scope）/ E3-R6 ProtectedWorkbook/NamedSheetViews /
-   E3-R7 Drawing 变更（复用 PPT DrawingML）。
+   ~~GroupRow/CollapsedRow(33/34)~~（✅ 完成 2026-09-02，TestJXlsyGroupRow 39/39）→ ~~DataValidation(48/49/50)~~（✅ 完成 2026-09-02，TestJXlsyDataValidationApply 54/54）→ ~~SetFitToPage(39)+ProtectedRange(56/57)~~（✅ 完成 2026-09-02，TestJXlsyFitToPage 20/20 + TestJXlsyProtectedRange 25/25）→ **E3-R1 实质完成**（ChangeHyperlink ✅ 已在 T7.6-3，余 action 40-47/51 属 E3-R5 scope）/
+   ~~E3-R5 Slicer/PivotTables/PivotFields~~（✅ 完成 2026-09-02，skipODataNoop，object model 缺失变更跳过不 fail-loud，TestJXlsyPivotSlicerSkip 15/15）/ ~~E3-R6 ProtectedWorkbook/NamedSheetViews~~（✅ 完成 2026-09-01，office 404aee68 / test 46871fc）/
+   ~~E3-R7 Drawing 变更（复用 PPT DrawingML）~~（✅ 完成 2026-09-02，office 6bfd8220 / test 12c0330；[DRAWING-ORACLE-PENDING]）。
+   ~~E3-R2 SheetAdd wbSheetIdFrom 复制场景~~（✅ 完成 2026-09-02，TestJXlsySheetAddCopy 15/15；wbOptSheet 仍 fail-loud [UNVALIDATED-E2E]）。
 2. **重型三门回归压到最后一环**（验收节奏见「开工约束」）：category A 全部清零后进最终三门回归。
 3. （备忘）P8 边界遗留：空段落/initial-kept-para 段标写出未覆盖；4|8 Word HighLight 保持 apply-only 写出 no-op（DrawingML 无表示，忠实）。
