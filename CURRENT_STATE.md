@@ -18,6 +18,10 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **E3-R1 Worksheet(class=1) SetFitToPage(39) + ProtectedRange(56/57) apply 完成**（2026-09-02，office `1fdabc5b` / test `83c3864`）：
+  - SetFitToPage(39)：`UndoRedoData_FromTo(bool,bool)` → 落 SheetPr(24)→PageSetUpPr(10)→FitToPage(12)（1字节 WriteBool）；复用 parseSummaryBoolChange 读取路径，新增 applyFitToPageChange（PageSetUpPr 容器代替 OutlinePr，升序插在 TabColor(9) 之后/OutlinePr(13) 之前）；护栏 TestJXlsyFitToPage 20/20
+  - AddProtectedRange(56)/DelProtectedRange(57)：`UndoRedoData_ProtectedRange{id:0(数值),to:2(SER_OBJECT)}`，落 ProtectedRanges(42)→ProtectedRange(43)（Read2 attr：AlgorithmName/SpinCount/HashValue/SaltValue/Name/SqRef）；session-local prId→prName map 追踪本会话新增 PR，Delete 靠 Name(4) 字段匹配，文件既存 PR → fail-loud；prList 空→删节点；护栏 TestJXlsyProtectedRange 25/25
+  - ⚠ [UNVALIDATED-E2E]：无真实 fixture，合成 round-trip
 - **E3-R1 Worksheet(class=1) GroupRow(33)/CollapsedRow(34)=行大纲级别/折叠 apply 完成**（2026-09-02，office `7dd63ee2` / test `27d7749`）：
   - 缺口：`parseWorksheetChange` 对 action 33/34 fail-loud。同 GroupCol(35/36)，Data=`UndoRedoData_IndexSimpleProp(index,oNewVal)` 变更流只含 index+oNewVal 标量（bRow/oOldVal 不序列化，UndoRedo.js:942）。redo（:3082/:3117）：GroupRow(33)→`row.setOutlineLevel(oNewVal)`（clamp[0,7]，WorkbookElems.js:5160）、CollapsedRow(34)→`row.setCollapsed(oNewVal)`（:6052，纯 flag，无 hidden 级联）
   - reader：dispatch 33/34 → `parseGroupIndexScalar`（与 35/36 共用，蓝本 UndoRedo.js:3082/:3117）；产 groupSet/propIndex/groupNewVal
@@ -330,8 +334,8 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
    缺口见 §10 待办汇总 E3-R1..R7：~~E3-R4 Cell Error 值~~（✅ 完成 2026-08-31）→ ~~E3-R2b Workbook DefinedNamesChange(7)~~（✅ 完成 2026-08-31）→
    ~~E3-R4b ColorFilter ThemeColor + DynamicFilter 日期求值~~（✅ 完成 2026-08-31）→ **E3-R1 Worksheet 长尾 action（进行中）**：
    ~~ChangeMerge(25)=合并单元格~~（✅ 完成 2026-09-01，TestJXlsyMergeApply 31/31）→ ~~SheetView 屏显布尔簇(31/32/54)~~（✅ 完成 2026-09-01，TestJXlsySheetViewApply 23/23）→ ~~SheetPr summary 布尔(37/38)~~（✅ 完成 2026-09-01，TestJXlsySummaryBool 27/27）→ ~~SetTabColor(27)~~（✅ 完成 2026-09-01，TestJXlsySetTabColor 37/37）→ ~~ChangeFrozenCell(30)~~（✅ 完成 2026-09-01，TestJXlsyChangeFrozenCell 40/40）→ ~~GroupCol/CollapsedCol(35/36)~~（✅ 完成 2026-09-01，TestJXlsyGroupCol 26/26）→ ~~Hide(19)~~（✅ 完成 2026-09-01，TestJXlsyHide 13/13）→ ~~AddCols(5)~~（✅ 完成 2026-09-01，TestJXlsyAddCols 32/32）→ ~~ShiftCells(6-9)~~（✅ 完成 2026-09-01，TestJXlsyShiftCells 81/81）→ ~~MoveRange(13)~~（✅ 完成 2026-09-01，TestJXlsyMoveRange 54/54）→ 余下
-   ~~GroupRow/CollapsedRow(33/34)~~（✅ 完成 2026-09-02，TestJXlsyGroupRow 39/39）→ DataValidation/ChangeHyperlink 等（见清单 §2）/
-   E3-R5 Slicer/PivotTables/PivotFields（Pivot 须先定 scope）/ E3-R6 ProtectedRange/ProtectedWorkbook/NamedSheetViews /
+   ~~GroupRow/CollapsedRow(33/34)~~（✅ 完成 2026-09-02，TestJXlsyGroupRow 39/39）→ ~~DataValidation(48/49/50)~~（✅ 完成 2026-09-02，TestJXlsyDataValidationApply 54/54）→ ~~SetFitToPage(39)+ProtectedRange(56/57)~~（✅ 完成 2026-09-02，TestJXlsyFitToPage 20/20 + TestJXlsyProtectedRange 25/25）→ ChangeHyperlink 等（见清单 §2）/
+   E3-R5 Slicer/PivotTables/PivotFields（Pivot 须先定 scope）/ E3-R6 ProtectedWorkbook/NamedSheetViews /
    E3-R7 Drawing 变更（复用 PPT DrawingML）。
 2. **重型三门回归压到最后一环**（验收节奏见「开工约束」）：category A 全部清零后进最终三门回归。
 3. （备忘）P8 边界遗留：空段落/initial-kept-para 段标写出未覆盖；4|8 Word HighLight 保持 apply-only 写出 no-op（DrawingML 无表示，忠实）。
