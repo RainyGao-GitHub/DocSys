@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R1 已实质完成**（Worksheet class=1 全部可实现 action 均已闭环，Pivot/Slicer action 40-47/51 属 E3-R5 scope）；**E3-R7 Drawing 变更已完成**（bNoDrawing=false 清洁解析 + drawingSkips 跳过，不 fail-loud，[DRAWING-ORACLE-PENDING]）；**E3-R2 SheetAdd 工作簿内复制场景已完成**（wbSheetIdFrom 深克隆路径，wbOptSheet 仍 fail-loud）；**E3-R5 Slicer/PivotTables/PivotFields 已完成**（skipODataNoop，object model 缺失，变更跳过不 fail-loud）。**Excel category A 缺口已全部清零，下一步：进最终重型三门回归 / 去 [UNVALIDATED-E2E]**（见清单 §10）。
+apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R1 已实质完成**（Worksheet class=1 全部可实现 action 均已闭环，Pivot/Slicer action 40-47/51 属 E3-R5 scope）；**E3-R7 Drawing 变更已完成**（bNoDrawing=false 清洁解析 + drawingSkips 跳过，不 fail-loud，[DRAWING-ORACLE-PENDING]）；**E3-R2 SheetAdd 工作簿内复制场景已完成**（wbSheetIdFrom 深克隆路径，wbOptSheet 仍 fail-loud）；**E3-R5 Slicer/PivotTables/PivotFields 已完成**（skipODataNoop，object model 缺失，变更跳过不 fail-loud）。**Excel category A 缺口已全部清零，最终重型三门回归已跑通（2026-09-02）**；下一步：去 [UNVALIDATED-E2E]（见清单 §10）。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -18,6 +18,11 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **最终重型三门回归跑通**（2026-09-02，E3-R5 收官后验收节奏最后一环，无代码改动）：
+  - Gate 2（W2 语义门 `TestJMergeJavaGolden_W2`）：**19/19 PASS**（语义断言 + document.xml 体积比 0.89 在 80~120% 容差内）。
+  - Gate 3（PPTX `TestComplexFixtureMergeGolden`）：**22/22 PASS**（same=34/benign=1/chartDiff=3 均 T6.6.2c 预期；slide10 形状/连接器全序列化）。
+  - Gate 1（Word golden `TestJMergeJavaGolden`）：5/6 —— **唯一 realDiff 在 `word/document.xml`，成分纯为 sectPr（ref 5 节 vs mine 1 节，连带 headerReference/footerReference/pgMar/pgSz/cols/titlePg/pgNumType）**，即 W2-4 已知遗留（用户 2026-08-27 裁定「分节 sectPr 缺失按忠实即通过处理，不再追查」，见 memory `w2-4-sectpr-known-issue`）。**非 E3-R5 引入**（工作树 clean，E3-R5 为 Excel-only 包路径），非新回归；该 golden 门 `realDiff==0` 硬指标早于 W2 sectPr 裁定，为陈旧断言而非代码退化。
+  - 结论：三门就「E3-R5 有无破坏既有能力」而言全绿；Word golden 门唯一差异是已裁定接受的 W2-4 sectPr 遗留。Excel 用 x2t 参考对比（各 apply 护栏内已含 round-trip，无独立重型 Excel golden 门）。
 - **E3-R5 Slicer(15)/PivotTables(16)/PivotFields(17) 变更跳过完成**（2026-09-02，office `ebe76640` / test `bdd31aa`）：
   - 缺口：三类原落在 `parseOne` 末尾 `else` 兜底 `recordDrop("unhandled-class-action")` → apply fail-loud，阻塞所有含 pivot/slicer 变更的 Excel 文件。
   - 蓝本调查（sdkjs v7.0.1，UndoRedo.js）：`UndoRedoPivotTables`(L3819)/`UndoRedoPivotFields`(L4036) 均调 `ws.getPivotTableById(Data.pivot)`+`pivotTable.stashCurReportRange()`（30+/12 action types，须完整 pivot 对象模型 + 布局重算）；`UndoRedoSlicer`(L4117) 调 `oModel.getSlicerByName(Data.name)`（20+ action types，须 slicer 对象模型）。三者均非二进制层可实现的编辑。
