@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（Slide 线已收官，Excel 线已收官）。**当前 Word/Slide 真实 fixture 录制轮**（2026-09-03 起，浏览器录制 Word/Slide 覆盖缺口，见 Word 清单 §14 / Slide 清单 §11）。批次顺序：S-1 ✅ → W-1 ✅ → W-2 ✅ → W-3 ✅ → W-4 ✅（特殊家族）→ W-5 ⚠️（分栏✅/行内公式待补录）→ **S-2/S-3（下一轮）** → 复用清单 skip 升级（P1 优先：Slide RemoveFromSpTree=**1117|11** 部署版漂移）→ Word/Slide 汇总 golden 门收敛。
+apply_changes JS→Java 全量移植（Slide 线已收官，Excel 线已收官）。**Word/Slide 真实 fixture 录制轮已全部完成**（2026-09-03，S-1/S-2/S-3 + W-1~W-5 全入库，见 Word 清单 §14 / Slide 清单 §11）。**当前阶段：复用清单 skip 升级**（P1 优先：Slide RemoveFromSpTree=**1117|11** 部署版漂移 → 实现+注册断言；图片 fixture 5|15/18/19/20、1107|1/4、1113|2、1000|106；S-2 树已兑现 1197/1198 ChartStyle、1108/1109 Path 等 fallback）→ 最后 Word/Slide 汇总 golden 门收敛。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -27,6 +27,9 @@ apply_changes JS→Java 全量移植（Slide 线已收官，Excel 线已收官�
 - **W-4 特殊家族 fixture 录制入库**（2026-09-03，test `305b3ac` / office doc `c5b995b0`）：`测试文件/EditorBinWithChanges_W4特殊家族.docx/-1733997211`（output 41395B，含 comments/footnotes/endnotes 部件）。单会话 247 条变更 32 类型（清单 §14.7）：批注 17|4/5+回复 18|1、脚注 55|1/2、尾注 56|1、内容控件 60|13/15/16/17、样式 3|24、**意外收获 28|40/41 OnStart/EndSplit×5（当前 🟡 Skip 组，可供升级验证）**。
 - **W-5 分栏✅/行内公式❌**（2026-09-03，test `44a8f1b` / office doc `20845605`）：`测试文件/EditorBinWithChanges_W5分栏公式.docx/2100343981`（30|22/23/24 分栏 cols num=2）。**行内公式两次录制未落盘**：方程式→分数模板插入后 DocSys 与编辑器 websocket 保存链路异常（Editor.bin 有内容但 changes/output 不 flush，`window.close()` 恶化），公式类型（26 oMath 树/28|42/43）待补录，清单 §14.8 已如实记录。
 - ⚠️ **W-5 文档 websocket 保存链路疑似损坏**：该 docId 的后续会话只产生 Editor.bin；下一轮若补录公式建议**新建文档**重录（勿复用 100085323331）。
+- **W-5 行内公式补录成功**（2026-09-03，test `0d689e8` / office doc `28421cb0`）：`测试文件/EditorBinWithChanges_W5行内公式补录.docx/-455783043`（26|101/102 oMath+28|40/41+28|33/34）。**★关键突破：方程式 UI 点击在 v7.0.1.37 不可靠，改用 `window.editor.asc_AddMath('fraction')` 一次成功（成功标志=字体框切 Cambria Math）**。
+- **S-2 图表装饰修改录制入库**（2026-09-03，test `8a83842` / office doc `57ff5e14`）：`测试文件/EditorBinWithChanges_S2图表装饰修改.pptx/560394054`（1896 条 181 类型！）：1042|3/7-15 标签编辑、1111|22 轴、1112|4；**同时兑现复用清单 1197|1-31/1198|1-9 ChartStyle 全家、1108/1109 Path、图表数据族 1028-1076**。录制方法：图表编辑器内嵌 spreadsheeteditor iframe，单元格=textarea#area_id 输入 Enter 提交。
+- **S-3 幻灯片装饰录制入库**（2026-09-03，test `1e533af` / office doc `d6267c17`）：`测试文件/EditorBinWithChanges_S3幻灯片装饰.pptx/1536879443`（1117|7 切换淡化+持续时间 3S、1117|9 背景渐变）。教训：幻灯片背景调色板点击瞬关，改填充类型下拉可靠。
 
 
 - **去 [UNVALIDATED-E2E] 收口：浏览器录制 15 个真实 fixture 全绿 + 勾销 16 个 marker**（2026-09-03）：
