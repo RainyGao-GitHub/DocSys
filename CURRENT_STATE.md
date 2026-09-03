@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R1 已实质完成**（Worksheet class=1 全部可实现 action 均已闭环，Pivot/Slicer action 40-47/51 属 E3-R5 scope）；**E3-R7 Drawing 变更已完成**（bNoDrawing=false 清洁解析 + drawingSkips 跳过，不 fail-loud，[DRAWING-ORACLE-PENDING]）；**E3-R2 SheetAdd 工作簿内复制场景已完成**（wbSheetIdFrom 深克隆路径，wbOptSheet 仍 fail-loud）；**E3-R5 Slicer/PivotTables/PivotFields 已完成**（skipODataNoop，object model 缺失，变更跳过不 fail-loud）。**Excel category A 缺口已全部清零，最终重型三门回归已跑通（2026-09-02）**；**去 [UNVALIDATED-E2E] 已收口（2026-09-03，15 个浏览器录制 fixture 全绿，16 个 marker 勾销）**。剩余：批注增删改 5-fail（G2-G5 已知真缺口，本轮只曝光不修）+ 4 处未录制 marker（见清单 §11.2/§11.4/§11.6）。
+apply_changes JS→Java 全量移植（Slide 线已收官，Excel 线已收官）。**当前 Word/Slide 真实 fixture 录制轮**（2026-09-03 起，浏览器录制 Word/Slide 覆盖缺口，见 Word 清单 §14 / Slide 清单 §11）。批次顺序：S-1 ✅ → W-1 ✅ → W-2 ✅ → W-3 ✅ → W-4 ✅（特殊家族）→ W-5 ⚠️（分栏✅/行内公式待补录）→ **S-2/S-3（下一轮）** → 复用清单 skip 升级（P1 优先：Slide RemoveFromSpTree=**1117|11** 部署版漂移）→ Word/Slide 汇总 golden 门收敛。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -18,6 +18,17 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **Word/Slide 覆盖盘点 + 批次计划写入清单并提交**（2026-09-03，office `147675aa`）：用 Python 直方图解码 8 棵现有 Word/Slide fixture 变更流 → Word 清单 §14 / Slide 清单 §11 增补「真实 fixture 覆盖矩阵 + 待录制批次」（W-1..W-5 / S-1..S-3 + 复用清单）。
+- **S-1 fixture 录制入库**（2026-09-03，test `bee1190`）：`测试文件/EditorBinWithChanges_S1删除形状阴影备注.pptx/-2103341622`（data/Editor.bin 46288B + changes0-5.json + output/output.pptx 32826B）。要点：1117|12 AddToSpTree×2、**1117|11 RemoveFromSpTree×1（部署版 v7.0.1.71 漂移，≠清单的 13）**、1089|7 EffectPr×2、1108|7/8+1109 Path、1110|1/3、备注=28|1/28|2 run 变更（无 1129 base）。竖排文字未录成（控件 0 尺寸不可达，如实记录）。
+- **W-1 段落属性全家桶 fixture 录制入库**（2026-09-03，test `bee1190` / office doc `aa3a1856`）：`测试文件/EditorBinWithChanges_W1段落属性全家桶.docx/280084512`（Editor.bin 139141B + changes0-3 + output/output.docx 22921B）。单会话 39 条变更 33 类型直方图（Word 清单 §14.4 全表）。**录制方法论教训**：① 段落对话框 checkbox 须点外层 `label`（含 `input.checkbox__native`）并回读 checked 状态；② 颜色菜单选色后**不要按 Escape**（会整个关对话框，本轮丢过一次）；③ 段落选择用「点击首段 + End + ArrowDown」键盘定位第二段（坐标点击不可靠）；④ **部署版 v7.0.1.71 漂移：默认制表位走 2|3 Document.DefaultTab 而非 3|38**；⑤ 同会话勾选再反勾不产生净变更记录。
+- 录制配方（沿用）：编辑器 URL `http://localhost:8100/DocSystem/web/office.html?reposId=5&docId=<id>&path=&name=<b64>&langType=ch`；保存=navigate about:blank+等 15s；dockey 按 `C:\DocSysReposes\5\data\OfficeEdit\<docId>\` LastWriteTime 找；fixture 布局=data/{Editor.bin,changes}+output/output.<ext>。
+- **W-2 字体全家桶 fixture 录制入库**（2026-09-03，test `422b0e8` / office doc `27219c8f`）：`测试文件/EditorBinWithChanges_W2字体全家桶.docx/1818486778`（Editor.bin 45540B + changes0-9 + output 22663B）。单会话 320 条变更 54 类型（Word 清单 §14.5 全表）：ParaRun 28|1-6/8/10/11/13/14/15/16/17/21/22/23/24/29/30 + ParaTextPr 4|1-5/7/8/10-15/17-20/22/26。**录制方法**：run 级=工具栏按钮（bold/italic/underline/strikeout/上标/下标/fontcolor/highlight/inc·decfont/字体名/字号/change-case）；段落标 rPr=段落-高级设置→字体页（6 复选框+2 spinner）。**教训**：① DE 无独立字体对话框，只有段落高级设置的字体页+工具栏；② 首段点击若落在页眉区会把文本打进页眉（页眉区≈页顶 50px）；③ 文本选择须拖拽，定位用截图像素扫描（截图 2× DPI，CSS 坐标=像素/2）；④ 工具栏「大写」是文本变换非 caps flag，caps 只能走对话框「全部大写」
+- **W-3 表格属性全家桶 fixture 录制入库**（2026-09-03，test `023fc4f` / office doc `e0f687cb`）：`测试文件/EditorBinWithChanges_W3表格属性全家桶.docx/115364904`（Editor.bin 45540B + changes0-3 + output 21669B）。单会话 172 条变更 23 类型（清单 §14.6）：Table 9|2/5/6/7/8/11/15/25、TableRow 10|3/4、TableCell 11|3/5/6/7/8、单元格内段落 3|1/30。**教训**：表格边框按钮图标 `borders-twin-*`；自动调整取消后宽度 spinner 仍 disabled；无 id spinner 按行上下文定位。
+- **W-4 特殊家族 fixture 录制入库**（2026-09-03，test `305b3ac` / office doc `c5b995b0`）：`测试文件/EditorBinWithChanges_W4特殊家族.docx/-1733997211`（output 41395B，含 comments/footnotes/endnotes 部件）。单会话 247 条变更 32 类型（清单 §14.7）：批注 17|4/5+回复 18|1、脚注 55|1/2、尾注 56|1、内容控件 60|13/15/16/17、样式 3|24、**意外收获 28|40/41 OnStart/EndSplit×5（当前 🟡 Skip 组，可供升级验证）**。
+- **W-5 分栏✅/行内公式❌**（2026-09-03，test `44a8f1b` / office doc `20845605`）：`测试文件/EditorBinWithChanges_W5分栏公式.docx/2100343981`（30|22/23/24 分栏 cols num=2）。**行内公式两次录制未落盘**：方程式→分数模板插入后 DocSys 与编辑器 websocket 保存链路异常（Editor.bin 有内容但 changes/output 不 flush，`window.close()` 恶化），公式类型（26 oMath 树/28|42/43）待补录，清单 §14.8 已如实记录。
+- ⚠️ **W-5 文档 websocket 保存链路疑似损坏**：该 docId 的后续会话只产生 Editor.bin；下一轮若补录公式建议**新建文档**重录（勿复用 100085323331）。
+
+
 - **去 [UNVALIDATED-E2E] 收口：浏览器录制 15 个真实 fixture 全绿 + 勾销 16 个 marker**（2026-09-03）：
   - 可行性验证 + 录制：DocSys 切 OnlyOffice native 路径（`isOnlyOfficeUsed=1`），浏览器驱动编辑器逐分支编辑，采集真实变更流（`orgChanges/` → fixture 树 `测试文件/EditorBinWithChanges_<名>.xlsx/<dockey>/{data,output}`）+ native golden（x2t `output/output.xlsx`）。
   - 15 fixture：SetTabColor/ChangeMerge/ChangeFrozenCell/Hide/SheetView/SummaryBool/FitToPage/GroupRowCol/StructOps/DataValidation/WorksheetSort/DefinedNames/SheetAddCopy/ProtectedWorkbook/AfColor —— 全部注册进 `TestT8XlsyMergeGolden`（FIXTURES + keyCellExpect），**门全绿（零失败）**。
