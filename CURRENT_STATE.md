@@ -6,7 +6,7 @@
 - `src/com/DocSystem/websocket/office/docs/MxsOffice工程上下文.md`（office 仓库）：JDK 路径、编译命令、类路径、运行时目录等前提。
 
 ## 当前任务
-apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R1 已实质完成**（Worksheet class=1 全部可实现 action 均已闭环，Pivot/Slicer action 40-47/51 属 E3-R5 scope）；**E3-R7 Drawing 变更已完成**（bNoDrawing=false 清洁解析 + drawingSkips 跳过，不 fail-loud，[DRAWING-ORACLE-PENDING]）；**E3-R2 SheetAdd 工作簿内复制场景已完成**（wbSheetIdFrom 深克隆路径，wbOptSheet 仍 fail-loud）；**E3-R5 Slicer/PivotTables/PivotFields 已完成**（skipODataNoop，object model 缺失，变更跳过不 fail-loud）。**Excel category A 缺口已全部清零，最终重型三门回归已跑通（2026-09-02）**；下一步：去 [UNVALIDATED-E2E]（见清单 §10）。
+apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长尾线**，按 2026-08-27 验收节奏逐节点推进）。**E3-R1 已实质完成**（Worksheet class=1 全部可实现 action 均已闭环，Pivot/Slicer action 40-47/51 属 E3-R5 scope）；**E3-R7 Drawing 变更已完成**（bNoDrawing=false 清洁解析 + drawingSkips 跳过，不 fail-loud，[DRAWING-ORACLE-PENDING]）；**E3-R2 SheetAdd 工作簿内复制场景已完成**（wbSheetIdFrom 深克隆路径，wbOptSheet 仍 fail-loud）；**E3-R5 Slicer/PivotTables/PivotFields 已完成**（skipODataNoop，object model 缺失，变更跳过不 fail-loud）。**Excel category A 缺口已全部清零，最终重型三门回归已跑通（2026-09-02）**；**去 [UNVALIDATED-E2E] 已收口（2026-09-03，15 个浏览器录制 fixture 全绿，16 个 marker 勾销）**。剩余：批注增删改 5-fail（G2-G5 已知真缺口，本轮只曝光不修）+ 4 处未录制 marker（见清单 §11.2/§11.4/§11.6）。
 
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
@@ -18,6 +18,21 @@ apply_changes JS→Java 全量移植（Slide 线已收官，**当前 Excel 长�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **去 [UNVALIDATED-E2E] 收口：浏览器录制 15 个真实 fixture 全绿 + 勾销 16 个 marker**（2026-09-03）：
+  - 可行性验证 + 录制：DocSys 切 OnlyOffice native 路径（`isOnlyOfficeUsed=1`），浏览器驱动编辑器逐分支编辑，采集真实变更流（`orgChanges/` → fixture 树 `测试文件/EditorBinWithChanges_<名>.xlsx/<dockey>/{data,output}`）+ native golden（x2t `output/output.xlsx`）。
+  - 15 fixture：SetTabColor/ChangeMerge/ChangeFrozenCell/Hide/SheetView/SummaryBool/FitToPage/GroupRowCol/StructOps/DataValidation/WorksheetSort/DefinedNames/SheetAddCopy/ProtectedWorkbook/AfColor —— 全部注册进 `TestT8XlsyMergeGolden`（FIXTURES + keyCellExpect），**门全绿（零失败）**。
+  - **注册过程修复 4 个真实缺陷**（详见清单 §11.6）：① runtime-id 偏移按文档推断 `inferRuntimeOffset`（新建文档=4/加载=5，原固定 5 对录制文档全报 sheetId 未找到）；② 空表 XLSB 载体保障 `ensureCellDataTargets`（新建空文档无 XLSB 块，ChangeValue 无落点）；③ ShiftCellsRight/AddCols 腾空列样式继承（对偶 JS `_shiftCellsRight` copyRange(prev)+clearDataKeepXf，golden B1/C2 带样空格即源于此）；④ `Integer wsIdx = cond ? map.get : 0` 三元拆箱 NPE 隐患 → `Integer.valueOf(0)`。
+  - 门结果：`TestT8XlsyMergeGolden` 21 fixture = **20 全绿 + 批注增删改 5-fail（G2-G5 已知，见清单 §11.3）**。
+  - 勾销 16 个 `TestJXlsy*` marker → `[E2E: covered by <fixture> @ TestT8XlsyMergeGolden 2026-09-03]`；保留 4 处（AutoFilterApply.ColorFilter 子路径 / PivotSlicerSkip / ProtectedRange / ThemeFilter.{date/ThemeColor}，录制不可行或未录制）。
+  - 未提交：改动含 office 核心（JXlsyApplyChanges/JXlsbWorksheetData + 清单 + fixture 树）+ test 仓库（TestT8XlsyMergeGolden + 16 个 marker 文件 + 15 fixture 树）。按 CLAUDE.md 多仓库规则待提交。
+
+  - **注册 AutoFilter 真实 fixture 进 `TestT8XlsyMergeGolden`（第 6 个）**：变更流早在盘上（`733577657/data/changes`），只缺约定名 golden。参数化 `ConvertBinWithChangesToXLSXwithX2t`（`args[0]=fixtureBaseDir`）→ x2t native 铸 `output/output.xlsx`；删 stale `outpu.xlsx` typo；`assertAutoFilterEffect` 硬断 `<autoFilter>` 定义（数值归一，`10.0≡10`）+ hidden 行数。
+  - **覆盖直方图（`TestT703XlsxGaps` 扩至 6 fixture）**：产出 {class/action→fixture} 矩阵（详见清单 §11.1）。**决定性推论**：AutoFilter样本变更流**只有 RowHide(28)×32 + AutoFilters(8)×16，零移动 op**，故其 9 sheet 12694 格重定位**证明不可能来自 apply**（base 转换层分歧）→ Tier3 对该 fixture 降 informational 并如实记录 `[RESIDUAL-GAP]`。
+  - **合法勾销/锐化 21 个 marker**（勾销纪律=只清「真实 fixture 命中 + 过门」）：仅 `TestJXlsyAutoFilterApply` 主路径（value-list/custom/top10/dynamic）得真实 E2E 背书 → 改写为 `[E2E: covered by AutoFilter样本 @ TestT8XlsyMergeGolden]`（sheet1/2/3 定义字节级匹配 + hidden 行匹配）；其余 20 分支在 6 fixture 零命中 → 锐化为 `[NO-REAL-FIXTURE: 需编辑器录制]`（19 文件经子代理机械替换 + AutoFilterApply.ColorFilter 子路径 + ThemeFilter.{date/ThemeColor}）。
+  - **真实门曝出 2 类真缺口（如实记录，本轮不修）**：① **belowAverage 的 val 未重算列平均**（AutoFilter样本 sheet4：mine val=28 vs golden 28.952380952380953，`AUTOFILTER-DEF-GAP`）；② **★5-fail baseline 归因更正**——`TestT8XlsyMergeGolden` 的 5-fail 全落在**批注增删改 fixture**，实为 {threaded comment 全丢(mine=0/golden=2) + legacy D7 run 文本 + schema new=1 + E7↔H6/F14↔G7 协同重定位}，**非** memory `t76-cell-format-changes` 所记「Java 写出器基线格式 sz11.0」——其中 threaded 全丢/D7/schema new=1 是真实批注 apply/写出缺口。按 W2-4 范式本轮只曝光+文档化，不修复。
+  - 门结果：`TestT8XlsyMergeGolden` passed=63 failed=5（5-fail 全在批注 fixture，AutoFilter样本通过）；抽查 `TestJXlsyAutoFilterApply` 52/52 + `TestJXlsyThemeFilter` 22/22（注释改写不动逻辑）全绿。
+  - 产物：清单 §11（覆盖矩阵 + 残余缺口表 + 录制配方，含 `OfficeBase.saveOrgChanges:3986` 等 class:line 锚点）。**残余缺口需人工编辑器录制，另起一轮**。
+
 - **最终重型三门回归跑通**（2026-09-02，E3-R5 收官后验收节奏最后一环，无代码改动）：
   - Gate 2（W2 语义门 `TestJMergeJavaGolden_W2`）：**19/19 PASS**（语义断言 + document.xml 体积比 0.89 在 80~120% 容差内）。
   - Gate 3（PPTX `TestComplexFixtureMergeGolden`）：**22/22 PASS**（same=34/benign=1/chartDiff=3 均 T6.6.2c 预期；slide10 形状/连接器全序列化）。
