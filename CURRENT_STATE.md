@@ -8,6 +8,11 @@
 ## 当前任务
 apply_changes JS→Java 全量移植（Slide 线已收官，Excel 线已收官）。**Word/Slide 真实 fixture 录制轮已全部完成**（2026-09-03，S-1/S-2/S-3 + W-1~W-5 全入库，见 Word 清单 §14 / Slide 清单 §11）。**当前阶段：复用清单 skip 升级**（P1 优先：Slide RemoveFromSpTree=**1117|11** 部署版漂移 → 实现+注册断言；图片 fixture 5|15/18/19/20、1107|1/4、1113|2、1000|106；S-2 树已兑现 1197/1198 ChartStyle、1108/1109 Path 等 fallback）→ 最后 Word/Slide 汇总 golden 门收敛。
 
+**S-3 golden 门已全部通过**（2026-09-04，office ac9f346e / test 8fb600b）：TestJSlideMergeGoldenNew S-3 realDiff=0（same=36）。1117|7 Transition + 1117|9 Bg Java 序列化闭环。
+
+### ★ 验证节奏约束（2026-09-05 用户决定）
+每完成一个 fixture 的验证和修复后，**必须等用户手动确认通过后**才能开始下一个 fixture。禁止自行连续推进多个 fixture。
+
 ## References（读这里取细节）
 - 计划：`devDocs/apply_changes-JS移植Java开发计划.md`（office 仓库 `src/com/DocSystem/websocket/office`）→ W3-11 节点
 - 上下文（权威续接锚点）：`docs/apply_changes-JS移植Java开发上下文.md`（office 仓库）→ 「当前续接锚点」
@@ -387,6 +392,23 @@ apply_changes JS→Java 全量移植（Slide 线已收官，Excel 线已收官�
   - JSlideChangesFactory: DLbls 15 sub 注册（含 DLbls_SetDLbl 走 ApplyContent 内联 JChangesBaseSkipProperty fallback，规避 SKIP_CTOR 前向引用编译错）+ CatAx_SetTitle/SetTxPr 注册
   - ★ 测试坑：str2() 须写**字节数**（len×2）而非字符数——BinStreamReader.GetString2 读字节数前缀（GetLong()→字节数→GetString2LE(byteLen)），写字符数导致流错位全部 noHost
   - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（sdkjs v7.0.1.71 ChartFormat.js CDLbls changesFactory + CAxisBase.prototype）；TestJChartDecoration 41/41（8 Bool + 1 Long + 1 String + 4 ObjectRef + 1 Content + CatAx/JValAx title/txPr）
+
+### ★ 当前验证阶段进度（2026-09-05）
+
+**阶段**：用真实 fixture 测试数据验证 apply_changes Java 代码，通过和参考输出（Nashorn/x2t golden）对比确定是否要修正 Java 代码。每个 fixture 完成后等用户手动确认再开始下一个。
+
+**当前 fixture：TestJMergeJavaGolden3（图片放大/移动/翻转/旋转）— 根因已确认，修复待实施**
+- fixture：`测试文件/EditorBinWithChanges_图片_放大_移动_水平翻转_旋转_base.docx/-746750271`（107 条变更）
+- **表现**：输出 docx 中图片完全缺失（Drawing '0_697' 不写入输出）
+- **根因链**：
+  1. TABLEID_ADD [4]（Drawing '0_697' elemType=5）→ `readDrawingInit()` 执行，调 `resolver.getById('0_700')` → null（ImageShape '0_700' 在 change [7] 才 TABLEID_ADD，forward reference）→ `drawing.graphicObj` 未设置
+  2. Change [68] `5|8` SetGraphicObject nFlags=2 → `(2&2)==0` = false → New absent（不读 new id）→ `newGraphicObj=null` → `apply()` no-op → `drawing.graphicObj` 仍为 null
+  3. `buildForNewImage()` 检查 `d.graphicObj == null` → return null → drawing 不写入输出
+- **待解决的不确定点**：readDrawingInit 的 W/H 格式（当前 GetDouble/8字节，解码值 2.654e-301 明显错误，可能是 int32/4字节），影响 hasGO 的判断位置
+- **修复方向**：deferred graphicObj 解析（readDrawingInit 只存 graphicObjId 字符串，所有 TABLEID_ADD 完成后统一解析），同时确认 W/H 格式
+- **状态：等用户确认后实施修复**
+
+---
 
 ## 下一步
 1. **Excel 长尾逐节点推进**（2026-08-31 全量盘点：Slide 已收官、Word 残余 Skip 全为有意边界，缺口全在 Excel）。
