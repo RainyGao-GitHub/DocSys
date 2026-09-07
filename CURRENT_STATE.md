@@ -23,6 +23,11 @@ apply_changes JS→Java 全量移植（Slide 线已收官，Excel 线已收官�
 - **★ 验收节奏（用户 2026-08-27 决定）**：先全量移植剩余 ~148 类型（Word 89/Slide 26/Excel 33），边移边做**轻量验证**（编译+蓝本对照/单类型字节往返/模型值断言，不写 golden），**重型三门回归压到最后一环**。完整细则见上下文 §6 首块「验收节奏调整」，计划「验证策略」已同步。
 
 ## 当前进展
+- **TestJMergeJavaGolden2 闭环**（2026-09-05，office `2d47abb4` / test `0b43d71`）：fixture2 粗体_斜体_段落（compact DOCT bin）14/14 语义断言通过 + MS Word OPENED OK。
+  - 根因：compact bin → x2t 产出 footer/header 三处缺陷：① wps:wsp 直接在 wp:anchor 下（缺 a:graphic/a:graphicData 包装）；② 引用未定义紧凑数字样式 ID（"9"/"10"/"15"）；③ 缺 word/_rels/footer*.xml.rels。
+  - 修复：新建 JDocxCompactBinFixer.fix()（三项后处理）+ JStyleSectionReWriter Pass 4（dedup SSTS_Style）；测试侧在 FileConverter.convert() 后调用。
+  - **等待用户确认后再推进下一 fixture。**
+
 - **Word/Slide 覆盖盘点 + 批次计划写入清单并提交**（2026-09-03，office `147675aa`）：用 Python 直方图解码 8 棵现有 Word/Slide fixture 变更流 → Word 清单 §14 / Slide 清单 §11 增补「真实 fixture 覆盖矩阵 + 待录制批次」（W-1..W-5 / S-1..S-3 + 复用清单）。
 - **S-1 fixture 录制入库**（2026-09-03，test `bee1190`）：`测试文件/EditorBinWithChanges_S1删除形状阴影备注.pptx/-2103341622`（data/Editor.bin 46288B + changes0-5.json + output/output.pptx 32826B）。要点：1117|12 AddToSpTree×2、**1117|11 RemoveFromSpTree×1（部署版 v7.0.1.71 漂移，≠清单的 13）**、1089|7 EffectPr×2、1108|7/8+1109 Path、1110|1/3、备注=28|1/28|2 run 变更（无 1129 base）。竖排文字未录成（控件 0 尺寸不可达，如实记录）。
 - **W-1 段落属性全家桶 fixture 录制入库**（2026-09-03，test `bee1190` / office doc `aa3a1856`）：`测试文件/EditorBinWithChanges_W1段落属性全家桶.docx/280084512`（Editor.bin 139141B + changes0-3 + output/output.docx 22921B）。单会话 39 条变更 33 类型直方图（Word 清单 §14.4 全表）。**录制方法论教训**：① 段落对话框 checkbox 须点外层 `label`（含 `input.checkbox__native`）并回读 checked 状态；② 颜色菜单选色后**不要按 Escape**（会整个关对话框，本轮丢过一次）；③ 段落选择用「点击首段 + End + ArrowDown」键盘定位第二段（坐标点击不可靠）；④ **部署版 v7.0.1.71 漂移：默认制表位走 2|3 Document.DefaultTab 而非 3|38**；⑤ 同会话勾选再反勾不产生净变更记录。
@@ -55,7 +60,7 @@ apply_changes JS→Java 全量移植（Slide 线已收官，Excel 线已收官�
 - **最终重型三门回归跑通**（2026-09-02，E3-R5 收官后验收节奏最后一环，无代码改动）：
   - Gate 2（W2 语义门 `TestJMergeJavaGolden_W2`）：**19/19 PASS**（语义断言 + document.xml 体积比 0.89 在 80~120% 容差内）。
   - Gate 3（PPTX `TestComplexFixtureMergeGolden`）：**22/22 PASS**（same=34/benign=1/chartDiff=3 均 T6.6.2c 预期；slide10 形状/连接器全序列化）。
-  - Gate 1（Word golden `TestJMergeJavaGolden`）：5/6 —— **唯一 realDiff 在 `word/document.xml`，成分纯为 sectPr（ref 5 节 vs mine 1 节，连带 headerReference/footerReference/pgMar/pgSz/cols/titlePg/pgNumType）**，即 W2-4 已知遗留（用户 2026-08-27 裁定「分节 sectPr 缺失按忠实即通过处理，不再追查」，见 memory `w2-4-sectpr-known-issue`）。**非 E3-R5 引入**（工作树 clean，E3-R5 为 Excel-only 包路径），非新回归；该 golden 门 `realDiff==0` 硬指标早于 W2 sectPr 裁定，为陈旧断言而非代码退化。
+  - Gate 1（Word golden `TestJMergeJavaGolden`）：**6/6 PASS**（2026-09-06，office `c5f7321a`）——三处修复：① `JBinIdAllocator.readParagraph` pPr type=31 注册 JModel.Section（使 Section 变更能按 ID 找到宿主）；② Hyperlink LINK/ANCHOR/TOOLTIP 属性改从 base binary 读取（修 TOC 超链接约 2832 字节差异）；③ JMergeEngine 移除 `fixSectPrOrientation`（W>H 推断错误，base binary orient 字节须透传，landscape=1 被错误覆盖为 0 导致 5 字节差）。同步修正 JChangesParagraphSectionPr nFlags 位约定。
   - 结论：三门就「E3-R5 有无破坏既有能力」而言全绿；Word golden 门唯一差异是已裁定接受的 W2-4 sectPr 遗留。Excel 用 x2t 参考对比（各 apply 护栏内已含 round-trip，无独立重型 Excel golden 门）。
 - **E3-R5 Slicer(15)/PivotTables(16)/PivotFields(17) 变更跳过完成**（2026-09-02，office `ebe76640` / test `bdd31aa`）：
   - 缺口：三类原落在 `parseOne` 末尾 `else` 兜底 `recordDrop("unhandled-class-action")` → apply fail-loud，阻塞所有含 pivot/slicer 变更的 Excel 文件。
@@ -393,20 +398,20 @@ apply_changes JS→Java 全量移植（Slide 线已收官，Excel 线已收官�
   - ★ 测试坑：str2() 须写**字节数**（len×2）而非字符数——BinStreamReader.GetString2 读字节数前缀（GetLong()→字节数→GetString2LE(byteLen)），写字符数导致流错位全部 noHost
   - 验收（轻量）：编译零错误 + 蓝本逐分支对照忠实（sdkjs v7.0.1.71 ChartFormat.js CDLbls changesFactory + CAxisBase.prototype）；TestJChartDecoration 41/41（8 Bool + 1 Long + 1 String + 4 ObjectRef + 1 Content + CatAx/JValAx title/txPr）
 
-### ★ 当前验证阶段进度（2026-09-05）
+### ★ 当前验证阶段进度（2026-09-06）
 
 **阶段**：用真实 fixture 测试数据验证 apply_changes Java 代码，通过和参考输出（Nashorn/x2t golden）对比确定是否要修正 Java 代码。每个 fixture 完成后等用户手动确认再开始下一个。
 
-**当前 fixture：TestJMergeJavaGolden3（图片放大/移动/翻转/旋转）— 根因已确认，修复待实施**
+**✅ sectPr 二进制透传修复（2026-09-06，office `1a57c3d6`）**
+- **问题**：`JDocumentWriter.writeParagraph()` 对全部段落无差别调用 `JSectionCodec.stripSectPrFromPPr()`，导致中间节（non-final section）段落的 pPr type=31 sectPr 记录被一律剥除，fixture1 realDiff=4319 字节。
+- **修复**：三部分联动：①`JBinIdAllocator` 记录 `docSectionParagraph`（末段落，其 type=31 是 body-level type=4 的副本）；②`JDocumentWriter` 新增 `docSectionParagraph` 字段并在 `writeParagraph()` 中：dirty p.section → rebuildPPrWithSection，`p==docSectionParagraph` → strip，其余段落 → 原样透传（保留中间节 sectPr）；③`JMergeEngine` 传递 `alloc.docSectionParagraph`。
+- **结果**：fixture1 realDiff 降至 2837 字节，剩余差异=`Paragraph_SectionPr`（sub=34，仍 SkipProperty，方向不更新）+ TOC 超链接 tooltip/anchor 属性缺失；其余 4 个 fixture 无回归（fixture2/3/W2/W2-4 均通过）。
+
+**✅ TestJMergeJavaGolden3（图片放大/移动/翻转/旋转）— 18/18 PASS（2026-09-05）**
 - fixture：`测试文件/EditorBinWithChanges_图片_放大_移动_水平翻转_旋转_base.docx/-746750271`（107 条变更）
-- **表现**：输出 docx 中图片完全缺失（Drawing '0_697' 不写入输出）
-- **根因链**：
-  1. TABLEID_ADD [4]（Drawing '0_697' elemType=5）→ `readDrawingInit()` 执行，调 `resolver.getById('0_700')` → null（ImageShape '0_700' 在 change [7] 才 TABLEID_ADD，forward reference）→ `drawing.graphicObj` 未设置
-  2. Change [68] `5|8` SetGraphicObject nFlags=2 → `(2&2)==0` = false → New absent（不读 new id）→ `newGraphicObj=null` → `apply()` no-op → `drawing.graphicObj` 仍为 null
-  3. `buildForNewImage()` 检查 `d.graphicObj == null` → return null → drawing 不写入输出
-- **待解决的不确定点**：readDrawingInit 的 W/H 格式（当前 GetDouble/8字节，解码值 2.654e-301 明显错误，可能是 int32/4字节），影响 hasGO 的判断位置
-- **修复方向**：deferred graphicObj 解析（readDrawingInit 只存 graphicObjId 字符串，所有 TABLEID_ADD 完成后统一解析），同时确认 W/H 格式
-- **状态：等用户确认后实施修复**
+- **根因 & 修复**：`JChangesDrawingSetGraphicObject` 使用错误的 flag 位编码。OrgPath 误记为 `CChangesDrawingsObject`（CChangesBaseStringProperty，bit1=New-undef/bit2=Old-undef），实际蓝本是 `CChangesParaDrawingGraphicObject`（ParaDrawingChanges.js），其 ReadFromBinary **bit0(1)=New-null/bit1(2)=Old-null，写序 New 在前 Old 在后**。旧代码 `(nFlags&2)==0` 对 nFlags=2 → false → New 未读；修正为 `(nFlags&1)==0` → New="0_700" 正常读出 → `drawing.graphicObj = ImageShape '0_700'` → `buildForNewImage()` 写出完整图片锚点。
+- **顺带确认**：WriteDouble 在变更流中是 4 字节定点（val*100000 as int32），BinStreamReader.GetDouble() 已正确实现；hasGO 在 init data 中为 0（false），Drawing '0_697' 的 graphicObj 全部由 SetGraphicObject 变更设置。
+- **等用户确认后继续下一个 fixture。**
 
 ---
 
