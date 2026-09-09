@@ -27,9 +27,10 @@ apply_changes Java 移植中 **id 分配与 JS（sdkjs v7.0.1）对齐**。这�
 - **根因**：`JBinIdAllocator.isContainer()`（或 `walkParContent()` switch）把 Del/Ins/MoveFrom/MoveTo 与 Hyperlink/FldSimple 一并当作容器各分配 1 id。JS 实际（`Serialize2.js:11564-11608`）：这四种类型不创建任何对象，只包 ReviewInfo，内容经 oParStruct 直接加入段落，id 消耗 = 0。
 - **后果**：基线 bin 含修订时，从第一条 Del/Ins 起后续所有对象 id 整体偏移 → owner 命中错误对象或 noHost。fail-loud 只抓 type-2(noHost)，抓不住 type-1(静默错对象)。
 - **修复**：读侧 `JBinIdAllocator.readRevision`（0-id + REV payload Author=0/Date=1/Id=2/UserId=3/Content=4 + 内容扁平化入段落 + `[start,end)` 标 reviewType Remove=1/Add=2）；写侧 `JDocumentWriter.writeTrackRevision` 把 Id 写在最前且从局部计数器 0 重新生成（非读回原 Id）。
-- **验证**：`TestRevisionIdAlloc.java`（office/test）用 x2t 从带 `<w:ins>/<w:del>` 的 docx 转出的真实 base bin（`tmp/revtest/binsrc/Editor.bin`）判定，**6 PASS / 1 FAIL**。
+- **验证**：`TestRevisionIdAlloc.java`（office/test）用 x2t 从带 `<w:ins>/<w:del>` 的 docx 转出的真实 base bin（fixture 已正式入库，见下节）判定，**6 PASS / 1 FAIL**。
   - 6 PASS：docStart=402、runs=4、envelope 容器 id 数=0（Del/Ins 各 0 id）、'old'=Remove(1)、'new'=Add(2)；run 流=Hello(405)/old(406)/new(407)/world.(408)，无容器 id 混入。
-  - 唯一 FAIL：round-trip 字节等价（334 vs 324，+10）——与修改无关：两 envelope 原/重写均恰 95 字节，+10 全来自 `Correct_Content`(Serialize2.js:11154) 段尾注入的空 run（`05 05 00 00 00 08 00 00 00 00`）。
+  - 唯一 FAIL：round-trip 字节等价——与修改无关：两 envelope 原/重写均恰 95 字节，差量全来自 `Correct_Content`(Serialize2.js:11154) 段尾注入的空 run（`05 05 00 00 00 08 00 00 00 00`，10 字节）。
+  - **数字口径坑（勿误判回归）**：测试打印 `roundtrip 长度=338  原始 Document 分节长度=324`，看着是 +14。但重写串开头多一个 4 字节外层长度前缀（`4e010000`=334），原始串没有；**净载荷 334 vs 324 = +10**，与上面的归因一致。别把 338−324 当成新增缺陷。
 - **判定准则坑**：不能以 x2t 字节等价作 round-trip 判据。x2t(C++) 字段序=(Author,Date,Id,Content)，JS `WriteTrackRevision`=(Id,Author,Date,Content) 且 Id 从 0 重生成（Del=0/Ins=1；x2t 为 Del=1/Ins=2）。权威判据 = Java 镜像 sdkjs v7.0.1。
 
 ### ❌ 未完成：确证错位 2（忠实路径内部计数与 JS 不符）
@@ -48,12 +49,45 @@ apply_changes Java 移植中 **id 分配与 JS（sdkjs v7.0.1）对齐**。这�
 - **风险 4**：pre-doc 对象（脚注/尾注/页眉页脚正文/编号）在 calibrated 路径只"跳过 counter 不建模"；针对它们的 change 会 noHost → 抛异常。安全但覆盖窄于 JS（fail-loud）。
 - **风险 5**：bootstrap=401 为 oracle 常量，依赖 sdkjs 版本一致；升级即失效。
 
+## 如何重跑子项 1 的验证
+工作目录 `D:/Dev/DocSys`（`.class` 必须 `-d` 到 `WebRoot/WEB-INF/classes`，勿落 src 树）：
+```
+C:/docsysRel/docsys-WDK/docsys/tomcat/Java/jdk/bin/javac -encoding UTF-8 \
+  -d WebRoot/WEB-INF/classes \
+  -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" \
+  src/com/DocSystem/websocket/office/test/TestRevisionIdAlloc.java
+
+java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" \
+  com.DocSystem.websocket.office.test.TestRevisionIdAlloc
+```
+期望：`passed=6 failed=1`（唯一 FAIL = round-trip 净 +10，已归因 `Correct_Content`；注意 338/324 的口径坑，见上）。
+
+## ✅ 测试 fixture 已正式入库（2026-09-09，原 scratch 坑已消除）
+`TestRevisionIdAlloc` 的 base bin 已从未跟踪的 root `tmp/revtest/` 迁入 office/test 仓库正式 fixture 目录：
+
+`src/com/DocSystem/websocket/office/test/测试文件/RevisionBase修订id分配/`
+- `binsrc/Editor.bin`（993B，测试直接读）、`fromdocx/input.docx`（1093B）
+- `makerev.py` + `params.xml`（路径已改成指向本目录，可原地重跑重生成）、`README.md`
+
+同时做了两处加固：
+- `BIN_PATH` 改指入库路径（原 `tmp/revtest/binsrc/Editor.bin`）。
+- **静默跳过坑已修**：原先 fixture 缺失时走 `[SKIP]` 分支直接 return，表现为 "0 failed" 会被误读成通过；现改为抛 `IllegalStateException`（fail-loud），报错里带绝对路径 + 重生成方法 + "工作目录须为 D:/Dev/DocSys" 提示。
+
+> 注意：office/test 的 `.gitignore` 忽略 `tmp/` 与 `/tmp`，且 `office/test/tmp/` 已被各测试当 scratch 输出目录用——**fixture 不能放那里**，否则只是把"未跟踪易丢"的坑平移。正式 fixture 一律进 `测试文件/`。
+
 ## 下一步（待用户确认后再动）
 - 候选一（§14.5 建议 3）：修忠实路径 5/6 计数——改动小、边界清晰。
 - 候选二（§14.5 建议 2，风险最高）：用真实遍历替换 481 常量——补 CTheme 树 id 分配，工作量大。
 - 是否继续推进、先做哪个，等用户指示（遵守"未确认前不自推进"）。
 
-## 未提交改动（待按归属提交）
-- office 核心仓库（dev/office）：`JBinIdAllocator.java`、`JDocumentWriter.java`
-- office/test 仓库（master）：`TestRevisionIdAlloc.java`
-- 尚未提交；提交归属见 CLAUDE.md「仓库结构」。
+## 未提交改动（2026-09-09 实测 git status，待按归属提交）
+- **office 核心仓库（dev/office）** —— 3 项未提交：
+  - `doctrenderer/jmerge/word/JBinIdAllocator.java`（M，`readRevision` 等）
+  - `doctrenderer/jmerge/word/JDocumentWriter.java`（M，`writeTrackRevision` 等）
+  - `devDocs/apply_changes-移植后代码验证计划.md`（M，F1 条目范围更正）
+- **office/test 仓库（master）** —— 3 项未提交：
+  - `TestRevisionIdAlloc.java`（M，BIN_PATH 入库路径 + fail-loud 改造）
+  - `测试文件/RevisionBase修订id分配/`（??，新增 fixture 目录 5 文件）
+  - `TestS3Diag.java`（M，第18行 OUT 从工程根 `tmp/TestS3Diag/` 改回 `office/test/tmp/`，与另 63 个测试对齐；已重编译过）
+- **root 仓库（devInt）** —— 2 项未提交：`CLAUDE.md`（M，新增「测试 scratch 输出目录（不变量）」节，与 .class 不变量并列）、本工作卡。root `tmp/`、`tmp_diff/`、`tmp_w24/`、`tmp_test_output.txt` 已由用户删除。
+- 提交归属见 CLAUDE.md「仓库结构」。
