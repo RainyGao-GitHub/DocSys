@@ -61,11 +61,27 @@ apply_changes Java 移植中 **id 分配与 JS（sdkjs v7.0.1）对齐**。这�
 - **验证**：Golden3 `noHost=0`（真实遍历给出 docStart=634 = oracle，preDocIds=232）；剩余 7 error 为 Drawing xfrm/flip 处理器未实现（classId=5/3，预存在缺口，不是 id 分配问题）。Golden2/W2/W2_4/RevisionIdAlloc 无回归（各 noHost=0/error=0）。
 - **提交**：office `34429f3f`，讲解文档 `docs/id分配候选二-BinStreamReader两处雷.md`。同时清理候选二调试用临时 Log 输出（JMergeEngine.java 的 docStart 打印 + JBinIdAllocator 内 doOther/countThemeIds/aSeekTable/allocate 各调试输出）。
 
-### ❌ 未完成：风险 2-5
-- **风险 2**：Drawing 子对象用字节级估算（`countPptxSubObjects`）；JS 是每个 `CBaseObject` 构造 1 id，数量取决于 shape 类型（Fill/Stroke/Geometry/Path/Effect/Text…）。某类估算不一致 → 后续 id 漂移。
-- **风险 3**：`Correct_Content` 删除分支未模拟——基线含相邻空 run/空超链接时 JS 会删除对象（减 id），Java 不删 → 漂移。
-- **风险 4**：pre-doc 对象（脚注/尾注/页眉页脚正文/编号）在 calibrated 路径只"跳过 counter 不建模"；针对它们的 change 会 noHost → 抛异常。安全但覆盖窄于 JS（fail-loud）。
-- **风险 5**：bootstrap=401 为 oracle 常量，依赖 sdkjs 版本一致；升级即失效。
+### ✅ 完成：风险 2（Drawing 子对象真实遍历，2026-09-10）
+- **根因**：`countPptxSubObjects` 对所有 PIC 一律返回 10、其余返回 0；JS 实际按形状类型分配：CShape 含文字框时多达 5+递归，CConnectionShape 无 UniNvPr 链，CGroupShape 有 children 递归。
+- **修复**：真实 PPTX binary 遍历（Serialize.js ReadPic/ReadShape/ReadCxn/ReadGroupShape 蓝本）：
+  - CImageShape/COleObject：固定 3(UniNvPr链) + 条件 Ph/CSpPr/CXfrm/Geometry/Path/Style
+  - CShape：同上 + textBoxContent(CDocContent=5 + DOCT 子流递归)
+  - CConnectionShape：无 UniNvPr(SkipRecord) + CSpPr/Geometry/Style
+  - CGroupShape：grSpPr(CXfrm only) + children 递归
+  - PRESET_PATHS 静态表（227 项，来自 CreateGeometry.js）
+- **验证**：Golden3 `noHost=0`（不变）；W2/W2_4/RevisionIdAlloc 无回归。
+- **提交**：office `ec4572f7`，讲解文档 `docs/id分配候选三-Drawing子对象真实遍历.md`。
+
+### ✅ 完成：风险 3（Correct_Content 删除分支分析，2026-09-10）
+- **结论**：不产生 id 序列漂移。`Internal_Content_Remove` 只做 `Content.splice()`，不调 `g_oTableId.Remove()`。被删对象仍在 g_oTableId，后续对象 id 在 JS/Java 中完全一致。§14.4"减 id"描述有误已修正。**无需修改代码**。
+- **讲解文档**：`docs/id分配候选四-Correct_Content删除分支分析.md`
+
+### ✅ 完成：风险 4（pre-doc 无模型映射，当前阶段不修复，2026-09-10）
+- **结论**：id 序列一致（Risk 1 真实遍历已保证），只是 pre-doc 对象无 idMap 映射→ 针对脚注/页眉 change 会 noHost（fail-loud）。策略可接受，待支持脚注/页眉 change 时一并建模。**当前不修复**。
+
+### ✅ 完成：风险 5（bootstrap=401 维护风险，2026-09-10）
+- **结论**：sdkjs 已钉 v7.0.1.71，401 当前版本稳定。升级时需手动更新（一行），Golden 测试快速发现。记录为版本升级 checklist 项。**当前不修复**。
+- **讲解文档**：`docs/id分配候选五-风险4和5分析.md`（风险 4/5 合并）
 
 ## 如何重跑子项 1 的验证
 工作目录 `D:/Dev/DocSys`（`.class` 必须 `-d` 到 `WebRoot/WEB-INF/classes`，勿落 src 树）：
@@ -93,15 +109,18 @@ java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" \
 
 > 注意：office/test 的 `.gitignore` 忽略 `tmp/` 与 `/tmp`，且 `office/test/tmp/` 已被各测试当 scratch 输出目录用——**fixture 不能放那里**，否则只是把"未跟踪易丢"的坑平移。正式 fixture 一律进 `测试文件/`。
 
-## 下一步（待用户确认后再动）
-- 候选三（§14.4 风险 2-5）：Drawing 估算、Correct_Content 删除分支、pre-doc change noHost、bootstrap 常量。
-- 是否继续推进、先做哪个，等用户指示（遵守"未确认前不自推进"）。
+## 下一步
+- **§14.4 全部 5 条风险已分析关闭**（2026-09-10）。
+- id 分配对齐大类缺陷整体**已闭环**：确证错位 1/2 + 风险 1-5 全部处理完毕。
+- 可开启下一轮 fixture 验证（风险 2 新形状类型：CShape 文字框/CConnectionShape/CGroupShape），由用户创建 Word 文件 → x2t → bin → noHost=0 确认。
 
 ## 提交状态（2026-09-10）
-- **office 核心仓库（dev/office）** —— ✅ 已提交 4 条：
+- **office 核心仓库（dev/office）** —— ✅ 已提交 6 条：
   - `c9c0cabe`：子项 1（确证错位 1：Del/Ins/MoveFrom/MoveTo 0-id）。
   - `4c3b5079`：子项 2（确证错位 2：doHdrFtr/cell/Sdt skipN 5→6 + 讲解文档）。
   - `a99958ab`：风险 1（真实遍历替换 481 常量：Fix A/B/C + 讲解文档）。
   - `34429f3f`：风险 1 实现雷修复（Seek2+no+4 + 清理调试 Log + 讲解文档）。
+  - `ec4572f7`：风险 2（Drawing 子对象真实遍历 + 227 预设路径数表 + 讲解文档）。
+  - `6e0f5328`：风险 3-5 文档分析（三项关闭无需改代码 + §14.4 措辞修正）。
 - **office/test 仓库（master）** —— ✅ `845e2c0`：5 个测试文件移除 globalCalibrationOverride。
 - **root 仓库（devInt）** —— ⏳ 未提交：`CLAUDE.md`（M）+ 本工作卡（M）。
