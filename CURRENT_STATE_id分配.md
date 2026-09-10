@@ -53,7 +53,13 @@ apply_changes Java 移植中 **id 分配与 JS（sdkjs v7.0.1）对齐**。这�
 - **Fix B**：`doOther()` 用真实 PPTX binary 遍历 CTheme id 树（new CTheme=1 + themeElements=0 + per spDef/lnDef/txDef: CSpPr+DefId+optional xfrm+geom+CShapeStyle + per ExtraClrScheme: 1+optional ClrMap=1）。
 - **Fix C**：删除 Java 自创脚手架（`CALIBRATED_PRE_DOC_IDS`、`USE_CALIBRATED_PRE_DOC`、`instancePreDocOverride`、`globalCalibrationOverride`、`countStyles()`），从测试文件清除全部调用点（5 个测试文件）。
 - **验证**：`TestRevisionIdAlloc` 仍 **6 PASS / 1 FAIL**（docStart=402，符合预期——revision fixture 无 Other/Notes 分节，真实遍历产出 pre-doc=0）。
-- **提交**：待提交到 office 仓库（dev/office）。讲解文档：`docs/id分配候选二-真实遍历替换481常量.md`（已存在）。
+- **提交**：office `a99958ab`（Fix A/B/C），office/test `845e2c0`（5 测试文件移除 calibration）。讲解文档：`docs/id分配候选二-真实遍历替换481常量.md`。
+
+### ✅ 完成：风险 1 实现雷修复（Seek2+no+4，2026-09-10）
+- **雷 1 根因**：`doOther` 用 `stream.Seek(off)` 只设 `pos`（帧锚点），不改 `cur`（实际读位置）；`GetULong()` 从旧 `cur` 处读到 0，CTheme 计数为 0，`docStart` 整体偏低，所有 owner 映射错对象。修复：`stream.Seek2(off)`。
+- **雷 2 根因**：`countThemeIds/countDefaultShapeDef/countSpPr/countExtraClrSchemes` 对 PPTX record `end` 边界多加 `+4`。PPTX `EndRecord` 写的是纯内容长度（不含 4B 长度字段本身），读完 4B len 后 `cur` 在内容起始，`end = cur + len` 即可；`+4` 导致越界进入相邻记录，CShapeStyle/CXfrm/CGeometry 计数偏大。全部去掉 `+4`。
+- **验证**：Golden3 `noHost=0`（真实遍历给出 docStart=634 = oracle，preDocIds=232）；剩余 7 error 为 Drawing xfrm/flip 处理器未实现（classId=5/3，预存在缺口，不是 id 分配问题）。Golden2/W2/W2_4/RevisionIdAlloc 无回归（各 noHost=0/error=0）。
+- **提交**：office `34429f3f`，讲解文档 `docs/id分配候选二-BinStreamReader两处雷.md`。同时清理候选二调试用临时 Log 输出（JMergeEngine.java 的 docStart 打印 + JBinIdAllocator 内 doOther/countThemeIds/aSeekTable/allocate 各调试输出）。
 
 ### ❌ 未完成：风险 2-5
 - **风险 2**：Drawing 子对象用字节级估算（`countPptxSubObjects`）；JS 是每个 `CBaseObject` 构造 1 id，数量取决于 shape 类型（Fill/Stroke/Geometry/Path/Effect/Text…）。某类估算不一致 → 后续 id 漂移。
@@ -89,14 +95,13 @@ java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" \
 
 ## 下一步（待用户确认后再动）
 - 候选三（§14.4 风险 2-5）：Drawing 估算、Correct_Content 删除分支、pre-doc change noHost、bootstrap 常量。
-- 验证候选二对其他 fixture（TestJMergeJavaGolden2/3/W2/W2_4）的影响——这些 fixture 之前用 globalCalibrationOverride 绕过，现在走真实遍历，需确认它们通过（可能需要调整，因为这些 fixture 的 pre-doc ids 由真实遍历计算，不再是手动覆盖值）。
 - 是否继续推进、先做哪个，等用户指示（遵守"未确认前不自推进"）。
 
 ## 提交状态（2026-09-10）
-- **office 核心仓库（dev/office）** —— ✅ 已提交 2 条 + ⏳ 待提交候选二：
+- **office 核心仓库（dev/office）** —— ✅ 已提交 4 条：
   - `c9c0cabe`：子项 1（确证错位 1：Del/Ins/MoveFrom/MoveTo 0-id）。
   - `4c3b5079`：子项 2（确证错位 2：doHdrFtr/cell/Sdt skipN 5→6 + 讲解文档）。
-  - ✅ 候选二（风险 1）：`a99958ab`（office 仓库）。JBinIdAllocator 真实遍历 + Fix A/B/C + 注释清理。
+  - `a99958ab`：风险 1（真实遍历替换 481 常量：Fix A/B/C + 讲解文档）。
+  - `34429f3f`：风险 1 实现雷修复（Seek2+no+4 + 清理调试 Log + 讲解文档）。
 - **office/test 仓库（master）** —— ✅ `845e2c0`：5 个测试文件移除 globalCalibrationOverride。
 - **root 仓库（devInt）** —— ⏳ 未提交：`CLAUDE.md`（M）+ 本工作卡（M）。
-- 提交归属见 CLAUDE.md「仓库结构」。
