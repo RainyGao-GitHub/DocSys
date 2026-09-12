@@ -408,7 +408,7 @@ public class DocSysSkillExecutor implements SkillExecutor {
                 }
             }
 
-            Map<String, Object> response = docSysClient.searchDocs("", vid);
+            Map<String, Object> response = docSysClient.agentListAllDocs(vid);
             if (!"ok".equals(response.get("status"))) {
                 return SkillExecutionResult.error("Failed to list documents: " + response.get("msgInfo"));
             }
@@ -612,7 +612,7 @@ public class DocSysSkillExecutor implements SkillExecutor {
         }
         try {
             Integer vid = vidStr != null ? Integer.parseInt(vidStr) : null;
-            Map<String, Object> response = docSysClient.searchDocs(query, vid);
+            Map<String, Object> response = docSysClient.agentSearchDocsByKeyword(query, vid);
             String formatted = formatSearchResults(response, query);
             return SkillExecutionResult.ok(formatted);
         } catch (Exception e) {
@@ -873,7 +873,7 @@ public class DocSysSkillExecutor implements SkillExecutor {
             return SkillExecutionResult.error("请提供要查询的内容，例如: 查询项目的资料");
         }
         try {
-            Map<String, Object> response = docSysClient.searchDocs(query, null);
+            Map<String, Object> response = docSysClient.agentSearchDocsByKeyword(query, null);
             String status = (String) response.get("status");
             if ("ok".equals(status)) {
                 Object data = response.get("data");
@@ -908,7 +908,7 @@ public class DocSysSkillExecutor implements SkillExecutor {
             return SkillExecutionResult.error("请提供要撰写的主题，例如: 撰写项目综述");
         }
         try {
-            Map<String, Object> searchResult = docSysClient.searchDocs(topic, null);
+            Map<String, Object> searchResult = docSysClient.agentSearchDocsByKeyword(topic, null);
             String resultSummary = formatSearchResults(searchResult, topic);
             return SkillExecutionResult.ok(
                 "已找到以下与【" + topic + "】相关的文档：\n\n" + resultSummary +
@@ -923,7 +923,7 @@ public class DocSysSkillExecutor implements SkillExecutor {
             return SkillExecutionResult.error("请提供想了解的内容，例如: 关于项目情况");
         }
         try {
-            Map<String, Object> searchResult = docSysClient.searchDocs(topic, null);
+            Map<String, Object> searchResult = docSysClient.agentSearchDocsByKeyword(topic, null);
             String resultSummary = formatSearchResults(searchResult, topic);
             return SkillExecutionResult.ok(
                 "根据搜索结果，关于【" + topic + "】的相关文档如下：\n\n" + resultSummary);

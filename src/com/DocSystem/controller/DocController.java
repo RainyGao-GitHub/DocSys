@@ -7353,6 +7353,297 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	//Agent 专用文件搜索接口(2026-09-12): mode=index 基于 Lucene 索引(文件名/内容/备注, 支持与或非 DSL);
+	//mode=grep 磁盘逐行扫描兜底(覆盖直接放入仓库目录尚未建索引的文件)。面向 LLM 工具调用, 返回紧凑结果。
+	@RequestMapping("/agentSearchDoc.do")
+	public void agentSearchDoc(Integer reposId, String path, String query, String pattern, String mode,
+			Integer maxResults, Boolean withSnippet,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("************** agentSearchDoc ****************");
+		Log.info("agentSearchDoc reposId:" + reposId + " path:" + path + " mode:" + mode + " maxResults:" + maxResults);
+		
+		ReturnAjax rt = new ReturnAjax();
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, null, false, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(repos == null)
+		{
+			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		if(maxResults == null || maxResults <= 0)
+		{
+			maxResults = 20;
+		}
+		else if(maxResults > 100)
+		{
+			maxResults = 100;
+		}
+		if(withSnippet == null)
+		{
+			withSnippet = true;
+		}
+		
+		String pathFilter = com.DocSystem.agent.search.AgentSearchExecutor.normalizePathFilter(path);
+		
+		//磁盘扫描兜底（grep 等价实现）
+		if("grep".equalsIgnoreCase(mode))
+		{
+			if(pattern == null || pattern.trim().isEmpty())
+			{
+				docSysErrorLog("grep 模式需要 pattern 参数（搜索关键词）", rt);
+				writeJson(rt, response);			
+				return;	
+			}
+			List<Map<String, Object>> results = com.DocSystem.agent.search.AgentSearchExecutor.grepScan(
+					repos, pattern.trim(), pathFilter.isEmpty() ? null : pathFilter, maxResults,
+					doc -> !isRealDocTextSearchIgnored(repos, doc, true));
+			rt.setData(results);
+			rt.setDataEx(results.size());
+			writeJson(rt, response);
+			return;
+		}
+		
+		//Lucene 索引搜索（默认）
+		com.DocSystem.agent.search.AgentSearchQuery parsedQuery;
+		try
+		{
+			parsedQuery = com.DocSystem.agent.search.AgentSearchQuery.parse(query);
+		}
+		catch(IllegalArgumentException e)
+		{
+			docSysErrorLog(e.getMessage(), rt);
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		List<HitDoc> hits = com.DocSystem.agent.search.AgentSearchExecutor.searchIndex(
+				repos, parsedQuery, pathFilter.isEmpty() ? null : pathFilter, maxResults);
+		
+		List<String> snippetTerms = parsedQuery.collectTerms();
+		List<Map<String, Object>> results = new ArrayList<Map<String, Object>>();
+		for(HitDoc hitDoc : hits)
+		{
+			Doc doc = hitDoc.doc;
+			Map<String, Object> r = new HashMap<String, Object>();
+			r.put("reposId", reposId);
+			r.put("docId", doc.getDocId());
+			r.put("path", doc.getPath());
+			r.put("name", doc.getName());
+			r.put("type", doc.getType());
+			r.put("size", doc.getSize());
+			r.put("hitType", hitDoc.hitType);
+			//⚠️ 直接用公有字段：getTotalHitScore() 会调 Log.debug（写文件失败时无限递归）
+			r.put("score", hitDoc.hitScore_Total);
+			if(withSnippet)
+			{
+				String snippet = extractHitSnippet(repos, hitDoc, snippetTerms);
+				if(snippet != null)
+				{
+					r.put("snippet", snippet);
+				}
+			}
+			results.add(r);
+		}
+		rt.setData(results);
+		rt.setDataEx(results.size());
+		writeJson(rt, response);
+	}
+	
+	//Agent 搜索: 提取命中片段(±50 字符纯文本, 不转 base64; 超过 2MB 的文件不读全文)
+	private String extractHitSnippet(Repos repos, HitDoc hitDoc, List<String> terms)
+	{
+		Doc doc = hitDoc.doc;
+		Long size = doc.getSize();
+		if(size != null && size > 2L * 1024 * 1024)
+		{
+			return null;
+		}
+		doc.setLocalRootPath(Path.getReposRealPath(repos));
+		doc.setLocalVRootPath(Path.getReposVirtualPath(repos));
+		String content = null;
+		if((hitDoc.hitType & HitDoc.HitType_FileContent) != 0)
+		{
+			content = readRealDocContent(repos, doc);
+		}
+		else if((hitDoc.hitType & HitDoc.HitType_FileComment) != 0)
+		{
+			content = readVirtualDocContent(repos, doc);
+		}
+		if(content == null || content.isEmpty())
+		{
+			return null;
+		}
+		String lower = content.toLowerCase();
+		int first = -1;
+		int termLen = 0;
+		for(String t : terms)
+		{
+			if(t == null || t.isEmpty())
+			{
+				continue;
+			}
+			int idx = lower.indexOf(t.toLowerCase());
+			if(idx >= 0 && (first < 0 || idx < first))
+			{
+				first = idx;
+				termLen = t.length();
+			}
+		}
+		if(first < 0)
+		{
+			return null;
+		}
+		int start = Math.max(0, first - 50);
+		int end = Math.min(content.length(), first + termLen + 50);
+		String snippet = content.substring(start, end);
+		snippet = snippet.replace('\n', ' ').replace('\r', ' ');
+		if(start > 0)
+		{
+			snippet = "…" + snippet;
+		}
+		if(end < content.length())
+		{
+			snippet = snippet + "…";
+		}
+		return snippet;
+	}
+	
+	//Agent 专用文本文件写入接口(2026-09-12): 创建或覆盖文本文件(UTF-8, 1MB 上限);
+	//复用 updateRealDocContent(文件锁/版本提交/远程推送/备份动作); 不用 uploadDoc(那是上传语义)。
+	//新建文件时先按 addDoc 流程建条目再写内容(FSM 仓库产生 create+modify 两条历史, 已知可接受)。
+	private static final int AGENT_WRITE_MAX_CONTENT_LEN = 1024 * 1024;
+	@RequestMapping("/agentWriteText.do")
+	public void agentWriteText(
+			Integer reposId, String path, String name, String content, String commitMsg,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("************** agentWriteText [" + path + name + "] ****************");
+		Log.info("agentWriteText reposId:" + reposId + " path:" + path + " name:" + name + " contentLen:" + (content != null ? content.length() : 0));
+		
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
+		
+		if(name == null || name.isEmpty())
+		{
+			docSysErrorLog("文件名不能为空！", rt);
+			writeJson(rt, response);			
+			return;	
+		}
+		if(FileUtil.isTextFile(name) == false)
+		{
+			docSysErrorLog("暂不支持该文件类型（仅支持文本文件，如 txt/md/json/xml/sql/代码/脚本等）", rt);
+			writeJson(rt, response);			
+			return;	
+		}
+		if(content == null)
+		{
+			docSysErrorLog("content 不能为空！", rt);
+			writeJson(rt, response);			
+			return;	
+		}
+		if(content.length() > AGENT_WRITE_MAX_CONTENT_LEN)
+		{
+			docSysErrorLog("内容超过 1MB 上限，请拆分成更小的文件", rt);
+			writeJson(rt, response);			
+			return;	
+		}
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "Agent写入 [" + path + name + "]";
+		}
+		
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, 0L, "");
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
+		boolean isNew = (dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0);
+		if(!isNew && dbDoc.getType() != 1)
+		{
+			docSysErrorLog("目标 " + path + name + " 是目录，不能写入文本内容", rt);
+			writeJson(rt, response);			
+			return;	
+		}
+		
+		User login_user = reposAccess.getAccessUser();
+		String commitUser = login_user.getName();
+		
+		if(isNew)
+		{
+			//先按 addDoc 流程创建文件条目(底层接口, 不写响应)
+			ActionContext context = buildBasicActionContext(getRequestIpAddress(request), login_user,
+					"agentWriteText", "agentWriteText", "Agent写入", null, repos, doc, null, null);
+			context.info = "Agent写入 [" + doc.getPath() + doc.getName() + "]";
+			context.commitMsg = commitMsg;
+			context.commitUser = commitUser;
+			int ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, login_user, rt, context);
+			if(ret == 0)
+			{
+				docSysErrorLog("创建文件条目失败: " + path + name, rt);
+				writeJson(rt, response);
+				addSystemLog(request, login_user, "agentWriteText", "agentWriteText", "Agent写入", null, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+				return;
+			}
+		}
+		else
+		{
+			doc.setType(dbDoc.getType());
+			doc.setSize(dbDoc.getSize());
+			doc.setLatestEditTime(dbDoc.getLatestEditTime());
+		}
+		
+		//写入文本内容(UTF-8; 含文件锁/版本提交/远程推送/备份动作)
+		doc.setContent(content);
+		doc.setCharset("UTF-8");
+		doc.autoCharsetDetect = false;
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ret = updateRealDocContent(repos, doc, commitMsg, commitUser, login_user, rt, actionList,
+				request, "agentWriteText", "agentWriteText", "Agent写入", null);
+		if(ret)
+		{
+			deleteTmpRealDocContent(repos, doc, login_user);
+			executeCommonActionList(actionList, rt);
+			Doc updatedDoc = docSysGetDoc(repos, doc, false);
+			if(updatedDoc != null)
+			{
+				Map<String, Object> docInfo = new HashMap<String, Object>();
+				docInfo.put("reposId", reposId);
+				docInfo.put("docId", updatedDoc.getDocId());
+				docInfo.put("path", updatedDoc.getPath());
+				docInfo.put("name", updatedDoc.getName());
+				docInfo.put("type", updatedDoc.getType());
+				docInfo.put("size", updatedDoc.getSize());
+				rt.setData(docInfo);
+			}
+			addSystemLog(request, login_user, "agentWriteText", "agentWriteText", "Agent写入", null, "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+		}
+		else
+		{
+			addSystemLog(request, login_user, "agentWriteText", "agentWriteText", "Agent写入", null, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+		}
+		writeJson(rt, response);
+	}
+	
 	/**
      * 去除字符串中所包含的空格（包括:空格(全角，半角)、制表符、换页符等）
      * @param s

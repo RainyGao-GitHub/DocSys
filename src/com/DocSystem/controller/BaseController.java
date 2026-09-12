@@ -14349,7 +14349,8 @@ public class BaseController  extends BaseFunction{
 		return 0;
 	}
 	
-	private static boolean isRealDocTextSearchIgnored(Repos repos, Doc doc, boolean parentCheck) {
+	//Agent 搜索优化: private→protected, 供 DocController.agentSearchDoc.do(grep 分支)过滤全文搜索忽略项
+	protected static boolean isRealDocTextSearchIgnored(Repos repos, Doc doc, boolean parentCheck) {
 		//版本倉庫和索引倉庫禁止建立索引
 		if(doc.getName().equals("DocSysVerReposes") || doc.getName().equals("DocSysLucene"))
     	{

@@ -12,6 +12,7 @@ import javax.annotation.PostConstruct;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.DocSystem.agent.tool.ToolCall;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -361,6 +362,161 @@ public class LLMService {
         }
 
         return doChat(chatEndpoint, chatModel, chatApiKey, messages);
+    }
+
+    /**
+     * T10：非流式原生工具调用通道 —— 请求携带 tools + tool_choice，返回结构化 tool_calls。
+     *
+     * <p>双通道语义：{@link LlmTurnResult#nativeToolCalls} 非空 → 调用方直接执行；
+     * 端点 400 拒绝 tools（thinking 类模型）→ 去 tools 重试一次，返回 {@code toolsRejected=true}
+     * 的纯文本结果，由调用方切换文本通道。</p>
+     *
+     * @param messages   完整消息列表（role ∈ system/user/assistant/tool；tool 消息含 tool_call_id）
+     * @param resolved   请求级模型配置
+     * @param tools      OpenAI 格式工具数组（null/空 → 不带 tools）
+     * @param toolChoice "auto"/null → auto；其它值原样下发
+     */
+    public LlmTurnResult chatNative(List<Map<String, Object>> messages, ResolvedLlmConfig resolved,
+                                    JSONArray tools, String toolChoice) throws IOException {
+        if (resolved == null) {
+            resolved = resolveDefaultConfig();
+        }
+        String chatEndpoint = resolved.endpoint;
+        String chatModel = resolved.model;
+        String chatApiKey = resolved.apiKey;
+
+        // Circuit breaker: primary/backup switching
+        if (hasBackup && isPrimaryCircuitOpen()) {
+            log.info("Primary LLM circuit breaker OPEN — switching to backup endpoint");
+            chatEndpoint = backupEndpoint;
+            chatModel = backupModel.isEmpty() ? defaultModel : backupModel;
+            chatApiKey = apiKey;
+        }
+
+        boolean toolsRequested = tools != null && !tools.isEmpty();
+        LlmTurnResult result = doChatNative(chatEndpoint, chatModel, chatApiKey, messages, tools, toolChoice);
+        if (result.toolsRejected && toolsRequested) {
+            log.warn("LLM native tools rejected (HTTP 400) — retrying once without tools");
+            LlmTurnResult retried = doChatNative(chatEndpoint, chatModel, chatApiKey, messages, null, null);
+            // 保留 rejected 标记（调用方据此在后续轮次关闭原生通道），文本取重试结果
+            return retried.hasNativeCalls() ? retried : LlmTurnResult.rejected(retried.text);
+        }
+        return result;
+    }
+
+    /** 单次原生请求：带 tools 时 400 → 返回 rejected 结果（不抛异常，交由上层去 tools 重试） */
+    private LlmTurnResult doChatNative(String targetEndpoint, String targetModel, String targetApiKey,
+            List<Map<String, Object>> messages, JSONArray tools, String toolChoice) throws IOException {
+        boolean targetOpenAi = detectOpenAiCompatible(targetEndpoint);
+        boolean toolsRequested = tools != null && !tools.isEmpty();
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", targetModel);
+        requestBody.put("messages", messages);
+        requestBody.put("temperature", temperature);
+        requestBody.put("max_tokens", maxTokens);
+        requestBody.put("stream", false);
+        if (toolsRequested) {
+            requestBody.put("tools", tools);
+            requestBody.put("tool_choice",
+                    toolChoice != null && !toolChoice.trim().isEmpty() ? toolChoice.trim() : "auto");
+        }
+
+        String json = JSON.toJSONString(requestBody);
+        String chatCompletionsPath = (targetEndpoint != null && targetEndpoint.contains("bigmodel.cn"))
+                ? "/v4/chat/completions" : "/v1/chat/completions";
+        String url = targetOpenAi ? targetEndpoint + chatCompletionsPath : targetEndpoint + "/api/chat";
+
+        Request.Builder reqBuilder = new Request.Builder()
+                .url(url)
+                .header("Content-Type", "application/json")
+                .post(RequestBody.create(JSON_MEDIA, json));
+        if (targetApiKey != null && !targetApiKey.isEmpty()) {
+            reqBuilder.header("Authorization", "Bearer " + targetApiKey);
+        }
+        Request request = reqBuilder.build();
+
+        Response response = httpClient.newCall(request).execute();
+        String body = null;
+        try {
+            int code = response.code();
+            ResponseBody respBody = response.body();
+            body = respBody != null ? respBody.string() : "";
+            log.info("LLM chatNative response: status={}, bodyLen={}, toolsSent={}", code, body.length(), toolsRequested);
+
+            if (code == 200) {
+                JSONObject result = JSON.parseObject(body);
+                if (targetOpenAi) {
+                    JSONArray choices = result.getJSONArray("choices");
+                    if (choices != null && !choices.isEmpty()) {
+                        JSONObject msg = choices.getJSONObject(0).getJSONObject("message");
+                        String text = msg != null && msg.getString("content") != null
+                                ? msg.getString("content") : "";
+                        List<ToolCall> calls = parseNativeToolCalls(msg);
+                        return calls.isEmpty() ? LlmTurnResult.text(text)
+                                : LlmTurnResult.toolCalls(text, calls);
+                    }
+                    return LlmTurnResult.text("");
+                }
+                JSONObject messageResult = result.getJSONObject("message");
+                String assistantMessage = messageResult != null && messageResult.getString("content") != null
+                        ? messageResult.getString("content") : "";
+                return LlmTurnResult.text(assistantMessage);
+            }
+            if (code == 400 && toolsRequested) {
+                log.warn("LLM chatNative tools rejected: status=400 body={}",
+                        body != null && body.length() > 300 ? body.substring(0, 300) : body);
+                return LlmTurnResult.rejected("");
+            }
+            log.warn("LLM chatNative returned status {}: {}", code, body);
+            throw new LlmHttpException(code, "LLM returned HTTP " + code + ": " + body);
+        } finally {
+            response.close();
+        }
+    }
+
+    /**
+     * T10：解析 OpenAI 兼容 message.tool_calls[] → ToolCall 列表。
+     * 单项形如 {id, type:"function", function:{name, arguments(JSON字符串)}}；arguments 非法 → 空对象。
+     */
+    public static List<ToolCall> parseNativeToolCalls(JSONObject message) {
+        List<ToolCall> calls = new ArrayList<>();
+        if (message == null) {
+            return calls;
+        }
+        JSONArray tcs = message.getJSONArray("tool_calls");
+        if (tcs == null) {
+            return calls;
+        }
+        for (int i = 0; i < tcs.size(); i++) {
+            JSONObject tc = tcs.getJSONObject(i);
+            if (tc == null) {
+                continue;
+            }
+            String id = tc.getString("id");
+            JSONObject fn = tc.getJSONObject("function");
+            if (fn == null) {
+                continue;
+            }
+            String name = fn.getString("name");
+            if (name == null || name.isEmpty()) {
+                continue;
+            }
+            String argsStr = fn.getString("arguments");
+            JSONObject args = new JSONObject();
+            if (argsStr != null && !argsStr.trim().isEmpty()) {
+                try {
+                    JSONObject parsed = JSON.parseObject(argsStr);
+                    if (parsed != null) {
+                        args = parsed;
+                    }
+                } catch (Exception e) {
+                    log.warn("LLM native tool_call arguments not JSON: {}", argsStr);
+                }
+            }
+            calls.add(new ToolCall(id, name, args, argsStr));
+        }
+        return calls;
     }
 
     /**
@@ -834,31 +990,205 @@ public class LLMService {
     }
 
     /**
-     * 惰性流式迭代器（T7.1.1 真流式核心）：
-     * 持有 OkHttp Response + BufferedReader，每次 hasNext/next 才读下一行 SSE；
-     * reasoning/text 分片到达即返回，流结束（[DONE]/finish_reason/EOF）返回 done 并关闭响应。
+     * T10：流式原生工具调用通道 —— 请求携带 tools + tool_choice，
+     * 逐 token 返回 text/reasoning 分片；流结束后、done 之前逐个返回 {@link StreamChunk#toolCall} 完成块。
      *
-     * <p>不缓冲全部分片 → 调用方（ToolUseLoop/AgentController）逐分片回调，
+     * <p>端点 400 拒绝 tools（thinking 类模型）→ 自动去 tools 重试一次，并在分片最前返回
+     * {@link StreamChunk#toolsRejected()} 标记块（调用方据此在后续轮次关闭 tools）。</p>
+     *
+     * @param messages   完整消息列表（role ∈ system/user/assistant/tool）
+     * @param resolved   请求级模型配置
+     * @param tools      OpenAI 格式工具数组（null/空 → 不带 tools，等价旧 streamChatChunks）
+     * @param toolChoice "auto"/null → auto；其它值原样下发
+     */
+    public Iterator<StreamChunk> streamChatChunksNative(List<Map<String, Object>> messages,
+                                                        ResolvedLlmConfig resolved,
+                                                        JSONArray tools, String toolChoice) throws IOException {
+        try {
+            if (resolved == null) {
+                resolved = resolveDefaultConfig();
+            }
+            String streamEndpoint = resolved.endpoint;
+            String streamModel = resolved.model;
+            String streamApiKey = resolved.apiKey;
+            boolean streamOpenAi = resolved.openAiCompatible;
+
+            // Circuit breaker: primary/backup switching
+            if (hasBackup && isPrimaryCircuitOpen()) {
+                log.info("Primary LLM circuit breaker OPEN for streaming — switching to backup endpoint");
+                streamEndpoint = backupEndpoint;
+                streamModel = backupModel.isEmpty() ? defaultModel : backupModel;
+                streamApiKey = apiKey;
+                streamOpenAi = detectOpenAiCompatible(streamEndpoint);
+            }
+
+            boolean toolsRequested = tools != null && !tools.isEmpty();
+            String effectiveToolChoice = toolsRequested
+                    ? (toolChoice != null && !toolChoice.trim().isEmpty() ? toolChoice.trim() : "auto")
+                    : null;
+            StreamOpenResult open = openStreamResponse(streamEndpoint, streamModel, streamApiKey,
+                    streamOpenAi, messages, toolsRequested ? tools : null, effectiveToolChoice);
+
+            ResponseBody respBody = open.response.body();
+            if (respBody == null) {
+                open.response.close();
+                List<StreamChunk> onlyDone = new ArrayList<>();
+                onlyDone.add(StreamChunk.done());
+                return onlyDone.iterator();
+            }
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(respBody.byteStream(), StandardCharsets.UTF_8));
+            // ★ 真流式：返回惰性迭代器，逐行读取 SSE；text/reasoning 即时返回，tool_calls 流末聚合，done 收尾
+            return new StreamChunkIterator(reader, open.response, streamOpenAi,
+                    toolsRequested, open.toolsRejected);
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("LLM native streaming failed: {}", e.getMessage());
+            throw new RuntimeException("LLM native streaming failed: " + e.getMessage(), e);
+        }
+    }
+
+    /** 打开流式响应；带 tools 时 400 → 去 tools 重试一次并置 toolsRejected */
+    private static class StreamOpenResult {
+        final Response response;
+        final boolean toolsRejected;
+        StreamOpenResult(Response response, boolean toolsRejected) {
+            this.response = response;
+            this.toolsRejected = toolsRejected;
+        }
+    }
+
+    private StreamOpenResult openStreamResponse(String endpoint, String model, String apiKey,
+            boolean openAi, List<Map<String, Object>> messages, JSONArray tools, String toolChoice)
+            throws IOException {
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", model);
+        requestBody.put("messages", messages);
+        requestBody.put("temperature", temperature);
+        requestBody.put("max_tokens", maxTokens);
+        requestBody.put("stream", true);
+        if (tools != null && !tools.isEmpty()) {
+            requestBody.put("tools", tools);
+            requestBody.put("tool_choice", toolChoice != null ? toolChoice : "auto");
+        }
+
+        String json = JSON.toJSONString(requestBody);
+        String streamPath = (endpoint != null && endpoint.contains("bigmodel.cn"))
+                ? "/v4/chat/completions" : "/v1/chat/completions";
+        String url = openAi ? endpoint + streamPath : endpoint + "/api/chat";
+
+        Request.Builder reqBuilder = new Request.Builder()
+                .url(url)
+                .header("Content-Type", "application/json")
+                .post(RequestBody.create(JSON_MEDIA, json));
+        if (apiKey != null && !apiKey.isEmpty()) {
+            reqBuilder.header("Authorization", "Bearer " + apiKey);
+        }
+        Request request = reqBuilder.build();
+
+        Response response = httpClient.newCall(request).execute();
+        if (response.code() == 400 && tools != null && !tools.isEmpty()) {
+            String errBody = "";
+            try {
+                ResponseBody rb = response.body();
+                errBody = rb != null ? rb.string() : "";
+            } catch (Exception ignored) {}
+            response.close();
+            log.warn("LLM native streaming tools rejected (HTTP 400) — retrying once without tools: {}",
+                    errBody != null && errBody.length() > 300 ? errBody.substring(0, 300) : errBody);
+            // 去 tools 重试（toolChoice 一并去掉）
+            Map<String, Object> retryBody = new HashMap<>();
+            retryBody.put("model", model);
+            retryBody.put("messages", messages);
+            retryBody.put("temperature", temperature);
+            retryBody.put("max_tokens", maxTokens);
+            retryBody.put("stream", true);
+            Request.Builder retryBuilder = new Request.Builder()
+                    .url(url)
+                    .header("Content-Type", "application/json")
+                    .post(RequestBody.create(JSON_MEDIA, JSON.toJSONString(retryBody)));
+            if (apiKey != null && !apiKey.isEmpty()) {
+                retryBuilder.header("Authorization", "Bearer " + apiKey);
+            }
+            Response retryResponse = httpClient.newCall(retryBuilder.build()).execute();
+            if (retryResponse.code() != 200) {
+                String err2 = "";
+                try {
+                    ResponseBody rb2 = retryResponse.body();
+                    err2 = rb2 != null ? rb2.string() : "";
+                } catch (Exception ignored) {}
+                retryResponse.close();
+                throw new LlmHttpException(retryResponse.code(),
+                        "LLM streaming returned HTTP " + retryResponse.code() + ": " + err2);
+            }
+            return new StreamOpenResult(retryResponse, true);
+        }
+        if (response.code() != 200) {
+            String errBody = "";
+            try {
+                ResponseBody rb = response.body();
+                errBody = rb != null ? rb.string() : "";
+            } catch (Exception ignored) {}
+            response.close();
+            log.warn("LLM native streaming returned status {}: {}", response.code(), errBody);
+            throw new LlmHttpException(response.code(),
+                    "LLM streaming returned HTTP " + response.code() + ": " + errBody);
+        }
+        return new StreamOpenResult(response, false);
+    }
+
+    /**
+     * 惰性流式迭代器（T7.1.1 真流式核心；T10 扩展工具收集）：
+     * 持有 OkHttp Response + BufferedReader，每次 hasNext/next 才读下一行 SSE；
+     * reasoning/text 分片到达即返回；流结束（[DONE]/finish_reason/EOF）前，
+     * 若收集到原生 tool_calls（collectToolCalls）则先逐个返回 tool_call 完成块，
+     * 最后返回 done 并关闭响应。toolsRejected 时首个分片为 tools_rejected 标记块。
+     *
+     * <p>不缓冲全部文本分片 → 调用方（ToolUseLoop/AgentController）逐分片回调，
      * 前端才能逐 token 实时渲染。流式异常/自然结束一律兜底 done（不抛给调用方）。</p>
      */
     private static class StreamChunkIterator implements Iterator<StreamChunk> {
 
+        /** 工具调用累积桶（key = delta.tool_calls[].index） */
+        private static final class ToolCallAcc {
+            String id;
+            String name;
+            final StringBuilder args = new StringBuilder();
+        }
+
         private final BufferedReader reader;
         private final Response response;
         private final boolean openAi;
+        private final boolean collectToolCalls;
+        private final boolean toolsRejected;
+        private final Map<Integer, ToolCallAcc> toolCallAccs = new LinkedHashMap<>();
+        private final Deque<StreamChunk> pending = new ArrayDeque<>();
         private StreamChunk next;
         private boolean finished = false;
+        private boolean toolCallsFlushed = false;
         private boolean closed = false;
 
         StreamChunkIterator(BufferedReader reader, Response response, boolean openAi) {
+            this(reader, response, openAi, false, false);
+        }
+
+        StreamChunkIterator(BufferedReader reader, Response response, boolean openAi,
+                            boolean collectToolCalls, boolean toolsRejected) {
             this.reader = reader;
             this.response = response;
             this.openAi = openAi;
+            this.collectToolCalls = collectToolCalls;
+            this.toolsRejected = toolsRejected;
         }
 
         @Override
         public boolean hasNext() {
             if (next != null) return true;
+            if (!pending.isEmpty()) {
+                next = pending.poll();
+                return true;
+            }
             if (finished) return false;
             next = readNext();
             return next != null;
@@ -876,6 +1206,9 @@ public class LLMService {
 
         /** 读下一行 SSE 并解析为分片；返回 null 表示流已结束（done 已发出） */
         private StreamChunk readNext() {
+            if (!pending.isEmpty()) {
+                return pending.poll();
+            }
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -901,6 +1234,10 @@ public class LLMService {
                                     reasoning = delta.getString("reasoning_content");
                                     if (reasoning == null) {
                                         reasoning = delta.getString("reasoning");
+                                    }
+                                    // T10：原生工具调用 delta（按 index 聚合 id/name/arguments 分片）
+                                    if (collectToolCalls) {
+                                        accumulateToolCallDelta(delta);
                                     }
                                 }
                                 String finishReason = choices.getJSONObject(0).getString("finish_reason");
@@ -928,7 +1265,7 @@ public class LLMService {
                         }
                         if (done) {
                             finish();
-                            return StreamChunk.done();
+                            return nextFromPendingOrDone();
                         }
                     } catch (Exception e) {
                         // Skip malformed JSON line
@@ -936,18 +1273,89 @@ public class LLMService {
                 }
                 // 流自然结束（EOF）
                 finish();
-                return StreamChunk.done();
+                return nextFromPendingOrDone();
             } catch (Exception e) {
                 log.warn("LLM SSE stream read error (falling back to done): {}", e.getMessage());
                 finish();
-                return StreamChunk.done();
+                return nextFromPendingOrDone();
             }
+        }
+
+        /** T10：聚合一条 delta.tool_calls（index 分桶；id/name 覆盖；arguments 拼接） */
+        private void accumulateToolCallDelta(JSONObject delta) {
+            JSONArray tcs = delta.getJSONArray("tool_calls");
+            if (tcs == null) {
+                return;
+            }
+            for (int i = 0; i < tcs.size(); i++) {
+                JSONObject tc = tcs.getJSONObject(i);
+                if (tc == null) {
+                    continue;
+                }
+                Integer index = tc.getInteger("index");
+                if (index == null) {
+                    index = toolCallAccs.size();
+                }
+                ToolCallAcc acc = toolCallAccs.get(index);
+                if (acc == null) {
+                    acc = new ToolCallAcc();
+                    toolCallAccs.put(index, acc);
+                }
+                String id = tc.getString("id");
+                if (id != null) {
+                    acc.id = id;
+                }
+                JSONObject fn = tc.getJSONObject("function");
+                if (fn != null) {
+                    String name = fn.getString("name");
+                    if (name != null) {
+                        acc.name = name;
+                    }
+                    String argsFrag = fn.getString("arguments");
+                    if (argsFrag != null) {
+                        acc.args.append(argsFrag);
+                    }
+                }
+            }
+        }
+
+        private StreamChunk nextFromPendingOrDone() {
+            return pending.isEmpty() ? StreamChunk.done() : pending.poll();
         }
 
         private void finish() {
             if (finished) return;
             finished = true;
+            flushToolCalls();
             close();
+        }
+
+        /** 流末聚合输出：tools_rejected 标记 → 各 tool_call 完成块 → done（保持顺序） */
+        private void flushToolCalls() {
+            if (toolCallsFlushed) return;
+            toolCallsFlushed = true;
+            if (toolsRejected) {
+                pending.add(StreamChunk.toolsRejected());
+            }
+            if (collectToolCalls) {
+                for (ToolCallAcc acc : toolCallAccs.values()) {
+                    JSONObject args = new JSONObject();
+                    String argsStr = acc.args.toString();
+                    if (!argsStr.trim().isEmpty()) {
+                        try {
+                            JSONObject parsed = JSON.parseObject(argsStr);
+                            if (parsed != null) {
+                                args = parsed;
+                            }
+                        } catch (Exception e) {
+                            log.warn("LLM native stream tool_call arguments not JSON: {}", argsStr);
+                        }
+                    }
+                    String name = acc.name != null ? acc.name : "";
+                    pending.add(StreamChunk.toolCall(new ToolCall(acc.id, name, args, argsStr)));
+                }
+            }
+            pending.add(StreamChunk.done());
         }
 
         private void close() {

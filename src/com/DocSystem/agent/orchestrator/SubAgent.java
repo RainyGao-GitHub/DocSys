@@ -506,9 +506,9 @@ public class SubAgent {
                 }
             }
 
-            // Use search API to list/filter documents (getDocList endpoints are 404 in DocSys backend)
-            Map<String, Object> response = client.searchDocs("", vid);
-            log.info("handleGetDocList: searchDocs response status={}, hasData={}",
+            // 迁移(T9)：旧 searchDocs("",vid) hack → 新端点 agentListAllDocs（扁平列举）
+            Map<String, Object> response = client.agentListAllDocs(vid);
+            log.info("handleGetDocList: agentListAllDocs response status={}, hasData={}",
                 response.get("status"), response.get("data") != null);
             if (!"ok".equals(response.get("status"))) {
                 String msgInfo = response.get("msgInfo") != null ? response.get("msgInfo").toString() : "Unknown error";
@@ -661,7 +661,7 @@ public class SubAgent {
         }
         try {
             Integer vid = vidStr != null ? Integer.parseInt(vidStr) : null;
-            Map<String, Object> response = client.searchDocs(query, vid);
+            Map<String, Object> response = client.agentSearchDocsByKeyword(query, vid);
             // 最佳实践：使用格式化方法，只显示摘要
             String formatted = formatSearchResults(response, query);
 
@@ -1142,7 +1142,7 @@ private AgentResponse handleHelp() {
 
         try {
             log.info("Searching documents for: {}", query);
-            Map<String, Object> response = client.searchDocs(query, null);
+            Map<String, Object> response = client.agentSearchDocsByKeyword(query, null);
 
             String status = (String) response.get("status");
             if ("ok".equals(status)) {
@@ -1228,7 +1228,7 @@ private AgentResponse handleHelp() {
         try {
             // 1. 先搜索相关文档
             log.info("Generating summary for topic: {}", topic);
-            Map<String, Object> searchResult = client.searchDocs(topic, null);
+            Map<String, Object> searchResult = client.agentSearchDocsByKeyword(topic, null);
             
             // 2. 如果有LLM服务，使用RAG生成总结
             if (llmService != null && llmService.isAvailable()) {
@@ -1274,7 +1274,7 @@ private AgentResponse handleHelp() {
         try {
             // 1. 搜索相关文档
             log.info("Searching and answering about: {}", topic);
-            Map<String, Object> searchResult = client.searchDocs(topic, null);
+            Map<String, Object> searchResult = client.agentSearchDocsByKeyword(topic, null);
             
             // 2. 使用LLM生成回答
             if (llmService != null && llmService.isAvailable()) {

@@ -36,6 +36,14 @@ public class TestToolCallParser {
         testPluralToolCalls();
         testMixedSingularPlural();
         testPluralMalformed();
+        testFunctionsXmlFormat();
+        testFunctionsXmlArgumentsJson();
+        testFunctionsXmlMultipleInvokes();
+        testFunctionsXmlMalformed();
+        testFunctionsXmlPartial();
+        testFunctionsWithSpaceTag();
+        testFunctionCallsUnderscoreTag();
+        testDsmlEscapedMarkup();
         System.out.println("\n======== TestToolCallParser: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -182,5 +190,110 @@ public class TestToolCallParser {
         String out = "<tool_calls>\n{\"name\":\"list_repos\",\"arguments\":{}}";
         List<ToolCall> calls = ToolCallParser.parse(out);
         check("plural unclosed -> null (retry)", calls == null);
+    }
+
+    /** T9.1：<functions><invoke>...</invoke></functions> 格式（deepseek-v4 漂移格式） */
+    private static void testFunctionsXmlFormat() {
+        String out = "<functions>\n<invoke name=\"list_repos\">\n<parameter name=\"arguments\">{}</parameter>\n</invoke>\n</functions>";
+        List<ToolCall> calls = ToolCallParser.parse(out);
+        check("functions: 1 call", calls != null && calls.size() == 1);
+        if (calls != null && !calls.isEmpty()) {
+            check("functions: name=list_repos", "list_repos".equals(calls.get(0).name));
+            check("functions: empty args", calls.get(0).arguments != null && calls.get(0).arguments.isEmpty());
+        }
+        check("functions: containsToolCall", ToolCallParser.containsToolCall(out));
+    }
+
+    /** T9.1：单参数 arguments=<JSON> 解包为参数对象 */
+    private static void testFunctionsXmlArgumentsJson() {
+        String out = "<functions><invoke name=\"write_file\"><parameter name=\"arguments\">"
+                + "{\"vid\": 1, \"name\": \"a.md\", \"content\": \"# hi\"}"
+                + "</parameter></invoke></functions>";
+        List<ToolCall> calls = ToolCallParser.parse(out);
+        check("functions: args json 1 call", calls != null && calls.size() == 1);
+        if (calls != null && !calls.isEmpty()) {
+            check("functions: vid=1", calls.get(0).arguments.getInteger("vid") == 1);
+            check("functions: name=a.md", "a.md".equals(calls.get(0).arguments.getString("name")));
+            check("functions: content=# hi", "# hi".equals(calls.get(0).arguments.getString("content")));
+        }
+    }
+
+    /** T9.1：一个 functions 块内多个 invoke */
+    private static void testFunctionsXmlMultipleInvokes() {
+        String out = "我先查一下。\n<functions>"
+                + "<invoke name=\"list_repos\"><parameter name=\"arguments\">{}</parameter></invoke>"
+                + "\n<invoke name=\"get_login_user\"><parameter name=\"arguments\">{}</parameter></invoke>"
+                + "</functions>";
+        List<ToolCall> calls = ToolCallParser.parse(out);
+        check("functions: 2 invokes", calls != null && calls.size() == 2);
+        if (calls != null && calls.size() == 2) {
+            check("functions: invoke names",
+                    "list_repos".equals(calls.get(0).name) && "get_login_user".equals(calls.get(1).name));
+        }
+    }
+
+    /** T9.1：functions 块内 invoke 无 name → 全无效 → null */
+    private static void testFunctionsXmlMalformed() {
+        String out = "<functions><invoke></invoke></functions>";
+        List<ToolCall> calls = ToolCallParser.parse(out);
+        check("functions: malformed -> null", calls == null);
+    }
+
+    /** T9.1：functions 未闭合 → 视为畸形重试而非最终回答 */
+    private static void testFunctionsXmlPartial() {
+        String out = "我来调用 <functions><invoke name=\"list_repos\"";
+        List<ToolCall> calls = ToolCallParser.parse(out);
+        check("functions: partial -> null", calls == null);
+    }
+
+    /** T9.1：模型把 "function calls" 写成带空格标签 <functions calls> → 仍能解析 */
+    private static void testFunctionsWithSpaceTag() {
+        String out = "<functions calls>\n<invoke name=\"list_repos\">\n"
+                + "<parameter name=\"arguments\" string=\"false\">{}</parameter>\n"
+                + "</invoke>\n</functions>";
+        List<ToolCall> calls = ToolCallParser.parse(out);
+        check("functions(空格标签): 1 call", calls != null && calls.size() == 1);
+        if (calls != null && !calls.isEmpty()) {
+            check("functions(空格标签): name=list_repos", "list_repos".equals(calls.get(0).name));
+            check("functions(空格标签): args 解包", calls.get(0).arguments != null && calls.get(0).arguments.isEmpty());
+        }
+    }
+
+    /** T9.1：下划线变体 <function_calls> 也能解析 */
+    private static void testFunctionCallsUnderscoreTag() {
+        String out = "<function_calls>\n<invoke name=\"get_login_user\">\n"
+                + "<parameter name=\"arguments\">{}</parameter>\n"
+                + "</invoke>\n</function_calls>";
+        List<ToolCall> calls = ToolCallParser.parse(out);
+        check("function_calls(下划线): 1 call", calls != null && calls.size() == 1);
+        if (calls != null && !calls.isEmpty()) {
+            check("function_calls: name=get_login_user", "get_login_user".equals(calls.get(0).name));
+        }
+    }
+
+    /**
+     * T9.3：LLM 网关转义格式回归（2026-09-13 线上实测原文）：
+     * 网关把 `<` 转义成 `<｜DSML｜`、`</` 转义成 `</｜DSML｜`，且标签内有空格。
+     * 线上证据：<｜DSML｜ calls> <｜DSML｜ invoke name="list_repos"> ...
+     */
+    private static void testDsmlEscapedMarkup() {
+        String out = "<｜DSML｜ calls> <｜DSML｜ invoke name=\"list_repos\"> "
+                + "<｜DSML｜ parameter name=\"arguments\" string=\"false\">{}</｜DSML｜ parameter> "
+                + "</｜DSML｜ invoke> </｜DSML｜ calls>";
+        List<ToolCall> calls = ToolCallParser.parse(out);
+        check("DSML转义: 1 call", calls != null && calls.size() == 1);
+        if (calls != null && !calls.isEmpty()) {
+            check("DSML转义: name=list_repos", "list_repos".equals(calls.get(0).name));
+            check("DSML转义: args 解包为空", calls.get(0).arguments != null && calls.get(0).arguments.isEmpty());
+        }
+        check("DSML转义: containsToolCall=true", ToolCallParser.containsToolCall(out));
+
+        // 半角部分转义（只有开标签被转义）也应可解析
+        String partial = "<｜DSML｜ tool_call>{\"name\":\"list_repos\",\"arguments\":{}}</｜DSML｜tool_call>";
+        List<ToolCall> calls2 = ToolCallParser.parse(partial);
+        check("DSML转义(tool_call变体): 1 call", calls2 != null && calls2.size() == 1);
+        if (calls2 != null && !calls2.isEmpty()) {
+            check("DSML转义(tool_call变体): name=list_repos", "list_repos".equals(calls2.get(0).name));
+        }
     }
 }

@@ -1,8 +1,10 @@
 package com.DocSystem.agent.orchestrator;
 
 import com.DocSystem.agent.llm.LLMService;
+import com.DocSystem.agent.llm.LlmTurnResult;
 import com.DocSystem.agent.llm.ResolvedLlmConfig;
 import com.DocSystem.agent.llm.StreamChunk;
+import com.DocSystem.agent.tool.ToolSchemaBuilder;
 import com.DocSystem.agent.tool.ToolCall;
 import com.DocSystem.agent.tool.ToolCallParser;
 import com.DocSystem.agent.tool.ToolPromptBuilder;
@@ -64,6 +66,12 @@ public class ToolUseLoop {
 
     private final LlmCaller llmCaller;
     private final StreamingLlmCaller streamingLlmCaller;
+    /** T10：原生通道调用抽象（text + 结构化 tool_calls + toolsRejected） */
+    private final LlmTurnCaller llmTurnCaller;
+    /** T10：流式原生通道调用抽象（分片含 tool_call/tools_rejected 块） */
+    private final StreamingTurnCaller streamingTurnCaller;
+    /** T10：请求级原生 tools 开关（端点拒绝后翻 false；null=无开关，纯文本通道） */
+    private final boolean[] nativeToolsEnabled;
     private final ToolRegistry toolRegistry;
 
     /** 是否管理员（决定 adminOnly 工具可见性） */
@@ -84,6 +92,22 @@ public class ToolUseLoop {
     @FunctionalInterface
     public interface StreamingLlmCaller {
         Iterator<StreamChunk> chat(List<Map<String, String>> messages) throws Exception;
+    }
+
+    /**
+     * T10：原生通道调用抽象 —— 返回 text + 结构化 tool_calls（优先通道，无需文本解析）。
+     */
+    @FunctionalInterface
+    public interface LlmTurnCaller {
+        LlmTurnResult chat(List<Map<String, Object>> messages) throws Exception;
+    }
+
+    /**
+     * T10：流式原生通道调用抽象 —— 分片含 tool_call/tools_rejected 块。
+     */
+    @FunctionalInterface
+    public interface StreamingTurnCaller {
+        Iterator<StreamChunk> chat(List<Map<String, Object>> messages) throws Exception;
     }
 
     /**
@@ -126,16 +150,110 @@ public class ToolUseLoop {
                 registry, isAdmin);
     }
 
+    /**
+     * T10：绑定 LLMService 原生工具通道（非流式）。
+     * toolChoice=null/"auto" → 请求带 tools + tool_choice:auto；"none" → 不带 tools（纯文本通道）。
+     * 端点 400 拒绝 tools 后，本次循环的后续轮次自动去 tools（text 通道继续可用）。
+     */
+    public static ToolUseLoop forLlmServiceNative(LLMService llm, ToolRegistry registry,
+                                                   ResolvedLlmConfig resolved, boolean isAdmin,
+                                                   String toolChoice) {
+        final boolean[] enabled = { true };
+        return new ToolUseLoop(null, null,
+                (LlmTurnCaller) (messages -> llm.chatNative(messages, resolved,
+                        effectiveTools(registry, isAdmin, enabled, toolChoice), toolChoice)),
+                null, registry, isAdmin, enabled);
+    }
+
+    /** T10：绑定 LLMService 原生工具通道（流式，SSE 路径） */
+    public static ToolUseLoop forLlmServiceStreamingNative(LLMService llm, ToolRegistry registry,
+                                                            ResolvedLlmConfig resolved, boolean isAdmin,
+                                                            String toolChoice) {
+        final boolean[] enabled = { true };
+        return new ToolUseLoop(null, null, null,
+                (StreamingTurnCaller) (messages -> llm.streamChatChunksNative(messages, resolved,
+                        effectiveTools(registry, isAdmin, enabled, toolChoice), toolChoice)),
+                registry, isAdmin, enabled);
+    }
+
+    /** T10：上一工具调用签名（name+args，重复调用检测；每次 run 重置） */
+    private String lastCallKey = null;
+    /** T10：连续相同工具调用计数 */
+    private int consecutiveIdentical = 0;
+
+    /** T10：按开关与配置计算本轮 tools 参数（开关关闭或 toolChoice=none → null） */
+    private static com.alibaba.fastjson.JSONArray effectiveTools(ToolRegistry registry, boolean isAdmin,
+                                                                  boolean[] enabled, String toolChoice) {
+        if (enabled != null && !enabled[0]) {
+            return null;
+        }
+        if (toolChoice != null && "none".equalsIgnoreCase(toolChoice.trim())) {
+            return null;
+        }
+        return ToolSchemaBuilder.build(registry.listForUser(isAdmin));
+    }
+
     public ToolUseLoop(LlmCaller llmCaller, ToolRegistry toolRegistry, boolean isAdmin) {
         this(llmCaller, null, toolRegistry, isAdmin);
     }
 
     public ToolUseLoop(LlmCaller llmCaller, StreamingLlmCaller streamingLlmCaller,
                        ToolRegistry toolRegistry, boolean isAdmin) {
-        this.llmCaller = llmCaller;
-        this.streamingLlmCaller = streamingLlmCaller;
+        this(llmCaller, streamingLlmCaller,
+                legacyTurnCaller(llmCaller), legacyStreamingTurnCaller(streamingLlmCaller),
+                toolRegistry, isAdmin, null);
+    }
+
+    /** T10 规范构造器：原生通道 + 旧式通道四选一/并存（旧式包装成 LlmTurnResult 文本结果）。包私有供同包测试注入开关 */
+    ToolUseLoop(LlmCaller legacyLlmCaller, StreamingLlmCaller legacyStreamingCaller,
+                LlmTurnCaller turnCaller, StreamingTurnCaller streamingTurnCaller,
+                ToolRegistry toolRegistry, boolean isAdmin, boolean[] nativeToolsEnabled) {
+        this.llmCaller = legacyLlmCaller;
+        this.streamingLlmCaller = legacyStreamingCaller;
+        this.llmTurnCaller = turnCaller;
+        this.streamingTurnCaller = streamingTurnCaller;
+        this.nativeToolsEnabled = nativeToolsEnabled;
         this.toolRegistry = toolRegistry;
         this.isAdmin = isAdmin;
+    }
+
+    /** 旧式非流式调用器 → 原生结果包装（text 通道） */
+    private static LlmTurnCaller legacyTurnCaller(final LlmCaller legacy) {
+        if (legacy == null) {
+            return null;
+        }
+        return new LlmTurnCaller() {
+            @Override
+            public LlmTurnResult chat(List<Map<String, Object>> messages) throws Exception {
+                return LlmTurnResult.text(legacy.chat(toStringMaps(messages)));
+            }
+        };
+    }
+
+    /** 旧式流式调用器 → 原生流式包装（无 tool_call/tools_rejected 块） */
+    private static StreamingTurnCaller legacyStreamingTurnCaller(final StreamingLlmCaller legacy) {
+        if (legacy == null) {
+            return null;
+        }
+        return new StreamingTurnCaller() {
+            @Override
+            public Iterator<StreamChunk> chat(List<Map<String, Object>> messages) throws Exception {
+                return legacy.chat(toStringMaps(messages));
+            }
+        };
+    }
+
+    /** Object 消息 → 旧式 String 消息（值 toString 拍平；复杂值不进旧通道） */
+    private static List<Map<String, String>> toStringMaps(List<Map<String, Object>> messages) {
+        List<Map<String, String>> out = new ArrayList<>();
+        for (Map<String, Object> m : messages) {
+            Map<String, String> c = new HashMap<>();
+            for (Map.Entry<String, Object> e : m.entrySet()) {
+                c.put(e.getKey(), e.getValue() == null ? "" : String.valueOf(e.getValue()));
+            }
+            out.add(c);
+        }
+        return out;
     }
 
     /** T8.5 每步工具审计回调（可为 null → 不审计） */
@@ -208,16 +326,16 @@ public class ToolUseLoop {
     }
 
     /**
-     * 单轮 LLM 输出执行器 —— 非流式直接返回完整响应；流式逐分片回调并聚合完整响应。
+     * 单轮 LLM 输出执行器 —— 返回文本 + 原生 tool_calls（双通道数据源）。
      */
     @FunctionalInterface
     private interface TurnRunner {
-        String run(List<Map<String, String>> messages) throws Exception;
+        LlmTurnResult run(List<Map<String, Object>> messages) throws Exception;
     }
 
     private ToolUseResult runInternal(String userQuery, List<Map<String, String>> priorHistory,
                                       StreamSink sink) {
-        List<Map<String, String>> messages = new ArrayList<>();
+        List<Map<String, Object>> messages = new ArrayList<>();
         // T8.6：默认 system prompt 经管理员配置装饰器（override 替换 / suffix 追加）
         String systemPrompt = ToolPromptBuilder.buildSystemPrompt(toolRegistry.listForUser(isAdmin));
         if (systemPromptDecorator != null) {
@@ -231,7 +349,7 @@ public class ToolUseLoop {
                 String content = h.get("content");
                 if (content == null || content.isEmpty()) continue;
                 if ("user".equals(role) || "assistant".equals(role)) {
-                    Map<String, String> m = new HashMap<>();
+                    Map<String, Object> m = new HashMap<>();
                     m.put("role", role);
                     m.put("content", content);
                     messages.add(m);
@@ -243,176 +361,289 @@ public class ToolUseLoop {
         int turns = 0;
         int toolCalls = 0;
         int consecutiveMalformed = 0;
-        String lastCallKey = null;        // 上一个工具调用签名（name+args），用于重复检测
-        int consecutiveIdentical = 0;     // 连续相同工具调用计数
+        // 重复调用检测状态（每次 run 重置；本实例每请求单独构建，无并发复用）
+        lastCallKey = null;
+        consecutiveIdentical = 0;
 
         // 选择单轮执行器：有 sink 且流式通道可用 → 流式；否则非流式
         final TurnRunner turnRunner;
-        if (sink != null && streamingLlmCaller != null) {
+        if (sink != null && streamingTurnCaller != null) {
             turnRunner = msgs -> runStreamingTurn(msgs, sink);
-        } else {
-            turnRunner = msgs -> llmCaller.chat(msgs);
+        } else if (llmTurnCaller != null) {
+            turnRunner = msgs -> llmTurnCaller.chat(msgs);
+        } else if (streamingTurnCaller != null) {
+            // 流式通道可用但无 sink：静默聚合（不回调事件）
+            turnRunner = msgs -> runStreamingTurn(msgs, null);
             if (sink != null) {
-                // 流式通道不可用 → 退化为非流式（过程事件在轮末补发）
-                log.warn("ToolUseLoop: stream sink provided but streaming channel unavailable, " +
-                        "falling back to non-streaming turn execution");
+                log.warn("ToolUseLoop: stream sink provided but non-streaming turn runner selected");
             }
+        } else {
+            throw new IllegalStateException("ToolUseLoop: no LLM caller configured");
         }
 
         try {
             while (turns < MAX_TURNS) {
                 turns++;
-                String response = turnRunner.run(messages);
-                log.debug("ToolUseLoop turn {}: response={}", turns, truncate(response));
+                LlmTurnResult turn = turnRunner.run(messages);
+                log.debug("ToolUseLoop turn {}: textLen={}, nativeCalls={}, toolsRejected={}",
+                        turns, turn.text.length(),
+                        turn.nativeToolCalls == null ? 0 : turn.nativeToolCalls.size(),
+                        turn.toolsRejected);
 
-                List<ToolCall> calls = ToolCallParser.parse(response);
-                if (calls == null) {
+                // T10：端点拒绝 tools → 本次循环后续轮次关闭原生通道（文本通道继续可用）
+                if (turn.toolsRejected) {
+                    if (nativeToolsEnabled != null) {
+                        nativeToolsEnabled[0] = false;
+                    }
+                    log.warn("ToolUseLoop: LLM 拒绝 tools（HTTP 400），后续轮次切换为纯文本通道");
+                }
+
+                List<ToolCall> nativeCalls = turn.hasNativeCalls() ? turn.nativeToolCalls : null;
+                String responseText = turn.text;
+
+                // ===== T10 双通道：原生 tool_calls 优先，文本通道（ToolCallParser）兜底 =====
+                if (nativeCalls != null) {
+                    com.DocSystem.common.Log.info("[ToolUseLoop][NATIVE] turn=" + turns
+                            + " calls=" + nativeCalls.size()
+                            + " first=" + (nativeCalls.isEmpty() ? "-" : nativeCalls.get(0).name));
+                    // 原生通道回灌：assistant 消息带 tool_calls（id 必须与 tool 结果一一对应）
+                    List<String> callIds = new ArrayList<>();
+                    for (int i = 0; i < nativeCalls.size(); i++) {
+                        ToolCall c = nativeCalls.get(i);
+                        callIds.add(c.id != null ? c.id : "call_" + i);
+                    }
+                    messages.add(assistantMsgWithToolCalls(responseText, nativeCalls, callIds));
+                    for (int i = 0; i < nativeCalls.size(); i++) {
+                        executeCall(turns, nativeCalls.get(i), true, callIds.get(i), messages, sink);
+                    }
+                    toolCalls += nativeCalls.size();
+                    trimTranscript(messages);
+                    continue;
+                }
+
+                List<ToolCall> parsed = ToolCallParser.parse(responseText);
+                // T9.1 诊断（写 docsys.log，线上排障可见）
+                com.DocSystem.common.Log.info("[ToolUseLoop][PARSE] turn=" + turns + " len="
+                        + (responseText != null ? responseText.length() : -1)
+                        + " result=" + (parsed == null ? "NULL(畸形,将回灌重试)"
+                        : (parsed.isEmpty() ? "EMPTY(视为最终回答)" : parsed.size() + "个调用"))
+                        + " head=[" + truncateLog(responseText) + "]");
+                if (parsed == null) {
                     // tool_call 标记存在但格式错误 → 回灌错误消息让 LLM 重试
                     consecutiveMalformed++;
                     if (consecutiveMalformed >= MAX_MALFORMED) {
                         log.warn("ToolUseLoop: too many malformed tool_call blocks, aborting");
                         return ToolUseResult.error(
                                 "AI 多次输出格式错误的工具调用，已终止。请稍后重试或换个说法。",
-                                messages, turns, toolCalls, false);
+                                toStringMaps(messages), turns, toolCalls, false);
                     }
-                    messages.add(assistantMsg(response));
+                    messages.add(assistantMsg(responseText));
                     messages.add(userMsg(
-                            "[SYSTEM] 你的工具调用格式无效。请严格按以下格式输出（JSON 必须合法）：\n" +
-                            "<tool_call>{\"name\":\"工具名\",\"arguments\":{...}}</tool_call>"));
+                            "[SYSTEM] 你的工具调用格式无效。请使用以下两种格式之一（JSON 必须合法）：\n" +
+                            "<tool_call>{\"name\":\"工具名\",\"arguments\":{...}}</tool_call>\n" +
+                            "或 <functions><invoke name=\"工具名\"><parameter name=\"参数名\">值</parameter></invoke></functions>"));
                     continue;
                 }
 
-                if (calls.isEmpty()) {
+                if (parsed.isEmpty()) {
                     // 无工具调用 → 最终回答
-                    return ToolUseResult.success(response, messages, turns, toolCalls);
+                    return ToolUseResult.success(responseText, toStringMaps(messages), turns, toolCalls);
                 }
 
-                // 有工具调用 → 执行并回灌
+                // 文本通道有工具调用 → 执行并回灌
                 consecutiveMalformed = 0;
-                messages.add(assistantMsg(response));
-                for (ToolCall call : calls) {
+                messages.add(assistantMsg(responseText));
+                for (ToolCall call : parsed) {
                     toolCalls++;
-
-                    // 连续相同工具调用检测（防死循环：LLM 反复调同一工具不换招）
-                    String callKey = call.name + "|" + (call.arguments != null ? call.arguments.toJSONString() : "{}");
-                    if (callKey.equals(lastCallKey)) {
-                        consecutiveIdentical++;
-                    } else {
-                        consecutiveIdentical = 1;
-                        lastCallKey = callKey;
-                    }
-                    if (consecutiveIdentical >= MAX_IDENTICAL_CALLS) {
-                        log.warn("ToolUseLoop: tool '{}' called {} times identically, injecting hint",
-                                call.name, MAX_IDENTICAL_CALLS);
-                        ToolResult hintError = ToolResult.error(
-                                "你已连续多次调用相同工具/参数且结果未改变。请换一个思路："
-                                + "检查参数是否正确、改用其他工具，或直接基于已有信息回答用户。");
-                        messages.add(toolResultMsg(call.name, hintError));
-                        if (sink != null) {
-                            sink.onToolCall(call);
-                            sink.onToolResult(call, hintError);
-                        }
-                        // T8.5：被防死循环拦截的调用也计入 step 审计（success=false）
-                        if (stepAuditSink != null) {
-                            stepAuditSink.onStep(turns, call, hintError, 0L);
-                        }
-                        consecutiveIdentical = 0;
-                        lastCallKey = null;
-                        continue;
-                    }
-
-                    log.info("ToolUseLoop executing tool '{}' args={}", call.name, call.arguments);
-                    if (sink != null) {
-                        sink.onToolCall(call);
-                    }
-                    // T8.5：每步工具执行计时 + 审计
-                    long stepStart = System.currentTimeMillis();
-                    ToolResult result = toolRegistry.execute(call.name, call.arguments, isAdmin);
-                    long stepDuration = System.currentTimeMillis() - stepStart;
-                    if (stepAuditSink != null) {
-                        stepAuditSink.onStep(turns, call, result, stepDuration);
-                    }
-                    if (sink != null) {
-                        sink.onToolResult(call, result);
-                    }
-                    messages.add(toolResultMsg(call.name, result));
+                    executeCall(turns, call, false, null, messages, sink);
                 }
                 // 上下文裁剪：保留 system + user 开头，超长时丢弃最早的工具结果
                 trimTranscript(messages);
             }
         } catch (Exception e) {
             log.error("ToolUseLoop failed", e);
-            return ToolUseResult.error("工具推理失败: " + e.getMessage(), messages, turns, toolCalls, false);
+            return ToolUseResult.error("工具推理失败: " + e.getMessage(), toStringMaps(messages), turns, toolCalls, false);
         }
 
         log.warn("ToolUseLoop exceeded MAX_TURNS={}", MAX_TURNS);
         return ToolUseResult.error(
                 "处理超时：AI 连续调用工具过多仍未给出回答（已中断）。请缩小请求范围或重试。",
-                messages, turns, toolCalls, true);
+                toStringMaps(messages), turns, toolCalls, true);
+    }
+
+    /**
+     * 执行单个工具调用（原生/文本通道共用）：重复调用检测、SSE 事件、step 审计、结果回灌。
+     *
+     * @param turns         当前轮次（审计/日志用）
+     * @param call          待执行调用
+     * @param nativeChannel true=原生通道（role=tool 回灌）；false=文本通道（[TOOL_RESULT] 回灌）
+     * @param callId        原生调用的 id（文本通道为 null）
+     */
+    private void executeCall(int turns, ToolCall call,
+                             boolean nativeChannel, String callId,
+                             List<Map<String, Object>> messages, StreamSink sink) {
+        // 连续相同工具调用检测（防死循环：LLM 反复调同一工具不换招）
+        String callKey = call.name + "|" + (call.arguments != null ? call.arguments.toJSONString() : "{}");
+        if (callKey.equals(lastCallKey)) {
+            consecutiveIdentical++;
+        } else {
+            consecutiveIdentical = 1;
+            lastCallKey = callKey;
+        }
+        if (consecutiveIdentical >= MAX_IDENTICAL_CALLS) {
+            log.warn("ToolUseLoop: tool '{}' called {} times identically, injecting hint",
+                    call.name, MAX_IDENTICAL_CALLS);
+            ToolResult hintError = ToolResult.error(
+                    "你已连续多次调用相同工具/参数且结果未改变。请换一个思路："
+                    + "检查参数是否正确、改用其他工具，或直接基于已有信息回答用户。");
+            messages.add(nativeChannel
+                    ? toolResultMsgNative(callId, hintError)
+                    : toolResultMsg(call.name, hintError));
+            if (sink != null) {
+                sink.onToolCall(call);
+                sink.onToolResult(call, hintError);
+            }
+            // T8.5：被防死循环拦截的调用也计入 step 审计（success=false）
+            if (stepAuditSink != null) {
+                stepAuditSink.onStep(turns, call, hintError, 0L);
+            }
+            consecutiveIdentical = 0;
+            lastCallKey = null;
+            return;
+        }
+
+        log.info("ToolUseLoop executing tool '{}' args={} channel={}", call.name, call.arguments,
+                nativeChannel ? "native" : "text");
+        if (sink != null) {
+            sink.onToolCall(call);
+        }
+        // T8.5：每步工具执行计时 + 审计
+        long stepStart = System.currentTimeMillis();
+        ToolResult result = toolRegistry.execute(call.name, call.arguments, isAdmin);
+        long stepDuration = System.currentTimeMillis() - stepStart;
+        if (stepAuditSink != null) {
+            stepAuditSink.onStep(turns, call, result, stepDuration);
+        }
+        if (sink != null) {
+            sink.onToolResult(call, result);
+        }
+        messages.add(nativeChannel
+                ? toolResultMsgNative(callId, result)
+                : toolResultMsg(call.name, result));
     }
 
     /**
      * 流式单轮执行：逐分片回调 sink（reasoning → onReasoning；text → onText），
-     * 聚合完整响应文本返回（供轮末解析 tool_call）。
+     * 聚合完整响应文本 + 原生 tool_calls，返回双通道结果。
      */
-    private String runStreamingTurn(List<Map<String, String>> messages, StreamSink sink) throws Exception {        StringBuilder full = new StringBuilder();
-        Iterator<StreamChunk> it = streamingLlmCaller.chat(messages);
+    private LlmTurnResult runStreamingTurn(List<Map<String, Object>> messages, StreamSink sink) throws Exception {
+        StringBuilder full = new StringBuilder();
+        List<ToolCall> nativeCalls = new ArrayList<>();
+        boolean toolsRejected = false;
+        Iterator<StreamChunk> it = streamingTurnCaller.chat(messages);
         while (it.hasNext()) {
             StreamChunk chunk = it.next();
             if (chunk.isDone()) break;
-            if (chunk.isReasoning()) {
-                sink.onReasoning(chunk.content);
+            if (chunk.isToolsRejected()) {
+                toolsRejected = true;
+            } else if (chunk.isReasoning()) {
+                if (sink != null) {
+                    sink.onReasoning(chunk.content);
+                }
+            } else if (chunk.isToolCall()) {
+                if (chunk.toolCall != null) {
+                    nativeCalls.add(chunk.toolCall);
+                }
             } else if (chunk.isText()) {
                 full.append(chunk.content);
-                sink.onText(chunk.content);
+                if (sink != null) {
+                    sink.onText(chunk.content);
+                }
             }
         }
-        return full.toString();
+        if (toolsRejected) {
+            return LlmTurnResult.rejected(full.toString());
+        }
+        return nativeCalls.isEmpty()
+                ? LlmTurnResult.text(full.toString())
+                : LlmTurnResult.toolCalls(full.toString(), nativeCalls);
     }
 
     // ---------- 消息构造 ----------
 
-    private static Map<String, String> systemMsg(String content) {
-        Map<String, String> m = new HashMap<>();
+    private static Map<String, Object> systemMsg(String content) {
+        Map<String, Object> m = new HashMap<>();
         m.put("role", "system");
         m.put("content", content);
         return m;
     }
 
-    private static Map<String, String> userMsg(String content) {
-        Map<String, String> m = new HashMap<>();
+    private static Map<String, Object> userMsg(String content) {
+        Map<String, Object> m = new HashMap<>();
         m.put("role", "user");
         m.put("content", content);
         return m;
     }
 
-    private static Map<String, String> assistantMsg(String content) {
-        Map<String, String> m = new HashMap<>();
+    private static Map<String, Object> assistantMsg(String content) {
+        Map<String, Object> m = new HashMap<>();
         m.put("role", "assistant");
         m.put("content", content);
         return m;
     }
 
+    /** T10：原生通道 assistant 消息 —— 携带 tool_calls（id/type/function{name,arguments}），与 tool 结果一一对应 */
+    private static Map<String, Object> assistantMsgWithToolCalls(String text, List<ToolCall> calls,
+                                                                  List<String> callIds) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("role", "assistant");
+        m.put("content", text != null ? text : "");
+        com.alibaba.fastjson.JSONArray tcs = new com.alibaba.fastjson.JSONArray();
+        for (int i = 0; i < calls.size(); i++) {
+            ToolCall c = calls.get(i);
+            com.alibaba.fastjson.JSONObject fn = new com.alibaba.fastjson.JSONObject();
+            fn.put("name", c.name);
+            fn.put("arguments", c.arguments != null ? c.arguments.toJSONString() : "{}");
+            com.alibaba.fastjson.JSONObject tc = new com.alibaba.fastjson.JSONObject();
+            tc.put("id", callIds.get(i));
+            tc.put("type", "function");
+            tc.put("function", fn);
+            tcs.add(tc);
+        }
+        m.put("tool_calls", tcs);
+        return m;
+    }
+
     /** 工具结果回灌：role=user + 结构化标记（兼容不支持 tool role 的模型） */
-    private static Map<String, String> toolResultMsg(String toolName, ToolResult r) {
-        Map<String, String> m = new HashMap<>();
+    private static Map<String, Object> toolResultMsg(String toolName, ToolResult r) {
+        Map<String, Object> m = new HashMap<>();
         m.put("role", "user");
         m.put("content", "[TOOL_RESULT tool=" + toolName + "]\n" + r.toString() + "\n[/TOOL_RESULT]");
+        return m;
+    }
+
+    /** T10：原生通道工具结果回灌：role=tool + tool_call_id（OpenAI 兼容约定） */
+    private static Map<String, Object> toolResultMsgNative(String callId, ToolResult r) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("role", "tool");
+        m.put("tool_call_id", callId != null ? callId : "call_0");
+        m.put("content", r.toString());
         return m;
     }
 
     /**
      * 上下文裁剪：消息总数超 MAX_TRANSCRIPT_SIZE 时，丢弃最早的工具结果消息（保留 system + user 开头）。
      */
-    private static void trimTranscript(List<Map<String, String>> messages) {
+    private static void trimTranscript(List<Map<String, Object>> messages) {
         while (messages.size() > MAX_TRANSCRIPT_SIZE) {
-            // 从位置 2 起找第一条 role=user 且内容为 [TOOL_RESULT 的消息删除
+            // 从位置 2 起找第一条 [TOOL_RESULT] user 消息或 role=tool 消息删除
             boolean removed = false;
             for (int i = 2; i < messages.size(); i++) {
-                Map<String, String> m = messages.get(i);
-                String content = m.get("content");
-                if ("user".equals(m.get("role"))
-                        && content != null && content.startsWith("[TOOL_RESULT")) {
+                Map<String, Object> m = messages.get(i);
+                Object content = m.get("content");
+                boolean toolResult = "user".equals(m.get("role"))
+                        && content != null && content.toString().startsWith("[TOOL_RESULT");
+                if (toolResult || "tool".equals(m.get("role"))) {
                     messages.remove(i);
                     removed = true;
                     break;
@@ -428,5 +659,14 @@ public class ToolUseLoop {
     private static String truncate(String s) {
         if (s == null) return "null";
         return s.length() > 200 ? s.substring(0, 200) + "..." : s;
+    }
+
+    /** 日志用截断（换行压平，防日志文件被长文本撑爆） */
+    private static String truncateLog(String s) {
+        if (s == null) {
+            return "null";
+        }
+        String flat = s.replace('\n', ' ').replace('\r', ' ').replace('|', '/');
+        return flat.length() > 150 ? flat.substring(0, 150) + "..." : flat;
     }
 }

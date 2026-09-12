@@ -36,7 +36,8 @@ public class DocSysToolFactory {
         reg.register(listDocs(client));
         reg.register(getDoc(client));
         reg.register(getDocHistory(client));
-        reg.register(searchDocs(client));
+        reg.register(searchFiles(client));
+        reg.register(grepFiles(client));
         reg.register(ragChat(client));
         reg.register(listAiModels(client));
         reg.register(getSysConfig(client));
@@ -73,7 +74,9 @@ public class DocSysToolFactory {
         reg.register(createRepos(client));
         reg.register(deleteRepos(client));
         reg.register(updateRepos(client));
-        reg.register(createDoc(client));
+        reg.register(createFolder(client));
+        reg.register(writeFile(client));
+        reg.register(writeNote(client));
         reg.register(deleteDoc(client));
         reg.register(renameDoc(client));
         reg.register(moveDoc(client));
@@ -168,15 +171,67 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** R9 全文搜索 */
-    public static ToolDefinition searchDocs(DocSysClient client) {
+    /** R9 Agent 专用索引搜索（T1：/Doc/agentSearchDoc.do mode=index） */
+    public static ToolDefinition searchFiles(DocSysClient client) {
         JSONObject props = props(
-                strProp("searchWord", "搜索关键词（必填）"),
-                intProp("vid", "仓库ID（可选，限定范围）"));
-        JSONObject schema = objSchema(props, new String[]{"searchWord"});
-        return ToolDefinition.builder("search_docs", "全文搜索文档（按关键词检索文档内容）",
-                args -> ToolResult.ok(fmt(client.searchDocs(args.getString("searchWord"),
-                        args.getInteger("vid")))))
+                intProp("vid", "仓库ID（必填，单仓库；不确定先调 list_repos）"),
+                strProp("query", "查询条件（必填，JSON 字符串）。格式：{\"must\":[{\"field\":\"content\",\"term\":\"预算\"}],\"should\":[{\"field\":\"name\",\"term\":\"周报\",\"match\":\"fuzzy\"}],\"mustNot\":[{\"field\":\"comment\",\"term\":\"保密\"}]}。field: name(文件名)/content(文件内容)/comment(备注)；match: term(默认,中文分词)/wildcard/prefix/fuzzy(后三种仅 name)"),
+                strProp("path", "目录限定（可选，仓库内相对路径，如 /docs/2026）"),
+                intProp("maxResults", "最大结果数（可选，默认 20，上限 100）"),
+                boolProp("withSnippet", "是否返回命中片段（可选，默认 true）"));
+        JSONObject schema = objSchema(props, new String[]{"vid", "query"});
+        return ToolDefinition.builder("search_files",
+                "在指定仓库内基于全文索引搜索文档（文件名/文件内容/备注），支持与或非(must/should/mustNot)组合。"
+                        + "注意：文件刚被直接放入仓库目录、尚未建立索引时可能搜不到——此时改用 grep_files。",
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    if (vid == null) {
+                        return ToolResult.error("vid 必填（仓库ID，不确定先调 list_repos）");
+                    }
+                    String query = args.getString("query");
+                    if (query == null || query.isEmpty()) {
+                        return ToolResult.error("query 必填（JSON 字符串，见参数说明）");
+                    }
+                    try {
+                        return ToolResult.ok(fmt(client.agentSearchDocs(
+                                vid, query, args.getString("path"),
+                                args.getInteger("maxResults"), args.getBoolean("withSnippet"))));
+                    } catch (Exception e) {
+                        return ToolResult.error("search_files failed: " + e.getMessage());
+                    }
+                })
+                .parameters(schema)
+                .build();
+    }
+
+    /** R9b Agent 磁盘扫描搜索（T2：/Doc/agentSearchDoc.do mode=grep，不依赖索引） */
+    public static ToolDefinition grepFiles(DocSysClient client) {
+        JSONObject props = props(
+                intProp("vid", "仓库ID（必填，单仓库；不确定先调 list_repos）"),
+                strProp("pattern", "搜索关键词（必填）"),
+                strProp("path", "目录限定（可选，仓库内相对路径，如 /docs/2026）"),
+                intProp("maxResults", "最大结果数（可选，默认 20，上限 100）"));
+        JSONObject schema = objSchema(props, new String[]{"vid", "pattern"});
+        return ToolDefinition.builder("grep_files",
+                "直接在仓库磁盘上逐行扫描文本文件内容（不依赖索引，较慢）。"
+                        + "用于 search_files 搜不到的情况（文件刚放入仓库尚未建立索引），或需要精确匹配原始文本时。",
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    if (vid == null) {
+                        return ToolResult.error("vid 必填（仓库ID，不确定先调 list_repos）");
+                    }
+                    String pattern = args.getString("pattern");
+                    if (pattern == null || pattern.isEmpty()) {
+                        return ToolResult.error("pattern 必填（搜索关键词）");
+                    }
+                    try {
+                        return ToolResult.ok(fmt(client.grepFiles(
+                                vid, pattern, args.getString("path"),
+                                args.getInteger("maxResults"))));
+                    } catch (Exception e) {
+                        return ToolResult.error("grep_files failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .build();
     }
@@ -305,22 +360,113 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** W4 创建文档/文件夹 */
-    public static ToolDefinition createDoc(DocSysClient client) {
+    /** W4a 创建目录（文件夹） */
+    public static ToolDefinition createFolder(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                strProp("name", "文档/文件夹名（必填）"),
+                strProp("name", "目录名（必填）"),
                 longProp("pid", "父目录ID（可选，0=根）"),
                 strProp("path", "路径（可选）"),
-                intProp("type", "类型（0=文件，1=文件夹，默认0）"),
-                strProp("content", "文件内容（可选，type=0 时）"),
                 strProp("commitMsg", "提交信息（可选）"));
         JSONObject schema = objSchema(props, new String[]{"vid", "name"});
-        return ToolDefinition.builder("create_doc", "创建文档或文件夹",
-                args -> ToolResult.ok(fmt(client.addDoc(
-                        args.getInteger("vid"), args.getLong("pid"), args.getString("path"),
-                        args.getString("name"), args.getInteger("type"), null,
-                        args.getString("content"), args.getString("commitMsg")))))
+        return ToolDefinition.builder("create_folder", "创建目录（文件夹）",
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    if (vid == null) {
+                        return ToolResult.error("vid 必填（仓库ID）");
+                    }
+                    try {
+                        return ToolResult.ok(fmt(client.addDoc(
+                                vid, args.getLong("pid"), args.getString("path"),
+                                args.getString("name"), 2, null, null, args.getString("commitMsg"))));
+                    } catch (Exception e) {
+                        return ToolResult.error("create_folder failed: " + e.getMessage());
+                    }
+                })
+                .parameters(schema)
+                .isWrite(true).needsConfirm(true)
+                .build();
+    }
+
+    /** W4b 创建/覆盖写入文本文件（T4：/Doc/agentWriteText.do，实体文件，不走 uploadDoc） */
+    public static ToolDefinition writeFile(DocSysClient client) {
+        JSONObject props = props(
+                intProp("vid", "仓库ID（必填）"),
+                strProp("path", "路径（可选，如 /docs/2026）"),
+                strProp("name", "文件名（必填，含后缀）"),
+                strProp("content", "文件内容（必填，大模型生成的文本，UTF-8，1MB 以内）"),
+                strProp("commitMsg", "提交信息（可选）"));
+        JSONObject schema = objSchema(props, new String[]{"vid", "name", "content"});
+        return ToolDefinition.builder("write_file",
+                "创建或覆盖写入【文本】文件（txt/md/json/xml/sql/代码/脚本等）。文件不存在则创建，存在则覆盖。"
+                        + "写入的是仓库实体文件。仅支持文本类型，Office 文件暂不支持。"
+                        + "要写备注（虚拟内容）用 write_note，建目录用 create_folder。",
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    if (vid == null) {
+                        return ToolResult.error("vid 必填（仓库ID）");
+                    }
+                    String content = args.getString("content");
+                    if (content == null || content.isEmpty()) {
+                        return ToolResult.error("content 必填（文本文件内容）");
+                    }
+                    try {
+                        return ToolResult.ok(fmt(client.writeTextDoc(
+                                vid, args.getString("path"),
+                                args.getString("name"), content, args.getString("commitMsg"))));
+                    } catch (Exception e) {
+                        return ToolResult.error("write_file failed: " + e.getMessage());
+                    }
+                })
+                .parameters(schema)
+                .isWrite(true).needsConfirm(true)
+                .build();
+    }
+
+    /** W4c 创建/更新文档备注（虚拟内容，不产生实体文件） */
+    public static ToolDefinition writeNote(DocSysClient client) {
+        JSONObject props = props(
+                intProp("vid", "仓库ID（必填）"),
+                strProp("path", "路径（可选）"),
+                strProp("name", "文档名（必填）"),
+                strProp("content", "备注内容（必填）"),
+                longProp("docId", "文档ID（可选，已知道时可加快定位）"),
+                strProp("commitMsg", "提交信息（可选）"));
+        JSONObject schema = objSchema(props, new String[]{"vid", "name", "content"});
+        return ToolDefinition.builder("write_note",
+                "创建或更新文档【备注】（虚拟内容，不产生实体文件）。文档不存在时自动创建文档条目并写入备注。"
+                        + "要写入实体文件用 write_file。",
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    if (vid == null) {
+                        return ToolResult.error("vid 必填（仓库ID）");
+                    }
+                    String content = args.getString("content");
+                    if (content == null || content.isEmpty()) {
+                        return ToolResult.error("content 必填（备注内容）");
+                    }
+                    try {
+                        String path = args.getString("path");
+                        String name = args.getString("name");
+                        String commitMsg = args.getString("commitMsg");
+                        Map<String, Object> res = client.updateDocContent(
+                                vid, args.getLong("docId"), path, name, content, null, commitMsg);
+                        String status = res != null ? String.valueOf(res.get("status")) : "fail";
+                        String msg = res != null ? String.valueOf(res.get("msgInfo")) : "";
+                        if ("ok".equals(status)) {
+                            return ToolResult.ok(fmt(res));
+                        }
+                        if (msg != null && msg.contains("不存在")) {
+                            // 文档不存在 → 创建条目并写入备注（addDoc+content 即备注语义）
+                            Map<String, Object> created = client.addDoc(
+                                    vid, null, path, name, 1, null, content, commitMsg);
+                            return ToolResult.ok(fmt(created));
+                        }
+                        return ToolResult.error(msg != null && !msg.isEmpty() ? msg : "更新备注失败");
+                    } catch (Exception e) {
+                        return ToolResult.error("write_note failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -776,6 +922,16 @@ public class DocSysToolFactory {
     private static JSONObject longProp(String name, String desc) {
         JSONObject o = new JSONObject();
         o.put("type", "integer");
+        o.put("description", desc);
+        JSONObject entry = new JSONObject();
+        entry.put(name, o);
+        return entry;
+    }
+
+    /** 生成 {name: {type: boolean, description}} 单属性条目 */
+    private static JSONObject boolProp(String name, String desc) {
+        JSONObject o = new JSONObject();
+        o.put("type", "boolean");
         o.put("description", desc);
         JSONObject entry = new JSONObject();
         entry.put(name, o);

@@ -7,6 +7,12 @@ import com.alibaba.fastjson.JSONObject;
  */
 public class ToolCall {
 
+    /**
+     * 原生 tool_call 的 id（OpenAI 兼容 tool_calls[].id，回灌 role=tool 消息时需要）。
+     * 文本通道解析出的调用没有 id（为 null，回灌走 [TOOL_RESULT] 标记）。
+     */
+    public final String id;
+
     /** 工具名 */
     public final String name;
 
@@ -17,6 +23,11 @@ public class ToolCall {
     public final String rawOutput;
 
     public ToolCall(String name, JSONObject arguments, String rawOutput) {
+        this(null, name, arguments, rawOutput);
+    }
+
+    public ToolCall(String id, String name, JSONObject arguments, String rawOutput) {
+        this.id = id;
         this.name = name;
         this.arguments = arguments != null ? arguments : new JSONObject();
         this.rawOutput = rawOutput;
@@ -24,6 +35,6 @@ public class ToolCall {
 
     @Override
     public String toString() {
-        return "ToolCall{name=" + name + ", arguments=" + arguments + "}";
+        return "ToolCall{id=" + id + ", name=" + name + ", arguments=" + arguments + "}";
     }
 }

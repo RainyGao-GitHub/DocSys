@@ -54,9 +54,9 @@ public class TestWriteTools {
         DocSysClient client = new DocSysClient("http://localhost:9999");
         ToolRegistry reg = DocSysToolFactory.createFullRegistry(client);
 
-        String[] writeTools = {"create_repos", "delete_repos", "update_repos", "create_doc",
-                "delete_doc", "rename_doc", "move_doc", "copy_doc", "lock_doc", "unlock_doc",
-                "create_doc_share", "backup_repos"};
+        String[] writeTools = {"create_repos", "delete_repos", "update_repos", "create_folder",
+                "write_file", "write_note", "delete_doc", "rename_doc", "move_doc", "copy_doc",
+                "lock_doc", "unlock_doc", "create_doc_share", "backup_repos"};
         for (String name : writeTools) {
             ToolDefinition def = reg.find(name);
             check("write tool registered: " + name, def != null);
@@ -65,7 +65,7 @@ public class TestWriteTools {
                 check(name + " needsConfirm", def.needsConfirm);
             }
         }
-        check("full registry size=25", reg.size() == 25);
+        check("full registry size=28", reg.size() == 28);
     }
 
     private static void testConfirmGateInvoked() {

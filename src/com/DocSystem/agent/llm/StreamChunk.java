@@ -18,16 +18,30 @@ public final class StreamChunk {
     public static final String TYPE_TEXT = "text";
     public static final String TYPE_REASONING = "reasoning";
     public static final String TYPE_DONE = "done";
+    /** T10：原生 tool_call 完成块（流结束后、done 前逐个到达） */
+    public static final String TYPE_TOOL_CALL = "tool_call";
+    /** T10：端点拒绝 tools（已去 tools 重试；本轮后续分片来自无 tools 请求） */
+    public static final String TYPE_TOOLS_REJECTED = "tools_rejected";
 
-    /** 分片类型（text/reasoning/done） */
+    /** 分片类型（text/reasoning/tool_call/done） */
     public final String type;
 
     /** 分片内容（done 时为 ""） */
     public final String content;
 
+    /** tool_call 分片携带的完整调用（其余类型为 null） */
+    public final com.DocSystem.agent.tool.ToolCall toolCall;
+
     private StreamChunk(String type, String content) {
         this.type = type;
         this.content = content != null ? content : "";
+        this.toolCall = null;
+    }
+
+    private StreamChunk(com.DocSystem.agent.tool.ToolCall toolCall) {
+        this.type = TYPE_TOOL_CALL;
+        this.content = "";
+        this.toolCall = toolCall;
     }
 
     public static StreamChunk text(String content) {
@@ -42,9 +56,21 @@ public final class StreamChunk {
         return new StreamChunk(TYPE_DONE, "");
     }
 
+    /** T10：原生 tool_call 完成块（name/arguments 已完整） */
+    public static StreamChunk toolCall(com.DocSystem.agent.tool.ToolCall call) {
+        return new StreamChunk(call);
+    }
+
+    /** T10：端点拒绝 tools 标记块（先于 text/tool_call/done 到达） */
+    public static StreamChunk toolsRejected() {
+        return new StreamChunk(TYPE_TOOLS_REJECTED, "");
+    }
+
     public boolean isText() { return TYPE_TEXT.equals(type); }
     public boolean isReasoning() { return TYPE_REASONING.equals(type); }
     public boolean isDone() { return TYPE_DONE.equals(type); }
+    public boolean isToolCall() { return TYPE_TOOL_CALL.equals(type); }
+    public boolean isToolsRejected() { return TYPE_TOOLS_REJECTED.equals(type); }
 
     @Override
     public String toString() {

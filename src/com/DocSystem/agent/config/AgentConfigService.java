@@ -28,6 +28,11 @@ public class AgentConfigService {
     public static final String KEY_SYSTEM_PROMPT_OVERRIDE = "system_prompt_override";
     /** system prompt 附加段落（推荐） */
     public static final String KEY_SYSTEM_PROMPT_SUFFIX = "system_prompt_suffix";
+    /**
+     * T10：Agent 原生工具调用开关。值："auto"（默认，请求带 tools + tool_choice:auto）；
+     * "none"（不带 tools，纯文本通道，适配 thinking 模型/省 token）。
+     */
+    public static final String KEY_AGENT_TOOL_CHOICE = "agent_tool_choice";
 
     @Autowired
     private AgentConfigRepository repository;

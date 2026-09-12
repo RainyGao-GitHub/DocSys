@@ -633,13 +633,22 @@ public class MainAgent {
             }
         });
         boolean isAdmin = extractIsAdmin(sessionInfo);
+        // T10：原生工具调用开关（agent_config；auto 默认；none 纯文本通道）
+        String toolChoice = null;
+        if (agentConfigService != null) {
+            String tc = agentConfigService.getGlobal(
+                    com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_TOOL_CHOICE);
+            if (tc != null && !tc.trim().isEmpty()) {
+                toolChoice = tc.trim();
+            }
+        }
         com.DocSystem.agent.orchestrator.ToolUseLoop loop;
         if (streaming) {
-            loop = com.DocSystem.agent.orchestrator.ToolUseLoop.forLlmServiceStreaming(
-                    llmService, registry, resolvedLlm, isAdmin);
+            loop = com.DocSystem.agent.orchestrator.ToolUseLoop.forLlmServiceStreamingNative(
+                    llmService, registry, resolvedLlm, isAdmin, toolChoice);
         } else {
-            loop = com.DocSystem.agent.orchestrator.ToolUseLoop.forLlmService(
-                    llmService, registry, resolvedLlm, isAdmin);
+            loop = com.DocSystem.agent.orchestrator.ToolUseLoop.forLlmServiceNative(
+                    llmService, registry, resolvedLlm, isAdmin, toolChoice);
         }
         // T8.5：工具链每步审计（每轮/每工具：轮次/工具/参数摘要/结果摘要/耗时）→
         // 用 DocSys 自带 Log 接口打结构化日志（写 docsys.log，可下载 grep 排查）。

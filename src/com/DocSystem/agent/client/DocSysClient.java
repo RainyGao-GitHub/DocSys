@@ -1,6 +1,7 @@
 package com.DocSystem.agent.client;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
@@ -13,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -404,9 +407,9 @@ public class DocSysClient {
      * - pid: Parent folder ID (0 for root)
      * - path: Path in repository
      * - name: Document name
-     * - type: Document type (0=file, 1=folder, 2=smart folder)
+     * - type: 文档类型（1=文件，2=目录）
      * - level: Level in tree
-     * - content: For virtual documents
+     * - content: 注意——带 content 时服务器写入的是"备注"（虚拟内容），不是实体文件
      * - commitMsg: Version control commit message
      */
     public Map<String, Object> addDoc(
@@ -614,8 +617,8 @@ public class DocSysClient {
     // ==================== SEARCH OPERATION ====================
 
     /**
-     * Search documents (full-text search)
-     * POST /Doc/searchDoc.do
+     * 旧全文搜索（/Doc/searchDoc.do，人类接口）。**仅供旧路径**（SubAgent/DocSysSkillExecutor/CLI）使用。
+     * 工具层已下线（search_docs → search_files/grep_files），新代码勿再调用。
      */
     public Map<String, Object> searchDocs(String searchWord, Integer vid) throws Exception {
         // Use the working endpoint directly
@@ -628,72 +631,203 @@ public class DocSysClient {
         // 传错参数会被当作全局搜索（reposId=null）→ 全库检索极慢/超时
         if (vid != null) params.put("reposId", vid.toString());
 
-        // Build FormBody with guaranteed param order (searchWord must be first)
-        FormBody.Builder fb = new FormBody.Builder();
-        for (Map.Entry<String, String> e : params.entrySet()) {
-            fb.add(e.getKey(), e.getValue());
-        }
-        RequestBody formBody = fb.build();
-
-        Request.Builder builder = new Request.Builder()
-            .url(url)
-            .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-            .post(formBody);
-
-        if (sessionCookie != null) {
-            builder.header("Cookie", sessionCookie);
-        }
-
-        Request req = builder.build();
-        log.info("searchDocs: url={}, vid={}", url, vid);
-        Response response = httpClient.newCall(req).execute();
+        Response response = postForm(url, params, sessionCookie);
         try {
             String respBody = responseBodyString(response);
-            log.info("searchDocs: status={}, bodyLen={}", response.code(), respBody.length());
+            log.info("searchDocs: url={}, vid={}, status={}, bodyLen={}", url, vid, response.code(), respBody.length());
 
-            // Check for HTML error pages - only check the START of the response
-            // (search results may contain "404" or other keywords as part of content)
             String bodyStart = respBody.substring(0, Math.min(500, respBody.length())).toLowerCase();
-            if (bodyStart.contains("<!doctype") || bodyStart.contains("<!doctype html") ||
-                bodyStart.contains(" 404 ") || bodyStart.contains("未找到") ||
-                bodyStart.contains("error") || bodyStart.contains("internal server error")) {
-                log.warn("Search detected HTML error page: {}", respBody.substring(0, Math.min(100, respBody.length())));
+            if (bodyStart.contains("<!doctype") || bodyStart.contains(" 404 ")
+                    || bodyStart.contains("internal server error")) {
                 Map<String, Object> error = new HashMap<>();
                 error.put("status", "fail");
                 error.put("msgInfo", "Search service unavailable: " + respBody.substring(0, Math.min(100, respBody.length())));
                 return error;
             }
 
-            // Parse JSON response
             Object parsed = JSON.parse(respBody);
-
             if (parsed instanceof Map) {
-                Map<String, Object> result = (Map<String, Object>) parsed;
-                // If it has "data" key, return as-is (most DocSystem APIs return this format)
-                if (result.containsKey("data")) {
-                    return result;
-                }
-                // If it has "status" key, return as-is
-                if (result.containsKey("status")) {
-                    return result;
-                }
-                // Wrap it
-                Map<String, Object> wrapped = new HashMap<>();
-                wrapped.put("status", "ok");
-                wrapped.put("data", result);
-                return wrapped;
-            } else if (parsed instanceof java.util.List) {
-                // Response is a list, wrap it
-                Map<String, Object> wrapped = new HashMap<>();
-                wrapped.put("status", "ok");
-                wrapped.put("data", parsed);
-                return wrapped;
+                return (Map<String, Object>) parsed;
             }
+            Map<String, Object> wrapped = new HashMap<>();
+            wrapped.put("status", "ok");
+            wrapped.put("data", parsed);
+            return wrapped;
+        } finally {
+            response.close();
+        }
+    }
 
-            // Fallback
+    /**
+     * Agent 专用索引搜索（T1：/Doc/agentSearchDoc.do，mode=index）。
+     * 取代原 search_docs 工具（旧 /Doc/searchDoc.do 为人类设计，含路径猜解/base64/多线程编排等冗余）。
+     *
+     * @param reposId   仓库ID（必填，单仓库）
+     * @param queryJson 查询 DSL JSON（must/should/mustNot × field(name/content/comment) × match(term/wildcard/prefix/fuzzy)）
+     * @param path      目录限定（可选，仓库内相对路径）
+     * @param maxResults 最大结果数（可选，默认 20，上限 100）
+     * @param withSnippet 是否返回命中片段（可选，默认 true）
+     */
+    public Map<String, Object> agentSearchDocs(Integer reposId, String queryJson, String path,
+                                               Integer maxResults, Boolean withSnippet) throws Exception {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("reposId", String.valueOf(reposId));
+        params.put("mode", "index");
+        if (queryJson != null && !queryJson.isEmpty()) params.put("query", queryJson);
+        if (path != null && !path.isEmpty()) params.put("path", path);
+        if (maxResults != null) params.put("maxResults", maxResults.toString());
+        if (withSnippet != null) params.put("withSnippet", withSnippet.toString());
+        return postFormAndParse(baseUrl + "/Doc/agentSearchDoc.do", params);
+    }
+
+    /**
+     * Agent 专用磁盘扫描搜索（T2：/Doc/agentSearchDoc.do，mode=grep）。
+     * 覆盖文件直接放入仓库目录、尚未被 DocSys 扫描建索引的情况。仅文本文件。
+     */
+    public Map<String, Object> grepFiles(Integer reposId, String pattern, String path,
+                                         Integer maxResults) throws Exception {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("reposId", String.valueOf(reposId));
+        params.put("mode", "grep");
+        params.put("pattern", pattern);
+        if (path != null && !path.isEmpty()) params.put("path", path);
+        if (maxResults != null) params.put("maxResults", maxResults.toString());
+        return postFormAndParse(baseUrl + "/Doc/agentSearchDoc.do", params);
+    }
+
+    /**
+     * Agent 专用文本文件写入（T4：/Doc/agentWriteText.do）。
+     * 创建或覆盖文本文件（UTF-8、1MB 上限；服务端白名单校验后缀）。
+     */
+    public Map<String, Object> writeTextDoc(Integer reposId, String path, String name,
+                                            String content, String commitMsg) throws Exception {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("reposId", String.valueOf(reposId));
+        if (path != null) params.put("path", path);
+        params.put("name", name);
+        params.put("content", content);
+        if (commitMsg != null && !commitMsg.isEmpty()) params.put("commitMsg", commitMsg);
+        return postFormAndParse(baseUrl + "/Doc/agentWriteText.do", params);
+    }
+
+    /**
+     * 更新文档内容（/Doc/updateDocContent.do）。
+     * docType=1 → 更新实体文本文件内容；docType=null → 更新备注（虚拟内容）。
+     */
+    public Map<String, Object> updateDocContent(Integer reposId, Long docId, String path, String name,
+                                                String content, Integer docType, String commitMsg) throws Exception {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("reposId", String.valueOf(reposId));
+        if (docId != null) params.put("docId", docId.toString());
+        if (path != null) params.put("path", path);
+        params.put("name", name);
+        params.put("content", content);
+        if (docType != null) params.put("docType", docType.toString());
+        if (commitMsg != null && !commitMsg.isEmpty()) params.put("commitMsg", commitMsg);
+        return postFormAndParse(baseUrl + "/Doc/updateDocContent.do", params);
+    }
+
+    /**
+     * 旧路径迁移用（SubAgent/DocSysSkillExecutor）：单个关键词 → 三字段 should DSL 搜索。
+     * vid=null 时遍历全部可访问仓库合并结果（新端点单仓库化）。CLI 仍用旧 {@link #searchDocs}。
+     */
+    public Map<String, Object> agentSearchDocsByKeyword(String keyword, Integer vid) throws Exception {
+        return agentSearchDocsByQuery(buildKeywordQueryJson(keyword), vid);
+    }
+
+    /** 列出仓库全部文档（扁平列举，旧 handleGetDocList 用 searchDocs("",vid) 的迁移等价物） */
+    public Map<String, Object> agentListAllDocs(Integer vid) throws Exception {
+        return agentSearchDocsByQuery(
+                "{\"should\":[{\"field\":\"name\",\"term\":\".\",\"match\":\"wildcard\"}]}", vid);
+    }
+
+    /** 单仓库直接搜；全仓库（vid=null）逐仓搜索后按 score 降序合并 */
+    private Map<String, Object> agentSearchDocsByQuery(String queryJson, Integer vid) throws Exception {
+        if (vid != null) {
+            return agentSearchDocs(vid, queryJson, null, 50, false);
+        }
+        List<Object> merged = new ArrayList<>();
+        try {
+            Map<String, Object> reposRes = getReposList();
+            Object data = reposRes.get("data");
+            if (data instanceof List) {
+                for (Object item : (List<?>) data) {
+                    if (!(item instanceof Map)) {
+                        continue;
+                    }
+                    Object idObj = ((Map<?, ?>) item).get("id");
+                    if (idObj == null) {
+                        continue;
+                    }
+                    try {
+                        Integer rid = Integer.parseInt(idObj.toString());
+                        Map<String, Object> one = agentSearchDocs(rid, queryJson, null, 20, false);
+                        Object list = one.get("data");
+                        if (list instanceof List) {
+                            merged.addAll((List<?>) list);
+                        }
+                    } catch (Exception repoErr) {
+                        log.warn("agentSearchDocsByQuery: repo {} search failed: {}", idObj, repoErr.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("agentSearchDocsByQuery: all-repos search failed: {}", e.getMessage());
+        }
+        merged.sort((a, b) -> Integer.compare(scoreOf(b), scoreOf(a)));
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "ok");
+        result.put("data", merged);
+        return result;
+    }
+
+    private static int scoreOf(Object item) {
+        if (item instanceof Map) {
+            Object s = ((Map<?, ?>) item).get("score");
+            if (s instanceof Number) {
+                return ((Number) s).intValue();
+            }
+        }
+        return 0;
+    }
+
+    /** 构建单关键词三字段 should 查询 DSL（公开供单测） */
+    public static String buildKeywordQueryJson(String keyword) {
+        JSONObject nameTerm = new JSONObject();
+        nameTerm.put("field", "name");
+        nameTerm.put("term", keyword);
+        JSONObject contentTerm = new JSONObject();
+        contentTerm.put("field", "content");
+        contentTerm.put("term", keyword);
+        JSONObject commentTerm = new JSONObject();
+        commentTerm.put("field", "comment");
+        commentTerm.put("term", keyword);
+        JSONArray should = new JSONArray();
+        should.add(nameTerm);
+        should.add(contentTerm);
+        should.add(commentTerm);
+        JSONObject query = new JSONObject();
+        query.put("should", should);
+        return query.toJSONString();
+    }
+
+    /** 表单 POST 并解析 JSON 响应（失败时返回 status=fail + msgInfo） */
+    private Map<String, Object> postFormAndParse(String url, Map<String, String> params) throws Exception {
+        Response response = postForm(url, params, sessionCookie);
+        try {
+            String respBody = responseBodyString(response);
+            try {
+                Object parsed = JSON.parse(respBody);
+                if (parsed instanceof Map) {
+                    return (Map<String, Object>) parsed;
+                }
+            } catch (Exception parseErr) {
+                log.warn("postFormAndParse: non-JSON response from {}: {}", url,
+                        respBody.substring(0, Math.min(200, respBody.length())));
+            }
             Map<String, Object> error = new HashMap<>();
             error.put("status", "fail");
-            error.put("msgInfo", "Failed to parse search results");
+            error.put("msgInfo", "响应解析失败: " + respBody.substring(0, Math.min(200, respBody.length())));
             return error;
         } finally {
             response.close();
