@@ -18,11 +18,20 @@ W1 + G3 双命中，全部代码已提交。
 
 id 分配对齐已闭环，**下一个 fixture 由用户决定**。
 
+- **2026-09-14 路径对比分析（已交付，未改代码）**：对 Java/JS 的 ownerId 分配做了分层对比 → 结论「走了相同路径」。产物：`docs/id分配-路径对齐对比分析.md`（office 仓库，未提交）。
+  - L0 终态序列 oracle（已有）／L1 静态逐节点路径对照表（新，§2）／L2 OrgPath 锚点审计（新，49 引用全核验，§4）。
+  - 确认差异点全部 id-neutral（Comments/Settings 等跳过、glossary 常数覆盖、Drawing 子对象估算、Correct_Content 删除分支、pre-doc 无映射）。
+  - **同日按用户要求把 §2 每个对比项展开为代码对拍**（JS 蓝本片段 + Java 片段 + 逐点说明，全部行号当天实测于蓝本 HEAD d2baeb9714）。
+  - **同日补全三端覆盖**：新增 §2.10 Slide（PPTY，锚定反推策略：Slide ctor 8 id + per-shape 序列 oracle 指认 + JSlideIdResolver 候选枚举）与 §2.11 Excel（XLST，ownerId 机制不适用，payload 级 golden）；§3 增补 Slide 特有差异点 7/8；§4 增补 slide 侧锚点审计（88 引用：74 命中/14 微漂移已抽验/0 缺失）。
+  - 若需更强的运行时证据：**L3 动态事件流 diff**（方案见该文档 §5）待用户决定是否实施。
+- **2026-09-14 GraalJS 替代 Nashorn 评估计划（文档已交付，未做验证）**：用户提出"移植维护成本大，是否应像 C++ 一样用 JS 引擎执行"。产物：`docs/GraalJS替代Nashorn评估计划.md`（office 仓库，未提交）——性能数据（Nashorn 57-78s / 移植 1.5-1.9s / "Nashorn 比 V8 慢 50-100×"）、spike 设计（最小 harness + golden 兼容性门 + 两生命周期三段计时 + PASS/FAIL 判据）、NSJSBase 8 文件迁移清单、JDK 迁移四阶段、风险表。**验证由用户决定何时开始**。
+
 ---
 
 ## References
 
 - 权威范围：`docs/apply_changes代码逻辑分析.md` §14（office 仓库）
+- 路径对比分析：`docs/id分配-路径对齐对比分析.md`（office 仓库，2026-09-14）
 - 续接上下文：`docs/apply_changes-JS移植Java开发上下文.md`
 - 记忆：`revision-envelope-id-alignment`、`jbin-id-allocator-ccore-pitfall`、`binstream-getstring2-byte-count`、`porting-faithfulness-principle`、`sdkjs-version-pin-7.0.1`
 - 编译/提交前提见 CLAUDE.md（`.class` → `WebRoot/WEB-INF/classes`；核心代码 → office 仓库，测试 → office/test）
