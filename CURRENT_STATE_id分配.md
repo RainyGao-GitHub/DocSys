@@ -25,6 +25,7 @@ id 分配对齐已闭环，**下一个 fixture 由用户决定**。
   - **同日补全三端覆盖**：新增 §2.10 Slide（PPTY，锚定反推策略：Slide ctor 8 id + per-shape 序列 oracle 指认 + JSlideIdResolver 候选枚举）与 §2.11 Excel（XLST，ownerId 机制不适用，payload 级 golden）；§3 增补 Slide 特有差异点 7/8；§4 增补 slide 侧锚点审计（88 引用：74 命中/14 微漂移已抽验/0 缺失）。
   - 若需更强的运行时证据：**L3 动态事件流 diff**（方案见该文档 §5）待用户决定是否实施。
 - **2026-09-14 GraalJS 替代 Nashorn 评估计划（文档已交付，未做验证）**：用户提出"移植维护成本大，是否应像 C++ 一样用 JS 引擎执行"。产物：`docs/GraalJS替代Nashorn评估计划.md`（office 仓库，未提交）——性能数据（Nashorn 57-78s / 移植 1.5-1.9s / "Nashorn 比 V8 慢 50-100×"）、spike 设计（最小 harness + golden 兼容性门 + 两生命周期三段计时 + PASS/FAIL 判据）、NSJSBase 8 文件迁移清单、JDK 迁移四阶段、风险表。**验证由用户决定何时开始**。
+- **2026-09-14 用户决定移除 Java 路径 → 裁定「先做 S1 禁用即可」，由用户自行修改**：生产回归 Nashorn（开关 `JMergeEngine.ENABLED` 默认值 `true→false`）。S2（删调度块）/S3（删 jmerge+测试）暂不执行；测试删除清单（122 删 / 8 小修 / 12 保留前提）已定稿在方案文档 §1.3/§3.3。产物：`docs/apply_changes移除Java路径修改方案.md`（office 仓库，未提交）。
 
 ---
 
