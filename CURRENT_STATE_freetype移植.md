@@ -29,7 +29,7 @@
 - 每次里程碑（批次绿/Spike 结论/结构变更定型/验证层结果）立即更新本卡「当前进展」「下一步」。
 
 ## 当前进展
-- **✅ 规划交付物已生成（未提交）**：`devDocs/freetype移植-开发计划.md`、`freetype移植-文件级映射表.md`、`freetype移植-操作规范.md`、`freetype移植-check_batch.ps1`、`freetype移植-check_functions.ps1`。
+- **✅ 规划交付物已提交**：office `b33d7e55`（5 文件 513 行：开发计划/文件级映射表/操作规范/两个 ps1）；主仓库 `2a8e89b85`（本工作卡）。
 - **⬜ 零代码移植**：`office/freetype/` 包尚不存在；映射表全部 ⬜。
 - 现状盘点结论（已核实）：lwjgl 涉及 14 文件 ~500 处；实际 FT API 面 ~35 函数 + 15 结构体；渲染模式 NORMAL/LIGHT/LCD/LCD_V/MONO；加载标志 40968/40970。
 
@@ -39,4 +39,4 @@
 3. 开始 B1 移植（模板 → 基准 commit → 移植 → 批编译绿）。
 
 ## 未提交改动
-- office 仓库：devDocs 新增 `freetype移植-*` 5 个文件（开发计划/映射表/操作规范/两个 ps1）。
+- 无。
