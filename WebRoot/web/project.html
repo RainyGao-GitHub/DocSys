@@ -448,6 +448,117 @@
 		<input type="text" value="1" id="uploadType" name="uploadType" title="上传类型：1文件 2文件夹"/>
 	</form>
 </div>
+<!-- AI Agent入口：点击在ArtDialog弹层中打开（右侧停靠，不跳转页面，保留当前仓库/文件视图） -->
+<style>
+    #ai-chat-icon {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #00CED1, #9370DB);
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 206, 209, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        z-index: 9999;
+    }
+
+    #ai-chat-icon:hover {
+        transform: scale(1.12) rotate(5deg);
+        box-shadow: 0 6px 20px rgba(147, 112, 219, 0.4);
+        background: linear-gradient(135deg, #20B2AA, #7B68EE);
+    }
+
+    #ai-chat-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    #ai-chat-icon:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+</style>
+<div id="ai-chat-icon" title="AI" style="display:none" onclick="openAiChat();">
+    <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <text x="50%" y="60%" text-anchor="middle" font-weight="bold" font-size="12" fill="white">AI</text>
+    </svg>
+</div>
+<script>
+    // 在ArtDialog弹层中打开AI Agent页面（右侧停靠，不跳转页面，保留当前仓库/文件视图）
+    function openAiChat()
+    {
+    	var dialogId = "ArtDialogAiChat";
+    	// 已打开时聚焦现有弹层，避免重复创建
+    	var existing = artDialog.list && artDialog.list[dialogId];
+    	if(existing)
+    	{
+    		existing.zIndex().focus();
+    		return;
+    	}
+
+    	// 右侧停靠：宽度约50%，上下留边距，不占满整个窗口
+    	var winWidth = $(window).width();
+    	var winHeight = $(window).height();
+    	var width = Math.min(Math.max(420, Math.round(winWidth * 0.5)), winWidth - 40);
+    	// 顶部避开页面固定导航栏，重叠会遮挡标题栏和关闭按钮
+    	var navHeight = $(".navbar-fixed-top").outerHeight() || 50;
+    	var top = navHeight + 10;
+    	// 高度=视口高度-上边距-下边距(20)-标题栏及边框(约35)，保证整个弹层完整落在视口内
+    	var height = Math.max(320, winHeight - top - 20 - 35);
+    	var left = Math.max(20, winWidth - width - 20);
+
+    	var d = new artDialog({
+    		id: dialogId,
+    		title: "AI Agent",
+    		content: '<iframe frameborder="0" name="' + dialogId + '" src="/DocSystem/web/agent/index.html" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true"></iframe>',
+    		foot: false,
+    		big: true,
+    		padding: 0,
+    		width: width,
+    		height: height,
+    		left: left,
+    		top: top,
+    		// 高于页面固定导航栏（本页z-index:300），否则弹层最大化到(0,0)后标题栏/关闭按钮会被导航栏盖住
+    		zIndex: 2000,
+    		fixed: true,
+    		resize: true,
+    		drag: true,
+    		close: function()
+    		{
+    			// 弹层关闭后恢复AI图标
+    			$("#ai-chat-icon").show();
+    		},
+    	});
+    	// 隐藏底部按钮栏（弹层只需标题栏 + 页面内容）
+    	$("." + dialogId + " .aui-footer").parent().remove();
+    	// 弹层打开时隐藏AI图标（图标与弹层不同时出现）
+    	$("#ai-chat-icon").hide();
+    	// 按右侧停靠位置摆放
+    	d.position(left, top);
+    }
+
+    // 系统已配置并启用AI模型时才显示AI入口（与仓库列表页行为一致）
+    (function()
+    {
+    	$.ajax({
+            url : "/DocSystem/Repos/getAiModelList.do",
+            type : "post",
+            dataType : "json",
+            data : {},
+            success : function (ret) {
+                if( "ok" == ret.status )
+                {
+                    $('#ai-chat-icon').show();
+                }
+            }
+        });
+    })();
+</script>
 <script type="text/javascript" src="project.js"></script>
 </body>
 </html>

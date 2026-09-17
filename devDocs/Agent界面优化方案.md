@@ -107,3 +107,26 @@
   - 收尾微调：输入框 placeholder 同步精简（去掉快捷键说明）；窄宽度（<480px）隐藏"系统健康"文字时同步隐藏其后的分隔符（芯片显示 `Lv.1 · 0%`）。
   - 宽屏优化：移除 `.chat-container` 的最大宽度限制（原 inline `max-width:1000px; margin:0 auto`，styles.css 另有 900px 旧值被其覆盖）→ 改为 `max-width:none; margin:0`。用户拉大窗口/弹层时消息区与输入区满宽显示（1600px 视口实测容器=视口宽，无两侧空白）。styles.css 保持不动（ui.html 兼容）。
   - ⚠️ 缓存提示：Agent 页在 ArtDialog iframe 中按浏览器缓存策略加载，更新静态页后首次可能显示旧缓存版本；**硬刷新（Ctrl+F5）一次**即可。若希望每次打开强刷，可在 `openAiChat()` 的 iframe src 加时间戳参数（未做，按需评估）。
+
+## 7. 扩展：仓库详情页 Agent 入口（project.html / project_en.html）
+
+目标：进入仓库（仓库详情页）后也能用 Agent，且**不打断当前的仓库/文件浏览视图**——与仓库列表页 `projects.html` 行为一致（右侧停靠弹层 + 图标互斥）。
+
+### 7.1 实现（纯前端，无 Java 改动）
+
+- 改动位置：`WebRoot/web/project.html` 与 `WebRoot/web/project_en.html` 的**页面尾部**（`<script src="project.js">` 之前）各插入一段自包含代码：
+  - `#ai-chat-icon`：左下悬浮图标（60×60 渐变圆，`position:fixed; z-index:9999`），初始 `style="display:none"`；
+  - `openAiChat()`：与 `projects.html` 同一实现——`id: "ArtDialogAiChat"`；右侧停靠（宽 ≈50%、下限 420、上限 视口-40）；`top = 导航栏高 + 10`；高 = 视口高 - top - 55；`zIndex:2000`（> 本页导航栏 `z-index:300`，最大化后标题栏/关闭按钮不被遮）；`fixed:true`；打开时隐藏图标、`close` 回调恢复；已存在则 `zIndex().focus()` 不重复创建；移除 `.aui-footer` 按钮栏。
+  - 入口显示条件：`POST /DocSystem/Repos/getAiModelList.do` 返回 `ok`。该接口只校验服务端 LLM 配置（未配置/未启用/无模型时返回 error），**不校验登录态**，因此与列表页保持一致即可，无需额外登录门禁。
+- **无需引入任何资源**：两页已自带 `css/artDialog.css`、`dialog.js`、`dialog-plus.js`、`js/artDialog.js`（实际生效的是 v6 版 `js/artDialog.js`，含全局 `artDialog.list`）。
+- **未改 `project.js`**：该文件同时被中/英文页引用且近 3k 行，登录检查 `SysInit()` 保持原样；AI 入口完全自包含于页面尾部脚本，避免回归风险。
+
+### 7.2 实测（8100，junction 部署，视口 795×876，已登录 Admin）
+
+- 图标按预期显示；点击打开弹层：`position:fixed`、`z-index:2000`、左 355 / 上 61 / 宽 420 / 高 795（导航栏高 51，底部留白 20）；仓库树与文档区在左侧仍可见可用；
+- iframe 内 Agent 页加载正常（顶栏 / 新会话 / 会话下拉 / 帮助 / 技能 / 设置 / 模型选择器均在，无左栏残留）；
+- 关闭按钮 → 弹层移除、图标恢复 `display:flex`（jQuery 1.10.2 的 `.show()` 会清空内联 `display`，样式表 `flex` 生效——已实测确认，无需改用 `.css()`）；
+- 重复调用 `openAiChat()` → 弹层仍只有 1 个（去重生效）；
+- 页面无其它 `fixed/absolute` 角标元素，图标不与文件树、翻页控件（prev/next）冲突；
+- 控制台仅见既有历史问题：head 中 jPlayer 的 `Cannot read properties of undefined (reading 'fn')` 与 `stackeditForVDoc.html` 404，均与本改动无关。
+- 校验：`node vm.Script` 对两页全部内联脚本块做语法解析，0 错误（脚本：`%TEMP%\check_html_js.js`，用法 `node check_html_js.js <html路径>`）
