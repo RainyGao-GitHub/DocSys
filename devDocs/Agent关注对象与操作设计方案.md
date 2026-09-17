@@ -397,3 +397,118 @@ ScholarOS 可以把 `@导师` 写进文本，因为对象是**固定 14 项**、
 dev Tomcat 一直"启动成功却看不到改动"的根因：**Eclipse WTP 的 Tomcat（javaw，`-Dcatalina.base=...\org.eclipse.wst.server.core\tmp0`）占着 8100**，我的 dev Tomcat 每次 `BindException: Address already in use: JVM_Bind <null>:8100`（日志里能看到），于是浏览器实际访问的是 `wtpwebapps\DocSystem` 里 **Eclipse 上次 Publish 的旧副本**（静态文件与类都是旧的）。
 识别方法：`netstat -ano | findstr :8100` 拿到 PID → 看命令行里 `catalina.base`；再对比服务器响应头 `Content-Length/ETag` 与工作区文件大小/修改时间是否一致。
 处置：停止 Eclipse 里的服务器（或 Publish）后由 dev Tomcat 接管，静态文件与 `WebRoot/WEB-INF/classes` 立即生效。
+
+---
+
+## 14. P2：上传改为「本轮对话的临时输入」+ 显式入库（2026-09-17）
+
+### 14.1 动机与用户决策
+
+用户原话要点：
+
+> 上传的文件是用于支撑这次对话用的（比如上传一张图片让智能体识别，或一份文档需要智能体读取；具体采取什么操作要根据本轮消息与上下文确定）。**默认情况下上传的文件只用于临时用途，不应该直接传入仓库根目录**；用户若希望上传到仓库，需要**自己选择目标仓库和目录**。**上传目录功能建议直接去掉**——没有实际用途（project 页已有；用于支撑对话时目录内容难以描述清楚）。
+
+据此确定：
+
+1. 上传 = 本轮对话输入，落在**系统临时目录**，**不写仓库**；
+2. 入库是**显式二次动作**（chip 上的「入库」→ 目录树选目标目录 → 导入）；
+3. 「上传目录」按钮与整条旧仓库上传链路删除；
+4. 图片本轮**不做视觉识别**（只存文件 + 元信息，避免臆造）。
+
+### 14.2 存储与生命周期
+
+- 目录：`java.io.tmpdir/DocSysAgentUpload/<userId>/<会话id>/`（`userId`=登录名，会话 id=前端 `payload.sessionId`；`safeSegment` 只保留 `[A-Za-z0-9_-]` 并**剔除点号**，防 `..` 越出根目录）
+- 上限：单文件 20MB、单轮 10 个附件；同名追加 `-2`/`-3` 后缀
+- 读取策略：文本类（白名单扩展名）≤1MB 返回内容（截断到 20 万字符）；图片/二进制只返回元信息
+- 清理：`sweepExpired(7 天)` 惰性清理（首次访问管理端点触发）；chip 删除 = 立即删临时文件；附件整个会话内有效
+
+### 14.3 后端实现
+
+| 位置 | 内容 |
+| --- | --- |
+| `agent/attachment/AgentAttachmentSupport.java`（新） | 纯函数：`sessionDir/safeSegment/sanitizeName/extensionOf/mimeOf/kindOf/listItems/resolve/readForTool/renderLines/sweepExpired/deleteSessionDir`；常量 `MAX_FILE_BYTES/MAX_ATTACHMENTS/MAX_READ_CHARS/MAX_READ_BYTES/RETENTION_DAYS` |
+| `agent/attachment/TestAgentAttachmentSupport.java`（新） | 57 项护栏（安全化/穿越/读写策略/renderLines/sweep） |
+| `AgentController` | `POST /agent/attachment`（multipart+sessionId，落临时目录）、`GET /agent/attachments?sessionId=`、`DELETE /agent/attachment?id=&sessionId=`、`POST /agent/attachment/import`（`AttachmentImportRequest{sessionId,id,reposId,pid,path,name}` → `DocSysClient.uploadFile` 写入仓库）；`ExecuteRequest.attachments`；`verifyAttachments()`（只认会话目录里真实存在的 id，剔除后发 notice）；`renderAttachmentLines()` |
+| `agent/focus/AgentFocusSupport` | `buildUserMessage(userText, focus, operation, notice, attachmentLines)`：注入块顺序为 关注对象 → **【本轮附件】** → 操作 → 约束（含"附件不在仓库、需用 attachment 工具读取、不得臆造"）→ 提示 → 用户文本；`hasInjectedBlock/stripInjectedBlock` 同步识别附件段 |
+| `agent/tool/DocSysToolFactory` | 新工具 `attachment(action=list|read, name=)`；`list` 返回编号清单，`read` 文本返回内容（带元信息与截断说明），图片/二进制只返回元信息 |
+| `agent/orchestrator/MainAgent` | `buildToolLoop` 注册 `attachment` 工具（目录按**对话会话 id** 捕获，见 14.6-①）；`TestAttachmentTool` 14 项护栏 |
+
+### 14.4 前端实现（`WebRoot/web/agent/index.html`）
+
+- 输入区上方新增**附件栏** `#attachBar/#attachChips`；chip = 文件类型图标 + 名称 + 大小 + 「入库」+ 「×」（未完成的上传显示"上传中 N%"）
+- `uploadAttachment(file)`：先确保有会话（无会话先 `POST /agent/sessions` 建会话，保证 sessionId 与附件目录一致）→ XHR `POST /agent/attachment`（带进度）→ 追加 chip
+- 发送时 `payload.attachments=[{id,name}]`（只在有附件时带）
+- 会话切换/刷新：`loadAttachmentsForSession()`（`GET /agent/attachments`）恢复 chips
+- 入库：复用 `#focusDialog` 目录树，新增 `mode:'import'`（标题"导入到仓库：<文件名>"、隐藏搜索/清空、**只允许选目录**（文件行置灰）、底部按钮变「导入到此处」）→ `POST /agent/attachment/import`
+- **删除**旧链路：`uploadFile/uploadMultipleFiles/discoverReposId/uploadWithProgress/handleRepoNotFoundUpload/pendingUploads*/showRepoCreatePrompt/retryPendingUploads/上传进度条辅助/relogin 的"创建仓库才能上传"分支`（约 325 行），以及此前已删的「上传目录」
+
+### 14.5 实测（dev Tomcat 8100，2026-09-17）
+
+| 场景 | 结果 |
+| --- | --- |
+| 📎 上传 `hello.txt` | `POST /agent/attachment` 200，chip 出现（132 B）；**仓库根目录仍 29 项、无 hello.txt** ✓ |
+| 刷新页面 | `GET /agent/attachments` 200，chip 自动恢复 ✓ |
+| 发送"读取附件关键字" | 模型调用 `attachment(read)` 拿到真实内容，正确答出关键字 `麒麟-7391` ✓ |
+| 上传 `pic.png` 后询问图片内容 | 工具只返回 `image/png, 66 B` 元信息；模型明确声明无视觉能力、不臆造 ✓ |
+| chip「入库」 | 弹窗进入 import 模式（标题/隐藏搜索/「导入到此处」/文件行禁用 ✓）→ 选仓库根 → `POST /agent/attachment/import` 200 → 仓库 29→30 项、出现 hello.txt ✓ |
+| chip「×」 | `DELETE` 200×2 → chips 清空、刷新后仍空、磁盘临时文件消失 ✓ |
+| 回归 | `@` 弹窗（focus 模式标题/搜索/清空/「确定」/文件行可选/计数 1/10/取消回滚）、`/` 菜单（6 操作+技能）均正常；全程 `pageerror` 0 ✓ |
+
+（测试文件落在 `office/test/tmp/attachmentE2E/`；测试导入到 `vid=1` 根目录的 hello.txt 已用 `Doc/deleteDoc.do` 清理。）
+
+### 14.6 实测中发现并修掉的问题
+
+① **附件工具看不到刚上传的附件**（模型报"本轮没有上传附件"）
+根因：**写入方与读取方用了不同的会话键**——上传端点按「对话会话 id」（`payload.sessionId`，如 `1d95a3d1-…`）落盘，而 `MainAgent.buildToolLoop` 里用的是 `context.getSessionId()`，它其实是 **jsessionid**（见 `AgentController.getContext(username, jsessionid)`）→ 工具去 `<user>/<jsessionid>` 找，自然为空；文件实际在 `<user>/<对话会话 id>`（磁盘取证确认）。
+修复：`SessionInfo` 增 `agentSessionId` + `attachmentSessionKey()`（对话 id 优先、回退 jsessionid）；两处工具循环入口（`runToolLoopStreamingWithSse`、`runToolLoopWithSse`）注入 `sessionId`；`MainAgent` 改为 `resolveAttachmentSession(sessionInfo, context)`。
+教训：**按会话隔离的临时资源，必须让"写"和"读"共用同一个会话键**；`AgentContext.sessionId` 在本项目语义是 jsessionid，容易被误当成对话会话 id。
+
+② **新端点部署后一直 404**
+旧 `AgentController.class` 仍在 JVM 中（Tomcat 不热加载已加载的类）；重启 dev Tomcat 后恢复。
+注意：**未登录时任何 `/agent/**` 都会先被鉴权拦成 302**，所以 302/404 都**不能**证明映射是否存在——验证要么带会话打真实接口，要么直接看 `WebRoot/WEB-INF/classes/.../AgentController.class` 的时间戳与内容。
+
+③ **不能用 PowerShell 文本替换改源码**
+`Get-Content -Raw ... -replace ... | Set-Content -Encoding UTF8` 会把 UTF-8（无 BOM）源码按 ANSI 读成乱码（曾把 `OutputStreamWriter` 改成乱码标识符）。要么用编辑工具，要么用 .NET `[IO.File]::ReadAllLines/WriteAllLines(..., UTF8Encoding($false))`。
+
+### 14.7 后续待办
+
+- ~~会话删除时同步 `deleteSessionDir`~~ → **已做（2026-09-17）**：`AgentController.deleteSession()` 调 `purgeSessionAttachments(user, sessionId)`（best-effort，只删当前用户自己的目录，日志 `session deleted: attachments purged…`）；前端删除当前会话时同步清空 `state.attachments` 与 chips。实测：网页删会话 → `DELETE /agent/sessions/<id>` 200 → 磁盘会话附件目录消失、chips 清空 ✓。
+- 图片视觉识别（多模态）未接；当前一律元信息（接入要点见 §14.8）。
+- `msg.isUploadProgress` 历史渲染分支与 `upload-progress-*` CSS 已无生产者，可择机清理。
+
+### 14.8 后续接「多模态识别」需要什么（评估，未实施）
+
+**结论先说**：不需要给附件存储/上传/工具做结构性改造；需要在**消息内容形状**、**模型能力标记**、**决策点**三处动刀。当前代码有两个有利事实：
+
+1. 原生通道 `LLMService.doChatNative` 是 `requestBody.put("messages", messages)` + `JSON.toJSONString(...)` —— **message map 里的任何结构都会原样透传**，也就是说 `content` 换成 `[{type:"text"},{type:"image_url",…}]` 这种 parts 数组**不需要改序列化**；
+2. `ToolUseLoop` 内部本来就是 `List<Map<String,Object>>`，只有 `toStringMaps()`（文本通道适配）会把它降级成 `Map<String,String>`。
+
+**改动清单**
+
+| # | 位置 | 要做什么 |
+| --- | --- | --- |
+| 1 | `ResolvedLlmConfig`（+ 模型来源 `UserLlmModelService`/`AgentConfigService`/模型管理 UI） | 增 `supportsVision`（默认 false）；用户自定义模型加"支持图片"勾选。**这是"由模型能力决定"的唯一事实来源** |
+| 2 | 消息构造（`ToolUseLoop` 组装 user/tool 消息处、以及注入块之后） | 允许 `content` 为 parts 数组；`toStringMaps()` 遇到 parts 时降级为文本占位（文本通道没有多模态能力，必须优雅退化而不是抛错） |
+| 3 | `AgentController.streamInternal`（A 方案决策点） | 主模型有视觉能力时，把本轮的图片附件转成 `data:image/png;base64,…` 的 image part **只发本轮、不落库**，附在 user 消息里；同时注入块文案改为"图片已随消息提供" |
+| 4 | `MainAgent.buildToolLoop`（B 方案决策点） | 主模型**无**视觉能力时，注册 `image_understand(name, question)` 工具（背后调一个可配置的视觉模型 selector，如 `agent_vision_model`），由模型自己决定要不要调；注入块文案改为"图片内容可用 image_understand 读取" |
+| 5 | `AgentAttachmentSupport.renderLines` | 现在硬编码了"当前模型无视觉能力，不要臆造图片内容"，需按能力出两种文案（建议现在就参数化，接入时只切开关） |
+| 6 | 会话历史/审计（`ConversationHistoryService.saveExchange`） | **绝不把 base64 写进 DB**：历史里只存附件标记（如 `[[image:pic.png#att]]`），回放时若临时文件还在再从会话目录展开，不在就渲染"（图片已过期）" |
+| 7 | 成本/健壮性闸门 | MIME 白名单（png/jpeg/webp/gif，**排除 svg**）、长边降采样（如 ≤1024px）、单图 ≤4MB、每轮图片数上限（可配，默认 1）、token 预算提示 |
+| 8 | 安全边界 | 只送用户本轮上传的临时附件；仓库内文件默认不送图（要送也得用户显式 @ 且另行决策），避免把仓库内容无感外发 |
+
+**为什么推荐"混合"而不是二选一**：供应商侧是无状态的，用户第二轮问"刚才那张图里的数字是多少"时，A 方案必须**重新**把图片 part 再发一次（从会话临时目录展开即可，会话目录本就按会话保留）；B 工具路线则天然支持"按需重看"，且不依赖主模型能力。两者共用同一套能力开关，接入成本≈"能力标记 + 两个决策点 + 一份输出策略"。
+
+**现在就能做的低风险预备（1 小时内）**：给 `renderLines` 加"是否可见图片"的参数（两种文案并存，默认仍走无视觉分支），并在模型配置里预留 `supportsVision` 字段（不接线）。这样后续接入只是"翻开关 + 接决策点"。
+
+#### 14.8.1 预备已落地（2026-09-17）
+
+- `AgentAttachmentSupport.renderLines(items)` → 保留 1 参版本（**等价旧行为**），新增 `renderLines(items, visionAvailable)`：图片行文案二选一
+  - `false`（默认）：`图片「p.png」(2.0 KB, image/png：图片，当前模型无视觉能力，不要臆造图片内容)`
+  - `true`：`图片「p.png」(2.0 KB, image/png：图片，本轮图片内容已可查看（多模态），不要臆造未提供的信息)`
+  - 参数语义刻意定义为「**本轮**图片内容对模型可见」而不是单纯的模型能力：只有真的把图片送达（内联 parts 或视觉工具携带）才可传 true，避免让模型以为看得到实际看不见的图
+- `ResolvedLlmConfig` 增 `public final boolean supportsVision`：保留 4 参构造（默认 `false`，既有调用方与行为完全不变），新增 5 参构造；`toString()` 打印该标记（排障时能一眼看出本轮是否走视觉路径）
+- `AgentController.renderAttachmentLines()` 调用点已改传 `renderLines(items, false)` 并留注释（接线后改传 `resolvedLlm != null && resolvedLlm.supportsVision`）
+- 护栏：`TestAgentAttachmentSupport` **69**（新增 6 项：vision 文案、去掉"无视觉能力"措辞、文本/文档行不受影响、空列表）；新增 `agent/llm/TestResolvedLlmConfig` **7**（旧构造默认 false、新构造带标记、toString 含标记且不泄露 apiKey、openAiCompatible 推导不回归）
+- 冒烟（8100，重启后）：上传 + 发送 → 工具照旧读到真实文本（关键字命中），注入块文案与改造前一致 ✓
+
+接线时的剩余工作：`supportsVision` 的**来源**（模型配置/UI）→ 图片转 parts 内联（`streamInternal`）→ `image_understand` 工具（`buildToolLoop`）→ 历史只存附件标记 → 尺寸/MIME/数量闸门。

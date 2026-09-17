@@ -603,6 +603,16 @@ public class MainAgent {
             registry.register(com.DocSystem.agent.tool.DocSysToolFactory.runSkillTool(
                     skillExecutorRegistry, context));
         }
+        // P2：附件工具 —— 读取本轮用户上传的临时附件（按对话会话目录捕获；目录不存在则返回“无附件”）
+        // 注意：目录必须与 /agent/attachment 上传端点一致，即用「对话会话 id」而非 jsessionid
+        //（context.getSessionId() 是 jsessionid，用它会导致工具看不到刚上传的附件）
+        String attachUser = extractUserId(sessionInfo);
+        String attachSession = resolveAttachmentSession(sessionInfo, context);
+        registry.register(com.DocSystem.agent.tool.DocSysToolFactory.attachment(
+                com.DocSystem.agent.attachment.AgentAttachmentSupport.sessionDir(
+                        attachUser,
+                        com.DocSystem.agent.attachment.AgentAttachmentSupport.sessionKey(attachSession),
+                        false)));
         final String toolUserId = extractUserId(sessionInfo);
         final String toolSessionId = context != null ? context.getSessionId() : null;
         final String toolTraceId = org.slf4j.MDC.get("traceId");
@@ -717,6 +727,19 @@ public class MainAgent {
             return ((AgentController.SessionInfo) sessionInfo).username;
         }
         return null;
+    }
+
+    /**
+     * P2：附件会话 id —— 与 /agent/attachment 上传端点同一规则（对话会话 id 优先，回退 jsessionid）。
+     */
+    private String resolveAttachmentSession(Object sessionInfo, AgentContext context) {
+        if (sessionInfo instanceof AgentController.SessionInfo) {
+            String s = ((AgentController.SessionInfo) sessionInfo).attachmentSessionKey();
+            if (s != null && !s.trim().isEmpty()) {
+                return s;
+            }
+        }
+        return context != null ? context.getSessionId() : null;
     }
 
     /**

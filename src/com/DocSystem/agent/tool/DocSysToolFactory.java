@@ -635,6 +635,60 @@ public class DocSysToolFactory {
      * @param store    用户记忆存储（不可为 null）
      * @param username 当前用户名（可为 null → 执行返回未登录错误）
      */
+    /**
+     * P2：附件工具 —— 读取<b>本轮用户上传的临时附件</b>（不在仓库里）。
+     *
+     * <p>会话目录由调用方按请求捕获（仿 memorySet(store, username) 模式）；
+     * 目录不存在 或 无附件 → 返回“无附件”，不报错。</p>
+     *
+     * @param sessionDir 会话附件目录（可为 null）
+     */
+    public static ToolDefinition attachment(java.io.File sessionDir) {
+        JSONObject props = props(
+                strProp("action", "操作：list（列出本轮全部附件）或 read（读取指定附件内容）。必填，示例 \"list\""),
+                strProp("name", "附件名（action=read 时必填，名字来自【本轮附件】段，示例 \"需求.docx\"）"));
+        JSONObject schema = objSchema(props, new String[]{"action"});
+        return ToolDefinition.builder("attachment",
+                "读取本轮用户上传的临时附件（用户随消息上传、不在仓库里的文件）。"
+                + "action=list 列出附件；action=read + name 读取指定附件：文本类返回内容（可能截断），"
+                + "图片/二进制只返回元信息（不得臆造内容）。注意：附件不属于仓库，不要用 get_doc/search_files 去找它们。",
+                args -> {
+                    String action = args.getString("action");
+                    action = (action == null || action.trim().isEmpty()) ? "list" : action.trim().toLowerCase();
+                    java.util.List<com.DocSystem.agent.attachment.AgentAttachmentSupport.Item> items =
+                            com.DocSystem.agent.attachment.AgentAttachmentSupport.listItems(sessionDir);
+                    if ("list".equals(action)) {
+                        if (items.isEmpty()) {
+                            return ToolResult.ok("本轮没有上传附件");
+                        }
+                        return ToolResult.ok(com.DocSystem.agent.attachment.AgentAttachmentSupport.renderLines(items)
+                                + "（用 attachment(action=\"read\", name=\"...\") 读取内容）");
+                    }
+                    if ("read".equals(action)) {
+                        String name = args.getString("name");
+                        java.io.File f = com.DocSystem.agent.attachment.AgentAttachmentSupport.resolve(sessionDir, name);
+                        if (f == null) {
+                            return ToolResult.error("附件不存在：" + name + "（先用 action=list 查看本轮附件）");
+                        }
+                        try {
+                            com.DocSystem.agent.attachment.AgentAttachmentSupport.ReadResult r =
+                                    com.DocSystem.agent.attachment.AgentAttachmentSupport.readForTool(f, f.getName());
+                            if (r == null) {
+                                return ToolResult.error("附件不可读：" + name);
+                            }
+                            if ("text".equals(r.kind)) {
+                                String head = r.meta + (r.truncated ? "（内容过长，已截断）" : "");
+                                return ToolResult.ok(head + "\n---\n" + r.content);
+                            }
+                            return ToolResult.ok(r.meta);
+                        } catch (java.io.IOException e) {
+                            return ToolResult.error("附件读取失败：" + e.getMessage());
+                        }
+                    }
+                    return ToolResult.error("不支持的 action：" + action + "（可选 list / read）");
+                }).parameters(schema).build();
+    }
+
     public static ToolDefinition memorySet(UserMemoryStore store, String username) {
         JSONObject props = props(
                 strProp("key", "记忆键（必填）。建议带命名空间，如 user.preference / user.preferred_language / user.workplace。示例：\"key\":\"user.preference\""),

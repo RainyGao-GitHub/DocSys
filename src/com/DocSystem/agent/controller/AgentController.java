@@ -217,6 +217,8 @@ public class AgentController {
         private String operation;
         /** P1：「@」本轮关注对象（仓库/目录/文件），结构见 AgentFocusSupport.FocusItem */
         private List<AgentFocusSupport.FocusItem> focus;
+        /** P2：本轮附件（上传的临时文件；只传 id/name，服务端按会话目录校验存在性） */
+        private List<AttachmentRef> attachments;
 
         public ExecuteRequest() {}
 
@@ -240,6 +242,9 @@ public class AgentController {
 
         public List<AgentFocusSupport.FocusItem> getFocus() { return focus; }
         public void setFocus(List<AgentFocusSupport.FocusItem> focus) { this.focus = focus; }
+
+        public List<AttachmentRef> getAttachments() { return attachments; }
+        public void setAttachments(List<AttachmentRef> attachments) { this.attachments = attachments; }
     }
 
     /**
@@ -346,6 +351,8 @@ public class AgentController {
             AgentContext context = getContext(username, jsessionid);
             DocSysClient execClient = getSessionClient(jsessionid);
             SessionInfo info = new SessionInfo(username, jsessionid, jsessionid);
+            // P2：附件工具按「对话会话 id」找临时附件（与 /agent/attachment 上传路径一致）
+            info.agentSessionId = sessionId;
 
             // SSE 确认推送器：写工具需要确认时推 confirm 事件给前端
             com.DocSystem.agent.tool.ConfirmEventSink sink = (toolName, token, msg) -> {
@@ -408,6 +415,8 @@ public class AgentController {
             AgentContext context = getContext(username, jsessionid);
             DocSysClient execClient = getSessionClient(jsessionid);
             SessionInfo info = new SessionInfo(username, jsessionid, jsessionid);
+            // P2：附件工具按「对话会话 id」找临时附件（context.getSessionId() 是 jsessionid，会看不到刚上传的附件）
+            info.agentSessionId = sessionId;
 
             final StringBuilder reasoningAccum = new StringBuilder();
 
@@ -638,7 +647,30 @@ public class AgentController {
             return AgentResponse.error("ConversationHistoryService not available");
         }
         conversationHistoryService.deleteSession(sessionId);
+        // P2：会话删除时同步清空该会话的附件临时目录（临时文件不该残留到 7 天 sweep；删失败不影响会话删除结果）
+        purgeSessionAttachments(user.getName(), sessionId);
         return AgentResponse.ok("会话已删除");
+    }
+
+    /**
+     * P2：清空某用户某会话的附件临时目录（best-effort）。
+     * 注意：只删当前用户自己的目录（会话 id 虽然是 UUID，但不以“能删他人文件”为前提）。
+     */
+    private void purgeSessionAttachments(String userId, String sessionId) {
+        try {
+            java.io.File dir = com.DocSystem.agent.attachment.AgentAttachmentSupport.sessionDir(
+                    userId, attachSessionKey(sessionId), false);
+            if (!dir.isDirectory()) {
+                return;
+            }
+            int files = com.DocSystem.agent.attachment.AgentAttachmentSupport.listItems(dir).size();
+            boolean ok = com.DocSystem.agent.attachment.AgentAttachmentSupport.deleteRecursively(dir);
+            log.info("session deleted: attachments purged, user={}, session={}, files={}, ok={}",
+                    userId, sessionId, files, ok);
+        } catch (Exception e) {
+            log.warn("purge session attachments failed: user={}, session={}, err={}",
+                    userId, sessionId, e.getMessage());
+        }
     }
 
     // ==================== LLM 模型列表 / 用户自定义模型 CRUD ====================
@@ -943,7 +975,7 @@ public class AgentController {
             @RequestParam(name = "modelId", required = false) String modelId,
             HttpServletRequest request,
             HttpServletResponse response) {
-        return streamInternal(decodeQueryParam(commandRaw), sessionId, modelId, request, response, null, null);
+        return streamInternal(decodeQueryParam(commandRaw), sessionId, modelId, request, response, null, null, null);
     }
 
     /**
@@ -982,7 +1014,7 @@ public class AgentController {
                     sanitized.items.size(), sanitized.droppedInvalid, sanitized.droppedOverflow);
         }
         return streamInternal(body.getCommand(), body.getSessionId(), body.getModelId(),
-                request, response, operation, sanitized.items);
+                request, response, operation, sanitized.items, body.getAttachments());
     }
 
     /**
@@ -1000,8 +1032,19 @@ public class AgentController {
         }
     }
 
-    /** 参数校验失败时快速返回一个只发 error 事件并立即结束的 SSE */
-    private SseEmitter immediateSseError(String message) {
+    /** P2：附件引用（前端只传 id/name；size/mime 由服务端从临时文件读） */
+    public static class AttachmentRef {
+        private String id;
+        private String name;
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+    }
+
+    /**
+     * 参数校验失败时快速返回一个只发 error 事件并立即结束的 SSE
+     */    private SseEmitter immediateSseError(String message) {
         SseEmitter emitter = new SseEmitter(5000L);
         try {
             emitter.send(SseEmitter.event()
@@ -1061,6 +1104,68 @@ public class AgentController {
         }
     }
 
+    /**
+     * P2：校验本轮附件 —— 只认<b>该会话临时目录里真实存在</b>的文件（前端传的 id/name 均会安全化）。
+     * 不存在的条目直接丢弃（调用方据此发 notice），不报错；数量上限 {@code MAX_ATTACHMENTS}。
+     */
+    private List<com.DocSystem.agent.attachment.AgentAttachmentSupport.Item> verifyAttachments(
+            List<AttachmentRef> refs, String userId, String sessionId) {
+        List<com.DocSystem.agent.attachment.AgentAttachmentSupport.Item> out =
+                new ArrayList<com.DocSystem.agent.attachment.AgentAttachmentSupport.Item>();
+        if (refs == null || refs.isEmpty()) {
+            return out;
+        }
+        java.io.File dir = com.DocSystem.agent.attachment.AgentAttachmentSupport.sessionDir(
+                userId, attachSessionKey(sessionId), false);
+        Set<String> seen = new java.util.HashSet<String>();
+        for (AttachmentRef ref : refs) {
+            if (out.size() >= com.DocSystem.agent.attachment.AgentAttachmentSupport.MAX_ATTACHMENTS) {
+                break;
+            }
+            if (ref == null) {
+                continue;
+            }
+            String rawId = ref.getId() != null ? ref.getId() : ref.getName();
+            java.io.File f = com.DocSystem.agent.attachment.AgentAttachmentSupport.resolve(dir, rawId);
+            if (f == null) {
+                continue;
+            }
+            String safe = com.DocSystem.agent.attachment.AgentAttachmentSupport.sanitizeName(f.getName());
+            if (safe == null || !seen.add(safe)) {
+                continue;
+            }
+            out.add(new com.DocSystem.agent.attachment.AgentAttachmentSupport.Item(safe, safe, f.length()));
+        }
+        return out;
+    }
+
+    /** 附件会话目录键：sessionId 为空时用 default（与工具层/附件包同一规则） */
+    private static String attachSessionKey(String sessionId) {
+        return com.DocSystem.agent.attachment.AgentAttachmentSupport.sessionKey(sessionId);
+    }
+
+    /** 渲染附件行（注入块用；无附件时返回空列表） */
+    private List<String> renderAttachmentLines(
+            List<com.DocSystem.agent.attachment.AgentAttachmentSupport.Item> items) {
+        List<String> lines = new ArrayList<String>();
+        if (items == null || items.isEmpty()) {
+            return lines;
+        }
+        // 多模态未接线（设计方案 §14.8）：本轮图片对模型不可见 → 走「无视觉能力」文案。
+        // 接线后改为传 `resolvedLlm != null && resolvedLlm.supportsVision`（必须先真的把图片送达模型）。
+        String rendered = com.DocSystem.agent.attachment.AgentAttachmentSupport.renderLines(items, false);
+        if (rendered.isEmpty()) {
+            return lines;
+        }
+        String[] parts = rendered.split("\n");
+        for (String p : parts) {
+            if (!p.isEmpty()) {
+                lines.add(p + "\n");
+            }
+        }
+        return lines;
+    }
+
     /** SSE 流式的公共实现（GET / POST 共用）；command 已按各自编码方式正确解码，供后续 lambda 引用 */
     private SseEmitter streamInternal(
             final String command,
@@ -1069,7 +1174,8 @@ public class AgentController {
             HttpServletRequest request,
             HttpServletResponse response,
             final String operation,
-            final List<AgentFocusSupport.FocusItem> focusItems) {
+            final List<AgentFocusSupport.FocusItem> focusItems,
+            final List<AttachmentRef> attachmentRefs) {
 
         // Prevent browser buffering for real-time streaming
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -1143,14 +1249,35 @@ public class AgentController {
                 if (command != null && command.toLowerCase().trim().startsWith("chat ")) {
                     userText = command.substring(5).trim();
                 }
-                final String focusCommand = AgentFocusSupport.buildUserMessage(userText, verifiedFocus, operation, focusNotice);
+                // ===== P2：本轮附件（临时文件，非仓库；只认会话目录里真实存在的）=====
+                List<com.DocSystem.agent.attachment.AgentAttachmentSupport.Item> attachmentItems =
+                        verifyAttachments(attachmentRefs, capturedUserId, sessionId);
+                String attachNotice = null;
+                if (attachmentRefs != null && attachmentRefs.size() > attachmentItems.size()) {
+                    attachNotice = "已忽略 " + (attachmentRefs.size() - attachmentItems.size())
+                            + " 个不存在或已过期的附件";
+                }
+                String notice = focusNotice;
+                if (attachNotice != null) {
+                    notice = (notice == null ? "" : notice + "；") + attachNotice;
+                }
+                List<String> attachLines = renderAttachmentLines(attachmentItems);
+                final String focusCommand = AgentFocusSupport.buildUserMessage(userText, verifiedFocus,
+                        operation, notice, attachLines);
                 if (focusNotice != null) {
                     sendSse(emitter, "{\"type\":\"notice\",\"message\":" + escapeJson(focusNotice) + "}");
+                }
+                if (attachNotice != null) {
+                    sendSse(emitter, "{\"type\":\"notice\",\"message\":" + escapeJson(attachNotice) + "}");
                 }
                 if (operation != null || (verifiedFocus != null && !verifiedFocus.isEmpty())) {
                     log.info("focus: operation={}, items={}, kept={}", operation,
                             focusItems != null ? focusItems.size() : 0,
                             verifiedFocus != null ? verifiedFocus.size() : 0);
+                }
+                if (!attachmentItems.isEmpty()) {
+                    log.info("attachments: requested={}, kept={}",
+                            attachmentRefs != null ? attachmentRefs.size() : 0, attachmentItems.size());
                 }
 
                 String lowerCmd = command.toLowerCase().trim();
@@ -2440,6 +2567,211 @@ public class AgentController {
         public void setCheckSum(String checkSum) { this.checkSum = checkSum; }
     }
 
+    // ==================== P2：附件（临时文件，不属于仓库） ====================
+
+    /** 清理超期附件目录：每 JVM 只做一次（懒执行，不依赖启动钩子） */
+    private static final java.util.concurrent.atomic.AtomicBoolean ATTACH_SWEEP_DONE =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    private void sweepAttachmentsOnce() {
+        if (!ATTACH_SWEEP_DONE.compareAndSet(false, true)) {
+            return;
+        }
+        try {
+            int removed = com.DocSystem.agent.attachment.AgentAttachmentSupport.sweepExpired(
+                    com.DocSystem.agent.attachment.AgentAttachmentSupport.RETENTION_DAYS * 24L * 3600L * 1000L);
+            if (removed > 0) {
+                log.info("attachments: swept {} expired session dirs", removed);
+            }
+        } catch (Exception e) {
+            log.warn("attachments sweep failed: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 上传附件（临时）——为<b>本轮对话</b>提供输入，不写仓库。
+     * POST /agent/attachment（multipart: file + sessionId）
+     *
+     * @return data: {id, name, size, mime, kind}
+     */
+    @PostMapping("/attachment")
+    public AgentResponse uploadAttachment(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "sessionId", required = false) String sessionId,
+            HttpServletRequest servletRequest) {
+        User user = currentUser(servletRequest);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
+        if (file == null || file.isEmpty()) {
+            return AgentResponse.error("未选择文件");
+        }
+        if (file.getSize() > com.DocSystem.agent.attachment.AgentAttachmentSupport.MAX_FILE_BYTES) {
+            return AgentResponse.error("文件过大（上限 "
+                    + (com.DocSystem.agent.attachment.AgentAttachmentSupport.MAX_FILE_BYTES / 1024 / 1024) + "MB）");
+        }
+        String name = com.DocSystem.agent.attachment.AgentAttachmentSupport.sanitizeName(file.getOriginalFilename());
+        if (name == null) {
+            return AgentResponse.error("文件名非法");
+        }
+        sweepAttachmentsOnce();
+        String userId = user.getName() != null ? user.getName() : "anonymous";
+        java.io.File dir = com.DocSystem.agent.attachment.AgentAttachmentSupport.sessionDir(
+                userId, attachSessionKey(sessionId), true);
+        try {
+            List<com.DocSystem.agent.attachment.AgentAttachmentSupport.Item> existing =
+                    com.DocSystem.agent.attachment.AgentAttachmentSupport.listItems(dir);
+            if (existing.size() >= com.DocSystem.agent.attachment.AgentAttachmentSupport.MAX_ATTACHMENTS) {
+                return AgentResponse.error("附件数量已达上限（"
+                        + com.DocSystem.agent.attachment.AgentAttachmentSupport.MAX_ATTACHMENTS + " 个）");
+            }
+            java.io.File target = new java.io.File(dir, name);
+            if (target.exists()) {   // 同名：加序号后缀，避免覆盖已上传内容
+                String ext = com.DocSystem.agent.attachment.AgentAttachmentSupport.extensionOf(name);
+                String base = ext.isEmpty() ? name : name.substring(0, name.length() - ext.length() - 1);
+                for (int i = 2; i < 100 && target.exists(); i++) {
+                    String cand = base + "-" + i + (ext.isEmpty() ? "" : "." + ext);
+                    name = com.DocSystem.agent.attachment.AgentAttachmentSupport.sanitizeName(cand);
+                    if (name == null) {
+                        return AgentResponse.error("文件名非法");
+                    }
+                    target = new java.io.File(dir, name);
+                }
+            }
+            file.transferTo(target);
+            com.DocSystem.agent.attachment.AgentAttachmentSupport.Item item =
+                    new com.DocSystem.agent.attachment.AgentAttachmentSupport.Item(name, name, target.length());
+            Map<String, Object> data = new HashMap<String, Object>();
+            data.put("id", item.id);
+            data.put("name", item.name);
+            data.put("size", item.size);
+            data.put("mime", item.mime);
+            data.put("kind", item.kind);
+            log.info("attachment uploaded: user={}, session={}, name={}, size={}",
+                    userId, attachSessionKey(sessionId), name, item.size);
+            return AgentResponse.ok("附件已上传（临时）").withData(data);
+        } catch (Exception e) {
+            log.warn("attachment upload failed: {}", e.getMessage());
+            return AgentResponse.error("附件上传失败: " + e.getMessage());
+        }
+    }
+
+    /** 列出当前会话的附件（页面刷新/切会话后恢复 chips）GET /agent/attachments?sessionId= */
+    @GetMapping("/attachments")
+    public AgentResponse listAttachments(@RequestParam(value = "sessionId", required = false) String sessionId,
+                                         HttpServletRequest servletRequest) {
+        User user = currentUser(servletRequest);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
+        String userId = user.getName() != null ? user.getName() : "anonymous";
+        java.io.File dir = com.DocSystem.agent.attachment.AgentAttachmentSupport.sessionDir(
+                userId, attachSessionKey(sessionId), false);
+        List<Map<String, Object>> out = new ArrayList<Map<String, Object>>();
+        for (com.DocSystem.agent.attachment.AgentAttachmentSupport.Item it :
+                com.DocSystem.agent.attachment.AgentAttachmentSupport.listItems(dir)) {
+            Map<String, Object> one = new HashMap<String, Object>();
+            one.put("id", it.id);
+            one.put("name", it.name);
+            one.put("size", it.size);
+            one.put("mime", it.mime);
+            one.put("kind", it.kind);
+            out.add(one);
+        }
+        return AgentResponse.ok(out);
+    }
+
+    /** 删除会话中的一个临时附件 DELETE /agent/attachment?sessionId=&id= */
+    @DeleteMapping("/attachment")
+    public AgentResponse deleteAttachment(@RequestParam("id") String id,
+                                          @RequestParam(value = "sessionId", required = false) String sessionId,
+                                          HttpServletRequest servletRequest) {
+        User user = currentUser(servletRequest);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
+        String userId = user.getName() != null ? user.getName() : "anonymous";
+        java.io.File dir = com.DocSystem.agent.attachment.AgentAttachmentSupport.sessionDir(
+                userId, attachSessionKey(sessionId), false);
+        java.io.File f = com.DocSystem.agent.attachment.AgentAttachmentSupport.resolve(dir, id);
+        if (f == null) {
+            return AgentResponse.error("附件不存在");
+        }
+        boolean ok = f.delete();
+        return ok ? AgentResponse.ok("附件已删除") : AgentResponse.error("附件删除失败");
+    }
+
+    /** 附件入库请求体（用户显式选目标仓库与目录） */
+    public static class AttachmentImportRequest {
+        private String sessionId;
+        private String id;
+        private Integer reposId;
+        private Long pid;
+        private String path;
+        private String name;
+        public String getSessionId() { return sessionId; }
+        public void setSessionId(String sessionId) { this.sessionId = sessionId; }
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public Integer getReposId() { return reposId; }
+        public void setReposId(Integer reposId) { this.reposId = reposId; }
+        public Long getPid() { return pid; }
+        public void setPid(Long pid) { this.pid = pid; }
+        public String getPath() { return path; }
+        public void setPath(String path) { this.path = path; }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+    }
+
+    /**
+     * 把临时附件导入仓库（显式动作）POST /agent/attachment/import
+     * 目标仓库/目录由用户在选择器里指定；服务端直接把临时文件内容写入仓库。
+     */
+    @PostMapping("/attachment/import")
+    public AgentResponse importAttachment(@RequestBody AttachmentImportRequest body,
+                                          HttpServletRequest servletRequest) {
+        User user = currentUser(servletRequest);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
+        if (body == null || body.getReposId() == null || body.getReposId() <= 0) {
+            return AgentResponse.error("请选择目标仓库");
+        }
+        String userId = user.getName() != null ? user.getName() : "anonymous";
+        java.io.File dir = com.DocSystem.agent.attachment.AgentAttachmentSupport.sessionDir(
+                userId, attachSessionKey(body.getSessionId()), false);
+        java.io.File src = com.DocSystem.agent.attachment.AgentAttachmentSupport.resolve(dir, body.getId());
+        if (src == null) {
+            return AgentResponse.error("附件不存在或已过期，请重新上传");
+        }
+        try {
+            String name = com.DocSystem.agent.attachment.AgentAttachmentSupport.sanitizeName(
+                    body.getName() != null ? body.getName() : src.getName());
+            if (name == null) {
+                return AgentResponse.error("文件名非法");
+            }
+            byte[] data = Files.readAllBytes(src.toPath());
+            DocSysClient client = getSessionClient(servletRequest.getSession().getId());
+            Map<String, Object> result = client.uploadFile(body.getReposId(),
+                    body.getPid() != null ? body.getPid() : 0L,
+                    body.getPath() != null ? body.getPath() : "/",
+                    name, data, name);
+            boolean ok = result != null && ("ok".equals(result.get("status"))
+                    || Boolean.TRUE.equals(result.get("success")));
+            if (!ok) {
+                String msg = result != null && result.get("msgInfo") != null
+                        ? String.valueOf(result.get("msgInfo")) : "导入失败";
+                return AgentResponse.error(msg);
+            }
+            log.info("attachment imported: user={}, name={}, repo={}, path={}",
+                    userId, name, body.getReposId(), body.getPath());
+            return AgentResponse.ok("已导入仓库: " + name).withData(result);
+        } catch (Exception e) {
+            log.warn("attachment import failed: {}", e.getMessage());
+            return AgentResponse.error("导入失败: " + e.getMessage());
+        }
+    }
+
     /**
      * 文件上传端点
      *
@@ -2711,6 +3043,16 @@ public class AgentController {
         public String sessionId;
         public String jsessionid;
         public String tenantId;
+        /**
+         * P2：对话会话 id（＝前端 payload.sessionId）。附件临时目录按它隔离，
+         * 必须与 /agent/attachment（上传/列表/删除/入库）使用同一个 id；为空时回退 jsessionid。
+         */
+        public String agentSessionId;
+
+        /** 附件会话目录键所用的 id（与上传端点一致） */
+        public String attachmentSessionKey() {
+            return (agentSessionId != null && !agentSessionId.trim().isEmpty()) ? agentSessionId : sessionId;
+        }
         
         public SessionInfo(String username, String sessionId) {
             this.username = username;

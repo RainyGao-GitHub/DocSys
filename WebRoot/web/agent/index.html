@@ -1783,6 +1783,32 @@
             color: #888;
         }
 
+        /* P2：附件 chips（本轮对话的输入，默认临时，不入仓库）*/
+        .attach-bar { padding: 0 2px 6px; }
+        .attach-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .attach-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 6px 3px 8px; border-radius: 12px;
+            background: #fff; border: 1px dashed #d8c9a8; color: #7a5c14;
+            font-size: 12px; max-width: 100%;
+        }
+        .attach-chip.busy { background: #faf7ee; border-style: solid; }
+        .attach-chip .ac-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+        .attach-chip .ac-size { font-size: 10px; color: #a08c5a; }
+        .attach-chip .ac-import {
+            border: 1px solid #e2d5b4; background: #fdfaf2; color: #8a6a1a;
+            border-radius: 8px; font-size: 10px; padding: 1px 6px; cursor: pointer;
+        }
+        .attach-chip .ac-import:hover { background: #f6eed8; }
+        .attach-chip .ac-x {
+            border: none; background: none; color: inherit; cursor: pointer;
+            font-size: 13px; line-height: 1; padding: 0 2px;
+        }
+        .attach-chip .ac-x:hover { color: #d33; }
+        body.dark-theme .attach-chip { background: #2a2418; border-color: #4a3f28; color: #e0c98a; }
+        body.dark-theme .attach-chip .ac-size { color: #a08c5a; }
+        body.dark-theme .attach-chip .ac-import { background: #332b1c; border-color: #4a3f28; color: #d8bb76; }
+
         /* P1：关注对象（@）/ 操作（/）chips */
         .focus-bar { padding: 0 2px 8px; }
         .focus-chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -1835,6 +1861,9 @@
         }
         .ft-row:hover { background: #f5f7fa; }
         .ft-row.selected { background: #eef6ff; }
+        /* P2：导入模式下文件行不可选（导入目标是目录） */
+        .ft-row.ft-disabled { opacity: 0.5; cursor: default; }
+        .ft-row.ft-disabled .ft-check { cursor: default; }
         .ft-caret { width: 12px; text-align: center; color: #888; font-size: 9px; user-select: none; cursor: pointer; }
         .ft-caret.leaf { visibility: hidden; }
         .ft-check { width: 14px; height: 14px; margin: 0; cursor: pointer; flex: none; }
@@ -2046,6 +2075,9 @@
                 </div>
                 
                 <div class="input-area">
+                    <div class="attach-bar" id="attachBar" style="display:none;">
+                        <div class="attach-chips" id="attachChips"></div>
+                    </div>
                     <div class="focus-bar" id="focusBar" style="display:none;">
                         <div class="focus-chips" id="focusChips"></div>
                         <div class="focus-note-editor" id="focusNoteEditor" style="display:none;">
@@ -2059,9 +2091,6 @@
                         <textarea id="messageInput" placeholder="输入消息、问题或命令；输入 @ 选择关注对象，输入 / 选择操作" rows="1"></textarea>
                         <div class="upload-buttons">
                             <button class="upload-btn" id="uploadFileBtn" title="上传文件（可多选）">📎</button>
-                            <button class="upload-btn" id="uploadFolderBtn" title="上传文件夹">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                            </button>
                         </div>
                         <button class="send-btn" id="sendBtn" title="发送 (Enter)">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -2099,7 +2128,7 @@
     <div class="dialog-overlay" id="focusDialog">
         <div class="dialog">
             <div class="dialog-header">
-                <span class="dialog-title">选择关注对象</span>
+                <span class="dialog-title" id="focusDialogTitle">选择关注对象</span>
                 <button class="dialog-close" id="focusDialogClose">&times;</button>
             </div>
             <div class="focus-dialog-toolbar">
@@ -2329,8 +2358,8 @@
             { name: 'AI 助手', icon: 'A', description: '智能问答与文档分析', active: true }
         ],
         allSkills: [],       // All available skills from API for autocomplete
-        pendingUploads: [],   // Files waiting for repo creation
-        pendingRepoFiles: {}, // { repoName: [files] }
+        attachments: [],      // P2：当前会话的临时附件（不入仓库）
+        attachUploading: null, // P2：{name, percent}
         settings: {
             theme: 'light',
             autoLearn: true,
@@ -2354,7 +2383,8 @@
         focusDialog: {
             open: false, snapshot: null, vid: null, repoName: '', root: null,
             expanded: {}, loadedRepos: {}, index: -1,
-            searchQuery: '', searchTimer: null, searchResults: null, searchLoading: false
+            searchQuery: '', searchTimer: null, searchResults: null, searchLoading: false,
+            mode: 'focus', importAtt: null, importTarget: null   // P2：'import' = 附件入库选目录
         }
     };
 
@@ -3219,9 +3249,6 @@
             if (msg.isRelogin) {
                 html += '<div class="relogin-prompt"><p>请重新登录以继续使用</p><button onclick="showLoginScreen()">重新登录</button></div>';
             }
-            if (msg.isRepoPrompt) {
-                html += '<div class="relogin-prompt"><p>需要创建仓库才能上传</p><button onclick="showRepoCreatePrompt()">创建仓库并上传</button> <button onclick="dismissPendingUploads()" style="background:#999;margin-left:8px;">暂不上传</button></div>';
-            }
             html += '</div></div>';
         }
         list.innerHTML = html;
@@ -3397,6 +3424,9 @@
                         state.currentSession = null;
                         state.sessionId = null;
                         state.messages = [];
+                        // P2：会话删了，其附件临时目录也已被服务端清空 → chips 一并清掉
+                        state.attachments = [];
+                        renderAttachBar();
                         renderMessages();
                     }
                     renderSessions();
@@ -3422,6 +3452,7 @@
 
     /** 加载指定会话的历史消息（T7.3：reasoning 消息合并到其后的 assistant，灰色小字回看展示） */
     async function loadSessionMessages(sessionId) {
+        loadAttachmentsForSession();   // P2：切会话时恢复该会话的附件 chips
         var data = await API.getSessionMessages(sessionId);
         if (!data || !data.data) return;
         var msgs = [];
@@ -3579,6 +3610,9 @@
             if (state.operation) payload.operation = state.operation.id;
             var focusSnapshot = snapshotFocus();
             if (focusSnapshot.length) payload.focus = focusSnapshot;
+            // P2：本轮附件（临时）→ 后端据此渲染附件清单，模型用 attachment 工具按需读取
+            var attSnapshot = snapshotAttachments();
+            if (attSnapshot.length) payload.attachments = attSnapshot;
 
             var response = await fetch(url, {
                 method: 'POST',
@@ -4113,10 +4147,26 @@
     }
 
     function openFocusDialog() {
+        openTreeDialog('focus', null);
+    }
+
+    /** P2：把附件导入仓库——复用同一棵目录树，仅允许选目录 */
+    function openImportDialog(att) {
+        if (!att) return;
+        openTreeDialog('import', att);
+    }
+
+    /** mode: 'focus'（选关注对象，存草稿快照） | 'import'（选目标目录） */
+    function openTreeDialog(mode, att) {
         var d = state.focusDialog;
         closePicker();
         d.open = true;
-        d.snapshot = (state.focus || []).map(function (it) { return JSON.parse(JSON.stringify(it)); });
+        d.mode = mode;
+        d.importAtt = att || null;
+        d.importTarget = null;
+        d.snapshot = (mode === 'focus')
+            ? (state.focus || []).map(function (it) { return JSON.parse(JSON.stringify(it)); })
+            : null;
         d.searchQuery = '';
         d.searchResults = null;
         d.index = -1;
@@ -4190,6 +4240,16 @@
 
     /** 勾选/取消勾选一个节点（不级联：一个勾 = 一个关注对象） */
     function toggleFocusNodeCheck(node) {
+        var d = state.focusDialog;
+        if (d.mode === 'import') {
+            if (!node.dir) {
+                showMessage('请选择目录（导入目标是文件夹）', 'info');
+                return;
+            }
+            d.importTarget = node;
+            renderFocusDialog();
+            return;
+        }
         var item = fdNodeToItem(node);
         var key = focusKey(item);
         var idx = -1;
@@ -4231,6 +4291,7 @@
 
     function renderFocusTree() {
         var d = state.focusDialog;
+        var importMode = (d.mode === 'import');
         var rows = focusDialogVisibleRows();
         if (!rows.length) {
             return '<div class="ft-tip">' + (d.searchQuery ? '没有匹配的结果' : '加载中…') + '</div>';
@@ -4242,17 +4303,24 @@
             var checked = false;
             var item = fdNodeToItem(node);
             var k = focusKey(item);
-            for (var j = 0; j < (state.focus || []).length; j++) {
-                if (focusKey(state.focus[j]) === k) { checked = true; break; }
+            if (importMode) {
+                checked = !!(d.importTarget && d.importTarget.key === node.key);
+            } else {
+                for (var j = 0; j < (state.focus || []).length; j++) {
+                    if (focusKey(state.focus[j]) === k) { checked = true; break; }
+                }
             }
             var caret = node.dir
                 ? '<span class="ft-caret" data-expand="' + node.key + '">' + (node.expanded ? '▼' : '▶') + '</span>'
                 : '<span class="ft-caret leaf">·</span>';
-            html += '<div class="ft-row' + (i === d.index ? ' selected' : '') + '" data-key="' + escapeHtml(node.key)
+            // 导入模式：文件行不可选（导入目标是目录）
+            var rowCls = 'ft-row' + (i === d.index ? ' selected' : '')
+                       + (importMode && !node.dir ? ' ft-disabled' : '');
+            html += '<div class="' + rowCls + '" data-key="' + escapeHtml(node.key)
                  + '" data-idx="' + i + '" style="padding-left:' + (6 + depth * 14) + 'px;">';
             html += caret;
             html += '<input type="checkbox" class="ft-check" data-check="' + escapeHtml(node.key) + '"'
-                 + (checked ? ' checked' : '') + '>';
+                 + (checked ? ' checked' : '') + (importMode && !node.dir ? ' disabled' : '') + '>';
             // 树行：类型用图标表示（整库 = 库文件夹 / 目录 = 文件夹 / 文件 = 按扩展名）
             html += focusItemIconHtml(node);
             html += '<span class="ft-name">' + escapeHtml(node.label || node.name || '') + '</span>';
@@ -4268,6 +4336,19 @@
     function renderFocusDialog() {
         var d = state.focusDialog;
         if (!d.open) return;
+        var importMode = (d.mode === 'import');
+        var title = fdEl('focusDialogTitle');
+        if (title) {
+            title.textContent = importMode
+                ? ('导入到仓库：' + ((d.importAtt && d.importAtt.name) || ''))
+                : '选择关注对象';
+        }
+        var searchBox = fdEl('focusDialogSearch');
+        if (searchBox) searchBox.style.display = importMode ? 'none' : '';
+        var clearBtn = fdEl('focusDialogClear');
+        if (clearBtn) clearBtn.style.display = importMode ? 'none' : '';
+        var okBtn = fdEl('focusDialogOk');
+        if (okBtn) okBtn.textContent = importMode ? '导入到此处' : '确定';
         var sel = fdEl('focusDialogRepo');
         if (sel && state.repos) {
             if (sel.options.length !== state.repos.length) {
@@ -4281,13 +4362,43 @@
             sel.value = String(d.vid);
         }
         var count = fdEl('focusDialogCount');
-        if (count) count.textContent = '已选 ' + (state.focus || []).length + ' / ' + FOCUS_MAX;
+        if (count) {
+            if (importMode) {
+                count.textContent = d.importTarget
+                    ? ('导入到：' + fdImportTargetLabel(d))
+                    : '请展开并选中目标目录';
+            } else {
+                count.textContent = '已选 ' + (state.focus || []).length + ' / ' + FOCUS_MAX;
+            }
+        }
         var tree = fdEl('focusTree');
         if (tree) tree.innerHTML = renderFocusTree();
     }
 
+    /** 导入目标目录的可读路径（根目录叫 整库） */
+    function fdImportTargetLabel(d) {
+        var node = d.importTarget;
+        if (!node) return '';
+        var repo = fdFindRepo(node.vid);
+        var repoName = repo ? fdRepoLabel(repo) : ('仓库 ' + node.vid);
+        return repoName + (node.name ? ('/' + node.name) : '');
+    }
+
     function confirmFocusDialog() {
         var d = state.focusDialog;
+        if (d.mode === 'import') {
+            if (!d.importTarget) {
+                showMessage('请先选择目标目录', 'info');
+                return;
+            }
+            doImportAttachment(d.importAtt, d.importTarget);
+            d.open = false;
+            d.mode = 'focus';
+            d.importAtt = null;
+            d.importTarget = null;
+            fdEl('focusDialog').classList.remove('active');
+            return;
+        }
         d.open = false;
         d.snapshot = null;
         fdEl('focusDialog').classList.remove('active');
@@ -4296,15 +4407,47 @@
         if (input) { try { input.focus(); } catch (e) { /* ignore */ } }
     }
 
+    /** P2：把临时附件内容写入仓库（用户显式动作，失败不影响临时附件） */
+    async function doImportAttachment(att, node) {
+        if (!att || !node) return;
+        try {
+            var resp = await fetch(API_BASE + '/attachment/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId: state.sessionId || '',
+                    id: att.id,
+                    reposId: node.vid,
+                    pid: node.docId || 0,
+                    path: node.path || '/',
+                    name: att.name
+                })
+            });
+            var json = await resp.json();
+            if (json && !json.success && handleAuthError(json.message)) return;
+            if (json && json.success) {
+                showMessage('已导入：' + att.name + ' → ' + fdImportTargetLabel({ importTarget: node }), 'success');
+            } else {
+                showMessage('导入失败: ' + ((json && json.message) || ('HTTP ' + resp.status)), 'error');
+            }
+        } catch (e) {
+            showMessage('导入失败: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+
     function cancelFocusDialog() {
         var d = state.focusDialog;
-        if (d.snapshot) {
+        if (d.mode !== 'import' && d.snapshot) {
             state.focus = d.snapshot.map(function (it) { return JSON.parse(JSON.stringify(it)); });
         }
+        var wasImport = (d.mode === 'import');
         d.open = false;
         d.snapshot = null;
+        d.mode = 'focus';
+        d.importAtt = null;
+        d.importTarget = null;
         fdEl('focusDialog').classList.remove('active');
-        renderFocusBar();
+        if (!wasImport) renderFocusBar();
     }
 
     function clearFocusDialog() {
@@ -4745,6 +4888,21 @@
         var chip = (t && t.closest) ? t.closest('[data-focus-idx]') : null;
         if (chip) openFocusNote(parseInt(chip.getAttribute('data-focus-idx'), 10));
     });
+    // P2：附件 chips（入库 / 移除）
+    document.getElementById('attachChips').addEventListener('click', function(e) {
+        var t = e.target;
+        if (!t || !t.getAttribute) return;
+        var imp = t.getAttribute('data-att-import');
+        if (imp !== null && imp !== undefined) {
+            var att = (state.attachments || [])[parseInt(imp, 10)];
+            if (att) openImportDialog(att);
+            return;
+        }
+        var rem = t.getAttribute('data-att-remove');
+        if (rem !== null && rem !== undefined) {
+            removeAttachment(parseInt(rem, 10));
+        }
+    });
     // 点空白处（既不在 chips 也不在用途编辑器内）→ 关闭用途编辑器并清除选中态
     // 注意：必须用事件路径（composedPath）判定——点 chip 会先重渲染 chips，
     // 被点击的节点随即脱离 DOM，此时 contains(target) 会误判为"点在外面"。
@@ -5043,289 +5201,145 @@
         input.accept = '*/*';
         input.onchange = function(e) {
             var files = e.target.files;
-            if (files.length > 0) {
-                if (files.length === 1) {
-                    uploadFile(files[0]);
-                } else {
-                    uploadMultipleFiles(files);
-                }
+            for (var i = 0; i < files.length; i++) {
+                uploadAttachment(files[i]);
             }
         };
         input.click();
     });
 
-    // 文件夹上传按钮
-    document.getElementById('uploadFolderBtn').addEventListener('click', function() {
-        var input = document.createElement('input');
-        input.type = 'file';
-        input.webkitdirectory = true;
-        input.onchange = function(e) {
-            var files = e.target.files;
-            if (files.length > 0) {
-                uploadFolder(files);
+    // ==================== P2：附件（临时，供本轮对话使用） ====================
+
+    /** 附件栏渲染（未上传完成的显示进度） */
+    function renderAttachBar() {
+        var bar = document.getElementById('attachBar');
+        var wrap = document.getElementById('attachChips');
+        if (!bar || !wrap) return;
+        var list = state.attachments || [];
+        var uploading = state.attachUploading;
+        bar.style.display = (list.length || uploading) ? 'block' : 'none';
+        var html = '';
+        for (var i = 0; i < list.length; i++) {
+            var a = list[i];
+            html += '<span class="attach-chip" title="临时附件（不入仓库）；点「入库」可导入到指定仓库目录">'
+                 + focusItemIconHtml({ kind: 'file', name: a.name })
+                 + '<span class="ac-name">' + escapeHtml(a.name) + '</span>'
+                 + '<span class="ac-size">' + escapeHtml(formatFileSize(a.size || 0)) + '</span>'
+                 + '<button class="ac-import" data-att-import="' + i + '" title="导入到仓库…">入库</button>'
+                 + '<button class="ac-x" data-att-remove="' + i + '" title="移除附件（删除临时文件）">&times;</button>'
+                 + '</span>';
+        }
+        if (uploading) {
+            html += '<span class="attach-chip busy">'
+                 + '<span class="ac-name">' + escapeHtml(uploading.name) + '</span>'
+                 + '<span class="ac-size">上传中 ' + (uploading.percent || 0) + '%</span>'
+                 + '</span>';
+        }
+        wrap.innerHTML = html;
+    }
+
+    /** 上传一个文件到本会话的临时附件目录（不写仓库） */
+    function uploadAttachment(file) {
+        if (!state.isLoggedIn) {
+            showMessage('请先登录', 'error');
+            return;
+        }
+        if (!file) return;
+        state.attachUploading = { name: file.name, percent: 0 };
+        renderAttachBar();
+        ensureSessionForAttachment(function (sid) {
+            if (!sid) {
+                state.attachUploading = null;
+                renderAttachBar();
+                return;
             }
-        };
-        input.click();
-    });
-
-    // ==================== Upload Progress Bar ====================
-    var uploadProgressId = null;
-
-    function createProgressBar(fileName) {
-        var msgId = 'upload-progress-' + Date.now();
-        state.messages.push({
-            role: 'system',
-            content: '📤 上传中: ' + fileName + '\n' +
-                '<div class="upload-progress-container" id="' + msgId + '">' +
-                '<div class="upload-progress-bar"><div class="upload-progress-fill" style="width: 0%"></div></div>' +
-                '<span class="upload-progress-text">0%</span></div>',
-            time: formatTime(),
-            isUploadProgress: true,
-            progressMsgId: msgId
-        });
-        renderMessages();
-        return msgId;
-    }
-
-    function updateProgress(msgId, percent) {
-        var el = document.getElementById(msgId);
-        if (el) {
-            var fill = el.querySelector('.upload-progress-fill');
-            var text = el.querySelector('.upload-progress-text');
-            if (fill) fill.style.width = percent + '%';
-            if (text) text.textContent = percent + '%';
-        }
-    }
-
-    function removeProgress(msgId) {
-        var el = document.getElementById(msgId);
-        if (el) {
-            el.closest('.message').remove();
-        }
-    }
-
-    // Upload with XMLHttpRequest for progress tracking
-    /**
-     * Discover available repos and return the first available reposId.
-     * Caches the result in sessionStorage for the duration of the session.
-     */
-    var _cachedReposId = null;
-    async function discoverReposId() {
-        if (_cachedReposId !== null) return _cachedReposId;
-
-        try {
-            var url = API_BASE + '/repos?sessionId=' + encodeURIComponent(state.sessionId || '');
-            var resp = await fetch(url);
-            var data = await resp.json();
-            if (data && !data.success && handleAuthError(data.message)) return null;
-            if (data.success && data.data && data.data.firstVid > 0) {
-                _cachedReposId = String(data.data.firstVid);
-                return _cachedReposId;
-            }
-        } catch (e) {
-            console.warn('Failed to discover repos:', e);
-        }
-
-        // Fallback: try reposId=3 (common default) or 1
-        _cachedReposId = '3';
-        return _cachedReposId;
-    }
-
-    function uploadWithProgress(file, reposId, path, name, sessionId) {
-        return new Promise(function(resolve, reject) {
             var xhr = new XMLHttpRequest();
-            var formData = new FormData();
-            formData.append('file', file);
-            formData.append('reposId', reposId || '1');
-            formData.append('path', path || '/');
-            formData.append('name', name || file.name);
-            if (sessionId) formData.append('sessionId', sessionId);
-
-            xhr.open('POST', API_BASE + '/upload', true);
-
-            xhr.upload.onprogress = function(e) {
-                if (e.lengthComputable) {
-                    var percent = Math.round((e.loaded / e.total) * 100);
-                    if (uploadProgressId) {
-                        updateProgress(uploadProgressId, percent);
-                    }
+            var fd = new FormData();
+            fd.append('file', file);
+            fd.append('sessionId', sid);
+            xhr.open('POST', API_BASE + '/attachment', true);
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable && state.attachUploading) {
+                    state.attachUploading.percent = Math.round((e.loaded / e.total) * 100);
+                    renderAttachBar();
                 }
             };
-
-            xhr.onload = function() {
-                try {
-                    var result = JSON.parse(xhr.responseText);
-                    resolve(result);
-                } catch (e) {
-                    reject(new Error('解析响应失败'));
+            xhr.onload = function () {
+                state.attachUploading = null;
+                var ret = null;
+                try { ret = JSON.parse(xhr.responseText); } catch (e) { /* ignore */ }
+                if (ret && ret.success && ret.data) {
+                    state.attachments.push(ret.data);
+                    renderAttachBar();
+                    showMessage('已添加附件（临时，未入仓库）: ' + ret.data.name, 'success');
+                } else {
+                    renderAttachBar();
+                    showMessage('附件上传失败: ' + ((ret && ret.message) || ('HTTP ' + xhr.status)), 'error');
                 }
             };
-
-            xhr.onerror = function() {
-                reject(new Error('网络错误'));
+            xhr.onerror = function () {
+                state.attachUploading = null;
+                renderAttachBar();
+                showMessage('附件上传失败：网络错误', 'error');
             };
-
-            xhr.send(formData);
+            xhr.send(fd);
         });
     }
 
-    // 单文件上传函数
-    async function uploadFile(file) {
-        if (!state.isLoggedIn) {
-            showMessage('请先登录', 'error');
+    /** 上传前确保有会话：附件按会话隔离，先建会话再上传（否则会落到 default 目录） */
+    function ensureSessionForAttachment(cb) {
+        if (state.sessionId) {
+            cb(state.sessionId);
             return;
         }
-
-        showMessage('正在上传: ' + file.name + '...', 'info');
-        uploadProgressId = createProgressBar(file.name + ' (' + formatFileSize(file.size) + ')');
-
-        try {
-            var reposId = await discoverReposId();
-            var result = await uploadWithProgress(file, reposId, '/', file.name, state.sessionId || '');
-
-            if (result.success) {
-                showMessage('上传成功', 'success');
-                state.messages.push({ role: 'system', content: '✅ 上传成功: ' + file.name, time: formatTime() });
+        API.createSession(null).then(function (created) {
+            if (created && created.data && created.data.sessionId) {
+                state.sessionId = created.data.sessionId;
+                state.currentSession = state.sessionId;
+                state.sessions.unshift({ sessionId: state.sessionId, title: '新会话' });
+                renderSessions();
+                cb(state.sessionId);
             } else {
-                var errMsg = result.message || '';
-                // Check if it's a repo-not-found error
-                if (errMsg.includes('仓库') || errMsg.includes('repository') || errMsg.includes('repo') || errMsg.includes('Repo')) {
-                    handleRepoNotFoundUpload(file);
-                } else {
-                    showMessage('上传失败: ' + errMsg, 'error');
-                    state.messages.push({ role: 'system', content: '❌ 上传失败: ' + file.name + ' - ' + errMsg, time: formatTime() });
-                }
+                showMessage('无法创建会话，附件上传失败', 'error');
+                cb(null);
             }
-        } catch (err) {
-            showMessage('上传失败: ' + err.message, 'error');
-            state.messages.push({ role: 'system', content: '❌ 上传失败: ' + file.name + ' - ' + err.message, time: formatTime() });
-        }
-
-        if (uploadProgressId) {
-            removeProgress(uploadProgressId);
-            uploadProgressId = null;
-        }
-        renderMessages();
+        });
     }
 
-    // 多文件上传函数
-    async function uploadMultipleFiles(files) {
-        if (!state.isLoggedIn) {
-            showMessage('请先登录', 'error');
+    /** 拉取当前会话已上传的附件（刷新/切会话后恢复 chips） */
+    async function loadAttachmentsForSession() {
+        if (!state.sessionId) {
+            state.attachments = [];
+            renderAttachBar();
             return;
         }
-
-        showMessage('正在上传 ' + files.length + ' 个文件...', 'info');
-        state.messages.push({ role: 'system', content: '📤 批量上传中: ' + files.length + ' 个文件', time: formatTime() });
-        renderMessages();
-
-        let successCount = 0;
-        let failCount = 0;
-
-        for (var i = 0; i < files.length; i++) {
-            var file = files[i];
-            uploadProgressId = createProgressBar('(' + (i + 1) + '/' + files.length + ') ' + file.name);
-
-            try {
-                var reposId = await discoverReposId();
-                var result = await uploadWithProgress(file, reposId, '/', file.name, state.sessionId || '');
-                if (result.success) {
-                    successCount++;
-                } else {
-                    failCount++;
-                    var errMsg = result.message || '';
-                    if (errMsg.includes('仓库') || errMsg.includes('repository') || errMsg.includes('repo')) {
-                        // Only trigger repo-not-found once, at the first failure
-                        if (state.pendingUploads.length === 0) {
-                            handleRepoNotFoundUpload(file);
-                        }
-                    }
-                }
-            } catch (err) {
-                failCount++;
-            }
-
-            if (uploadProgressId) {
-                removeProgress(uploadProgressId);
-                uploadProgressId = null;
-            }
+        try {
+            var resp = await fetch(API_BASE + '/attachments?sessionId=' + encodeURIComponent(state.sessionId));
+            var json = await resp.json();
+            state.attachments = (json && json.success && json.data) ? json.data : [];
+        } catch (e) {
+            state.attachments = [];
         }
-
-        if (failCount === 0) {
-            showMessage('全部 ' + successCount + ' 个文件上传成功', 'success');
-            state.messages.push({ role: 'system', content: '✅ 批量上传成功: ' + successCount + ' 个文件', time: formatTime() });
-        } else {
-            showMessage(successCount + ' 成功, ' + failCount + ' 失败', 'warning');
-            state.messages.push({ role: 'system', content: '⚠️ 批量上传完成: ' + successCount + ' 成功, ' + failCount + ' 失败', time: formatTime() });
-        }
-        renderMessages();
+        renderAttachBar();
     }
 
-    // 文件夹上传函数
-    async function uploadFolder(files) {
-        if (!state.isLoggedIn) {
-            showMessage('请先登录', 'error');
-            return;
-        }
+    /** 移除附件（同时删除临时文件） */
+    async function removeAttachment(idx) {
+        var a = (state.attachments || [])[idx];
+        if (!a) return;
+        state.attachments.splice(idx, 1);
+        renderAttachBar();
+        try {
+            await fetch(API_BASE + '/attachment?id=' + encodeURIComponent(a.id)
+                + '&sessionId=' + encodeURIComponent(state.sessionId || ''), { method: 'DELETE' });
+        } catch (e) { /* ignore */ }
+    }
 
-        var batchStartTime = Date.now();
-        showMessage('正在上传文件夹 (' + files.length + ' 个文件)...', 'info');
-        state.messages.push({ role: 'system', content: '📁 上传文件夹: ' + files.length + ' 个文件', time: formatTime() });
-
-        // 创建总体进度条
-        var totalProgressId = createProgressBar('文件夹上传 (0/' + files.length + ')');
-
-        let successCount = 0;
-        let failCount = 0;
-
-        for (var i = 0; i < files.length; i++) {
-            var file = files[i];
-            var dirPath = file.webkitRelativePath || '';
-            var isEnd = (i === files.length - 1) ? 1 : 0;
-
-            try {
-                var reposId = await discoverReposId();
-                var result = await uploadWithProgress(file, reposId, '/', file.name, state.sessionId || '');
-                if (result.success) {
-                    successCount++;
-                } else {
-                    failCount++;
-                    var errMsg = result.message || '';
-                    if (errMsg.includes('仓库') || errMsg.includes('repository') || errMsg.includes('repo')) {
-                        if (state.pendingUploads.length === 0) {
-                            handleRepoNotFoundUpload(file);
-                        }
-                    }
-                }
-            } catch (err) {
-                failCount++;
-            }
-
-            // 更新总体进度
-            var percent = Math.round(((i + 1) / files.length) * 100);
-            updateProgress(totalProgressId, percent);
-
-            // 更新进度条文字
-            var el = document.getElementById(totalProgressId);
-            if (el) {
-                var text = el.querySelector('.upload-progress-text');
-                if (text) text.textContent = (i + 1) + '/' + files.length;
-            }
-        }
-
-        if (uploadProgressId === totalProgressId) {
-            removeProgress(totalProgressId);
-            uploadProgressId = null;
-        }
-
-        if (failCount === 0) {
-            showMessage('文件夹上传成功: ' + successCount + ' 个文件', 'success');
-            state.messages.push({ role: 'system', content: '✅ 文件夹上传成功: ' + successCount + ' 个文件', time: formatTime() });
-        } else {
-            showMessage('文件夹上传完成: ' + successCount + ' 成功, ' + failCount + ' 失败', 'warning');
-            state.messages.push({ role: 'system', content: '⚠️ 文件夹上传完成: ' + successCount + ' 成功, ' + failCount + ' 失败', time: formatTime() });
-        }
-        renderMessages();
+    /** 发送时的附件引用（只传 id/name） */
+    function snapshotAttachments() {
+        return (state.attachments || []).map(function (a) {
+            return { id: a.id, name: a.name };
+        });
     }
 
     function formatFileSize(bytes) {
@@ -5335,138 +5349,6 @@
     }
 
     // ==================== Pending Uploads Handler ====================
-    function handleRepoNotFoundUpload(file) {
-        // Check if we have pending uploads for this file already
-        var pendingKey = file.name + '_' + file.size;
-        var isPending = state.pendingUploads.some(function(f) {
-            return f.name === file.name && f.size === file.size;
-        });
-
-        if (!isPending) {
-            state.pendingUploads.push({ name: file.name, size: file.size, webkitRelativePath: file.webkitRelativePath || '' });
-            savePendingUploads();
-        }
-
-        var count = state.pendingUploads.length;
-        var msg = count === 1
-            ? '⚠️ 仓库不存在！\n文件【' + file.name + '】已暂存，等待创建仓库后自动上传。\n\n是否立即创建一个新仓库？'
-            : '⚠️ 仓库不存在！\n还有 ' + count + ' 个文件等待上传。\n\n是否立即创建一个新仓库来接收这些文件？';
-
-        // Remove the generic "upload failed" message and replace with the prompt
-        // The failed upload message was already added; we'll add the prompt right after it
-        state.messages.push({ role: 'system', content: msg, time: formatTime(), isRepoPrompt: true, pendingKey: pendingKey });
-        renderMessages();
-
-        // Scroll to bottom
-        document.getElementById('messagesArea').scrollTop = document.getElementById('messagesArea').scrollHeight;
-    }
-
-    function savePendingUploads() {
-        try {
-            localStorage.setItem('docsys_pending_uploads', JSON.stringify(state.pendingUploads));
-        } catch (e) { /* ignore */ }
-    }
-
-    function loadPendingUploads() {
-        try {
-            var saved = localStorage.getItem('docsys_pending_uploads');
-            if (saved) {
-                state.pendingUploads = JSON.parse(saved);
-            }
-        } catch (e) { state.pendingUploads = []; }
-    }
-
-    function clearPendingUploads() {
-        state.pendingUploads = [];
-        try { localStorage.removeItem('docsys_pending_uploads'); } catch (e) { /* ignore */ }
-    }
-
-    function dismissPendingUploads() {
-        clearPendingUploads();
-        // Remove repo prompt messages
-        state.messages = state.messages.filter(function(m) { return !m.isRepoPrompt; });
-        renderMessages();
-        showMessage('已取消待上传文件', 'info');
-    }
-
-    function showRepoCreatePrompt() {
-        var repoName = prompt('请输入新仓库名称（英文或拼音，推荐用英文）：\n例如：my-docs, project-files, documents', 'my-docs');
-        if (!repoName || !repoName.trim()) return;
-
-        repoName = repoName.trim();
-        showMessage('正在创建仓库: ' + repoName + '...', 'info');
-        state.messages.push({ role: 'system', content: '🔧 正在创建仓库【' + repoName + '】...', time: formatTime() });
-        renderMessages();
-
-        API.execute('create-repos ' + repoName, state.sessionId).then(function(result) {
-            if (result.success && result.message) {
-                showMessage('仓库【' + repoName + '】创建成功！', 'success');
-                state.messages.push({ role: 'system', content: '✅ 仓库【' + repoName + '】创建成功！\n请重新上传文件，系统将上传到新仓库。', time: formatTime() });
-
-                // Remove the repo prompt messages
-                state.messages = state.messages.filter(function(m) { return !m.isRepoPrompt; });
-                renderMessages();
-
-                // Trigger file picker for pending files
-                var count = state.pendingUploads.length;
-                showMessage('请重新选择 ' + count + ' 个文件进行上传', 'info');
-
-                // Programmatically trigger file input
-                var input = document.createElement('input');
-                input.type = 'file';
-                input.multiple = true;
-                input.accept = '*/*';
-                input.onchange = function(e) {
-                    var files = e.target.files;
-                    if (files.length > 0) {
-                        if (files.length === 1) {
-                            uploadFile(files[0]);
-                        } else {
-                            uploadMultipleFiles(files);
-                        }
-                    }
-                };
-                input.click();
-            } else {
-                showMessage('仓库创建失败: ' + (result.message || '未知错误'), 'error');
-                state.messages.push({ role: 'system', content: '❌ 仓库创建失败: ' + (result.message || '未知错误'), time: formatTime() });
-                renderMessages();
-            }
-        }).catch(function(err) {
-            showMessage('仓库创建请求失败: ' + err.message, 'error');
-            state.messages.push({ role: 'system', content: '❌ 仓库创建失败: ' + err.message, time: formatTime() });
-            renderMessages();
-        });
-    }
-
-    async function retryPendingUploads(repoId) {
-        // Files can't be programmatically recreated in browser, so prompt user to re-select
-        if (state.pendingUploads.length === 0) return;
-
-        var count = state.pendingUploads.length;
-        var names = state.pendingUploads.map(function(f) { return '• ' + f.name; }).join('\n');
-        showMessage('请重新选择 ' + count + ' 个文件上传到新仓库', 'info');
-        state.messages.push({ role: 'system', content: '📂 请重新选择 ' + count + ' 个文件:\n' + names, time: formatTime() });
-        renderMessages();
-
-        var input = document.createElement('input');
-        input.type = 'file';
-        input.multiple = true;
-        input.accept = '*/*';
-        input.onchange = function(e) {
-            var files = e.target.files;
-            if (files.length > 0) {
-                clearPendingUploads();
-                if (files.length === 1) {
-                    uploadFile(files[0]);
-                } else {
-                    uploadMultipleFiles(files);
-                }
-            }
-        };
-        input.click();
-    }
-
     // Save settings
     document.getElementById('saveSettingsBtn').addEventListener('click', function() {
         var newTheme = document.getElementById('themeSelect').value;
@@ -5527,6 +5409,7 @@
             state.messages = [];
             renderSessions();
             renderMessages();
+            loadAttachmentsForSession();   // P2：新会话无附件
         } else {
             showMessage('创建会话失败', 'error');
         }
