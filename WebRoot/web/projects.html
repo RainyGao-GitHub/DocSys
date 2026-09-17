@@ -223,6 +223,8 @@
     		height: height,
     		left: left,
     		top: top,
+    		// 高于页面固定导航栏（z-index:1030），否则弹层最大化到 (0,0) 后标题栏/关闭按钮会被导航栏盖住
+    		zIndex: 2000,
     		fixed: true,
     		resize: true,
     		drag: true,
