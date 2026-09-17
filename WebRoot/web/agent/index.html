@@ -156,52 +156,142 @@
             display: flex;
         }
         
-        /* Sidebar */
-        .sidebar {
-            width: 220px;
-            background: #fff;
-            border-right: 1px solid #e0e0e0;
+        /* Top Bar（会话导航 + Soul 状态；替代原左侧栏）*/
+        .top-bar {
             display: flex;
-            flex-direction: column;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
-        }
-        
-        .sidebar-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #e0e0e0;
-            background: #009a61;
-        }
-        
-        .sidebar-header h3 {
-            color: #fff;
-            font-size: 16px;
-            font-weight: 500;
-        }
-        
-        .sidebar-content {
-            flex: 1;
-            min-height: 0;
-            padding: 15px;
-            overflow-y: auto;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fff;
+            flex-shrink: 0;
+        }
+        
+        .top-bar-left, .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+        
+        .top-bar-left { flex: 1; }
+        
+        .top-bar-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 28px;
+            padding: 0 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            color: #555;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .top-bar-btn:hover {
+            background: #f5f5f5;
+            border-color: #009a61;
+            color: #009a61;
+        }
+        
+        .top-bar-btn.new-session {
+            width: 28px;
+            padding: 0;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .session-menu { position: relative; min-width: 0; }
+        
+        .session-toggle { max-width: 280px; }
+        
+        .session-toggle-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 240px;
+        }
+        
+        .session-toggle-caret { color: #999; font-size: 10px; }
+        
+        .session-dropdown {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: calc(100% + 6px);
+            z-index: 60;
+            width: 280px;
+            max-width: calc(100vw - 32px);
+            max-height: 300px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+        
+        .session-dropdown.open { display: block; }
+        
+        .session-dropdown-header {
+            position: sticky;
+            top: 0;
+            padding: 8px 12px;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
             color: #999;
             font-size: 12px;
             text-transform: uppercase;
         }
         
-        .section-btn {
-            background: none;
-            border: none;
-            color: #009a61;
+        .session-dropdown .session-list { padding: 6px; }
+        
+        /* Soul 状态芯片（顶栏右侧）*/
+        .soul-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 28px;
+            padding: 0 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 14px;
+            background: #fff;
+            color: #555;
+            font-size: 12px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .soul-chip:hover { border-color: #009a61; color: #009a61; }
+        
+        .soul-chip .health-dot { width: 8px; height: 8px; flex-shrink: 0; }
+        .soul-chip .health-dot.healthy { background: #22c55e; box-shadow: 0 0 4px rgba(34,197,94,0.5); }
+        .soul-chip .health-dot.degraded { background: #f59e0b; box-shadow: 0 0 4px rgba(245,158,11,0.5); }
+        .soul-chip .health-dot.unhealthy { background: #ef4444; box-shadow: 0 0 4px rgba(239,68,68,0.5); }
+        .soul-chip .health-text { color: #555; }
+        .soul-chip-sep { color: #ccc; }
+        .soul-chip-level { color: #009a61; font-weight: 600; }
+        .soul-chip-progress { font-variant-numeric: tabular-nums; }
+        
+        /* 窄容器适配（ArtDialog 内嵌时视口≈面板宽度）*/
+        @media (max-width: 620px) {
+            .session-toggle-title { max-width: 140px; }
+            .session-toggle { max-width: 180px; }
+        }
+        @media (max-width: 480px) {
+            .soul-chip .health-text,
+            .soul-chip .soul-chip-sep-health { display: none; }
+            .session-toggle-title { max-width: 100px; }
+        }
+        @media (max-width: 400px) {
+            .soul-chip-progress, .soul-chip-sep { display: none; }
+            .char-counter { display: none; }
         }
         
         .session-list {
@@ -250,31 +340,6 @@
             background: #e8f5e9;
             color: #009a61;
             font-weight: 500;
-        }
-        
-        .sidebar-footer {
-            padding: 12px 15px;
-            border-top: 1px solid #e0e0e0;
-        }
-        
-        .sidebar-btn {
-            width: 100%;
-            padding: 10px;
-            border-radius: 3px;
-            background: none;
-            border: 1px solid #ddd;
-            color: #555;
-            cursor: pointer;
-            text-align: left;
-            font-size: 13px;
-            margin-bottom: 8px;
-            transition: all 0.2s;
-        }
-        
-        .sidebar-btn:hover {
-            background: #f5f5f5;
-            border-color: #009a61;
-            color: #009a61;
         }
         
         /* Main Content */
@@ -935,6 +1000,43 @@
             cursor: pointer;
         }
         .model-manage-btn:hover { background: #ececec; }
+        
+        /* Bottom Toolbar（帮助 / 技能 / 设置 图标）*/
+        .input-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        
+        .toolbar-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            background: none;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: #777;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            color: #009a61;
+            border-color: #009a61;
+            background: #f5f5f5;
+        }
+        
+        .toolbar-btn svg { width: 15px; height: 15px; }
+        
+        .toolbar-sep {
+            width: 1px;
+            height: 16px;
+            background: #e0e0e0;
+        }
         .model-mgr-item {
             display: flex;
             align-items: center;
@@ -1518,13 +1620,40 @@
             background: #1a1a2e;
             color: #e0e0e0;
         }
-        body.dark-theme .sidebar {
+        body.dark-theme .top-bar {
             background: #16213e;
             border-color: #2a2a4a;
         }
-        body.dark-theme .sidebar-header {
-            background: #0f3460;
+        body.dark-theme .top-bar-btn {
+            background: #16213e;
+            border-color: #2a2a4a;
+            color: #b0b0b0;
         }
+        body.dark-theme .top-bar-btn:hover {
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        body.dark-theme .session-dropdown {
+            background: #16213e;
+            border-color: #2a2a4a;
+        }
+        body.dark-theme .session-dropdown-header {
+            background: #16213e;
+            border-color: #2a2a4a;
+            color: #888;
+        }
+        body.dark-theme .soul-chip {
+            background: #16213e;
+            border-color: #2a2a4a;
+            color: #b0b0b0;
+        }
+        body.dark-theme .soul-chip:hover { border-color: #00ff88; color: #00ff88; }
+        body.dark-theme .soul-chip .health-text { color: #b0b0b0; }
+        body.dark-theme .soul-chip-level { color: #00ff88; }
+        body.dark-theme .soul-chip-sep { color: #444; }
+        body.dark-theme .toolbar-btn { color: #b0b0b0; }
+        body.dark-theme .toolbar-btn:hover { color: #00ff88; border-color: #00ff88; }
+        body.dark-theme .toolbar-sep { background: #2a2a4a; }
         body.dark-theme .chat-container {
             background: #1a1a2e;
         }
@@ -1770,59 +1899,40 @@
     
     <!-- Main App -->
     <div id="appContainer" class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h3>MXSDOC AI智能体</h3>
-            </div>
-            <div class="sidebar-content">
-                <!-- Soul Evolution Status -->
-                <div class="soul-panel" id="soulPanel">
-                    <div class="soul-panel-header">
-                        <span class="soul-title">Soul 进化</span>
-                        <span class="soul-level" id="soulLevelBadge">Lv.1</span>
-                    </div>
-                    <div class="soul-status">
-                        <div class="health-dot healthy" id="healthDot"></div>
-                        <span class="health-text" id="healthText">系统健康</span>
-                    </div>
-                    <div class="soul-stats">
-                        <div class="soul-stat">
-                            <div class="soul-stat-label">模式</div>
-                            <div class="soul-stat-value" id="sidebarPatterns">0</div>
-                        </div>
-                        <div class="soul-stat">
-                            <div class="soul-stat-label">成功率</div>
-                            <div class="soul-stat-value" id="sidebarSuccessRate">--</div>
-                        </div>
-                    </div>
-                    <div class="soul-progress">
-                        <div class="soul-progress-label">
-                            <span>学习进度</span>
-                            <span id="sidebarProgress">0%</span>
-                        </div>
-                        <div class="soul-progress-bar">
-                            <div class="soul-progress-fill" id="sidebarProgressFill" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="section-header" style="margin-top: 16px;">
-                    <span>会话</span>
-                    <button class="section-btn" id="newSessionBtn">+</button>
-                </div>
-                <div class="session-list" id="sessionList">
-                </div>
-            </div>
-            <div class="sidebar-footer">
-                <button class="sidebar-btn" id="helpBtn">帮助 ?</button>
-                <button class="sidebar-btn" id="skillsBtn">技能市场</button>
-                <button class="sidebar-btn" id="settingsBtn">设置</button>
-            </div>
-        </aside>
-        
         <!-- Main Content -->
         <main class="main-content">
             <div class="chat-container">
+                <!-- Top Bar：会话导航 + Soul 状态（替代原左侧栏） -->
+                <div class="top-bar">
+                    <div class="top-bar-left">
+                        <button class="top-bar-btn new-session" id="newSessionBtn" title="新建会话">＋</button>
+                        <div class="session-menu" id="sessionMenu">
+                            <button class="top-bar-btn session-toggle" id="sessionToggleBtn" title="切换会话">
+                                <span class="session-toggle-title" id="currentSessionTitle">未选择会话</span>
+                                <span class="session-toggle-caret">▾</span>
+                            </button>
+                            <div class="session-dropdown" id="sessionDropdown">
+                                <div class="session-dropdown-header">会话</div>
+                                <div class="session-list" id="sessionList"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="top-bar-right">
+                        <button class="soul-chip" id="soulChipBtn" title="进化状态与技能市场">
+                            <span class="health-dot healthy" id="healthDot"></span>
+                            <span class="health-text" id="healthText">系统健康</span>
+                            <span class="soul-chip-sep soul-chip-sep-health">·</span>
+                            <span class="soul-chip-level" id="soulLevelBadge">Lv.1</span>
+                            <span class="soul-chip-sep">·</span>
+                            <span class="soul-chip-progress" id="sidebarProgress">0%</span>
+                            <span style="display: none;">
+                                <span id="sidebarPatterns">0</span>
+                                <span id="sidebarSuccessRate">--</span>
+                                <span id="sidebarProgressFill" style="width: 0%"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
                 <div class="messages-area" id="messagesArea">
                     <div class="empty-state" id="emptyState">
                         <h3>开始新对话</h3>
@@ -1839,7 +1949,7 @@
                 <div class="input-area">
                     <div class="input-container" style="position: relative;">
                         <div class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></div>
-                        <textarea id="messageInput" placeholder="输入消息、命令或问题... (Enter 发送, Shift+Enter 换行, ↑↓ 历史, Tab 补全)" rows="1" maxlength="4000"></textarea>
+                        <textarea id="messageInput" placeholder="输入消息、命令或问题..." rows="1" maxlength="4000"></textarea>
                         <div class="upload-buttons">
                             <button class="upload-btn" id="uploadFileBtn" title="上传文件（可多选）">📎</button>
                             <button class="upload-btn" id="uploadFolderBtn" title="上传文件夹">
@@ -1854,14 +1964,21 @@
                         </button>
                     </div>
                     <div class="input-bottom-bar">
-                        <div class="input-shortcuts">
+                        <div class="input-tools">
+                            <button class="toolbar-btn" id="helpBtn" title="命令帮助 (Ctrl+H)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            </button>
+                            <button class="toolbar-btn" id="skillsBtn" title="技能市场与进化状态">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                            </button>
+                            <button class="toolbar-btn" id="settingsBtn" title="设置">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            </button>
+                            <span class="toolbar-sep"></span>
                             <span class="model-picker">
                                 <select id="modelSelect" title="选择大模型"></select>
                                 <button class="model-manage-btn" id="manageModelsBtn" title="管理我的自定义模型">⚙ 模型</button>
                             </span>
-                            <span class="input-shortcut"><kbd>Enter</kbd> 发送</span>
-                            <span class="input-shortcut"><kbd>Shift</kbd>+<kbd>Enter</kbd> 换行</span>
-                            <span class="input-shortcut"><kbd>Tab</kbd> 补全</span>
                         </div>
                         <span class="char-counter" id="charCounter">0 / 4000</span>
                     </div>
@@ -2311,6 +2428,17 @@
         var percent = document.getElementById('sidebarProgress');
         if (fill) fill.style.width = progress + '%';
         if (percent) percent.textContent = progress + '%';
+
+        // 顶栏芯片 tooltip（详情：模式数/成功率）
+        var chip = document.getElementById('soulChipBtn');
+        if (chip) {
+            var chipStatusText = { healthy: '系统健康', degraded: '性能下降', unhealthy: '需要关注' };
+            chip.title = '进化 Lv.' + level
+                + ' · ' + (chipStatusText[health] || '系统健康')
+                + ' · 意图模式 ' + patterns
+                + ' · 成功率 ' + (successRate ? (successRate * 100).toFixed(0) + '%' : '--')
+                + '（点击查看技能市场与详情）';
+        }
     }
 
     function updateDialogSoul(data) {
@@ -3062,8 +3190,20 @@
         if (area) area.scrollTop = area.scrollHeight;
     }
 
+    function updateSessionToggleTitle() {
+        var titleEl = document.getElementById('currentSessionTitle');
+        if (!titleEl) return;
+        var cur = null;
+        for (var i = 0; i < (state.sessions || []).length; i++) {
+            if (state.sessions[i].sessionId === state.currentSession) { cur = state.sessions[i]; break; }
+        }
+        titleEl.textContent = cur ? (cur.title || '新会话') : '未选择会话';
+        titleEl.title = titleEl.textContent;
+    }
+
     function renderSessions() {
         var list = document.getElementById('sessionList');
+        updateSessionToggleTitle();
         if (!state.sessions || state.sessions.length === 0) {
             list.innerHTML = '<div class="session-item">暂无会话</div>';
             return;
@@ -3632,6 +3772,11 @@
         document.getElementById('skillsDialog').classList.add('active');
     });
 
+    // Soul 状态芯片：点击打开「技能市场 & 进化状态」
+    document.getElementById('soulChipBtn').addEventListener('click', function() {
+        document.getElementById('skillsBtn').click();
+    });
+
     // Help Dialog
     document.getElementById('helpBtn').addEventListener('click', function() {
         showHelpDialog();
@@ -3657,8 +3802,9 @@
             renderMessages();
             showMessage('对话已清空', 'info');
         }
-        // Escape - Close dialogs and autocomplete
+        // Escape - Close session dropdown, dialogs and autocomplete
         if (e.key === 'Escape') {
+            if (window.closeSessionDropdown) window.closeSessionDropdown();
             hideAutocomplete();
             document.querySelectorAll('.dialog-overlay.active').forEach(function(d) {
                 d.classList.remove('active');
@@ -4200,7 +4346,29 @@
         state.sessionId = item.dataset.id;
         await loadSessionMessages(item.dataset.id);
         renderSessions();
+        if (window.closeSessionDropdown) window.closeSessionDropdown();
     });
+
+    // ==================== 会话下拉（顶栏） ====================
+    (function initSessionDropdown() {
+        var toggle = document.getElementById('sessionToggleBtn');
+        var dropdown = document.getElementById('sessionDropdown');
+        var menu = document.getElementById('sessionMenu');
+        if (!toggle || !dropdown || !menu) return;
+
+        window.closeSessionDropdown = function() {
+            dropdown.classList.remove('open');
+        };
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', function(e) {
+            if (dropdown.classList.contains('open') && !menu.contains(e.target)) {
+                window.closeSessionDropdown();
+            }
+        });
+    })();
 
     // ==================== Startup: shared DocSystem session ====================
     // The agent is merged into DocSystem (same origin, /DocSystem). It no longer
