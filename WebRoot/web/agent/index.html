@@ -291,7 +291,6 @@
         }
         @media (max-width: 400px) {
             .soul-chip-progress, .soul-chip-sep { display: none; }
-            .char-counter { display: none; }
         }
         
         .session-list {
@@ -1731,9 +1730,6 @@
         body.dark-theme .input-tip {
             color: #888;
         }
-        body.dark-theme .char-counter {
-            color: #888;
-        }
         body.dark-theme .dialog {
             background: #16213e;
         }
@@ -1950,7 +1946,7 @@
                 <div class="input-area">
                     <div class="input-container" style="position: relative;">
                         <div class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></div>
-                        <textarea id="messageInput" placeholder="输入消息、命令或问题..." rows="1" maxlength="4000"></textarea>
+                        <textarea id="messageInput" placeholder="输入消息、命令或问题..." rows="1"></textarea>
                         <div class="upload-buttons">
                             <button class="upload-btn" id="uploadFileBtn" title="上传文件（可多选）">📎</button>
                             <button class="upload-btn" id="uploadFolderBtn" title="上传文件夹">
@@ -1981,7 +1977,6 @@
                                 <button class="model-manage-btn" id="manageModelsBtn" title="管理我的自定义模型">⚙ 模型</button>
                             </span>
                         </div>
-                        <span class="char-counter" id="charCounter">0 / 4000</span>
                     </div>
                 </div>
             </div>
@@ -3399,12 +3394,16 @@
                 }
             }
 
-            var url = API_BASE + '/stream?command=' + encodeURIComponent(content);
-            if (state.sessionId) url += '&sessionId=' + encodeURIComponent(state.sessionId);
-            if (state.selectedModelId) url += '&modelId=' + encodeURIComponent(state.selectedModelId);
+            // 走 POST + JSON body：GET 把命令放 URL query 会撞 Tomcat 请求行 8KB 上限（中文约 870 字即 400）
+            var url = API_BASE + '/stream';
+            var payload = { command: content };
+            if (state.sessionId) payload.sessionId = state.sessionId;
+            if (state.selectedModelId) payload.modelId = state.selectedModelId;
 
             var response = await fetch(url, {
-                headers: { 'Accept': 'text/event-stream' },
+                method: 'POST',
+                headers: { 'Accept': 'text/event-stream', 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
                 signal: state.abortController.signal
             });
 
@@ -3645,8 +3644,6 @@
         var value = e.target.value.trim();
         // 自动 resize textarea
         autoResizeTextarea(e.target);
-        // 更新字符计数
-        updateCharCounter(e.target);
         if (value.length > 0) {
             // Load skills if not cached
             if (state.allSkills.length === 0) {
@@ -3671,18 +3668,6 @@
         textarea.style.height = newHeight + 'px';
         // 当内容超过最大高度时显示滚动条
         textarea.style.overflowY = textarea.scrollHeight > 200 ? 'auto' : 'hidden';
-    }
-
-    // Update character counter
-    function updateCharCounter(textarea) {
-        var counter = document.getElementById('charCounter');
-        if (!counter) return;
-        var len = textarea.value.length;
-        var max = 4000;
-        counter.textContent = len + ' / ' + max;
-        counter.className = 'char-counter';
-        if (len > max * 0.9) counter.classList.add('near-limit');
-        if (len >= max) counter.classList.add('at-limit');
     }
 
     function showAutocomplete(query) {

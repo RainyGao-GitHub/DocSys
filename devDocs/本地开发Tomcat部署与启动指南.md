@@ -150,9 +150,10 @@ Get-CimInstance Win32_Process -Filter "Name='java.exe' OR Name='javaw.exe'" |
 5. `validateJarFile(...servlet-api-3.0-alpha-1.jar) - jar not loaded` 是 Tomcat 拒绝 webapp 自带 servlet-api 的正常提示，无需处理。
 6. `Log.appendContentToFile` 失败时在 catch 里调用 `Log.info(e)`，会再次写同一日志文件 → 失败成环即无限递归（StackOverflowError 刷屏）。**日志目录必须确保存在且可写**，否则整个应用起不来（控制器类初始化被污染）。方式 A/B 下日志目录已在标准位置，不受影响。
 7. Tomcat 7 扫描 Java 9+ 依赖（jackson/sqlite-jdbc/lwjgl 等）的 `module-info.class` 会刷大量 `Invalid byte tag in constant pool: 19` 告警，属已知正常现象。
+8. **query 参数中文解码与 Tomcat 版本强耦合（整包发布下成立）**：Tomcat 7.0.56 默认 `URIEncoding=ISO-8859-1`（Connector 未显式配置），所以 `new String(x.getBytes("ISO8859-1"),"UTF-8")` 这类补丁（`DocController`/`BaseFunction`/`AgentController` 等 ~30 处）是**必要且正确**的。已核对三处 `conf/server.xml` 内容一致（dev、Windows 包 `docsys-Win-Release`、Linux 包 `docsys-linux-2.02.86.tar.gz`）：**均未配置** `URIEncoding` / `useBodyEncodingForURI`。⚠️ 若把 `DocSystem-*.war` 单独部署进用户自备的 Tomcat 8.5+/9+（默认 UTF-8），或给 Connector 加 `URIEncoding="UTF-8"`，这些补丁会把中文打成 `????`（JDK8 实测：`"中".getBytes("ISO8859-1")` → `0x3F`，不可逆）。结论：保持整包同发布即为自洽；**新增功能不要用 query 传中文，一律走 POST body**（如 `POST /agent/stream`）。
 
 ## 7. 变更记录
 
 - **2026-09-17**：创建本文档与 `DocSystem.xml` context（挂载工作区 WebRoot）验证 `projects.html` AI 图标 ArtDialog 弹层改动。验证中发现 500 根因=日志目录缺失（见 2-A / 6-5）；测试后已移除 contex
 - **2026-09-17（三）**：按文档从头部署实测并修订文档。修正的问题：① 裸 Context 描述符挂载会导致 `docSys.ini` 退化为相对路径（读不到 `llmConfig` → "系统未设置AI模型"、AI 图标不显示）、日志路径跑偏；② 文档推荐方式改为 **Junction 挂载**（`webapps\DocSystem` → 工作区）+ 从 WTP 复制 `docSys.ini`，改后日志/配置回到标准位置，`getAiModelList` 返回 deepseek 模型，端到端验证通过（启动 31 秒）；③ 补充停止命令对 `javaw.exe`（Eclipse WTP）的覆盖、描述符自动重部署怪癖等。本次实测确认：`docsys_start.bat`（2026/7/12 版）可直接使用。t 映射并交回用户自行部署。启动脚本已更新为 2026/7/12 版（PowerShell 取 PID，替代 wmic）。
-- **2026-09-17（二）**：用户部署完成后，`projects.html` AI 图标 → ArtDialog 弹层 → Agent 页面（iframe）端到端验证通过：弹层打开/重复点击聚焦（不重复创建）/关闭/重开均正常，Agent 页在 iframe 内完整加载（登录态共享）。
+- **2026-09-17（四）**：Agent 消息发送由 `GET /agent/stream?command=...` 改为 `POST /agent/stream`（JSON body），并删除输入框 `maxlength=4000` 与右下角字数计数器；顺带查明 GET 通道的真实上限 = Tomcat 请求行 8KB（`encodeURIComponent` 后中文约 870 字即 400）。新增 6-8：query 中文解码与 Tomcat 版本/配置的耦合关系，以及"整包发布"前提的核对结果。

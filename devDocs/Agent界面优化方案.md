@@ -29,7 +29,7 @@
 │                                                                │
 ├────────────────────────────────────────────────────────────────┤
 │ [📎]  [ 输入框 ………………………………… ]                    [发送/停止] │
-│ [? 帮助] [📚 技能] [⚙ 设置]    [模型 ▾][⚙模型] ……………      0/4000 │ ← 底部工具行
+│ [? 帮助] [📚 技能] [⚙ 设置]    [模型 ▾][⚙模型]                        │ ← 底部工具行
 └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -130,3 +130,51 @@
 - 页面无其它 `fixed/absolute` 角标元素，图标不与文件树、翻页控件（prev/next）冲突；
 - 控制台仅见既有历史问题：head 中 jPlayer 的 `Cannot read properties of undefined (reading 'fn')` 与 `stackeditForVDoc.html` 404，均与本改动无关。
 - 校验：`node vm.Script` 对两页全部内联脚本块做语法解析，0 错误（脚本：`%TEMP%\check_html_js.js`，用法 `node check_html_js.js <html路径>`）
+
+## 8. 消息发送改造：GET query → POST JSON，并移除输入框字数限制（2026-09-17）
+
+### 8.1 问题（实测证据）
+
+| 项 | 事实 |
+| --- | --- |
+| 前端硬限制 | `<textarea maxlength="4000">` + 右下角 `#charCounter`（"0 / 4000"，>90% 变黄、=100% 变红，<400px 隐藏） |
+| 计数器质量 | 只在 `input` 事件里刷新，**发送时 `input.value=''` 不触发事件 → 数值残留**（实测输入 3 字后清空，仍显示 `3 / 4000`）；初始值是写死的 |
+| 服务端校验 | **无**（Agent 包内唯一 4000 是 `SkillMemoryManager.CONTEXT_WINDOW_LIMIT`，是 token 估算常量，同名巧合） |
+| 真正的瓶颈 | 整个问题被塞进 **GET 查询串**：`GET /DocSystem/agent/stream?command=<encodeURIComponent(问题)>`；dev Tomcat 的 `Connector` 未配 `maxHttpHeaderSize` → Tomcat 7 默认 **8192 字节**请求行上限，超限由 Tomcat 直接 400（不到应用层） |
+| 编码膨胀 | `encodeURIComponent('中')` = 9 字符 → 中文可用约 **850~870 字**，ASCII 约 7800 字 |
+
+实测（8100）：700 汉字（编码后 6300）→ 200；1000 汉字（9000）→ **400**；2000 汉字（18000）→ 400。
+即 `maxlength=4000` 对中文是**假天花板**，用户看到的是 `请求失败: HTTP 400`（`index.html` catch 里 `curMsg.content = '请求失败: ' + err.message`）。
+
+### 8.2 实现
+
+后端 `src/com/DocSystem/agent/controller/AgentController.java`：
+
+- 抽出公共实现 `private SseEmitter streamInternal(final String command, final String sessionId, final String modelId, request, response)`（原 GET 方法体原样搬入，`command` 改为入参）。
+- `GET /agent/stream`（**保留**，兼容 `ui.html` 的 `js/app-vanilla.js` 与嵌入用的 `js/chat-widget.js`）：仅做 query 中文修复 `decodeQueryParam()`（ISO-8859-1 → UTF-8，原逻辑不变）后委派。
+- **新增 `POST /agent/stream`**：`@RequestBody ExecuteRequest`（复用 `/execute` 的 DTO：command / sessionId / modelId，Jackson 按 UTF-8 解码，无需再修复），空命令则返回 `immediateSseError("EMPTY_COMMAND")`。
+
+前端 `WebRoot/web/agent/index.html`：
+
+- `executeWithGeneration()` 的 fetch 改 POST + `Content-Type: application/json`，body 为 `{command, sessionId?, modelId?}`（SSE 仍是流式，`reader.read()` 逻辑不变）。
+- 删除 `maxlength="4000"`、`#charCounter` 元素、`updateCharCounter()` 函数及其调用、`<400px` 里 `.char-counter{display:none}` 与深色主题 `.char-counter` 规则。
+- `css/styles.css` 里的 `.char-counter/.near-limit/.at-limit` **故意保留**（该文件按约定不动，且 `ui.html` 不涉及这几个类，属无害死规则）。
+- 底部工具行布局不受影响：`.input-bottom-bar` 是 `space-between`，`.input-tools` 始终是第一项（左对齐），删掉右侧计数器只是右侧留白。
+
+### 8.3 验证（8100，重编 + 重启 dev Tomcat 45.7s）
+
+| 用例 | 结果 |
+| --- | --- |
+| `POST /agent/stream` + 2000 汉字（原先必 400） | **200**，完整流式（166 个 SSE 分片，收到 `done`） |
+| `POST /agent/stream` 正常短消息（UI 点发送） | **200**，回复正确渲染，`isGenerating=false`，输入框清空 |
+| `GET /agent/stream?command=whoami`（旧通道兼容） | **200**，流式正常 |
+| `GET /agent/stream?command=<1500 汉字>`（回归确认） | **400**（仍受 8KB 限制，符合预期；旧前端不要发长文本） |
+| UI：`#charCounter` 是否还在 | `false` |
+| UI：`maxlength` 属性 | `null`（已移除） |
+| UI：粘贴 5000 汉字 | 输入 `value.length === 5000`，不截断 |
+| 控制台 | 无新增错误（仅历史既有的 jPlayer / stackedit 404） |
+
+### 8.4 部署提示
+
+- 改了 Java → 必须 `javac ... -d WebRoot/WEB-INF/classes`（本次命令附 `-parameters -g`，因为该类里存在依赖参数名解析的 `@RequestParam`）+ **重启 dev Tomcat**（目录/联接部署不自动重载类）。
+- 已知既有噪声（非本次引入）：客户端中途断开 SSE 时，后台线程继续 `emitter.send()`，日志会刷 `SSE send failed: ResponseBodyEmitter is already set complete`（`sendSse` 已有 try/catch，只是量大）。后续可加"连接已断开即停止推送"的短路。 

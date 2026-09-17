@@ -892,7 +892,8 @@ public class AgentController {
 
     /**
      * SSE Streaming endpoint for real-time AI responses
-     * GET /api/agent/stream?command=xxx&sessionId=xxx
+     * GET  /api/agent/stream?command=xxx&amp;sessionId=xxx&amp;modelId=xxx   （旧入口，兼容 ui.html / chat-widget.js）
+     * POST /api/agent/stream  body: {"command":"...","sessionId":"...","modelId":"..."}（推荐入口，index.html 使用）
      *
      * Returns SSE stream:
      * - data: {"type":"start"}
@@ -900,6 +901,10 @@ public class AgentController {
      * ...
      * - data: {"type":"done","fullContent":"..."}
      * - data: {"type":"error","message":"..."}
+     *
+     * ⚠️ GET 入口把整条命令放进 URL query，受 Tomcat 请求行上限约束（maxHttpHeaderSize 默认 8192 字节，
+     * 本工程 Connector 未调整）：ASCII 约 7800 字、中文（encodeURIComponent 后 ×9）约 870 字即被 Tomcat 直接
+     * 拒绝为 HTTP 400（实测：1000 汉字=9000 编码字符 → 400）。新前端一律用 POST 入口，无长度限制。
      */
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(
@@ -908,19 +913,58 @@ public class AgentController {
             @RequestParam(name = "modelId", required = false) String modelId,
             HttpServletRequest request,
             HttpServletResponse response) {
+        return streamInternal(decodeQueryParam(commandRaw), sessionId, modelId, request, response);
+    }
 
-        // GET query 参数的中文修复：Tomcat 默认按 ISO-8859-1 解码 URL query（未配 URIEncoding=UTF-8），
-        // 与 DocSystem 一致地重解码为 UTF-8（见 BaseFunction/DocController 的同类处理）。
-        // command 为 effectively-final 供后续 SSE lambda 引用。
-        String decoded = commandRaw;
-        if (commandRaw != null) {
-            try {
-                decoded = new String(commandRaw.getBytes("ISO8859-1"), "UTF-8");
-            } catch (java.io.UnsupportedEncodingException e) {
-                // 保底：编码不支持时用原值
-            }
+    /**
+     * SSE 流式端点（POST + JSON body）—— 前端推荐入口。
+     * body 复用 ExecuteRequest：command / sessionId / modelId；UTF-8 由 Jackson 解码，
+     * 因此不需要 GET 入口那段 ISO-8859-1 → UTF-8 修复。
+     */
+    @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamPost(
+            @RequestBody ExecuteRequest body,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        if (body == null || body.getCommand() == null || body.getCommand().trim().isEmpty()) {
+            return immediateSseError("EMPTY_COMMAND");
         }
-        final String command = decoded;
+        return streamInternal(body.getCommand(), body.getSessionId(), body.getModelId(), request, response);
+    }
+
+    /**
+     * GET query 参数的中文修复：Tomcat 默认按 ISO-8859-1 解码 URL query（未配 URIEncoding=UTF-8），
+     * 与 DocSystem 一致地重解码为 UTF-8（见 BaseFunction/DocController 的同类处理）。
+     */ 
+    private String decodeQueryParam(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        try {
+            return new String(raw.getBytes("ISO8859-1"), "UTF-8");
+        } catch (java.io.UnsupportedEncodingException e) {
+            return raw; // 保底：编码不支持时用原值
+        }
+    }
+
+    /** 参数校验失败时快速返回一个只发 error 事件并立即结束的 SSE */
+    private SseEmitter immediateSseError(String message) {
+        SseEmitter emitter = new SseEmitter(5000L);
+        try {
+            emitter.send(SseEmitter.event()
+                .data("{\"type\":\"error\",\"message\":" + escapeJson(message) + "}", MediaType.TEXT_PLAIN));
+            emitter.complete();
+        } catch (Exception ignored) {}
+        return emitter;
+    }
+
+    /** SSE 流式的公共实现（GET / POST 共用）；command 已按各自编码方式正确解码，供后续 lambda 引用 */
+    private SseEmitter streamInternal(
+            final String command,
+            final String sessionId,
+            final String modelId,
+            HttpServletRequest request,
+            HttpServletResponse response) {
 
         // Prevent browser buffering for real-time streaming
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
