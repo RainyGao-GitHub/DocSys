@@ -64,8 +64,9 @@ public class ConversationHistoryService {
             if (assistantMessage != null && !assistantMessage.isEmpty()) {
                 appendMessage(sessionId, "assistant", assistantMessage);
             }
-            // 会话标题：取第一条用户消息（截断）
-            sessionService.updateTitleIfEmpty(sessionId, userMessage);
+            // 会话标题：取第一条用户消息（截断）。注意：必须剔除关注对象注入块（否则标题会变成块首行）
+            sessionService.updateTitleIfEmpty(sessionId,
+                    com.DocSystem.agent.focus.AgentFocusSupport.stripInjectedBlock(userMessage));
             sessionService.touch(sessionId);
         } catch (Exception e) {
             log.warn("saveExchange failed (ignored, does not affect response): sessionId={}, err={}",

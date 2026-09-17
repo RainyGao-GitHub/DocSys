@@ -502,6 +502,29 @@
     		return;
     	}
 
+    	// P1: pass the current repository/document as the initial focus object (removable in the chips bar)
+    	var agentSrc = "/DocSystem/web/agent/index.html";
+    	var ctxParts = [];
+    	if(typeof gReposInfo !== 'undefined' && gReposInfo && gReposInfo.id)
+    	{
+    		ctxParts.push("ctxVid=" + encodeURIComponent(gReposInfo.id));
+    	}
+    	if(typeof gDocInfo !== 'undefined' && gDocInfo && gDocInfo.name)
+    	{
+    		ctxParts.push("ctxPath=" + encodeURIComponent(gDocInfo.path || ""));
+    		ctxParts.push("ctxName=" + encodeURIComponent(gDocInfo.name));
+    		ctxParts.push("ctxKind=" + (gDocInfo.type === 2 ? "dir" : "file"));   // DocSys 约定：type 1=文件，2=目录
+    		if(gDocInfo.docId) { ctxParts.push("ctxDocId=" + encodeURIComponent(gDocInfo.docId)); }
+    	}
+    	else if(ctxParts.length)
+    	{
+    		// P1.5：没打开文档 → 关注对象即当前仓库的根目录
+    		// 注意：不能传 ctxName（仓名会被当成同名子目录）；根目录的显示名由 Agent 页从仓库列表取
+    		ctxParts.push("ctxKind=dir");
+    		ctxParts.push("ctxPath=/");
+    	}
+    	if(ctxParts.length) { agentSrc += "?" + ctxParts.join("&"); }
+
     	// Dock on the right: about 50% width, margins on all sides, not fullscreen
     	var winWidth = $(window).width();
     	var winHeight = $(window).height();
@@ -516,7 +539,7 @@
     	var d = new artDialog({
     		id: dialogId,
     		title: "AI Agent",
-    		content: '<iframe frameborder="0" name="' + dialogId + '" src="/DocSystem/web/agent/index.html" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true"></iframe>',
+    		content: '<iframe frameborder="0" name="' + dialogId + '" src="' + agentSrc + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true"></iframe>',
     		foot: false,
     		big: true,
     		padding: 0,

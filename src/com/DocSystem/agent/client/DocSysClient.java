@@ -378,8 +378,12 @@ public class DocSysClient {
                 Response response = postForm(url, params, sessionCookie);
                 try {
                     String body = responseBodyString(response);
-                    // Check if we got a valid JSON response (not 404 / html)
-                    if (response.code() == 200 && !body.contains("<!doctype html>") && !body.contains("404")) {
+                    // 判据必须是 HTTP 状态码 + 是否为 JSON，**不能**用 body.contains("404")：
+                    // 正常列表 JSON 里 docId/时间戳等数字完全可能含 "404" 子串，
+                    // 那会把合法的仓库根目录列表误判为失败（2026-09-17 实测踩坑）。
+                    String trimmed = body == null ? "" : body.trim();
+                    boolean looksJson = trimmed.startsWith("{") || trimmed.startsWith("[");
+                    if (response.code() == 200 && looksJson) {
                         return JSON.parseObject(body);
                     }
                 } finally {

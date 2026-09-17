@@ -6,6 +6,7 @@ import com.DocSystem.agent.controller.AuditLogService;
 import com.DocSystem.agent.entity.AuditLogEntity;
 import com.DocSystem.agent.core.AgentContext;
 import com.DocSystem.agent.core.AgentResponse;
+import com.DocSystem.agent.focus.AgentFocusSupport;
 import com.DocSystem.agent.learning.service.CollaborativeFilteringService;
 import com.DocSystem.agent.learning.service.BehaviorTrackingService;
 import com.DocSystem.agent.learning.service.SkillMetadataService;
@@ -212,6 +213,10 @@ public class AgentController {
         private String jsessionid;
         private String cookie;  // Cookie header 也可通过 body 传递
         private String modelId;  // 用户选择的模型 selector（sys:idx 或 user:id），null=默认
+        /** P1：「/」本轮操作 id（白名单见 AgentFocusSupport.operationIds()，可含 skill:<id>），null=未选 */
+        private String operation;
+        /** P1：「@」本轮关注对象（仓库/目录/文件），结构见 AgentFocusSupport.FocusItem */
+        private List<AgentFocusSupport.FocusItem> focus;
 
         public ExecuteRequest() {}
 
@@ -229,6 +234,12 @@ public class AgentController {
 
         public String getModelId() { return modelId; }
         public void setModelId(String modelId) { this.modelId = modelId; }
+
+        public String getOperation() { return operation; }
+        public void setOperation(String operation) { this.operation = operation; }
+
+        public List<AgentFocusSupport.FocusItem> getFocus() { return focus; }
+        public void setFocus(List<AgentFocusSupport.FocusItem> focus) { this.focus = focus; }
     }
 
     /**
@@ -585,7 +596,26 @@ public class AgentController {
                 conversationHistoryService.getHistory(sessionId)) {
             Map<String, Object> item = new HashMap<>();
             item.put("role", m.getRole());
-            item.put("content", m.getContent());
+            String content = m.getContent();
+            // P1：关注对象/操作以注入块形式存在用户消息里，读取时反解回结构化字段 + 剥离原文，
+            // 这样刷新/换设备后历史仍是「用户原文 + 对象 chips」，且不新增表字段。
+            if ("user".equals(m.getRole())
+                    && com.DocSystem.agent.focus.AgentFocusSupport.hasInjectedBlock(content)) {
+                List<com.DocSystem.agent.focus.AgentFocusSupport.FocusItem> focus =
+                        com.DocSystem.agent.focus.AgentFocusSupport.parseInjectedBlock(content);
+                if (!focus.isEmpty()) {
+                    item.put("focus", focus);
+                }
+                String op = com.DocSystem.agent.focus.AgentFocusSupport.parseInjectedOperation(content);
+                if (op != null) {
+                    Map<String, Object> opInfo = new HashMap<String, Object>();
+                    opInfo.put("id", op);
+                    opInfo.put("label", AgentFocusSupport.operationShortLabel(op));
+                    item.put("operation", opInfo);
+                }
+                content = com.DocSystem.agent.focus.AgentFocusSupport.stripInjectedBlock(content);
+            }
+            item.put("content", content);
             item.put("seq", m.getSeq());
             item.put("createdAt", m.getCreatedAt() != null ? m.getCreatedAt().toString() : null);
             messages.add(item);
@@ -913,7 +943,7 @@ public class AgentController {
             @RequestParam(name = "modelId", required = false) String modelId,
             HttpServletRequest request,
             HttpServletResponse response) {
-        return streamInternal(decodeQueryParam(commandRaw), sessionId, modelId, request, response);
+        return streamInternal(decodeQueryParam(commandRaw), sessionId, modelId, request, response, null, null);
     }
 
     /**
@@ -929,7 +959,30 @@ public class AgentController {
         if (body == null || body.getCommand() == null || body.getCommand().trim().isEmpty()) {
             return immediateSseError("EMPTY_COMMAND");
         }
-        return streamInternal(body.getCommand(), body.getSessionId(), body.getModelId(), request, response);
+        // P1：「/」操作白名单校验（非法 → 400，避免前端伪造指令语义）
+        String operation = null;
+        if (body.getOperation() != null && !body.getOperation().trim().isEmpty()) {
+            operation = AgentFocusSupport.normalizeOperation(body.getOperation());
+            if (operation == null) {
+                log.warn("invalid operation from client: '{}'", body.getOperation());
+                try {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"type\":\"error\",\"message\":"
+                            + escapeJson("非法的操作: " + body.getOperation()) + "}");
+                } catch (Exception ignored) {}
+                return null;
+            }
+        }
+        // P1：「@」关注对象形状校验 / 去重（D8）/ 上限（D6）
+        // 可见性校验放在后台线程做，避免阻塞 SSE 首个字节
+        AgentFocusSupport.SanitizeResult sanitized = AgentFocusSupport.sanitize(body.getFocus());
+        if (sanitized.droppedTotal() > 0) {
+            log.info("focus sanitize: kept={}, droppedInvalid={}, droppedOverflow={}",
+                    sanitized.items.size(), sanitized.droppedInvalid, sanitized.droppedOverflow);
+        }
+        return streamInternal(body.getCommand(), body.getSessionId(), body.getModelId(),
+                request, response, operation, sanitized.items);
     }
 
     /**
@@ -958,13 +1011,65 @@ public class AgentController {
         return emitter;
     }
 
+    /**
+     * P1：校验「@」关注对象的可见性 —— 剔除当前用户不可见的仓库；
+     * fail-open：校验过程出错时保留原对象（避免因瞬时故障丢失用户上下文）。
+     * dir/file 的路径存在性由工具层兜底（不额外发请求，控制延迟）。
+     */
+    private List<AgentFocusSupport.FocusItem> verifyFocusItems(
+            List<AgentFocusSupport.FocusItem> items, String jsessionid) {
+        if (items == null || items.isEmpty()) {
+            return items;
+        }
+        try {
+            DocSysClient client = getSessionClient(jsessionid);
+            Map<String, Object> resp = client.getReposList();
+            if (resp == null) {
+                return items;
+            }
+            Object data = resp.get("data");
+            if (!(data instanceof List)) {
+                return items;
+            }
+            Set<Integer> visible = new java.util.HashSet<Integer>();
+            for (Object one : (List<?>) data) {
+                if (!(one instanceof Map)) {
+                    continue;
+                }
+                Object id = ((Map<?, ?>) one).get("id");
+                if (id instanceof Number) {
+                    visible.add(((Number) id).intValue());
+                } else if (id != null) {
+                    try {
+                        visible.add(Integer.valueOf(String.valueOf(id)));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+            if (visible.isEmpty()) {
+                return items;   // 拿不到可见仓库列表 → fail-open
+            }
+            List<AgentFocusSupport.FocusItem> kept = new ArrayList<AgentFocusSupport.FocusItem>();
+            for (AgentFocusSupport.FocusItem it : items) {
+                if (it.getVid() != null && visible.contains(it.getVid())) {
+                    kept.add(it);
+                }
+            }
+            return kept;
+        } catch (Exception e) {
+            log.warn("verifyFocusItems failed, keep all focus items: {}", e.getMessage());
+            return items;
+        }
+    }
+
     /** SSE 流式的公共实现（GET / POST 共用）；command 已按各自编码方式正确解码，供后续 lambda 引用 */
     private SseEmitter streamInternal(
             final String command,
             final String sessionId,
             final String modelId,
             HttpServletRequest request,
-            HttpServletResponse response) {
+            HttpServletResponse response,
+            final String operation,
+            final List<AgentFocusSupport.FocusItem> focusItems) {
 
         // Prevent browser buffering for real-time streaming
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -1022,6 +1127,32 @@ public class AgentController {
                 emitter.send(SseEmitter.event()
                     .data("{\"type\":\"start\"}", MediaType.TEXT_PLAIN));
 
+                // ===== P1：「@」关注对象 + 「/」操作 =====
+                // 1) 可见性校验（剔除无权限/已不存在的仓库）
+                // 2) 渲染「本轮关注对象/操作/约束」并注入用户消息（仅本轮有效；同时随会话历史落库，续接可用）
+                String focusNotice = null;
+                List<AgentFocusSupport.FocusItem> verifiedFocus = focusItems;
+                if (focusItems != null && !focusItems.isEmpty()) {
+                    verifiedFocus = verifyFocusItems(focusItems, capturedJsessionid);
+                    int dropped = focusItems.size() - verifiedFocus.size();
+                    if (dropped > 0) {
+                        focusNotice = "已忽略 " + dropped + " 个无权限或已不存在的关注对象";
+                    }
+                }
+                String userText = command;
+                if (command != null && command.toLowerCase().trim().startsWith("chat ")) {
+                    userText = command.substring(5).trim();
+                }
+                final String focusCommand = AgentFocusSupport.buildUserMessage(userText, verifiedFocus, operation, focusNotice);
+                if (focusNotice != null) {
+                    sendSse(emitter, "{\"type\":\"notice\",\"message\":" + escapeJson(focusNotice) + "}");
+                }
+                if (operation != null || (verifiedFocus != null && !verifiedFocus.isEmpty())) {
+                    log.info("focus: operation={}, items={}, kept={}", operation,
+                            focusItems != null ? focusItems.size() : 0,
+                            verifiedFocus != null ? verifiedFocus.size() : 0);
+                }
+
                 String lowerCmd = command.toLowerCase().trim();
                 boolean isAiChat = lowerCmd.startsWith("chat ") ||
                                    lowerCmd.startsWith("问") ||
@@ -1042,10 +1173,7 @@ public class AgentController {
                                        lowerCmd.startsWith("chat-with-docs") || lowerCmd.equals("ai-models");
 
                 if (isAiChat && !isCliCommand && llmService != null) {
-                    String message = command;
-                    if (lowerCmd.startsWith("chat ")) {
-                        message = command.substring(5).trim();
-                    }
+                    String message = focusCommand;
 
                     String effectiveSession = sessionId != null ? sessionId : "stream-" + System.currentTimeMillis();
                     StringBuilder fullContent = new StringBuilder();
@@ -1121,7 +1249,7 @@ public class AgentController {
                     if (toolLoopEnabled && llmService != null) {
                         try {
                             StreamingLoopOutcome outcome = runToolLoopStreamingWithSse(
-                                    command, capturedUsername, capturedJsessionid, sessionId, resolvedLlm, emitter);
+                                    focusCommand, capturedUsername, capturedJsessionid, sessionId, resolvedLlm, emitter);
                             if (outcome != null && outcome.response != null) {
                                 AgentResponse toolResp = outcome.response;
                                 String responseText = toolResp.isSuccess()
@@ -1135,7 +1263,7 @@ public class AgentController {
                                 if (conversationHistoryService != null) {
                                     conversationHistoryService.saveExchange(
                                             sessionId != null ? sessionId : capturedJsessionid,
-                                            command, responseText, outcome.reasoning);
+                                            focusCommand, responseText, outcome.reasoning);
                                 }
                                 emitter.complete();
                                 return;
