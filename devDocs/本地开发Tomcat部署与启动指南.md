@@ -10,31 +10,41 @@
 | 开发 Tomcat（本文主角） | `C:\TomcatForDocSysDev\docsys\tomcat` | Tomcat 7.0.56，自带 JRE（`tomcat\Java\jre`），SQLite 库 `tomcat\DocSystem.db`（jdbc 配置为 `${catalina.home}/DocSystem.db`） |
 | 工作区（被部署的 webapp） | `D:\Dev\DocSys\WebRoot` | 完整 webapp（`WEB-INF/classes` + `WEB-INF/lib` + 静态页面）；Java 编译输出即入此目录 |
 | Release 实例（仅本机有） | `C:\docsysRel\docsys-Win-Release\docsys-win-2.02.86\docsys` | 独立安装的发布副本，同样监听 8100；**与 dev Tomcat 端口冲突，二者只能运行一个** |
-| Eclipse WTP 实例（备选） | Eclipse 内部 Tomcat（端口 8100） | 与本文无关；用 Eclipse 时不需要手动启动 |
+| Eclipse WTP 实例（备选） | Eclipse 内部 Tomcat（端口 8100） | 复用同一套 Tomcat 安装（`catalina.home` 相同、共用 `tomcat\DocSystem.db`）；部署副本在 Eclipse 工作区 `...\tmp0\wtpwebapps\DocSystem`，其 `docSys.ini` 与外层同级；与 dev 实例端口互斥 |
+| 外部配置目录 `docSys.ini` | dev：`...\tomcat\webapps\docSys.ini` | **重要**：`docSysConfig.properties`（含 `llmConfig`=AI 模型配置、`debugLogLevel` 等）、`docSysIniState`、`backup/` 都由应用读写此目录。位置由 webapp 路径推导，见第 2 节背景 |
 
 访问入口（dev Tomcat）：`http://127.0.0.1:8100/DocSystem/`，测试账号 `Admin / Admin`。
 
 ## 2. 部署方法
 
-### 方式 A（推荐，本机已配置）：Context 直接挂载工作区
+> **路径推导背景（必读，2026-09-17 实测踩坑）**：应用会用「webapp 的实际路径」推导多个关键路径：
+> 1. `Path.getDocSysWebParentPath()` 在 webapp 路径中查找 `/DocSystem` 再取其上一级，用于定位外部配置目录 `docSys.ini`（AI 模型 `llmConfig`、调试日志开关等都在那里）；
+> 2. 默认日志文件 = webapp 路径上溯两级 + `logs/docsys.log`。
+>
+> **因此 webapp 的实际路径必须包含 `/DocSystem` 这段。** 若用 `conf\Catalina\localhost\DocSystem.xml` 直接把 `D:\Dev\DocSys\WebRoot` 挂为 `/DocSystem`（路径里没有 `/DocSystem` 字样），会出现两类问题：docSys.ini 退化为**相对进程工作目录**的 `docSys.ini/`（读不到 llmConfig → 前端提示"系统未设置AI模型"、AI 图标不显示）；日志目录推导为 `D:\Dev` 下（目录不存在时触发 Log 递归 → 全站 500，见 6-5）。**故推荐方式 A（Junction），不要用裸 Context 描述符挂载。**
 
-已创建文件：
+### 方式 A（推荐）：Junction 目录联接挂载工作区
 
+用目录联接（junction）让 `webapps\DocSystem` 指向工作区：Tomcat 按标准目录应用部署，所有路径推导回到标准位置；且工作区改动即时生效（静态文件刷新即生效、类文件重启生效）。
+
+已创建（2026-09-17）：
+- 联接：`C:\TomcatForDocSysDev\docsys\tomcat\webapps\DocSystem` → `D:\Dev\DocSys\WebRoot`
+- 外部配置目录：`C:\TomcatForDocSysDev\docsys\tomcat\webapps\docSys.ini`（从 Eclipse WTP 环境复制，含 `llmConfig`）
+
+创建 / 重建命令：
+
+```powershell
+# 1) 建联接（/J 目录联接，不需要管理员权限）
+cmd /c 'mklink /J "C:\TomcatForDocSysDev\docsys\tomcat\webapps\DocSystem" "D:\Dev\DocSys\WebRoot"'
+
+# 2) 准备 docSys.ini（若缺失，从现有环境复制；WTP 的来源路径见第 1 节）
+Copy-Item "D:\EclipseProject\EclipseWorkspaceForDocSys\.metadata\plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\docSys.ini" "C:\TomcatForDocSysDev\docsys\tomcat\webapps\docSys.ini" -Recurse
 ```
-C:\TomcatForDocSysDev\docsys\tomcat\conf\Catalina\localhost\DocSystem.xml
-```
 
-内容：
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<Context docBase="D:/Dev/DocSys/WebRoot" reloadable="false" />
-```
-
-- 优点：不复制 400MB+ 的 webapp；静态文件（html/js/css）改完刷新浏览器即生效；`javac -d WebRoot/WEB-INF/classes` 编译的类只需重启 Tomcat 生效。
-- 适用：日常开发、前端验证。
-- ⚠️ **前提（重要）**：先创建 `D:\Dev\logs` 目录！应用的默认日志路径 = webapp 上溯两级 + `logs/docsys.log`（`BaseFunction` 静态初始化 `Path.getParentPath(docSysWebPath, 2) + "logs/docsys.log"`）。挂载工作区时即 `D:\Dev\logs\docsys.log`，该目录不存在会导致：首次写日志失败 → `Log.appendContentToFile` catch 调 `Log.info(e)` 写同一文件再失败 → 无限递归 → StackOverflowError → `BaseController`/`DocController` 类初始化失败 → Spring MVC 上下文初始化失败 → **所有请求 500**（2026-09-17 实测踩坑）。
-  传统 `webapps\DocSystem` 布局下该路径为 `<tomcat>\logs\docsys.log`（目录已存在，无此问题）。
+- 实测效果：日志落 `tomcat\logs\docsys.log`；配置读写 `webapps\docSys.ini\`；`/Repos/getAiModelList.do` 返回 `deepseek-v4-flash / v4-pro`，AI 图标正常显示。
+- ⚠️ `conf\Catalina\localhost\DocSystem.xml` **不要存在**（与 webapps 目录同名会冲突/抢占）。
+- `webapps` 下的 `docSys.ini` 目录会被 Tomcat 顺带当作空应用部署（无害）。
+- 删除联接：`cmd /c rmdir "C:\TomcatForDocSysDev\docsys\tomcat\webapps\DocSystem"`（只删联接，不动工作区内容）。
 
 ### 方式 B（传统复制）：整包复制到 webapps
 
@@ -42,8 +52,8 @@ C:\TomcatForDocSysDev\docsys\tomcat\conf\Catalina\localhost\DocSystem.xml
 robocopy "D:\Dev\DocSys\WebRoot" "C:\TomcatForDocSysDev\docsys\tomcat\webapps\DocSystem" /MIR /XD .git
 ```
 
-- 注意：`webapps` 里一旦存在 `DocSystem`，方式 A 的 context 与之同名会冲突（二选一）。
-- 大改动/需要隔离环境时使用；复制耗时且每次改动都要重新同步。
+- 与方式 A 布局相同（同样满足"路径含 `/DocSystem`"），`docSys.ini` 要求也相同；区别只是复制而非联接。
+- 大改动 / 需要隔离环境时使用；复制耗时（400MB+）且每次改动都要重新同步。
 
 ## 3. 启动 Tomcat
 
@@ -53,11 +63,15 @@ robocopy "D:\Dev\DocSys\WebRoot" "C:\TomcatForDocSysDev\docsys\tomcat\webapps\Do
 # 查看占用者
 Get-NetTCPConnection -State Listen -LocalPort 8100 | Select-Object LocalPort,OwningProcess
 
-# 若是 release 实例（示例 PID），停止它：
-Stop-Process -Id <PID> -Force
+# 常见占用者：
+#   ① release 实例（java.exe，路径在 C:\docsysRel\...）
+#   ② Eclipse WTP 实例（javaw.exe，命令行为 -Dcatalina.home=C:\TomcatForDocSysDev\docsys\tomcat，
+#      catalina.base 指向 Eclipse 工作区 .metadata\...\tmp0）
+# 停止方式见 3.3 的通用命令。
 ```
 
 > release 实例停掉后如需恢复：运行 `C:\docsysRel\docsys-Win-Release\docsys-win-2.02.86\docsys\docsys_start.bat`（或 `start.bat` 带监控）。
+> Eclipse WTP 实例如需恢复：在 Eclipse 中重新启动该 Server（或 Publish+Start）。
 
 ### 3.2 启动
 
@@ -65,7 +79,7 @@ Stop-Process -Id <PID> -Force
 
 - 脚本要素（`docsys_start.bat`，2026/7/12 版）：设置 `CATALINA_HOME/JAVA_HOME/JRE_HOME`（JRE = `tomcat\Java\jre`）→ 用 PowerShell 记录父进程 PID 到 `tmp\docsys.pid` → 若存在 `webapps\docSys.ini\jdbc.properties` 则覆盖部署目录的 jdbc 配置 → `catalina.bat run`。
 - 旧版本（2025/12/7）用 `wmic` 记 PID，Win11 已移除 wmic 会中断脚本，已被上述新版替代。
-- 就绪标志：输出出现 `Server startup in ... ms`（首次部署扫描 jar 较慢，实测约 90 秒；后续启动更快）。
+- 就绪标志：输出出现 `Server startup in ... ms`。实测耗时：方式 A（目录部署）本次 31 秒；首次冷启动可到 1.5~3 分钟（取决于文件缓存/杀软）。扫描阶段控制台会刷 `Invalid byte tag ...` 告警，属正常（见 6-6）。
 
 等价手动命令（PowerShell，便于定制参数）：
 
@@ -83,13 +97,17 @@ $env:JRE_HOME     = $env:JAVA_HOME
 ### 3.3 停止
 
 - 前台运行：在对应终端 `Ctrl+C`。
-- 或按 Java 可执行文件路径杀进程（等价 `docsys_stop.bat`）：
+- 通用停止命令（同时覆盖 `docsys_start.bat` 实例和 Eclipse WTP 实例）：
 
 ```powershell
-Get-CimInstance Win32_Process -Filter "Name='java.exe'" |
-  Where-Object { $_.ExecutablePath -like '*TomcatForDocSysDev*' } |
+# java.exe  : docsys_start.bat 启动的实例（位于 tomcat\Java\jre）
+# javaw.exe : Eclipse WTP 启动的实例（命令行含 -Dcatalina.home=C:\TomcatForDocSysDev\docsys\tomcat）
+Get-CimInstance Win32_Process -Filter "Name='java.exe' OR Name='javaw.exe'" |
+  Where-Object { $_.ExecutablePath -like '*TomcatForDocSysDev*' -or $_.CommandLine -like '*catalina.home=C:\TomcatForDocSysDev*' } |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
 ```
+
+- ⚠️ 只按 `java.exe` + 路径过滤会**漏掉 Eclipse WTP 实例**（它是 `javaw.exe`、可执行文件在系统 JRE 目录），必须叠加命令行匹配。
 
 ## 4. 日志位置
 
@@ -97,7 +115,7 @@ Get-CimInstance Win32_Process -Filter "Name='java.exe'" |
 | --- | --- |
 | Tomcat 引擎日志 | `C:\TomcatForDocSysDev\docsys\tomcat\logs\catalina.<date>.log`、`localhost.<date>.log` |
 | 访问日志 | `C:\TomcatForDocSysDev\docsys\tomcat\logs\localhost_access_log.<date>.txt` |
-| 应用日志 | `Log` 类默认写「webapp 上溯两级 + `logs/docsys.log`」：挂载工作区时 = `D:\Dev\logs\docsys.log`；`webapps\DocSystem` 布局时 = `C:\TomcatForDocSysDev\docsys\tomcat\logs\docsys.log`。⚠️ 该目录必须先存在，否则应用启动即失败（见 2-A / 6-5） |
+| 应用日志 | `C:\TomcatForDocSysDev\docsys\tomcat\logs\docsys.log`（方式 A/B 的 `webapps\DocSystem` 布局；由「webapp 上溯两级」推导，目录已存在）。⚠️ 裸 Context 挂载会让该路径跑到 `D:\Dev\logs`，目录不存在时应用启动即失败（见第 2 节背景 / 6-5） |
 
 ## 5. 典型使用场景
 
@@ -115,7 +133,7 @@ Get-CimInstance Win32_Process -Filter "Name='java.exe'" |
 & "C:\docsysRel\docsys-WDK\docsys\tomcat\Java\jdk\bin\javac" -encoding UTF-8 -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" -d WebRoot/WEB-INF/classes <源文件...>
 ```
 
-2. 重启 dev Tomcat（context 设的 `reloadable="false"`，改动类不自动重载）。
+2. 重启 dev Tomcat 使新类生效（目录部署/联接部署不会自动重载类）。
 
 ### 5.3 验证清单（打开页面）
 
@@ -126,13 +144,15 @@ Get-CimInstance Win32_Process -Filter "Name='java.exe'" |
 ## 6. 已知注意事项
 
 1. **端口互斥**：dev Tomcat、release 实例、Eclipse WTP 三者都想用 8100，同时只能跑一个。
-2. **`docSys.ini` 无关**：`docsys_start.bat` 会把 `webapps\docSys.ini\jdbc.properties` 覆盖到部署目录；本机 dev 环境 `docSys.ini` 不存在，跳过即可，直接用工作区的 `jdbc.properties`（SQLite → `tomcat\DocSystem.db`）。
-3. **DB 是 dev 专用库**：内容与 release 实例/其他环境不同，属正常现象。
-4. `validateJarFile(...servlet-api-3.0-alpha-1.jar) - jar not loaded` 是 Tomcat 拒绝 webapp 自带 servlet-api 的正常提示，无需处理。
-5. `Log.appendContentToFile` 失败时在 catch 里调用 `Log.info(e)`，会再次写同一日志文件 → 失败成环即无限递归（StackOverflowError 刷屏）。**日志目录必须确保存在且可写**，否则整个应用起不来（控制器类初始化被污染）。
-6. Tomcat 7 扫描 Java 9+ 依赖（jackson/sqlite-jdbc/lwjgl 等）的 `module-info.class` 会刷大量 `Invalid byte tag in constant pool: 19` 告警，属已知正常现象。
+2. **`docSys.ini` 是应用的外部配置目录**：位置 = webapp 路径中 `/DocSystem` 的上一级 + `docSys.ini/`（本机 dev：`tomcat\webapps\docSys.ini\`）。其中 `docSysConfig.properties` 的 `llmConfig` 决定 AI 模型列表（缺失则前端提示"系统未设置AI模型"、AI 图标隐藏）。`docsys_start.bat` 若发现其中的 `jdbc.properties` 会覆盖部署目录的 jdbc 配置（本机无此文件，直接用工作区配置：SQLite → `tomcat\DocSystem.db`）。
+3. **不要用裸 Context 描述符挂载**（原因见第 2 节背景）；若使用描述符，还会触发一次额外行为：描述符文件 mtime 晚于部署起点时，Tomcat 启动后约 10 秒自动重部署一次（期间短暂 404），随后稳定。
+4. **DB 是 dev 专用库**：内容与 release 实例/其他环境不同，属正常现象。
+5. `validateJarFile(...servlet-api-3.0-alpha-1.jar) - jar not loaded` 是 Tomcat 拒绝 webapp 自带 servlet-api 的正常提示，无需处理。
+6. `Log.appendContentToFile` 失败时在 catch 里调用 `Log.info(e)`，会再次写同一日志文件 → 失败成环即无限递归（StackOverflowError 刷屏）。**日志目录必须确保存在且可写**，否则整个应用起不来（控制器类初始化被污染）。方式 A/B 下日志目录已在标准位置，不受影响。
+7. Tomcat 7 扫描 Java 9+ 依赖（jackson/sqlite-jdbc/lwjgl 等）的 `module-info.class` 会刷大量 `Invalid byte tag in constant pool: 19` 告警，属已知正常现象。
 
 ## 7. 变更记录
 
-- **2026-09-17**：创建本文档与 `DocSystem.xml` context（挂载工作区 WebRoot）验证 `projects.html` AI 图标 ArtDialog 弹层改动。验证中发现 500 根因=日志目录缺失（见 2-A / 6-5）；测试后已移除 context 映射并交回用户自行部署。启动脚本已更新为 2026/7/12 版（PowerShell 取 PID，替代 wmic）。
+- **2026-09-17**：创建本文档与 `DocSystem.xml` context（挂载工作区 WebRoot）验证 `projects.html` AI 图标 ArtDialog 弹层改动。验证中发现 500 根因=日志目录缺失（见 2-A / 6-5）；测试后已移除 contex
+- **2026-09-17（三）**：按文档从头部署实测并修订文档。修正的问题：① 裸 Context 描述符挂载会导致 `docSys.ini` 退化为相对路径（读不到 `llmConfig` → "系统未设置AI模型"、AI 图标不显示）、日志路径跑偏；② 文档推荐方式改为 **Junction 挂载**（`webapps\DocSystem` → 工作区）+ 从 WTP 复制 `docSys.ini`，改后日志/配置回到标准位置，`getAiModelList` 返回 deepseek 模型，端到端验证通过（启动 31 秒）；③ 补充停止命令对 `javaw.exe`（Eclipse WTP）的覆盖、描述符自动重部署怪癖等。本次实测确认：`docsys_start.bat`（2026/7/12 版）可直接使用。t 映射并交回用户自行部署。启动脚本已更新为 2026/7/12 版（PowerShell 取 PID，替代 wmic）。
 - **2026-09-17（二）**：用户部署完成后，`projects.html` AI 图标 → ArtDialog 弹层 → Agent 页面（iframe）端到端验证通过：弹层打开/重复点击聚焦（不重复创建）/关闭/重开均正常，Agent 页在 iframe 内完整加载（登录态共享）。
