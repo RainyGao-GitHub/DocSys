@@ -189,12 +189,10 @@
 <script src="static/artDialog/dist/dialog-plus.js"></script>
 <script src="js/artDialog.js"></script>
 <script>
-    // 在ArtDialog弹层中打开AI Agent页面（不跳转页面，保留当前仓库/文件视图）
+    // 在ArtDialog弹层中打开AI Agent页面（右侧停靠，不跳转页面，保留当前仓库/文件视图）
     function openAiChat()
     {
     	var dialogId = "ArtDialogAiChat";
-    	var width = Math.min($(window).width() - 40, 1400);
-    	var height = Math.min($(window).height() - 60, 900);
     	// 已打开时聚焦现有弹层，避免重复创建
     	var existing = artDialog.list && artDialog.list[dialogId];
     	if(existing)
@@ -202,6 +200,17 @@
     		existing.zIndex().focus();
     		return;
     	}
+
+    	// 右侧停靠：宽度约50%，上下留边距，不占满整个窗口
+    	var winWidth = $(window).width();
+    	var winHeight = $(window).height();
+    	var width = Math.min(Math.max(420, Math.round(winWidth * 0.5)), winWidth - 40);
+    	// 顶部避开页面固定导航栏（其 z-index 高于弹层，重叠会遮挡标题栏和关闭按钮）
+    	var navHeight = $(".navbar-fixed-top").outerHeight() || 50;
+    	var top = navHeight + 10;
+    	// 高度=视口高度-上边距-下边距(20)-标题栏及边框(约35)，保证整个弹层完整落在视口内
+    	var height = Math.max(320, winHeight - top - 20 - 35);
+    	var left = Math.max(20, winWidth - width - 20);
 
     	var d = new artDialog({
     		id: dialogId,
@@ -212,11 +221,23 @@
     		padding: 0,
     		width: width,
     		height: height,
+    		left: left,
+    		top: top,
+    		fixed: true,
     		resize: true,
     		drag: true,
+    		close: function()
+    		{
+    			// 弹层关闭后恢复 AI 图标
+    			$("#ai-chat-icon").show();
+    		},
     	});
     	// 隐藏底部按钮栏（弹层只需标题栏 + 页面内容）
     	$("." + dialogId + " .aui-footer").parent().remove();
+    	// 弹层打开时隐藏 AI 图标（图标与弹层不同时出现）
+    	$("#ai-chat-icon").hide();
+    	// 按右侧停靠位置摆放
+    	d.position(left, top);
     }
 </script>
 <script type="text/html" id="tmpl-projects">
