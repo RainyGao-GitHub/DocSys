@@ -427,6 +427,13 @@
         .quick-tag:hover {
             background: #c8e6c9;
         }
+
+        /* 已选中的模式（快捷操作 = / 菜单里的模式，再点一次取消） */
+        .quick-tag.is-selected {
+            background: #009a61;
+            border-color: #009a61;
+            color: #fff;
+        }
         
         .message {
             display: flex;
@@ -1713,6 +1720,10 @@
             color: #00ff88;
             border-color: #009a61;
         }
+        body.dark-theme .quick-tag.is-selected {
+            background: #009a61;
+            color: #fff;
+        }
         body.dark-theme .empty-state h3 {
             color: #e0e0e0;
         }
@@ -2092,11 +2103,8 @@
                     <div class="empty-state" id="emptyState">
                         <h3>开始新对话</h3>
                         <p>发送消息开始与 AI 助手交流</p>
-                        <div class="quick-commands">
-                            <span class="quick-tag" data-cmd="list repos">列出仓库</span>
-                            <span class="quick-tag" data-cmd="whoami">查看用户</span>
-                            <span class="quick-tag" data-cmd="help">帮助</span>
-                        </div>
+                        <!-- 快捷操作 = / 菜单里的模式（JS 渲染，点击效果同用 / 选择） -->
+                        <div class="quick-commands" id="modeShortcuts"></div>
                     </div>
                     <div id="messagesList"></div>
                 </div>
@@ -3308,15 +3316,11 @@
 
     function renderMessages() {
         var list = document.getElementById('messagesList');
-        var empty = document.getElementById('emptyState');
-        
+        // 提示区（#emptyState，含快捷操作）常驻：不再随消息增删隐藏（2026-09-18）
         if (state.messages.length === 0) {
-            empty.style.display = 'block';
             list.innerHTML = '';
             return;
         }
-        
-        empty.style.display = 'none';
         
         var html = '';
         for (var i = 0; i < state.messages.length; i++) {
@@ -4217,11 +4221,13 @@
     function setOperation(id, label) {
         state.operation = { id: id, label: label || id };
         renderOperationChip();
+        renderModeShortcuts();   // 提示区的快捷按钮同步高亮
     }
 
     function clearOperation() {
         state.operation = null;
         renderOperationChip();
+        renderModeShortcuts();
     }
 
     function snapshotFocus() {
@@ -5228,16 +5234,36 @@
         }
     }
     
-    // Quick commands
-    var quickTags = document.querySelectorAll('.quick-tag');
-    for (var i = 0; i < quickTags.length; i++) {
-        quickTags[i].addEventListener('click', (function(tag) {
-            return function() {
-                document.getElementById('messageInput').value = tag.dataset.cmd;
-                sendMessage();
-            };
-        })(quickTags[i]));
+    // 快捷操作 = / 菜单里的模式（数据源同为 OPERATION_CATALOG）：点击效果同用 / 选择，再点一次取消
+    function renderModeShortcuts() {
+        var box = document.getElementById('modeShortcuts');
+        if (!box) return;
+        var cur = state.operation ? state.operation.id : null;
+        var html = '';
+        for (var i = 0; i < OPERATION_CATALOG.length; i++) {
+            var op = OPERATION_CATALOG[i];
+            html += '<span class="quick-tag' + (cur === op.id ? ' is-selected' : '')
+                 + '" data-op-id="' + op.id + '" title="' + escapeHtml(op.desc) + '">'
+                 + escapeHtml(op.label) + '</span>';
+        }
+        box.innerHTML = html;
     }
+    document.getElementById('modeShortcuts').addEventListener('click', function(e) {
+        var id = (e.target && e.target.getAttribute) ? e.target.getAttribute('data-op-id') : null;
+        if (!id) return;
+        if (state.operation && state.operation.id === id) {
+            clearOperation();   // 再点一次 = 取消
+        } else {
+            for (var i = 0; i < OPERATION_CATALOG.length; i++) {
+                if (OPERATION_CATALOG[i].id === id) {
+                    setOperation(OPERATION_CATALOG[i].id, OPERATION_CATALOG[i].label);
+                    break;
+                }
+            }
+        }
+        focusMessageInput();
+    });
+    renderModeShortcuts();
     
     // Dialogs
     document.getElementById('skillsBtn').addEventListener('click', function() {

@@ -114,6 +114,14 @@ ScholarOS 可以把 `@导师` 写进文本，因为对象是**固定 14 项**、
 - 实测：选 1 个对象 + 「问答」→ 无任何 badge；切到别的会话 → 对象/模式都还在（chip 仍是「问答 ×」）；新建会话 → 仍保留；点 `×` → 只移除被点的那个。无 `pageerror`。
 - 历史遗留（保留不动）：文档旧条目里的 D7「继承」语义描述见 §6 的修订说明。
 
+**✅ 2026-09-18 空状态快捷操作（在原有样式上最小改动）**
+
+- 原 `#emptyState`（居中「开始新对话」+ 文案 + 三个命令按钮「列出仓库 / 查看用户 / 帮助」）**样式与结构保持原样**，只做两处改动：
+  1. **快捷按钮换成 `/` 的 6 个模式**：容器 `#modeShortcuts`（沿用 `.quick-commands` / `.quick-tag` 原样式，新增 `.quick-tag.is-selected` 高亮 + dark-theme 变体），由 `renderModeShortcuts()` 从 `OPERATION_CATALOG` 渲染；点击 = `setOperation()`（**效果同用 `/` 选择**，chip 出现在输入框下方），**再点已选中的那个 = 取消**（`clearOperation()`）；事件用容器级委托（容器不被重建，重建的只是内部按钮）。`setOperation/clearOperation` 内同步刷高亮 → 用 `/` 菜单选、点 chip 的 `×` 也会反向同步。原 `.quick-tag` 那段"填入命令并直接发送"的处理已删除。
+  2. **常驻**：`renderMessages()` 删掉 `empty.style.display='block'/'none'` 两处切换（只在无消息时 `list.innerHTML=''`），发送消息后这层内容不再消失。
+- 实测：6 个按钮 → `ask/summarize/generate_doc/organize/find/compare` 全部正确、chip 与高亮唯一；再点取消；用 `/` 选「查找」→ 对应按钮高亮；发一条消息后（`messages=2`）`#emptyState` 仍 `display:flex` 且可见、位于消息列表上方。无 `pageerror`。
+- ⚠️ **已试过并回退**：曾按学术伴摘要页 `AbstractInitialization.tsx` 的样式重做整块提示卡（左对齐卡片 + 「点击 @ / 点击 / + 模式按钮组」），用户反馈"效果不是很好" → 已全部回退，**保留原有居中空状态样式**，只换按钮。后续不要重复该方案。
+
 
 ### 3.4 对象选择器（`@`）
 
