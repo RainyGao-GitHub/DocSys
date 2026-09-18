@@ -1848,8 +1848,6 @@
         /* 正在编辑用途的对象：用背景色区分（未选中的留白）*/
         .focus-chip.editing { background: #dceaff; border-color: #8fbaf0; color: #1257a8; }
         .focus-chip.op { background: #eefaf3; border-color: #c8ecd9; color: #0f7b52; }
-        .focus-chip.inherited { background: #f6f6f6; border-color: #e2e2e2; color: #777; }
-        .focus-chip.inherited.editing { background: #dceaff; border-color: #8fbaf0; color: #1257a8; }
         .focus-chip .chip-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
         /* P1.5：类型图标（复用 project 页目录树的 zTree 图标资源）*/
         .fi { width: 15px; height: 15px; flex: none; vertical-align: -2px; }
@@ -1870,8 +1868,6 @@
         body.dark-theme .focus-chip { background: #202028; border-color: #3a3a4a; color: #c8cdd8; }
         body.dark-theme .focus-chip.editing { background: #1e2b45; border-color: #3f5f96; color: #8fb6ff; }
         body.dark-theme .focus-chip.op { background: #16302a; border-color: #275246; color: #7fd7ac; }
-        body.dark-theme .focus-chip.inherited { background: #252525; border-color: #3a3a3a; color: #aaa; }
-        body.dark-theme .focus-chip.inherited.editing { background: #1e2b45; border-color: #3f5f96; color: #8fb6ff; }
         body.dark-theme .focus-note-editor { background: #1c1c2a; border-color: #33334d; }
         body.dark-theme .focus-note-editor textarea { background: #141420; color: #ddd; border-color: #33334d; }
 
@@ -2414,7 +2410,7 @@
         selectedModelId: null,    // 用户选中的大模型(空=系统默认第一个)
         availableModels: [],       // 系统模型 + 用户自定义模型
         // P1：关注对象（@）与操作（/）
-        focus: [],                // [{kind,vid,path,name,docId,label,note,inherited}]
+        focus: [],                // [{kind,vid,path,name,docId,label,note}]（已选对象保留到用户点 × 删除）
         operation: null,          // {id,label}
         focusDrafts: {},          // focusKey -> note（sessionStorage 持久化）
         activeFocusKey: null,     // 正在编辑说明的对象
@@ -2842,7 +2838,7 @@
             if (!json.success) return;
 
             var skills = json.data.skills || [];
-            state.allSkills = skills;   // 供 / 菜单的「技能」分组复用，避免重复请求
+            state.allSkills = skills;   // 技能市场对话框用（/ 菜单不再列技能，2026-09-18）
             var categories = {};
 
             skills.forEach(function(s) {
@@ -3540,6 +3536,7 @@
                         state.sessionId = null;
                         state.messages = [];
                         // P2：会话删了，其附件临时目录也已被服务端清空 → chips 一并清掉
+                        // （@ 对象 / 操作不跟着清：2026-09-18 规则 = 保留到用户主动点 × 删除）
                         state.attachments = [];
                         renderAttachBar();
                         renderMessages();
@@ -3568,6 +3565,7 @@
     /** 加载指定会话的历史消息（T7.3：reasoning 消息合并到其后的 assistant，灰色小字回看展示） */
     async function loadSessionMessages(sessionId) {
         loadAttachmentsForSession();   // P2：切会话时恢复该会话的附件 chips
+        // 已选 @ 对象 / 操作不随会话切换变化（2026-09-18 规则：保留到用户主动点 × 删除）
         var data = await API.getSessionMessages(sessionId);
         if (!data || !data.data) return;
         var msgs = [];
@@ -3660,6 +3658,21 @@
         await executeWithGeneration(content, input);
     }
 
+    /**
+     * 轻提示（不拦人）：选了语义上依赖"资料"的模式（问答/总结资料/生成文档/整理归档/对比），
+     * 但本轮既没选 @ 对象也没上传附件 → 该模式缺少事实来源，可能只能基于通用知识回答。
+     * 「查找」不算（无范围时等于仓库全局检索）。
+     */
+    function maybeWarnOperationWithoutMaterials() {
+        var op = state.operation;
+        if (!op || !op.id) return;
+        if (!operationNeedsMaterials(op.id)) return;
+        if ((state.focus || []).length) return;
+        if ((state.attachments || []).length) return;
+        showMessage('本轮未选择任何资料（@ 对象或附件），「' + (op.label || op.id)
+                + '」可能只能基于通用知识回答', 'info');
+    }
+
     async function executeWithGeneration(content, input) {
         // Add to command history
         if (commandHistory.indexOf(content) === -1) {
@@ -3672,13 +3685,16 @@
         input.value = '';
         hideAutocomplete();
 
+        maybeWarnOperationWithoutMaterials();   // 模式缺资料 → 轻提示（不拦发送）
+
         // Add user message（携带本轮 @ / 供气泡渲染；服务端落库的是渲染后的文本）
         state.messages.push({
             role: 'user', content: content, time: formatTime(),
             focus: snapshotFocus(),
             operation: state.operation ? { id: state.operation.id, label: state.operation.label } : null
         });
-        markFocusInherited();   // D7：发送后本轮对象转为「继承」状态（可移除）
+        // 2026-09-18：不再给已选对象/操作打「继承」标记 —— 保留就是默认行为，
+        // 只有用户点 chip 的 × 才移除（send 这里不做任何状态变更）
         renderMessages();
 
         // Create assistant message placeholder（T7.2：新增 liveText/reasoning/toolCalls 等流式状态字段）
@@ -3934,13 +3950,22 @@
     var FOCUS_MAX = 10;
     var FOCUS_NOTE_MAX = 500;
     var OPERATION_CATALOG = [
-        { id: 'ask', label: '问答', desc: '基于所选资料回答问题' },
-        { id: 'summarize', label: '总结资料', desc: '汇总所选资料的要点' },
-        { id: 'generate_doc', label: '生成文档', desc: '依据所选资料在指定目录生成新文档' },
-        { id: 'organize', label: '整理归档', desc: '按规则移动/复制所选对象' },
-        { id: 'find', label: '查找', desc: '在所选范围内检索文件或内容' },
-        { id: 'compare', label: '对比', desc: '对比多个文件或版本' }
+        { id: 'ask', label: '问答', desc: '基于所选资料回答问题', needsMaterials: true },
+        { id: 'summarize', label: '总结资料', desc: '汇总所选资料的要点', needsMaterials: true },
+        { id: 'generate_doc', label: '生成文档', desc: '依据所选资料在指定目录生成新文档', needsMaterials: true },
+        { id: 'organize', label: '整理归档', desc: '按规则移动/复制所选对象', needsMaterials: true },
+        // 查找：无范围时退化为仓库全局检索，仍有意义 → 不需要资料
+        { id: 'find', label: '查找', desc: '在所选范围内检索文件或内容', needsMaterials: false },
+        { id: 'compare', label: '对比', desc: '对比多个文件或版本', needsMaterials: true }
     ];
+
+    /** 该模式是否必须要有"资料"（@ 对象 / 附件）才有意义；未知 id（含历史 skill:xxx）→ false 不提示 */
+    function operationNeedsMaterials(id) {
+        for (var i = 0; i < OPERATION_CATALOG.length; i++) {
+            if (OPERATION_CATALOG[i].id === id) return !!OPERATION_CATALOG[i].needsMaterials;
+        }
+        return false;
+    }
 
     function focusKey(it) {
         return [(it.kind || ''), (it.vid || 0), (it.path || ''), (it.name || '')].join('|');
@@ -4083,12 +4108,11 @@
             var it = state.focus[i];
             var note = getFocusNote(it);
             var editing = (state.activeFocusKey && focusKey(it) === state.activeFocusKey);
-            html += '<span class="focus-chip' + (it.inherited ? ' inherited' : '') + (editing ? ' editing' : '')
+            html += '<span class="focus-chip' + (editing ? ' editing' : '')
                  + '" data-focus-idx="' + i + '" title="点击填写/修改说明">'
                  + focusItemIconHtml(it)
                  + '<span class="chip-label">' + escapeHtml(it.label || it.name || ('#' + it.vid)) + '</span>'
                  + (note ? '<span class="chip-note-dot" title="已填写说明">✎</span>' : '')
-                 + (it.inherited ? '<span class="chip-badge">继承</span>' : '')
                  + '<button class="chip-x" data-focus-remove="' + i + '" title="移除对象">&times;</button>'
                  + '</span>';
         }
@@ -4100,7 +4124,7 @@
         var slot = document.getElementById('opChipSlot');
         if (!slot) return;
         if (!state.operation) { slot.innerHTML = ''; return; }
-        slot.innerHTML = '<span class="focus-chip op" title="本轮操作（点击 × 移除）">'
+        slot.innerHTML = '<span class="focus-chip op" title="已选操作（点击 × 移除）">'
              + focusKindIconHtml(isSkillOperationId(state.operation.id) ? 'skill' : 'operation')
              + '<span class="chip-label">' + escapeHtml(state.operation.label || state.operation.id) + '</span>'
              + '<button class="chip-x" data-op-remove="1" title="移除操作">&times;</button></span>';
@@ -4174,7 +4198,6 @@
             showMessage('最多只能选择 ' + FOCUS_MAX + ' 个关注对象', 'info');
             return;
         }
-        item.inherited = false;
         state.focus.push(item);
         state.activeFocusKey = key;
         renderFocusBar();
@@ -4199,14 +4222,6 @@
     function clearOperation() {
         state.operation = null;
         renderOperationChip();
-    }
-
-    /** 发送后：本轮对象标记为「继承」（D7，下一轮默认沿用，可移除） */
-    function markFocusInherited() {
-        for (var i = 0; i < (state.focus || []).length; i++) {
-            state.focus[i].inherited = true;
-        }
-        renderFocusChips();
     }
 
     function snapshotFocus() {
@@ -4384,7 +4399,6 @@
                 showMessage('最多只能选择 ' + FOCUS_MAX + ' 个关注对象', 'info');
                 return;
             }
-            item.inherited = false;
             state.focus.push(item);
             state.activeFocusKey = key;
         }
@@ -4694,23 +4708,7 @@
         state.picker.browse = null;
         var panel = document.getElementById('suggestionPanel');
         if (panel) panel.style.display = 'flex';
-        ensureSkillsLoaded();
         renderPicker();
-    }
-
-    /** 技能数据源：/skills 只拉一次，供 / 菜单分组展示 */
-    var skillsLoading = false;
-    function ensureSkillsLoaded() {
-        if (state.allSkills && state.allSkills.length) return;
-        if (skillsLoading) return;
-        skillsLoading = true;
-        fetch(API_BASE + '/skills').then(function (r) { return r.json(); }).then(function (json) {
-            skillsLoading = false;
-            if (json && json.success && json.data) {
-                state.allSkills = json.data.skills || [];
-                if (state.picker.mode === 'operation') renderPicker();
-            }
-        }).catch(function () { skillsLoading = false; });
     }
 
     /** 选择器交互后把焦点交回输入框（否则 Esc/打字会被按钮抢走） */
@@ -4810,6 +4808,12 @@
           .catch(function (e) { console.warn('docsPost failed: ' + path, e); cb(null); });
     }
 
+    /**
+     * / 菜单数据源：**只列内置操作（模式）**。
+     * 技能不再进菜单（2026-09-18）：选中技能只是往提示词里加一句「使用技能：xxx」，
+     * 既不保证执行也没有参数，且技能清单本就写在 run_skill 工具描述里，由模型按需调用；
+     * 历史消息里已存的 skill:<id> 仍能正常回显（见 isSkillOperationId）。
+     */
     function buildPickerItems() {
         var q = (state.picker.query || '').toLowerCase().trim();
         var items = [];
@@ -4818,11 +4822,6 @@
             if (q && op.label.toLowerCase().indexOf(q) < 0 && op.id.indexOf(q) < 0
                     && op.desc.toLowerCase().indexOf(q) < 0) continue;
             items.push({ type: 'operation', group: '操作', id: op.id, label: op.label, desc: op.desc });
-        }
-        for (var j = 0; j < (state.allSkills || []).length; j++) {
-            var s = state.allSkills[j];
-            if (q && (s.id || '').toLowerCase().indexOf(q) < 0 && (s.name || '').toLowerCase().indexOf(q) < 0) continue;
-            items.push({ type: 'skill', group: '技能', id: s.id, label: s.name || s.id, desc: s.description || s.id });
         }
         return items;
     }
@@ -4894,17 +4893,10 @@
     function selectPickerItem(idx) {
         var it = (state.picker.items || [])[idx];
         if (!it) return;
-        if (it.type === 'operation') {
-            setOperation(it.id, it.label);
-            pickerInsertDone();
-            focusMessageInput();
-            return;
-        }
-        if (it.type === 'skill') {
-            setOperation('skill:' + it.id, '技能：' + it.label);
-            pickerInsertDone();
-            focusMessageInput();
-        }
+        // / 菜单现在只有内置操作（技能不再进菜单）
+        setOperation(it.id, it.label);
+        pickerInsertDone();
+        focusMessageInput();
     }
 
     function navigatePicker(dir) {
@@ -5566,6 +5558,7 @@
             state.currentSession = sid;
             state.sessionId = sid;
             state.messages = [];
+            // 已选 @ 对象 / 操作保留（2026-09-18 规则：只有用户点 × 才移除）
             renderSessions();
             renderMessages();
             loadAttachmentsForSession();   // P2：新会话无附件
