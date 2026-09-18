@@ -864,12 +864,13 @@
 
         .input-container {
             display: flex;
-            gap: 8px;
-            align-items: flex-end;
+            flex-direction: column;
+            align-items: stretch;   /* 覆盖主题样式里行布局时代的 flex-end，否则框内内容会右对齐 */
+            gap: 4px;
             background: #fff;
             border: 1.5px solid #ddd;
             border-radius: 14px;
-            padding: 8px 10px;
+            padding: 6px 10px 8px;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
 
@@ -878,15 +879,27 @@
             box-shadow: 0 0 0 3px rgba(0,154,97,0.1);
         }
 
+        /* composer：框内文本行 / 框内底部工具栏 / 框内 chips 区（布局参考学术伴 WritingComposer） */
+        .composer-input { display: flex; align-items: flex-end; }
+        .composer-bottom {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; padding-top: 4px;
+        }
+        .composer-tools { display: flex; align-items: center; gap: 6px; }
+        .composer-chips {
+            padding: 2px 2px 0;
+            margin-bottom: 2px;
+        }
+
         .input-container textarea {
             flex: 1;
-            padding: 8px 10px;
+            padding: 6px 2px;
             border: none;
             font-size: 15px;
             font-family: inherit;
             resize: none;
             outline: none;
-            min-height: 44px;
+            min-height: 40px;
             max-height: 200px;
             line-height: 1.5;
             background: transparent;
@@ -899,10 +912,10 @@
         
         .send-btn {
             flex-shrink: 0;
-            width: 44px;
-            height: 44px;
+            width: 36px;
+            height: 36px;
             padding: 0;
-            border-radius: 12px;
+            border-radius: 10px;
             border: none;
             background: linear-gradient(135deg, #009a61 0%, #00c47a 100%);
             color: white;
@@ -933,25 +946,19 @@
         }
 
         .send-btn svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        .upload-buttons {
-            display: flex;
-            gap: 4px;
-            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
         }
 
         .upload-btn {
-            width: 36px;
-            height: 36px;
+            width: 30px;
+            height: 30px;
             padding: 0;
-            border-radius: 10px;
+            border-radius: 8px;
             border: 1px solid transparent;
             background: transparent;
             color: #666;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
             transition: all 0.15s;
             display: flex;
@@ -1795,7 +1802,7 @@
         }
 
         /* P2：附件 chips（本轮对话的输入，默认临时，不入仓库）*/
-        .attach-bar { padding: 0 2px 6px; }
+        .attach-bar { padding: 0 2px 0; }
         .attach-chips { display: flex; flex-wrap: wrap; gap: 6px; }
         .attach-chip {
             display: inline-flex; align-items: center; gap: 5px;
@@ -1830,7 +1837,7 @@
         body.dark-theme .attach-chip .ac-import { background: #332b1c; border-color: #4a3f28; color: #d8bb76; }
 
         /* P1：关注对象（@）/ 操作（/）chips */
-        .focus-bar { padding: 0 2px 8px; }
+        .focus-bar { padding: 0 2px 0; }
         .focus-chips { display: flex; flex-wrap: wrap; gap: 6px; }
         .focus-chip {
             display: inline-flex; align-items: center; gap: 4px;
@@ -2095,34 +2102,42 @@
                 </div>
                 
                 <div class="input-area">
-                    <div class="attach-bar" id="attachBar" style="display:none;">
-                        <div class="attach-chips" id="attachChips"></div>
-                    </div>
-                    <div class="focus-bar" id="focusBar" style="display:none;">
-                        <div class="focus-chips" id="focusChips"></div>
-                        <div class="focus-note-editor" id="focusNoteEditor" style="display:none;">
-                            <textarea id="focusNoteInput" rows="2" maxlength="500" placeholder="说明这个对象是什么、怎么用（可选）"></textarea>
-                            <div class="focus-note-foot"><span id="focusNoteTip">0 / 500</span></div>
-                        </div>
-                    </div>
+                    <!-- composer：整个输入框是一个带边框的容器（布局参考学术伴 WritingComposer）
+                         框内自上而下：已选 chips（附件 / 关注对象）→ 文本行 → 框内底部工具栏（@ / … 发送） -->
                     <div class="input-container" style="position: relative;">
                         <div class="suggestion-panel" id="suggestionPanel" style="display:none;"></div>
                         <div class="autocomplete-suggestions" id="autocompleteSuggestions" style="display: none;"></div>
-                        <textarea id="messageInput" placeholder="输入消息、问题或命令；输入 @ 选择关注对象，输入 / 选择操作" rows="1"></textarea>
-                        <div class="upload-buttons">
-                            <button class="upload-btn" id="uploadFileBtn" title="上传文件（可多选）">📎</button>
+                        <div class="attach-bar composer-chips" id="attachBar" style="display:none;">
+                            <div class="attach-chips" id="attachChips"></div>
                         </div>
-                        <button class="send-btn" id="sendBtn" title="发送 (Enter)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                        </button>
-                        <button class="send-btn" id="stopBtn" style="display:none; background:linear-gradient(135deg, #d32f2f 0%, #f44336 100%);" title="停止 (Esc)">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
-                        </button>
+                        <div class="focus-bar composer-chips" id="focusBar" style="display:none;">
+                            <div class="focus-chips" id="focusChips"></div>
+                            <div class="focus-note-editor" id="focusNoteEditor" style="display:none;">
+                                <textarea id="focusNoteInput" rows="2" maxlength="500" placeholder="说明这个对象是什么、怎么用（可选）"></textarea>
+                                <div class="focus-note-foot"><span id="focusNoteTip">0 / 500</span></div>
+                            </div>
+                        </div>
+                        <div class="composer-input">
+                            <textarea id="messageInput" placeholder="输入消息、问题或命令；输入 @ 选择关注对象，输入 / 选择操作" rows="1"></textarea>
+                        </div>
+                        <div class="composer-bottom">
+                            <div class="composer-tools">
+                                <button class="toolbar-btn" id="focusBtn" title="关注对象 (@)">@</button>
+                                <button class="toolbar-btn" id="opBtn" title="操作 (/)">/</button>
+                            </div>
+                            <div class="composer-tools">
+                                <button class="upload-btn" id="uploadFileBtn" title="上传文件（可多选）">📎</button>
+                                <button class="send-btn" id="sendBtn" title="发送 (Enter)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                </button>
+                                <button class="send-btn" id="stopBtn" style="display:none; background:linear-gradient(135deg, #d32f2f 0%, #f44336 100%);" title="停止 (Esc)">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="input-bottom-bar">
                         <div class="input-tools">
-                            <button class="toolbar-btn" id="focusBtn" title="关注对象 (@)">@</button>
-                            <button class="toolbar-btn" id="opBtn" title="操作 (/)">/</button>
                             <button class="toolbar-btn" id="helpBtn" title="命令帮助 (Ctrl+H)">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             </button>

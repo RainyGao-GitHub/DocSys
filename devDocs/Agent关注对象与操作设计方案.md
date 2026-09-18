@@ -440,8 +440,11 @@ dev Tomcat 一直"启动成功却看不到改动"的根因：**Eclipse WTP 的 T
 - 发送时 `payload.attachments=[{id,name}]`（只在有附件时带）
 - 会话切换/刷新：`loadAttachmentsForSession()`（`GET /agent/attachments`）恢复 chips
 - 入库：复用 `#focusDialog` 目录树，新增 `mode:'import'`（标题"导入到仓库：<文件名>"、隐藏搜索/清空、**只允许选目录**（文件行置灰）、底部按钮变「导入到此处」）→ `POST /agent/attachment/import`
-- **提示口径**（2026-09-18 用户要求）：上传**成功不弹提示**（chip 出现即反馈），只有失败（HTTP/网络错误）才提示；入库/替换仍提示（显式动作 + 要说明是新增还是替换同名文件）；**同名冲突弹窗里选“取消”不再额外提示**（关掉弹窗即可，chip 上本就显示未入库）
-- **原生弹窗全部替换为页面内弹窗**（2026-09-18 用户要求："alert/confirm 风格与功能无法定制"）：
+- **提示口径**（2026-09-18 用户要求）：上传**成功不弹提示**（chip 出现即反馈），只有失败（HTTP/网络错误）才提示；入库/替换仍提示（显式动作 + 要说明是新增还是替换同名文件）；**同名冲突弹窗里选“取消”不再额外提示**（关掉弹窗即可，chip 上本就显示未入库）- **输入区改「composer」布局**（2026-09-18 用户要求，参考学术伴 `D:\Dev\ScholarOS` 的 `WritingComposer.tsx` + `thesisWriting.css`）：
+  - 参考实现的形态：**整个输入框是一个带边框的容器**，框内自上而下 = 已选 chip 行 → textarea → 框内底部工具行（左：`@` / `/` + 已选操作队列；右：发送）；选择器下拉出现在框外
+  - DocSys 落地：`.input-container` 改 `flex-direction: column`，内部新增 `.composer-input`（文本行）/`.composer-bottom`（框内工具行，`justify-content: space-between`）/`.composer-tools`；`#attachBar`、`#focusBar`（关注对象 chips + 用途编辑器）从框外移到**框内顶部**（加 `.composer-chips` 类）；`#focusBtn`/`#opBtn` 从底部工具栏移到**框内左下**；`📎`（`#uploadFileBtn`）与发送/停止移到**框内右下**；帮助/技能/设置/模型仍留在框外 `.input-bottom-bar`；发送按钮 44→36px、上传 36→30px
+  - ⚠️ **坑**：`css/styles.css`（`<link>`，先加载）里也有一份 `.input-container`（行布局时代的 `align-items: flex-end`）。行内 `<style>` 改列布局时必须显式写 `align-items: stretch`，否则继承到 `flex-end` → 框内所有内容被挤到右边（实测现象：chips 与占位文字都跑到框右侧）
+  - 选择器面板（`.suggestion-panel`）仍是 `.input-container` 的绝对定位子元素（`bottom:100%`）→ 现在位于整个框（含 chips）上方 ✓ 无需改动- **原生弹窗全部替换为页面内弹窗**（2026-09-18 用户要求："alert/confirm 风格与功能无法定制"）：
   - 新增 `uiDialog({title, message, okText, cancelText, danger, alertOnly})` → `Promise<boolean>` 与 `uiAlert(message, title)`，视觉沿用页内 `.confirm-*`（圆角卡片 + 标题 + 正文 + 右下按钮，深色主题已适配；危险动作用红色 `.confirm-danger`）
   - 已替换：入库同名冲突确认（取消 / 替换）、删除会话确认（取消 / 删除）、性能报告 `alert`
   - 键盘：`Esc`=取消、`Enter`=确定；用 **capture 阶段 + stopPropagation** 实现，避免回车穿透到页面的"Enter 发送消息"
