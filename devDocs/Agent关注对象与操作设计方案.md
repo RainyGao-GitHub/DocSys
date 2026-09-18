@@ -444,7 +444,10 @@ dev Tomcat 一直"启动成功却看不到改动"的根因：**Eclipse WTP 的 T
   - 参考实现的形态：**整个输入框是一个带边框的容器**，框内自上而下 = 已选 chip 行 → textarea → 框内底部工具行（左：`@` / `/` + 已选操作队列；右：发送）；选择器下拉出现在框外
   - DocSys 落地：`.input-container` 改 `flex-direction: column`，内部新增 `.composer-input`（文本行）/`.composer-bottom`（框内工具行，`justify-content: space-between`）/`.composer-tools`；`#attachBar`、`#focusBar`（关注对象 chips + 用途编辑器）从框外移到**框内顶部**（加 `.composer-chips` 类）；`#focusBtn`/`#opBtn` 从底部工具栏移到**框内左下**；`📎`（`#uploadFileBtn`）与发送/停止移到**框内右下**；帮助/技能/设置/模型仍留在框外 `.input-bottom-bar`；发送按钮 44→36px、上传 36→30px
   - ⚠️ **坑**：`css/styles.css`（`<link>`，先加载）里也有一份 `.input-container`（行布局时代的 `align-items: flex-end`）。行内 `<style>` 改列布局时必须显式写 `align-items: stretch`，否则继承到 `flex-end` → 框内所有内容被挤到右边（实测现象：chips 与占位文字都跑到框右侧）
-  - 选择器面板（`.suggestion-panel`）仍是 `.input-container` 的绝对定位子元素（`bottom:100%`）→ 现在位于整个框（含 chips）上方 ✓ 无需改动- **原生弹窗全部替换为页面内弹窗**（2026-09-18 用户要求："alert/confirm 风格与功能无法定制"）：
+  - 选择器面板（`.suggestion-panel`）仍是 `.input-container` 的绝对定位子元素（`bottom:100%`）→ 在**整个框（含 chips）上方**弹出 ✓ 无需改动
+  - **已选操作 chip 落在消息框下面、`/` 按钮之后**（2026-09-18 用户澄清："选择之后的操作 放在消息框下面 「/」的后面"）：`@` 关注对象 chips 仍在**框顶 chips 行**（`#focusBar`/`#focusChips`）；`/` 选中的操作（或技能）chip 渲染到**框内底部工具行的 `#opChipSlot`**（紧跟 `/` 按钮，对应学术伴底部工具行里的 `<OperationQueue>`）。实现：拆出 `renderOperationChip()`（`renderFocusChips()` 不再渲染操作 chip，`#focusBar` 显隐只看 `state.focus`）；`setOperation`/`clearOperation` 只刷槽位；chips 点击委托抽成 `onComposerChipClick`，同时挂在 `#focusChips` 与 `#opChipSlot`；样式 `.op-chip-slot`（flex + `min-width:0` + `overflow:hidden`，chip 内边距收紧、label 上限 150px）
+  - ⚠️ **一次误读（记录以免重犯）**：用户先前那句"「/」选择的快捷操作放在消息框下面"曾被理解成"**选择器面板**要下移"，改了面板 DOM/CSS → 用户回退。正解是**面板位置不动**（仍在框上方弹出），只调**选中之后的操作 chip** 的位置
+- **原生弹窗全部替换为页面内弹窗**（2026-09-18 用户要求："alert/confirm 风格与功能无法定制"）：
   - 新增 `uiDialog({title, message, okText, cancelText, danger, alertOnly})` → `Promise<boolean>` 与 `uiAlert(message, title)`，视觉沿用页内 `.confirm-*`（圆角卡片 + 标题 + 正文 + 右下按钮，深色主题已适配；危险动作用红色 `.confirm-danger`）
   - 已替换：入库同名冲突确认（取消 / 替换）、删除会话确认（取消 / 删除）、性能报告 `alert`
   - 键盘：`Esc`=取消、`Enter`=确定；用 **capture 阶段 + stopPropagation** 实现，避免回车穿透到页面的"Enter 发送消息"

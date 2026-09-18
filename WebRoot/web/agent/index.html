@@ -1860,6 +1860,10 @@
         .focus-chip .chip-badge { font-size: 10px; color: #999; }
         .focus-chip .chip-x { border: none; background: none; color: inherit; cursor: pointer; font-size: 13px; line-height: 1; padding: 0 2px; }
         .focus-chip .chip-x:hover { color: #d33; }
+        /* 已选操作 chip 的位置：消息框下面、/ 按钮之后（参考学术伴 OperationQueue） */
+        .op-chip-slot { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; }
+        .op-chip-slot .focus-chip { padding: 2px 4px 2px 7px; }
+        .op-chip-slot .focus-chip .chip-label { max-width: 150px; }
         .focus-note-editor { margin-top: 6px; border: 1px solid #ddd; border-radius: 6px; padding: 8px; background: #fafafa; }
         .focus-note-editor textarea { width: 100%; resize: vertical; border: 1px solid #e0e0e0; border-radius: 4px; padding: 6px; font-size: 12px; font-family: inherit; box-sizing: border-box; }
         .focus-note-foot { text-align: right; margin-top: 3px; font-size: 11px; color: #999; }
@@ -2124,6 +2128,8 @@
                             <div class="composer-tools">
                                 <button class="toolbar-btn" id="focusBtn" title="关注对象 (@)">@</button>
                                 <button class="toolbar-btn" id="opBtn" title="操作 (/)">/</button>
+                                <!-- 已选操作 chip：放在消息框下面、/ 按钮之后 -->
+                                <div class="op-chip-slot" id="opChipSlot"></div>
                             </div>
                             <div class="composer-tools">
                                 <button class="upload-btn" id="uploadFileBtn" title="上传文件（可多选）">📎</button>
@@ -4066,19 +4072,13 @@
     }
 
     function renderFocusChips() {
+        renderOperationChip();
         var bar = document.getElementById('focusBar');
         var wrap = document.getElementById('focusChips');
         if (!bar || !wrap) return;
         var hasFocus = !!(state.focus && state.focus.length);
-        var hasOp = !!state.operation;
-        bar.style.display = (hasFocus || hasOp) ? 'block' : 'none';
+        bar.style.display = hasFocus ? 'block' : 'none';
         var html = '';
-        if (hasOp) {
-            html += '<span class="focus-chip op" title="本轮操作（点击 × 移除）">'
-                 + focusKindIconHtml(isSkillOperationId(state.operation.id) ? 'skill' : 'operation')
-                 + '<span class="chip-label">' + escapeHtml(state.operation.label || state.operation.id) + '</span>'
-                 + '<button class="chip-x" data-op-remove="1" title="移除操作">&times;</button></span>';
-        }
         for (var i = 0; i < (state.focus || []).length; i++) {
             var it = state.focus[i];
             var note = getFocusNote(it);
@@ -4093,6 +4093,17 @@
                  + '</span>';
         }
         wrap.innerHTML = html;
+    }
+
+    /** 已选操作 chip：渲染到消息框下面、/ 按钮之后的槽位（不再占用框顶 chips 行） */
+    function renderOperationChip() {
+        var slot = document.getElementById('opChipSlot');
+        if (!slot) return;
+        if (!state.operation) { slot.innerHTML = ''; return; }
+        slot.innerHTML = '<span class="focus-chip op" title="本轮操作（点击 × 移除）">'
+             + focusKindIconHtml(isSkillOperationId(state.operation.id) ? 'skill' : 'operation')
+             + '<span class="chip-label">' + escapeHtml(state.operation.label || state.operation.id) + '</span>'
+             + '<button class="chip-x" data-op-remove="1" title="移除操作">&times;</button></span>';
     }
 
     function activeFocusItem() {
@@ -4182,12 +4193,12 @@
 
     function setOperation(id, label) {
         state.operation = { id: id, label: label || id };
-        renderFocusChips();
+        renderOperationChip();
     }
 
     function clearOperation() {
         state.operation = null;
-        renderFocusChips();
+        renderOperationChip();
     }
 
     /** 发送后：本轮对象标记为「继承」（D7，下一轮默认沿用，可移除） */
@@ -5007,7 +5018,8 @@
     document.getElementById('focusDialogCancel').addEventListener('click', cancelFocusDialog);
     document.getElementById('focusDialogClose').addEventListener('click', cancelFocusDialog);
     document.getElementById('focusDialogClear').addEventListener('click', clearFocusDialog);
-    document.getElementById('focusChips').addEventListener('click', function(e) {
+    /** chips 点击（框顶关注对象 chips 行 + / 后面的操作 chip 槽共用一套委托） */
+    function onComposerChipClick(e) {
         var t = e.target;
         var rem = t && t.getAttribute ? t.getAttribute('data-focus-remove') : null;
         if (rem !== null && rem !== undefined) {
@@ -5020,7 +5032,9 @@
         }
         var chip = (t && t.closest) ? t.closest('[data-focus-idx]') : null;
         if (chip) openFocusNote(parseInt(chip.getAttribute('data-focus-idx'), 10));
-    });
+    }
+    document.getElementById('focusChips').addEventListener('click', onComposerChipClick);
+    document.getElementById('opChipSlot').addEventListener('click', onComposerChipClick);
     // P2：附件 chips（入库 / 移除）
     document.getElementById('attachChips').addEventListener('click', function(e) {
         var t = e.target;
