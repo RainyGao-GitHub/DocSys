@@ -2647,6 +2647,7 @@ public class AgentController {
             data.put("size", item.size);
             data.put("mime", item.mime);
             data.put("kind", item.kind);
+            data.put("imported", false);   // 刚上传，尚未入库
             log.info("attachment uploaded: user={}, session={}, name={}, size={}",
                     userId, attachSessionKey(sessionId), name, item.size);
             return AgentResponse.ok("附件已上传（临时）").withData(data);
@@ -2676,16 +2677,52 @@ public class AgentController {
             one.put("size", it.size);
             one.put("mime", it.mime);
             one.put("kind", it.kind);
+            // 已入库（每附件一次）→ 前端 chip 显示「✓ 已入库」且不再提供入库按钮
+            one.put("imported", it.imported);
             out.add(one);
         }
         return AgentResponse.ok(out);
     }
 
-    /** 删除会话中的一个临时附件 DELETE /agent/attachment?sessionId=&id= */
-    @DeleteMapping("/attachment")
-    public AgentResponse deleteAttachment(@RequestParam("id") String id,
-                                          @RequestParam(value = "sessionId", required = false) String sessionId,
+    /**
+     * 删除会话中的一个临时附件。
+     *
+     * <p>POST /agent/attachment/delete，body: {@code {sessionId, id}} —— **中文文件名不能走 query**：
+     * Tomcat 7 默认 {@code URIEncoding=ISO-8859-1}，会把 URL 里的 UTF-8 百分号编码解成乱码，
+     * 结果 resolve 不到文件（返回“附件不存在”）而前端看起来像“删了但刷新又回来”。
+     */
+    @PostMapping("/attachment/delete")
+    public AgentResponse deleteAttachment(@RequestBody AttachmentDeleteRequest body,
                                           HttpServletRequest servletRequest) {
+        if (body == null) {
+            return AgentResponse.error("参数错误");
+        }
+        return deleteAttachmentInternal(body.getSessionId(), body.getId(), servletRequest);
+    }
+
+    /** 兼容旧调用：DELETE /agent/attachment?sessionId=&id=（query 传中文时按 Tomcat 默认编码补正） */
+    @DeleteMapping("/attachment")
+    public AgentResponse deleteAttachmentByQuery(
+            @RequestParam("id") String id,
+            @RequestParam(value = "sessionId", required = false) String sessionId,
+            HttpServletRequest servletRequest) {
+        return deleteAttachmentInternal(sessionId, fixQueryEncoding(id), servletRequest);
+    }
+
+    /** query 参数编码补正（与项目其他 DocSys 端点同一做法：ISO-8859-1 字串还原为 UTF-8） */
+    private static String fixQueryEncoding(String raw) {
+        if (raw == null || raw.isEmpty()) {
+            return raw;
+        }
+        try {
+            return new String(raw.getBytes("ISO8859-1"), "UTF-8");
+        } catch (Exception e) {
+            return raw;
+        }
+    }
+
+    private AgentResponse deleteAttachmentInternal(String sessionId, String id,
+                                                   HttpServletRequest servletRequest) {
         User user = currentUser(servletRequest);
         if (user == null) {
             return AgentResponse.error("NOT_LOGGED_IN");
@@ -2695,10 +2732,25 @@ public class AgentController {
                 userId, attachSessionKey(sessionId), false);
         java.io.File f = com.DocSystem.agent.attachment.AgentAttachmentSupport.resolve(dir, id);
         if (f == null) {
+            log.warn("attachment delete: not found, user={}, session={}, id={}", userId, sessionId, id);
             return AgentResponse.error("附件不存在");
         }
         boolean ok = f.delete();
+        if (ok) {
+            // 附件被移除 → 其「已入库」标记也清掉；否则用户重新上传同名文件时会被误判为“已入库”
+            com.DocSystem.agent.attachment.AgentAttachmentSupport.unmarkImported(dir, id);
+        }
         return ok ? AgentResponse.ok("附件已删除") : AgentResponse.error("附件删除失败");
+    }
+
+    /** 删除附件请求体（中文文件名必须走 body，见 deleteAttachment 注释） */
+    public static class AttachmentDeleteRequest {
+        private String sessionId;
+        private String id;
+        public String getSessionId() { return sessionId; }
+        public void setSessionId(String sessionId) { this.sessionId = sessionId; }
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
     }
 
     /** 附件入库请求体（用户显式选目标仓库与目录） */
@@ -2709,6 +2761,8 @@ public class AgentController {
         private Long pid;
         private String path;
         private String name;
+        /** 是否强制替换目标目录里的同名文件（默认 false：有同名文件则回 DOC_EXISTS，由前端弹窗询问） */
+        private boolean force;
         public String getSessionId() { return sessionId; }
         public void setSessionId(String sessionId) { this.sessionId = sessionId; }
         public String getId() { return id; }
@@ -2721,6 +2775,43 @@ public class AgentController {
         public void setPath(String path) { this.path = path; }
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
+        public boolean isForce() { return force; }
+        public void setForce(boolean force) { this.force = force; }
+    }
+
+    /**
+     * 目标目录里是否已有同名条目。
+     *
+     * <p>DocSys 的上传遇到同名文件是“直接覆盖 + 生成新版本”，会改掉已有内容 —— 默认必须先问用户，
+     * 而上传后再判别已经太晚（内容已被改）。所以入库前先用子目录列表探测一次。
+     *
+     * @return "file"（同名文件）/ "dir"（同名目录）/ null（无冲突或列表拿不到，按无冲突处理）
+     */
+    private String findNameConflict(DocSysClient client, Integer reposId, Long folderDocId, String fileName) {
+        try {
+            // 目标目录用它的 docId 定位；根目录（docId 为 null/0）不传 → 服务端返回仓库根目录
+            Long docId = (folderDocId != null && folderDocId > 0) ? folderDocId : null;
+            Map<String, Object> list = client.getDocList(reposId, docId, null, null);
+            Object data = list != null ? list.get("data") : null;
+            if (!(data instanceof List)) {
+                return null;
+            }
+            for (Object o : (List<?>) data) {
+                if (!(o instanceof Map)) {
+                    continue;
+                }
+                Map<?, ?> d = (Map<?, ?>) o;
+                if (!fileName.equals(String.valueOf(d.get("name")))) {
+                    continue;
+                }
+                Object t = d.get("type");
+                return (t instanceof Number && ((Number) t).intValue() == 2) ? "dir" : "file";
+            }
+            return null;
+        } catch (Exception e) {
+            log.warn("conflict check failed (treated as no conflict): {}", e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -2744,6 +2835,10 @@ public class AgentController {
         if (src == null) {
             return AgentResponse.error("附件不存在或已过期，请重新上传");
         }
+        // 一个附件只允许入库一次：已标记过直接拒绝（前端也会把入库按钮换成「已入库」，这里只是兜底）
+        if (com.DocSystem.agent.attachment.AgentAttachmentSupport.isImported(dir, body.getId())) {
+            return AgentResponse.error("该附件已入库，不能重复入库（如需重新入库，请先移除附件再重新上传）");
+        }
         try {
             String name = com.DocSystem.agent.attachment.AgentAttachmentSupport.sanitizeName(
                     body.getName() != null ? body.getName() : src.getName());
@@ -2752,6 +2847,16 @@ public class AgentController {
             }
             byte[] data = Files.readAllBytes(src.toPath());
             DocSysClient client = getSessionClient(servletRequest.getSession().getId());
+            // 同名冲突：默认不覆盖，交给用户确认（前端拿 DOC_EXISTS 弹“是否替换”，确认后带 force 重发）
+            if (!body.isForce()) {
+                String conflict = findNameConflict(client, body.getReposId(), body.getPid(), name);
+                if ("dir".equals(conflict)) {
+                    return AgentResponse.error("目标目录已存在同名文件夹，无法入库：" + name, "DOC_EXISTS");
+                }
+                if ("file".equals(conflict)) {
+                    return AgentResponse.error("目标目录已存在同名文件，请确认是否替换：" + name, "DOC_EXISTS");
+                }
+            }
             Map<String, Object> result = client.uploadFile(body.getReposId(),
                     body.getPid() != null ? body.getPid() : 0L,
                     body.getPath() != null ? body.getPath() : "/",
@@ -2763,9 +2868,18 @@ public class AgentController {
                         ? String.valueOf(result.get("msgInfo")) : "导入失败";
                 return AgentResponse.error(msg);
             }
-            log.info("attachment imported: user={}, name={}, repo={}, path={}",
-                    userId, name, body.getReposId(), body.getPath());
-            return AgentResponse.ok("已导入仓库: " + name).withData(result);
+            // DocSys 对同名文件的写入走 UPDATE：返回 status=ok 但 data 里没有 docId（不设 data）；
+            // 新增文件才带 docId。入库文案据此如实说明是“新增”还是“替换了同名文件”。
+            Object inner = result.get("data");
+            boolean added = inner instanceof Map && ((Map<?, ?>) inner).get("docId") != null;
+            // 入库成功 → 打上「已入库」标记，chip 从此只显示状态、不再提供入库
+            com.DocSystem.agent.attachment.AgentAttachmentSupport.markImported(dir, body.getId());
+            log.info("attachment imported: user={}, name={}, repo={}, path={}, added={}, force={}",
+                    userId, name, body.getReposId(), body.getPath(), added, body.isForce());
+            if (!added && body.isForce()) {
+                return AgentResponse.ok("已替换入库：" + name + "（原同名文件已生成新版本）");
+            }
+            return AgentResponse.ok("已入库：" + name);
         } catch (Exception e) {
             log.warn("attachment import failed: {}", e.getMessage());
             return AgentResponse.error("导入失败: " + e.getMessage());

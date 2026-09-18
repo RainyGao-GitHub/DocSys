@@ -2,13 +2,18 @@ package com.DocSystem.agent.attachment;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -140,6 +145,10 @@ public final class AgentAttachmentSupport {
             sb.append(c);
         }
         String out = sb.toString().trim();
+        // 剥掉前导点：避免隐藏文件（如 .env）上传后 listItems 看不到、又防止与已入库标记旁车文件（._imported）撞名
+        while (out.startsWith(".")) {
+            out = out.substring(1).trim();
+        }
         if (out.isEmpty() || ".".equals(out) || "..".equals(out)) {
             return null;
         }
@@ -222,6 +231,8 @@ public final class AgentAttachmentSupport {
         public long size;
         public String mime;
         public String kind;
+        /** 是否已入库（每附件只能入库一次） */
+        public boolean imported;
 
         public Item() {
         }
@@ -265,8 +276,11 @@ public final class AgentAttachmentSupport {
                 return a.getName().compareToIgnoreCase(b.getName());
             }
         });
+        Set<String> imported = readImported(sessionDir);
         for (File f : sorted) {
-            out.add(new Item(f.getName(), f.getName(), f.length()));
+            Item it = new Item(f.getName(), f.getName(), f.length());
+            it.imported = imported.contains(f.getName());
+            out.add(it);
         }
         return out;
     }
@@ -399,6 +413,122 @@ public final class AgentAttachmentSupport {
             return "文档";
         }
         return "文件";
+    }
+
+    // ==================== 已入库标记（旁车文件） ====================
+
+    /**
+     * 会话内「已入库」标记文件名（一个附件只能入库一次）。点号开头 → {@link #listItems(File)} 不列出、
+     * {@link #resolve(File, String)} 也取不到（sanitizeName 会剥掉前导点），因此它不会被当成附件展示/读取。
+     */
+    public static final String IMPORTED_FILE = "._imported";
+
+    /** 已入库的附件 id 集合（每行一个 id；文件缺失/损坏返回空集，不抛异常） */
+    public static Set<String> readImported(File sessionDir) {
+        Set<String> out = new LinkedHashSet<String>();
+        if (sessionDir == null) {
+            return out;
+        }
+        File f = new File(sessionDir, IMPORTED_FILE);
+        if (!f.isFile()) {
+            return out;
+        }
+        String text = readTextFile(f);
+        if (text == null) {
+            return out;
+        }
+        for (String line : text.split("\\r?\\n")) {
+            String id = line.trim();
+            if (!id.isEmpty()) {
+                out.add(id);
+            }
+        }
+        return out;
+    }
+
+    /** 该附件是否已入库 */
+    public static boolean isImported(File sessionDir, String id) {
+        String safeId = sanitizeName(id);
+        return safeId != null && readImported(sessionDir).contains(safeId);
+    }
+
+    /**
+     * 标记为已入库（best-effort，幂等）：已标记过返回 false；写失败也返回 false，不影响入库本身。
+     */
+    public static boolean markImported(File sessionDir, String id) {
+        if (sessionDir == null) {
+            return false;
+        }
+        String safeId = sanitizeName(id);
+        if (safeId == null) {
+            return false;
+        }
+        Set<String> all = readImported(sessionDir);
+        if (!all.add(safeId)) {
+            return false;
+        }
+        return writeImported(sessionDir, all);
+    }
+
+    /**
+     * 取消「已入库」标记（附件被移除时调用；幂等）：否则同名文件重新上传会被误判为已入库。
+     */
+    public static boolean unmarkImported(File sessionDir, String id) {
+        if (sessionDir == null) {
+            return false;
+        }
+        String safeId = sanitizeName(id);
+        if (safeId == null) {
+            return false;
+        }
+        Set<String> all = readImported(sessionDir);
+        if (!all.remove(safeId)) {
+            return false;
+        }
+        return writeImported(sessionDir, all);
+    }
+
+    /** 写出标记文件（每行一个 id；空集合则删除文件） */
+    private static boolean writeImported(File sessionDir, Set<String> ids) {
+        File f = new File(sessionDir, IMPORTED_FILE);
+        try {
+            if (ids.isEmpty()) {
+                return !f.exists() || f.delete();
+            }
+            StringBuilder sb = new StringBuilder();
+            for (String one : ids) {
+                sb.append(one).append('\n');
+            }
+            Writer w = new OutputStreamWriter(new FileOutputStream(f), Charset.forName("UTF-8"));
+            try {
+                w.write(sb.toString());
+            } finally {
+                w.close();
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** 读整个文本文件（UTF-8）；失败返回 null */
+    private static String readTextFile(File f) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            Reader r = new InputStreamReader(new FileInputStream(f), Charset.forName("UTF-8"));
+            try {
+                char[] buf = new char[4096];
+                int n;
+                while ((n = r.read(buf)) > 0) {
+                    sb.append(buf, 0, n);
+                }
+            } finally {
+                r.close();
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // ==================== 清理 ====================

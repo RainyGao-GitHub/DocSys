@@ -428,18 +428,24 @@ dev Tomcat 一直"启动成功却看不到改动"的根因：**Eclipse WTP 的 T
 | --- | --- |
 | `agent/attachment/AgentAttachmentSupport.java`（新） | 纯函数：`sessionDir/safeSegment/sanitizeName/extensionOf/mimeOf/kindOf/listItems/resolve/readForTool/renderLines/sweepExpired/deleteSessionDir`；常量 `MAX_FILE_BYTES/MAX_ATTACHMENTS/MAX_READ_CHARS/MAX_READ_BYTES/RETENTION_DAYS` |
 | `agent/attachment/TestAgentAttachmentSupport.java`（新） | 57 项护栏（安全化/穿越/读写策略/renderLines/sweep） |
-| `AgentController` | `POST /agent/attachment`（multipart+sessionId，落临时目录）、`GET /agent/attachments?sessionId=`、`DELETE /agent/attachment?id=&sessionId=`、`POST /agent/attachment/import`（`AttachmentImportRequest{sessionId,id,reposId,pid,path,name}` → `DocSysClient.uploadFile` 写入仓库）；`ExecuteRequest.attachments`；`verifyAttachments()`（只认会话目录里真实存在的 id，剔除后发 notice）；`renderAttachmentLines()` |
+| `AgentController` | `POST /agent/attachment`（multipart+sessionId，落临时目录）、`GET /agent/attachments?sessionId=`、**`POST /agent/attachment/delete`（body: `{sessionId,id}`；旧 `DELETE /agent/attachment?id=&sessionId=` 保留兼容）**、`POST /agent/attachment/import`（`AttachmentImportRequest{sessionId,id,reposId,pid,path,name,force}` → `DocSysClient.uploadFile` 写入仓库）；`ExecuteRequest.attachments`；`verifyAttachments()`（只认会话目录里真实存在的 id，剔除后发 notice）；`renderAttachmentLines()` |
 | `agent/focus/AgentFocusSupport` | `buildUserMessage(userText, focus, operation, notice, attachmentLines)`：注入块顺序为 关注对象 → **【本轮附件】** → 操作 → 约束（含"附件不在仓库、需用 attachment 工具读取、不得臆造"）→ 提示 → 用户文本；`hasInjectedBlock/stripInjectedBlock` 同步识别附件段 |
 | `agent/tool/DocSysToolFactory` | 新工具 `attachment(action=list|read, name=)`；`list` 返回编号清单，`read` 文本返回内容（带元信息与截断说明），图片/二进制只返回元信息 |
 | `agent/orchestrator/MainAgent` | `buildToolLoop` 注册 `attachment` 工具（目录按**对话会话 id** 捕获，见 14.6-①）；`TestAttachmentTool` 14 项护栏 |
 
 ### 14.4 前端实现（`WebRoot/web/agent/index.html`）
 
-- 输入区上方新增**附件栏** `#attachBar/#attachChips`；chip = 文件类型图标 + 名称 + 大小 + 「入库」+ 「×」（未完成的上传显示"上传中 N%"）
+- 输入区上方新增**附件栏** `#attachBar/#attachChips`；chip = 文件类型图标 + 名称 + 「入库」/「✓ 已入库」+ 「×」（**不显示文件大小**，2026-09-18 用户要求去掉；上传中显示"上传中 N%"）
 - `uploadAttachment(file)`：先确保有会话（无会话先 `POST /agent/sessions` 建会话，保证 sessionId 与附件目录一致）→ XHR `POST /agent/attachment`（带进度）→ 追加 chip
 - 发送时 `payload.attachments=[{id,name}]`（只在有附件时带）
 - 会话切换/刷新：`loadAttachmentsForSession()`（`GET /agent/attachments`）恢复 chips
 - 入库：复用 `#focusDialog` 目录树，新增 `mode:'import'`（标题"导入到仓库：<文件名>"、隐藏搜索/清空、**只允许选目录**（文件行置灰）、底部按钮变「导入到此处」）→ `POST /agent/attachment/import`
+- **提示口径**（2026-09-18 用户要求）：上传**成功不弹提示**（chip 出现即反馈），只有失败（HTTP/网络错误）才提示；入库/替换仍提示（显式动作 + 要说明是新增还是替换同名文件）；**同名冲突弹窗里选“取消”不再额外提示**（关掉弹窗即可，chip 上本就显示未入库）
+- **原生弹窗全部替换为页面内弹窗**（2026-09-18 用户要求："alert/confirm 风格与功能无法定制"）：
+  - 新增 `uiDialog({title, message, okText, cancelText, danger, alertOnly})` → `Promise<boolean>` 与 `uiAlert(message, title)`，视觉沿用页内 `.confirm-*`（圆角卡片 + 标题 + 正文 + 右下按钮，深色主题已适配；危险动作用红色 `.confirm-danger`）
+  - 已替换：入库同名冲突确认（取消 / 替换）、删除会话确认（取消 / 删除）、性能报告 `alert`
+  - 键盘：`Esc`=取消、`Enter`=确定；用 **capture 阶段 + stopPropagation** 实现，避免回车穿透到页面的"Enter 发送消息"
+  - 遮罩点击不关闭（防误触）；打开后焦点落在主按钮上
 - **删除**旧链路：`uploadFile/uploadMultipleFiles/discoverReposId/uploadWithProgress/handleRepoNotFoundUpload/pendingUploads*/showRepoCreatePrompt/retryPendingUploads/上传进度条辅助/relogin 的"创建仓库才能上传"分支`（约 325 行），以及此前已删的「上传目录」
 
 ### 14.5 实测（dev Tomcat 8100，2026-09-17）
@@ -457,7 +463,6 @@ dev Tomcat 一直"启动成功却看不到改动"的根因：**Eclipse WTP 的 T
 （测试文件落在 `office/test/tmp/attachmentE2E/`；测试导入到 `vid=1` 根目录的 hello.txt 已用 `Doc/deleteDoc.do` 清理。）
 
 ### 14.6 实测中发现并修掉的问题
-
 ① **附件工具看不到刚上传的附件**（模型报"本轮没有上传附件"）
 根因：**写入方与读取方用了不同的会话键**——上传端点按「对话会话 id」（`payload.sessionId`，如 `1d95a3d1-…`）落盘，而 `MainAgent.buildToolLoop` 里用的是 `context.getSessionId()`，它其实是 **jsessionid**（见 `AgentController.getContext(username, jsessionid)`）→ 工具去 `<user>/<jsessionid>` 找，自然为空；文件实际在 `<user>/<对话会话 id>`（磁盘取证确认）。
 修复：`SessionInfo` 增 `agentSessionId` + `attachmentSessionKey()`（对话 id 优先、回退 jsessionid）；两处工具循环入口（`runToolLoopStreamingWithSse`、`runToolLoopWithSse`）注入 `sessionId`；`MainAgent` 改为 `resolveAttachmentSession(sessionInfo, context)`。
@@ -469,6 +474,14 @@ dev Tomcat 一直"启动成功却看不到改动"的根因：**Eclipse WTP 的 T
 
 ③ **不能用 PowerShell 文本替换改源码**
 `Get-Content -Raw ... -replace ... | Set-Content -Encoding UTF8` 会把 UTF-8（无 BOM）源码按 ANSI 读成乱码（曾把 `OutputStreamWriter` 改成乱码标识符）。要么用编辑工具，要么用 .NET `[IO.File]::ReadAllLines/WriteAllLines(..., UTF8Encoding($false))`。
+
+④ **附件"删了刷新又回来"**（2026-09-18 用户报障，已修）
+根因：**中文文件名走了 query string**。`DELETE /agent/attachment?id=删除测试 中文名.txt` 的 UTF-8 百分号编码被 **Tomcat 7 默认 `URIEncoding=ISO-8859-1`** 解成乱码 → 服务端 `resolve()` 找不到文件 → 返回 HTTP 200 但 `success:false / "附件不存在"`；而前端把删除请求当 fire-and-forget（`try{ await fetch; }catch{}` 吞掉一切），chip 已乐观移除 → 刷新后又从服务端拉回来。ASCII 文件名（`hello.txt`）不受影响，所以此前测试全绿、没暴露。
+修复（三处）：
+1. 新增 **`POST /agent/attachment/delete`**（body `{sessionId,id}`）作为主路径——**中文一律走 body，不进 URL**（项目已有约定，见 `devDocs/接口中文编码清单与约定.md`）；
+2. 旧 `DELETE /agent/attachment?…` 保留兼容，但参数按项目既有做法补正编码（`new String(raw.getBytes("ISO8859-1"), "UTF-8")`）；
+3. 前端 `removeAttachment()` 不再静默：失败时 toast 报错 + `loadAttachmentsForSession()` 把 chip 放回去（**别假装成功**），并在服务端侧加 `log.warn("attachment delete: not found…")` 便于定位。
+教训：① 破坏性操作的响应必须检查（乐观 UI + 忽略失败 = 用户数据错觉）；② 中文参数永远走 body；③ 排障时先看**响应体**，HTTP 200 不代表业务成功（本项目错误也是 200 + `success:false`）。
 
 ### 14.7 后续待办
 
@@ -512,3 +525,62 @@ dev Tomcat 一直"启动成功却看不到改动"的根因：**Eclipse WTP 的 T
 - 冒烟（8100，重启后）：上传 + 发送 → 工具照旧读到真实文本（关键字命中），注入块文案与改造前一致 ✓
 
 接线时的剩余工作：`supportsVision` 的**来源**（模型配置/UI）→ 图片转 parts 内联（`streamInternal`）→ `image_understand` 工具（`buildToolLoop`）→ 历史只存附件标记 → 尺寸/MIME/数量闸门。
+
+### 14.9 入库（import）接口链与"重复入库"语义修复（2026-09-18）
+
+#### 14.9.1 入库调用的接口链
+
+```
+前端 chip「入库」→ 目录树弹窗选目录 → POST /DocSystem/agent/attachment/import
+   body: { sessionId, id, reposId, pid, path, name, targetLabel }
+   ↓ AgentController.importAttachment()
+      解析会话临时目录里的附件 → DocSysClient.uploadFile(reposId, pid, path, name, bytes, name)
+   ↓ POST /Doc/uploadDoc.do  (multipart: reposId/pid/path/name/type=1/size/uploadFile/commitMsg)
+   ↓ DocController.uploadDoc → saveDocToRepos(...)     ← 与 project 页上传走的是同一条服务端链路
+```
+
+即：**入库复用 DocSys 原生上传接口**（同样的权限校验、秒传/版本判定、FSM 提交），Agent 侧只是"把临时文件读出来再传一次"。注意 DocSys 上传以 `path` 为准（project 页只传 path，不传 pid），pid 只是兼容参数。
+
+#### 14.9.2 问题：重复入库会给"没成功"的错觉
+
+实测（同内容文件第二次导入到同一目录）：DocSys 在 `saveDoc_FSM()` 短路（debugLog：`文件已存在！`），**返回 `status=ok` 但 `data` 里没有 `docId`** —— 也就是**什么都没写**（不覆盖、不新建版本），而旧实现照旧回报"已导入仓库"，前端两次都弹成功 → 用户自然怀疑"刚才是不是没入库成功"，于是反复点。
+
+#### 14.9.3 修复（口径：一个附件只能入库一次；同名冲突必须问用户）
+
+用户裁定（2026-09-18）：
+1. **"用户只能入库一次，入库成功标记成已入库，不需要标明入库到哪里，用户自己选择的他肯定自己知道"**
+2. **"同名文件不能当成已入库"**：目标目录已有同名文件时不能直接覆盖（两者内容可能不同），要弹窗问"是否替换"；不替换则保持**未入库**；替换则重新入库（因此入库接口需要 `force` 参数）
+
+实现（三条）：
+
+**(a) 一次性入库 + 只标记「已入库」**
+- 已入库的再打 import 直接拒绝：`该附件已入库，不能重复入库（如需重新入库，请先移除附件再重新上传）`（校验在写之前）
+- 成功 → `markImported`；前端 chip 变绿 `✓ 已入库`、**入库按钮消失**（只剩 ×）
+- 标记存储：会话目录旁车文件 `._imported`（纯文本每行一个附件 id；`readImported/isImported/markImported/unmarkImported`）
+  - 点号开头 ⇒ `listItems` 不列出、`sanitizeName` 剥前导点 ⇒ `resolve` 取不到，不会被当成附件展示/读取（护栏覆盖）
+  - **移除附件时 `unmarkImported`**：否则移除后再上传同名文件会被误判成"已入库"、无法入库
+- `GET /agent/attachments` 每项带 `imported` → 刷新后状态仍在
+
+**(b) 同名冲突先问用户（关键：**写入前**探测）**
+- DocSys 的上传遇到同名文件是**直接覆盖 + 生成新版本**（`saveDoc_FSM` 的 UPDATE 分支），上传后再判别已经太晚（内容已被改）→ 所以入库前先用 `Repos/getSubDocList.do`（`DocSysClient.getDocList(reposId, 目标目录docId, …)`）列出目标目录，按**文件名**判冲突：
+  - 同名**文件** → `AgentResponse.error("目标目录已存在同名文件，请确认是否替换：x", "DOC_EXISTS")`
+  - 同名**文件夹** → 直接拒绝（`目标目录已存在同名文件夹，无法入库`）
+- 前端拿到 `errorCode=DOC_EXISTS` → `confirm('目标目录「X」已存在同名文件：x\n\n是否替换？\n（替换会生成新版本，原文件内容将被覆盖）')`
+  - 取消 → `已取消入库（未替换同名文件，附件仍未入库）`，**标记不写**，chip 仍是「入库」
+  - 确认 → 带 `force: true` 重发 → 写入 → `已替换入库：x（原同名文件已生成新版本）` → 标记
+- 请求体新增 `force`（默认 false）；响应仍用 `docSys.data.docId` 区分"新增 / 走 UPDATE 替换"（替换且 force=false 时理论上是并发抢跑，按替换文案回报）
+
+> 对比：修复前把"目标已存在"直接判成"已入库"，会把**同名不同内容**也当成成功（用户报的问题）；现在冲突必须用户点头，且默认不覆盖。
+
+#### 14.9.4 实测（8100，dev Tomcat）
+
+| 场景 | 结果 |
+| --- | --- |
+| 目标目录无同名文件 → 入库 | toast `已入库：hello.txt`；chip 变绿 `✓ 已入库`、入库按钮消失 ✓ |
+| 目标目录**已有同名文件**（内容不同：126B vs 132B）→ 入库 | 弹窗 `目标目录「测试仓库2」已存在同名文件：hello.txt / 是否替换？` ✓ |
+| └ 选择**替换** | 带 force 重发 → toast `已替换入库：hello.txt（原同名文件已生成新版本）`；**仓库文件内容已变为新内容**（126 B，关键字 `替换-8823`）✓ |
+| └ 选择**不替换** | 关掉弹窗即可（**不再额外提示**，2026-09-18 用户要求）；chip 仍是「入库」；**仓库文件字节与修改时间未变** ✓ |
+| 直接再打 import 接口（绕过 UI） | 被拒绝：`该附件已入库，不能重复入库（…）` ✓ |
+| 移除附件后再上传同名文件 | 标记随移除清掉 → 可再次入库 ✓ |
+| 刷新页面 | `✓ 已入库` 仍在（`imported` 来自服务端）✓ |
+| 护栏 | `TestAgentAttachmentSupport` **86**、`TestAttachmentTool` **16**、`TestAgentFocusSupport` **98**、`TestResolvedLlmConfig` **7** 全绿；index.html 语法 0 error ✓ |

@@ -7,6 +7,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * P2 护栏：Agent 附件支持类（临时存储 / 文件名清洗 / 读取策略 / 注入块 / 清理）。
@@ -27,6 +28,7 @@ public class TestAgentAttachmentSupport {
         testRenderLines();
         testSweep();
         testPurgeSession();
+        testImportedFlag();
         System.out.println("\n======== TestAgentAttachmentSupport: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -189,6 +191,50 @@ public class TestAgentAttachmentSupport {
 
         check("deleteSessionDir", AgentAttachmentSupport.deleteSessionDir("uSweep", "newSession")
                 && !fresh.exists());
+    }
+
+    /**
+     * 已入库标记（旁车文件）：一个附件只能入库一次；标记要能被 listItems 带出，且旁车文件不能被当成附件。
+     * AgentController 用它给 chip 显示「✓ 已入库」并拒绝重复入库。
+     */
+    private static void testImportedFlag() throws Exception {
+        File dir = AgentAttachmentSupport.sessionDir("uImp", "sess-imp", true);
+        writeFile(new File(dir, "a.txt"), "a");
+        writeFile(new File(dir, "b.txt"), "b");
+
+        check("not imported by default", !AgentAttachmentSupport.isImported(dir, "a.txt")
+                && AgentAttachmentSupport.readImported(dir).isEmpty());
+        check("mark imported", AgentAttachmentSupport.markImported(dir, "a.txt"));
+        check("is imported", AgentAttachmentSupport.isImported(dir, "a.txt"));
+        check("other attachment unaffected", !AgentAttachmentSupport.isImported(dir, "b.txt"));
+        check("mark is idempotent", !AgentAttachmentSupport.markImported(dir, "a.txt")
+                && AgentAttachmentSupport.readImported(dir).size() == 1);
+        // 附件被移除时要能取消标记（否则同名文件重新上传会被误判为已入库）
+        check("unmark imported", AgentAttachmentSupport.unmarkImported(dir, "a.txt")
+                && !AgentAttachmentSupport.isImported(dir, "a.txt"));
+        check("unmark is idempotent", !AgentAttachmentSupport.unmarkImported(dir, "a.txt"));
+        check("mark again after unmark", AgentAttachmentSupport.markImported(dir, "a.txt"));
+
+        List<AgentAttachmentSupport.Item> items = AgentAttachmentSupport.listItems(dir);
+        check("listItems carries imported flag", items.size() == 2
+                && items.get(0).imported && !items.get(1).imported);
+        check("sidecar is not an attachment", items.size() == 2
+                && !items.get(0).name.startsWith(".") && !items.get(1).name.startsWith("."));
+        check("sidecar not resolvable",
+                AgentAttachmentSupport.resolve(dir, AgentAttachmentSupport.IMPORTED_FILE) == null);
+        check("hidden name stripped", "env".equals(AgentAttachmentSupport.sanitizeName(".env")));
+        check("null id rejected", !AgentAttachmentSupport.markImported(dir, null)
+                && !AgentAttachmentSupport.isImported(dir, null));
+
+        // 空白/损坏的标记文件不应影响附件本身；重新标记要能自愈
+        writeFile(new File(dir, AgentAttachmentSupport.IMPORTED_FILE), "\n\n");
+        check("blank sidecar -> not imported", !AgentAttachmentSupport.isImported(dir, "a.txt"));
+        check("blank sidecar -> still lists attachments", AgentAttachmentSupport.listItems(dir).size() == 2);
+        check("re-mark after damage", AgentAttachmentSupport.markImported(dir, "a.txt")
+                && AgentAttachmentSupport.isImported(dir, "a.txt"));
+
+        AgentAttachmentSupport.deleteRecursively(dir);
+        check("imported flag cleanup", !dir.exists());
     }
 
     /** 会话删除联动清理：幂等 + 清干净内容（AgentController.deleteSession 依赖这两个性质） */

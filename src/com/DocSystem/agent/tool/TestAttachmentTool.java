@@ -57,6 +57,14 @@ public class TestAttachmentTool {
             ToolResult defaulted = tool.executor.execute(new JSONObject());
             check("default action = list", defaulted.success && defaulted.summary.contains("需求.md"));
 
+            // 6.1) 已入库标记旁车文件不得被当成附件（列出/读取都要看不见）
+            AgentAttachmentSupport.markImported(dir, "需求.md");
+            ToolResult listWithFlag = tool.executor.execute(args("action", "list"));
+            check("list hides sidecar", !listWithFlag.summary.contains("imported"));
+            ToolResult readSidecar = tool.executor.execute(
+                    args("action", "read", "name", AgentAttachmentSupport.IMPORTED_FILE));
+            check("read sidecar -> error", !readSidecar.success);
+
             // 7) 目录为 null 时返回“无附件”而不炸
             ToolResult nullDir = DocSysToolFactory.attachment(null).executor.execute(args("action", "list"));
             check("null dir safe", nullDir.success && nullDir.summary.contains("没有上传附件"));

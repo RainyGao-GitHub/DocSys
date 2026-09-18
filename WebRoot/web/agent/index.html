@@ -817,6 +817,17 @@
             color: #fff;
         }
         .confirm-approve:hover { filter: brightness(1.05); }
+        /* 危险动作（删除 / 替换） */
+        .confirm-danger {
+            background: linear-gradient(135deg, #d9534f 0%, #e2665f 100%);
+            color: #fff;
+        }
+        .confirm-danger:hover { filter: brightness(1.05); }
+        body.dark-theme .confirm-dialog { background: #1e2233; }
+        body.dark-theme .confirm-title { color: #e6e9f2; }
+        body.dark-theme .confirm-msg { color: #b9bfd0; }
+        body.dark-theme .confirm-reject { background: #2a2f45; color: #c5c9d6; }
+        body.dark-theme .confirm-reject:hover { background: #333950; }
 
         /* dark theme 适配 */
         body.dark-theme .process-container {
@@ -1793,8 +1804,17 @@
             font-size: 12px; max-width: 100%;
         }
         .attach-chip.busy { background: #faf7ee; border-style: solid; }
+        /* 已入库的附件：底色转绿 + 徽标，避免“再点一次入库”让用户误以为上次没成功 */
+        .attach-chip.imported { background: #f0f9f3; border-color: #b7dcc6; color: #2e6a4a; }
+        .attach-chip .ac-done {
+            font-size: 10px; padding: 1px 6px; border-radius: 8px;
+            background: #e2f3e8; color: #2e6a4a; border: 1px solid #c7e5d3; flex: none;
+        }
+        body.dark-theme .attach-chip.imported { background: #17281f; border-color: #2f5440; color: #93cfa8; }
+        body.dark-theme .attach-chip .ac-done { background: #1e3527; color: #9fd8b3; border-color: #2f5440; }
         .attach-chip .ac-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
-        .attach-chip .ac-size { font-size: 10px; color: #a08c5a; }
+        /* 仅上传中的进度文字（附件本身不显示大小）*/
+        .attach-chip .ac-progress { font-size: 10px; color: #a08c5a; }
         .attach-chip .ac-import {
             border: 1px solid #e2d5b4; background: #fdfaf2; color: #8a6a1a;
             border-radius: 8px; font-size: 10px; padding: 1px 6px; cursor: pointer;
@@ -1806,7 +1826,7 @@
         }
         .attach-chip .ac-x:hover { color: #d33; }
         body.dark-theme .attach-chip { background: #2a2418; border-color: #4a3f28; color: #e0c98a; }
-        body.dark-theme .attach-chip .ac-size { color: #a08c5a; }
+        body.dark-theme .attach-chip .ac-progress { color: #a08c5a; }
         body.dark-theme .attach-chip .ac-import { background: #332b1c; border-color: #4a3f28; color: #d8bb76; }
 
         /* P1：关注对象（@）/ 操作（/）chips */
@@ -3018,6 +3038,73 @@
         if (rejectBtn) rejectBtn.addEventListener('click', function() { resolveConfirm('reject'); });
     });
 
+    // ==================== 通用确认 / 提示弹窗（替代原生 confirm/alert） ====================
+    // 视觉沿用 .confirm-*（圆角卡片 + 标题 + 正文 + 右下按钮，与 project 页 artDialog 风格一致），
+    // 比原生 confirm/alert 可控：样式、按钮文案、危险动作用色都能定制。
+    /**
+     * @param opts {title, message, okText, cancelText, danger, alertOnly}
+     * @returns Promise<boolean>：确定=true；取消/Esc=false（alertOnly 时只有确定）
+     */
+    function uiDialog(opts) {
+        opts = opts || {};
+        return new Promise(function (resolve) {
+            var overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay show';
+            var dialog = document.createElement('div');
+            dialog.className = 'confirm-dialog';
+
+            var title = document.createElement('div');
+            title.className = 'confirm-title';
+            title.textContent = opts.title || '提示';
+
+            var msg = document.createElement('div');
+            msg.className = 'confirm-msg';
+            msg.textContent = opts.message || '';
+
+            var actions = document.createElement('div');
+            actions.className = 'confirm-actions';
+
+            var done = false;
+            function close(ok) {
+                if (done) return;
+                done = true;
+                document.removeEventListener('keydown', onKey, true);
+                overlay.remove();
+                resolve(ok);
+            }
+            function onKey(e) {
+                if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(false); }
+                else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); close(true); }
+            }
+
+            if (!opts.alertOnly) {
+                var cancel = document.createElement('button');
+                cancel.className = 'confirm-reject';
+                cancel.textContent = opts.cancelText || '取消';
+                cancel.addEventListener('click', function () { close(false); });
+                actions.appendChild(cancel);
+            }
+            var ok = document.createElement('button');
+            ok.className = opts.danger ? 'confirm-danger' : 'confirm-approve';
+            ok.textContent = opts.okText || '确定';
+            ok.addEventListener('click', function () { close(true); });
+            actions.appendChild(ok);
+
+            dialog.appendChild(title);
+            dialog.appendChild(msg);
+            dialog.appendChild(actions);
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+            document.addEventListener('keydown', onKey, true);
+            setTimeout(function () { try { ok.focus(); } catch (e) { /* ignore */ } }, 0);
+        });
+    }
+
+    /** 单按钮提示（替代 alert） */
+    function uiAlert(message, title) {
+        return uiDialog({ title: title || '提示', message: message, alertOnly: true });
+    }
+
     function formatTime() {
         return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
     }
@@ -3416,7 +3503,14 @@
             del.addEventListener('click', async function(e) {
                 e.stopPropagation();
                 var id = del.closest('.session-item').dataset.id;
-                if (!confirm('删除该会话及其历史消息？')) return;
+                var okDel = await uiDialog({
+                    title: '删除会话',
+                    message: '将删除该会话的历史消息与该会话的临时附件，删除后不可恢复。',
+                    okText: '删除',
+                    cancelText: '取消',
+                    danger: true
+                });
+                if (!okDel) return;
                 var ok = await API.deleteSession(id);
                 if (ok) {
                     state.sessions = state.sessions.filter(function(s) { return s.sessionId !== id; });
@@ -4407,8 +4501,12 @@
         if (input) { try { input.focus(); } catch (e) { /* ignore */ } }
     }
 
-    /** P2：把临时附件内容写入仓库（用户显式动作，失败不影响临时附件） */
-    async function doImportAttachment(att, node) {
+    /**
+     * P2：把临时附件内容写入仓库（每个附件只能入库一次；成功后 chip 只显示「已入库」）。
+     * force=false 时若目标目录已有**同名文件**，服务端回 DOC_EXISTS → 这里弹窗问"是否替换"，
+     * 确认后带 force=true 重发；取消则保持未入库（不覆盖任何已有文件）。
+     */
+    async function doImportAttachment(att, node, force) {
         if (!att || !node) return;
         try {
             var resp = await fetch(API_BASE + '/attachment/import', {
@@ -4420,16 +4518,36 @@
                     reposId: node.vid,
                     pid: node.docId || 0,
                     path: node.path || '/',
-                    name: att.name
+                    name: att.name,
+                    force: !!force
                 })
             });
             var json = await resp.json();
             if (json && !json.success && handleAuthError(json.message)) return;
             if (json && json.success) {
-                showMessage('已导入：' + att.name + ' → ' + fdImportTargetLabel({ importTarget: node }), 'success');
-            } else {
-                showMessage('导入失败: ' + ((json && json.message) || ('HTTP ' + resp.status)), 'error');
+                showMessage(json.message || ('已入库：' + att.name), 'success');
+                // 从服务端重取列表：chip 的「已入库」以服务端标记为准（刷新后一致）
+                loadAttachmentsForSession();
+                return;
             }
+            if (json && json.errorCode === 'DOC_EXISTS' && !force) {
+                var target = fdImportTargetLabel({ importTarget: node });
+                var ok = await uiDialog({
+                    title: '目标目录已存在同名文件',
+                    message: '「' + target + '」中已有文件：' + att.name
+                        + '\n\n替换：用本次上传的内容覆盖它（生成新版本）\n'
+                        + '取消：不写入，附件保持未入库',
+                    okText: '替换',
+                    cancelText: '取消',
+                    danger: true
+                });
+                if (ok) {
+                    return doImportAttachment(att, node, true);
+                }
+                // 用户选择不替换：关掉弹窗就行，不再额外提示（状态本来就还是「未入库」，chip 上看得见）
+                return;
+            }
+            showMessage('导入失败: ' + ((json && json.message) || ('HTTP ' + resp.status)), 'error');
         } catch (e) {
             showMessage('导入失败: ' + (e && e.message ? e.message : e), 'error');
         }
@@ -5221,18 +5339,24 @@
         var html = '';
         for (var i = 0; i < list.length; i++) {
             var a = list[i];
-            html += '<span class="attach-chip" title="临时附件（不入仓库）；点「入库」可导入到指定仓库目录">'
+            // 已入库：只显示状态标记（不再提供入库按钮，每附件只能入库一次；入库到哪由用户自己选的，无需回显）
+            html += '<span class="attach-chip' + (a.imported ? ' imported' : '') + '" title="'
+                 + (a.imported ? '已入库（临时附件仍可继续用于本轮对话，直到你移除它）'
+                               : '临时附件（不入仓库）；点「入库」可导入到指定仓库目录') + '">'
                  + focusItemIconHtml({ kind: 'file', name: a.name })
-                 + '<span class="ac-name">' + escapeHtml(a.name) + '</span>'
-                 + '<span class="ac-size">' + escapeHtml(formatFileSize(a.size || 0)) + '</span>'
-                 + '<button class="ac-import" data-att-import="' + i + '" title="导入到仓库…">入库</button>'
-                 + '<button class="ac-x" data-att-remove="' + i + '" title="移除附件（删除临时文件）">&times;</button>'
+                 + '<span class="ac-name">' + escapeHtml(a.name) + '</span>';
+            if (a.imported) {
+                html += '<span class="ac-done" title="已入库">✓ 已入库</span>';
+            } else {
+                html += '<button class="ac-import" data-att-import="' + i + '" title="导入到仓库…">入库</button>';
+            }
+            html += '<button class="ac-x" data-att-remove="' + i + '" title="移除附件（删除临时文件）">&times;</button>'
                  + '</span>';
         }
         if (uploading) {
             html += '<span class="attach-chip busy">'
                  + '<span class="ac-name">' + escapeHtml(uploading.name) + '</span>'
-                 + '<span class="ac-size">上传中 ' + (uploading.percent || 0) + '%</span>'
+                 + '<span class="ac-progress">上传中 ' + (uploading.percent || 0) + '%</span>'
                  + '</span>';
         }
         wrap.innerHTML = html;
@@ -5270,8 +5394,7 @@
                 try { ret = JSON.parse(xhr.responseText); } catch (e) { /* ignore */ }
                 if (ret && ret.success && ret.data) {
                     state.attachments.push(ret.data);
-                    renderAttachBar();
-                    showMessage('已添加附件（临时，未入仓库）: ' + ret.data.name, 'success');
+                    renderAttachBar();   // 成功不加提示：chip 出现本身就是反馈
                 } else {
                     renderAttachBar();
                     showMessage('附件上传失败: ' + ((ret && ret.message) || ('HTTP ' + xhr.status)), 'error');
@@ -5323,16 +5446,29 @@
         renderAttachBar();
     }
 
-    /** 移除附件（同时删除临时文件） */
+    /** 移除附件（同时删除临时文件）。中文文件名走 POST body（不能进 query：Tomcat 默认编码会打乱） */
     async function removeAttachment(idx) {
         var a = (state.attachments || [])[idx];
         if (!a) return;
         state.attachments.splice(idx, 1);
         renderAttachBar();
         try {
-            await fetch(API_BASE + '/attachment?id=' + encodeURIComponent(a.id)
-                + '&sessionId=' + encodeURIComponent(state.sessionId || ''), { method: 'DELETE' });
-        } catch (e) { /* ignore */ }
+            var resp = await fetch(API_BASE + '/attachment/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId: state.sessionId || '', id: a.id })
+            });
+            var json = await resp.json();
+            if (json && !json.success) {
+                if (handleAuthError(json.message)) return;
+                // 删除失败：把 chip 放回去（别假装成功，否则刷新后又出现），并说明原因
+                showMessage('移除附件失败: ' + (json.message || ('HTTP ' + resp.status)), 'error');
+                loadAttachmentsForSession();
+            }
+        } catch (e) {
+            showMessage('移除附件失败: ' + (e && e.message ? e.message : e), 'error');
+            loadAttachmentsForSession();
+        }
     }
 
     /** 发送时的附件引用（只传 id/name） */
@@ -5340,12 +5476,6 @@
         return (state.attachments || []).map(function (a) {
             return { id: a.id, name: a.name };
         });
-    }
-
-    function formatFileSize(bytes) {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
     // ==================== Pending Uploads Handler ====================
@@ -5392,7 +5522,7 @@
             var msg = 'Top 操作:\n' + topOps.map(function(o) {
                 return o.operation + ': ' + o.count + '次, 成功率' + (o.successRate * 100).toFixed(0) + '%';
             }).join('\n');
-            alert(msg);
+            uiAlert(msg, '性能报告');
         } else {
             showMessage('获取性能报告失败', 'error');
         }
