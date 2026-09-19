@@ -46,12 +46,38 @@
   - ① **`getLoginUser()` 自己写响应**（内部 `writeJson` 后 return null）→ 调用方设的码根本到不了客户端；这也是"未登录"一直没码的真因。
   - ② **文案嗅探会假阳**：`reposCheck` 的"系统维护中，请稍后重试！"含 `请稍后重试`，旧嗅探会把它当**可重试的锁占用**（现在被"有码优先"短路掉）。→ 说明 `isLockBusy` 的文案兜底只能当过渡。
 
-#### R1-1b 其余权限点到码（**R1-1 的尾巴**）
-- **现状**：`ReposController` / `websocket/BussinessController` / `websocket/BusinessBaseController` 里还有约 **40 处** `setError("您…")` 风格权限文案未打码。
+#### R1-1b 其余权限点/登录点/不存在点到码（**R1-1 的尾巴**）— ✅ 已完成（2026-09-20）
+- **现状（改造前）**：`ReposController` / `DocController` / `websocket/BussinessController` 里仍有大量 `setError("您…")` / `setError("用户未登录…")` / `setError("仓库 … 不存在！")` 只有文案。
 - **后果**：这些路径失败时无码 → 工具层退回文案兜底 → 同一个"猜失败原因"的问题在仓库/分享/业务接口上依旧存在。
-- **方案**：复用已就位的 `BaseFunction.setPermissionError(rt, msg)`（直接产出 `NO_PERMISSION`）；其余"不存在/参数错"同样补 `DOC_NOT_FOUND`/`REPOS_NOT_FOUND`/`INVALID_PARAM`。
-- **验收**：`ReposController` 无权限删仓库返回 `NO_PERMISSION`（探针断言）+ 护栏；页面 1 次无权限操作的 E2E。
-- **工作量**：小（机械替换 + 一次探针），但**必须人工过一遍错误分类**，不能一律 `NO_PERMISSION`。
+- **已落地的打码（共 66 处，全部人工分类，不搞一刀切）**：
+  | 位置 | 分类 | 处数 | 写法 |
+  |---|---|---|---|
+  | `ReposController` | 未登录 | 18 | `rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN)` |
+  | `ReposController` | 权限 | 28 | `setPermissionError(rt, "您…")` |
+  | `ReposController` | 仓库不存在 | 7 | `rt.setError("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND)` |
+  | `ReposController` | 备份任务不存在 | 2 | `ErrorCode.TASK_NOT_FOUND`（新增码，工具层提示"不要沿用旧 taskId"） |
+  | `DocController` | 非法访问（`reposAccess == null`） | 2 | `setErrorCodeIfAbsent(NO_PERMISSION)` **再** `setError("非法访问")`——保留 `checkAndGetAccessInfo` 已设的更具体码（如 NOT_LOGIN） |
+  | `DocController` | 非法存储类型 | 4 | `ErrorCode.INVALID_PARAM` |
+  | `BussinessController` | 非法访问（`reposAccess == null`） | 13 | 同上（先 ifAbsent 再 setError） |
+  | `BussinessController` | 未登录 | 2 | `NOT_LOGIN` |
+  | `BussinessController` | 文档权限（office/CAD 链接） | 8 | `setPermissionError` |
+  | `BussinessController` | 历史回退/删除（非系统管理员） | 2 | `setPermissionError` |
+  | `BussinessController` | 没有该仓库访问权限 | 1 | `setPermissionError` |
+- **设计要点**：`setError(msg)` **不动 errorCode**，所以"先 `setErrorCodeIfAbsent(兜底码)`、再 `setError(粗文案)`"能保住上游更精确的码；`setPermissionError` 是"文案+NO_PERMISSION"的一步写法。
+- **验收（实测）**：
+  - **护栏 `TestPermissionErrorCoding 16/16`（新增）**：源码 lint —— 三个控制器里 `setError("您…")` 必须走 `setPermissionError`、未登录必须带 `NOT_LOGIN`、`仓库…不存在` 必须带 `REPOS_NOT_FOUND`、`非法访问` 前必须 `setErrorCodeIfAbsent(NO_PERMISSION)`；并校验 `BaseFunction.setPermissionError` 内部确实置了码。
+    （不用运行时构造无权限场景：裸 JVM 里 `BaseFunction` 会触发 `Log` 写文件递归 StackOverflow，且 dev 只有超级管理员账号。）
+  - **真实 HTTP 探针**：不带 cookie 请求 `/Repos/getReposList.do`、`/Repos/getReposAllGroups.do`、`/Repos/getSubDocList.do` → 均返回 `{"errorCode":"NOT_LOGIN"}`；带 cookie 请求 `/Repos/getDocAuthList.do?reposId=999` → `{"errorCode":"REPOS_NOT_FOUND","msgInfo":"仓库 999 不存在！"}` ✓
+  - 全量护栏：23/16/13/25/11/52/55/29/26/30/55 全绿。
+  - 页面 E2E：建 `R11B验证` → 列目录确认 → 删除，4 步工具调用全 ok、确认门正常、磁盘无残留。
+- **未覆盖（如实记录）**：`NO_PERMISSION` 只有"源码 lint + 序列化/机制"证据，**没有真实 HTTP 证据**——dev 环境只有超级管理员 Admin，注册普通账号被"账号格式不正确/需验证码"挡住。要有第二条账号后才能补这条 E2E。
+- **结构提醒**：`websocket/BussinessController.java` 与 `BusinessBaseController.java` 归属**独立仓库 `src/com/DocSystem/websocket`（分支 master）**，不在主仓库（主仓库 `.gitignore` 排除整棵 `websocket`），提交要分开。
+
+#### R1-1c 剩余"对象不存在"出口补码（**R1-1b 的直接续作，本次未做**）
+- **现状**：`docSysErrorLog(<消息含"不存在">, rt)` 共 **66 处**未打码：`DocController 44` / `BussinessController 14` / `BaseController 5` / `ReposController 3`。样例：`docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt)`、`docSysErrorLog("仓库 " + reposId + " 不存在！", rt)`、`docSysErrorLog("分享信息不存在！", rt)`。
+- **后果**：模型"按名字操作一个不存在的文件"时拿到的仍是纯文案，会反复重试同一个名字（正是 R1 想消灭的模式）；`BussinessController` 那 14 处直接影响 R1-2/R1-3 的分享工具。
+- **方案**：`BaseFunction` 已有带码重载 `docSysErrorLog(logStr, errorCode, rt)`，按语义传 `DOC_NOT_FOUND` / `REPOS_NOT_FOUND` / `INVALID_PARAM`。
+- **验收**：`TestPermissionErrorCoding` 增加一组"不存在类出口必须带码"的 lint 断言；`Bussiness/getDocOfficeLink` 用不存在的文件名请求时返回 `DOC_NOT_FOUND`（本次实测该请求正是无码的 `{"msgInfo":"zzz_nofile.txt 不存在！"}`）。
 
 #### R1-2 `create_doc_share` 指向不存在的端点
 - **现状**：`DocSysClient:1066` 调 `/Doc/createDocShare.do`；**服务端无此映射**（`DocController` 只有 `getDocShareList/verifyDocSharePwd/getDocShare`），真实创建分享在 `BussinessController:/addDocShare.do`（另有 `updateDocShare/deleteDocShare`）。
@@ -145,7 +171,7 @@
 
 | 阶段 | 内容 | 依赖 | 交付 |
 |---|---|---|---|
-| **R1** | R1-1 errCode ✅（用户点名）→ R1-1b 余下权限点 → R1-4 get_doc_history → R1-5 list_repos → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
+| **R1** | R1-1 errCode ✅ → R1-1b 权限/登录/不存在出口 ✅ → R1-1c `docSysErrorLog` 不存在出口（66 处）→ R1-4 get_doc_history → R1-5 list_repos → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
 | **R3** | R3-2 全工具体检（产出体检表）→ R3-1 命名 → R3-3 run_skill → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表 + 检查单文档 |
 
@@ -156,7 +182,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R1-1 后）：`TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 22` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
+   - 现基线（2026-09-20 R1-1b 后）：`TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 16` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolE2E` `ListDocsProbe` `ToolChk` `IdProbe` `LockProbe`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -173,7 +199,9 @@
 | 文档接口 | `src/com/DocSystem/controller/DocController.java`（`moveDoc` `copyDoc` `renameDoc` `deleteDoc` `getDocHistory` `getDocShareList`） |
 | 仓库接口 | `src/com/DocSystem/controller/ReposController.java`（`addRepos` `deleteRepos` `updateReposInfo` `backupRepos` `queryReposFullBackupTask`） |
 | 分享接口 | `src/com/DocSystem/websocket/BussinessController.java`（`addDocShare` `updateDocShare` `deleteDocShare`） |
-| 回执对象（错误码落点） | `src/util/ReturnAjax.java` |
+| 回执对象（错误码落点） | `src/util/ReturnAjax.java`、`src/com/DocSystem/common/ErrorCode.java` |
+| 权限/不存在出口的统一写法 | `src/com/DocSystem/common/BaseFunction.java`（`setPermissionError` / `docSysErrorLog(msg, code, rt)` 重载） |
+| 业务/分享接口（**独立仓库 `src/com/DocSystem/websocket`，master**） | `websocket/BussinessController.java`（`addDocShare` `getDocOfficeLink`…）、`websocket/BusinessBaseController.java` |
 | 锁与事件 | `src/com/DocSystem/common/BaseFunction.java`（`doLockDoc` `isDocForceLocked` `unlockDoc`）、`src/com/DocSystem/common/EVENT.java` |
 
 ---
@@ -195,8 +223,9 @@
 |---|---|---|---|---|
 | — | — | move_doc / copy / rename / delete 的 docId-only 塌缩 + 工具层锁占用重试 | ✅ | `b5c85bf9f` |
 | — | — | list_docs 大目录截断 → 紧凑分页清单 | ✅ | `10f9e21f8` |
-| R1-1 | P0 | 后端补 errorCode（替代文案嗅探） | ✅ | 见本次提交 |
-| R1-1b | P0 | ReposController/BussinessController 约 40 处权限点补码 | ⬜ | |
+| R1-1 | P0 | 后端补 errorCode（替代文案嗅探） | ✅ | `eda22474b` |
+| R1-1b | P0 | 权限/登录/仓库不存在出口补码（三控制器 66 处） | ✅ | 见本次提交 |
+| R1-1c | P0 | `docSysErrorLog(…不存在！, rt)` 66 处补码 | ⬜ | |
 | R1-2 | P0 | create_doc_share 端点不存在 | ⬜ | |
 | R1-3 | P0 | get_doc_share_list 语义错位 | ⬜ | |
 | R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ⬜ | |

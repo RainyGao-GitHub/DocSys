@@ -154,6 +154,25 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 - **Agent 页面端到端**：建两个目录 → 立刻移入 → 移回根 → 删除两个目录，**6 步写操作全 ok**（确认门 6 次均正常），
   磁盘还原；模型还自己总结出"docId 会随移动变化、不能沿用旧值"。
 
+## R1-1b 权限/登录/仓库不存在出口补码（2026-09-20）—— 把 R1-1 的码铺满
+
+### 打了什么（66 处，全部人工分类）
+- `ReposController`：未登录 18（NOT_LOGIN）、权限 28（`setPermissionError`）、仓库不存在 7（REPOS_NOT_FOUND）、备份任务不存在 2（新增码 TASK_NOT_FOUND）
+- `DocController`：`reposAccess == null` 的 2 处 `非法访问` 改为「先 `setErrorCodeIfAbsent(NO_PERMISSION)` 再 `setError`」（保住上游更精确的码）；非法存储类型 4 处 → INVALID_PARAM
+- `BussinessController`（**独立仓库，非主仓库**）：访问守卫 13、未登录 2、文档权限 8、历史回退/删除权限 2、仓库访问权限 1
+- `BaseFunction.setPermissionError()` 成为权限类失败的统一出口；`ErrorCode` 新增 `TASK_NOT_FOUND`，工具层给出「不要沿用旧 taskId」提示
+
+### 验证证据
+- **护栏 `TestPermissionErrorCoding`（新增）16/16**：源码 lint（权限必须走 setPermissionError、未登录必须带 NOT_LOGIN、仓库不存在必须带 REPOS_NOT_FOUND、非法访问必须先 ifAbsent）+ 校验 helper 内部置码。
+  （不造运行时无权限场景：裸 JVM 里 BaseFunction 会触发 Log 写文件递归 StackOverflow；dev 只有超级管理员）
+- 全量护栏 23/16/13/25/11/52/55/29/26/30/55 全绿
+- **真实 HTTP 探针**：无 cookie 请求 `/Repos/getReposList.do`、`/Repos/getReposAllGroups.do`、`/Repos/getSubDocList.do` → `errorCode=NOT_LOGIN` ✓；带 cookie 请求 `/Repos/getDocAuthList.do?reposId=999` → `errorCode=REPOS_NOT_FOUND` ✓
+- 页面 E2E：建 `R11B验证` → 列目录确认 → 删除（4 步工具调用全 ok、确认门正常、磁盘无残留）
+
+### 未覆盖（如实记录）
+- `NO_PERMISSION` **只有静态/机制证据，无真实 HTTP 证据**：dev 只有 Admin（超级管理员），注册普通账号被“账号格式不正确/需验证码”挡住。需第二条账号后才能补。
+- 新发现：`docSysErrorLog(<消息含“不存在”>, rt)` **66 处**未打码（Doc 44 / Bussiness 14 / Base 5 / Repos 3）→ 已记为计划的 **R1-1c**（`getDocOfficeLink` 用不存在文件名请求实测就是无码的 `{"msgInfo":"zzz_nofile.txt 不存在！"}`）。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -163,14 +182,15 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0，先做）**：**R1-1 后端补 errorCode ✅ `eda22474b`** → R1-1b 余下约 40 处权限点 → R1-4 `get_doc_history` 静默返回仓库根历史 → R1-5 `list_repos` 截断（18 仓只看 9）→ R1-2 `create_doc_share` 指向不存在端点 → R1-3 `get_doc_share_list` 语义错位
+- **R1（P0，先做）**：R1-1 后端补 errorCode ✅ `eda22474b` → **R1-1b 权限/登录/不存在出口补码 ✅（待提交）** → R1-1c `docSysErrorLog(…不存在！)` 66 处 → R1-4 `get_doc_history` → R1-5 `list_repos` → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 无（工作区干净；R1-1 = `eda22474b`）
-- 已提交：R1-1 错误码 = `eda22474b`；可靠性计划 = `9c675b79a`；move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
+- 主仓库 `devInt`（**R1-1b**）：`common/ErrorCode.java`（+TASK_NOT_FOUND）、`controller/ReposController.java`、`controller/DocController.java`、`agent/tool/DocSysToolFactory.java`（TASK_NOT_FOUND 提示）、`agent/tool/TestReturnAjaxErrorCode.java`、`agent/tool/TestPermissionErrorCoding.java`（新增）、`devDocs/Agent工具与接口可靠性计划.md` + 本卡
+- **websocket 仓库 `src/com/DocSystem/websocket`（master）**：`BussinessController.java`（仓库结构见计划 §4 “业务/分享接口”行）
+- 已提交：R1-1 错误码 = `eda22474b`；工作卡记录 = `78fae07f3`；可靠性计划 = `9c675b79a`；move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
 - office 仓库：与本任务无关
 
 ## 生效约束

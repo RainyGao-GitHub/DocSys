@@ -44,6 +44,7 @@ import dev.langchain4j.model.output.Response;
 
 import com.DocSystem.entity.ReposAuth;
 import com.DocSystem.common.Base64Util;
+import com.DocSystem.common.ErrorCode;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.Path;
@@ -433,7 +434,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -461,7 +462,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -546,7 +547,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -854,7 +855,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -869,7 +870,7 @@ public class ReposController extends BaseController{
 			List <Repos> list = reposService.getReposList(repos);
 			if(list == null || list.size() != 1)	//仓库拥有人
 			{
-				rt.setError("您无权删除该仓库!");				
+				setPermissionError(rt, "您无权删除该仓库!");				
 				writeJson(rt, response);	
 				return;
 			}
@@ -942,7 +943,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -957,7 +958,7 @@ public class ReposController extends BaseController{
 			List <Repos> list = reposService.getReposList(repos);
 			if(list == null || list.size() != 1)	//仓库拥有人
 			{
-				rt.setError("您无权进行该操作!");				
+				setPermissionError(rt, "您无权进行该操作!");				
 				writeJson(rt, response);	
 				return;
 			}
@@ -1000,7 +1001,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1124,7 +1125,7 @@ public class ReposController extends BaseController{
 		User login_user = reposAccess.getAccessUser();
 		if(login_user.getType() != 2)	//超级管理员
 		{
-			rt.setError("您无权进行此操作，请联系系统管理员!");				
+			setPermissionError(rt, "您无权进行此操作，请联系系统管理员!");				
 			writeJson(rt, response);	
 			return;
 		}
@@ -1247,7 +1248,7 @@ public class ReposController extends BaseController{
 		if(task == null)
 		{
 			//可能任务已被取消或者超时删除
-			rt.setError("仓库自动备份任务 " + taskId + " 不存在");
+			rt.setError("仓库自动备份任务 " + taskId + " 不存在", ErrorCode.TASK_NOT_FOUND);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1291,7 +1292,7 @@ public class ReposController extends BaseController{
 		User login_user = reposAccess.getAccessUser();
 		if(login_user.getType() != 2)	//超级管理员
 		{
-			rt.setError("您无权进行此操作，请联系系统管理员!");				
+			setPermissionError(rt, "您无权进行此操作，请联系系统管理员!");				
 			writeJson(rt, response);	
 			return;
 		}
@@ -1412,7 +1413,7 @@ public class ReposController extends BaseController{
 		if(task == null)
 		{
 			//可能任务已被取消或者超时删除
-			rt.setError("仓库全量备份任务 " + taskId + " 不存在");
+			rt.setError("仓库全量备份任务 " + taskId + " 不存在", ErrorCode.TASK_NOT_FOUND);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1482,7 +1483,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1497,7 +1498,7 @@ public class ReposController extends BaseController{
 			List <Repos> list = reposService.getReposList(repos);
 			if(list == null || list.size() != 1)	//仓库拥有人
 			{
-				rt.setError("您无权修改该仓库!");				
+				setPermissionError(rt, "您无权修改该仓库!");				
 				writeJson(rt, response);	
 				return;
 			}
@@ -1660,7 +1661,7 @@ public class ReposController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND);
 			writeJson(rt, response);	
 			setReposIsBusy(reposId, false);
 			
@@ -1913,7 +1914,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1921,7 +1922,7 @@ public class ReposController extends BaseController{
 		//检查是否是系统管理员
 		if(login_user.getType() != 2)	//超级管理员
 		{
-			rt.setError("您无权进行该操作!");				
+			setPermissionError(rt, "您无权进行该操作!");				
 			writeJson(rt, response);	
 			return;
 		}
@@ -2037,7 +2038,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2052,7 +2053,7 @@ public class ReposController extends BaseController{
 			List <Repos> list = reposService.getReposList(repos);
 			if(list == null || list.size() != 1)	//仓库拥有人
 			{
-				rt.setError("您无权进行该操作!");				
+				setPermissionError(rt, "您无权进行该操作!");				
 				writeJson(rt, response);	
 				return;
 			}
@@ -2093,7 +2094,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2101,7 +2102,7 @@ public class ReposController extends BaseController{
 		//检查是否是超级管理员或者仓库owner
 		if(login_user.getType() != 2)	//超级管理员 或 仓库的拥有者可以清除仓库缓存
 		{
-			rt.setError("您无权进行该操作!");				
+			setPermissionError(rt, "您无权进行该操作!");				
 			writeJson(rt, response);	
 			return;
 		}
@@ -2169,7 +2170,7 @@ public class ReposController extends BaseController{
 		if(rootDocAuth == null || rootDocAuth.getAccess() == null || rootDocAuth.getAccess() == 0)
 		{
 			Log.debug("getReposInitMenu() 您没有该仓库的访问权限，请联系管理员！");
-			rt.setError("您没有该仓库的访问权限，请联系管理员！");
+			setPermissionError(rt, "您没有该仓库的访问权限，请联系管理员！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -2368,7 +2369,7 @@ public class ReposController extends BaseController{
 		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
 		{
 			Log.debug("getSubDocList() 您没有该目录的访问权限，请联系管理员！");
-			rt.setError("您没有该目录的访问权限，请联系管理员！");
+			setPermissionError(rt, "您没有该目录的访问权限，请联系管理员！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -2502,7 +2503,7 @@ public class ReposController extends BaseController{
 		if(docAuth == null || docAuth.getAccess() == null || docAuth.getAccess() == 0)
 		{
 			Log.debug("getSubDocListRS() 您没有该目录的访问权限，请联系管理员！");
-			rt.setError("您没有该目录的访问权限，请联系管理员！");
+			setPermissionError(rt, "您没有该目录的访问权限，请联系管理员！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -2557,7 +2558,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2594,7 +2595,7 @@ public class ReposController extends BaseController{
 			{
 				
 				Log.debug("getReposManagerMenu() 您没有该仓库的访问权限，请联系管理员！");
-				rt.setError("您没有该仓库的访问权限，请联系管理员！");
+				setPermissionError(rt, "您没有该仓库的访问权限，请联系管理员！");
 				writeJson(rt, response);			
 				return;
 			}
@@ -2640,7 +2641,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2705,7 +2706,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2733,7 +2734,7 @@ public class ReposController extends BaseController{
 		if(login_user == null)
 		{
 			Log.debug("getDocAuthList() 用户未登录，请先登录！");
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2741,7 +2742,7 @@ public class ReposController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2756,7 +2757,7 @@ public class ReposController extends BaseController{
 		if(isAdminOfDoc(repos, login_user, doc) == false)
 		{
 			Log.debug("getDocAuthList() isAdminOfDoc return false");
-			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
+			setPermissionError(rt, "您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -3023,7 +3024,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3031,7 +3032,7 @@ public class ReposController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3039,7 +3040,7 @@ public class ReposController extends BaseController{
 		//检查是否是仓库的管理员
 		if(isAdminOfRepos(login_user,reposId) == false && isAdminOfRootDoc(repos, login_user) == false)
 		{
-			rt.setError("您没有该仓库的管理权限，无法添加用户 ！");
+			setPermissionError(rt, "您没有该仓库的管理权限，无法添加用户 ！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -3132,7 +3133,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3140,7 +3141,7 @@ public class ReposController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3148,7 +3149,7 @@ public class ReposController extends BaseController{
 		//检查当前用户的权限
 		if(isAdminOfRepos(login_user,reposId) == false && isAdminOfRootDoc(repos, login_user) == false)
 		{
-			rt.setError("您不是该仓库的管理员，请联系管理员开通权限 ！");
+			setPermissionError(rt, "您不是该仓库的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -3194,7 +3195,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3202,7 +3203,7 @@ public class ReposController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3217,7 +3218,7 @@ public class ReposController extends BaseController{
 		if(isAdminOfDoc(repos, login_user, doc) == false)
 		{
 			Log.debug("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
-			rt.setError("您不是该目录/文件的管理员，请联系管理员开通权限 ！");
+			setPermissionError(rt, "您不是该目录/文件的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -3253,7 +3254,7 @@ public class ReposController extends BaseController{
 			if(parentDocAuth == null || parentDocAuth.getAccess() == null || parentDocAuth.getAccess() == 0)
 			{
 				Log.debug("configDocAuth check parent docauth failed, parentDoc path:" + path);
-				rt.setError("未设置上级目录的访问权限");
+				setPermissionError(rt, "未设置上级目录的访问权限");
 				writeJson(rt, response);
 				return;
 			}
@@ -3345,7 +3346,7 @@ public class ReposController extends BaseController{
 		User login_user = getLoginUser(session, request, response, rt);
 		if(login_user == null)
 		{
-			rt.setError("用户未登录，请先登录！");
+			rt.setError("用户未登录，请先登录！", ErrorCode.NOT_LOGIN);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3353,7 +3354,7 @@ public class ReposController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3367,7 +3368,7 @@ public class ReposController extends BaseController{
 		//检查当前用户的权限
 		if(isAdminOfDoc(repos, login_user, doc) == false)
 		{
-			rt.setError("您不是该仓库/文件的管理员，请联系管理员开通权限 ！");
+			setPermissionError(rt, "您不是该仓库/文件的管理员，请联系管理员开通权限 ！");
 			writeJson(rt, response);			
 			return;
 		}
@@ -3430,48 +3431,48 @@ public class ReposController extends BaseController{
 		DocAuth docAuth = getUserDocAuth(repos, login_user.getId(), doc); 
 		if(docAuth == null)
 		{
-			rt.setError("您没有该目录/文件的权限");
+			setPermissionError(rt, "您没有该目录/文件的权限");
 			return true;
 		}
 		
 		if(docAuth.getIsAdmin()==null || isAdmin > docAuth.getIsAdmin())
 		{
-			rt.setError("您无权设置管理员权限");
+			setPermissionError(rt, "您无权设置管理员权限");
 			return true;
 		}
 		if(docAuth.getAccess()==null || access > docAuth.getAccess())
 		{
-			rt.setError("您无权设置读权限");
+			setPermissionError(rt, "您无权设置读权限");
 			return true;
 		}
 		if(docAuth.getEditEn()==null || editEn > docAuth.getEditEn())
 		{
-			rt.setError("您无权设置写权限");
+			setPermissionError(rt, "您无权设置写权限");
 			return true;
 		}
 		if(docAuth.getAddEn()==null || addEn > docAuth.getAddEn())
 		{
-			rt.setError("您无权设置新增权限");
+			setPermissionError(rt, "您无权设置新增权限");
 			return true;
 		}
 		if(docAuth.getDeleteEn()==null || deleteEn > docAuth.getDeleteEn())
 		{
-			rt.setError("您无权设置删除权限");
+			setPermissionError(rt, "您无权设置删除权限");
 			return true;
 		}
 		if(docAuth.getDownloadEn()==null || downloadEn > docAuth.getDownloadEn())
 		{
-			rt.setError("您无权设置下载权限");
+			setPermissionError(rt, "您无权设置下载权限");
 			return true;
 		}
 		if(isUploadSizeExceeded(uploadSize, docAuth.getUploadSize()))
 		{
-			rt.setError("您设置上传大小超出您的权限");
+			setPermissionError(rt, "您设置上传大小超出您的权限");
 			return true;
 		}
 		if(docAuth.getHeritable()==null || heritable > docAuth.getHeritable())
 		{
-			rt.setError("您无权设置权限继承");
+			setPermissionError(rt, "您无权设置权限继承");
 			return true;
 		}
 		
@@ -3498,7 +3499,7 @@ public class ReposController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			rt.setError("仓库 " + reposId + " 不存在！");
+			rt.setError("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND);
 			writeJson(rt, response);			
 			return;
 		}
@@ -3513,7 +3514,7 @@ public class ReposController extends BaseController{
 		DocAuth docAuth = getUserDispDocAuth(repos, reposAccess.getAccessUser().getId(), doc); 
 		if(docAuth == null)
 		{
-			rt.setError("您没有该目录/文件的权限");
+			setPermissionError(rt, "您没有该目录/文件的权限");
 			return;
 		}
 		

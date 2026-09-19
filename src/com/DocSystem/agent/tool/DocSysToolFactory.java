@@ -887,6 +887,9 @@ public class DocSysToolFactory {
         if (ErrorCode.SYSTEM_BUSY.equals(errorCode)) {
             return "（服务端维护中，非调用方可解决）";
         }
+        if (ErrorCode.TASK_NOT_FOUND.equals(errorCode)) {
+            return "（该任务不存在或已被回收：请重新发起任务，不要沿用旧 taskId）";
+        }
         return "";
     }
 

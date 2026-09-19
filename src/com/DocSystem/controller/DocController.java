@@ -5273,6 +5273,7 @@ public class DocController extends BaseController{
 		if(reposAccess == null)
 		{
 			Log.debug("lockDoc reposAccess is null");
+			rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);
 			rt.setError("非法访问");
 			writeJson(rt, response);		
 			return;
@@ -5367,6 +5368,7 @@ public class DocController extends BaseController{
 		if(reposAccess == null)
 		{
 			Log.debug("lockDoc reposAccess is null");
+			rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);
 			rt.setError("非法访问");
 			writeJson(rt, response);		
 			return;
@@ -8710,7 +8712,7 @@ public class DocController extends BaseController{
 		if(storageType == null)
 		{	
 			Log.debug("getSubDocList() storageType is null");
-			rt.setError("非法存储类型！");
+			rt.setError("非法存储类型！", ErrorCode.INVALID_PARAM);
 			writeJson(rt, response);			
 			return;
 		}
@@ -8729,7 +8731,7 @@ public class DocController extends BaseController{
 		}
 		
 		Log.debug("getSubDocList() 非法存储类型:" + storageType);
-		rt.setError("非法存储类型！");
+		rt.setError("非法存储类型！", ErrorCode.INVALID_PARAM);
 		writeJson(rt, response);			
 	}
 
@@ -8847,7 +8849,7 @@ public class DocController extends BaseController{
 		if(storageType == null)
 		{	
 			Log.debug("getInitSubDocList() storageType is null");
-			rt.setError("非法存储类型！");
+			rt.setError("非法存储类型！", ErrorCode.INVALID_PARAM);
 			writeJson(rt, response);			
 			return;
 		}
@@ -8866,7 +8868,7 @@ public class DocController extends BaseController{
 		}
 		
 		Log.debug("getInitSubDocList() 非法存储类型:" + storageType);
-		rt.setError("非法存储类型！");
+		rt.setError("非法存储类型！", ErrorCode.INVALID_PARAM);
 		writeJson(rt, response);			
 	}
 	

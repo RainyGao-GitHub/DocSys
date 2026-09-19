@@ -87,7 +87,7 @@ public class TestReturnAjaxErrorCode {
     private static void testGuidance() {
         for (String code : new String[]{ErrorCode.DOC_LOCKED, ErrorCode.NO_PERMISSION,
                 ErrorCode.DOC_NOT_FOUND, ErrorCode.REPOS_NOT_FOUND, ErrorCode.INVALID_PARAM,
-                ErrorCode.NOT_LOGIN, ErrorCode.SYSTEM_BUSY}) {
+                ErrorCode.NOT_LOGIN, ErrorCode.SYSTEM_BUSY, ErrorCode.TASK_NOT_FOUND}) {
             check("已知码有处置提示: " + code,
                     DocSysToolFactory.guidanceFor(code) != null
                             && DocSysToolFactory.guidanceFor(code).length() > 0);
