@@ -154,7 +154,7 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 - **Agent 页面端到端**：建两个目录 → 立刻移入 → 移回根 → 删除两个目录，**6 步写操作全 ok**（确认门 6 次均正常），
   磁盘还原；模型还自己总结出"docId 会随移动变化、不能沿用旧值"。
 
-## R1-1b 权限/登录/仓库不存在出口补码（2026-09-20）—— 把 R1-1 的码铺满
+## R1-1b 权限/登录/仓库不存在出口补码（2026-09-20）—— 把 R1-1 的码铺满 — ✅ 已提交（主库 `16ac39a43`、websocket 库 `142c2014`）
 
 ### 打了什么（66 处，全部人工分类）
 - `ReposController`：未登录 18（NOT_LOGIN）、权限 28（`setPermissionError`）、仓库不存在 7（REPOS_NOT_FOUND）、备份任务不存在 2（新增码 TASK_NOT_FOUND）
@@ -182,15 +182,14 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0，先做）**：R1-1 后端补 errorCode ✅ `eda22474b` → **R1-1b 权限/登录/不存在出口补码 ✅（待提交）** → R1-1c `docSysErrorLog(…不存在！)` 66 处 → R1-4 `get_doc_history` → R1-5 `list_repos` → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
+- **R1（P0，先做）**：R1-1 ✅ `eda22474b` → R1-1b ✅ `16ac39a43`/`142c2014` → R1-1c `docSysErrorLog(…不存在！)` 66 处 → R1-4 `get_doc_history` → R1-5 `list_repos` → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 主仓库 `devInt`（**R1-1b**）：`common/ErrorCode.java`（+TASK_NOT_FOUND）、`controller/ReposController.java`、`controller/DocController.java`、`agent/tool/DocSysToolFactory.java`（TASK_NOT_FOUND 提示）、`agent/tool/TestReturnAjaxErrorCode.java`、`agent/tool/TestPermissionErrorCoding.java`（新增）、`devDocs/Agent工具与接口可靠性计划.md` + 本卡
-- **websocket 仓库 `src/com/DocSystem/websocket`（master）**：`BussinessController.java`（仓库结构见计划 §4 “业务/分享接口”行）
-- 已提交：R1-1 错误码 = `eda22474b`；工作卡记录 = `78fae07f3`；可靠性计划 = `9c675b79a`；move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
+- 无（主库与 websocket 库均干净；R1-1 = `eda22474b`、R1-1b = `16ac39a43` / websocket `142c2014`）
+- 已提交：R1-1b = 主库 `16ac39a43` + websocket 库 `142c2014`；R1-1 错误码 = `eda22474b`；工作卡记录 = `78fae07f3`；可靠性计划 = `9c675b79a`；move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
 - office 仓库：与本任务无关
 
 ## 生效约束
@@ -199,3 +198,4 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 - 编译输出目录铁律：`-d WebRoot/WEB-INF/classes`，源码树不得出现 `.class`。
 - 运行期技能 store：dev = `C:\DocSysReposes\skills`（配置 `AgentSkillStorePath`），源码删除后必须手工清理同名目录。
 - 测试/探针产物写 `%TEMP%\docsys_chk\`；**绝不写工程根 `tmp/`**（计划 §5 不变量 3）。
+- **`src/com/DocSystem/websocket` 是独立 git 仓库（master）**，主仓库 `.gitignore` 排除它；`BussinessController.java`/`BusinessBaseController.java` 在那里，改完要分开提交。
