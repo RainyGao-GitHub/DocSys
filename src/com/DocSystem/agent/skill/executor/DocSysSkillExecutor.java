@@ -66,32 +66,18 @@ public class DocSysSkillExecutor implements SkillExecutor {
      */
     private static final Set<String> BUILT_IN_SKILL_IDS = new HashSet<>(Arrays.asList(
         // Repository skills
-        "list_repos", "list-repos",
         "create_repos", "create-repos", "add_repos",
         "delete_repos", "delete-repos",
-        "get_repos", "repos-info",
         "update_repos",
         "backup_repos", "backup",
         "backup_status",
         // Document skills
-        "get_doc_list", "list-docs", "list_docs",
         "add_doc", "create-doc", "add-document",
         "delete_doc", "delete-doc", "delete-document",
         "rename_doc", "rename-doc",
         "move_doc", "move-doc",
         "copy_doc", "copy-doc",
-        "get_doc", "doc-info",
-        "doc_history", "version-history",
-        // Search skills
-        "search_doc", "search", "search-docs",
-        "search_in_repo",
-        // AI/Chat skills
-        "rag_chat", "chat-with-docs",
-        "list_models", "ai-models",
-        // User skills
-        "whoami",
         // System skills
-        "config", "system-config", "system_config",
         "help", "help-repos", "help-docs", "help-search",
         "banner",
         "init-llm", "init-auth",
@@ -114,21 +100,15 @@ public class DocSysSkillExecutor implements SkillExecutor {
     public SkillExecutionResult execute(String skillId, Map<String, String> params, AgentContext context) {
         try {
             log.debug("DocSysSkillExecutor handling: {} params={}", skillId, params);
-            // ---------- USER ----------
-            if ("whoami".equals(skillId)) return handleWhoami();
             // ---------- REPOS ----------
-            if ("list_repos".equals(skillId) || "list-repos".equals(skillId)) return handleListRepos();
             if ("add_repos".equals(skillId) || "create-repos".equals(skillId)) return handleAddRepos(
                 params.get("name"), params.get("desc"), params.get("path"),
                 params.get("type"), params.get("verCtrl"));
             if ("delete_repos".equals(skillId) || "delete-repos".equals(skillId)) return handleDeleteRepos(params.get("name"));
-            if ("get_repos".equals(skillId) || "repos-info".equals(skillId)) return handleGetRepos(params.get("vid"));
             if ("update_repos".equals(skillId)) return handleUpdateRepos(params);
             if ("backup_repos".equals(skillId) || "backup".equals(skillId)) return handleBackupRepos(params.get("vid"), params.get("path"));
             if ("backup_status".equals(skillId)) return handleBackupStatus(params.get("taskId"));
             // ---------- DOCS ----------
-            if ("get_doc_list".equals(skillId) || "list-docs".equals(skillId) || "list_docs".equals(skillId)) return handleGetDocList(
-                params.get("vid"), params.get("pid"), params.get("path"));
             if ("add_doc".equals(skillId) || "create-doc".equals(skillId) || "add-document".equals(skillId)) return handleAddDoc(
                 params.get("vid"), params.get("pid"), params.get("path"),
                 params.get("name"), params.get("type"), params.get("content"));
@@ -139,17 +119,8 @@ public class DocSysSkillExecutor implements SkillExecutor {
                 params.get("name"), params.get("newName"));
             if ("move_doc".equals(skillId) || "move-doc".equals(skillId)) return handleMoveDoc(params);
             if ("copy_doc".equals(skillId) || "copy-doc".equals(skillId)) return handleCopyDoc(params);
-            if ("get_doc".equals(skillId) || "doc-info".equals(skillId)) return handleGetDoc(
-                params.get("vid"), params.get("docId"), params.get("path"), params.get("name"));
-            if ("doc_history".equals(skillId) || "version-history".equals(skillId)) return handleDocHistory(params.get("vid"), params.get("docId"));
-            // ---------- SEARCH ----------
-            if ("search_doc".equals(skillId) || "search".equals(skillId) || "search-docs".equals(skillId)) return handleSearchDoc(params.get("query"), params.get("vid"));
             // ---------- CHAT ----------
-            if ("rag_chat".equals(skillId) || "chat-with-docs".equals(skillId)) return handleRagChat(
-                params.get("query"), params.get("model"), params.get("apiKey"));
-            if ("list_models".equals(skillId) || "ai-models".equals(skillId)) return handleListAiModels();
             // ---------- SYSTEM ----------
-            if ("config".equals(skillId) || "system-config".equals(skillId) || "system_config".equals(skillId)) return handleGetConfig();
             if ("help".equals(skillId)) return handleHelp();
             if ("help-repos".equals(skillId)) return handleHelpRepos();
             if ("help-docs".equals(skillId)) return handleHelpDocs();

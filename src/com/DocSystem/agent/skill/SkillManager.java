@@ -69,26 +69,17 @@ public class SkillManager {
      */
     private void loadBuiltInSkills() {
         // ========== Repository Skills ==========
-        registerSkill(new Skill("list_repos", "List Repositories", 
-            "List all accessible repositories in DocSystem. Aliases: list repos, 仓库列表, 列出仓库",
-            "repository", "read"));
         registerSkill(new Skill("create_repos", "Create Repository",
             "Create a new repository with name, description, path. Aliases: create repo, 创建仓库, 新建仓库",
             "repository", "write"));
         registerSkill(new Skill("delete_repos", "Delete Repository",
             "Delete an existing repository by ID. Aliases: delete repo, 删除仓库",
             "repository", "write"));
-        registerSkill(new Skill("repos_info", "Repository Info",
-            "Get detailed information about a repository. Aliases: repos info, 仓库详情",
-            "repository", "read"));
         registerSkill(new Skill("backup_repos", "Backup Repository",
             "Backup a repository to specified path. Aliases: backup, 备份仓库",
             "repository", "admin"));
             
         // ========== Document Skills ==========
-        registerSkill(new Skill("list_docs", "List Documents",
-            "List documents in a repository or folder. Aliases: list docs, 列出文档, 查看文档",
-            "document", "read"));
         registerSkill(new Skill("add_doc", "Add Document",
             "Add a new document to repository. Aliases: add doc, 上传文档, 添加文档",
             "document", "write"));
@@ -104,38 +95,7 @@ public class SkillManager {
         registerSkill(new Skill("copy_doc", "Copy Document",
             "Copy a document. Aliases: copy doc, 复制文档",
             "document", "write"));
-        registerSkill(new Skill("get_doc", "Get Document",
-            "Get document content/details. Aliases: get doc, 获取文档",
-            "document", "read"));
-        registerSkill(new Skill("doc_history", "Document History",
-            "Get version history of a document. Aliases: history, 版本历史",
-            "document", "read"));
-            
-        // ========== Search Skills ==========
-        registerSkill(new Skill("search_doc", "Search Documents",
-            "Full-text search across all documents. Aliases: search, 搜索, 查找, 检索",
-            "search", "read"));
-        registerSkill(new Skill("search_in_repo", "Search In Repository",
-            "Search documents within a specific repository. Aliases: search in, 在仓库中搜索",
-            "search", "read"));
-            
-        // ========== AI/Chat Skills ==========
-        registerSkill(new Skill("rag_chat", "RAG Chat",
-            "Chat with AI using document context (RAG). Aliases: chat with docs, 基于文档问答",
-            "ai", "read"));
-        registerSkill(new Skill("list_models", "List AI Models",
-            "List available AI models. Aliases: ai models, 模型列表",
-            "ai", "read"));
-            
-        // ========== User Skills ==========
-        registerSkill(new Skill("whoami", "Who Am I",
-            "Show current user information. Aliases: whoami, 我是谁, 当前用户",
-            "user", "read"));
-            
         // ========== System Skills ==========
-        registerSkill(new Skill("system_config", "System Config",
-            "Get system configuration. Aliases: config, 系统配置",
-            "system", "admin"));
         registerSkill(new Skill("system_help", "Help",
             "Show available commands and help. Aliases: help, 帮助, ?",
             "system", "read"));

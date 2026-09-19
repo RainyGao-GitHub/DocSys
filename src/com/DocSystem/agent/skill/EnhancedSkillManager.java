@@ -106,12 +106,8 @@ public class EnhancedSkillManager {
      */
     private void loadBuiltInSkills() {
         // Register built-in skills with full definitions
-        registerSkill(createListReposSkill());
         registerSkill(createCreateReposSkill());
         registerSkill(createDeleteReposSkill());
-        registerSkill(createListDocsSkill());
-        registerSkill(createSearchDocSkill());
-        registerSkill(createWhoamiSkill());
         
         log.info("Loaded {} built-in enhanced skills", skills.size());
     }

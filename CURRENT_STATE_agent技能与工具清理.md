@@ -27,25 +27,36 @@
   - 删 `DocSysToolFactory.aiChat`（未注册死定义）、`get_banner_config`（注册+定义；client/端点保留给 CLI 与 Banner.js）
   - 删技能目录 `darwin-eval`（无 skill.md）、`backup_repo`（与 backup_repos 重复）、`test-skill`（用户裁定删除）——仓库与运行期 store 均已删
   - 实测：工具 **28→27**；`/skills` **37→36→（删 test-skill）35**；护栏全绿；重启 dev Tomcat 后 200 复验
-- **P2 下线 3 个 DocSys 技能 — ✅ 完成（2026-09-19，待提交）**
+- **P2 下线 3 个 DocSys 技能 — ✅ 完成（2026-09-19，已提交 `7621521ca`）**
   - `download_doc` / `upload_doc` / `ai_chat`：目录 + store 删除；`SkillManager` 内置注册、`EnhancedSkillManager` 三个 `create*Skill` 方法、两处 `BUILT_IN_SKILL_IDS`、`DocSysSkillExecutor` 分发与 handler（`handleDownloadDoc`/`handleChat`）全部移除
   - 实测：`/skills` **35 → 32**（三个 id 均消失，`rag_chat`/`system_help` 保留）；工具 27 不变；护栏 6 项全绿（58/55/29/26/30/55）；重启后 200
   - 遗留：`SubAgent`/`MainAgent`/`LLMIntentParser` 的旧编排分支未动（不依赖技能注册表，P4 可选清理）
-- **P3a（S2 试点）— ✅ 完成（2026-09-19，待提交）**
+- **P3a（S2 试点）— ✅ 完成（2026-09-19，已提交 `fcf727d5f`）**
   - `user_login` / `user_logout`：目录+store、`SkillManager` 注册、两处白名单（含 `login`/`logout` 别名）、`DocSysSkillExecutor` 分发 + `handleLogin`/`handleLogout` 均移除
   - `status`：仅目录+store（本就不在任何白名单）
   - 实测：`/skills` **32 → 29**；工具 27；护栏 6 项全绿（58/55/29/26/30/55）；重启后 200
-- P3b（S1 23 个同名技能）、P4 未开始。
+- **身份与权限核查 — ✅ 完成（2026-09-19，写入计划 §2.5）**
+  - 工具通道：身份 = **HttpSession 的 `login_user`**，经 `copyWithSession(jsessionid)` 带 cookie，后端按该用户 `ReposAccess` 鉴权（实测：无 cookie → "用户未登录"；带 cookie → ok）
+  - 技能（内置 handler）通道：**无身份**（`DocSysSkillExecutor` 单例 client 构造期 new、`AgentContext` 无 cookie）→ DocSys 调用一律失败
+  - 结构风险：该单例 client 一旦被写 cookie 就跨用户冒用（历史触发点 `user_login` 已删，触发点消除、结构未消除）→ **P3b 要删该执行器及其实例 client**
+  - 另：`SKILL.md` 的 `permissions` 不参与鉴权（仅展示）；`checkSkillAccess` 只管技能可见性
+- **P3b-读（只读组 11 个）— ✅ 代码完成 + 静态验证（2026-09-19）**
+  - 下线：`list_repos` `repos_info` `list_docs` `get_doc` `doc_history` `list_models` `search_doc` `search_in_repo` `rag_chat` `whoami` `system_config`（目录+store、两个 Manager 注册、两处白名单+分发）
+  - 静态实测：`/skills` **29 → 18**；工具 **27 不变**；护栏 6 项全绿（58/55/29/26/30/55）
+  - 遗留死代码（无引用，待 P3b-写收尾清除）：`DocSysSkillExecutor` 的 10 个 handler + `EnhancedSkillManager` 的 4 个 `create*Skill`
+  - ⏳ 浏览器端到端验证：进行中（用户要求每轮必做）
+- P3b-写（11 个写类技能 + 删执行器）、P4 未开始。
 
 ## 下一步
 
-1. 用户确认后进入 **P3b**：S1 的 23 个同名技能（`add_doc` `backup_repo`①、`backup_repos` `copy_doc` `create_repos` `delete_doc` `delete_repos` `doc_history` `get_doc` `list_docs` `list_models` `list_repos` `lock_doc` `move_doc` `rag_chat` `rename_doc` `repos_info` `search_doc` `search_in_repo` `share_doc` `unlock_doc` `whoami` `system_config`）——① `backup_repo` 已在 P1 删除，实为 22 个
-2. P4：工具瘦身裁定（`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc`）+ store 清理机制
+1. 完成 P3b-读的 **Agent 页面端到端验证**（列仓库 / 列目录 / 搜索 / 读文件 → 确认走工具且结果正确）
+2. P3b-写：`add_doc` `create_repos` `delete_repos` `delete_doc` `rename_doc` `move_doc` `copy_doc` `backup_repos` `lock_doc` `unlock_doc` `share_doc` + 删 `DocSysSkillExecutor` 及其实例 client + 清死代码；做完同样要页面验证
+3. P4：工具瘦身裁定（`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc`）+ store 清理机制 +（可选）免 HTTP 直调门面评估
 
 ## 未提交改动
 
-- 主仓库 `devInt`：P3a 改动（`SkillManager` / `DocSysSkillExecutor` / `ExternalSkillExecutor` + 3 个技能目录删除 + 本卡与计划文档更新）
-- 已提交：P1 = `a3b2da425`；P2 = `7621521ca`；UTF-8 编码修复 = `3c774d101`（用户此前提交）
+- 主仓库 `devInt`：P3b-读 代码改动（`SkillManager` / `EnhancedSkillManager` / `DocSysSkillExecutor` / `ExternalSkillExecutor` + 11 个技能目录删除）+ 文档（计划 P3b / 本卡）；另含上一轮未提交的 §2.5 文档改动
+- 已提交：P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；UTF-8 编码修复 = `3c774d101`（用户此前提交）
 - office 仓库：与本任务无关
 
 ## 生效约束

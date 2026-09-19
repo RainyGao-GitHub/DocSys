@@ -39,7 +39,13 @@
 
 `add_doc` `backup_repo` `backup_repos` `copy_doc` `create_repos` `delete_doc` `delete_repos` `doc_history` `get_doc` `list_docs` `list_models` `list_repos` `lock_doc` `move_doc` `rag_chat` `rename_doc` `repos_info` `search_doc` `search_in_repo` `share_doc` `unlock_doc` `whoami` `system_config`
 
-> ⚠️ `lock_doc` `unlock_doc` `share_doc` `status` `system_help` `test-skill` `backup_repo` **不在任何内置白名单内**（两个 executor 的 `BUILT_IN_SKILL_IDS` 都没有），实际走"目录技能 → 外部策略 2（CLI `docsys …`）"，而该 CLI 命令在本环境不存在 → 执行必失败。删除无功能损失。
+> ⚠️ `lock_doc` `unlock_doc` `share_doc` `status` `system_help` `test-skill` `backup_repo` **不在任何内置白名单内**（两个 executor 的 `BUILT_IN_SKILL_IDS` 都没有）；`repos_info` 另有问题：**别名写成连字符**（`repos-info`）而技能 id 是下划线（`repos_info`）—— 见下方「更正」。
+>
+> **更正（2026-09-19 核查）**：
+> 1. `repos_info` **有 Java 实现**（`DocSysSkillExecutor.handleGetRepos`），但白名单/分发只列了 `get_repos` 与 `repos-info`（`DocSysSkillExecutor.java:72/125`、`ExternalSkillExecutor.java:67`）→ 技能 id `repos_info`（下划线，来自目录名与 frontmatter）**匹配不上**，`run_skill("repos_info")` 落到外部策略。
+> 2. **外部策略在本部署整体不可执行**（已逐一核查技能目录 + 运行期 store）：**无一个目录含 `__main__.py` 或 `agent.md`**，环境也**没有 `docsys` CLI** → 策略1/2/3 全失败（`All three strategies failed for skill 'x'`）。
+> 3. 推论：凡不在白名单的技能 = **纯清单条目**（只有帮助列表/技能市场可见，不可执行）——包括 `repos_info` `lock_doc` `unlock_doc` `share_doc`，以及文档型 `ant-expert` `java-expert`（这也说明 ant-expert 当年的乱码只影响帮助列表显示，与执行无关）。删除这些条目无行为损失。
+> 4. 若日后要让外部技能真可执行，需补齐资产（安装 `docsys` CLI，或在技能目录提供 `__main__.py`（Python 策略）/ `agent.md`（LLM 引导策略））——属独立课题，不在本计划范围。
 
 ### S2 无工具、建议删/不暴露（3，P3a 已删）
 
@@ -57,6 +63,36 @@
 
 - `SkillManager.loadBuiltInSkills()`：27 条（list_repos … browser_use）
 - `EnhancedSkillManager`：9 条（`setId`：list_repos / create_repos / delete_repos / list_docs / search_doc / upload_doc / download_doc / whoami / chat）
+
+## 2.5 技能通道的身份与权限（2026-09-19 核查，结论：**技能通道无身份**）
+
+### 身份机制（工具通道是正确的）
+- 身份来源不是 HTTP，而是 **HttpSession 里的 `login_user` 属性**；HTTP 只是 `JSESSIONID` 的载体
+- 链路：`AgentController:276` `request.getSession().getId()` → `MainAgent:221` `copyWithSession(jsessionid, username)`（`DocSysClient:1122` 写入 `Cookie: JSESSIONID=…`）→ `runToolUseLoop(..., client, ...)`（javadoc："per-request DocSysClient（会话隔离）"）→ 后端 `BaseController:579` `session.getAttribute("login_user")` → `checkAndGetAccessInfo`（`:8348`）构造 `ReposAccess(authMask)` → `checkUserDeleteRight` / `checkUserAddRight` / `checkUserAccessPwd`
+- ⚠️ `copyWithSession(jsessionId, username)` 的 `username` **不参与鉴权**（仅日志/展示），真实身份由 cookie 决定
+- 实测（`%TEMP%\docsys_chk\IdProbe.java`，2026-09-19）：无 cookie → `{"msgInfo":"用户未登录","status":"fail"}`；带浏览器 JSESSIONID → `status:ok` + 完整仓库列表
+
+### 技能（内置 handler）通道：无身份
+- `DocSysSkillExecutor` 的 client 构造期 new 一次（`:53/59`），`run_skill` 传入的 `AgentContext` 只带 sessionId/userId/username/role（无 cookie/client），也没有 per-request 注入 setter
+- ⇒ DocSys 内置技能的 HTTP 调用在真实运行中一律"用户未登录"（功能失效，非越权）
+
+### 结构风险：共享单例 client 的 cookie 串号
+- 该 client 是 Spring 单例：一旦有代码写入 cookie（`login()` 在 `DocSysClient:88` 写 `this.sessionCookie`；`setSessionCookie` `:1102`），后续**所有用户**经此执行器的请求都会带那把 cookie → 以他人身份执行
+- 历史触发点：`user_login` 技能（P3a 已删）。现状：现存 `.login(` 仅 `DocSysCLI:161` 与 `SubAgent:279`（均为 per-request client）→ **触发点已消除，结构未消除**
+- 决策：P3b 删除 `DocSysSkillExecutor` 及其实例 client（或至少改为 per-request 注入）
+
+### 技能"权限声明"不生效
+- `Skill.getPermission()` 仅用于 `/skills` 展示（`AgentController:1577`），**不参与鉴权**
+- `ExternalSkillExecutor.checkSkillAccess`（`:204/250`）只校验技能可见性（PRIVATE/TENANT/PUBLIC），**不校验文档级权限**
+- ⇒ 技能侧没有细粒度权限保护；真保护只在后端 controller，而技能通道拿不到身份去触发它
+
+### 外部技能通道（供参考）
+- `ExternalSkillExecutor.injectEnvVars` 注入 `DOCSYS_SESSION`（= `context.getSessionId()`）/`DOCSYS_USER`/`DOCSYS_PASSWORD` → 理论上有身份
+- 但 `context.getSessionId()` 语义漂移（既当 jsessionid 又当附件会话键），且当前无 `__main__.py`/agent.md/CLI 资产 → 未验证；若复活外部技能，须先把该字段明确定义为 HttpSession id
+
+### 若将来做"免 HTTP 直调"
+- 只在"**门面 + 显式 User**"形态下做：Controller 从 session 取 `User`、Agent 从同一 session 取同一个 `User`，两边共用业务实现
+- 必须补齐 controller 的鉴权链（`checkAndGetAccessInfo` / shareId / authMask / docPwd / 锁 / 审计）——"身份正确"的保障从容器转移到调用方
 
 ## 3. 阶段计划
 
@@ -91,14 +127,27 @@
 - **实测**：`/skills` **32 → 29**（三个 id 均消失，`whoami`/`system_help` 保留）；工具 27 不变；护栏 6 项全绿（58/55/29/26/30/55）；重启后 200
 - 保留：`SubAgent.handleLogin/handleLogout`（旧编排自有路径，不依赖技能注册表；`DocSysClient.login/logout` 亦保留）
 
-#### P3b S1 23 个同名技能 — 待办
+#### P3b-读 只读组 11 个 — ✅ 完成（2026-09-19，浏览器验证见下）
 
-- 验收：`/skills` 只剩插件类；真实对话回归"找/读/写/移/删"；护栏全绿
+- 下线名单：`list_repos` `repos_info` `list_docs` `get_doc` `doc_history` `list_models` `search_doc` `search_in_repo` `rag_chat` `whoami` `system_config`
+- [x] 目录 + 运行期 store（双删，每个 11 个）
+- [x] `SkillManager` 内置注册（含整段 Search/AI-Chat/User 小节）+ `EnhancedSkillManager` 注册（`createListReposSkill`/`createListDocsSkill`/`createSearchDocSkill`/`createWhoamiSkill`）
+- [x] 两处 `BUILT_IN_SKILL_IDS` 与 `DocSysSkillExecutor` 分发分支（含别名组 `list-repos`/`repos-info`/`get_doc_list`/`list-docs`/`doc-info`/`version-history`/`search`/`search-docs`/`chat-with-docs`/`ai-models`/`config`/`system-config`）
+- ⏳ 遗留：`DocSysSkillExecutor` 里这些 id 的 handler 方法（`handleListRepos`/`handleGetRepos`/`handleGetDocList`/`handleGetDoc`/`handleDocHistory`/`handleSearchDoc`/`handleRagChat`/`handleListAiModels`/`handleWhoami`/`handleGetConfig`）与 `EnhancedSkillManager` 的 4 个 `create*Skill` 现已**无引用**（死代码），待 P3b-写收尾或删除执行器时一并清除
+- **静态实测**：`/skills` **29 → 18**；工具 **27 不变**（`list_repos`/`get_doc`/`get_doc_history`/`search_files`/`rag_chat`/`get_sys_config` 均在）；护栏 6 项全绿（58/55/29/26/30/55）；目录计数：仓库 29→18、store 30→19
+
+#### P3b-写 写组 11 个 — 待办
+
+- 名单：`add_doc` `create_repos` `delete_repos` `delete_doc` `rename_doc` `move_doc` `copy_doc` `backup_repos` `lock_doc` `unlock_doc` `share_doc`
+- 保留（不删，共 7）：`ant-expert` `java-expert` `playwright` `browser_use` `web_search` `system_help` `banner`
+- [ ] 逐项下线（同 6 处同步）+ **删除 `DocSysSkillExecutor` 及其实例 `docSysClient`**（无身份；共享单例有串号结构风险——见 §2.5），或至少改为 per-request 注入
+- 验收：`/skills` 只剩上述 7 个；**打开 Agent 页面真实对话回归**“找/读/写/移/删”；护栏全绿；`run_skill("<DocSys能力>")` 明确报 No executor
 
 ### P4 工具瘦身裁定 + 机制加固
 
 - [ ] 裁定：`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc` `web_search`（技能版）
 - [ ] store 清理机制：下线 id 黑名单 / 升级清理（`AgentInitService` 是"已存在跳过"的单向拷贝，老环境副本清不掉）
+- [ ] （可选）"免 HTTP 直调"评估：只在"门面 + 显式 User"形态下做，且必须补齐 controller 鉴权链——见 §2.5
 - [ ] 文档与 repo 记忆更新
 
 ## 4. 固定联动点与已知坑
