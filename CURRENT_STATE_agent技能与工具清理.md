@@ -60,21 +60,58 @@
   - 验证：护栏 6 项全绿（52/55/29/26/30/55）；编译通过；重启 200；store 清扫实测（预置 `rag_chat`+`lock_doc` 残留 → 重启后递归删除，`java-expert` 保留）
   - 页面端到端：工具清单无那 5 个；写 `create_folder`/`delete_doc` 确认门正常；负向「锁定文件」→ 模型声明无此工具、未调用 ✓
 
+## move_doc 底层功能修复（2026-09-20）—— 智能体"资料整理"的底层能力
+
+### 根因（代码 + 实测取证）
+realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, path+name)` 的派生值：
+`docId = level*100000000000L + (path+name).hashCode() + 102147483647L`。而
+`buildBasicDoc(vid, docId, pid, reposPath, path, name, …)` 在 **path 与 name 同时为空**时会把文档
+**强制改写为仓库根目录**（`docId=0 / pid=-1 / level=-1`）——传入的 docId 被丢弃。
+
+因此只带 `docId+dstPid` 的调用（正是模型 19/19 次的传参方式，audit_logs 已取证）会变成：
+源文档/目标目录双双塔缩为仓库根 → 先 FORCE 锁住根目录(`key=vid_`)，再锁目标时命中"父目录已被锁定"
+→ `lock dstDoc [] Failed` / `用户[Admin]正在移动文件[],请稍后重试!`。
+
+### 两层修复
+1. **服务端按 docId 反查（`BaseController.resolveRealDocByDocId`）**：解析链 = doc 表 → 文件名索引 →
+   按 level 限定层级的文件系统枚举；每个候选都用 `Path.buildDocIdByName(level, path, name)` 重算校验。
+   level 由 docId 反推（`floorDiv(docId - 99999999999, 1e11)`，已用 1435 组往返用例钉住）。
+   `moveDoc`/`copyDoc`/`renameDoc`/`deleteDoc` 四个接口在缺少 path/name 时自动补全（**仅缺参时触发，UI 行为不变**）。
+2. **工具层锁占用重试（`DocSysToolFactory.callWithLockRetry`）**：写操作在后台异步动作（版本库提交/推送/索引）
+   完成前会一直持有 FORCE 锁，实测窗口 **0.6~1.0s**；"先建目录、立刻移入"必然撞上。
+   按提示语"请稍后重试"识别为可重试，退避重试 6 次×500ms；真实错误（权限/不存在）不重试。
+
+### 顺带加固
+- **拒绝静默回落根目录**：解析失败时明确报错（"无法通过 docId=… 定位源文件（可能已被移动/重命名/删除）…"），
+  不再报含糊的锁冲突；无 docId 也无 path/name 时直接提示缺定位信息（挡住"删根"风险）。
+- **同位置守卫**：源与目标同一个 `path+name` 时提前报错，避免两个 FORCE 锁落在同一 key 上。
+- **异步解锁用 try/finally 包住**（`executeCommonActionListAsyncEx` + `releaseDocLockQuietly`）：
+  异步动作抛异常时也必须释放锁，并在解锁后仍残留 FORCE 锁时告警。
+
+### 验证证据
+- 新增护栏：`TestDocIdResolve` 11/11（docId 公式 + level 反解 1435 组 + 边界 hashCode）；
+  `TestLockRetry` 9/9（标记识别/重试后成功/真实错误不重试/耗尽次数）；其余 6 项全绿（52/55/29/26/30/55）
+- 工具层端到端（Java，走 Agent 同一代码路径）：`MoveToolE2E` **15/15**：建目录后立刻移动（重试成功）、
+  移回根、docId-only 重命名、过期 docId → 明确报错（非锁错误）、docId-only 删除、磁盘无残留
+- **Agent 页面端到端**（真实 LLM + 确认门）：`在仓库 5 建 AI整理测试 → 把 TTITrace 移进去` → 3 步工具调用
+  （create_folder×2 + move_doc）全部批准并成功；反向 `移回根 + 删除空目录` → 2 步（move_doc + delete_doc）
+  成功；磁盘核对 `TTITrace` 回到根目录、`AI整理测试` 已删、无残留
+
 ## 全阶段完成情况
 
-P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅（未提交）
+P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
 技能：37 → **7**（`ant-expert` `java-expert` `playwright` `browser_use` `web_search` `system_help` `banner`）；工具：35 定义 → **22**（10R+12W，另含条件工具 memory_*3/web_search/run_skill/attachment）
 
 ## 下一步
 
-1. 提交 P4（主仓库 `devInt`）
-2. 遗留（与本轮清理无关，待裁定）：`move_doc` 工具失败根因（只传 docId+dstPid → 空 name/path → FSM 重复 FORCE 锁同键；方案 A/B/C）、FSM 失败释放自锁
-3. 可选：后端级测试（TestBackupTools 类断言备份族）、提醒后续新增/下线工具要同步 `TestWriteTools` 计数
+1. 提交 move_doc 修复（主仓库 `devInt`）
+2. 可选后续：`list_docs` 的 4000 字截断（大目录返回被截断，模型无法解析；仓库 5 根目录 90+ 项必踩）
+3. 可选后续：后端给"文档被锁占用"加错误码（现靠提示语"请稍后重试"判定，较脆弱）
 
 ## 未提交改动
 
-- 主仓库 `devInt`：P4 代码（`DocSysToolFactory` / `TestWriteTools` / `AgentInitService`）+ 文档（计划 §P4 / 本卡）
-- 已提交：P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；UTF-8 编码修复 = `3c774d101`（用户此前提交）
+- 主仓库 `devInt`：`BaseController`（resolver + 异步解锁 try/finally）/ `DocController`（4 接口按 docId 反查 + 定位守卫）/ `DocSysToolFactory`（锁占用重试）/ 新增 `TestDocIdResolve` + `TestLockRetry` + 本卡
+- 已提交：P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
 - office 仓库：与本任务无关
 
 ## 生效约束

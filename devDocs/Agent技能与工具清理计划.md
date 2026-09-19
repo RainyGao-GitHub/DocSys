@@ -161,7 +161,7 @@
 | `rag_chat` (R) | **下线** | 与 Agent 自身推理 + `search_files`/`grep_files`/`get_doc` 重叠 |
 | `list_ai_models` (R) | **下线** | 模型配置元信息，模型选择属对话层 |
 | `get_sys_config` (R) | **下线** | 系统配置暴露给模型，收益低、风险面大 |
-| `lock_doc` (W) | **下线** | 协作编辑语义的 2h FORCE 锁，失败不自解（`move_doc` 锁冲突故障直接诱因） |
+| `lock_doc` (W) | **下线** | 协作编辑语义的 2h FORCE 锁，失败不自解（后证实 `move_doc` 的报错与它无关，真因见工作卡"move_doc 底层功能修复"，已于 2026-09-20 修复） |
 | `unlock_doc` (W) | **下线** | 同上，成对 |
 | `backup_repos` (W) | 保留 | 运维动作，"AI 运维助手"场景有真实价值 |
 | `query_backup_status` (R) | 保留 | 与 `backup_repos` 成对 |

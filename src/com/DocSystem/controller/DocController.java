@@ -300,6 +300,39 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
+
+		//【delete_doc 修复】只带 docId 时按 docId 反查 path/name。
+		//否则 buildBasicDoc 会得到空 path+空 name（=仓库根目录），删除请求会变成“删根”——必须拦住。
+		if(name == null || name.isEmpty() || path == null || path.isEmpty())
+		{
+			Doc resolvedSrcDoc = resolveRealDocByDocId(repos, reposId, docId);
+			if(resolvedSrcDoc != null && (resolvedSrcDoc.getLevel() == null || resolvedSrcDoc.getLevel() != -1))
+			{
+				Log.info("deleteDoc() 按 docId 反查目标 docId:" + docId + " [" + path + name + "] -> ["
+						+ resolvedSrcDoc.getPath() + resolvedSrcDoc.getName() + "]");
+				path = resolvedSrcDoc.getPath();
+				name = resolvedSrcDoc.getName();
+				pid = resolvedSrcDoc.getPid();
+				level = resolvedSrcDoc.getLevel();
+				type = resolvedSrcDoc.getType();
+			}
+		}
+
+		if((name == null || name.isEmpty()) && docId != null && docId.longValue() != 0L)
+		{
+			docSysErrorLog("无法通过 docId=" + docId + " 定位待删除的文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 path+name！", rt);
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		if(name == null || name.isEmpty())
+		{
+			docSysErrorLog("缺少待删除文件的定位信息：请提供 docId，或 path+name！", rt);
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
 		
 		deleteDocFromRepos(
 				"deleteDoc", "deleteDoc", "删除", taskId,
@@ -412,13 +445,6 @@ public class DocController extends BaseController{
 
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
-		if(name == null || "".equals(name))
-		{
-			docSysErrorLog("文件名不能为空！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
 		if(dstName == null || "".equals(dstName))
 		{
 			docSysErrorLog("目标文件名不能为空！", rt);
@@ -436,6 +462,36 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(!reposCheck(repos, rt, response))
 		{
+			return;
+		}
+
+		//【rename_doc 修复】只带 docId 时按 docId 反查源文档（原实现会先报“文件名不能为空”，用户/模型无从得知怎么办）
+		if(name == null || name.isEmpty())
+		{
+			Doc resolvedSrcDoc = resolveRealDocByDocId(repos, reposId, docId);
+			if(resolvedSrcDoc != null && (resolvedSrcDoc.getLevel() == null || resolvedSrcDoc.getLevel() != -1))
+			{
+				Log.info("renameDoc() 按 docId 反查源文档 docId:" + docId + " [" + path + name + "] -> ["
+						+ resolvedSrcDoc.getPath() + resolvedSrcDoc.getName() + "]");
+				path = resolvedSrcDoc.getPath();
+				name = resolvedSrcDoc.getName();
+				pid = resolvedSrcDoc.getPid();
+				level = resolvedSrcDoc.getLevel();
+				type = resolvedSrcDoc.getType();
+			}
+		}
+
+		if((name == null || name.isEmpty()) && docId != null && docId.longValue() != 0L)
+		{
+			docSysErrorLog("无法通过 docId=" + docId + " 定位待重命名的文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 path+name！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		if(name == null || "".equals(name))
+		{
+			docSysErrorLog("缺少待重命名文件的定位信息：请提供 docId，或 path+name！", rt);
+			writeJson(rt, response);			
 			return;
 		}
 		
@@ -546,7 +602,65 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-		
+
+		//【move_doc 修复】只带 docId 调用时，按 docId 反查源文档与目标目录的 path/name。
+		//若不反查：buildBasicDoc(vid, docId, ..., path="", name="") 会把二者都当成"仓库根目录"
+		//（docId 被改写为 0/pid=-1），于是先 FORCE 锁住根目录，再锁目标目录时命中"父目录已被锁定"，
+		//报 lock dstDoc Failed / "用户正在移动文件[],请稍后重试" —— Agent 早期 move_doc 19/19 失败的真因。
+		if(srcName == null || srcName.isEmpty())
+		{
+			Doc resolvedSrcDoc = resolveRealDocByDocId(repos, reposId, docId);
+			if(resolvedSrcDoc != null && (resolvedSrcDoc.getLevel() == null || resolvedSrcDoc.getLevel() != -1))
+			{
+				Log.info("moveDoc() 按 docId 反查源文档 docId:" + docId + " [" + srcPath + srcName + "] -> ["
+						+ resolvedSrcDoc.getPath() + resolvedSrcDoc.getName() + "]");
+				srcPath = resolvedSrcDoc.getPath();
+				srcName = resolvedSrcDoc.getName();
+				srcPid = resolvedSrcDoc.getPid();
+				srcLevel = resolvedSrcDoc.getLevel();
+				type = resolvedSrcDoc.getType();
+			}
+		}
+		if(docId != null && docId.longValue() != 0L && (srcName == null || srcName.isEmpty()))
+		{
+			//不能放任"定位失败"退回旧行为：buildBasicDoc 会把空 path+name 当成仓库根目录，
+			//结果是"移动整个仓库"或"锁自己的父目录"这类难以排查的失败（Agent 传过期 docId 时的真实场景）
+			docSysErrorLog("无法通过 docId=" + docId + " 定位源文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 srcPath+srcName！", rt);
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		if(srcName == null || srcName.isEmpty())
+		{
+			//无 docId 也无 srcPath/srcName：无从定位，直接给明确提示（旧行为会静默把仓库根当成源，报出锁冲突假象）
+			docSysErrorLog("缺少源文件定位信息：请提供 docId，或 srcPath+srcName！", rt);
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		if(dstPid != null)
+		{
+			Doc resolvedDstParent = resolveRealDocByDocId(repos, reposId, dstPid);
+			if(resolvedDstParent != null)
+			{
+				String resolvedDstPath = (resolvedDstParent.getLevel() != null && resolvedDstParent.getLevel() == -1)
+						? ""	//目标=仓库根目录
+						: resolvedDstParent.getPath() + resolvedDstParent.getName() + "/";
+				if(resolvedDstPath.equals(dstPath) == false)
+				{
+					Log.info("moveDoc() 按 dstPid 修正目标路径 dstPid:" + dstPid + " [" + dstPath + "] -> [" + resolvedDstPath + "]");
+					dstPath = resolvedDstPath;
+				}
+			}
+			else if(dstPid.longValue() != 0L && (dstPath == null || dstPath.isEmpty()))
+			{
+				docSysErrorLog("无法通过 dstPid=" + dstPid + " 定位目标目录（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或提供 dstPath！", rt);
+				writeJson(rt, response);
+				addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+				return;
+			}
+		}
+
 		String reposPath = Path.getReposPath(repos);
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
@@ -570,7 +684,17 @@ public class DocController extends BaseController{
 		{
 			dstName = srcName;
 		}
-		
+
+		//源与目标同一个位置：必须提前拦下。否则两个 FORCE 锁落在同一个 docLockId（vid_path+name）上，
+		//第二个锁会被 isDocForceLocked 拒绝（强制锁连自己也不放行），报出难以理解的"正在移动文件"。
+		if(srcName != null && dstName != null && (srcPath + srcName).equals(dstPath + dstName))
+		{
+			docSysErrorLog("源文件与目标位置相同，无需移动！", rt);
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
 		if(commitMsg == null || commitMsg.isEmpty())
 		{
 			commitMsg = "移动 " + srcPath + srcName + " 至 " + dstPath + dstName;
@@ -682,10 +806,67 @@ public class DocController extends BaseController{
 		{
 			return;
 		}
-		
+
+		//【copy_doc 修复】同 moveDoc：只带 docId 时按 docId 反查源文档与目标目录（否则 buildBasicDoc 会把二者当成仓库根）
+		if(srcName == null || srcName.isEmpty())
+		{
+			Doc resolvedSrcDoc = resolveRealDocByDocId(repos, reposId, docId);
+			if(resolvedSrcDoc != null && (resolvedSrcDoc.getLevel() == null || resolvedSrcDoc.getLevel() != -1))
+			{
+				Log.info("copyDoc() 按 docId 反查源文档 docId:" + docId + " [" + srcPath + srcName + "] -> ["
+						+ resolvedSrcDoc.getPath() + resolvedSrcDoc.getName() + "]");
+				srcPath = resolvedSrcDoc.getPath();
+				srcName = resolvedSrcDoc.getName();
+				srcPid = resolvedSrcDoc.getPid();
+				srcLevel = resolvedSrcDoc.getLevel();
+				type = resolvedSrcDoc.getType();
+			}
+		}
+		if(docId != null && docId.longValue() != 0L && (srcName == null || srcName.isEmpty()))
+		{
+			docSysErrorLog("无法通过 docId=" + docId + " 定位源文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 srcPath+srcName！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(srcName == null || srcName.isEmpty())
+		{
+			docSysErrorLog("缺少源文件定位信息：请提供 docId，或 srcPath+srcName！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(dstPid != null)
+		{
+			Doc resolvedDstParent = resolveRealDocByDocId(repos, reposId, dstPid);
+			if(resolvedDstParent != null)
+			{
+				String resolvedDstPath = (resolvedDstParent.getLevel() != null && resolvedDstParent.getLevel() == -1)
+						? ""	//目标=仓库根目录
+						: resolvedDstParent.getPath() + resolvedDstParent.getName() + "/";
+				if(resolvedDstPath.equals(dstPath) == false)
+				{
+					Log.info("copyDoc() 按 dstPid 修正目标路径 dstPid:" + dstPid + " [" + dstPath + "] -> [" + resolvedDstPath + "]");
+					dstPath = resolvedDstPath;
+				}
+			}
+			else if(dstPid.longValue() != 0L && (dstPath == null || dstPath.isEmpty()))
+			{
+				docSysErrorLog("无法通过 dstPid=" + dstPid + " 定位目标目录（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或提供 dstPath！", rt);
+				writeJson(rt, response);
+				return;
+			}
+		}
+
 		if(dstName == null || "".equals(dstName))
 		{
 			dstName = srcName;
+		}
+
+		//源与目标同一位置：直接报错，避免白跑一次复制/自锁冲突
+		if(srcName != null && dstName != null && (srcPath + srcName).equals(dstPath + dstName))
+		{
+			docSysErrorLog("源文件与目标位置相同，无需复制！", rt);
+			writeJson(rt, response);
+			return;
 		}
 		
 		if(commitMsg == null || commitMsg.isEmpty())

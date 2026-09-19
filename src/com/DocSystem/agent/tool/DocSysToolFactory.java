@@ -6,6 +6,8 @@ import com.DocSystem.agent.search.WebSearchResult;
 import com.DocSystem.agent.search.WebSearchService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -18,6 +20,8 @@ import java.util.Map;
  * <p>当前实现 T3.1 只读工具组（R1-R16）；写工具组（T3.2）后续加入。</p>
  */
 public class DocSysToolFactory {
+
+    private static final Logger log = LoggerFactory.getLogger(DocSysToolFactory.class);
 
     /** 工具结果文本摘要的最大长度（避免注入 LLM 上下文过大） */
     private static final int MAX_SUMMARY_LEN = 4000;
@@ -324,9 +328,9 @@ public class DocSysToolFactory {
                         return ToolResult.error("vid 必填（仓库ID）");
                     }
                     try {
-                        return ToolResult.ok(fmt(client.addDoc(
+                        return ToolResult.ok(fmt(callWithLockRetry("create_folder", () -> client.addDoc(
                                 vid, args.getLong("pid"), args.getString("path"),
-                                args.getString("name"), 2, null, null, args.getString("commitMsg"))));
+                                args.getString("name"), 2, null, null, args.getString("commitMsg")))));
                     } catch (Exception e) {
                         return ToolResult.error("create_folder failed: " + e.getMessage());
                     }
@@ -359,9 +363,9 @@ public class DocSysToolFactory {
                         return ToolResult.error("content 必填（文本文件内容）");
                     }
                     try {
-                        return ToolResult.ok(fmt(client.writeTextDoc(
+                        return ToolResult.ok(fmt(callWithLockRetry("write_file", () -> client.writeTextDoc(
                                 vid, args.getString("path"),
-                                args.getString("name"), content, args.getString("commitMsg"))));
+                                args.getString("name"), content, args.getString("commitMsg")))));
                     } catch (Exception e) {
                         return ToolResult.error("write_file failed: " + e.getMessage());
                     }
@@ -397,8 +401,8 @@ public class DocSysToolFactory {
                         String path = args.getString("path");
                         String name = args.getString("name");
                         String commitMsg = args.getString("commitMsg");
-                        Map<String, Object> res = client.updateDocContent(
-                                vid, args.getLong("docId"), path, name, content, null, commitMsg);
+                        Map<String, Object> res = callWithLockRetry("write_note", () -> client.updateDocContent(
+                                vid, args.getLong("docId"), path, name, content, null, commitMsg));
                         String status = res != null ? String.valueOf(res.get("status")) : "fail";
                         String msg = res != null ? String.valueOf(res.get("msgInfo")) : "";
                         if ("ok".equals(status)) {
@@ -406,8 +410,8 @@ public class DocSysToolFactory {
                         }
                         if (msg != null && msg.contains("不存在")) {
                             // 文档不存在 → 创建条目并写入备注（addDoc+content 即备注语义）
-                            Map<String, Object> created = client.addDoc(
-                                    vid, null, path, name, 1, null, content, commitMsg);
+                            Map<String, Object> created = callWithLockRetry("write_note", () -> client.addDoc(
+                                    vid, null, path, name, 1, null, content, commitMsg));
                             return ToolResult.ok(fmt(created));
                         }
                         return ToolResult.error(msg != null && !msg.isEmpty() ? msg : "更新备注失败");
@@ -431,10 +435,10 @@ public class DocSysToolFactory {
                 strProp("commitMsg", "提交信息（可选）"));
         JSONObject schema = objSchema(props, new String[]{"vid"});
         return ToolDefinition.builder("delete_doc", "删除文档（需确认）",
-                args -> ToolResult.ok(fmt(client.deleteDoc(
+                args -> ToolResult.ok(fmt(callWithLockRetry("delete_doc", () -> client.deleteDoc(
                         args.getInteger("vid"), args.getLong("docId"), args.getLong("pid"),
                         args.getString("path"), args.getString("name"), null,
-                        args.getString("commitMsg")))))
+                        args.getString("commitMsg"))))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -452,10 +456,10 @@ public class DocSysToolFactory {
                 strProp("commitMsg", "提交信息（可选）"));
         JSONObject schema = objSchema(props, new String[]{"vid", "dstName"});
         return ToolDefinition.builder("rename_doc", "重命名文档",
-                args -> ToolResult.ok(fmt(client.renameDoc(
+                args -> ToolResult.ok(fmt(callWithLockRetry("rename_doc", () -> client.renameDoc(
                         args.getInteger("vid"), args.getLong("docId"), args.getLong("pid"),
                         args.getString("path"), args.getString("name"), null,
-                        args.getString("dstName"), args.getString("commitMsg")))))
+                        args.getString("dstName"), args.getString("commitMsg"))))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -472,10 +476,10 @@ public class DocSysToolFactory {
                 strProp("commitMsg", "提交信息（可选）"));
         JSONObject schema = objSchema(props, new String[]{"vid", "docId", "dstPid"});
         return ToolDefinition.builder("move_doc", "移动文档到其他目录",
-                args -> ToolResult.ok(fmt(client.moveDoc(
+                args -> ToolResult.ok(fmt(callWithLockRetry("move_doc", () -> client.moveDoc(
                         args.getInteger("vid"), args.getLong("docId"), null, null, null, null,
                         args.getLong("dstPid"), args.getString("dstPath"), args.getString("dstName"),
-                        null, null, args.getString("commitMsg")))))
+                        null, null, args.getString("commitMsg"))))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -492,10 +496,10 @@ public class DocSysToolFactory {
                 strProp("commitMsg", "提交信息（可选）"));
         JSONObject schema = objSchema(props, new String[]{"vid", "docId", "dstPid"});
         return ToolDefinition.builder("copy_doc", "复制文档到其他目录",
-                args -> ToolResult.ok(fmt(client.copyDoc(
+                args -> ToolResult.ok(fmt(callWithLockRetry("copy_doc", () -> client.copyDoc(
                         args.getInteger("vid"), args.getLong("docId"), null, null, null, null,
                         args.getLong("dstPid"), args.getString("dstPath"), args.getString("dstName"),
-                        null, null, args.getString("commitMsg")))))
+                        null, null, args.getString("commitMsg"))))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -828,6 +832,75 @@ public class DocSysToolFactory {
         }
         String json = JSON.toJSONString(result);
         return truncate(json);
+    }
+
+    // ==================== FORCE 锁占用重试（2026-09-20） ====================
+
+    /**
+     * DocSys 文档级写操作在执行期间会对文档加 FORCE 锁，并在**后台异步动作**（版本库提交、
+     * 远程/本地备份推送、索引更新）完成后才释放；实测该窗口约 0.6~1.0 秒（依仓库配置与网络可更长）。
+     * 窗口内对同一文档（或其父子目录）的任何写操作都会被拒绝，服务端提示
+     * {@code 用户[xxx]正在新增/移动文件[yyy],请稍后重试!}。
+     *
+     * <p>对智能体而言这是"整理资料"链路的必然撞点：先建目标目录 → 立刻把文件移进去，
+     * 目标目录（作为父目录参与锁检查）在创建后一秒内仍是锁住的。服务端并未提供错误码，
+     * 故此处按提示语识别该可重试场景，自动退避重试；真正失败（权限/不存在）不会命中该标记，不受影响。
+     */
+    private static final String LOCK_BUSY_MARK = "请稍后重试";
+
+    /** 锁占用时的最大尝试次数 */
+    private static final int LOCK_RETRY_MAX_ATTEMPTS = 6;
+
+    /** 每次重试间隔（毫秒）——6 x 500ms 覆盖 ~3 秒窗口 */
+    private static final long LOCK_RETRY_INTERVAL_MS = 500;
+
+    /** 可返回 DocSys 响应 Map 的调用（可抛异常） */
+    interface DocSysCall {
+        Map<String, Object> call() throws Exception;
+    }
+
+    /** 执行文档级写调用；命中"文档被锁占用"时自动重试，其余结果原样返回（包级可见：便于护栏测试） */
+    static Map<String, Object> callWithLockRetry(String opName, DocSysCall call) throws Exception {
+        Map<String, Object> last = null;
+        for (int attempt = 1; attempt <= LOCK_RETRY_MAX_ATTEMPTS; attempt++) {
+            last = call.call();
+            if (!isLockBusy(last)) {
+                return last;
+            }
+            if (attempt == LOCK_RETRY_MAX_ATTEMPTS) {
+                break;
+            }
+            log.info("{} 命中文档锁占用（第 {}/{} 次），{}ms 后重试: {}",
+                    opName, attempt, LOCK_RETRY_MAX_ATTEMPTS, LOCK_RETRY_INTERVAL_MS, describe(last));
+            try {
+                Thread.sleep(LOCK_RETRY_INTERVAL_MS);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                return last;
+            }
+        }
+        log.warn("{} 重试 {} 次后仍被文档锁占用: {}", opName, LOCK_RETRY_MAX_ATTEMPTS, describe(last));
+        return last;
+    }
+
+    /** 响应是否表示"文档被 FORCE 锁占用，可稍后重试"（包级可见：便于护栏测试） */
+    static boolean isLockBusy(Map<String, Object> resp) {
+        if (resp == null) {
+            return false;
+        }
+        Object status = resp.get("status");
+        if (status != null && "ok".equals(String.valueOf(status))) {
+            return false;
+        }
+        String text = describe(resp);
+        return text.contains(LOCK_BUSY_MARK) || text.contains("强制锁定");
+    }
+
+    private static String describe(Map<String, Object> resp) {
+        if (resp == null) {
+            return "null";
+        }
+        return String.valueOf(resp.get("msgInfo")) + " | " + String.valueOf(resp.get("debugLog"));
     }
 
     /** 格式化 String 返回（如 RAG/AIChat 的 SSE 原文）为紧凑文本 */

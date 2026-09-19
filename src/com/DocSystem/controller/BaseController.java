@@ -5227,25 +5227,55 @@ public class BaseController  extends BaseFunction{
 			List<CommonAction> asyncActionList = actionList;
 			public void run() {
 				Log.debug("executeCommonActionListAsync() executeCommonActionList in new thread");
-				
-				executeCommonActionList(asyncActionList, rt);
-				
-				//unlockDoc
-				if(context.docLockType != null)
-				{
-					unlockDoc(context.doc, context.docLockType, context.user);
+
+				try {
+					executeCommonActionList(asyncActionList, rt);
+				} catch(Throwable t) {
+					//异步动作（版本库提交/远程推送/备份/索引）在异常时不得吞掉后续的解锁
+					Log.info("executeCommonActionListAsyncEx() 异步动作异常(不影响解锁): " + t);
+					if(t instanceof Exception)
+					{
+						Log.debug((Exception)t);
+					}
+				} finally {
+					//【锁泄漏修复】原实现把解锁直接写在 executeCommonActionList 之后且无 try/finally：
+					//异步动作一旦抛异常，线程直接退出、文档的 FORCE 锁（TTL 2 小时）永不释放，
+					//表现为该文件/目录后续所有操作都失败并提示"用户[xxx]正在新增/移动文件[],请稍后重试"。
+					releaseDocLockQuietly(context.doc, context.docLockType, context.user);
+					releaseDocLockQuietly(context.newDoc, context.newDocLockType, context.user);
 				}
-				if(context.newDocLockType != null)
-				{
-					unlockDoc(context.newDoc, context.newDocLockType, context.user);
-				}
-				
+
 				//write systemLog
 				addSystemLog(context, context.user, "成功", buildSystemLogDetailContent(rt));
 			}
 		}).start();
-	}	
-	
+	}
+
+	/**
+	 * 释放文档锁（不抛异常），并在解锁后仍残留 FORCE 锁时告警。
+	 *
+	 * <p>残留通常意味着解锁用的 path/name 与加锁时不一致（key = vid + path + name），
+	 * 属于必须暴露的问题，不能静默（否则用户会遇到莫名其妙的"稍后重试"）。
+	 */
+	private void releaseDocLockQuietly(Doc doc, Integer lockType, User user)
+	{
+		if(doc == null || lockType == null)
+		{
+			return;
+		}
+		try {
+			unlockDoc(doc, lockType, user);
+			DocLock curLock = getDocLock(doc);
+			if(curLock != null && (curLock.getState() & DocLock.LOCK_STATE_FORCE) != 0)
+			{
+				Log.info("releaseDocLockQuietly() 解锁后仍存在FORCE锁，key不匹配？ doc:[" + doc.getPath() + doc.getName()
+						+ "] vid:" + doc.getVid() + " lockType:" + lockType + " state:" + curLock.getState());
+			}
+		} catch(Throwable t) {
+			Log.info("releaseDocLockQuietly() 释放锁异常 doc:[" + doc.getPath() + doc.getName() + "]: " + t);
+		}
+	}
+
 	public boolean executeCommonActionList(List<CommonAction> actionList, ReturnAjax rt) 
 	{
 		if(actionList == null || actionList.size() == 0)
@@ -8127,6 +8157,191 @@ public class BaseController  extends BaseFunction{
 	
 		Doc dbDoc = list.get(0);
 		return dbDoc;
+	}
+
+	/**
+	 * 由 docId 反推 level。
+	 *
+	 * <p>依据 {@code Path.getDocId(level, docPath)} 的编码：{@code docId = level*1e11 + docPath.hashCode() + 102147483647}。
+	 * 因 Java {@code String.hashCode()} ∈ [-2^31, 2^31)，可知常数项
+	 * {@code C = 102147483647 + hashCode} ∈ [99999999999, 104294967294]，即恒为 11 位且恒小于 2e11，
+	 * 故 {@code docId - 99999999999} 除以 1e11 后下取整即得 level（不含根目录，根 docId=0）。
+	 */
+	protected static int deriveDocLevelFromDocId(long docId)
+	{
+		if(docId <= 0)
+		{
+			return -1;	//0 = 仓库根目录（level = -1）
+		}
+		return (int)Math.floorDiv(docId - 99999999999L, 100000000000L);
+	}
+
+	/**
+	 * 按 docId 反查实体文档，补全 path/name/pid/level/type。
+	 *
+	 * <p><b>为什么需要</b>：realDoc 的 docId 是 {@code Path.getDocId(level, path+name)} 的<b>派生值</b>
+	 * （哈希），不是数据库主键；而 {@code buildBasicDoc(vid, docId, pid, reposPath, path, name, ...)}
+	 * 在 path 与 name <b>同时为空</b>时会把文档强制改写成<b>仓库根目录</b>（docId=0/pid=-1/level=-1），
+	 * 传入的 docId 被丢弃。因此只带 docId 调 moveDoc/copyDoc/deleteDoc 这类接口时会静默变成
+	 * "对仓库根目录操作"：典型现象是 moveDoc 先锁住根目录、再锁目标目录时命父目录锁检查失败，报
+	 * {@code lock dstDoc [...] Failed / 用户正在[移动文件],请稍后重试}（Agent 早期 move_doc 19/19 失败的真因）。
+	 *
+	 * <p><b>解析顺序</b>（快 → 慢）：doc 表 → 文件名索引 → 按 level 限定层级的文件系统枚举（权威）。
+	 * 每个候选都用 {@code Path.buildDocIdByName(level, path, name)} 重新校验，避免残留脏记录误命中。
+	 *
+	 * @return 解析成功返回完整 Doc；失败返回 null（调用方应保留原始 path/name 参数，保持旧行为）
+	 */
+	protected Doc resolveRealDocByDocId(Repos repos, Integer reposId, Long docId)
+	{
+		if(repos == null || docId == null)
+		{
+			return null;
+		}
+
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+
+		if(docId.longValue() == 0L)
+		{
+			return buildRootDoc(repos, localRootPath, localVRootPath);	//仓库根目录
+		}
+
+		int level = deriveDocLevelFromDocId(docId.longValue());
+		if(level < 0)
+		{
+			return null;
+		}
+
+		Doc qDoc = new Doc();
+		qDoc.setVid(reposId);
+		qDoc.setDocId(docId);
+
+		//1) doc 表（最快；只覆盖走过 add/commit 流程的文档）
+		try {
+			Doc hit = verifyResolvedDoc(dbGetDoc(repos, qDoc, false), repos, docId, level, localRootPath, localVRootPath);
+			if(hit != null)
+			{
+				return hit;
+			}
+		} catch(Throwable t) {
+			Log.debug("resolveRealDocByDocId() dbGetDoc failed: " + t);
+		}
+
+		//2) 文件名索引（覆盖已建索引的文档）
+		try {
+			List<Doc> list = LuceneUtil2.getDocListByDocId(repos, qDoc, getIndexLibPath(repos, INDEX_DOC_NAME));
+			if(list != null)
+			{
+				for(int i=0; i<list.size(); i++)
+				{
+					Doc hit = verifyResolvedDoc(list.get(i), repos, docId, level, localRootPath, localVRootPath);
+					if(hit != null)
+					{
+						return hit;
+					}
+				}
+			}
+		} catch(Throwable t) {
+			Log.debug("resolveRealDocByDocId() index lookup failed: " + t);
+		}
+
+		//3) 文件系统枚举（权威兜底）：docId 已含 level，只需枚举到该层
+		long startTime = new Date().getTime();
+		Doc fsDoc = findDocInFileSystemByDocId(repos, qDoc, level, docId.longValue());
+		Log.info("resolveRealDocByDocId() FS 枚举 vid:" + reposId + " docId:" + docId + " level:" + level
+				+ " 命中:" + (fsDoc != null) + " 耗时:" + (new Date().getTime() - startTime) + "ms");
+		if(fsDoc != null)
+		{
+			fsDoc.setLocalRootPath(localRootPath);
+			fsDoc.setLocalVRootPath(localVRootPath);
+		}
+		return fsDoc;
+	}
+
+	/**
+	 * 校验候选 Doc 是否是目标 docId 对应的文档：level/docId 必须能由 path+name 反算一致，
+	 * 且磁盘上真实存在（避免 doc 表/索引里的脏记录）。
+	 */
+	private Doc verifyResolvedDoc(Doc candidate, Repos repos, Long docId, int level,
+			String localRootPath, String localVRootPath)
+	{
+		if(candidate == null)
+		{
+			return null;
+		}
+		String path = candidate.getPath() == null ? "" : candidate.getPath();
+		String name = candidate.getName() == null ? "" : candidate.getName();
+		if(path.isEmpty() && name.isEmpty())
+		{
+			return null;	//根目录不是按 docId 解析的目标
+		}
+
+		Long expectDocId = Path.buildDocIdByName(level, path, name);
+		if(expectDocId == null || expectDocId.longValue() != docId.longValue())
+		{
+			Log.debug("verifyResolvedDoc() docId 反算不一致，丢弃候选 [" + path + name + "] expect:" + expectDocId + " want:" + docId);
+			return null;
+		}
+
+		File localEntry = new File(localRootPath + path + name);
+		if(localEntry.exists() == false)
+		{
+			Log.debug("verifyResolvedDoc() 候选磁盘不存在，丢弃 [" + path + name + "]");
+			return null;
+		}
+
+		Doc ret = buildBasicDoc(repos.getId(), docId, candidate.getPid(), candidate.getReposPath(),
+				path, name, level, localEntry.isDirectory() ? 2 : 1, true,
+				localRootPath, localVRootPath, localEntry.length(), candidate.getCheckSum());
+		ret.setLatestEditTime(localEntry.lastModified());
+		ret.setCreateTime(localEntry.lastModified());
+		return ret;
+	}
+
+	/** 在文件系统里按 docId 查找（只枚举到 level 层，带节点预算保护） */
+	private Doc findDocInFileSystemByDocId(Repos repos, Doc qDoc, int level, long docId)
+	{
+		Doc rootDoc = buildRootDoc(repos, Path.getReposRealPath(repos), Path.getReposVirtualPath(repos));
+		rootDoc.setSize(null);	//确保列表查询不会被根目录的size干扰
+		int[] budget = new int[]{ 200000 };	//节点预算，防御性上限
+		return walkDocTreeForDocId(repos, rootDoc, level, docId, budget);
+	}
+
+	private Doc walkDocTreeForDocId(Repos repos, Doc dir, int targetLevel, long targetDocId, int[] budget)
+	{
+		if(budget[0] <= 0)
+		{
+			return null;
+		}
+
+		List<Doc> subList = getLocalEntryList(repos, dir);
+		if(subList == null)
+		{
+			return null;
+		}
+
+		for(int i=0; i<subList.size(); i++)
+		{
+			Doc sub = subList.get(i);
+			budget[0]--;
+
+			if(sub.getDocId() != null && sub.getDocId().longValue() == targetDocId)
+			{
+				return sub;
+			}
+
+			boolean isDir = (sub.getType() != null && sub.getType() == 2);
+			Integer subLevel = sub.getLevel() == null ? null : sub.getLevel();
+			if(isDir && subLevel != null && (subLevel.intValue() + 1) <= targetLevel)
+			{
+				Doc found = walkDocTreeForDocId(repos, sub, targetLevel, targetDocId, budget);
+				if(found != null)
+				{
+					return found;
+				}
+			}
+		}
+		return null;
 	}
 
 	private boolean dbAddDoc(Repos repos, Doc doc, boolean addSubDocs, boolean parentDocCheck) 
