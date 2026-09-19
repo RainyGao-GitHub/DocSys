@@ -65,7 +65,7 @@ public class TestWriteTools {
                 check(name + " needsConfirm", def.needsConfirm);
             }
         }
-        check("full registry size=28", reg.size() == 28);
+        check("full registry size=27", reg.size() == 27);
     }
 
     private static void testConfirmGateInvoked() {

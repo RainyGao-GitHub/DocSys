@@ -41,7 +41,6 @@ public class DocSysToolFactory {
         reg.register(ragChat(client));
         reg.register(listAiModels(client));
         reg.register(getSysConfig(client));
-        reg.register(getBannerConfig(client));
         reg.register(getDocShareList(client));
         reg.register(queryBackupStatus(client));
         return reg;
@@ -250,15 +249,6 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** R13 Banner 配置 */
-    public static ToolDefinition getBannerConfig(DocSysClient client) {
-        JSONObject schema = objSchema(props(strProp("serverIP", "服务器IP（可选）")), null);
-        return ToolDefinition.builder("get_banner_config", "获取系统 Banner 配置",
-                args -> ToolResult.ok(fmt(client.getBannerConfig(args.getString("serverIP")))))
-                .parameters(schema)
-                .build();
-    }
-
     /** R15 分享列表 */
     public static ToolDefinition getDocShareList(DocSysClient client) {
         JSONObject props = props(
@@ -294,18 +284,6 @@ public class DocSysToolFactory {
         return ToolDefinition.builder("rag_chat", "基于文档库上下文（RAG）回答用户问题",
                 args -> ToolResult.ok(fmtString(client.ragChat(
                         args.getString("query"), args.getString("modelName"), args.getString("apiKey")))))
-                .parameters(schema)
-                .build();
-    }
-
-    /** R17 AI 对话（DocSys 后端 AIChat，SSE） */
-    public static ToolDefinition aiChat(DocSysClient client) {
-        JSONObject schema = objSchema(props(
-                strProp("message", "对话内容（必填）"),
-                strProp("llmName", "模型名（可选）")), new String[]{"message"});
-        return ToolDefinition.builder("ai_chat", "调用 DocSys 后端 AI 对话接口",
-                args -> ToolResult.ok(fmtString(client.chat(
-                        args.getString("message"), args.getString("llmName")))))
                 .parameters(schema)
                 .build();
     }
