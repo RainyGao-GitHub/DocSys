@@ -43,6 +43,7 @@ public class TestLockRetry {
 
     public static void main(String[] args) throws Exception {
         testMarker();
+        testErrorCodeFirst();
         testRetryThenSuccess();
         testRealErrorNoRetry();
         testExhaustAttempts();
@@ -60,6 +61,40 @@ public class TestLockRetry {
         check("ok 响应不算", DocSysToolFactory.isLockBusy(resp("ok", "", "")) == false);
         check("权限错误不算", DocSysToolFactory.isLockBusy(resp("fail", "您没有该目录的权限", "")) == false);
         check("null 不算", DocSysToolFactory.isLockBusy(null) == false);
+    }
+
+    /** R1-1：有错误码时以码为准，不再嗅探文案 */
+    private static void testErrorCodeFirst() {
+        // 1) 带 DOC_LOCKED 码、但文案里没有任何可嗅探字样 → 仍应识别为锁占用
+        Map<String, Object> coded = resp("fail", "操作被拒", "");
+        coded.put("errorCode", "DOC_LOCKED");
+        check("按 errorCode=DOC_LOCKED 识别（无文案线索）", DocSysToolFactory.isLockBusy(coded));
+
+        // 2) 带其它码、但文案含"请稍后重试" → 不得误判为锁占用（reposCheck 的"系统维护中，请稍后重试！"）
+        Map<String, Object> systemBusy = resp("fail", "系统维护中，请稍后重试！", "");
+        systemBusy.put("errorCode", "SYSTEM_BUSY");
+        check("SYSTEM_BUSY 不误判为锁占用", DocSysToolFactory.isLockBusy(systemBusy) == false);
+
+        Map<String, Object> noPerm = resp("fail", "您没有该目录的新增权限，请联系管理员", "");
+        noPerm.put("errorCode", "NO_PERMISSION");
+        check("NO_PERMISSION 不误判为锁占用", DocSysToolFactory.isLockBusy(noPerm) == false);
+
+        // 3) SYSTEM_BUSY 不应触发重试（只调用 1 次）
+        final int[] calls = new int[1];
+        Map<String, Object> r = null;
+        try {
+            r = DocSysToolFactory.callWithLockRetry("move_doc", new DocSysToolFactory.DocSysCall() {
+                public Map<String, Object> call() {
+                    calls[0]++;
+                    Map<String, Object> m = resp("fail", "系统维护中，请稍后重试！", "");
+                    m.put("errorCode", "SYSTEM_BUSY");
+                    return m;
+                }
+            });
+        } catch (Exception e) {
+            check("SYSTEM_BUSY 调用不应抛异常", false);
+        }
+        check("SYSTEM_BUSY 不重试（仅 1 次调用）", calls[0] == 1 && "fail".equals(r.get("status")));
     }
 
     /** 前两次锁占用、第三次成功 → 总共调用 3 次并返回成功 */

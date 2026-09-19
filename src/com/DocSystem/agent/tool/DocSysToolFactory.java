@@ -4,6 +4,7 @@ import com.DocSystem.agent.client.DocSysClient;
 import com.DocSystem.agent.memory.UserMemoryStore;
 import com.DocSystem.agent.search.WebSearchResult;
 import com.DocSystem.agent.search.WebSearchService;
+import com.DocSystem.common.ErrorCode;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
@@ -832,13 +833,61 @@ public class DocSysToolFactory {
         }
     }
 
-    /** 格式化 DocSysClient 返回的 Map 为紧凑文本（截断防上下文膨胀） */
-    private static String fmt(Map<String, Object> result) {
+    /** 格式化 DocSysClient 返回的 Map 为紧凑文本（截断防上下文膨胀；失败时附错误码与处置提示） */
+    static String fmt(Map<String, Object> result) {
         if (result == null) {
             return "(empty response)";
         }
         String json = JSON.toJSONString(result);
-        return truncate(json);
+        String code = errorCodeOf(result);
+        if (code == null) {
+            return truncate(json);
+        }
+        // 处置提示必须能被模型看到：先给提示预留空间再截 JSON，否则超长响应会把尾部的错误码提示一起截掉
+        String hint = "\n[错误码: " + code + "]" + guidanceFor(code);
+        if (json.length() + hint.length() > MAX_SUMMARY_LEN) {
+            json = json.substring(0, Math.max(0, MAX_SUMMARY_LEN - hint.length())) + "...(truncated)";
+        }
+        return json + hint;
+    }
+
+    /** 取响应里的错误码（服务端 R1-1 起在 ReturnAjax 输出 errorCode） */
+    static String errorCodeOf(Map<String, Object> resp) {
+        if (resp == null) {
+            return null;
+        }
+        Object code = resp.get("errorCode");
+        if (code == null) {
+            return null;
+        }
+        String s = String.valueOf(code);
+        return s.isEmpty() || "null".equals(s) ? null : s;
+    }
+
+    /** 错误码 -> 给模型的处置提示（避免模型对"权限不足"盲目重试、对"docId 失效"反复试同一个 id） */
+    static String guidanceFor(String errorCode) {
+        if (ErrorCode.DOC_LOCKED.equals(errorCode)) {
+            return "（文档正被后台动作占用，稍后重试即可；工具已自动重试过）";
+        }
+        if (ErrorCode.NO_PERMISSION.equals(errorCode)) {
+            return "（当前用户权限不足，重试无效：请换目标对象或联系管理员授权）";
+        }
+        if (ErrorCode.DOC_NOT_FOUND.equals(errorCode)) {
+            return "（对象不存在或 docId 已失效：请重新 list_docs/search_files 获取最新 docId）";
+        }
+        if (ErrorCode.REPOS_NOT_FOUND.equals(errorCode)) {
+            return "（仓库不存在或已禁用：先用 list_repos 确认仓库 ID）";
+        }
+        if (ErrorCode.INVALID_PARAM.equals(errorCode)) {
+            return "（参数缺失或非法，请修正入参后重试）";
+        }
+        if (ErrorCode.NOT_LOGIN.equals(errorCode)) {
+            return "（登录已失效，请重新登录）";
+        }
+        if (ErrorCode.SYSTEM_BUSY.equals(errorCode)) {
+            return "（服务端维护中，非调用方可解决）";
+        }
+        return "";
     }
 
     // ==================== 目录列表渲染（分页 + 紧凑，2026-09-20） ====================
@@ -1053,7 +1102,7 @@ public class DocSysToolFactory {
         return last;
     }
 
-    /** 响应是否表示"文档被 FORCE 锁占用，可稍后重试"（包级可见：便于护栏测试） */
+    /** 响应是否表示"文档被 FORCE 锁占用，可稍后重试"（优先按错误码判定，文案仅作过渡期兜底） */
     static boolean isLockBusy(Map<String, Object> resp) {
         if (resp == null) {
             return false;
@@ -1062,6 +1111,16 @@ public class DocSysToolFactory {
         if (status != null && "ok".equals(String.valueOf(status))) {
             return false;
         }
+        if (ErrorCode.DOC_LOCKED.equals(errorCodeOf(resp))) {
+            return true;
+        }
+        if (errorCodeOf(resp) != null) {
+            //带码但不是锁占用（如 SYSTEM_BUSY / NO_PERMISSION）→ 明确不可重试。
+            //不能退回文案判定：reposCheck 的"系统维护中，请稍后重试！"同样含"请稍后重试"，
+            //按文案会把"系统维护"误判成"文档锁占用"（R1-1 修正的真问题之一）
+            return false;
+        }
+        //无码（旧服务端）时才按文案兜底判定
         String text = describe(resp);
         return text.contains(LOCK_BUSY_MARK) || text.contains("强制锁定");
     }

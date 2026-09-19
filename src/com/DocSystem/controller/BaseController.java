@@ -89,6 +89,7 @@ import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.DocChangeType;
 import com.DocSystem.common.EVENT;
+import com.DocSystem.common.ErrorCode;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.HitDoc;
@@ -579,13 +580,13 @@ public class BaseController  extends BaseFunction{
 		User login_user = (User) session.getAttribute("login_user");
 		if(login_user == null)
 		{
-			docSysErrorLog("用户未登录，请先登录！", rt);
+			docSysErrorLog("用户未登录，请先登录！", ErrorCode.NOT_LOGIN, rt);
 			return null;
 		}
 				
 		if(login_user.getType() < role)
 		{
-			docSysErrorLog("您无权进行此操作，请联系系统管理员！", rt);
+			docSysErrorLog("您无权进行此操作，请联系系统管理员！", ErrorCode.NO_PERMISSION, rt);
 			return null;
 		}
 		
@@ -2887,7 +2888,9 @@ public class BaseController  extends BaseFunction{
 			}
 			else
 			{
-				rt.setError("用户未登录");
+				//注意：本方法自己 writeJson 就把响应写出去了（调用方随后再 writeJson 不会生效），
+				//所以错误码必须打在这里，否则调用方那处带码的 docSysErrorLog 到不了客户端（R1-1 实测踩坑）
+				rt.setError("用户未登录", ErrorCode.NOT_LOGIN);
 				writeJson(rt, response);
 				return null;
 			}
@@ -8581,7 +8584,7 @@ public class BaseController  extends BaseFunction{
 				if(!reposId.equals(docShare.getVid()))
 				{
 					docSysDebugLog("checkAndGetAccessInfo() reposId not matched, reposId:" + reposId + " docShare.vid:" + docShare.getVid(), rt);
-					docSysErrorLog("非法仓库访问", rt);
+					docSysErrorLog("非法仓库访问", ErrorCode.NO_PERMISSION, rt);
 					return null;
 				}
 			}
@@ -8610,7 +8613,7 @@ public class BaseController  extends BaseFunction{
 					if(accessPath.indexOf(sharedPath) != 0) //分享的文件本身或者子目录才可以访问
 					{
 						docSysDebugLog("checkAndGetAccessInfo() accessPath [" + accessPath + "] sharedPath [" + sharedPath + "]", rt);
-						docSysErrorLog("非法文件访问", rt);
+						docSysErrorLog("非法文件访问", ErrorCode.NO_PERMISSION, rt);
 						return null;
 					}
 				}
@@ -8633,7 +8636,7 @@ public class BaseController  extends BaseFunction{
 			if(login_user == null)
 			{
 				docSysDebugLog("checkAndGetAccessInfo() getLoginUser Failed", rt);
-				docSysErrorLog("用户未登录，请先登录！", rt);
+				docSysErrorLog("用户未登录，请先登录！", ErrorCode.NOT_LOGIN, rt);
 				return null;
 			}
 			reposAccess = new ReposAccess();
@@ -10337,19 +10340,19 @@ public class BaseController  extends BaseFunction{
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docUserAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			return false;
 		}
 		else
 		{
 			if(docUserAuth.getAccess() == 0)
 			{
-				rt.setError("您无权访问该目录，请联系管理员");
+				setPermissionError(rt, "您无权访问该目录，请联系管理员");
 				return false;
 			}
 			else if(docUserAuth.getAddEn() == null || docUserAuth.getAddEn() != 1)
 			{
-				rt.setError("您没有该目录的新增权限，请联系管理员");
+				setPermissionError(rt, "您没有该目录的新增权限，请联系管理员");
 				return false;				
 			}
 		}
@@ -10361,19 +10364,19 @@ public class BaseController  extends BaseFunction{
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docUserAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			return false;
 		}
 		else
 		{
 			if(docUserAuth.getAccess() == 0)
 			{
-				rt.setError("您无权访问该目录，请联系管理员");
+				setPermissionError(rt, "您无权访问该目录，请联系管理员");
 				return false;
 			}
 			else if(docUserAuth.getDeleteEn() == null || docUserAuth.getDeleteEn() != 1)
 			{
-				rt.setError("您没有该目录的删除权限，请联系管理员");
+				setPermissionError(rt, "您没有该目录的删除权限，请联系管理员");
 				return false;				
 			}
 		}
@@ -10385,19 +10388,19 @@ public class BaseController  extends BaseFunction{
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docUserAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			return false;
 		}
 		else
 		{
 			if(docUserAuth.getAccess() == 0)
 			{
-				rt.setError("您无权访问该文件，请联系管理员");
+				setPermissionError(rt, "您无权访问该文件，请联系管理员");
 				return false;
 			}
 			else if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
 			{
-				rt.setError("您没有该文件的编辑权限，请联系管理员");
+				setPermissionError(rt, "您没有该文件的编辑权限，请联系管理员");
 				return false;				
 			}
 		}
@@ -10409,7 +10412,7 @@ public class BaseController  extends BaseFunction{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			return false;
 		}
 		else
@@ -10417,7 +10420,7 @@ public class BaseController  extends BaseFunction{
 			Integer access = docAuth.getAccess();
 			if(access == null || access.equals(0))
 			{
-				rt.setError("您无权访问该文件，请联系管理员");
+				setPermissionError(rt, "您无权访问该文件，请联系管理员");
 				return false;
 			}
 		}
@@ -10429,19 +10432,19 @@ public class BaseController  extends BaseFunction{
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docUserAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			return false;
 		}
 		else
 		{
 			if(docUserAuth.getIsAdmin() == 0)
 			{
-				rt.setError("您无权管理该目录，请联系管理员");
+				setPermissionError(rt, "您无权管理该目录，请联系管理员");
 				return false;
 			}
 			else if(docUserAuth.getIsAdmin() == null || docUserAuth.getIsAdmin() != 1)
 			{
-				rt.setError("您没有该目录的管理权限，请联系管理员");
+				setPermissionError(rt, "您没有该目录的管理权限，请联系管理员");
 				return false;				
 			}
 		}
@@ -10453,7 +10456,7 @@ public class BaseController  extends BaseFunction{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			return false;
 		}
 		else
@@ -10461,7 +10464,7 @@ public class BaseController  extends BaseFunction{
 			Integer downloadEn = docAuth.getDownloadEn();
 			if(downloadEn == null || downloadEn.equals(0))
 			{
-				rt.setError("您无权下载该文件，请联系管理员");
+				setPermissionError(rt, "您无权下载该文件，请联系管理员");
 				return false;
 			}
 		}
@@ -10473,7 +10476,7 @@ public class BaseController  extends BaseFunction{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, userId, doc, authMask);
 		if(docAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			return false;
 		}
 		else
@@ -10481,7 +10484,7 @@ public class BaseController  extends BaseFunction{
 			Integer downloadEn = docAuth.getDownloadEn();
 			if(downloadEn == null || downloadEn.equals(0))
 			{
-				rt.setError("您无权分享该文件，请联系管理员");
+				setPermissionError(rt, "您无权分享该文件，请联系管理员");
 				return false;
 			}
 		}
@@ -20342,14 +20345,14 @@ public class BaseController  extends BaseFunction{
 		if(systemDisabled != 0)
 		{
 			Log.info("reposCheck() 系统已被禁用");
-			rt.setError("系统维护中，请稍后重试！");
+			rt.setError("系统维护中，请稍后重试！", ErrorCode.SYSTEM_BUSY);
 			writeJson(rt, response);			
 			return false;			
 		}
 		
 		if(repos == null)
 		{
-			docSysErrorLog("仓库不存在！", rt);
+			docSysErrorLog("仓库不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return false;
 		}
@@ -25375,21 +25378,21 @@ public class BaseController  extends BaseFunction{
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}
 		
 		if(docUserAuth.getAccess() == null || docUserAuth.getAccess() != 1)
 		{
-			rt.setError("您无权访问该文件，请联系管理员");
+			setPermissionError(rt, "您无权访问该文件，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}
 		
 		if(docUserAuth.getDeleteEn() == null || docUserAuth.getDeleteEn() != 1)
 		{
-			rt.setError("您没有该文件的删除权限，请联系管理员");
+			setPermissionError(rt, "您没有该文件的删除权限，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}
@@ -25441,21 +25444,21 @@ public class BaseController  extends BaseFunction{
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}
 		
 		if(docUserAuth.getAccess() == null || docUserAuth.getAccess() != 1)
 		{
-			rt.setError("您无权访问该文件，请联系管理员");
+			setPermissionError(rt, "您无权访问该文件，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}
 		
 		if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
 		{
-			rt.setError("您没有该文件的编辑权限，请联系管理员");
+			setPermissionError(rt, "您没有该文件的编辑权限，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}
@@ -25465,7 +25468,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(docUserAuth.getIsAdmin() == null || docUserAuth.getIsAdmin() != 1)
 			{
-				rt.setError("非仓库管理员，禁止对整个仓库执行恢复操作");
+				setPermissionError(rt, "非仓库管理员，禁止对整个仓库执行恢复操作");
 				writeJson(rt, response);	
 				return;
 			}
@@ -25488,7 +25491,7 @@ public class BaseController  extends BaseFunction{
 		{
 			if(docUserAuth.getIsAdmin() == null || docUserAuth.getIsAdmin() != 1)
 			{
-				rt.setError("非仓库管理员，禁止对整个目录执行恢复操作");
+				setPermissionError(rt, "非仓库管理员，禁止对整个目录执行恢复操作");
 				writeJson(rt, response);	
 				return;
 			}
@@ -25819,21 +25822,21 @@ public class BaseController  extends BaseFunction{
 		DocAuth docUserAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUser().getId(), doc, reposAccess.getAuthMask());
 		if(docUserAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}
 		
 		if(docUserAuth.getAccess() == null || docUserAuth.getAccess() != 1)
 		{
-			rt.setError("您无权访问该文件，请联系管理员");
+			setPermissionError(rt, "您无权访问该文件，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}
 		
 		if(docUserAuth.getEditEn() == null || docUserAuth.getEditEn() != 1)
 		{
-			rt.setError("您没有该文件的编辑权限，请联系管理员");
+			setPermissionError(rt, "您没有该文件的编辑权限，请联系管理员");
 			writeJson(rt, response);	
 			return;
 		}

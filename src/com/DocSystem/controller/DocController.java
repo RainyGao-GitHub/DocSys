@@ -30,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.EVENT;
+import com.DocSystem.common.ErrorCode;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.HitDoc;
@@ -320,7 +321,7 @@ public class DocController extends BaseController{
 
 		if((name == null || name.isEmpty()) && docId != null && docId.longValue() != 0L)
 		{
-			docSysErrorLog("无法通过 docId=" + docId + " 定位待删除的文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 path+name！", rt);
+			docSysErrorLog("无法通过 docId=" + docId + " 定位待删除的文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 path+name！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
@@ -328,7 +329,7 @@ public class DocController extends BaseController{
 
 		if(name == null || name.isEmpty())
 		{
-			docSysErrorLog("缺少待删除文件的定位信息：请提供 docId，或 path+name！", rt);
+			docSysErrorLog("缺少待删除文件的定位信息：请提供 docId，或 path+name！", ErrorCode.INVALID_PARAM, rt);
 			writeJson(rt, response);
 			addSystemLog(request, reposAccess.getAccessUser(), "deleteDoc", "deleteDoc", "删除", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
@@ -483,14 +484,14 @@ public class DocController extends BaseController{
 
 		if((name == null || name.isEmpty()) && docId != null && docId.longValue() != 0L)
 		{
-			docSysErrorLog("无法通过 docId=" + docId + " 定位待重命名的文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 path+name！", rt);
+			docSysErrorLog("无法通过 docId=" + docId + " 定位待重命名的文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 path+name！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
 
 		if(name == null || "".equals(name))
 		{
-			docSysErrorLog("缺少待重命名文件的定位信息：请提供 docId，或 path+name！", rt);
+			docSysErrorLog("缺少待重命名文件的定位信息：请提供 docId，或 path+name！", ErrorCode.INVALID_PARAM, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -625,7 +626,7 @@ public class DocController extends BaseController{
 		{
 			//不能放任"定位失败"退回旧行为：buildBasicDoc 会把空 path+name 当成仓库根目录，
 			//结果是"移动整个仓库"或"锁自己的父目录"这类难以排查的失败（Agent 传过期 docId 时的真实场景）
-			docSysErrorLog("无法通过 docId=" + docId + " 定位源文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 srcPath+srcName！", rt);
+			docSysErrorLog("无法通过 docId=" + docId + " 定位源文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 srcPath+srcName！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
@@ -633,7 +634,7 @@ public class DocController extends BaseController{
 		if(srcName == null || srcName.isEmpty())
 		{
 			//无 docId 也无 srcPath/srcName：无从定位，直接给明确提示（旧行为会静默把仓库根当成源，报出锁冲突假象）
-			docSysErrorLog("缺少源文件定位信息：请提供 docId，或 srcPath+srcName！", rt);
+			docSysErrorLog("缺少源文件定位信息：请提供 docId，或 srcPath+srcName！", ErrorCode.INVALID_PARAM, rt);
 			writeJson(rt, response);
 			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
@@ -654,7 +655,7 @@ public class DocController extends BaseController{
 			}
 			else if(dstPid.longValue() != 0L && (dstPath == null || dstPath.isEmpty()))
 			{
-				docSysErrorLog("无法通过 dstPid=" + dstPid + " 定位目标目录（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或提供 dstPath！", rt);
+				docSysErrorLog("无法通过 dstPid=" + dstPid + " 定位目标目录（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或提供 dstPath！", ErrorCode.DOC_NOT_FOUND, rt);
 				writeJson(rt, response);
 				addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
 				return;
@@ -689,7 +690,7 @@ public class DocController extends BaseController{
 		//第二个锁会被 isDocForceLocked 拒绝（强制锁连自己也不放行），报出难以理解的"正在移动文件"。
 		if(srcName != null && dstName != null && (srcPath + srcName).equals(dstPath + dstName))
 		{
-			docSysErrorLog("源文件与目标位置相同，无需移动！", rt);
+			docSysErrorLog("源文件与目标位置相同，无需移动！", ErrorCode.INVALID_PARAM, rt);
 			writeJson(rt, response);
 			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
 			return;
@@ -824,13 +825,13 @@ public class DocController extends BaseController{
 		}
 		if(docId != null && docId.longValue() != 0L && (srcName == null || srcName.isEmpty()))
 		{
-			docSysErrorLog("无法通过 docId=" + docId + " 定位源文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 srcPath+srcName！", rt);
+			docSysErrorLog("无法通过 docId=" + docId + " 定位源文件（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或同时提供 srcPath+srcName！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
 		if(srcName == null || srcName.isEmpty())
 		{
-			docSysErrorLog("缺少源文件定位信息：请提供 docId，或 srcPath+srcName！", rt);
+			docSysErrorLog("缺少源文件定位信息：请提供 docId，或 srcPath+srcName！", ErrorCode.INVALID_PARAM, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -850,7 +851,7 @@ public class DocController extends BaseController{
 			}
 			else if(dstPid.longValue() != 0L && (dstPath == null || dstPath.isEmpty()))
 			{
-				docSysErrorLog("无法通过 dstPid=" + dstPid + " 定位目标目录（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或提供 dstPath！", rt);
+				docSysErrorLog("无法通过 dstPid=" + dstPid + " 定位目标目录（可能已被移动/重命名/删除），请重新列目录获取最新 docId，或提供 dstPath！", ErrorCode.DOC_NOT_FOUND, rt);
 				writeJson(rt, response);
 				return;
 			}
@@ -864,7 +865,7 @@ public class DocController extends BaseController{
 		//源与目标同一位置：直接报错，避免白跑一次复制/自锁冲突
 		if(srcName != null && dstName != null && (srcPath + srcName).equals(dstPath + dstName))
 		{
-			docSysErrorLog("源文件与目标位置相同，无需复制！", rt);
+			docSysErrorLog("源文件与目标位置相同，无需复制！", ErrorCode.INVALID_PARAM, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -6138,7 +6139,7 @@ public class DocController extends BaseController{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
 		if(docAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			writeJson(rt, response);
 			return;
 		}
@@ -6364,7 +6365,7 @@ public class DocController extends BaseController{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
 		if(docAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			writeJson(rt, response);
 			return;
 		}
@@ -6565,7 +6566,7 @@ public class DocController extends BaseController{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
 		if(docAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			writeJson(rt, response);
 			return;
 		}
@@ -6766,7 +6767,7 @@ public class DocController extends BaseController{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
 		if(docAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			writeJson(rt, response);
 			return;
 		}
@@ -6969,7 +6970,7 @@ public class DocController extends BaseController{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
 		if(docAuth == null)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			writeJson(rt, response);
 			return;
 		}
@@ -7189,7 +7190,7 @@ public class DocController extends BaseController{
 		DocAuth docAuth = getUserDocAuthWithMask(repos, reposAccess.getAccessUserId(), doc, null);
 		if(docAuth == null || docAuth.getEditEn() == null || docAuth.getEditEn() == 0)
 		{
-			rt.setError("您无此操作权限，请联系管理员");
+			setPermissionError(rt, "您无此操作权限，请联系管理员");
 			writeJson(rt, response);
 			return;
 		}
@@ -7221,7 +7222,7 @@ public class DocController extends BaseController{
 		//设置文件密码
 		if(setDocPwd(repos, doc, pwd) == false)
 		{
-			rt.setError("您无权访问该文件，请联系管理员");			
+			setPermissionError(rt, "您无权访问该文件，请联系管理员");			
 		}
 		else
 		{

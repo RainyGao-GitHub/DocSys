@@ -1847,7 +1847,7 @@ public class BaseFunction{
 		}
 		
 		//FocreLock即使是自己锁定的也不可以解锁
-		rt.setError(buildLockFailMsg(docLock, lockType));
+		rt.setError(buildLockFailMsg(docLock, lockType), ErrorCode.DOC_LOCKED);
 		
 		long curTime = new Date().getTime();
 		String timeStamp = DateFormat.dateTimeFormat(new Date(docLock.createTime[lockType]));
@@ -1957,7 +1957,7 @@ public class BaseFunction{
 			return false;
 		}
 			
-		rt.setError(buildLockFailMsg(docLock, lockType));
+			rt.setError(buildLockFailMsg(docLock, lockType), ErrorCode.DOC_LOCKED);
 
 		long curTime = new Date().getTime();
 		String timeStamp = DateFormat.dateTimeFormat(new Date(docLock.createTime[lockType]));
@@ -7131,6 +7131,29 @@ public class BaseFunction{
 			rt.setError(logStr);
 		}
 		Log.info(logStr);
+	}
+
+	/**
+	 * 带错误码的错误日志（R1-1）：调用方可按 {@code errorCode} 判定处置，不再依赖文案。
+	 * 错误码见 {@link ErrorCode}。
+	 */
+	public static void docSysErrorLog(String logStr, String errorCode, ReturnAjax rt) {
+		if(rt != null)
+		{
+			rt.setError(logStr, errorCode);
+		}
+		Log.info(logStr);
+	}
+
+	/**
+	 * 权限类失败的统一出口（R1-1）：保持既有文案不变，补错误码 {@link ErrorCode#NO_PERMISSION}。
+	 * 新增权限检查请走本方法，避免又变成"只有文案、无法判定"。
+	 */
+	protected void setPermissionError(ReturnAjax rt, String msg) {
+		if(rt != null)
+		{
+			rt.setError(msg, ErrorCode.NO_PERMISSION);
+		}
 	}
 	
 	public static boolean createMonitorTrigger(String trigger)

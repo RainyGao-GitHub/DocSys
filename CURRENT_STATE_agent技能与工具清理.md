@@ -121,6 +121,39 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
   （create_folder×2 + move_doc）全部批准并成功；反向 `移回根 + 删除空目录` → 2 步（move_doc + delete_doc）
   成功；磁盘核对 `TTITrace` 回到根目录、`AI整理测试` 已删、无残留
 
+## R1-1 后端错误码（2026-09-20）—— 失败原因可归因，替掉文案嗅探
+
+### 问题
+写操作失败只有中文文案，工具层靠 `"请稍后重试"` 串嗅探判断"可重试"：文案一改即失效，
+且无法区分 **锁冲突 / 无权限 / 不存在 / 参数错**（模型会盲目重试不该重试的）。
+
+### 实现（已落地，待提交）
+- 新增 `src/com/DocSystem/common/ErrorCode.java`：8 个 String 常量（`DOC_LOCKED` `NOT_LOGIN` `NO_PERMISSION`
+  `DOC_NOT_FOUND` `REPOS_NOT_FOUND` `INVALID_PARAM` `SYSTEM_BUSY` `INTERNAL`）；
+- `ReturnAjax` 增 `errorCode`（`setError(msg,code)` / `setErrorCodeIfAbsent` / `getErrorCode`）；
+  **`setError(msg)` 行为不变（留 null）** → Web UI 零回归；
+- 打码 53 处：`BaseFunction` 锁判定 2 + `setPermissionError()` 新 helper；`BaseController` 权限 36 + 中枢 5；
+  `DocController` 12（docId 解析失败 / 缺定位 / 同位置 / 权限）；
+- 工具层：`errorCodeOf()` + `guidanceFor()`（每种码给中文处置提示）、`isLockBusy()` 改为**错误码优先**
+  （有码且≠DOC_LOCKED 立即否，不再嗅探）、`callWithLockRetry` 只对 `DOC_LOCKED` 重试、
+  `fmt()` 失败时追 `\n[错误码: X]（提示）` 且**为提示预留空间再截断**。
+
+### 过程中发现的新问题（已写入计划）
+- **`getLoginUser()` 自己写响应**（内部 `writeJson` 后 return null）→ 调用方设的码到不了客户端，
+  也是"未登录"一直无码的真因 → 已就地打码 + 记入计划 **R3-7**（双写隐患）。
+- **文案嗅探假阳**：`reposCheck` 的"系统维护中，请稍后重试！"含 `请稍后重试`，旧逻辑会当成可重试的锁
+  → 现被"有码优先"短路；余下兜底收尾记入 **R3-8**。
+- 其余未打码权限点约 40 处（`ReposController`/`BussinessController`/`BusinessBaseController`）→ **R1-1b**。
+
+### 验证证据（全 PASS）
+- 真实探针 `ErrorCodeProbe.ps1`（真 HTTP）：`DOC_LOCKED` ✓ / `REPOS_NOT_FOUND` ✓ / `NOT_LOGIN` ✓ /
+  `DOC_NOT_FOUND` ✓ / `INVALID_PARAM` ✓；清理后磁盘无残留
+- 护栏：`TestReturnAjaxErrorCode` **22/22**（新增，含超长响应提示不被截掉）、`TestLockRetry` **13/13**
+- 工具层端到端 `MoveToolE2E` **17/17**（比修复前多 2 条：工具输出确实带 `[错误码: DOC_NOT_FOUND]` + 处置提示；
+  锁窗口内 move/rename/delete 仍自动重试成功）
+- **Agent 页面端到端**：建两个目录 → 立刻移入 → 移回根 → 删除两个目录，**6 步写操作全 ok**（确认门 6 次均正常），
+  磁盘还原；模型还自己总结出"docId 会随移动变化、不能沿用旧值"。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -130,14 +163,19 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0，先做）**：R1-1 后端补 errorCode（用户点名）→ R1-4 `get_doc_history` 静默返回仓库根历史 → R1-5 `list_repos` 截断（18 仓只看 9）→ R1-2 `create_doc_share` 指向不存在端点 → R1-3 `get_doc_share_list` 语义错位
+- **R1（P0，先做）**：**R1-1 后端补 errorCode ✅（待提交）** → R1-1b 余下约 40 处权限点 → R1-4 `get_doc_history` 静默返回仓库根历史 → R1-5 `list_repos` 截断（18 仓只看 9）→ R1-2 `create_doc_share` 指向不存在端点 → R1-3 `get_doc_share_list` 语义错位
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 主仓库 `devInt`：`devDocs/Agent工具与接口可靠性计划.md`（新增）+ 本卡指针更新
-- 已提交：move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
+- 主仓库 `devInt`（**R1-1 错误码**，待提交）：
+  - 新增 `src/com/DocSystem/common/ErrorCode.java`、`src/com/DocSystem/agent/tool/TestReturnAjaxErrorCode.java`
+  - 修改 `src/util/ReturnAjax.java`、`src/com/DocSystem/common/BaseFunction.java`、
+    `src/com/DocSystem/controller/BaseController.java`、`src/com/DocSystem/controller/DocController.java`、
+    `src/com/DocSystem/agent/tool/DocSysToolFactory.java`、`src/com/DocSystem/agent/tool/TestLockRetry.java`
+  - 文档：`devDocs/Agent工具与接口可靠性计划.md`（R1-1 完成 + 新增 R1-1b/R3-7/R3-8）+ 本卡
+- 已提交：move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；可靠性计划 = `9c675b79a`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
 - office 仓库：与本任务无关
 
 ## 生效约束
@@ -145,3 +183,4 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 - 无前置提交要求；是否提交由用户决定（建议本任务分阶段提交，message 见各阶段完成时记录）。
 - 编译输出目录铁律：`-d WebRoot/WEB-INF/classes`，源码树不得出现 `.class`。
 - 运行期技能 store：dev = `C:\DocSysReposes\skills`（配置 `AgentSkillStorePath`），源码删除后必须手工清理同名目录。
+- 测试/探针产物写 `%TEMP%\docsys_chk\`；**绝不写工程根 `tmp/`**（计划 §5 不变量 3）。

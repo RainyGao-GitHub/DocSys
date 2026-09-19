@@ -28,15 +28,30 @@
 
 ### R1 — P0：模型一用就错（先做）
 
-#### R1-1 后端补错误码（**用户点名优先**）
+#### R1-1 后端补错误码（**用户点名优先**）— ✅ 已完成（2026-09-20）
 - **现状**：写操作失败只有文案；工具层用 `LOCK_BUSY_MARK="请稍后重试"` 嗅探文案判定"可重试"。文案一改即失效，且无法区分锁冲突/无权限/不存在/参数错。
 - **证据**：`src/util/ReturnAjax.java` 无 `errorCode`；`DocSysToolFactory.isLockBusy()` 依赖 `describe(resp)` 文本匹配。
-- **方案**：
-  1. `ReturnAjax` 增字段 `errorCode`（+getter/setter）→ JSON 多一个字段，**UI 不读、向后兼容**；
-  2. 打码点：`isDocForceLocked`/`buildLockFailMsg` → `DOC_LOCKED`；`checkUserDeleteRight`/`checkUserAddRight`/`checkUseAccessRight` → `NO_PERMISSION`；`docSysGetDoc==null` 类 → `NOT_FOUND`；参数校验 → `INVALID_PARAM`；
-  3. 工具层改为优先看 `errorCode`（过渡期保留文案兜底），`callWithLockRetry` 只在 `DOC_LOCKED` 时重试。
-- **验收**：锁窗口内 `move_doc` 仍自动重试成功；无权限写操作返回 `NO_PERMISSION` 且**不重试**；护栏补 `TestReturnAjaxErrorCode`（纯 JVM）。
-- **涉及**：`util/ReturnAjax.java`、`controller/BaseController.java`（`common/BaseFunction.java` 锁/权限判定）、`agent/tool/DocSysToolFactory.java`
+- **方案**（已落地）：
+  1. 新增 `src/com/DocSystem/common/ErrorCode.java`（`DOC_LOCKED`/`NOT_LOGIN`/`NO_PERMISSION`/`DOC_NOT_FOUND`/`REPOS_NOT_FOUND`/`INVALID_PARAM`/`SYSTEM_BUSY`/`INTERNAL`，String 常量，不用 enum）；
+  2. `ReturnAjax` 增 `errorCode` 字段 + `setError(msg, code)` / `setErrorCodeIfAbsent` / `getErrorCode`；**`setError(msg)` 行为不变（留 null）**，保证兼容；
+  3. 打码点（共 53 处）：`BaseFunction.isDocForceLocked`/`isDocLocked` → `DOC_LOCKED`；`BaseFunction.setPermissionError()` 新 helper + `BaseController` 36 处权限点 → `NO_PERMISSION`；`BaseController` 中枢 5 处（`reposCheck`→`SYSTEM_BUSY`/`REPOS_NOT_FOUND`、`checkAndGetAccessInfo`/`checkAndGetLoginUser`→`NOT_LOGIN`/`NO_PERMISSION`、`getLoginUser`→`NOT_LOGIN`）；`DocController` 12 处（docId 解析失败→`DOC_NOT_FOUND`、缺定位参数/同位置→`INVALID_PARAM`、权限 7 处）；
+  4. 工具层改**错误码优先**：`errorCodeOf()` + `guidanceFor()`，`isLockBusy()` 一旦发现"有码但码≠DOC_LOCKED"立即返回 false（不再嗅探文案）；`callWithLockRetry` 只在 `DOC_LOCKED` 时重试（6 次 × 500ms）；`fmt()` 失败时追加 `\n[错误码: X]（处置提示）`，**并为提示预留空间再截断**（否则超长响应会把提示一起截掉——已由护栏钉住）。
+- **验收（实测）**：
+  - 真实探针 `%TEMP%\docsys_chk\ErrorCodeProbe.ps1`：`DOC_LOCKED` ✓ / `REPOS_NOT_FOUND` ✓ / `NOT_LOGIN` ✓ / `DOC_NOT_FOUND` ✓ / `INVALID_PARAM` ✓，清理后磁盘无残留；
+  - 工具层 `MoveToolE2E 17/17`（含"工具输出带 `[错误码: DOC_NOT_FOUND]` + 处置提示"两条新断言），锁窗口内 move/rename/delete 仍自动重试成功；
+  - 护栏：`TestReturnAjaxErrorCode 22/22`（新增）、`TestLockRetry 13/13`；
+  - 页面 E2E："建 2 目录 → 立刻移入 → 移回 → 删除"六步写操作全 ok、确认门正常、磁盘还原。
+- **涉及**：`util/ReturnAjax.java`、`common/ErrorCode.java`、`common/BaseFunction.java`、`controller/BaseController.java`、`controller/DocController.java`、`agent/tool/DocSysToolFactory.java`
+- **过程中发现的新问题（已记入 R1-1b / R3-7 / R3-8）**：
+  - ① **`getLoginUser()` 自己写响应**（内部 `writeJson` 后 return null）→ 调用方设的码根本到不了客户端；这也是"未登录"一直没码的真因。
+  - ② **文案嗅探会假阳**：`reposCheck` 的"系统维护中，请稍后重试！"含 `请稍后重试`，旧嗅探会把它当**可重试的锁占用**（现在被"有码优先"短路掉）。→ 说明 `isLockBusy` 的文案兜底只能当过渡。
+
+#### R1-1b 其余权限点到码（**R1-1 的尾巴**）
+- **现状**：`ReposController` / `websocket/BussinessController` / `websocket/BusinessBaseController` 里还有约 **40 处** `setError("您…")` 风格权限文案未打码。
+- **后果**：这些路径失败时无码 → 工具层退回文案兜底 → 同一个"猜失败原因"的问题在仓库/分享/业务接口上依旧存在。
+- **方案**：复用已就位的 `BaseFunction.setPermissionError(rt, msg)`（直接产出 `NO_PERMISSION`）；其余"不存在/参数错"同样补 `DOC_NOT_FOUND`/`REPOS_NOT_FOUND`/`INVALID_PARAM`。
+- **验收**：`ReposController` 无权限删仓库返回 `NO_PERMISSION`（探针断言）+ 护栏；页面 1 次无权限操作的 E2E。
+- **工作量**：小（机械替换 + 一次探针），但**必须人工过一遍错误分类**，不能一律 `NO_PERMISSION`。
 
 #### R1-2 `create_doc_share` 指向不存在的端点
 - **现状**：`DocSysClient:1066` 调 `/Doc/createDocShare.do`；**服务端无此映射**（`DocController` 只有 `getDocShareList/verifyDocSharePwd/getDocShare`），真实创建分享在 `BussinessController:/addDocShare.do`（另有 `updateDocShare/deleteDocShare`）。
@@ -114,13 +129,23 @@
 - 失败是否**可归因**（有错误码/明确文案），不能退化成"稍后重试"
 - 护栏 + 真实探针 + 页面 E2E 三件套
 
+#### R3-7 `getLoginUser()` 自己写响应（R1-1 发现的隐患）
+- **现状**：`BaseController.getLoginUser()` 未登录分支内部就 `writeJson(rt, response)` 然后 `return null`。后果有二：① 调用方再写的错误码/文案**永远到不了客户端**（R1-1 的真因）；② 若调用方没判 null 继续 `writeJson`，会形成**二次写响应**（已提交的响应头之后写，轻则报错重则截断）。
+- **方案**：改成只返回 `null`（或抛/返回错误标记），由调用方统一 `writeJson`；调用方逐个检查在 `null` 后不再续写。
+- **验收**：无 cookie 请求仍返回 `NOT_LOGIN`（R1-1 探针第 3 项）；grep 确认无第二个 `writeJson` 能落在同一分支之后。
+
+#### R3-8 移除 `isLockBusy()` 的文案兜底（R1-1 的收尾）
+- **现状**：错误码已就位，但 `isLockBusy()` 仍保留文案嗅探兜底（为了兼容未打码的约 40 处 + 非 Agent 路径）。R1-1 已实测到一次**假阳**：`reposCheck` 的"系统维护中，请稍后重试！"。
+- **方案**：R1-1b 完成后，把兜底降级为**仅当 `errorCode == null` 且 msgInfo 含"正在…文件"句式**才认锁（比现在的宽泛 "请稍后重试" 紧得多）。
+- **验收**：`TestLockRetry` 新增"仅含『请稍后重试』但无锁句式 → 不认锁"断言。
+
 ---
 
 ## 2. 建议执行顺序
 
 | 阶段 | 内容 | 依赖 | 交付 |
 |---|---|---|---|
-| **R1** | R1-1 errCode（用户点名）→ R1-4 get_doc_history → R1-5 list_repos → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
+| **R1** | R1-1 errCode ✅（用户点名）→ R1-1b 余下权限点 → R1-4 get_doc_history → R1-5 list_repos → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
 | **R3** | R3-2 全工具体检（产出体检表）→ R3-1 命名 → R3-3 run_skill → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表 + 检查单文档 |
 
@@ -131,7 +156,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20）：`TestListDocsFormat 25` / `TestLockRetry 9` / `TestDocIdResolve 11` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
+   - 现基线（2026-09-20 R1-1 后）：`TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 22` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolE2E` `ListDocsProbe` `ToolChk` `IdProbe` `LockProbe`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -170,7 +195,8 @@
 |---|---|---|---|---|
 | — | — | move_doc / copy / rename / delete 的 docId-only 塌缩 + 工具层锁占用重试 | ✅ | `b5c85bf9f` |
 | — | — | list_docs 大目录截断 → 紧凑分页清单 | ✅ | `10f9e21f8` |
-| R1-1 | P0 | 后端补 errorCode（替代文案嗅探） | ⬜ | |
+| R1-1 | P0 | 后端补 errorCode（替代文案嗅探） | ✅ | 见本次提交 |
+| R1-1b | P0 | ReposController/BussinessController 约 40 处权限点补码 | ⬜ | |
 | R1-2 | P0 | create_doc_share 端点不存在 | ⬜ | |
 | R1-3 | P0 | get_doc_share_list 语义错位 | ⬜ | |
 | R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ⬜ | |
@@ -184,3 +210,5 @@
 | R3-4 | P2 | 旧编排死代码（SubAgent/MainAgent/LLMIntentParser）处置 | ⬜ | |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ⬜ | |
 | R3-6 | P2 | 新工具上线检查单（流程固化） | ⬜ | |
+| R3-7 | P2 | `getLoginUser()` 自写响应 → 双写隐患 | ⬜ | |
+| R3-8 | P2 | 移除 `isLockBusy` 文案兜底（R1-1 收尾） | ⬜ | |
