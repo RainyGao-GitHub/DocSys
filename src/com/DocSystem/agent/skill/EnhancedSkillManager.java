@@ -111,10 +111,7 @@ public class EnhancedSkillManager {
         registerSkill(createDeleteReposSkill());
         registerSkill(createListDocsSkill());
         registerSkill(createSearchDocSkill());
-        registerSkill(createUploadDocSkill());
-        registerSkill(createDownloadDocSkill());
         registerSkill(createWhoamiSkill());
-        registerSkill(createChatSkill());
         
         log.info("Loaded {} built-in enhanced skills", skills.size());
     }
@@ -395,67 +392,6 @@ public class EnhancedSkillManager {
         return skill;
     }
     
-    private EnhancedSkill createUploadDocSkill() {
-        EnhancedSkill skill = new EnhancedSkill();
-        skill.setId("upload_doc");
-        skill.setName("Upload Document");
-        skill.setDescription("Upload a document to repository");
-        skill.setCategory("document");
-        skill.setVersion("1.0.0");
-        skill.addPermission("write:document");
-        
-        skill.addTrigger("upload");
-        skill.addTrigger("上传");
-        skill.addTrigger("添加文档");
-        skill.addTrigger("add document");
-        
-        SkillCommand cmd = new SkillCommand();
-        cmd.setPattern("upload <vid> <file>");
-        cmd.setCliCommand("upload-doc");
-        cmd.addParameter("vid", "Repository ID", true);
-        cmd.addParameter("file", "File path", true);
-        skill.addCommand(cmd);
-        
-        skill.setExecutionFlow(
-            "1. Validate file exists\n" +
-            "2. Call DocSys API: POST /Doc/add.do (multipart)\n" +
-            "3. Return upload result"
-        );
-        
-        skill.addExample("upload 1 F:/documents/test.pdf");
-        
-        return skill;
-    }
-    
-    private EnhancedSkill createDownloadDocSkill() {
-        EnhancedSkill skill = new EnhancedSkill();
-        skill.setId("download_doc");
-        skill.setName("Download Document");
-        skill.setDescription("Download a document from repository");
-        skill.setCategory("document");
-        skill.setVersion("1.0.0");
-        
-        skill.addTrigger("download");
-        skill.addTrigger("下载");
-        skill.addTrigger("获取文档");
-        
-        SkillCommand cmd = new SkillCommand();
-        cmd.setPattern("download <vid> <docId>");
-        cmd.setCliCommand("download-doc");
-        cmd.addParameter("vid", "Repository ID", true);
-        cmd.addParameter("docId", "Document ID", true);
-        skill.addCommand(cmd);
-        
-        skill.setExecutionFlow(
-            "1. Call DocSys API: GET /Doc/download.do\n" +
-            "2. Stream file to user"
-        );
-        
-        skill.addExample("download 1 123");
-        
-        return skill;
-    }
-    
     private EnhancedSkill createWhoamiSkill() {
         EnhancedSkill skill = new EnhancedSkill();
         skill.setId("whoami");
@@ -481,36 +417,6 @@ public class EnhancedSkillManager {
         
         skill.addExample("whoami");
         skill.addExample("我是谁");
-        
-        return skill;
-    }
-    
-    private EnhancedSkill createChatSkill() {
-        EnhancedSkill skill = new EnhancedSkill();
-        skill.setId("chat");
-        skill.setName("AI Chat");
-        skill.setDescription("Chat with AI assistant");
-        skill.setCategory("ai");
-        skill.setVersion("1.0.0");
-        
-        skill.addTrigger("chat");
-        skill.addTrigger("聊天");
-        skill.addTrigger("问答");
-        skill.addTrigger("对话");
-        
-        SkillCommand cmd = new SkillCommand();
-        cmd.setPattern("chat <message>");
-        cmd.setCliCommand("chat");
-        cmd.addParameter("message", "Message to send", true);
-        skill.addCommand(cmd);
-        
-        skill.setExecutionFlow(
-            "1. Send message to LLM service\n" +
-            "2. Return AI response"
-        );
-        
-        skill.addExample("chat 你好");
-        skill.addExample("chat What is DocSystem?");
         
         return skill;
     }

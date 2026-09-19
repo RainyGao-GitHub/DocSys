@@ -69,15 +69,16 @@
 - **实测验收**：工具 28 → **27**（`ToolChk` 打印，`get_banner_config` 已不在）；`/skills` 37 → **36**（`backup_repo` 消失、`backup_repos` 保留）；护栏 `TestWriteTools 58/0`（断言 size 28→27 已同步）、`TestAgentSearchWriteTools 55/0`、`TestToolRegistry 29/0`、`TestUserMemoryTools 26/0`、`TestWebSearchTool 30/0`；重启 dev Tomcat 后 HTTP 200 复验通过
 - 目录计数：仓库技能目录 38 → 36；store `C:\DocSysReposes\skills` 37（36 技能 + `data`）
 
-### P2 已定 3 技能下线
+### P2 已定 3 技能下线 — ✅ 完成（2026-09-19）
 
 `download_doc` / `upload_doc` / `ai_chat`：
-- [ ] 目录（`WebRoot/WEB-INF/skills/<id>/`）+ 运行期 store
-- [ ] `SkillManager` 内置注册（`:110` dd、`:126` ai_chat）+ `EnhancedSkillManager`（`:114/115/117` 与 `setId` 方法）
-- [ ] 两处 `BUILT_IN_SKILL_IDS`
-- [ ] `DocSysSkillExecutor`：分发（`:151/157-158`）+ handler（`:581` handleDownloadDoc、`:666` handleChat）
-- [ ] 遗留引用清理（可选）：`SubAgent`、`MainAgent`、`LLMIntentParser`
-- 验收：`run_skill` 这 3 个 id → "No executor found"；`/skills` 再减 3
+- [x] 目录（`WebRoot/WEB-INF/skills/<id>/`）+ 运行期 store（两个都删）
+- [x] `SkillManager` 内置注册（`download_doc`、`ai_chat`）+ `EnhancedSkillManager`（`createUploadDocSkill` / `createDownloadDocSkill` / `createChatSkill` 注册与定义均删）
+- [x] 两处 `BUILT_IN_SKILL_IDS`（含 chat 别名组：`chat`/`ai-chat`/`ask`/`ai_chat`）
+- [x] `DocSysSkillExecutor`：分发分支 + handler（`handleDownloadDoc` / `handleChat`）删除
+- [ ] 遗留引用未动（保留）：`SubAgent`（101/191/628、200/702）、`MainAgent`（991/1090/1235）、`LLMIntentParser`——旧编排自有直调路径，不依赖技能注册表（P4 可选）
+- **实测**：`/skills` **35 → 32**（`download_doc`/`upload_doc`/`ai_chat` 均消失；`rag_chat`/`system_help` 保留）；工具 27 不变；护栏 TestWriteTools 58/0、TestAgentSearchWriteTools 55/0、TestToolRegistry 29/0、TestUserMemoryTools 26/0、TestWebSearchTool 30/0、TestToolCallParser 55/0；重启 dev Tomcat 后 200 复验
+- 未运行时验证（代码级确认）：`run_skill` 对这 3 个 id 现应返回 "No executor found for skill"
 
 ### P3 同名技能大去重（S1 23 个 + S2 3 个）
 

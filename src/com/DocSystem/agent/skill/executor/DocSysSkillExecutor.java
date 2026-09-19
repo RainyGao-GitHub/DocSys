@@ -81,14 +81,11 @@ public class DocSysSkillExecutor implements SkillExecutor {
         "move_doc", "move-doc",
         "copy_doc", "copy-doc",
         "get_doc", "doc-info",
-        "download_doc", "download-document",
         "doc_history", "version-history",
         // Search skills
         "search_doc", "search", "search-docs",
         "search_in_repo",
         // AI/Chat skills
-        "chat", "ai-chat", "ask",
-        "ai_chat",
         "rag_chat", "chat-with-docs",
         "list_models", "ai-models",
         // User skills
@@ -148,14 +145,10 @@ public class DocSysSkillExecutor implements SkillExecutor {
             if ("copy_doc".equals(skillId) || "copy-doc".equals(skillId)) return handleCopyDoc(params);
             if ("get_doc".equals(skillId) || "doc-info".equals(skillId)) return handleGetDoc(
                 params.get("vid"), params.get("docId"), params.get("path"), params.get("name"));
-            if ("download_doc".equals(skillId) || "download-document".equals(skillId)) return handleDownloadDoc(
-                params.get("vid"), params.get("docId"), params.get("path"), params.get("name"));
             if ("doc_history".equals(skillId) || "version-history".equals(skillId)) return handleDocHistory(params.get("vid"), params.get("docId"));
             // ---------- SEARCH ----------
             if ("search_doc".equals(skillId) || "search".equals(skillId) || "search-docs".equals(skillId)) return handleSearchDoc(params.get("query"), params.get("vid"));
             // ---------- CHAT ----------
-            if ("chat".equals(skillId) || "ai-chat".equals(skillId) || "ask".equals(skillId)) return handleChat(params.get("message"), params.get("model"));
-            if ("ai_chat".equals(skillId)) return handleChat(params.get("message"), params.get("model"));
             if ("rag_chat".equals(skillId) || "chat-with-docs".equals(skillId)) return handleRagChat(
                 params.get("query"), params.get("model"), params.get("apiKey"));
             if ("list_models".equals(skillId) || "ai-models".equals(skillId)) return handleListAiModels();
@@ -578,21 +571,6 @@ public class DocSysSkillExecutor implements SkillExecutor {
         }
     }
 
-    private SkillExecutionResult handleDownloadDoc(String vidStr, String docIdStr, String path, String name) {
-        try {
-            Integer vid = vidStr != null ? Integer.parseInt(vidStr) : null;
-            Long docId = docIdStr != null ? Long.parseLong(docIdStr) : null;
-            Map<String, Object> response = docSysClient.downloadDoc(vid, docId, path, name);
-            if ("ok".equals(response.get("status"))) {
-                return SkillExecutionResult.ok("Download ready: " + response.get("data"));
-            } else {
-                return SkillExecutionResult.error("Failed to download: " + response.get("msgInfo"));
-            }
-        } catch (Exception e) {
-            return SkillExecutionResult.error("Failed to download: " + e.getMessage());
-        }
-    }
-
     private SkillExecutionResult handleDocHistory(String vidStr, String docIdStr) {
         try {
             Integer vid = vidStr != null ? Integer.parseInt(vidStr) : null;
@@ -659,20 +637,6 @@ public class DocSysSkillExecutor implements SkillExecutor {
             sb.append("搜索结果解析异常: ").append(e.getMessage());
         }
         return sb.toString();
-    }
-
-    // ==================== CHAT HANDLERS ====================
-
-    private SkillExecutionResult handleChat(String message, String model) {
-        if (message == null || message.isEmpty()) {
-            return SkillExecutionResult.error("Usage: chat <message> [model]");
-        }
-        try {
-            String response = docSysClient.chat(message, model);
-            return SkillExecutionResult.ok(response);
-        } catch (Exception e) {
-            return SkillExecutionResult.error("Chat failed: " + e.getMessage());
-        }
     }
 
     private SkillExecutionResult handleRagChat(String query, String model, String apiKey) {

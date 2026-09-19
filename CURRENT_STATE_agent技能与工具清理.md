@@ -23,22 +23,25 @@
 
 ## 当前进展
 
-- **P1 死代码/垃圾清理 — ✅ 完成（2026-09-19）**
+- **P1 死代码/垃圾清理 — ✅ 完成（2026-09-19，已提交 `a3b2da425`）**
   - 删 `DocSysToolFactory.aiChat`（未注册死定义）、`get_banner_config`（注册+定义；client/端点保留给 CLI 与 Banner.js）
-  - 删技能目录 `darwin-eval`（无 skill.md）、`backup_repo`（与 backup_repos 重复，且不在任何白名单）——仓库与运行期 store 均已删
-  - 实测：工具 **28→27**；`/skills` **37→36**；护栏 TestWriteTools 58/0（断言同步为 27）、TestAgentSearchWriteTools 55/0、TestToolRegistry 29/0、TestUserMemoryTools 26/0、TestWebSearchTool 30/0；重启 dev Tomcat 后 200 复验
-  - 未做：`test-skill/` 去留待用户裁定
-- P2/P3/P4 未开始。
+  - 删技能目录 `darwin-eval`（无 skill.md）、`backup_repo`（与 backup_repos 重复）、`test-skill`（用户裁定删除）——仓库与运行期 store 均已删
+  - 实测：工具 **28→27**；`/skills` **37→36→（删 test-skill）35**；护栏全绿；重启 dev Tomcat 后 200 复验
+- **P2 下线 3 个 DocSys 技能 — ✅ 完成（2026-09-19，待提交）**
+  - `download_doc` / `upload_doc` / `ai_chat`：目录 + store 删除；`SkillManager` 内置注册、`EnhancedSkillManager` 三个 `create*Skill` 方法、两处 `BUILT_IN_SKILL_IDS`、`DocSysSkillExecutor` 分发与 handler（`handleDownloadDoc`/`handleChat`）全部移除
+  - 实测：`/skills` **35 → 32**（三个 id 均消失，`rag_chat`/`system_help` 保留）；工具 27 不变；护栏 6 项全绿（58/55/29/26/30/55）；重启后 200
+  - 遗留：`SubAgent`/`MainAgent`/`LLMIntentParser` 的旧编排分支未动（不依赖技能注册表，P4 可选清理）
+- P3/P4 未开始。
 
 ## 下一步
 
-1. 用户确认后进入 **P2**：下线 `download_doc` / `upload_doc` / `ai_chat`（目录 + 两个 Manager 注册 + 两处白名单 + `DocSysSkillExecutor` 分发与 handler + store 清理 + 遗留引用）
-2. 每阶段完成后按里程碑约定更新本卡与计划勾选
+1. 用户确认后进入 **P3**：下线 S1 的 23 个同名技能 + S2 的 3 个（`user_login`/`user_logout`/`status`）；每个技能 6 处同步（目录 / 两个 Manager 注册 / 两个 executor 白名单+分发+handler / store）
+2. P4：工具瘦身裁定（`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc`）+ store 清理机制
 
 ## 未提交改动
 
-- 主仓库 `devInt`：本任务改动（`devDocs/Agent技能与工具清理计划.md`、本卡、`CLAUDE.md` 指针、`DocSysToolFactory.java`、`TestWriteTools.java`、技能目录删除）——尚未提交
-- 此前遗留未提交：`SkillManager/EnhancedSkillManager/ExternalSkillExecutor/SkillScriptParser` 的 UTF-8 编码修复（2026-09-19，ant-expert 乱码）
+- 主仓库 `devInt`：P2 改动（`SkillManager` / `EnhancedSkillManager` / `DocSysSkillExecutor` / `ExternalSkillExecutor` + 3 个技能目录删除 + 本卡与计划文档更新）
+- 已提交：P1 = `a3b2da425`；UTF-8 编码修复 = `3c774d101`（用户此前提交）
 - office 仓库：与本任务无关
 
 ## 生效约束

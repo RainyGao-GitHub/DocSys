@@ -107,9 +107,6 @@ public class SkillManager {
         registerSkill(new Skill("get_doc", "Get Document",
             "Get document content/details. Aliases: get doc, 获取文档",
             "document", "read"));
-        registerSkill(new Skill("download_doc", "Download Document",
-            "Download a document from repository. Aliases: download, 下载文档",
-            "document", "read"));
         registerSkill(new Skill("doc_history", "Document History",
             "Get version history of a document. Aliases: history, 版本历史",
             "document", "read"));
@@ -123,9 +120,6 @@ public class SkillManager {
             "search", "read"));
             
         // ========== AI/Chat Skills ==========
-        registerSkill(new Skill("ai_chat", "AI Chat",
-            "Chat with AI assistant. Aliases: chat, 聊天, AI对话, 问答",
-            "ai", "read"));
         registerSkill(new Skill("rag_chat", "RAG Chat",
             "Chat with AI using document context (RAG). Aliases: chat with docs, 基于文档问答",
             "ai", "read"));

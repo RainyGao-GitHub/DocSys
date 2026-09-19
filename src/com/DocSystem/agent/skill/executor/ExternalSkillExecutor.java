@@ -76,14 +76,11 @@ public class ExternalSkillExecutor implements SkillExecutor {
         "move_doc", "move-doc",
         "copy_doc", "copy-doc",
         "get_doc", "doc-info",
-        "download_doc", "download-document",
         "doc_history", "version-history",
         // Search skills
         "search_doc", "search", "search-docs",
         "search_in_repo",
         // AI/Chat skills
-        "chat", "ai-chat", "ask",
-        "ai_chat",
         "rag_chat", "chat-with-docs",
         "list_models", "ai-models",
         // User skills
