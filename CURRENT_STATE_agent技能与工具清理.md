@@ -121,7 +121,7 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
   （create_folder×2 + move_doc）全部批准并成功；反向 `移回根 + 删除空目录` → 2 步（move_doc + delete_doc）
   成功；磁盘核对 `TTITrace` 回到根目录、`AI整理测试` 已删、无残留
 
-## R1-1 后端错误码（2026-09-20）—— 失败原因可归因，替掉文案嗅探
+## R1-1 后端错误码（2026-09-20）—— 失败原因可归因，替掉文案嗅探 — ✅ 已提交 `eda22474b`
 
 ### 问题
 写操作失败只有中文文案，工具层靠 `"请稍后重试"` 串嗅探判断"可重试"：文案一改即失效，
@@ -163,19 +163,14 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0，先做）**：**R1-1 后端补 errorCode ✅（待提交）** → R1-1b 余下约 40 处权限点 → R1-4 `get_doc_history` 静默返回仓库根历史 → R1-5 `list_repos` 截断（18 仓只看 9）→ R1-2 `create_doc_share` 指向不存在端点 → R1-3 `get_doc_share_list` 语义错位
+- **R1（P0，先做）**：**R1-1 后端补 errorCode ✅ `eda22474b`** → R1-1b 余下约 40 处权限点 → R1-4 `get_doc_history` 静默返回仓库根历史 → R1-5 `list_repos` 截断（18 仓只看 9）→ R1-2 `create_doc_share` 指向不存在端点 → R1-3 `get_doc_share_list` 语义错位
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 主仓库 `devInt`（**R1-1 错误码**，待提交）：
-  - 新增 `src/com/DocSystem/common/ErrorCode.java`、`src/com/DocSystem/agent/tool/TestReturnAjaxErrorCode.java`
-  - 修改 `src/util/ReturnAjax.java`、`src/com/DocSystem/common/BaseFunction.java`、
-    `src/com/DocSystem/controller/BaseController.java`、`src/com/DocSystem/controller/DocController.java`、
-    `src/com/DocSystem/agent/tool/DocSysToolFactory.java`、`src/com/DocSystem/agent/tool/TestLockRetry.java`
-  - 文档：`devDocs/Agent工具与接口可靠性计划.md`（R1-1 完成 + 新增 R1-1b/R3-7/R3-8）+ 本卡
-- 已提交：move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；可靠性计划 = `9c675b79a`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
+- 无（工作区干净；R1-1 = `eda22474b`）
+- 已提交：R1-1 错误码 = `eda22474b`；可靠性计划 = `9c675b79a`；move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
 - office 仓库：与本任务无关
 
 ## 生效约束
