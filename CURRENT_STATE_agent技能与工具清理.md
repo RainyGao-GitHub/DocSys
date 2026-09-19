@@ -128,14 +128,16 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 下一步
 
-1. 提交 move_doc 修复（主仓库 `devInt`）
-2. 可选后续：`list_docs` 的 4000 字截断（大目录返回被截断，模型无法解析；仓库 5 根目录 90+ 项必踩）
-3. 可选后续：后端给"文档被锁占用"加错误码（现靠提示语"请稍后重试"判定，较脆弱）
+**以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
+
+- **R1（P0，先做）**：R1-1 后端补 errorCode（用户点名）→ R1-4 `get_doc_history` 静默返回仓库根历史 → R1-5 `list_repos` 截断（18 仓只看 9）→ R1-2 `create_doc_share` 指向不存在端点 → R1-3 `get_doc_share_list` 语义错位
+- **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
+- **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 主仓库 `devInt`：`BaseController`（resolver + 异步解锁 try/finally）/ `DocController`（4 接口按 docId 反查 + 定位守卫）/ `DocSysToolFactory`（锁占用重试）/ 新增 `TestDocIdResolve` + `TestLockRetry` + 本卡
-- 已提交：P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
+- 主仓库 `devInt`：`devDocs/Agent工具与接口可靠性计划.md`（新增）+ 本卡指针更新
+- 已提交：move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
 - office 仓库：与本任务无关
 
 ## 生效约束
