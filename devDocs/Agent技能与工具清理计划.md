@@ -41,9 +41,9 @@
 
 > ⚠️ `lock_doc` `unlock_doc` `share_doc` `status` `system_help` `test-skill` `backup_repo` **不在任何内置白名单内**（两个 executor 的 `BUILT_IN_SKILL_IDS` 都没有），实际走"目录技能 → 外部策略 2（CLI `docsys …`）"，而该 CLI 命令在本环境不存在 → 执行必失败。删除无功能损失。
 
-### S2 无工具、建议删/不暴露（3，P3）
+### S2 无工具、建议删/不暴露（3，P3a 已删）
 
-`user_login` `user_logout`（会话由页面管理）、`status`（会话状态，用 `get_login_user` 即可）
+`user_login` `user_logout`（会话由页面管理）、`status`（会话状态，用 `get_login_user` 即可）—— 2026-09-19 已下线，见 P3a。
 
 ### S3 保留（8）
 
@@ -83,6 +83,16 @@
 ### P3 同名技能大去重（S1 23 个 + S2 3 个）
 
 逐项同步（每个技能 6 处）：目录 / `SkillManager` 注册 / `EnhancedSkillManager` 注册 / `DocSysSkillExecutor` 白名单+分发+handler / `ExternalSkillExecutor` 白名单 / store 副本。
+
+#### P3a S2 试点 — ✅ 完成（2026-09-19）
+
+- [x] `user_login` / `user_logout`：目录+store；`SkillManager` 内置注册；两处 `BUILT_IN_SKILL_IDS`（含 `login`/`logout` 别名）；`DocSysSkillExecutor` 分发 + `handleLogin`/`handleLogout`
+- [x] `status`：仅目录+store（本就不在任何白名单，无代码引用）
+- **实测**：`/skills` **32 → 29**（三个 id 均消失，`whoami`/`system_help` 保留）；工具 27 不变；护栏 6 项全绿（58/55/29/26/30/55）；重启后 200
+- 保留：`SubAgent.handleLogin/handleLogout`（旧编排自有路径，不依赖技能注册表；`DocSysClient.login/logout` 亦保留）
+
+#### P3b S1 23 个同名技能 — 待办
+
 - 验收：`/skills` 只剩插件类；真实对话回归"找/读/写/移/删"；护栏全绿
 
 ### P4 工具瘦身裁定 + 机制加固

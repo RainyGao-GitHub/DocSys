@@ -31,17 +31,21 @@
   - `download_doc` / `upload_doc` / `ai_chat`：目录 + store 删除；`SkillManager` 内置注册、`EnhancedSkillManager` 三个 `create*Skill` 方法、两处 `BUILT_IN_SKILL_IDS`、`DocSysSkillExecutor` 分发与 handler（`handleDownloadDoc`/`handleChat`）全部移除
   - 实测：`/skills` **35 → 32**（三个 id 均消失，`rag_chat`/`system_help` 保留）；工具 27 不变；护栏 6 项全绿（58/55/29/26/30/55）；重启后 200
   - 遗留：`SubAgent`/`MainAgent`/`LLMIntentParser` 的旧编排分支未动（不依赖技能注册表，P4 可选清理）
-- P3/P4 未开始。
+- **P3a（S2 试点）— ✅ 完成（2026-09-19，待提交）**
+  - `user_login` / `user_logout`：目录+store、`SkillManager` 注册、两处白名单（含 `login`/`logout` 别名）、`DocSysSkillExecutor` 分发 + `handleLogin`/`handleLogout` 均移除
+  - `status`：仅目录+store（本就不在任何白名单）
+  - 实测：`/skills` **32 → 29**；工具 27；护栏 6 项全绿（58/55/29/26/30/55）；重启后 200
+- P3b（S1 23 个同名技能）、P4 未开始。
 
 ## 下一步
 
-1. 用户确认后进入 **P3**：下线 S1 的 23 个同名技能 + S2 的 3 个（`user_login`/`user_logout`/`status`）；每个技能 6 处同步（目录 / 两个 Manager 注册 / 两个 executor 白名单+分发+handler / store）
+1. 用户确认后进入 **P3b**：S1 的 23 个同名技能（`add_doc` `backup_repo`①、`backup_repos` `copy_doc` `create_repos` `delete_doc` `delete_repos` `doc_history` `get_doc` `list_docs` `list_models` `list_repos` `lock_doc` `move_doc` `rag_chat` `rename_doc` `repos_info` `search_doc` `search_in_repo` `share_doc` `unlock_doc` `whoami` `system_config`）——① `backup_repo` 已在 P1 删除，实为 22 个
 2. P4：工具瘦身裁定（`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc`）+ store 清理机制
 
 ## 未提交改动
 
-- 主仓库 `devInt`：P2 改动（`SkillManager` / `EnhancedSkillManager` / `DocSysSkillExecutor` / `ExternalSkillExecutor` + 3 个技能目录删除 + 本卡与计划文档更新）
-- 已提交：P1 = `a3b2da425`；UTF-8 编码修复 = `3c774d101`（用户此前提交）
+- 主仓库 `devInt`：P3a 改动（`SkillManager` / `DocSysSkillExecutor` / `ExternalSkillExecutor` + 3 个技能目录删除 + 本卡与计划文档更新）
+- 已提交：P1 = `a3b2da425`；P2 = `7621521ca`；UTF-8 编码修复 = `3c774d101`（用户此前提交）
 - office 仓库：与本任务无关
 
 ## 生效约束

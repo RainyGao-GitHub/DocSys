@@ -131,12 +131,6 @@ public class SkillManager {
         registerSkill(new Skill("whoami", "Who Am I",
             "Show current user information. Aliases: whoami, 我是谁, 当前用户",
             "user", "read"));
-        registerSkill(new Skill("user_login", "User Login",
-            "Login to DocSystem. Aliases: login, 登录",
-            "user", "auth"));
-        registerSkill(new Skill("user_logout", "User Logout",
-            "Logout from DocSystem. Aliases: logout, 登出",
-            "user", "auth"));
             
         // ========== System Skills ==========
         registerSkill(new Skill("system_config", "System Config",

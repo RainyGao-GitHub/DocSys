@@ -90,8 +90,6 @@ public class DocSysSkillExecutor implements SkillExecutor {
         "list_models", "ai-models",
         // User skills
         "whoami",
-        "login", "logout",
-        "user_login", "user_logout",
         // System skills
         "config", "system-config", "system_config",
         "help", "help-repos", "help-docs", "help-search",
@@ -118,8 +116,6 @@ public class DocSysSkillExecutor implements SkillExecutor {
             log.debug("DocSysSkillExecutor handling: {} params={}", skillId, params);
             // ---------- USER ----------
             if ("whoami".equals(skillId)) return handleWhoami();
-            if ("login".equals(skillId)) return handleLogin(params.get("username"), params.get("password"));
-            if ("logout".equals(skillId)) return handleLogout();
             // ---------- REPOS ----------
             if ("list_repos".equals(skillId) || "list-repos".equals(skillId)) return handleListRepos();
             if ("add_repos".equals(skillId) || "create-repos".equals(skillId)) return handleAddRepos(
@@ -178,31 +174,6 @@ public class DocSysSkillExecutor implements SkillExecutor {
     }
 
     // ==================== USER HANDLERS ====================
-
-    private SkillExecutionResult handleLogin(String username, String password) {
-        if (username == null || password == null) {
-            return SkillExecutionResult.error("Usage: login <username> <password>");
-        }
-        try {
-            Map<String, Object> result = docSysClient.login(username, password);
-            if ("ok".equals(result.get("status"))) {
-                return SkillExecutionResult.ok("Logged in as " + username);
-            } else {
-                return SkillExecutionResult.error("Login failed: " + result.get("msgInfo"));
-            }
-        } catch (Exception e) {
-            return SkillExecutionResult.error("Login failed: " + e.getMessage());
-        }
-    }
-
-    private SkillExecutionResult handleLogout() {
-        try {
-            docSysClient.logout();
-            return SkillExecutionResult.ok("Logged out successfully");
-        } catch (Exception e) {
-            return SkillExecutionResult.error("Logout failed: " + e.getMessage());
-        }
-    }
 
     private SkillExecutionResult handleWhoami() {
         try {

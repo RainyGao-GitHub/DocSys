@@ -85,8 +85,6 @@ public class ExternalSkillExecutor implements SkillExecutor {
         "list_models", "ai-models",
         // User skills
         "whoami",
-        "login", "logout",
-        "user_login", "user_logout",
         // System skills
         "config", "system-config", "system_config",
         "help", "help-repos", "help-docs", "help-search",
