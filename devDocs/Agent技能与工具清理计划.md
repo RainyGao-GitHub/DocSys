@@ -136,7 +136,7 @@
 - ⏳ 遗留：`DocSysSkillExecutor` 里这些 id 的 handler 方法（`handleListRepos`/`handleGetRepos`/`handleGetDocList`/`handleGetDoc`/`handleDocHistory`/`handleSearchDoc`/`handleRagChat`/`handleListAiModels`/`handleWhoami`/`handleGetConfig`）与 `EnhancedSkillManager` 的 4 个 `create*Skill` 现已**无引用**（死代码），待 P3b-写收尾或删除执行器时一并清除
 - **静态实测**：`/skills` **29 → 18**；工具 **27 不变**（`list_repos`/`get_doc`/`get_doc_history`/`search_files`/`rag_chat`/`get_sys_config` 均在）；护栏 6 项全绿（58/55/29/26/30/55）；目录计数：仓库 29→18、store 30→19
 
-#### P3b-写 写组 11 个 — ✅ 代码完成（2026-09-19，浏览器验证进行中）
+#### P3b-写 写组 11 个 — ✅ 完成并验证（2026-09-19，commit `f364529e4`）
 
 - 名单：`add_doc` `create_repos` `delete_repos` `delete_doc` `rename_doc` `move_doc` `copy_doc` `backup_repos` `lock_doc` `unlock_doc` `share_doc`
 - 保留（共 7）：`ant-expert` `java-expert` `playwright` `browser_use` `web_search` `system_help` `banner`
@@ -146,8 +146,8 @@
 - [x] **删除 `DocSysSkillExecutor` 的共享单例 `DocSysClient`**（字段 + 构造函数参数 + import）→ 构造器变为无参（`@Autowired public DocSysSkillExecutor()`），彻底消除 §2.5 的串号结构风险
 - [x] **清死代码**：`DocSysSkillExecutor` 删了所有 DocSys-API handler（USER/REPOS/DOCS/SEARCH/BACKUP/SYSTEM-config + NATURAL-LANGUAGE + init 段；876 → 300 行）；`EnhancedSkillManager` 删了 6 个 `create*Skill`（418 → 211 行）
 - [x] 顺带清理：`update_repos` / `backup_status` / `init-llm` / `init-auth` / `search_and_load` / `generate_summary` / `search_and_answer` 等**无目录、无注册、不可达**的 DocSys 白名单 id 一并移除（避免残留死入口）
-- **静态实测**：仓库技能目录 **18 → 7**（store 19 → 8，含 `data`）；工具 **27 不变**；护栏 6 项全绿（58/55/29/26/30/55）；编译通过
-- ⏳ 待完成：API `/skills` 复核 + **Agent 页面端到端**（含一次带确认门的写操作）
+- **实测全绿**：API `/skills` **18 → 7**（`ant-expert` `banner` `browser_use` `java-expert` `playwright` `system_help` `web_search`）；帮助弹窗仅显示这 7 个；工具 **27 不变**；护栏 6 项全绿（58/55/29/26/30/55）；编译通过，重启后 200
+- **页面端到端**（重启后重登）：① 读「列出所有仓库」→ 1 步 `list_repos`；② 写「创建文件夹 P3B验证」→ `create_folder` + 确认弹窗（“此操作将执行写操作 [create_folder]”，拒绝/批准执行）→ 批准 → 新增成功；③ 清理删除 → `delete_doc` + 确认弹窗 → 批准 → 删除成功，无残留
 
 ### P4 工具瘦身裁定 + 机制加固
 
