@@ -30,7 +30,7 @@ public class TestWriteTools {
         testConfirmGateApprove();
         testNoopGatePassThrough();
         testReadToolsNoGate();
-        testRagAiToolsRegistered();
+        testRagAiToolsRetired();
         System.out.println("\n======== TestWriteTools: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -56,7 +56,7 @@ public class TestWriteTools {
 
         String[] writeTools = {"create_repos", "delete_repos", "update_repos", "create_folder",
                 "write_file", "write_note", "delete_doc", "rename_doc", "move_doc", "copy_doc",
-                "lock_doc", "unlock_doc", "create_doc_share", "backup_repos"};
+                "create_doc_share", "backup_repos"};
         for (String name : writeTools) {
             ToolDefinition def = reg.find(name);
             check("write tool registered: " + name, def != null);
@@ -65,7 +65,7 @@ public class TestWriteTools {
                 check(name + " needsConfirm", def.needsConfirm);
             }
         }
-        check("full registry size=27", reg.size() == 27);
+        check("full registry size=22", reg.size() == 22);
     }
 
     private static void testConfirmGateInvoked() {
@@ -131,22 +131,16 @@ public class TestWriteTools {
         check("read tool: gate NOT invoked", gateCalls.get() == 0);
     }
 
-    // ---------- T3.3 RAG/AI 工具 ----------
+    // ---------- T3.3 RAG/AI 工具（P4 后：rag_chat / list_ai_models / get_sys_config 均已下线） ----------
 
-    private static void testRagAiToolsRegistered() {
+    private static void testRagAiToolsRetired() {
         DocSysClient client = new DocSysClient("http://localhost:9999");
         ToolRegistry reg = DocSysToolFactory.createReadOnlyRegistry(client);
 
-        ToolDefinition rag = reg.find("rag_chat");
-        check("rag_chat registered", rag != null);
-        if (rag != null) {
-            check("rag_chat not write", !rag.isWrite && !rag.needsConfirm);
-            check("rag_chat has query param", rag.parameters != null
-                    && rag.parameters.getJSONObject("properties").containsKey("query"));
-        }
-
-        ToolDefinition ai = reg.find("ai_chat");
-        check("ai_chat NOT registered by default (redundant w/ LLMService)", ai == null);
+        check("rag_chat retired (P4)", reg.find("rag_chat") == null);
+        check("list_ai_models retired (P4)", reg.find("list_ai_models") == null);
+        check("get_sys_config retired (P4)", reg.find("get_sys_config") == null);
+        check("ai_chat NOT registered by default (redundant w/ LLMService)", reg.find("ai_chat") == null);
     }
 
     // ---------- 辅助 ----------

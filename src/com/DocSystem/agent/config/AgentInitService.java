@@ -73,6 +73,7 @@ public class AgentInitService {
 
         // 1.5) 拷贝默认技能到配置的技能目录（逐技能，不覆盖已存在的——保护进化改过的技能）
         try {
+            purgeRetiredSkills();
             copyDefaultSkillsIfAbsent();
         } catch (Exception e) {
             log.error("默认技能拷贝失败（不影响 DocSys 启动）: {}", e.getMessage(), e);
@@ -91,6 +92,66 @@ public class AgentInitService {
 
         initialized = true;
         log.info("=== DocSysAgent 初始化完成 ===");
+    }
+
+    /**
+     * 已下线技能 id 黑名单（维护约定：下线一个技能时，把 id 加到这里）。
+     *
+     * <p>为什么需要：{@link #copyDefaultSkillsIfAbsent()} 是<b>单向</b>拷贝（目标已存在则跳过，
+     * 以保护进化产物），所以从源码 {@code WEB-INF/skills} 删掉技能后，<b>老部署</b>的运行期
+     * store 里那份旧技能会永久留着，升级后用户仍能在技能列表/帮助里看到已下线的能力。
+     * 启动时按本名单清掉 store 同名目录即可一次性覆盖。
+     *
+     * <p>只按 id 精确匹配目录名，不动其它目录（进化/用户自建技能不受影响）。
+     */
+    static final String[] RETIRED_SKILL_IDS = {
+            // P1（2026-09-19）
+            "darwin-eval", "backup_repo", "test-skill",
+            // P2：下载/上传/对话（改由工具承担）
+            "download_doc", "upload_doc", "ai_chat",
+            // P3a：登录态（技能通道无身份，已删除）
+            "user_login", "user_logout", "status",
+            // P3b-读：只读 DocSys 能力（改由工具承担）
+            "list_repos", "repos_info", "list_docs", "get_doc", "doc_history",
+            "list_models", "search_doc", "search_in_repo", "rag_chat", "whoami", "system_config",
+            // P3b-写：写 DocSys 能力（改由工具承担）
+            "add_doc", "create_repos", "delete_repos", "delete_doc", "rename_doc", "move_doc",
+            "copy_doc", "backup_repos", "lock_doc", "unlock_doc", "share_doc"
+    };
+
+    /**
+     * 清理运行期技能目录里已下线的技能（黑名单精确匹配目录名，递归删除）。
+     *
+     * <p>幂等：目录不存在则跳过；失败只记日志，不影响启动。
+     */
+    private void purgeRetiredSkills() {
+        String dstSkillsDir = Path.getAgentSkillStorePath(BaseFunction.OSType);
+        if (dstSkillsDir == null || dstSkillsDir.trim().isEmpty()) {
+            return;
+        }
+        File dstRoot = new File(dstSkillsDir);
+        if (!dstRoot.exists() || !dstRoot.isDirectory()) {
+            return; // store 还没建立，无需清理
+        }
+        int purged = 0;
+        for (String id : RETIRED_SKILL_IDS) {
+            File retired = new File(dstRoot, id);
+            if (!retired.exists()) {
+                continue;
+            }
+            boolean ok = retired.isDirectory()
+                    ? FileUtil.delDir(retired.getAbsolutePath())
+                    : retired.delete();
+            if (ok) {
+                purged++;
+                log.info("已下线技能清理: {}{}", dstSkillsDir, id);
+            } else {
+                log.warn("已下线技能清理失败（可手工删除）: {}", retired.getAbsolutePath());
+            }
+        }
+        if (purged > 0) {
+            log.info("已下线技能清理完成: 共删除 {} 个", purged);
+        }
     }
 
     /**

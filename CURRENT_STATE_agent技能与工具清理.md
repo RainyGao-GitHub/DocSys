@@ -52,17 +52,28 @@
   - 顺带移除不可达 id：`update_repos` `backup_status` `init-llm` `init-auth` `search_and_load` `generate_summary` `search_and_answer`
   - 验证（全部实测 PASS）：API `/skills` = **7**（ant-expert banner browser_use java-expert playwright system_help web_search）；帮助弹窗同样只显示 7 个；工具 **27 不变**；护栏 6 项全绿（58/55/29/26/30/55）；编译通过；重启后 200
   - **页面端到端**（重启后重登 Admin/Admin）：① 读=「列出所有仓库」→ 1 步 `list_repos` 工具调用；② 写=「在仓库 5 根目录创建文件夹 P3B验证」→ `create_folder` 工具 + 确认弹窗→批准→`新增成功 docId=102224210355`；③ 清理=「删除该文件夹」→ `delete_doc` + 确认弹窗→批准→`删除成功 status: ok`（无残留）
-- P4：工具瘦身裁定 + store 清理机制 +（可选）免 HTTP 直调门面评估——未开始。
+- **P4（工具瘦身裁定 + 机制加固）— ✅ 完成并验证（2026-09-19）**
+  - 用户裁定下线 5 个：`rag_chat` `list_ai_models` `get_sys_config` `lock_doc` `unlock_doc`；保留 `backup_repos` `query_backup_status`
+  - 工具 **27 → 22**（14R+13W → 10R+12W）；`DocSysClient` 同名方法保留（`DocSysCLI`/`SubAgent` 旧编排仍用，本轮不动）
+  - `TestWriteTools` 断言 27→22 + 用例改写（→ 52 passed）
+  - **store 黑名单清扫**：`AgentInitService.RETIRED_SKILL_IDS`（31 个 id）+ `purgeRetiredSkills()`（在拷贝前执行）→ 今后下线只需加 id
+  - 验证：护栏 6 项全绿（52/55/29/26/30/55）；编译通过；重启 200；store 清扫实测（预置 `rag_chat`+`lock_doc` 残留 → 重启后递归删除，`java-expert` 保留）
+  - 页面端到端：工具清单无那 5 个；写 `create_folder`/`delete_doc` 确认门正常；负向「锁定文件」→ 模型声明无此工具、未调用 ✓
+
+## 全阶段完成情况
+
+P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅（未提交）
+技能：37 → **7**（`ant-expert` `java-expert` `playwright` `browser_use` `web_search` `system_help` `banner`）；工具：35 定义 → **22**（10R+12W，另含条件工具 memory_*3/web_search/run_skill/attachment）
 
 ## 下一步
 
-1. 进入 P4：工具瘦身裁定（`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc`）+ store 清理机制（`AgentInitService` 单向补拷，删源后旧 store 残留需离线 id 黑名单/升级清扫）
-2. P4 可选：免 HTTP 直调门面评估（若将来想真的直调 Java）
-3. 遗留（与本次清理无关）：`move_doc` 参数反查修复（方案 A/B/C 待裁定）、FSM 失败释放自锁
+1. 提交 P4（主仓库 `devInt`）
+2. 遗留（与本轮清理无关，待裁定）：`move_doc` 工具失败根因（只传 docId+dstPid → 空 name/path → FSM 重复 FORCE 锁同键；方案 A/B/C）、FSM 失败释放自锁
+3. 可选：后端级测试（TestBackupTools 类断言备份族）、提醒后续新增/下线工具要同步 `TestWriteTools` 计数
 
 ## 未提交改动
 
-- 无（P3b-写 已提交 `f364529e4`）
+- 主仓库 `devInt`：P4 代码（`DocSysToolFactory` / `TestWriteTools` / `AgentInitService`）+ 文档（计划 §P4 / 本卡）
 - 已提交：P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；UTF-8 编码修复 = `3c774d101`（用户此前提交）
 - office 仓库：与本任务无关
 

@@ -10,7 +10,9 @@
 3. 技能体系保留用途：外部插件（Python/CLI/LLM 引导）、自主进化产物、技能市场/可见性元数据。
 4. 不绕开 REST：工具继续走 `DocSysClient`（带用户 session → controller 层鉴权），**不改**为直调 Service。
 
-## 1. 工具清单（35 个定义 = 28 常驻 + 6 条件 + 1 死代码）
+## 1. 工具清单（初始 35 个定义 = 28 常驻 + 6 条件 + 1 死代码 → **P4 后 22 常驻 + 6 条件**）
+
+> 当前实际：**22 常驻**（10 读 + 12 写）+ 6 条件（`attachment` `run_skill` `web_search` `memory_set/get/list`）。下文"处置"列是**初始裁定记录**，已全部执行。
 
 | 分组 | 工具 | 处置 |
 |---|---|---|
@@ -21,7 +23,8 @@
 | 框架（6） | `attachment` `run_skill` `memory_set/get/list` `web_search` | 保留 |
 | **P1 删除（1）** | `get_banner_config`（`DocSysToolFactory:44` 注册 + `:254-262` 定义） | **删**（banner 属展示，不进工具表） |
 | **P1 删除（1，死代码）** | `ai_chat` 定义（`DocSysToolFactory:302-317`，从未注册，`TestWriteTools:148` 断言不注册） | **删** |
-| 待裁定（7） | `rag_chat`、`list_ai_models`、`get_sys_config`、`backup_repos` + `query_backup_status`、`lock_doc`、`unlock_doc` | **P4 裁定** |
+| P4 已删（5） | `rag_chat`、`list_ai_models`、`get_sys_config`、`lock_doc`、`unlock_doc` | **已删**（用户 2026-09-19 裁定） |
+| P4 保留（2） | `backup_repos`、`query_backup_status` | **保留**（运维价值 + 成对） |
 
 使用证据（`audit_logs` 全量）：`move_doc` 38、`run_skill` 6、`create_folder` 4、`write_file` 4、`delete_doc` 2、`unlock_doc` 2、`memory_set` 1 —— 其余工具模型从未调用过。
 
@@ -149,12 +152,34 @@
 - **实测全绿**：API `/skills` **18 → 7**（`ant-expert` `banner` `browser_use` `java-expert` `playwright` `system_help` `web_search`）；帮助弹窗仅显示这 7 个；工具 **27 不变**；护栏 6 项全绿（58/55/29/26/30/55）；编译通过，重启后 200
 - **页面端到端**（重启后重登）：① 读「列出所有仓库」→ 1 步 `list_repos`；② 写「创建文件夹 P3B验证」→ `create_folder` + 确认弹窗（“此操作将执行写操作 [create_folder]”，拒绝/批准执行）→ 批准 → 新增成功；③ 清理删除 → `delete_doc` + 确认弹窗 → 批准 → 删除成功，无残留
 
-### P4 工具瘦身裁定 + 机制加固
+### P4 工具瘦身裁定 + 机制加固 — ✅ 完成并验证（2026-09-19）
 
-- [ ] 裁定：`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc` `web_search`（技能版）
-- [ ] store 清理机制：下线 id 黑名单 / 升级清理（`AgentInitService` 是"已存在跳过"的单向拷贝，老环境副本清不掉）
-- [ ] （可选）"免 HTTP 直调"评估：只在"门面 + 显式 User"形态下做，且必须补齐 controller 鉴权链——见 §2.5
-- [ ] 文档与 repo 记忆更新
+**用户裁定（2026-09-19）**：
+
+| 工具 | 裁定 | 理由 |
+|---|---|---|
+| `rag_chat` (R) | **下线** | 与 Agent 自身推理 + `search_files`/`grep_files`/`get_doc` 重叠 |
+| `list_ai_models` (R) | **下线** | 模型配置元信息，模型选择属对话层 |
+| `get_sys_config` (R) | **下线** | 系统配置暴露给模型，收益低、风险面大 |
+| `lock_doc` (W) | **下线** | 协作编辑语义的 2h FORCE 锁，失败不自解（`move_doc` 锁冲突故障直接诱因） |
+| `unlock_doc` (W) | **下线** | 同上，成对 |
+| `backup_repos` (W) | 保留 | 运维动作，"AI 运维助手"场景有真实价值 |
+| `query_backup_status` (R) | 保留 | 与 `backup_repos` 成对 |
+
+- [x] 5 个工具下线：`DocSysToolFactory` 注册 + 定义删（保留 `DocSysClient` 同名方法：`DocSysCLI:220` 用 `getDocSysConfig`、`SubAgent:728 handleRagChat` 仍走 `ragChat`——均属旧编排，本次不动）
+- [x] 工具总数 **27 → 22**（14R+13W → **10R+12W**）；同步改 `TestWriteTools`（断言 27→22、删 3 条 rag_chat 用例、加 4 条"已下线"用例 → 52）
+- [x] **store 黑名单清扫机制**（`AgentInitService`）：`RETIRED_SKILL_IDS`（31 个 id）+ `purgeRetiredSkills()`，在 `copyDefaultSkillsIfAbsent()` 之前执行——精确按 id 删运行期目录里的已下线技能，不动进化/自建技能；今后下线只需把 id 加进名单
+- [x] 未动：免 HTTP 直调评估（yield，保持"经 REST"现状）
+- **验证全绿**：护栏 6 项（52/55/29/26/30/55）；编译通过；重启 200
+- **store 清扫实测**：预置 `C:\DocSysReposes\skills\rag_chat`（含 `references/` 子目录）与 `lock_doc` 两个残留 → 重启后两者均被递归删除，对照组 `java-expert` 保留；日志见 `delDir() delete Dir:C:\DocSysReposes\skills\rag_chat/references`
+- **页面端到端**：① 问"列出现有工具" → 模型列 22 常驻 + memory_*/web_search/run_skill/attachment，**无** rag_chat/list_ai_models/get_sys_config/lock_doc/unlock_doc；② 写「创建 P4验证」→ `create_folder` + 确认门 → 新增成功；③ 负向：「帮我锁定仓库 5 里的文件」→ 模型明说"没有任何锁定工具"、**未调 lock_doc**（改用 `list_docs` 给目录）；④ 清理删除 → `delete_doc` + 确认门 → 删除成功，无残留
+
+### P4 初始待办（存档）
+
+- [x] 裁定：`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc`（`web_search` 技能保留，与工具版并存不冲突）
+- [x] store 清理机制：离线 id 黑名单（`AgentInitService.RETIRED_SKILL_IDS` + `purgeRetiredSkills()`）
+- [x] （可选）"免 HTTP 直调"评估：只在"门面 + 显式 User"形态下做，且必须补齐 controller 鉴权链——见 §2.5；**本轮维持不做**
+- [x] 文档与 repo 记忆更新
 
 ## 4. 固定联动点与已知坑
 

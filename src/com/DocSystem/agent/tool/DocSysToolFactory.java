@@ -38,9 +38,8 @@ public class DocSysToolFactory {
         reg.register(getDocHistory(client));
         reg.register(searchFiles(client));
         reg.register(grepFiles(client));
-        reg.register(ragChat(client));
-        reg.register(listAiModels(client));
-        reg.register(getSysConfig(client));
+        // P4 下线（2026-09-19）：rag_chat（与 Agent 自身推理 + search/grep/get_doc 重叠）、
+        // list_ai_models（模型元信息，属对话层职责）、get_sys_config（配置暴露给模型，收益低风险大）
         reg.register(getDocShareList(client));
         reg.register(queryBackupStatus(client));
         return reg;
@@ -80,8 +79,8 @@ public class DocSysToolFactory {
         reg.register(renameDoc(client));
         reg.register(moveDoc(client));
         reg.register(copyDoc(client));
-        reg.register(lockDoc(client));
-        reg.register(unlockDoc(client));
+        // P4 下线（2026-09-19）：lock_doc / unlock_doc（协作编辑语义的 2h FORCE 锁，
+        // 失败后不自解，是 move_doc 锁冲突故障的直接诱因）
         reg.register(createDocShare(client));
         reg.register(backupRepos(client));
         // 用户记忆工具组（T8.3）：存储可用时才注册
@@ -235,20 +234,6 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** R10 AI 模型列表 */
-    public static ToolDefinition listAiModels(DocSysClient client) {
-        return ToolDefinition.builder("list_ai_models", "列出可用的 AI 模型列表",
-                args -> ToolResult.ok(fmt(client.getAiModelList())))
-                .build();
-    }
-
-    /** R11 系统配置 */
-    public static ToolDefinition getSysConfig(DocSysClient client) {
-        return ToolDefinition.builder("get_sys_config", "获取 DocSys 系统配置",
-                args -> ToolResult.ok(fmt(client.getDocSysConfig())))
-                .build();
-    }
-
     /** R15 分享列表 */
     public static ToolDefinition getDocShareList(DocSysClient client) {
         JSONObject props = props(
@@ -269,21 +254,6 @@ public class DocSysToolFactory {
         JSONObject schema = objSchema(props(strProp("taskId", "备份任务ID（必填）")), new String[]{"taskId"});
         return ToolDefinition.builder("query_backup_status", "查询备份任务状态",
                 args -> ToolResult.ok(fmt(client.queryBackupStatus(args.getString("taskId")))))
-                .parameters(schema)
-                .build();
-    }
-
-    // ==================== RAG/搜索工具组（T3.3） ====================
-
-    /** R18 RAG 对话（基于文档上下文回答） */
-    public static ToolDefinition ragChat(DocSysClient client) {
-        JSONObject schema = objSchema(props(
-                strProp("query", "问题（必填）"),
-                strProp("modelName", "模型名（可选）"),
-                strProp("apiKey", "API Key（可选）")), new String[]{"query"});
-        return ToolDefinition.builder("rag_chat", "基于文档库上下文（RAG）回答用户问题",
-                args -> ToolResult.ok(fmtString(client.ragChat(
-                        args.getString("query"), args.getString("modelName"), args.getString("apiKey")))))
                 .parameters(schema)
                 .build();
     }
@@ -526,41 +496,6 @@ public class DocSysToolFactory {
                         args.getInteger("vid"), args.getLong("docId"), null, null, null, null,
                         args.getLong("dstPid"), args.getString("dstPath"), args.getString("dstName"),
                         null, null, args.getString("commitMsg")))))
-                .parameters(schema)
-                .isWrite(true).needsConfirm(true)
-                .build();
-    }
-
-    /** W10 锁定文档 */
-    public static ToolDefinition lockDoc(DocSysClient client) {
-        JSONObject props = props(
-                intProp("vid", "仓库ID（必填）"),
-                longProp("docId", "文档ID（必填）"),
-                strProp("path", "路径（可选）"),
-                strProp("name", "文档名（可选）"),
-                intProp("lockType", "锁定类型（默认1）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "docId"});
-        return ToolDefinition.builder("lock_doc", "锁定文档防止编辑",
-                args -> ToolResult.ok(fmt(client.lockDoc(
-                        args.getInteger("vid"), args.getLong("docId"), args.getString("path"),
-                        args.getString("name"), args.getInteger("lockType")))))
-                .parameters(schema)
-                .isWrite(true).needsConfirm(true)
-                .build();
-    }
-
-    /** W11 解锁文档 */
-    public static ToolDefinition unlockDoc(DocSysClient client) {
-        JSONObject props = props(
-                intProp("vid", "仓库ID（必填）"),
-                longProp("docId", "文档ID（必填）"),
-                strProp("path", "路径（可选）"),
-                strProp("name", "文档名（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "docId"});
-        return ToolDefinition.builder("unlock_doc", "解锁文档恢复编辑",
-                args -> ToolResult.ok(fmt(client.unlockDoc(
-                        args.getInteger("vid"), args.getLong("docId"), args.getString("path"),
-                        args.getString("name")))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
