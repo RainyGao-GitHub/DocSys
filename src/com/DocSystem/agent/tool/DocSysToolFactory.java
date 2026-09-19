@@ -9,6 +9,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -130,15 +131,21 @@ public class DocSysToolFactory {
     public static ToolDefinition listDocs(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                longProp("docId", "子文件夹的 docId（可选，来自 list_docs 结果的 data[].docId）"),
-                strProp("path", "子文件夹相对路径（可选，如 \"DocSys\" 或 \"DocSys/sub\"）"));
+                longProp("docId", "子文件夹的 docId（可选，来自 list_docs 结果的 docId）"),
+                strProp("path", "子文件夹相对路径（可选，如 \"DocSys\" 或 \"DocSys/sub\"）"),
+                intProp("offset", "分页起点（可选，默认 0）"),
+                intProp("limit", "本页条数（可选，默认 " + DOC_LIST_DEFAULT_LIMIT + "，最大 " + DOC_LIST_MAX_LIMIT + "）"));
         JSONObject schema = objSchema(props, new String[]{"vid"});
         return ToolDefinition.builder("list_docs",
-                "列出指定仓库的文档列表。不传 docId/path 时返回仓库根目录内容；"
-                + "要查看某个子文件夹，请传该文件夹的 docId（推荐，来自上次 list_docs 结果的 data[].docId）"
-                + "或相对路径 path（如 \"DocSys\"）。",
-                args -> ToolResult.ok(fmt(client.getDocList(args.getInteger("vid"),
-                        args.getLong("docId"), null, args.getString("path")))))
+                "列出指定仓库/目录的文档清单（紧凑表格：类型/名称/大小/日期/docId）。"
+                + "不传 docId/path 时返回仓库根目录内容；查看子文件夹请传该文件夹的 docId（推荐）或相对路径 path。"
+                + "目录项多时结果会自动分页（表头给出总数与当前区间），用 offset/limit 翻页；"
+                + "找特定文件建议用 search_files/grep_files 按关键字检索，而不是逐页翻目录。",
+                args -> ToolResult.ok(formatDocListPage(
+                        client.getDocList(args.getInteger("vid"),
+                                args.getLong("docId"), null, args.getString("path")),
+                        args.getInteger("vid"), args.getString("path"), args.getLong("docId"),
+                        args.getInteger("offset"), args.getInteger("limit"))))
                 .parameters(schema)
                 .build();
     }
@@ -832,6 +839,169 @@ public class DocSysToolFactory {
         }
         String json = JSON.toJSONString(result);
         return truncate(json);
+    }
+
+    // ==================== 目录列表渲染（分页 + 紧凑，2026-09-20） ====================
+
+    /** list_docs 单页默认/最大条数 */
+    static final int DOC_LIST_DEFAULT_LIMIT = 50;
+    static final int DOC_LIST_MAX_LIMIT = 200;
+
+    /** 列表渲染字符预算（低于 MAX_SUMMARY_LEN，确保不会被 truncate 砍成半截） */
+    private static final int DOC_LIST_CHAR_BUDGET = 3600;
+
+    /**
+     * 把 `/Repos/getSubDocList.do` 的响应渲染成<b>紧凑清单</b>，并按 offset/limit 分页。
+     *
+     * <p><b>为什么不再直接倒 JSON</b>：该接口每项含 20+ 字段（localRootPath/reposPath/localVRootPath/
+     * officeType/creatorName/…），单条约 300~400 字符。仓库根目录 90+ 项即 ~30KB，经 {@link #truncate}
+     * 截到 4000 字符后 JSON 只剩半截——模型既解析不了、也拿不到后面的条目（2026-09-20 实测踩坑）。
+     * 这里只保留模型真正需要的类型/名称/大小/日期/docId，并给出总数与翻页提示，
+     * 让"大目录"变成"可分页的紧凑清单"。
+     */
+    static String formatDocListPage(Map<String, Object> resp, Integer vid, String path, Long docId,
+                                    Integer offsetArg, Integer limitArg) {
+        if (resp == null) {
+            return "(empty response)";
+        }
+        String status = String.valueOf(resp.get("status"));
+        if (!"ok".equals(status)) {
+            return "list_docs 失败: " + resp.get("msgInfo");
+        }
+
+        String where = describeTarget(vid, path, docId);
+        Object data = resp.get("data");
+        if (!(data instanceof List)) {
+            return "目录为空或不存在：" + where + "（服务器返回：" + data + "）";
+        }
+
+        List<?> all = (List<?>) data;
+        int total = all.size();
+        if (total == 0) {
+            return "目录为空：" + where;
+        }
+
+        int offset = offsetArg == null ? 0 : Math.max(0, offsetArg.intValue());
+        int limit = limitArg == null ? DOC_LIST_DEFAULT_LIMIT
+                : Math.min(DOC_LIST_MAX_LIMIT, Math.max(1, limitArg.intValue()));
+        if (offset >= total) {
+            return where + " 共 " + total + " 项；offset=" + offset + " 已超出范围（有效范围 0~" + (total - 1) + "）。";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("目录列表：").append(where).append("  共 ").append(total)
+                .append(" 项，本次显示第 ").append(offset + 1).append("-");
+
+        int end = Math.min(total, offset + limit);   // 先按 limit 取，字符超预算再回收
+        String body = renderEntries(all, offset, end);
+        int cap = DOC_LIST_CHAR_BUDGET - sb.length() - 220;   // 给表头/页脚留余量
+        while (body.length() > cap && end - offset > 1) {
+            end = offset + Math.max(1, (end - offset) * 3 / 4);
+            body = renderEntries(all, offset, end);
+        }
+
+        sb.append(end).append(" 项\n");
+        sb.append(body);
+        sb.append("\n说明：上表各项的 path 与本目录相同（").append(displayPath(path)).append("），");
+        sb.append("读取内容用 get_doc(vid=").append(vid).append(", path=").append(quoted(pathLabel(path)))
+                .append(", name=<名称>)；进入子目录可再调 list_docs(vid=").append(vid)
+                .append(", docId=<该子目录 docId>)。\n");
+        if (end < total) {
+            sb.append("⚠️ 还有 ").append(total - end).append(" 项未显示：继续调用 list_docs 传 offset=")
+                    .append(end).append("；或用 search_files/grep_files 按关键字直接找。");
+        }
+        return sb.toString();
+    }
+
+    /** 目录展示名：根目录给明确字样，避免表尾出现空的括号 */
+    private static String displayPath(String path) {
+        if (path == null || path.isEmpty()) {
+            return "根目录 path=\"\"";
+        }
+        return "path=\"" + path + "\"";
+    }
+
+    /** 渲染 [from, to) 区间的条目行 */
+    private static String renderEntries(List<?> all, int from, int to) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = from; i < to; i++) {
+            Object o = all.get(i);
+            if (!(o instanceof Map)) {
+                sb.append(i + 1).append(". ").append(o).append("\n");
+                continue;
+            }
+            Map<?, ?> d = (Map<?, ?>) o;
+            String name = str(d.get("name"));
+            Integer type = intOf(d.get("type"));
+            boolean isDir = type != null && type.intValue() == 2;
+            sb.append(i + 1).append(". ").append(isDir ? "[目录] " : "[文件] ").append(name);
+            if (isDir) {
+                sb.append("/");
+            } else {
+                sb.append("  ").append(sizeText(d.get("size")));
+            }
+            sb.append("  ").append(dateText(d.get("latestEditTime")));
+            sb.append("  docId=").append(str(d.get("docId"))).append("\n");
+        }
+        return sb.toString();
+    }
+
+    private static String describeTarget(Integer vid, String path, Long docId) {
+        StringBuilder sb = new StringBuilder("仓库 ").append(vid);
+        if (docId != null && docId.longValue() != 0L) {
+            sb.append(" / 目录 docId=").append(docId);
+        }
+        sb.append(" / ").append(path == null || path.isEmpty() ? "根目录（path=\"\"）" : "path=\"" + path + "\"");
+        return sb.toString();
+    }
+
+    private static String pathLabel(String path) {
+        return path == null ? "" : path;
+    }
+
+    private static String quoted(String s) {
+        return "\"" + s + "\"";
+    }
+
+    private static String sizeText(Object size) {
+        Long n = longOf(size);
+        if (n == null || n.longValue() <= 0) {
+            return "0B";
+        }
+        long v = n.longValue();
+        if (v < 1024) {
+            return v + "B";
+        }
+        if (v < 1024 * 1024) {
+            return String.format("%.1fKB", v / 1024.0);
+        }
+        return String.format("%.1fMB", v / (1024.0 * 1024.0));
+    }
+
+    private static String dateText(Object millis) {
+        Long t = longOf(millis);
+        if (t == null || t.longValue() <= 0) {
+            return "";
+        }
+        return new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date(t.longValue()));
+    }
+
+    private static Integer intOf(Object o) {
+        if (o instanceof Number) {
+            return Integer.valueOf(((Number) o).intValue());
+        }
+        return null;
+    }
+
+    private static Long longOf(Object o) {
+        if (o instanceof Number) {
+            return Long.valueOf(((Number) o).longValue());
+        }
+        return null;
+    }
+
+    private static String str(Object o) {
+        return o == null ? "" : String.valueOf(o);
     }
 
     // ==================== FORCE 锁占用重试（2026-09-20） ====================

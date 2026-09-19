@@ -60,6 +60,30 @@
   - 验证：护栏 6 项全绿（52/55/29/26/30/55）；编译通过；重启 200；store 清扫实测（预置 `rag_chat`+`lock_doc` 残留 → 重启后递归删除，`java-expert` 保留）
   - 页面端到端：工具清单无那 5 个；写 `create_folder`/`delete_doc` 确认门正常；负向「锁定文件」→ 模型声明无此工具、未调用 ✓
 
+## list_docs 截断修复（2026-09-20）—— 大目录看不到/解析不了
+
+### 问题
+`list_docs` 把 `/Repos/getSubDocList.do` 的**原始 JSON** 交给 `fmt()`，而 `fmt()` 按 `MAX_SUMMARY_LEN=4000`
+截断。该接口每项 20+ 字段（localRootPath/reposPath/localVRootPath/officeType/creatorName/…），单条约 300~400 字符；
+仓库 5 根目录 79 项即 ~30KB → **JSON 只剩半截**，模型既解析不了也看不到第 50 项之后的条目。
+
+### 修法（工具层渲染，不动共享接口）
+`DocSysToolFactory.formatDocListPage()`：只保留模型需要的 `类型/名称/大小/日期/docId`，输出
+「表头（总数 + 本页区间）+ 紧凑条目 + 说明（path 与 get_doc 用法）+ 翻页提示」；新增 `offset`/`limit`
+（默认 50、上限 200）参数；字符预算 3600（低于 4000，永不触发半截截断），超预算时按 3/4 递减条数而非截字符。
+
+### 验证
+- 护栏 `TestListDocsFormat` **25/25**：总数/区间/翻页提示、默认页 50 行、不超 4000 且无 "(truncated)"、
+  目录/文件/大小/日期/docId 渲染、中文保留、不再输出原始 JSON 字段（localRootPath 等）、
+  offset 越界提示、limit 超大收敛、空目录/data 非列表/失败状态、超长名 200 项只回收条数不截字符
+- 真实数据探针 `ListDocsProbe`（仓库 5 根目录 **79 项**）：page1 2953 字符显示 1-50、page2 2153 字符显示 51-79，均不截断
+- **Agent 页面端到端**：①「列出仓库 5 根目录全部项 + 统计」→ 2 步工具调用（自动翻完两页）→ 回答"79 项 = 目录 33 + 文件 46"并逐条列出（还主动说明 `优化计划.md`/`测试报告.md` 被系统标为目录）；
+  ②「读 test111.txt + 列 66666 目录」→ 3 步：`get_doc` 拿到真实内容、用**新格式给出的 docId** 下钻 `list_docs` 列出 3 项 ✓
+
+### 后续可选
+- `get_doc` 的内容同样是 4000 字上限（会带 "(truncated)" 标记），如需读长文可加 `maxChars`/`offset`
+- `search_files`/`grep_files` 的结果集也应确认在大仓库下的表现
+
 ## move_doc 底层功能修复（2026-09-20）—— 智能体"资料整理"的底层能力
 
 ### 根因（代码 + 实测取证）
