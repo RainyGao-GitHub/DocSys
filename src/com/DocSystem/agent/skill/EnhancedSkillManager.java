@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -133,7 +134,7 @@ public class EnhancedSkillManager {
                     Path skillMd = skillDir.resolve("SKILL.md");
                     if (Files.exists(skillMd)) {
                         try {
-                            String content = new String(Files.readAllBytes(skillMd));
+                            String content = new String(Files.readAllBytes(skillMd), StandardCharsets.UTF_8);
                             EnhancedSkill skill = SkillParser.parse(content, skillDir.getFileName().toString());
                             registerSkill(skill);
                             log.info("Loaded skill from {}", skillMd);

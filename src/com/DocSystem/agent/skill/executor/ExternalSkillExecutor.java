@@ -482,7 +482,7 @@ public class ExternalSkillExecutor implements SkillExecutor {
                 return null;
             }
 
-            String content = new String(Files.readAllBytes(skillMdPath));
+            String content = new String(Files.readAllBytes(skillMdPath), java.nio.charset.StandardCharsets.UTF_8);
             String command = parser.parseCliCommandBlock(content);
             if (command == null || command.trim().isEmpty()) {
                 log.debug("No CLI Command block found in skill.md for {}", skillDir.getFileName());
@@ -590,9 +590,9 @@ public class ExternalSkillExecutor implements SkillExecutor {
                 return null;
             }
 
-            String agentMdContent = new String(Files.readAllBytes(agentMdPath));
+            String agentMdContent = new String(Files.readAllBytes(agentMdPath), java.nio.charset.StandardCharsets.UTF_8);
             String skillMdContent = Files.exists(skillMdPath)
-                ? new String(Files.readAllBytes(skillMdPath))
+                ? new String(Files.readAllBytes(skillMdPath), java.nio.charset.StandardCharsets.UTF_8)
                 : "";
 
             // Build system prompt

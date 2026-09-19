@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
@@ -116,7 +117,7 @@ public class SkillScriptParser {
             return null;
         }
         try {
-            return new String(Files.readAllBytes(agentMdPath));
+            return new String(Files.readAllBytes(agentMdPath), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.warn("Failed to read agent.md from {}: {}", agentMdPath, e.getMessage());
             return null;

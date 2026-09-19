@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -283,7 +284,7 @@ public class SkillManager {
                 Path skillMd = dir.resolve("skill.md");
                 if (Files.exists(skillMd)) {
                     try {
-                        String content = new String(Files.readAllBytes(skillMd));
+                        String content = new String(Files.readAllBytes(skillMd), StandardCharsets.UTF_8);
                         Skill skill = parseSkillFile(content, dir.getFileName().toString());
                         registerSkill(skill);
                         log.info("Loaded skill from {}", skillMd);
