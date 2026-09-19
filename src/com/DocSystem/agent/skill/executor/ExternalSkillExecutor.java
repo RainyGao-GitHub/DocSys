@@ -60,18 +60,6 @@ public class ExternalSkillExecutor implements SkillExecutor {
     private static final Logger log = LoggerFactory.getLogger(ExternalSkillExecutor.class);
 
     private static final Set<String> BUILT_IN_SKILL_IDS = new HashSet<>(Arrays.asList(
-        // Repository skills
-        "create_repos", "create-repos", "add_repos",
-        "delete_repos", "delete-repos",
-        "update_repos",
-        "backup_repos", "backup",
-        "backup_status",
-        // Document skills
-        "add_doc", "create-doc", "add-document",
-        "delete_doc", "delete-doc", "delete-document",
-        "rename_doc", "rename-doc",
-        "move_doc", "move-doc",
-        "copy_doc", "copy-doc",
         // System skills
         "help", "help-repos", "help-docs", "help-search",
         "banner",

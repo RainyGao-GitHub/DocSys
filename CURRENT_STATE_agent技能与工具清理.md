@@ -45,18 +45,24 @@
   - 静态实测：`/skills` **29 → 18**；工具 **27 不变**；护栏 6 项全绿（58/55/29/26/30/55）
   - 遗留死代码（无引用，待 P3b-写收尾清除）：`DocSysSkillExecutor` 的 10 个 handler + `EnhancedSkillManager` 的 4 个 `create*Skill`
   - ⏳ 浏览器端到端验证：进行中（用户要求每轮必做）
-- P3b-写（11 个写类技能 + 删执行器）、P4 未开始。
+- **P3b-写（写组 11 个）— ✅ 代码完成 + 静态验证（2026-09-19，浏览器验证进行中）**
+  - 下线：`add_doc` `create_repos` `delete_repos` `delete_doc` `rename_doc` `move_doc` `copy_doc` `backup_repos` `lock_doc` `unlock_doc` `share_doc`（目录+store、SkillManager/EnhancedSkillManager 注册、两处白名单+分发）
+  - **删除 `DocSysSkillExecutor` 的共享单例 `DocSysClient`**（含构造函数参数/import）→ 无参构造；彻底消除 §2.5 串号结构风险
+  - **清死代码**：执行器 876 → 300 行（删全部 DocSys-API handler + NL/init 段）；`EnhancedSkillManager` 418 → 211 行（删 6 个 `create*Skill`）
+  - 顺带移除不可达 id：`update_repos` `backup_status` `init-llm` `init-auth` `search_and_load` `generate_summary` `search_and_answer`
+  - 静态实测：仓库技能目录 **18 → 7**（store 8）；工具 **27 不变**；护栏 6 项全绿（58/55/29/26/30/55）；编译通过
+  - ⏳ 待完成：API `/skills` 复核 + Agent 页面端到端（含一次带确认门的写操作）
+- P4：工具瘦身裁定 + store 清理机制 +（可选）免 HTTP 直调门面评估——未开始。
 
 ## 下一步
 
-1. 完成 P3b-读的 **Agent 页面端到端验证**（列仓库 / 列目录 / 搜索 / 读文件 → 确认走工具且结果正确）
-2. P3b-写：`add_doc` `create_repos` `delete_repos` `delete_doc` `rename_doc` `move_doc` `copy_doc` `backup_repos` `lock_doc` `unlock_doc` `share_doc` + 删 `DocSysSkillExecutor` 及其实例 client + 清死代码；做完同样要页面验证
-3. P4：工具瘦身裁定（`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc`）+ store 清理机制 +（可选）免 HTTP 直调门面评估
+1. 完成 P3b-写的**页面验证**（读：列仓库/搜索；写：一次带确认门的 `create_folder`）
+2. 提交 P3b-写；然后进入 P4（工具瘦身裁定：`rag_chat` `list_ai_models` `get_sys_config` `backup_repos` `query_backup_status` `lock_doc` `unlock_doc`）
 
 ## 未提交改动
 
-- 主仓库 `devInt`：P3b-读 代码改动（`SkillManager` / `EnhancedSkillManager` / `DocSysSkillExecutor` / `ExternalSkillExecutor` + 11 个技能目录删除）+ 文档（计划 P3b / 本卡）；另含上一轮未提交的 §2.5 文档改动
-- 已提交：P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；UTF-8 编码修复 = `3c774d101`（用户此前提交）
+- 主仓库 `devInt`：P3b-写 代码改动（`SkillManager` / `EnhancedSkillManager` / `DocSysSkillExecutor` / `ExternalSkillExecutor` + 11 个技能目录删除 + 文档）
+- 已提交：P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；UTF-8 编码修复 = `3c774d101`（用户此前提交）
 - office 仓库：与本任务无关
 
 ## 生效约束

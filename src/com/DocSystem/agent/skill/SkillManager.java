@@ -68,34 +68,7 @@ public class SkillManager {
      * Load built-in skills (always available)
      */
     private void loadBuiltInSkills() {
-        // ========== Repository Skills ==========
-        registerSkill(new Skill("create_repos", "Create Repository",
-            "Create a new repository with name, description, path. Aliases: create repo, 创建仓库, 新建仓库",
-            "repository", "write"));
-        registerSkill(new Skill("delete_repos", "Delete Repository",
-            "Delete an existing repository by ID. Aliases: delete repo, 删除仓库",
-            "repository", "write"));
-        registerSkill(new Skill("backup_repos", "Backup Repository",
-            "Backup a repository to specified path. Aliases: backup, 备份仓库",
-            "repository", "admin"));
-            
-        // ========== Document Skills ==========
-        registerSkill(new Skill("add_doc", "Add Document",
-            "Add a new document to repository. Aliases: add doc, 上传文档, 添加文档",
-            "document", "write"));
-        registerSkill(new Skill("delete_doc", "Delete Document",
-            "Delete a document by ID. Aliases: delete doc, 删除文档",
-            "document", "write"));
-        registerSkill(new Skill("rename_doc", "Rename Document",
-            "Rename a document. Aliases: rename doc, 重命名文档",
-            "document", "write"));
-        registerSkill(new Skill("move_doc", "Move Document",
-            "Move a document to another folder. Aliases: move doc, 移动文档",
-            "document", "write"));
-        registerSkill(new Skill("copy_doc", "Copy Document",
-            "Copy a document. Aliases: copy doc, 复制文档",
-            "document", "write"));
-        // ========== System Skills ==========
+        // ========== System Skills ==========（DocSys 自有能力已全部下线，改由工具承担）
         registerSkill(new Skill("system_help", "Help",
             "Show available commands and help. Aliases: help, 帮助, ?",
             "system", "read"));
