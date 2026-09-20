@@ -483,41 +483,52 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** W7 移动文档 */
+    /** W7 移动文档（R1-6：path/name 定位，目标目录用 dstPath） */
     public static ToolDefinition moveDoc(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                longProp("docId", "文档ID（必填）"),
-                longProp("dstPid", "目标目录ID（必填）"),
-                strProp("dstPath", "目标路径（可选）"),
-                strProp("dstName", "目标名（可选）"),
+                strProp("srcPath", "源文件所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
+                strProp("srcName", "源文件名（必填，来自 list_docs 的 name 列）"),
+                strProp("dstPath", "目标目录的路径（必填，如 \"66666/\"；仓库根目录传空串 \"\"）"),
+                strProp("dstName", "移动后的新名（可选，不填则沿用原名）"),
                 strProp("commitMsg", "提交信息（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "docId", "dstPid"});
-        return ToolDefinition.builder("move_doc", "移动文档到其他目录",
+        JSONObject schema = objSchema(props, new String[]{"vid", "srcPath", "srcName", "dstPath"});
+        return ToolDefinition.builder("move_doc",
+                "移动文档（文件或目录）到另一个目录。定位一律用 path+name：srcPath 是源文件所在目录的路径，"
+                + "srcName 是它的名字，dstPath 是**目标目录**的路径（子目录写 \"父目录/子目录名/\"，仓库根目录写空串）；"
+                + "两者都从 list_docs 结果里取。不要用 docId/dstPid。",
                 args -> ToolResult.ok(fmt(callWithLockRetry("move_doc", () -> client.moveDoc(
-                        args.getInteger("vid"), args.getLong("docId"), null, null, null, null,
-                        args.getLong("dstPid"), args.getString("dstPath"), args.getString("dstName"),
-                        null, null, args.getString("commitMsg"))))))
+                        args.getInteger("vid"), null,
+                        null, normalizeDocPath(args.getString("srcPath")), args.getString("srcName"),
+                        levelOfDocPath(args.getString("srcPath")),
+                        null, normalizeDocPath(args.getString("dstPath")), args.getString("dstName"),
+                        levelOfDocPath(args.getString("dstPath")),
+                        null, args.getString("commitMsg"))))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
     }
 
-    /** W8 复制文档 */
+    /** W8 复制文档（R1-6：path/name 定位） */
     public static ToolDefinition copyDoc(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                longProp("docId", "文档ID（必填）"),
-                longProp("dstPid", "目标目录ID（必填）"),
-                strProp("dstPath", "目标路径（可选）"),
-                strProp("dstName", "目标名（可选）"),
+                strProp("srcPath", "源文件所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
+                strProp("srcName", "源文件名（必填，来自 list_docs 的 name 列）"),
+                strProp("dstPath", "目标目录的路径（必填，如 \"66666/\"；仓库根目录传空串 \"\"）"),
+                strProp("dstName", "复制后的新名（可选，不填则沿用原名）"),
                 strProp("commitMsg", "提交信息（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "docId", "dstPid"});
-        return ToolDefinition.builder("copy_doc", "复制文档到其他目录",
+        JSONObject schema = objSchema(props, new String[]{"vid", "srcPath", "srcName", "dstPath"});
+        return ToolDefinition.builder("copy_doc",
+                "复制文档（文件或目录）到另一个目录。参数口径与 move_doc 完全一致，"
+                + "都用 srcPath+srcName 定位源、dstPath 指定目标目录；不要用 docId/dstPid。",
                 args -> ToolResult.ok(fmt(callWithLockRetry("copy_doc", () -> client.copyDoc(
-                        args.getInteger("vid"), args.getLong("docId"), null, null, null, null,
-                        args.getLong("dstPid"), args.getString("dstPath"), args.getString("dstName"),
-                        null, null, args.getString("commitMsg"))))))
+                        args.getInteger("vid"), null,
+                        null, normalizeDocPath(args.getString("srcPath")), args.getString("srcName"),
+                        levelOfDocPath(args.getString("srcPath")),
+                        null, normalizeDocPath(args.getString("dstPath")), args.getString("dstName"),
+                        levelOfDocPath(args.getString("dstPath")),
+                        null, args.getString("commitMsg"))))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -1022,6 +1033,7 @@ public class DocSysToolFactory {
      * <ul>
      *   <li>{@code null} / {@code ""} / {@code "/"} / {@code "./"} → {@code ""}（仓库根目录）</li>
      *   <li>去掉前导 {@code /}：{@code "/a/b"} → {@code "a/b/"}</li>
+     *   <li>折叠重复斜杠与 {@code .} 段：{@code "a//./b"} → {@code "a/b/"}</li>
      *   <li>统一补尾斜杠：{@code "66666"} → {@code "66666/"}（服务端 path 约定以 {@code /} 结尾）</li>
      * </ul>
      *
@@ -1032,17 +1044,15 @@ public class DocSysToolFactory {
         if (path == null) {
             return "";
         }
-        String p = path.trim();
-        while (p.startsWith("/")) {
-            p = p.substring(1);
+        StringBuilder sb = new StringBuilder();
+        for (String seg : path.trim().split("/")) {
+            // 丢弃空段（折叠重复斜杠与首尾斜杠）与 "." 段；".." 交给服务端拒绝（seperatePathAndName 返回 -2）
+            if (seg.isEmpty() || ".".equals(seg)) {
+                continue;
+            }
+            sb.append(seg).append('/');
         }
-        if (p.isEmpty() || ".".equals(p) || "./".equals(p)) {
-            return "";
-        }
-        if (!p.endsWith("/")) {
-            p = p + "/";
-        }
-        return p;
+        return sb.toString();
     }
 
     /**

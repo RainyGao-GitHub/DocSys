@@ -45,6 +45,7 @@ public class TestDocHistoryLocator {
         testChildDocPath();
         testPathNameIsCompleteLocator();
         testGetDocHistorySchema();
+        testMoveCopySchema();
         testListDocsFooterTeachesPath();
 
         System.out.println("======== TestDocHistoryLocator: " + pass + " passed, " + fail + " failed ========");
@@ -58,6 +59,36 @@ public class TestDocHistoryLocator {
         check("66666/ 下钻 sub -> 66666/sub/", "66666/sub/".equals(DocSysToolFactory.childDocPath("66666/", "sub")));
         check("null 父目录 -> a/", "a/".equals(DocSysToolFactory.childDocPath(null, "a")));
         check("子目录名带斜杠也能收敛 -> a/b/", "a/b/".equals(DocSysToolFactory.childDocPath("a/", "/b/")));
+    }
+
+    /**
+     * move_doc / copy_doc（R1-6 主战场）：必须用 srcPath+srcName 定位源、dstPath 指定目标目录，
+     * 不能再要求 docId/dstPid（旧口径下 src 侧参数在 client 调用里被写死 null，源只能靠 docId 定位）。
+     */
+    private static void testMoveCopySchema() {
+        ToolDefinition mv = DocSysToolFactory.moveDoc(null);
+        ToolDefinition cp = DocSysToolFactory.copyDoc(null);
+
+        for (ToolDefinition def : new ToolDefinition[]{mv, cp}) {
+            JSONObject props = def.parameters.getJSONObject("properties");
+            JSONArray required = def.parameters.getJSONArray("required");
+            check(def.name + " 暴露 srcPath/srcName/dstPath",
+                    props.containsKey("srcPath") && props.containsKey("srcName") && props.containsKey("dstPath"));
+            check(def.name + " 不再暴露 docId/dstPid/srcPid",
+                    !props.containsKey("docId") && !props.containsKey("dstPid") && !props.containsKey("srcPid"),
+                    props.keySet().toString());
+            check(def.name + " required = [vid, srcPath, srcName, dstPath]",
+                    required != null && required.size() == 4 && required.contains("vid")
+                            && required.contains("srcPath") && required.contains("srcName")
+                            && required.contains("dstPath"), String.valueOf(required));
+            check(def.name + " 描述里提醒不要用 docId/dstPid",
+                    def.description != null && def.description.contains("不要用 docId"));
+            check(def.name + " 仍是写操作且需确认", def.isWrite && def.needsConfirm);
+        }
+
+        check("move_doc 的 dstName 语义是“新名”（与 rename_doc 一致）",
+                mv.parameters.getJSONObject("properties").getJSONObject("dstName")
+                        .getString("description").contains("新名"));
     }
 
     /**
@@ -99,6 +130,9 @@ public class TestDocHistoryLocator {
         check("a/b -> a/b/", "a/b/".equals(DocSysToolFactory.normalizeDocPath("a/b")));
         check("  /a/b  -> a/b/（去空白）", "a/b/".equals(DocSysToolFactory.normalizeDocPath("  /a/b  ")));
         check("不产生双斜杠", "a/b/".equals(DocSysToolFactory.normalizeDocPath("a/b/")));
+        check("折叠重复斜杠", "a/b/".equals(DocSysToolFactory.normalizeDocPath("a//b")));
+        check("丢弃 . 段", "a/b/".equals(DocSysToolFactory.normalizeDocPath("a/./b/")));
+        check("混合写法收敛", "a/b/".equals(DocSysToolFactory.normalizeDocPath("/a//./b/")));
     }
 
     private static void testLevelOfPath() {

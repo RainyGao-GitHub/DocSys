@@ -216,6 +216,25 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 ### 下一步（R1-6 剩余清单）
 `move_doc`/`copy_doc`（需新增 srcPath/srcName，目标改 path/name）→ `delete_doc`/`rename_doc` 提必填 path+name → `list_docs` 删 docId 参数且输出改 path 为主 → `get_doc`/`write_note` 去 docId → `create_folder`/`write_file` 的 `pid` 改 `path` → `@` 注入块去 docId → 最后删除 `resolveRealDocByDocId` 过渡层
 
+## R1-6 第 2 步：move_doc / copy_doc 改 path/name 口径（2026-09-20）
+
+### 改动
+- 工具 `move_doc`/`copy_doc`：`required {vid, srcPath, srcName, dstPath}`，`dstName` 可选（= 新名）；**不再暴露 docId/dstPid/srcPid**
+  - `srcPath`/`srcName` = 源所在目录 path + 源名；`dstPath` = **目标目录自己的路径**（根 = `""`，子目录 = `"父/子/"`）
+  - `dstName` 语义与 `rename_doc` 一致（都是“新名字”），避免两个工具里 dstName 含义不同
+  - 描述里明写“不要用 docId/dstPid”
+- `normalizeDocPath()` 硬化：折叠重复斜杠、丢弃 `.` 段（与服务端 `Path.seperatePathAndName` 同口径）
+- **服务端一行未改**：`buildBasicDocBase` 在 `level==null` 时会自己从 path/name 规范化并反推 level
+
+### 验证
+- 护栏 `TestDocHistoryLocator` **48/48**（新增 move/copy schema 断言：无 docId/dstPid/srcPid、required 四项、dstName 描述=新名；归一化硬化 3 项）
+- 新探针 `MoveToolPathE2E` **16/16**（全程不传 docId/dstPid）：建两目录 → 移入（dstPath="B/"）→ 从子目录移回（srcPath="B/" 非空）→ 复制并改名 → 重命名 → path/name 逐个删除 → 磁盘无残留
+- **页面 E2E**：模型 6 步完成“建→移入→移回→删”，并主动说明“严格按 srcPath+srcName / dstPath 操作，未依赖 docId/dstPid” ✓
+- 全量护栏 48/25/13/11/23/24/52/55/29/26/30/55 全绿；磁盘无残留
+
+### 关键认知（重要）
+- **工具层不要乱传 level**：服务端只在 `level==null` 时才规范化 path；一旦传了 level，它就不再规范化，反而可能因斜杠差异算出另一个 docId（静默错位）
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -225,14 +244,14 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0，先做）**：R1-1 ✅ `eda22474b` → R1-1b ✅ → R1-1c ✅ → **R1-4 ✅（path/name 定位，试点）** → **R1-6 定位全面改 path/name（试点✅，余下见上节清单）** → R1-5 `list_repos` 截断 → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
+- **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 已做：get_doc_history ✅ + move_doc/copy_doc ✅（本次）**；余：delete_doc/rename_doc schema 收紧 → list_docs（删 docId 参数 + 输出改 path 为主）→ get_doc/write_note 去 docId → create_folder/write_file 的 pid→path → `@` 注入块去 docId → 删 `resolveRealDocByDocId` 过渡层；然后 R1-5 `list_repos` 截断 → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 无（工作区干净；R1-4/R1-6 试点 = `6d625166c`）
-- 已提交：R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`；工作卡 = `78fae07f3`/`017ea08b7`；CLAUDE.md = `e3d9d9e53`；计划 = `9c675b79a`；move_doc = `b5c85bf9f`；list_docs = `10f9e21f8`
+- 主仓库 `devInt`（**R1-6 move/copy**）：`agent/tool/DocSysToolFactory.java`（move_doc/copy_doc 改 path/name 口径；normalizeDocPath 硬化）、`agent/tool/TestDocHistoryLocator.java`、`devDocs/Agent工具与接口可靠性计划.md` + 本卡
+- 已提交：R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`；工作卡 = `78fae07f3`/`017ea08b7`/`9edafaaa5`/`b05015622`；CLAUDE.md = `e3d9d9e53`；计划 = `9c675b79a`
 - office 仓库：与本任务无关
 
 ## 生效约束

@@ -124,23 +124,37 @@
   实测：`vid=5` / `vid=5&docId=102199016117` / `vid=5&pid=102199016117` **都返回 79 项（根目录）**，只有 `vid=5&path=66666/` 返回 3 项 ✓ —— 即 `list_docs` 的 docId 参数**从来就没生效过**（页面上模型自己也实测出这一点）。这是"docId 参数面"必须清理的又一个硬证据。
 - **待改清单（下一步，按此顺序做）**：
 
-  | 工具 | 现状（required） | docId/pid 用法 | 目标 |
+  | 工具 | 现状（required） | docId/pid 用法 | 状态 |
   |---|---|---|---|
-  | `move_doc` | `{vid, docId, dstPid}` | 源侧参数在 client 调用里被**写死 null**（schema 都没暴露 srcPath/srcName） | `{vid, srcPath, srcName, dstPath, dstName}`（目标=目录自身的 path/name，根目录=空/空） |
-  | `copy_doc` | `{vid, docId, dstPid}` | 同上 | 同上 |
-  | `delete_doc` | `{vid}` | docId/pid/path/name 全可选 | `{vid, path, name}` |
-  | `rename_doc` | `{vid, dstName}` | docId/pid 可选 | `{vid, path, name, dstName}` |
-  | `create_doc_share` | `{vid, docId}` | docId（端点本身还错 → R1-2） | `{vid, path, name}`（与 R1-2 一起做） |
-  | `list_docs` | `{vid}` | docId 可选（**已实测不生效**）＋描述推荐 docId＋输出每行 docId | 删掉 docId 参数；输出改为以 `path+name` 为主（`docId` 列降为附注或去掉，同步改 `TestListDocsFormat`） |
-  | `get_doc` | `{vid, path, name}` | 已有可选 docId | 去掉 docId 参数 |
-  | `write_note` | `{vid, name, content}` | docId 可选 | 补 `path`，去掉 docId |
-  | `create_folder` / `write_file` | `{vid, name}` / `{vid, name, content}` | 用 `pid`（父目录 ID） | 改用 `path`（目标目录路径，根目录=空） |
-  | `@` 关注对象注入块 | `AgentFocusSupport.describe()` 注入 `docId=99` | docId 进提示词 | 去掉 docId（path 已是主键） |
-  | `AgentController.findNameConflict` | 用 `folderDocId` 调 `getDocList` | docId | 改用 path |
-  | 旧编排/CLI 帮助文本 | `delete-doc <vid> <docId>` 等 | docId-first 语法 | 随 R3-4 一并下线 |
-  | 我在 R1 加的服务端反查 | `BaseController.resolveRealDocByDocId` + `TestDocIdResolve` | 过渡兼容层 | 工具层全部切换完后**删除**（不再需要反查） |
+  | `move_doc` | `{vid, docId, dstPid}` | 源侧参数在 client 调用里被**写死 null** | ✅ 已改为 `{vid, srcPath, srcName, dstPath, dstName?}` |
+  | `copy_doc` | `{vid, docId, dstPid}` | 同上 | ✅ 同上 |
+  | `delete_doc` | `{vid}` | docId/pid/path/name 全可选 | ✅ 已用 path/name 实测通过（schema 收紧待做） |
+  | `rename_doc` | `{vid, dstName}` | docId/pid 可选 | ✅ 已用 path/name 实测通过（schema 收紧待做） |
+  | `get_doc_history` | `{vid, docId}` | docId | ✅ 已改为 `{vid, path, name}` |
+  | `create_doc_share` | `{vid, docId}` | docId（端点本身还错 → R1-2） | ⬜ `{vid, path, name}`（与 R1-2 一起做） |
+  | `list_docs` | `{vid}` | docId 可选（**已实测不生效**）＋描述推荐 docId＋输出每行 docId | 部分✅（页脚已改 path 口径）；剩：删 docId 参数 + 输出改 path 为主 |
+  | `get_doc` | `{vid, path, name}` | 已有可选 docId | ⬜ 去掉 docId 参数 |
+  | `write_note` | `{vid, name, content}` | docId 可选 | ⬜ 补 `path`，去 docId |
+  | `create_folder` / `write_file` | `{vid, name}` / `{vid, name, content}` | 用 `pid`（父目录 ID） | ⬜ 改用 `path`（目标目录路径，根目录=空） |
+  | `@` 关注对象注入块 | `AgentFocusSupport.describe()` 注入 `docId=99` | docId 进提示词 | ⬜ 去掉 docId |
+  | `AgentController.findNameConflict` | 用 `folderDocId` 调 `getDocList` | docId | ⬜ 改用 path |
+  | 旧编排/CLI 帮助文本 | `delete-doc <vid> <docId>` 等 | docId-first 语法 | ⬜ 随 R3-4 下线 |
+  | 我在 R1 加的服务端反查 | `BaseController.resolveRealDocByDocId` + `TestDocIdResolve` | 过渡兼容层 | ⬜ 工具层全部切换完后**删除** |
 
-- **验收（每项）**：护栏（schema 不含 docId + path 归一化/level 推导 + 线上 docId 指纹）→ 真实 HTTP 探针 → 页面 E2E 一条。
+- **本次已完成（move/copy，2026-09-20）**：
+  - 工具口径：`move_doc`/`copy_doc` → `required {vid, srcPath, srcName, dstPath}`（`dstName` 可选 = 新名）；
+    描述的 `dstName` 语义与 `rename_doc` 一致（都是“新名字”），而 **`dstPath` 是“目标目录自己的路径”**（根目录 = `""`）
+    —— 正好等于 `list_docs` 页脚教的 `childDocPath(当前目录, 子目录名)`，模型无需任何额外推理。
+  - **服务端无需改**：`buildBasicDocBase` 在 `level==null` 时会调 `Path.seperatePathAndName()` 自己从 path/name
+    规范化（会折叠重复斜杠、跳空段、拒 `..`）并反推 level。→ 也说明**工具层不要乱传 level**：一旦 level 非空，
+    服务端就**不再规范化 path**，反而可能因斜杠差异算出另一个 docId（静默错位）。
+  - 工具层 `normalizeDocPath()` 加硬化：折叠重复斜杠、丢弃 `.` 段（与服务端同口径）。
+  - 验证：护栏 `TestDocHistoryLocator` **48/48**（新增 move/copy schema 断言 + 归一化硬化用例）；
+    新探针 `MoveToolPathE2E` **16/16**：全程无 docId/dstPid —— 建两个目录 → 移入（dstPath="B/"）→
+    从子目录移回（srcPath="B/" 非空）→ 复制并改名（dstName）→ 重命名 → 逐个 path/name 删除 → 磁盘无残留；
+    **页面 E2E**：模型 6 步写完“建→移入→移回→删”，并主动说明“严格按 srcPath+srcName / dstPath 操作，未依赖 docId/dstPid” ✓
+
+- **验收（每项）**：护栏（schema 不含 docId + path 归一化 + 线上 docId 指纹）→ 真实探针 → 页面 E2E 一条。
 
 
 #### R1-5 `list_repos` 也被截断（同类）
@@ -226,7 +240,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R1-4/R1-6 试点后）：`TestDocHistoryLocator 34` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
+   - 现基线（2026-09-20 R1-6 move/copy 后）：`TestDocHistoryLocator 48` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolE2E` `ListDocsProbe` `ToolChk` `IdProbe` `LockProbe`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -274,7 +288,7 @@
 | R1-2 | P0 | create_doc_share 端点不存在 | ⬜ | |
 | R1-3 | P0 | get_doc_share_list 语义错位 | ⬜ | |
 | R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ✅ | 见本次提交 |
-| R1-6 | P0 | 定位方式全面改为 path/name（**试点 get_doc_history ✅**，余待做） | 🟡 | 试点见本次提交 |
+| R1-6 | P0 | 定位方式全面改为 path/name（试点 get_doc_history ✅；move/copy ✅；余：delete/rename schema、list_docs 输出、get_doc/write_*、create_folder pid→path、@注入块） | 🟡 | 见本次提交 |
 | R1-5 | P0 | list_repos 截断（18 仓只看 9） | ⬜ | |
 | R2-1 | P1 | 统一工具输出规范 + 抽 helper（23 处 fmt 裸 JSON） | ⬜ | |
 | R2-2 | P1 | get_doc 长文 maxChars/offset | ⬜ | |
