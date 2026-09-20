@@ -29,6 +29,7 @@ public class TestWebSearchTool {
     public static void main(String[] args) throws Exception {
         testHtmlParse();
         testBingHtmlParse();
+        testHtmlEntityCleaning();
         testJsonParse();
         testJsonWrappedParse();
         testHttp500Fallback();
@@ -49,6 +50,17 @@ public class TestWebSearchTool {
         } else {
             fail++;
             System.out.println("[FAIL] " + name);
+        }
+    }
+
+    /** 带诊断信息的断言（失败时把实际文本打出来，便于定位清洗规则的边界） */
+    private static void check(String name, boolean cond, String detail) {
+        if (cond) {
+            pass++;
+            System.out.println("[PASS] " + name);
+        } else {
+            fail++;
+            System.out.println("[FAIL] " + name + (detail == null || detail.isEmpty() ? "" : "  -> " + detail));
         }
     }
 
@@ -130,6 +142,76 @@ public class TestWebSearchTool {
         } finally {
             server.stop(0);
         }
+    }
+
+    /**
+     * 【R3-12】摘要里的 HTML 实体必须解码干净（Bing 实测带 {@code &ensp;} / {@code &#0183;}，进上下文是噪声）。
+     *
+     * <p>旧实现只硬编码 6 个实体，这两类原样漏进模型上下文。本用例用真实形态的 Bing 片段做回归。</p>
+     */
+    private static final String ENTITY_HTML =
+            "<html><body>"
+            + "<li class=\"b_algo\"><h2><a href=\"https://example.com/e1\">实体标题 &mdash; 测试</a></h2>"
+            + "<p>前段&ensp;中段&#0183;后段 &#183; 分隔 &hellip; 结尾&nbsp;&nbsp;多空格"
+            + " <b>加粗</b> &amp; 符号 &#x25CF; 圆点 &unknownent; 未知实体 &#xZZ; 坏数字</p></li>"
+            + "</body></html>";
+
+    private static void testHtmlEntityCleaning() throws Exception {
+        HttpServer server = startServer(200, ENTITY_HTML);
+        try {
+            WebSearchService svc = new WebSearchService(endpointOf(server), 3000);
+            WebSearchService.SearchOutcome out = svc.search("entity", 5);
+            check("entity: success", out.isSuccess());
+            check("entity: 1 result", out.results != null && out.results.size() == 1);
+            if (out.results == null || out.results.isEmpty()) {
+                return;
+            }
+            String snippet = out.results.get(0).snippet;
+            String title = out.results.get(0).title;
+            System.out.println("   [R3-12] 清洗后的摘要: " + snippet);
+            check("entity: &ensp; 已被处理（不残留实体）", !snippet.contains("&ensp;"), snippet);
+            check("entity: &#0183; 解码为 ·（十进制数字实体）", snippet.contains("中段\u00B7后段"), snippet);
+            check("entity: &#183; 解码为 ·", snippet.contains("\u00B7 分隔"), snippet);
+            check("entity: &hellip; 解码为 …", snippet.contains("\u2026"), snippet);
+            check("entity: &#x25CF; 解码为 ●（十六进制数字实体）", snippet.contains("\u25CF"), snippet);
+            check("entity: &nbsp; 折叠为单个空格（不残留 U+00A0）", !snippet.contains("\u00A0"), snippet);
+            check("entity: 多余的 ensp/nbsp 不产生连续空格", !snippet.contains("  "), snippet);
+            check("entity: 标签仍被去掉", !snippet.contains("<b>") && snippet.contains("加粗"), snippet);
+            check("entity: &amp; 仍是字面 &", snippet.contains("& 符号"), snippet);
+            check("entity: 未知具名实体原样保留（不瞎猜、不丢信息）", snippet.contains("&unknownent;"), snippet);
+            check("entity: 坏数字实体原样保留", snippet.contains("&#xZZ;"), snippet);
+            check("entity: 标题里的 &mdash; 也解码", title.contains("\u2014"), title);
+            check("entity: 输出里不该再有可识别的数字实体", !snippet.matches("(?s).*&#\\d+;.*"), snippet);
+        } finally {
+            server.stop(0);
+        }
+        testEntitySourceLint();
+    }
+
+    /** 源码 lint：钉死"通用解码"，防止退回硬编码 6 实体的老实现 */
+    private static void testEntitySourceLint() {
+        java.io.File f = new java.io.File("src/com/DocSystem/agent/search/WebSearchService.java");
+        if (!f.exists()) {
+            f = new java.io.File("D:/Dev/DocSys/src/com/DocSystem/agent/search/WebSearchService.java");
+        }
+        String src = null;
+        try (java.io.BufferedReader r = new java.io.BufferedReader(
+                new java.io.InputStreamReader(new java.io.FileInputStream(f), "UTF-8"))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = r.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+            src = sb.toString();
+        } catch (Exception e) {
+            check("能读到 WebSearchService 源码（lint 前置）", false);
+            return;
+        }
+        check("stripHtml 走通用实体解码", src.contains("unescapeHtmlEntities("));
+        check("stripHtml 处理 Unicode 空白（nbsp/ensp 等）", src.contains("normalizeUnicodeSpaces("));
+        check("支持十进制数字实体", src.contains("body.charAt(0) == '#'"));
+        check("支持十六进制数字实体", src.contains("parseInt(body.substring(2), 16)"));
+        check("不再退回硬编码 6 实体的老写法", !src.contains("replaceAll(\"&nbsp;\", \" \")"), "");
     }
 
     private static void testJsonParse() throws Exception {
