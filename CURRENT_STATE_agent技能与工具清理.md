@@ -192,7 +192,7 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 ### 遗留（非 Agent 可达，如实列出）
 - 全树还有 13 处“不存在”出口未打码：`ManageController 5`（banner 配置/用户/日志文件）、`SalesController 3`、`websocket/BusinessChannel 1`、`websocket/OfficeController 4`（Office 预览链路）
 
-## R1-4 / R1-6 试点：文档定位改为 path/name（2026-09-20，用户裁定）
+## R1-4 / R1-6 试点：文档定位改为 path/name（2026-09-20，用户裁定）— ✅ 已提交 `6d625166c`
 
 ### 用户裁定
 - docId 本质是 `Path.buildDocIdByName(level, path+name)` 的派生 hash，**不是主键**；DocSys 不保证每个文件都有 doc/索引记录 → “由 docId 反查 path/name”不可靠，且 docId 随移动/重命名失效。
@@ -231,8 +231,8 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- 主仓库 `devInt`（**R1-4/R1-6 试点**）：`agent/client/DocSysClient.java`（getDocHistory 增 path/name/level/type/maxLogNum/commitId，旧重载 @Deprecated）、`agent/tool/DocSysToolFactory.java`（get_doc_history schema 改 {vid,path,name}；新增 normalizeDocPath/levelOfDocPath/childDocPath；list_docs 页脚改 path 口径）、`agent/tool/TestDocHistoryLocator.java`（新增 34 项护栏）、`devDocs/Agent工具与接口可靠性计划.md` + 本卡
-- 已提交：R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`；工作卡 = `78fae07f3`/`017ea08b7`；CLAUDE.md = `e3d9d9e53`；计划 = `9c675b79a`；move_doc = `b5c85bf9f`；list_docs = `10f9e21f8`
+- 无（工作区干净；R1-4/R1-6 试点 = `6d625166c`）
+- 已提交：R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`；工作卡 = `78fae07f3`/`017ea08b7`；CLAUDE.md = `e3d9d9e53`；计划 = `9c675b79a`；move_doc = `b5c85bf9f`；list_docs = `10f9e21f8`
 - office 仓库：与本任务无关
 
 ## 生效约束
