@@ -693,10 +693,14 @@ public class DocSysToolFactory {
                     if (vid == null) {
                         return ToolResult.error("vid 必填（仓库ID）");
                     }
+                    String path = normalizeDocPath(args.getString("path"));
+                    String name = args.getString("name");
                     try {
-                        return ToolResult.ok(fmt(callWithLockRetry("create_folder", () -> client.addDoc(
-                                vid, null, normalizeDocPath(args.getString("path")),
-                                args.getString("name"), 2, null, null, args.getString("commitMsg")))));
+                        Map<String, Object> resp = callWithLockRetry("create_folder", () -> client.addDoc(
+                                vid, null, path, name, 2, null, null, args.getString("commitMsg")));
+                        return ToolResult.ok(writeReceipt(resp, "创建目录",
+                                docTargetText(vid, path, name + "/"),
+                                "下一步：用 list_docs(vid=" + vid + ", path=\"" + path + name + "/\") 看它里面的内容。"));
                     } catch (Exception e) {
                         return ToolResult.error("create_folder failed: " + e.getMessage());
                     }
@@ -729,10 +733,15 @@ public class DocSysToolFactory {
                     if (content == null || content.isEmpty()) {
                         return ToolResult.error("content 必填（文本文件内容）");
                     }
+                    String path = normalizeDocPath(args.getString("path"));
+                    String name = args.getString("name");
                     try {
-                        return ToolResult.ok(fmt(callWithLockRetry("write_file", () -> client.writeTextDoc(
-                                vid, normalizeDocPath(args.getString("path")),
-                                args.getString("name"), content, args.getString("commitMsg")))));
+                        Map<String, Object> resp = callWithLockRetry("write_file", () -> client.writeTextDoc(
+                                vid, path, name, content, args.getString("commitMsg")));
+                        Object size = sizeOfData(resp, "size");
+                        return ToolResult.ok(writeReceipt(resp, "写入文件",
+                                docTargetText(vid, path, name) + (size == null ? "" : "（" + sizeText(size) + "）"),
+                                "回执不包含正文；要核对内容请用 get_doc 读回。"));
                     } catch (Exception e) {
                         return ToolResult.error("write_file failed: " + e.getMessage());
                     }
@@ -772,15 +781,17 @@ public class DocSysToolFactory {
                         String status = res != null ? String.valueOf(res.get("status")) : "fail";
                         String msg = res != null ? String.valueOf(res.get("msgInfo")) : "";
                         if ("ok".equals(status)) {
-                            return ToolResult.ok(fmt(res));
+                            return ToolResult.ok(writeReceipt(res, "更新备注",
+                                    docTargetText(vid, path, name) + "（备注 " + content.length() + " 字符）"));
                         }
                         if (msg != null && msg.contains("不存在")) {
                             // 文档不存在 → 创建条目并写入备注（addDoc+content 即备注语义）
-                            Map<String, Object> created = callWithLockRetry("write_note", () -> client.addDoc(
+                            Map<String, Object> createdNote = callWithLockRetry("write_note", () -> client.addDoc(
                                     vid, null, path, name, 1, null, content, commitMsg));
-                            return ToolResult.ok(fmt(created));
+                            return ToolResult.ok(writeReceipt(createdNote, "新建文档并写入备注",
+                                    docTargetText(vid, path, name) + "（备注 " + content.length() + " 字符）"));
                         }
-                        return ToolResult.error(msg != null && !msg.isEmpty() ? msg : "更新备注失败");
+                        return ToolResult.ok(failReceipt(res));
                     } catch (Exception e) {
                         return ToolResult.error("write_note failed: " + e.getMessage());
                     }
@@ -800,10 +811,19 @@ public class DocSysToolFactory {
         JSONObject schema = objSchema(props, new String[]{"vid", "path", "name"});
         return ToolDefinition.builder("delete_doc",
                 "删除文档（文件或目录，需确认）。定位用 path+name（都从 list_docs 取）；不要传 docId/pid。",
-                args -> ToolResult.ok(fmt(callWithLockRetry("delete_doc", () -> client.deleteDoc(
-                        args.getInteger("vid"), null, null,
-                        normalizeDocPath(args.getString("path")), args.getString("name"), null,
-                        args.getString("commitMsg"))))))
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    String path = normalizeDocPath(args.getString("path"));
+                    String name = args.getString("name");
+                    try {
+                        Map<String, Object> resp = callWithLockRetry("delete_doc", () -> client.deleteDoc(
+                                vid, null, null, path, name, null, args.getString("commitMsg")));
+                        return ToolResult.ok(writeReceipt(resp, "删除", docTargetText(vid, path, name),
+                                "该对象的 docId 已失效，不要再引用；如需确认请用 list_docs 看当前目录。"));
+                    } catch (Exception e) {
+                        return ToolResult.error("delete_doc failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -820,10 +840,20 @@ public class DocSysToolFactory {
         JSONObject schema = objSchema(props, new String[]{"vid", "path", "name", "dstName"});
         return ToolDefinition.builder("rename_doc",
                 "重命名文档（文件或目录）。定位用 path+name（都从 list_docs 取），dstName 是新名字；不要传 docId/pid。",
-                args -> ToolResult.ok(fmt(callWithLockRetry("rename_doc", () -> client.renameDoc(
-                        args.getInteger("vid"), null, null,
-                        normalizeDocPath(args.getString("path")), args.getString("name"), null,
-                        args.getString("dstName"), args.getString("commitMsg"))))))
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    String path = normalizeDocPath(args.getString("path"));
+                    String name = args.getString("name");
+                    String dstName = args.getString("dstName");
+                    try {
+                        Map<String, Object> resp = callWithLockRetry("rename_doc", () -> client.renameDoc(
+                                vid, null, null, path, name, null, dstName, args.getString("commitMsg")));
+                        return ToolResult.ok(writeReceipt(resp, "重命名",
+                                name + " → " + dstName + "（在 " + displayPath(path) + " 下）"));
+                    } catch (Exception e) {
+                        return ToolResult.error("rename_doc failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -843,13 +873,25 @@ public class DocSysToolFactory {
                 "移动文档（文件或目录）到另一个目录。定位一律用 path+name：srcPath 是源文件所在目录的路径，"
                 + "srcName 是它的名字，dstPath 是**目标目录**的路径（子目录写 \"父目录/子目录名/\"，仓库根目录写空串）；"
                 + "两者都从 list_docs 结果里取。不要用 docId/dstPid。",
-                args -> ToolResult.ok(fmt(callWithLockRetry("move_doc", () -> client.moveDoc(
-                        args.getInteger("vid"), null,
-                        null, normalizeDocPath(args.getString("srcPath")), args.getString("srcName"),
-                        levelOfDocPath(args.getString("srcPath")),
-                        null, normalizeDocPath(args.getString("dstPath")), args.getString("dstName"),
-                        levelOfDocPath(args.getString("dstPath")),
-                        null, args.getString("commitMsg"))))))
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    String srcPath = normalizeDocPath(args.getString("srcPath"));
+                    String srcName = args.getString("srcName");
+                    String dstPath = normalizeDocPath(args.getString("dstPath"));
+                    String dstName = args.getString("dstName");
+                    try {
+                        Map<String, Object> resp = callWithLockRetry("move_doc", () -> client.moveDoc(
+                                vid, null,
+                                null, srcPath, srcName, levelOfDocPath(srcPath),
+                                null, dstPath, dstName, levelOfDocPath(dstPath),
+                                null, args.getString("commitMsg")));
+                        return ToolResult.ok(writeReceipt(resp, "移动",
+                                srcPath + srcName + " → " + displayPath(dstPath)
+                                        + (dstName == null || dstName.isEmpty() ? "（原名）" : dstName)));
+                    } catch (Exception e) {
+                        return ToolResult.error("move_doc failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -868,13 +910,26 @@ public class DocSysToolFactory {
         return ToolDefinition.builder("copy_doc",
                 "复制文档（文件或目录）到另一个目录。参数口径与 move_doc 完全一致，"
                 + "都用 srcPath+srcName 定位源、dstPath 指定目标目录；不要用 docId/dstPid。",
-                args -> ToolResult.ok(fmt(callWithLockRetry("copy_doc", () -> client.copyDoc(
-                        args.getInteger("vid"), null,
-                        null, normalizeDocPath(args.getString("srcPath")), args.getString("srcName"),
-                        levelOfDocPath(args.getString("srcPath")),
-                        null, normalizeDocPath(args.getString("dstPath")), args.getString("dstName"),
-                        levelOfDocPath(args.getString("dstPath")),
-                        null, args.getString("commitMsg"))))))
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    String srcPath = normalizeDocPath(args.getString("srcPath"));
+                    String srcName = args.getString("srcName");
+                    String dstPath = normalizeDocPath(args.getString("dstPath"));
+                    String dstName = args.getString("dstName");
+                    try {
+                        Map<String, Object> resp = callWithLockRetry("copy_doc", () -> client.copyDoc(
+                                vid, null,
+                                null, srcPath, srcName, levelOfDocPath(srcPath),
+                                null, dstPath, dstName, levelOfDocPath(dstPath),
+                                null, args.getString("commitMsg")));
+                        String finalName = dstName == null || dstName.isEmpty() ? srcName : dstName;
+                        return ToolResult.ok(writeReceipt(resp, "复制",
+                                srcPath + srcName + " → " + docTargetText(vid, dstPath, finalName)
+                                        + "（原文件仍在原处）"));
+                    } catch (Exception e) {
+                        return ToolResult.error("copy_doc failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -1230,6 +1285,65 @@ public class DocSysToolFactory {
             json = json.substring(0, Math.max(0, MAX_SUMMARY_LEN - hint.length())) + "...(truncated)";
         }
         return json + hint;
+    }
+
+    /**
+     * 写操作回执（R3-2 批 2）：成功不复述原 JSON，只给"做了什么 + 对象 + 关键量"；失败保留错误码。
+     *
+     * <p><b>为什么必须收敛</b>（2026-09-20 实测原始体积）：
+     * <ul>
+     *   <li>`create_folder` 560 字符、`write_file` **1091 字符**、`rename_doc` 444、`move_doc` 417、`delete_doc` 454 ——
+     *       里面全是 `localRootPath`/`reposPath`/`localVRootPath`/`remotePath`/`offsetPath`/`sortIndex`/
+     *       `autoCharsetDetect`/`creatorName`/`latestEditorName`/`isBussiness`/`officeType`/`checkSum`/
+     *       `dataEx.actionList`（整个内部动作列表）/`debugLog`（含远端推送日志）等模型完全用不到的内部字段；</li>
+     *   <li>更糟的是**写入的正文会被原样回显**（`content:"…"`）—— 写大文件时模型上下文会被自己刚写的正文塞满，
+     *       超过 4000 就被截断，真正的结果字段反而看不到了。</li>
+     * </ul>
+     */
+    static String writeReceipt(Map<String, Object> resp, String action, String target) {
+        return writeReceipt(resp, action, target, null);
+    }
+
+    static String writeReceipt(Map<String, Object> resp, String action, String target, String extraLine) {
+        if (!isOk(resp)) {
+            return failReceipt(resp);
+        }
+        StringBuilder sb = new StringBuilder("✅ 已").append(action).append("：").append(target);
+        if (extraLine != null && !extraLine.isEmpty()) {
+            sb.append("\n").append(extraLine);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 写操作失败回执：只给「人话原因 + 错误码 + 处置提示」，丢掉 `debugLog`/`dataEx` 这些内部字段。
+     *
+     * <p>实测失败响应也不小（`write_file` 失败时 1045 字符，其中 `debugLog` 带着锁的内部信息），
+     * 而那些信息对模型没有可操作性；保留 `[错误码: X]` 是为了不被反复重试（R1-1 成果）。
+     */
+    static String failReceipt(Map<String, Object> resp) {
+        if (resp == null) {
+            return "(empty response)";
+        }
+        String code = errorCodeOf(resp);
+        String msg = str(resp.get("msgInfo"));
+        if (msg.isEmpty()) {
+            msg = "操作失败（服务端未给出原因）";
+        }
+        StringBuilder sb = new StringBuilder("❌ ").append(shortText(msg, 200));
+        if (code != null) {
+            sb.append("\n[错误码: ").append(code).append("]").append(guidanceFor(code));
+        }
+        return sb.toString();
+    }
+
+    /** 取响应里 data 对象的某个字段（回执用；取不到返回 null） */
+    static Object sizeOfData(Map<String, Object> resp, String key) {
+        if (resp == null) {
+            return null;
+        }
+        Object data = resp.get("data");
+        return data instanceof Map ? ((Map<?, ?>) data).get(key) : null;
     }
 
     /** 取响应里的错误码（服务端 R1-1 起在 ReturnAjax 输出 errorCode） */

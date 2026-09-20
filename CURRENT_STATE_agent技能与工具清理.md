@@ -396,6 +396,48 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
 - **页面 E2E 再次印证 R3-9**：`delete_repos{vid:999999}` 的确认弹窗只写“此操作将执行写操作 [delete_repos]”，
   用户看不到到底要删哪个仓库。
 
+## R3-2 批 2a：写回执紧凑化 + 两个真缺陷（2026-09-20）
+
+### 体积对比（真机，仓库 5 走完整生命周期）
+| 工具 | 改造前 | 改造后 |
+|------|--------|--------|
+| create_folder | 560 字符 | **97** |
+| write_file | **1091 字符** | **75** |
+| write_note | **HTTP 500 NPE** | **51** |
+| rename_doc | 444 | **48** |
+| move_doc | 417 | **46** |
+| copy_doc | 41 | **63** |
+| delete_doc | 454 | **76** |
+
+- 原文噪声（已全去掉）：`localRootPath`/`reposPath`/`localVRootPath`/`remotePath`/`offsetPath`/`sortIndex`/
+  `autoCharsetDetect`/`creatorName`/`latestEditorName`/`isBussiness`/`officeType`/`checkSum`/
+  `dataEx.actionList`（整个内部动作列表）/`debugLog`。
+- 更坑：`write_file` 把**写入的正文原样回显**（`data.content`）——写大文件时上下文被自己的正文塞满。
+- 公共件：`writeReceipt(...)`（成功）+ `failReceipt(...)`（只留 msgInfo + `[错误码: X]` + 处置提示）。
+
+### ❗缺陷 A：`write_note` 对已有文档 100% 500 NPE（已修）
+- 根因：`DocController.updateDocContent` 的 `if(docType == 1)` 对 **null 拆箱**，而 `docType=null` 正是“写备注”的约定语义。
+- 修：`if(docType != null && docType == 1)`；护栏用源码 lint 锁死这一行。
+
+### ❗缺陷 B（安全）：写确认门可被“名字不在白名单”绕过（已修）
+- 现象（页面 E2E）： “新建文件+读回+写备注+删除” 四步**只弹了 1 次确认框**（只有 delete_doc）。
+- 根因：`AuditWriteConfirmGate.confirm()` → `createPendingEntry()` → `isWriteOperation(名字)`，
+  而它是早期用 **skill 名字子串** 拼的启发式（delete/add_/create_/upload/backup/restore/wipe/rename/move_/copy_），
+  `write_file`/`write_note`/`update_repos`/`run_skill` 一个都不命中 → 返回 null → 门内 `return true`（静默放行且无审计）。
+- 修：① 白名单补真实工具名；② 新增 `createPendingEntry(..., force)`，门永远传 true；③ 拿不到 token 改 **fail-closed**。
+
+### 验证
+- 护栏 `TestWriteReceiptFormat` **47/47**、`TestWriteConfirmGateCoverage` **13/13**（数据驱动 + 结构锁）；全量 **22 套 / 915 项**全绿。
+- 探针 `WriteToolsE2E` **31/31**（走工具层含锁重试）：建目录→写→读回校对→备注→改名→移动→复制→逐个删除；
+  仓库根 79 项 / `66666/` 3 项与基线逐项一致，磁盘无残留。
+- **页面 E2E 重跑同一句话**：确认弹窗 **1 次 → 3 次**（write_file / write_note / delete_doc 各一次），
+  回执全部为“✅ 已…”，删后目录回到 3 项。
+- 已提交：见下方「未提交改动」
+
+### 实测附带结论
+- `write_file` 直调客户端会报 `DOC_LOCKED`（同一请求内先锁后再次锁）但**文件已写入**；
+  工具层 `callWithLockRetry` 能自动重试成功 —— 模型侧看到的是成功（这层保护必须保留）。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -407,12 +449,17 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 - **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 ✅**；**R1-5 ✅**；**R1-2 ✅ / R1-3 ✅**；R1 全部完成
 - **R2（P1）**：**R2-1 ✅ / R2-2 ✅ / R2-3 ✅ / R2-4 ✅（本轮）** — 剩余：写操作回执类仍为 `fmt()` 整包 JSON，归入 R3-2 工具体检一并做
-- **R3（P2）**：**R3-2 批 1 ✅ / R3-1 ✅（本轮）**；下一步 **R3-2 批 2**（写回执紧凑化 + memory/attachment/web_search）→ R3-3 `run_skill` → R3-9 确认弹窗显示参数 → R3-10 跨仓库按路径/名字找 → R3-4/5 清理裁定 → R3-6 检查单
+- **R3（P2）**：**R3-2 批 1 ✅ / R3-1 ✅ / R3-2 批 2a ✅（本轮）**；下一步 **R3-2 批 2b**（memory/attachment/web_search 真实装配）→ R3-3 `run_skill` → R3-9 确认弹窗显示参数 → R3-10 跨仓库按路径/名字找 → R3-4/5 清理裁定 → R3-6 检查单
   新增两条（R2 页面 E2E 发现）：**R3-9 确认弹窗只显示工具名不显示参数**、**R3-10 缺“跨仓库按路径/名字找”能力**
 
 ## 未提交改动
 
-- 无（R3-2 批 1 已提交 `8599083bd`）
+- R3-2 批 2a 待提交：`src/com/DocSystem/agent/tool/DocSysToolFactory.java`、
+  `src/com/DocSystem/controller/DocController.java`、`src/com/DocSystem/agent/tool/AuditWriteConfirmGate.java`、
+  `src/com/DocSystem/agent/controller/AuditLogService.java`、
+  `src/com/DocSystem/agent/tool/TestWriteReceiptFormat.java`（新增）、
+  `src/com/DocSystem/agent/tool/TestWriteConfirmGateCoverage.java`（新增）、
+  `devDocs/Agent工具与接口可靠性计划.md`、本工作卡
 - 已提交：R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 

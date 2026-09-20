@@ -64,10 +64,13 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
             }
         }
         String confirmToken = auditLogService.createPendingEntry(
-                userId != null ? userId : "anonymous", sessionId, toolName, params, clientIp, traceId);
+                userId != null ? userId : "anonymous", sessionId, toolName, params, clientIp, traceId, true);
         if (confirmToken == null) {
-            // 非写操作（isWriteOperation 未收录）→ 不拦截
-            return true;
+            // 只有审计存储不可用才会走到这里。此时**绝不能静默放行写操作**（R3-2：原实现把
+            // “名字不在写操作名单里”也当成这条分支 → write_file/write_note 等不弹确认框就直接执行）。
+            // 宁可不执行，也不静默改数据。
+            log.error("Cannot obtain confirm token for write tool '{}' — refusing to execute", toolName);
+            return false;
         }
 
         // 2. 推送确认事件到前端（SSE）；无通道时记录日志

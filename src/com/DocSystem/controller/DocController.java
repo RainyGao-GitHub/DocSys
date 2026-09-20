@@ -2263,7 +2263,9 @@ public class DocController extends BaseController{
 		String commitUser = reposAccess.getAccessUser().getName();
 		List<CommonAction> actionList = new ArrayList<CommonAction>();
 		boolean ret = false;
-		if(docType == 1)
+		//R3-2 体检修复：docType 为 null 表示“更新备注（虚拟内容）”，但原来直接拆箱 `docType == 1`，
+		//  null 时抛 NPE → HTTP 500，导致 Agent 的 write_note 对**已有文档**100% 失败（实测）。
+		if(docType != null && docType == 1)
 		{
 			if(FileUtil.isTextFile(name) == false)
 			{

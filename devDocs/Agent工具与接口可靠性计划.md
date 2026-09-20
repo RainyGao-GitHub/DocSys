@@ -334,8 +334,52 @@
 - ⚠️ **顺带发现**：备份任务进行中对同一仓库调 `getRepos` 会失败（仓库忙）→ 回执取名称/目录必须回退 `getReposList`
   （已实现，否则 `delete_repos` 回执会丢名称与目录）。
 
-**批 2（待做）**：`write_note` `write_file` `create_folder` `delete_doc` `rename_doc` `move_doc` `copy_doc` `create_doc_share` `get_doc_share_list`
-的**写回执紧凑化**（R2 遗留）+ `memory_set/get/list` `attachment` `run_skill` `web_search` 的真实装配验证（后四个靠页面 E2E，与 R3-3 合并）。
+**批 2a（✅ 2026-09-20）：7 个文档写工具的回执紧凑化 + 两个真缺陷**
+
+| 工具 | 改造前 | 改造后 |
+|------|--------|--------|
+| `create_folder` | 560 字符 | **97** |
+| `write_file` | **1091 字符** | **75** |
+| `write_note` | **HTTP 500 NPE** | **51** |
+| `rename_doc` | 444 字符 | **48** |
+| `move_doc` | 417 字符 | **46** |
+| `copy_doc` | 41 字符 | **63**（多了人话） |
+| `delete_doc` | 454 字符 | **76** |
+
+- **原文里的内部噪声（全部去掉）**：`localRootPath`/`reposPath`/`localVRootPath`/`remotePath`/`offsetPath`/
+  `sortIndex`/`autoCharsetDetect`/`creatorName`/`latestEditorName`/`isBussiness`/`officeType`/`checkSum`/
+  `dataEx.actionList`（整个内部动作列表）/`debugLog`（含远端推送日志）。
+- **更坑的一点**：`write_file` 的响应把**写入的正文原样回显**（`data.content`）——写大文件时模型上下文会被自己刚写的正文塞满，
+  超 4000 后被 `truncate` 截断，真正的结果字段反而看不到。回执已不再回显正文（改成给大小 + “用 get_doc 读回核对”）。
+- 公共件：`writeReceipt(resp, action, target[, extraLine])` 成功回执 + `failReceipt(resp)` 失败回执
+  （只留 `msgInfo` + `[错误码: X]` + 处置提示，丢掉 `debugLog`/`dataEx`）。
+
+**❗缺陷 A：`write_note` 对已有文档 100% 失败（服务端 500 NPE）**
+- 根因：`DocController.updateDocContent` 里 `if(docType == 1)` 对 **null 拆箱**；而 `docType=null` 正是客户端约定的
+  “更新备注（虚拟内容）”语义 → 必 NPE。只有“文档不存在”分支能走通（工具会回退到 `addDoc`），所以看起来
+  “新建文档写备注”能用、“给已有文档写备注”必挂。
+- 修：`if(docType != null && docType == 1)`；护栏 `TestWriteReceiptFormat` 用源码 lint 锁死这一行。
+
+**❗缺陷 B（安全）：写确认门可以被“工具名不在白名单”绕过**
+- **现象（页面 E2E 抓的）**：“新建文件 + 读回 + 写备注 + 删除”四步全程**只弹了 1 次确认框**（只有 `delete_doc`）。
+- 根因链：`AuditWriteConfirmGate.confirm()` → `createPendingEntry()` → `isWriteOperation(工具名)`，
+  而 `isWriteOperation` 是早期用 **skill 名字子串** 拼的启发式（`contains("delete"/"add_"/"create_"/"upload"/
+  "backup"/"restore"/"wipe"/"rename"/"move_"/"copy_")`）→ `write_file`/`write_note`/`update_repos`/`run_skill`
+  **一个都不命中** → 返回 null → 门内 `return true`（**静默放行，且不留审计**）。
+- 修：① 审计白名单补齐真实工具名；② 新增 `createPendingEntry(..., boolean force)`，确认门永远传 `true`
+  （`ToolRegistry` 本就只对 `needsConfirm=true` 的工具调门，再拿名字猜一次既多余又危险）；
+  ③ 拿不到 token 时改为 **fail-closed**（`return false` + 错误日志），不再静默放行。
+- 验证：护栏 `TestWriteConfirmGateCoverage` **13/13**（数据驱动：注册表里每个 `needsConfirm` 工具名都要被
+  `isWriteOperation` 收录；结构锁：门必须用 force 入口、不得在拿不到 token 时放行）；
+  页面 E2E 重跑同一句话 → 弹窗 **1 次 → 3 次**（`write_file`/`write_note`/`delete_doc` 各一次）。
+
+- **验收（已过）**：探针 `WriteToolsE2E` **31/31**（真环境，走工具层含锁重试）：
+  建目录→写文件→读回校对→写备注→改名→移动→复制→逐个删除，回执均 < 4000、不含内部字段、不回显正文；
+  结尾仓库根目录 79 项 / `66666/` 3 项与基线逐项一致，磁盘无残留。
+- ⚠️ **实测附带结论**：`write_file` 直接调客户端会报 `DOC_LOCKED` 失败（同一请求内先锁后再次锁），
+  但**工具层 `callWithLockRetry` 能自动重试成功** —— 所以模型侧看到的是成功（这层保护是必要的）。
+
+**批 2b（待做）**：`memory_set/get/list` `attachment` `web_search` `run_skill` 的真实装配验证（与 R3-3 合并）。
 
 #### R3-3 `run_skill` 对已下线 DocSys 能力的表现
 - P3b 验收标准里写了"`run_skill("<DocSys能力>")` 应明确报 No executor"，但**未实测**。→ 补一次页面验证并记录。
@@ -373,7 +417,7 @@
 |---|---|---|---|
 | **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 ✅ → **R1-6 定位全面 path/name ✅** → **R1-5 list_repos ✅** → **R1-2 create_doc_share ✅** → **R1-3 get_doc_share_list ✅** → R2（统一输出/大结果）→ R3 | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
-| **R3** | R3-0（体检暴露的系统性缺陷，已修）→ R3-2 批 1（仓库/备份/当前用户 7 个）✅ → R3-1 命名 ✅ → R3-2 批 2（写回执紧凑化 + memory/attachment/web_search）→ R3-3 run_skill → R3-9/10 → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
+| **R3** | R3-0（体检暴露的系统性缺陷，已修）→ R3-2 批 1（仓库/备份/当前用户 7 个）✅ → R3-1 命名 ✅ → R3-2 批 2a（写回执 + 写确认门安全洞）✅ → R3-2 批 2b（memory/attachment/web_search）→ R3-3 run_skill → R3-9/10 → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
 
 > 每完成一项：更新本文状态列 → 更新工作卡"当前进展/未提交改动" → 提交（`devInt` 主干）。
 
@@ -382,7 +426,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R3-2 批 1 后，**20 套 / 856 项断言全绿**）：`TestReposToolsFormat 46` / `TestToolRegistry 36` / `TestToolOutputContract 82` / `TestListReposFormat 50` / `TestListDocsFormat 25` / `TestDocShareFormat 60` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestWriteTools 52` / `TestAgentSearchWriteTools 56` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestLockRetry 13` / `TestToolUseLoop 36` / `TestToolUseLoopNative 17` / `TestToolUseLoopStreaming 26` / `TestToolSchemaBuilder 7`
+   - 现基线（2026-09-20 R3-2 批 2a 后，**22 套 / 915 项断言全绿**）：`TestWriteConfirmGateCoverage 13` / `TestWriteReceiptFormat 47` / `TestReposToolsFormat 46` / `TestToolRegistry 36` / `TestToolOutputContract 82` / `TestListReposFormat 50` / `TestListDocsFormat 25` / `TestDocShareFormat 60` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestWriteTools 52` / `TestAgentSearchWriteTools 56` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestLockRetry 13` / `TestToolUseLoop 36` / `TestToolUseLoopNative 17` / `TestToolUseLoopStreaming 26` / `TestToolSchemaBuilder 7`
    - 注意 `TestAgentFocusSupport` 在 `com.DocSystem.agent.focus` 包，其余在 `com.DocSystem.agent.tool`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolPathE2E` `ReposListE2E` `ShareToolE2E` `OutputContractE2E` `MatchProbe` `TotalProbe` `SearchProbe2`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
@@ -438,7 +482,7 @@
 | R2-3 | P1 | search_files/grep_files 大结果验证与紧凑化 | ✅ | 探针：search 19840→2746/页（5 页覆盖 100 条）；grep 687130→3122 |
 | R2-4 | P1 | 命中数语义（服务端不给总数）+ match 大小写引导（页面 E2E 发现） | ✅ | 表头区分“全部命中/已达上限”；页面 E2E 同问法 7 步→4 步、0 次 match 试错 |
 | R3-1 | P2 | 参数命名一致（update_repos.reposId → vid） | ✅ | 统一为 vid 并删掉旧属性；护栏 TestReposToolsFormat 锁定 |
-| R3-2 | P2 | 全工具体检表（24 工具）——**批 1 ✅（仓库/备份/当前用户 7 个）/ 批 2 ⬜** | 🔶 | 批 1：探针 31/31、护栏 46/46、页面 E2E 4 步；批 2 见 R3-2 节 |
+| R3-2 | P2 | 全工具体检表（24 工具）——**批 1 ✅ / 批 2a ✅ / 批 2b ⬜** | 🔶 | 批 1：探针 31/31、护栏 46/46；批 2a：写回执 + 确认门安全洞（护栏 47/13，页面 E2E 弹窗 1→3 次） |
 | R3-3 | P2 | run_skill 对已下线能力的表现 | ⬜ | |
 | R3-4 | P2 | 旧编排死代码（SubAgent/MainAgent/LLMIntentParser）处置 | ⬜ | |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ⬜ | |

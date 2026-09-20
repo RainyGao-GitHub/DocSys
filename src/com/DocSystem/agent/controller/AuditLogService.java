@@ -40,7 +40,13 @@ public class AuditLogService {
     private static final Set<String> WRITE_OPERATIONS = new HashSet<>(Arrays.asList(
         "delete_repos", "delete_doc", "backup_repos", "add_repos", "create_repos",
         "upload_doc", "rename_doc", "move_doc", "copy_doc",
-        "restore_repos", "wipe_repos", "add_doc", "upload_file"
+        "restore_repos", "wipe_repos", "add_doc", "upload_file",
+        // R3-2 体检补全（2026-09-20）：原先只列了早期 skill 时代的名字，
+        // write_file/write_note/create_folder/create_doc_share/update_repos/run_skill 都不在名单里，
+        // 而下边的子串启发式也盖不住它们 → 这些工具在页面上不弹确认框、也不写审计
+        // （实测：一句“新建文件+写备注”全程没有任何确认弹窗）。
+        "write_file", "write_note", "create_folder", "create_doc_share",
+        "update_repos", "delete_doc_share", "run_skill"
     ));
 
     /** Field names that contain sensitive data — redact these (per D-15) */
@@ -191,7 +197,21 @@ public class AuditLogService {
     @Transactional
     public String createPendingEntry(String userId, String sessionId, String operation,
                                      Map<String, String> params, String clientIp, String traceId) {
-        if (!isWriteOperation(operation)) {
+        return createPendingEntry(userId, sessionId, operation, params, clientIp, traceId, false);
+    }
+
+    /**
+     * 同上，但可选“由调用方声明这确实是写操作”（跳过名字启发式）。
+     *
+     * <p>R3-2：`ToolRegistry` 只会对 `needsConfirm=true` 的工具调确认门，
+     * 所以门内再拿名字子串猜一次“是不是写操作”是多余且危险的：猜错就静默改数据。
+     * 用 `force=true` 保证“只要工具声明了 needsConfirm，就一定弹确认 + 写审计”。
+     */
+    @Transactional
+    public String createPendingEntry(String userId, String sessionId, String operation,
+                                     Map<String, String> params, String clientIp, String traceId,
+                                     boolean force) {
+        if (!force && !isWriteOperation(operation)) {
             return null;  // Not a write operation, no audit needed (per D-14)
         }
 
