@@ -412,6 +412,11 @@
 
 **批 2 完成**：写回执与条件工具的体检已全部做完（剩 R3-3 的遗留项转入 R3-11/12）。
 
+> ⚠️ **本节结论已被 R3-11 取代**：当时对 `system_help` 的处置是“修”（补进白名单 + 重写正文），
+> 但 2026-09-20 核查发现整个 help 族都过期/编造（含三个没注册但猜 id 可命中的 sibling、
+> `SubAgent` 里更陈旧的一份）→ 用户裁定 **(A)+(C)：整族删除**，调用它们得到明确的“未知技能”。
+> 唯一仍然成立的结论是：**子进程输出编码修复（GBK/UTF-8）**与帮助内容无关，保留。
+
 #### R3-9 确认弹窗显示参数（✅ 2026-09-20 已修）
 - **问题**（连续三轮页面 E2E 印证）：弹窗只写 `此操作将执行写操作 [delete_repos]，是否继续？`——
   用户看不到“到底要删哪个仓库/分享哪个文件”，只能盲批；对外动作（`create_doc_share`）尤其危险。
@@ -464,6 +469,46 @@
 - **遗留**：①前置仓库（`remoteServerGetDoc`）dev 无 type≥3 仓库，**无法 E2E**，仅由源码 lint 锁住调用方式；
   ②实测发现 repo 5 索引只覆盖 `MxsDoc/` 子树 —— 疑似索引同步/重建的覆盖缺陷，已单列为 **R3-13**。
 
+#### R3-11 help 技能族：整族删除（✅ 2026-09-20，用户裁定 A+C）
+- **发现过程**：R3-2 批 2b 只记了"`WebRoot/WEB-INF/skills/system_help` 演示件过期"。本次核查时发现整族都烂，且比原记录严重：
+  - **磁盘演示件是编造的**：`SKILL.md` 教模型跑 `docsys help`（dev 根本没有这个可执行文件）、
+    `scripts/run.bat` 指向 `http://localhost:8080/api/help` + 占位凭据、`references/api.md` 写了一个不存在的
+    `GET /System/help.do`、`references/related-skills.md` 指向并不存在的兄弟技能目录。
+  - **三个 sibling 同族**：`help-repos`/`help-docs`/`help-search` 在 `DocSysSkillExecutor.BUILT_IN_SKILL_IDS` 里
+    **但从未被注册**（模型看不见技能列表里没有它们）→ **猜 id 就能命中**，返回的却是 docId 时代的 CLI 命令表
+    （`create-repos <name> <desc> <path>`、**`delete-doc <vid> <docId>`**、`search <query> [vid]`）——
+    工具名全都不存在，且 `docId` 定位已在 R1-6 下线 → **会把模型引回废弃用法**。
+  - **`SubAgent` 里还有最陈旧的一份**：`handleHelp/handleHelpRepos/handleHelpDocs/handleHelpSearch` 四个方法，
+    命令表里含硬编码 `login admin admin2026` 示例、`chat-with-docs`/`ai-models` 等已下线 CLI，
+    而 `taskType="help*"` 是**可达的**（`MainAgent.executeSubTasks` → `subAgent.execute`）。
+- **用户裁定（A + C）**：`system_help` 的实际用途不大（返回的工具速查 + 约定与工具 schema 重复）→ **整族删除**。
+  删前核对过：那 5 条"关键约定"逐条都在工具描述里有对应表述（path/name 定位在 `get_doc`/`list_docs`/写工具参数里、
+  续读在 `get_doc`、search→grep 在两个搜索工具里、docId 已从参数面彻底移除），所以删除**不丢信息**。
+- **实现**：
+  - `DocSysSkillExecutor`：白名单去掉 `help`/`system_help`/`help-repos`/`help-docs`/`help-search`，
+    删除 `handleHelp`/`handleHelpRepos`/`handleHelpDocs`/`handleHelpSearch` 四个方法；
+  - `ExternalSkillExecutor`：排除集同步去掉这 5 个 id（留着会挡住将来同名的外部技能）；
+  - `SkillManager`：不再注册 `system_help`（人类"命令帮助"列表里少一条）；
+  - `SubAgent`：删除 4 个 handler + 4 个 taskType 分支 + `getCategory` 里的 help 分类
+    （这些 taskType 现在落到 `handleUnknownTask` → 注册表报"未知技能"）；
+  - 磁盘：`git rm -r WebRoot/WEB-INF/skills/system_help`（源码树整目录删除）+
+    手工删除运行期副本 `C:\DocSysReposes\skills\system_help`（**源码删了 store 不会自动删**）。
+- **验证**：
+  - 护栏 `TestSkillExecEncoding` 重写为 **46 项**（旧 34 项的"system_help 必须被接管"断言被删除）：
+    5 个 id 逐个断言 `canHandle=false` 且 `execute` 返回 `Unknown skill`；`banner`/`web_search`/`playwright` 仍正常；
+    源码 lint 锁住四个文件（白名单/排除集/SubAgent handler/SkillManager 注册）不得复活 + 技能目录已删除。
+    → **全量 32 套 / 1199 项断言 0 失败**。
+  - **live 验证**：`GET /agent/skills` 技能数 **7 → 6**（`java-expert, browser_use, web_search, playwright, ant-expert, banner`）。
+  - **页面 E2E**：让模型"执行 system_help 技能" → 模型先判断列表里没有它、为稳妥仍实际调用一次（确认弹窗 ✓）→
+    **`❌ run_skill 失败：No executor found for skill: system_help`** → 如实回答"技能不存在"并列出 6 个真实技能、
+    建议改用 `banner`（**未臆造输出**，正是 R3-3/P3b 要的口径）。
+- **⚠️ 踩坑（护栏自己的教训）**：`external.canHandle("help-repos")` 在不含排除集后**不再短路**，会走到外部技能目录查找
+  → 触碰 `BaseFunction.<clinit>` → 裸 JVM 里 `Log` 写文件失败递归 StackOverflow（已踩，栈全是 `Log.info`）。
+  因此"外部执行器也不再接管它们"改成**源码 lint**断言；另：源码 lint 断言方法时要用**方法定义形式**
+  （`private SkillExecutionResult handleHelp`），裸名字会被注释里的历史记录命中（本次两处都踩过）。
+- **相关观察（未做，留 R3-4）**：`banner` 技能保留，但它的"快速开始"仍是旧 CLI 味道
+  （`login <user> <pwd>`、`list-repos`、`search <关键词>`、`help`）——与本次删除同源，属旧编排清理范围。
+
 #### R3-3 `run_skill` 对已下线 DocSys 能力的表现
 - P3b 验收标准里写了"`run_skill("<DocSys能力>")` 应明确报 No executor"，但**未实测**。→ 补一次页面验证并记录。
 
@@ -500,7 +545,7 @@
 |---|---|---|---|
 | **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 ✅ → **R1-6 定位全面 path/name ✅** → **R1-5 list_repos ✅** → **R1-2 create_doc_share ✅** → **R1-3 get_doc_share_list ✅** → R2（统一输出/大结果）→ R3 | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
-| **R3** | R3-2 全工具体检（批 1/2a/2b 全 ✅）→ R3-1 命名 ✅ → R3-3 run_skill ✅ → **R3-9 确认弹窗 ✅** → **R3-10 跨仓库找 ✅** → R3-11/12 遗留 + R3-13 索引覆盖 → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
+| **R3** | R3-2 全工具体检（批 1/2a/2b 全 ✅）→ R3-1 命名 ✅ → R3-3 run_skill ✅ → **R3-9 确认弹窗 ✅** → **R3-10 跨仓库找 ✅** → **R3-11 help 技能族删除 ✅** → R3-12 遗留 + R3-13（用户暂缓）→ R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
 
 > 每完成一项：更新本文状态列 → 更新工作卡"当前进展/未提交改动" → 提交（`devInt` 主干）。
 
@@ -566,8 +611,10 @@
 | R2-4 | P1 | 命中数语义（服务端不给总数）+ match 大小写引导（页面 E2E 发现） | ✅ | 表头区分“全部命中/已达上限”；页面 E2E 同问法 7 步→4 步、0 次 match 试错 |
 | R3-1 | P2 | 参数命名一致（update_repos.reposId → vid） | ✅ | 统一为 vid 并删掉旧属性；护栏 TestReposToolsFormat 锁定 |
 | R3-2 | P2 | 全工具体检表（28 工具）——**批 1 ✅ / 批 2a ✅ / 批 2b ✅** | ✅ | 批 1：仓库/备份/当前用户；批 2a：写回执 + 确认门安全洞；批 2b：memory/attachment/web_search/run_skill |
-| R3-3 | P2 | run_skill 对已下线 DocSys 能力的表现 | ✅ | 未知技能报 `No executor found` ✓；`system_help` 死技能 + 子进程乱码已修（护栏 34/34） |
-| R3-11 | P2 | `WebRoot/WEB-INF/skills/system_help` 演示件过期（SKILL.md 让跑 `docsys` CLI；run.bat 指向 8080/api/help + admin2026） | ⬜ | R3-2 批 2b 发现；现已不被执行，但内容误导 || R3-13 | P2 | repo 5 的 Lucene 索引只覆盖 `MxsDoc/` 子树（`培训资料/`、`66666/` 等磁盘上存在但索引 0 条）—— 疑似索引同步/重建的覆盖缺陷 | ⬜ | R3-10 实测发现：这是“索引不是磁盘镜像”的根，直接决定搜索类工具的可信边界 || R3-12 | P2 | `web_search` 摘要未清理 HTML 实体（`&ensp;`/`&#0183;`） | ⬜ | R3-2 批 2b 发现；进上下文是噪声 |
+| R3-3 | P2 | run_skill 对已下线 DocSys 能力的表现 | ✅ | 未知技能报 `No executor found` ✓；子进程乱码已修（护栏 34/34）。当时的"`system_help` 死技能已修"已被 R3-11 接管——最终处置是**整族删除** |
+| R3-11 | P2 | help 技能族过期/编造内容（演示件教跑不存在的 CLI、端点、占位凭据；三 sibling 是 docId 时代 CLI 文案） | ✅ | 用户裁定 (A)+(C)：整族删除 → 调用得到明确"未知技能"；护栏 TestSkillExecEncoding 46 + 全量 32 套/1199 项 |
+| R3-12 | P2 | `web_search` 摘要未清理 HTML 实体（`&ensp;`/`&#0183;`） | ⬜ | R3-2 批 2b 发现；进上下文是噪声 |
+| R3-13 | P2 | repo 5 的 Lucene 索引只覆盖 `MxsDoc/` 子树（`培训资料/`、`66666/` 等磁盘上存在但索引 0 条）—— 疑似索引同步/重建的覆盖缺陷 | ⬜（用户暂缓） | R3-10 实测发现。用户判断"应是其他原因导致"，**先不查** |
 | R3-4 | P2 | 旧编排死代码（SubAgent/MainAgent/LLMIntentParser）处置 | ⬜ | |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ⬜ | |
 | R3-6 | P2 | 新工具上线检查单（流程固化） | ⬜ | |

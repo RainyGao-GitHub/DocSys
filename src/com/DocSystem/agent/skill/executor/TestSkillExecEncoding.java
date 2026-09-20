@@ -25,8 +25,8 @@ public class TestSkillExecEncoding {
     public static void main(String[] args) throws Exception {
         testDetectCharset();
         testReadProcessOutput();
-        testSystemHelpWiring();
-        testHelpContentFreshness();
+        testHelpFamilyRemoved();
+        testStaleArtifactsGone();
         System.out.println("\n======== TestSkillExecEncoding: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -86,51 +86,128 @@ public class TestSkillExecEncoding {
                 "".equals(ExternalSkillExecutor.readProcessOutput(new java.io.ByteArrayInputStream(new byte[0]))));
     }
 
-    /** ③ system_help 必须由内置执行器接管，且不能再落到外部 CLI 执行器 */
-    private static void testSystemHelpWiring() {
+    /**
+     * ③ R3-11（2026-09-20 用户裁定 A+C）：整族 help 技能已删除 —— help、system_help、
+     * help-repos、help-docs、help-search 都不再由任何执行器接管，调用它们必须得到明确的“未知技能”。
+     *
+     * <p><b>为什么删</b>：system_help 返回的“工具速查 + 5 条约定”与工具 schema 重复（实测用途不大）；
+     * 另三个 sibling 压根没注册（模型看不见，但猜 id 就能命中），内容还是 docId 时代的 CLI
+     * （`create-repos`、`delete-doc <vid> <docId>`、`search <query> [vid]`）——
+     * 工具名不存在、docId 定位已在 R1-6 下线。给过期内容比报“未知技能”危险得多。</p>
+     */
+    private static void testHelpFamilyRemoved() {
         DocSysSkillExecutor builtin;
         ExternalSkillExecutor external;
         try {
             builtin = new DocSysSkillExecutor();
-            // 外部执行器有 5 参构造（skillsDirPath, timeout, llmService, parser, metadataService）；
-            // 这里只验证 canHandle 的排除集，不跑 CLI，故依赖传 null/默认值即可。
             external = new ExternalSkillExecutor("WebRoot/WEB-INF/skills", 60, null, null, null);
         } catch (Throwable t) {
             check("能离线构造两个技能执行器（lint 前置）", false, String.valueOf(t));
             return;
         }
-        check("内置执行器接管 system_help", builtin.canHandle("system_help"));
-        check("外部 CLI 执行器不再接管 system_help（否则会去跑 docsys 命令）",
-                !external.canHandle("system_help"));
-        check("内置执行器仍接管 help（别名不丢）", builtin.canHandle("help"));
-
-        SkillExecutionResult r = builtin.execute("system_help", new HashMap<String, String>(), null);
-        check("system_help 执行成功（不再报 docsys 不是命令）", r.success(),
-                r.success() ? "" : String.valueOf(r.error()));
-        check("system_help 输出非空", r.success() && r.output() != null && r.output().length() > 200,
-                r.success() ? String.valueOf(r.output().length()) : "-");
+        String[] removed = {"help", "system_help", "help-repos", "help-docs", "help-search"};
+        for (String id : removed) {
+            check("内置执行器不再接管： " + id, !builtin.canHandle(id));
+            SkillExecutionResult gone = builtin.execute(id, new HashMap<String, String>(), null);
+            check("调用已删除的帮助技能 → 明确报未知技能（不是过期命令表）： " + id,
+                    !gone.success() && String.valueOf(gone.error()).contains("Unknown skill"),
+                    String.valueOf(gone.error()));
+        }
+        // 仍然保留的技能不受影响（banner / web 自动化）
+        check("banner 仍由内置执行器接管", builtin.canHandle("banner"));
+        check("web_search 仍由内置执行器接管", builtin.canHandle("web_search"));
+        check("playwright 仍由内置执行器接管", builtin.canHandle("playwright"));
+        // 保留项仍能正常执行（不做 HTTP，只看返回形状）
+        SkillExecutionResult banner = builtin.execute("banner", new HashMap<String, String>(), null);
+        check("banner 执行成功", banner.success(), banner.success() ? "" : String.valueOf(banner.error()));
+        check("外部执行器仍在（组件没被误删）", external != null);
+        // ⚠️ 不要在这里调 external.canHandle("help")：这些 id 已不在排除集里 → 会走到外部技能目录查找
+        // → 触碰 BaseFunction.<clinit> → 裸 JVM 里 Log 写文件失败递归 StackOverflow（已踩）。
+        // “外部执行器也不再接管它们”改用源码 lint 断言（见 testStaleArtifactsGone）。
     }
 
-    /** ④ help 正文必须与当前实现一致（不能是 docId 时代的过期 CLI 说明） */
-    private static void testHelpContentFreshness() throws Exception {
-        DocSysSkillExecutor builtin = new DocSysSkillExecutor();
-        String out = builtin.execute("system_help", new HashMap<String, String>(), null).output();
-        if (out == null) {
-            check("help 输出可读", false);
+    /**
+     * ⑤ R3-11 回归锁（源码 lint）：整族 help 技能实现与磁盘演示件都不得复活。
+     *
+     * <p>2026-09-20 实测的编造内容：`SKILL.md` 教模型跑 `docsys help`（dev 无此可执行文件）、
+     * `scripts/run.bat` 指向 `http://localhost:8080/api/help` + 占位凭据、
+     * `references/api.md` 写了不存在的 `GET /System/help.do`、`references/related-skills.md`
+     * 指向并不存在的兄弟技能目录；`SubAgent` 里那份最陈旧（命令表 + 硬编码 login 示例 + docId 定位）。</p>
+     */
+    private static void testStaleArtifactsGone() throws Exception {
+        String src = readSource("src/com/DocSystem/agent/skill/executor/DocSysSkillExecutor.java");
+        if (src == null) {
+            check("能读到 DocSysSkillExecutor 源码（lint 前置）", false);
             return;
         }
-        String[] stale = {"CLI Commands", "delete-doc <vid> <docId>", "rename-doc <vid> <docId>",
-                "get-doc <vid> <docId>", "download-doc", "ai-models", "chat-with-docs", "repos-info <vid>"};
-        for (String s : stale) {
-            check("help 不再出现过期 CLI 条目： " + s, !out.contains(s), out.substring(0, Math.min(200, out.length())));
+        // 断言用「方法定义形式」而不是裸名字：源码里的注释为记录历史会提到这些方法名，
+        // 裸字符串会把注释也算命中（护栏自己踩过）。
+        for (String gone : new String[]{"private SkillExecutionResult handleHelp", "handleHelpRepos",
+                "handleHelpDocs", "handleHelpSearch"}) {
+            check("DocSysSkillExecutor 不再包含帮助实现： " + gone,
+                    !src.contains("private SkillExecutionResult " + gone));
         }
-        String[] must = {"list_repos", "get_doc", "search_files", "grep_files", "write_file", "move_doc",
-                "backup_repos", "path+name", "move_doc"};
-        for (String s : must) {
-            check("help 提到当前工具/约定： " + s, out.contains(s));
+        for (String gone : new String[]{"\"help\"", "\"system_help\"", "\"help-repos\"", "\"help-docs\"", "\"help-search\""}) {
+            check("DocSysSkillExecutor 白名单不再含： " + gone, !src.contains(gone));
         }
-        check("help 明确 docId 不要用于定位", out.contains("docId") && out.contains("不要用它定位"), out);
-        check("help 说明写操作需要确认", out.contains("需要用户确认"), out);
-        check("help 输出 < 4000 字符（进上下文不超预算）", out.length() < 4000, "len=" + out.length());
+
+        String extSrc = readSource("src/com/DocSystem/agent/skill/executor/ExternalSkillExecutor.java");
+        if (extSrc == null) {
+            check("能读到 ExternalSkillExecutor 源码（lint 前置）", false);
+        } else {
+            for (String gone : new String[]{"\"help\"", "\"system_help\"", "\"help-repos\"", "\"help-docs\"", "\"help-search\""}) {
+                check("ExternalSkillExecutor 排除集不再含： " + gone, !extSrc.contains(gone));
+            }
+        }
+
+        String subSrc = readSource("src/com/DocSystem/agent/orchestrator/SubAgent.java");
+        if (subSrc == null) {
+            check("能读到 SubAgent 源码（lint 前置）", false);
+        } else {
+            for (String gone : new String[]{"private AgentResponse handleHelp", "private AgentResponse handleHelpRepos",
+                    "private AgentResponse handleHelpDocs", "private AgentResponse handleHelpSearch"}) {
+                check("SubAgent 不再包含帮助实现： " + gone, !subSrc.contains(gone));
+            }
+            check("SubAgent 命令表不再列 help-repos/help-docs/help-search",
+                    !subSrc.contains("\"  help-repos") && !subSrc.contains("\"  help-docs")
+                            && !subSrc.contains("\"  help-search"));
+            check("SubAgent 的 help 示例（含占位凭据）已随命令表删除", !subSrc.contains("login admin admin2026"));
+        }
+
+        String smSrc = readSource("src/com/DocSystem/agent/skill/SkillManager.java");
+        if (smSrc == null) {
+            check("能读到 SkillManager 源码（lint 前置）", false);
+        } else {
+            check("SkillManager 不再注册 system_help（人类帮助列表不再有这条）",
+                    !smSrc.contains("new Skill(\"system_help\""));
+        }
+
+        // 磁盘技能目录应已整体删除（源码树里）
+        java.io.File dir = new java.io.File("WebRoot/WEB-INF/skills/system_help");
+        if (!dir.exists()) {
+            dir = new java.io.File("D:/Dev/DocSys/WebRoot/WEB-INF/skills/system_help");
+        }
+        check("技能目录 WebRoot/WEB-INF/skills/system_help 已删除", !dir.exists(), dir.getAbsolutePath());
+    }
+
+    private static String readSource(String relative) {
+        java.io.File f = new java.io.File(relative);
+        if (!f.exists()) {
+            f = new java.io.File("D:/Dev/DocSys/" + relative);
+        }
+        if (!f.exists()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        try (java.io.BufferedReader r = new java.io.BufferedReader(
+                new java.io.InputStreamReader(new java.io.FileInputStream(f), "UTF-8"))) {
+            String line;
+            while ((line = r.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return sb.toString();
     }
 }

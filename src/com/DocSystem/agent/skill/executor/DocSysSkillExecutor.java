@@ -55,8 +55,13 @@ public class DocSysSkillExecutor implements SkillExecutor {
      * Updated to match SubAgent.getCategory() aliases (lines 91-118).
      */
     private static final Set<String> BUILT_IN_SKILL_IDS = new HashSet<>(Arrays.asList(
-        // System skills（DocSys 自有能力已全部下线，改由工具承担；此处只保留非 DocSys 技能）
-        "help", "system_help", "help-repos", "help-docs", "help-search",
+        // System skills：R3-11（2026-09-20 用户裁定）已全部下线 —— help/system_help/help-repos/help-docs/help-search
+        // 都不再被任何执行器接管。理由：
+        //   ① system_help 返回的“工具速查 + 约定”与工具 schema 重复（模型手上已经有了，实测用途不大）；
+        //   ② 三个 sibling 压根没注册（模型看不见），内容还是 docId 时代的 CLI（`create-repos`、
+        //      `delete-doc <vid> <docId>`、`search <query> [vid]`）—— 工具名不存在、docId 定位已在 R1-6 下线；
+        //   ③ 磁盘演示件是编造的（教你去跑不存在的 CLI / 不存在的 HTTP 端点 / 占位凭据）。
+        // 现在调用它们会得到明确的“未知技能”（P3b 口径），比给过期内容安全。
         "banner",
         // Web automation skills
         "playwright", "web_automation",
@@ -73,13 +78,7 @@ public class DocSysSkillExecutor implements SkillExecutor {
     public SkillExecutionResult execute(String skillId, Map<String, String> params, AgentContext context) {
         try {
             log.debug("DocSysSkillExecutor handling: {} params={}", skillId, params);
-            // ---------- SYSTEM ----------
-            // R3-2 批 2b：system_help 原来既不在内置白名单、又会被 ExternalSkillExecutor 当成
-            // `docsys help` 命令去跑（dev 无 docsys 可执行文件）→ 必然失败。这里对齐 id。
-            if ("help".equals(skillId) || "system_help".equals(skillId)) return handleHelp();
-            if ("help-repos".equals(skillId)) return handleHelpRepos();
-            if ("help-docs".equals(skillId)) return handleHelpDocs();
-            if ("help-search".equals(skillId)) return handleHelpSearch();
+            // ---------- SYSTEM（R3-11：help/system_help 已删除，此处不再有 SYSTEM 分支）----------
             if ("banner".equals(skillId)) return handleBanner(params.get("name"));
             // ---------- WEB AUTOMATION (stubs for now) ----------
             if ("playwright".equals(skillId) || "web_automation".equals(skillId)) return handlePlaywright(params);
@@ -95,85 +94,14 @@ public class DocSysSkillExecutor implements SkillExecutor {
 
     // ==================== SYSTEM HANDLERS ====================
 
-    private SkillExecutionResult handleHelp() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("DocSys Agent 能力速查（当前实现，2026-09-20）\n\n");
-        sb.append("【仓库】list_repos（无参，先拿 vid）/ get_repos(vid) / create_repos(name,path)\n");
-        sb.append("         delete_repos(vid) / update_repos(vid[,name,info,path]) / backup_repos(vid[,backupStorePath])\n");
-        sb.append("         query_backup_status(taskId)  ← taskId 取自 backup_repos 回执\n\n");
-        sb.append("【目录与文档】list_docs(vid[,path]) / get_doc(vid,path,name[,offset,maxChars])\n");
-        sb.append("         get_doc_history(vid,path,name) / get_doc_share_list([path,name])\n");
-        sb.append("         create_folder(vid,path,name) / write_file(vid,path,name,content) / write_note(vid,path,name,content)\n");
-        sb.append("         delete_doc(vid,path,name) / rename_doc(vid,path,name,dstName)\n");
-        sb.append("         move_doc(vid,srcPath,srcName,dstPath[,dstName]) / copy_doc(同上)\n");
-        sb.append("         create_doc_share(vid,path,name[,sharePwd,shareHours])\n\n");
-        sb.append("【搜索】search_files(vid,query[,path,maxResults])  ← 全文索引，query 是 JSON 条件\n");
-        sb.append("         grep_files(vid,pattern[,path,maxResults])  ← 磁盘逐行扫描，索引没建时用它\n\n");
-        sb.append("【关键约定】\n");
-        sb.append("  1) 定位一律用 path+name（path = 所在目录的相对路径，以 / 结尾；仓库根目录传空串 \"\"）\n");
-        sb.append("  2) docId 是派生值、会随移动/重命名失效，不要用它定位\n");
-        sb.append("  3) 写入/删除/改名/移动/分享/备份/技能 都需要用户确认后才执行\n");
-        sb.append("  4) 长文本分次读：get_doc 表头会给总长，页脚会给下一次的 offset\n");
-        sb.append("  5) 找不到文件时：先 search_files，搜不到再 grep_files（索引可能还没建）\n\n");
-        sb.append("【技能】run_skill(skillId[,params]) —— 可用技能见 run_skill 工具描述\n");
-        sb.append("【联网】web_search(query[,maxResults])\n");
-        sb.append("【附件】attachment(action=list|read[,name]) —— 读本轮上传的临时附件\n");
-        sb.append("【记忆】memory_set(key,value) / memory_get(key) / memory_list —— 跨会话偏好\n");
-        return SkillExecutionResult.ok(sb.toString());
-    }
-
-    private SkillExecutionResult handleHelpRepos() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Repository Commands:\n\n");
-        sb.append("  list-repos                          - List accessible repositories\n");
-        sb.append("  create-repos <name> <desc> <path> [type] [verCtrl]\n");
-        sb.append("                                          - Create new repository\n");
-        sb.append("    name: Repository name (required)\n");
-        sb.append("    desc: Description (optional)\n");
-        sb.append("    path: Storage path (required, e.g., F:/data/myrepo)\n");
-        sb.append("    type: 0=local (default), 1=remote storage\n");
-        sb.append("    verCtrl: 0=none, 1=SVN, 2=GIT (default: 0)\n\n");
-        sb.append("  delete-repos <vid>                  - Delete repository (by ID)\n");
-        sb.append("  repos-info <vid>                    - Get repository details\n");
-        sb.append("  backup <vid> [path]                 - Trigger full backup\n");
-        sb.append("  backup-status <taskId>              - Check backup status\n\n");
-        sb.append("Example:\n");
-        sb.append("  create-repos MyProject \"Project files\" F:/data/myrepo 0 1\n");
-        return SkillExecutionResult.ok(sb.toString());
-    }
-
-    private SkillExecutionResult handleHelpDocs() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Document Commands:\n\n");
-        sb.append("  list-docs <vid> [pid] [path]      - List documents in folder\n");
-        sb.append("    vid: Repository ID (required)\n");
-        sb.append("    pid: Parent folder ID (optional, default: 0 = root)\n");
-        sb.append("    path: Path in repository (optional)\n\n");
-        sb.append("  add-doc <vid> <name> [pid] [type] - Add new document\n");
-        sb.append("    vid: Repository ID (required)\n");
-        sb.append("    name: Document name (required)\n");
-        sb.append("    pid: Parent folder ID (optional)\n");
-        sb.append("    type: 0=file, 1=folder (default: 0)\n\n");
-        sb.append("  delete-doc <vid> <docId>          - Delete document\n");
-        sb.append("  rename-doc <vid> <docId> <newName> - Rename document\n");
-        sb.append("  get-doc <vid> <docId>             - Get document details\n");
-        sb.append("  download-doc <vid> <docId>         - Download document\n");
-        sb.append("  doc-history <vid> <docId>          - Get version history\n");
-        return SkillExecutionResult.ok(sb.toString());
-    }
-
-    private SkillExecutionResult handleHelpSearch() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Search Commands:\n\n");
-        sb.append("  search <query> [vid]              - Full-text search\n");
-        sb.append("    query: Search keyword (required)\n");
-        sb.append("    vid: Repository ID to search (optional, searches all if omitted)\n\n");
-        sb.append("  Note: Requires textSearch enabled on repository\n\n");
-        sb.append("Example:\n");
-        sb.append("  search \"meeting notes\"\n");
-        sb.append("  search \"report\" 1\n");
-        return SkillExecutionResult.ok(sb.toString());
-    }
+    // R3-11（2026-09-20 用户裁定）：整族 help 技能已删除 —— handleHelp / handleHelpRepos / handleHelpDocs /
+    // handleHelpSearch 全部移除，id（help、system_help、help-repos、help-docs、help-search）也不再被任何执行器接管。
+    //   · handleHelp 返回的“工具速查 + 5 条约定”与工具 schema 重复（模型手上已有），实测用途不大；
+    //     那 5 条约定逐条都在工具描述里有对应表述（path/name 定位、get_doc 续读、search→grep、写操作确认、
+    //     docId 已从参数面移除），所以删除不丢信息；
+    //   · 另三个返回的是 docId 时代的 CLI 命令表（create-repos / delete-doc <vid> <docId> / search <query> [vid]），
+    //     工具名不存在、docId 定位已在 R1-6 下线 —— 留着只会把模型引回废弃用法。
+    // 现在调用它们会得到明确的“未知技能”（P3b 验收口径），比给过期内容安全。
 
     private SkillExecutionResult handleBanner(String name) {
         if (name == null || name.isEmpty()) {

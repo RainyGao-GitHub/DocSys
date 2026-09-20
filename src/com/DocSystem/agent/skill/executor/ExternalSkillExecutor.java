@@ -60,8 +60,8 @@ public class ExternalSkillExecutor implements SkillExecutor {
     private static final Logger log = LoggerFactory.getLogger(ExternalSkillExecutor.class);
 
     private static final Set<String> BUILT_IN_SKILL_IDS = new HashSet<>(Arrays.asList(
-        // System skills
-        "help", "system_help", "help-repos", "help-docs", "help-search",
+        // System skills（R3-11：help/system_help/help-repos/help-docs/help-search 已随内置实现一并删除，
+        // 这里不再列入排除集 —— 否则将来真有一个外部技能叫这些名字会被无故挡住）
         "banner",
         "init-llm", "init-auth",
         // Web automation skills

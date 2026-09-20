@@ -113,8 +113,8 @@ public class SubAgent {
         if ("backup_repos".equals(taskType) || "backup".equals(taskType) || "backup_status".equals(taskType) || "lock_doc".equals(taskType) || "lock-doc".equals(taskType) || "unlock_doc".equals(taskType) || "unlock-doc".equals(taskType)) {
             return ToolCategory.TOOLOPS;
         }
-        // SysOps
-        if ("config".equals(taskType) || "system-config".equals(taskType) || "help".equals(taskType) || "help-repos".equals(taskType) || "help-docs".equals(taskType) || "help-search".equals(taskType) || "banner".equals(taskType)) {
+        // SysOps（R3-11：help/help-repos/help-docs/help-search 已下线，不再属于任何分类）
+        if ("config".equals(taskType) || "system-config".equals(taskType) || "banner".equals(taskType)) {
             return ToolCategory.SYSOPS;
         }
         // BrowserOps
@@ -207,17 +207,10 @@ public class SubAgent {
                 result = handleBackupRepos(docSysClient, params.get("vid"), params.get("path"));
             } else if ("backup_status".equals(taskType)) {
                 result = handleBackupStatus(docSysClient, params.get("taskId"));
-            // ========== SYSTEM COMMANDS ==========
+            // ========== SYSTEM COMMANDS ==========（R3-11：help/help-repos/help-docs/help-search 已整族删除；
+            // 这些 taskType 现在落到 DEFAULT → handleUnknownTask → SkillExecutorRegistry 报“未知技能”）==========
             } else if ("config".equals(taskType) || "system-config".equals(taskType)) {
                 result = handleGetConfig(docSysClient);
-            } else if ("help".equals(taskType) || "?".equals(taskType)) {
-                result = handleHelp();
-            } else if ("help-repos".equals(taskType)) {
-                result = handleHelpRepos();
-            } else if ("help-docs".equals(taskType)) {
-                result = handleHelpDocs();
-            } else if ("help-search".equals(taskType)) {
-                result = handleHelpSearch();
             } else if ("init-llm".equals(taskType)) {
                 result = handleInitLlm(docSysClient);
             } else if ("init-auth".equals(taskType)) {
@@ -1006,107 +999,6 @@ public class SubAgent {
         }
     }
     
-    // ========== HELP HANDLERS ==========
-private AgentResponse handleHelp() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("DocSys Agent CLI Commands:\n\n");
-        sb.append("User Management:\n");
-        sb.append("  login <user> <pwd>              - Login to DocSystem\n");
-        sb.append("  logout                          - Logout\n");
-        sb.append("  whoami                          - Show current user info\n\n");
-        sb.append("Repository Management:\n");
-        sb.append("  list-repos                      - List all repositories\n");
-        sb.append("  create-repos <name> [desc] [path] [type] [verCtrl]  - Create new repository\n");
-        sb.append("  delete-repos <vid>              - Delete repository by ID\n");
-        sb.append("  repos-info <vid>                - Get repository details\n");
-        sb.append("  backup <vid> [path]             - Backup repository\n\n");
-        sb.append("Document Operations:\n");
-        sb.append("  list-docs <vid> [pid] [path]   - List documents in repository\n");
-        sb.append("  add-doc <vid> <name> [pid]     - Add document to repository\n");
-        sb.append("  delete-doc <vid> <docId>       - Delete document\n");
-        sb.append("  rename-doc <vid> <docId> <newName> - Rename document\n");
-        sb.append("  get-doc <vid> <docId>           - Get document details\n");
-        sb.append("  download-doc <vid> <docId>     - Download document\n");
-        sb.append("  doc-history <vid> <docId>      - Get version history\n\n");
-        sb.append("Search:\n");
-        sb.append("  search <query> [vid]           - Search documents\n\n");
-        sb.append("AI/Chat:\n");
-        sb.append("  chat <message> [model]        - Chat with AI\n");
-        sb.append("  chat-with-docs <query> [model] - Chat with document context\n");
-        sb.append("  ai-models                       - List available AI models\n\n");
-        sb.append("Help:\n");
-        sb.append("  help-repos                     - Repository commands help\n");
-        sb.append("  help-docs                      - Document commands help\n");
-        sb.append("  help-search                    - Search commands help\n\n");
-        sb.append("Examples:\n");
-        sb.append("  login admin admin2026\n");
-        sb.append("  list-repos\n");
-        sb.append("  create-repos MyProject \"My project\" F:/data/myrepo 0 0\n");
-        sb.append("  list-docs 1\n");
-        sb.append("  search \"important\"\n");
-        sb.append("  chat \"list my documents\"\n");
-        return AgentResponse.ok(sb.toString());
-    }
-
-    private AgentResponse handleHelpRepos() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Repository Commands:\n\n");
-        sb.append("  list-repos                          - List accessible repositories\n");
-        sb.append("  get-manager-repos                   - List all repos (admin only)\n");
-        sb.append("  create-repos <name> <desc> <path> [type] [verCtrl]\n");
-        sb.append("                                          - Create new repository\n");
-        sb.append("    name: Repository name (required)\n");
-        sb.append("    desc: Description (optional)\n");
-        sb.append("    path: Storage path (required, e.g., F:/data/myrepo)\n");
-        sb.append("    type: 0=local (default), 1=remote storage\n");
-        sb.append("    verCtrl: 0=none, 1=SVN, 2=GIT (default: 0)\n\n");
-        sb.append("  delete-repos <vid>                  - Delete repository (by ID)\n");
-        sb.append("  repos-info <vid>                    - Get repository details\n");
-        sb.append("  update-repos <vid> <field=value>   - Update repository\n\n");
-        sb.append("  backup <vid> [path]                 - Trigger full backup\n");
-        sb.append("  backup-status <taskId>              - Check backup status\n\n");
-        sb.append("Example:\n");
-        sb.append("  create-repos MyProject \"Project files\" F:/data/myrepo 0 1\n");
-        return AgentResponse.ok(sb.toString());
-    }
-
-    private AgentResponse handleHelpDocs() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Document Commands:\n\n");
-        sb.append("  list-docs <vid> [pid] [path]      - List documents in folder\n");
-        sb.append("    vid: Repository ID (required)\n");
-        sb.append("    pid: Parent folder ID (optional, default: 0 = root)\n");
-        sb.append("    path: Path in repository (optional)\n\n");
-        sb.append("  add-doc <vid> <name> [pid] [type] - Add new document\n");
-        sb.append("    vid: Repository ID (required)\n");
-        sb.append("    name: Document name (required)\n");
-        sb.append("    pid: Parent folder ID (optional)\n");
-        sb.append("    type: 0=file, 1=folder (default: 0)\n\n");
-        sb.append("  delete-doc <vid> <docId>          - Delete document\n");
-        sb.append("    vid: Repository ID (required)\n");
-        sb.append("    docId: Document ID (required)\n\n");
-        sb.append("  rename-doc <vid> <docId> <newName> - Rename document\n\n");
-        sb.append("  move-doc <vid> <docId> <dstPid>   - Move document\n\n");
-        sb.append("  copy-doc <vid> <docId> <dstPid>   - Copy document\n\n");
-        sb.append("  get-doc <vid> <docId>             - Get document details\n\n");
-        sb.append("  download-doc <vid> <docId>        - Download document\n\n");
-        sb.append("  doc-history <vid> <docId>         - Get version history\n");
-        return AgentResponse.ok(sb.toString());
-    }
-
-    private AgentResponse handleHelpSearch() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Search Commands:\n\n");
-        sb.append("  search <query> [vid]              - Full-text search\n");
-        sb.append("    query: Search keyword (required)\n");
-        sb.append("    vid: Repository ID to search (optional, searches all if omitted)\n\n");
-        sb.append("  Note: Requires textSearch enabled on repository\n\n");
-        sb.append("Example:\n");
-        sb.append("  search \"meeting notes\"\n");
-        sb.append("  search \"report\" 1\n");
-        return AgentResponse.ok(sb.toString());
-    }
-
     private AgentResponse handleBanner(String name) {
         if (name == null || name.isEmpty()) {
             StringBuilder sb = new StringBuilder();

@@ -68,11 +68,9 @@ public class SkillManager {
      * Load built-in skills (always available)
      */
     private void loadBuiltInSkills() {
-        // ========== System Skills ==========（DocSys 自有能力已全部下线，改由工具承担）
-        registerSkill(new Skill("system_help", "Help",
-            "Show available commands and help. Aliases: help, 帮助, ?",
-            "system", "read"));
-
+        // ========== System Skills ==========（R3-11：help/system_help 已整族下线 —— 速查内容与工具 schema 重复；
+        // 人类“命令帮助”对话框列的是其余真实技能，不再需要一条 Help 条目）
+        //
         // ========== Web Automation Skills ==========
         registerSkill(new Skill("playwright", "Playwright Browser Automation",
             "Open URLs, take screenshots, interact with web pages using Playwright. " +
