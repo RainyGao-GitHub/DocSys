@@ -479,7 +479,7 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
 - **验证**：护栏 `TestWriteConfirmGateCoverage` **13 → 27**；页面 E2E 两次弹窗均带参数行：
   `write_file` → `参数：vid=5；path=66666/；name=modal_probe_….md；content=确认弹窗参数验证`；
   `delete_doc` → `参数：vid=5；path=66666/；name=modal_probe_….md`。
-- 已提交：见下方「未提交改动」
+- 已提交 `560c933a6`（R3-9）
 
 ## 全阶段完成情况
 
@@ -497,9 +497,8 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- R3-9 待提交：`src/com/DocSystem/agent/tool/AuditWriteConfirmGate.java`、
-  `src/com/DocSystem/agent/tool/TestWriteConfirmGateCoverage.java`、`devDocs/Agent工具与接口可靠性计划.md`、本工作卡
-- 已提交：R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R3-9 已提交 `560c933a6`）
+- 已提交：R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
