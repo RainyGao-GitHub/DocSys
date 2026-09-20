@@ -412,6 +412,23 @@
 
 **批 2 完成**：写回执与条件工具的体检已全部做完（剩 R3-3 的遗留项转入 R3-11/12）。
 
+#### R3-9 确认弹窗显示参数（✅ 2026-09-20 已修）
+- **问题**（连续三轮页面 E2E 印证）：弹窗只写 `此操作将执行写操作 [delete_repos]，是否继续？`——
+  用户看不到“到底要删哪个仓库/分享哪个文件”，只能盲批；对外动作（`create_doc_share`）尤其危险。
+- **根因**：`AuditWriteConfirmGate.confirm(toolName, args)` **手上就有 args**，但只把工具名拼进了文案（SSE 也不带参数）。
+- **修**：新增 `summarizeArgs(args)` 并拼进确认文案（弹窗的 `.confirm-msg` 本来就是 `white-space: pre-wrap`，多行能正常显示）：
+  - 敏感键（`pwd`/`sharePwd`/`token`/`apiKey`…）→ `***`；
+  - 长值（> 60 字符）→ **只给长度** `<1234 字符>`（写 1MB 文件不能把正文堆进弹窗）；
+  - 空值跳过、换行压平、整串预算 400 字符。
+- **验收（已过）**：
+  - 护栏 `TestWriteConfirmGateCoverage` **13 → 27**（新增 14 条：短值原样/长文本只给长度/不含正文/敏感键脱敏/不含原文/
+    空值与 null 跳过/空参/null 不炸/换行压平/总预算/源码 lint 确认文案拼了摘要）；
+  - **页面 E2E**：`write_file` 弹窗 → `参数：vid=5；path=66666/；name=modal_probe_…md；content=确认弹窗参数验证`；
+    `delete_doc` 弹窗 → `参数：vid=5；path=66666/；name=modal_probe_…md`（两次均 `hasParamLine=true`）。
+
+#### R3-10 跨仓库按路径/名字找（⬜ 待做）
+- 模型为了找 `66666/` 在哪个仓库连调 6 次 `list_docs`。候选方案：新增 `find_doc(path,name)`，或让 `list_docs` 在缺 `vid` 时跨仓库搜索。
+
 #### R3-3 `run_skill` 对已下线 DocSys 能力的表现
 - P3b 验收标准里写了"`run_skill("<DocSys能力>")` 应明确报 No executor"，但**未实测**。→ 补一次页面验证并记录。
 
@@ -448,7 +465,7 @@
 |---|---|---|---|
 | **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 ✅ → **R1-6 定位全面 path/name ✅** → **R1-5 list_repos ✅** → **R1-2 create_doc_share ✅** → **R1-3 get_doc_share_list ✅** → R2（统一输出/大结果）→ R3 | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
-| **R3** | R3-0（体检暴露的系统性缺陷，已修）→ R3-2 批 1（仓库/备份/当前用户 7 个）✅ → R3-1 命名 ✅ → R3-2 批 2a（写回执 + 写确认门安全洞）✅ → R3-2 批 2b（memory/attachment/web_search）→ R3-3 run_skill → R3-9/10 → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
+| **R3** | R3-2 全工具体检（批 1/2a/2b 全 ✅）→ R3-1 命名 ✅ → R3-3 run_skill ✅ → **R3-9 确认弹窗 ✅** → R3-10 跨仓库找 → R3-11/12 遗留 → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
 
 > 每完成一项：更新本文状态列 → 更新工作卡"当前进展/未提交改动" → 提交（`devInt` 主干）。
 
@@ -457,7 +474,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R3-2 批 2b 后，**23 套 / 949 项断言全绿**）：`TestSkillExecEncoding 34` / `TestWriteConfirmGateCoverage 13` / `TestWriteReceiptFormat 47` / `TestReposToolsFormat 46` / `TestToolRegistry 36` / `TestToolOutputContract 82` / `TestListReposFormat 50` / `TestListDocsFormat 25` / `TestDocShareFormat 60` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestWriteTools 52` / `TestAgentSearchWriteTools 56` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestLockRetry 13` / `TestToolUseLoop 36` / `TestToolUseLoopNative 17` / `TestToolUseLoopStreaming 26` / `TestToolSchemaBuilder 7`
+   - 现基线（2026-09-20 R3-9 后，**23 套 / 963 项断言全绿**）：`TestWriteConfirmGateCoverage 27` / `TestSkillExecEncoding 34` / `TestWriteReceiptFormat 47` / `TestReposToolsFormat 46` / `TestToolRegistry 36` / `TestToolOutputContract 82` / `TestListReposFormat 50` / `TestListDocsFormat 25` / `TestDocShareFormat 60` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestWriteTools 52` / `TestAgentSearchWriteTools 56` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestLockRetry 13` / `TestToolUseLoop 36` / `TestToolUseLoopNative 17` / `TestToolUseLoopStreaming 26` / `TestToolSchemaBuilder 7`
    - 注意 `TestAgentFocusSupport` 在 `com.DocSystem.agent.focus` 包，其余在 `com.DocSystem.agent.tool`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolPathE2E` `ReposListE2E` `ShareToolE2E` `OutputContractE2E` `MatchProbe` `TotalProbe` `SearchProbe2`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
@@ -522,5 +539,5 @@
 | R3-6 | P2 | 新工具上线检查单（流程固化） | ⬜ | |
 | R3-7 | P2 | `getLoginUser()` 自写响应 → 双写隐患 | ⬜ | |
 | R3-8 | P2 | 移除 `isLockBusy` 文案兜底（R1-1 收尾） | ⬜ | |
-| R3-9 | P2 | 确认弹窗只显示工具名、不显示参数（R2 页面 E2E 发现） | ⬜ | 对外动作（`create_doc_share`）用户看不到到底在分享哪个文件；属安全/可信问题 |
+| R3-9 | P2 | 确认弹窗只显示工具名、不显示参数（R2 页面 E2E 发现） | ✅ | 加 `summarizeArgs`（脉敏 + 长值只给长度）；护栏 13→27，页面 E2E 两次弹窗均带参数行 |
 | R3-10 | P2 | 无“跨仓库按路径/名字找”的能力（R2 页面 E2E 发现） | ⬜ | 模型为了找 `66666/` 在哪个仓库连调 6 次 `list_docs`；考虑 `find_doc(path,name)` 或让 `list_docs` 支持不传 vid |

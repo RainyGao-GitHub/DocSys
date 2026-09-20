@@ -469,6 +469,18 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
 - 页面 E2E：`attachment list/read` 与 `run_skill(system_help)` 均成功且输出可读；模型知实指出“【关键约定】实际有 5 条，不是你说的三条”。
 - 已提交 `9c98af6d8`（R3-2 批 2b / R3-3）
 
+## R3-9：确认弹窗显示参数（2026-09-20）
+
+- **问题**（连续三轮页面 E2E 印证）：弹窗只写“此操作将执行写操作 [delete_repos]，是否继续？”——
+  用户看不到到底要删哪个仓库 / 分享哪个文件，只能盲批。
+- **根因**：`AuditWriteConfirmGate.confirm(toolName, args)` **手上就有 args**，但只把工具名拼进了文案。
+- **修**：新增 `summarizeArgs(args)` 拼进确认文案（`.confirm-msg` 本就是 `pre-wrap`，多行正常显示）：
+  敏感键（pwd/sharePwd/token/apiKey…）→ `***`；长值（>60 字符）→ **只给长度** `<N 字符>`；空值跳过；换行压平；总预算 400。
+- **验证**：护栏 `TestWriteConfirmGateCoverage` **13 → 27**；页面 E2E 两次弹窗均带参数行：
+  `write_file` → `参数：vid=5；path=66666/；name=modal_probe_….md；content=确认弹窗参数验证`；
+  `delete_doc` → `参数：vid=5；path=66666/；name=modal_probe_….md`。
+- 已提交：见下方「未提交改动」
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -480,12 +492,13 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 - **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 ✅**；**R1-5 ✅**；**R1-2 ✅ / R1-3 ✅**；R1 全部完成
 - **R2（P1）**：**R2-1 ✅ / R2-2 ✅ / R2-3 ✅ / R2-4 ✅（本轮）** — 剩余：写操作回执类仍为 `fmt()` 整包 JSON，归入 R3-2 工具体检一并做
-- **R3（P2）**：**R3-2 批 1 / 批 2a / 批 2b ✅、R3-1 ✅、R3-3 ✅（本轮）**；下一步 **R3-9** 确认弹窗显示参数 → **R3-10** 跨仓库按路径/名字找 → **R3-11** system_help 演示件清理 → **R3-12** web_search 摘要 HTML 实体 → R3-4/5 清理裁定 → R3-6 检查单
+- **R3（P2）**：**R3-2 批 1/2a/2b ✅、R3-1 ✅、R3-3 ✅、R3-9 ✅（本轮）**；下一步 **R3-10** 跨仓库按路径/名字找 → **R3-11** system_help 演示件清理 → **R3-12** web_search 摘要 HTML 实体 → R3-4/5 清理裁定 → R3-6 检查单
   新增两条（R2 页面 E2E 发现）：**R3-9 确认弹窗只显示工具名不显示参数**、**R3-10 缺“跨仓库按路径/名字找”能力**
 
 ## 未提交改动
 
-- 无（R3-2 批 2b 已提交 `9c98af6d8`）
+- R3-9 待提交：`src/com/DocSystem/agent/tool/AuditWriteConfirmGate.java`、
+  `src/com/DocSystem/agent/tool/TestWriteConfirmGateCoverage.java`、`devDocs/Agent工具与接口可靠性计划.md`、本工作卡
 - 已提交：R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 

@@ -74,21 +74,79 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
         }
 
         // 2. 推送确认事件到前端（SSE）；无通道时记录日志
+        //    R3-9：原来只给“[工具名]，是否继续？”——用户看不到到底要动哪个对象（删哪个文件/分享哪个文件），
+        //    只能盲批。这里把参数整理成一句人话摘要附在文案里（弹窗的 .confirm-msg 是 pre-wrap，能显示换行）。
+        String summary = summarizeArgs(args);
         String message = "此操作将执行写操作 [" + toolName + "]，是否继续？";
+        if (!summary.isEmpty()) {
+            message = message + "\n参数：" + summary;
+        }
         try {
             confirmEventSink.onConfirmRequired(toolName, confirmToken, message);
         } catch (Exception e) {
             log.warn("Confirm event push failed for '{}' (token still in log): {}", toolName, e.getMessage());
         }
-        log.warn("Write operation '{}' requires confirmation. confirmToken={} — approve via POST /agent/confirm "
-                + "{\"confirmToken\":\"...\",\"action\":\"approve\"} within {}s", toolName, confirmToken, timeoutSeconds);
+        log.warn("Write operation '{}' requires confirmation. params=[{}] confirmToken={} — approve via POST /agent/confirm "
+                + "{\"confirmToken\":\"...\",\"action\":\"approve\"} within {}s",
+                toolName, summary, confirmToken, timeoutSeconds);
 
         // 3. 轮询等待批准
         return waitForApproval(confirmToken, timeoutSeconds);
     }
 
-    private boolean waitForApproval(String confirmToken, long timeoutSeconds) {
-        long deadline = System.currentTimeMillis() + timeoutSeconds * 1000L;
+    /** 确认文案里单个参数值最多展示的字符数（超过则只给长度） */
+    static final int ARG_VALUE_MAX = 60;
+
+    /** 确认文案里参数摘要的总预算 */
+    static final int ARG_SUMMARY_MAX = 400;
+
+    /** 需要脱敏的参数键（只显示 ***） */
+    private static final java.util.Set<String> SECRET_KEYS = new java.util.HashSet<>(java.util.Arrays.asList(
+            "pwd", "password", "passwd", "sharepwd", "token", "apikey", "api_key", "secret",
+            "authorization", "cookie", "jsessionid"));
+
+    /**
+     * 把工具参数整理成“给人看”的摘要（R3-9）。
+     *
+     * <p>规则：
+     * <ul>
+     *   <li>敏感键（pwd/sharePwd/token/apiKey…）→ 只显示 <code>***</code>；</li>
+     *   <li>空值跳过；长值（> {@link #ARG_VALUE_MAX}）**只给长度** <code>&lt;1234 字符&gt;</code>——
+     *       写文件/写备注的正文、run_skill 的 params 都不应该堵满弹窗；</li>
+     *   <li>整体不超过 {@link #ARG_SUMMARY_MAX}（超了加省略号）。</li>
+     * </ul>
+     * 例：`vid=5；path=66666/；name=a.txt；content=<15 字符>`
+     */
+    static String summarizeArgs(JSONObject args) {
+        if (args == null || args.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Object> e : args.entrySet()) {
+            String key = e.getKey();
+            Object raw = e.getValue();
+            if (raw == null || String.valueOf(raw).isEmpty()) {
+                continue;
+            }
+            String value;
+            if (SECRET_KEYS.contains(key.toLowerCase())) {
+                value = "***";
+            } else {
+                String s = String.valueOf(raw).replace("\n", " ").replace("\r", " ").trim();
+                value = s.length() > ARG_VALUE_MAX ? "<" + s.length() + " 字符>" : s;
+            }
+            if (sb.length() > 0) {
+                sb.append("；");
+            }
+            sb.append(key).append('=').append(value);
+            if (sb.length() > ARG_SUMMARY_MAX) {
+                return sb.substring(0, ARG_SUMMARY_MAX) + "…";
+            }
+        }
+        return sb.toString();
+    }
+
+    private boolean waitForApproval(String confirmToken, long timeoutSeconds) {        long deadline = System.currentTimeMillis() + timeoutSeconds * 1000L;
         int pollIntervalMs = 500;
         while (System.currentTimeMillis() < deadline) {
             try {
