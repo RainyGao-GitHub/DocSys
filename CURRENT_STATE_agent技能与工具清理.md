@@ -467,7 +467,7 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
 ### 验证
 - 护栏 `TestSkillExecEncoding` **34/34**；全量 **23 套 / 949 项**全绿。
 - 页面 E2E：`attachment list/read` 与 `run_skill(system_help)` 均成功且输出可读；模型知实指出“【关键约定】实际有 5 条，不是你说的三条”。
-- 已提交：见下方「未提交改动」
+- 已提交 `9c98af6d8`（R3-2 批 2b / R3-3）
 
 ## 全阶段完成情况
 
@@ -485,11 +485,8 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- R3-2 批 2b 待提交：`src/com/DocSystem/agent/skill/executor/ExternalSkillExecutor.java`、
-  `src/com/DocSystem/agent/skill/executor/DocSysSkillExecutor.java`、
-  `src/com/DocSystem/agent/skill/executor/TestSkillExecEncoding.java`（新增）、
-  `devDocs/Agent工具与接口可靠性计划.md`、本工作卡
-- 已提交：R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R3-2 批 2b 已提交 `9c98af6d8`）
+- 已提交：R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
