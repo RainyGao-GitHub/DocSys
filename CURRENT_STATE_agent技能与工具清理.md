@@ -173,7 +173,7 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 - `NO_PERMISSION` **只有静态/机制证据，无真实 HTTP 证据**：dev 只有 Admin（超级管理员），注册普通账号被“账号格式不正确/需验证码”挡住。需第二条账号后才能补。
 - 新发现：`docSysErrorLog(<消息含“不存在”>, rt)` **66 处**未打码（Doc 44 / Bussiness 14 / Base 5 / Repos 3）→ 已记为计划的 **R1-1c**（`getDocOfficeLink` 用不存在文件名请求实测就是无码的 `{"msgInfo":"zzz_nofile.txt 不存在！"}`）。
 
-## R1-1c “对象不存在”出口补码（2026-09-20）—— 让模型不再反复试同一个名字
+## R1-1c “对象不存在”出口补码（2026-09-20）—— 让模型不再反复试同一个名字 — ✅ 已提交（主库 `22687f84b`、websocket 库 `b16c72f4`）
 
 ### 打了什么（64 处，按语义分码）
 - `仓库 … 不存在！` → `REPOS_NOT_FOUND`：DocController 31 + BussinessController 5
@@ -201,15 +201,14 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0，先做）**：R1-1 ✅ `eda22474b` → R1-1b ✅ `16ac39a43`/`142c2014` → **R1-1c ✅（待提交）** → R1-4 `get_doc_history` 静默返回仓库根历史 → R1-5 `list_repos` 截断 → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
+- **R1（P0，先做）**：R1-1 ✅ `eda22474b` → R1-1b ✅ `16ac39a43`/`142c2014` → R1-1c ✅ `22687f84b`/`b16c72f4` → **R1-4 `get_doc_history` 静默返回仓库根历史（下一步）** → R1-5 `list_repos` 截断 → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 主仓库 `devInt`（**R1-1c**）：`common/ErrorCode.java`（+SHARE_NOT_FOUND）、`agent/tool/DocSysToolFactory.java`（+SHARE_NOT_FOUND/INTERNAL 提示）、`agent/tool/TestPermissionErrorCoding.java`（+不存在类 lint）、`controller/{DocController,BaseController,ReposController}.java`、`devDocs/Agent工具与接口可靠性计划.md` + 本卡
-- **websocket 仓库**：`BussinessController.java`
-- 已提交：R1-1b = 主库 `16ac39a43` + websocket `142c2014`；R1-1 = `eda22474b`；工作卡 = `78fae07f3`/`017ea08b7`；CLAUDE.md = `e3d9d9e53`；计划 = `9c675b79a`；move_doc = `b5c85bf9f`；list_docs = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`
+- 无（主库与 websocket 库均干净；R1-1c = 主库 `22687f84b` + websocket `b16c72f4`）
+- 已提交：R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`；工作卡 = `78fae07f3`/`017ea08b7`；CLAUDE.md = `e3d9d9e53`；计划 = `9c675b79a`；move_doc = `b5c85bf9f`；list_docs = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`
 - office 仓库：与本任务无关
 
 ## 生效约束
