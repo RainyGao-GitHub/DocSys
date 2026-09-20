@@ -192,6 +192,30 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 ### 遗留（非 Agent 可达，如实列出）
 - 全树还有 13 处“不存在”出口未打码：`ManageController 5`（banner 配置/用户/日志文件）、`SalesController 3`、`websocket/BusinessChannel 1`、`websocket/OfficeController 4`（Office 预览链路）
 
+## R1-4 / R1-6 试点：文档定位改为 path/name（2026-09-20，用户裁定）
+
+### 用户裁定
+- docId 本质是 `Path.buildDocIdByName(level, path+name)` 的派生 hash，**不是主键**；DocSys 不保证每个文件都有 doc/索引记录 → “由 docId 反查 path/name”不可靠，且 docId 随移动/重命名失效。
+- 因此：**文件操作接口一律用 path/name 定位，docId 退出参数面**；先拿 `get_doc_history` 做试点。
+
+### 试点做了什么
+- 工具 `get_doc_history`：`required {vid, path, name}`，**schema 不再暴露 docId**；描述里写明“不要传 docId”
+- `DocSysClient.getDocHistory()` 增 `path/name/level/type/maxLogNum/commitId`（服务端本来就支持），旧 2 参重载标 `@Deprecated`
+- 新增工具层统一口径：`normalizeDocPath()`（根目录=空串、去前导 `/`、补尾 `/`）、`levelOfDocPath()`（= path 中 `/` 个数）、`childDocPath()`
+- `list_docs` 页脚不再教 docId 下钻，改为 `list_docs(vid=…, path="<子目录名>/")`
+
+### 实测证据（决定性）
+- 改造前（只传真实 docId）：**100 条提交**，首条 `删除 [R11B验证]`（根目录历史）
+- 改造后（path=""+name=test111.txt+level=0）：**2 条提交**，`新增/修改 [test111.txt]` ✓
+- 页面 E2E：`get_doc_history {"vid":5,"path":"","name":"test111.txt"}` 1 步调用就答对
+
+### 试点中发现的硬证据（又一个 docId 参数不生效）
+- `ReposController.getSubDocList` 第 2301 行：`if(path == null) { doc = rootDoc; }` —— **只看 path**，path 为 null 时直接当仓库根目录，docId 根本不读
+- 实测：`vid=5` / `vid=5&docId=102199016117` / `vid=5&pid=102199016117` 都返回 **79 项（根）**；只有 `vid=5&path=66666/` 返回 3 项 → **`list_docs` 的 docId 参数从来没生效过**
+
+### 下一步（R1-6 剩余清单）
+`move_doc`/`copy_doc`（需新增 srcPath/srcName，目标改 path/name）→ `delete_doc`/`rename_doc` 提必填 path+name → `list_docs` 删 docId 参数且输出改 path 为主 → `get_doc`/`write_note` 去 docId → `create_folder`/`write_file` 的 `pid` 改 `path` → `@` 注入块去 docId → 最后删除 `resolveRealDocByDocId` 过渡层
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -201,14 +225,14 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0，先做）**：R1-1 ✅ `eda22474b` → R1-1b ✅ `16ac39a43`/`142c2014` → R1-1c ✅ `22687f84b`/`b16c72f4` → **R1-4 `get_doc_history` 静默返回仓库根历史（下一步）** → R1-5 `list_repos` 截断 → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
+- **R1（P0，先做）**：R1-1 ✅ `eda22474b` → R1-1b ✅ → R1-1c ✅ → **R1-4 ✅（path/name 定位，试点）** → **R1-6 定位全面改 path/name（试点✅，余下见上节清单）** → R1-5 `list_repos` 截断 → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 无（主库与 websocket 库均干净；R1-1c = 主库 `22687f84b` + websocket `b16c72f4`）
-- 已提交：R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`；工作卡 = `78fae07f3`/`017ea08b7`；CLAUDE.md = `e3d9d9e53`；计划 = `9c675b79a`；move_doc = `b5c85bf9f`；list_docs = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`
+- 主仓库 `devInt`（**R1-4/R1-6 试点**）：`agent/client/DocSysClient.java`（getDocHistory 增 path/name/level/type/maxLogNum/commitId，旧重载 @Deprecated）、`agent/tool/DocSysToolFactory.java`（get_doc_history schema 改 {vid,path,name}；新增 normalizeDocPath/levelOfDocPath/childDocPath；list_docs 页脚改 path 口径）、`agent/tool/TestDocHistoryLocator.java`（新增 34 项护栏）、`devDocs/Agent工具与接口可靠性计划.md` + 本卡
+- 已提交：R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`；工作卡 = `78fae07f3`/`017ea08b7`；CLAUDE.md = `e3d9d9e53`；计划 = `9c675b79a`；move_doc = `b5c85bf9f`；list_docs = `10f9e21f8`
 - office 仓库：与本任务无关
 
 ## 生效约束

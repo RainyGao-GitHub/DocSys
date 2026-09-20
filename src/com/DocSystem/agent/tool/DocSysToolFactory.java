@@ -168,15 +168,25 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** R8 版本历史 */
+    /** R8 版本历史（R1-4/R1-6：改用 path+name 定位，不再用 docId） */
     public static ToolDefinition getDocHistory(DocSysClient client) {
         JSONObject props = props(
-                intProp("vid", "仓库ID"),
-                longProp("docId", "文档ID"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "docId"});
-        return ToolDefinition.builder("get_doc_history", "获取文档的版本历史",
-                args -> ToolResult.ok(fmt(client.getDocHistory(args.getInteger("vid"),
-                        args.getLong("docId")))))
+                intProp("vid", "仓库ID（必填）"),
+                strProp("path", "所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
+                strProp("name", "文档/目录名（必填，来自 list_docs 的 name 列）"),
+                intProp("maxLogNum", "最多返回的提交数（可选，默认 100）"),
+                strProp("commitId", "从该 commitId 更早的历史开始取（可选）"));
+        JSONObject schema = objSchema(props, new String[]{"vid", "path", "name"});
+        return ToolDefinition.builder("get_doc_history",
+                "获取文档（或目录）的版本历史。定位用 path+name：path 是它所在目录的相对路径"
+                + "（以 / 结尾，根目录用空串），name 是它自己的名字，两者都从 list_docs 结果里取。"
+                + "不要传 docId：docId 会随移动/重命名失效，而且只传 docId 时服务端会把它当成仓库根目录、"
+                + "静默返回整个仓库的历史（不是该文件的历史）。",
+                args -> ToolResult.ok(fmt(client.getDocHistory(
+                        args.getInteger("vid"), null,
+                        normalizeDocPath(args.getString("path")), args.getString("name"),
+                        levelOfDocPath(args.getString("path")), null,
+                        args.getInteger("maxLogNum"), args.getString("commitId")))))
                 .parameters(schema)
                 .build();
     }
@@ -962,8 +972,8 @@ public class DocSysToolFactory {
         sb.append(body);
         sb.append("\n说明：上表各项的 path 与本目录相同（").append(displayPath(path)).append("），");
         sb.append("读取内容用 get_doc(vid=").append(vid).append(", path=").append(quoted(pathLabel(path)))
-                .append(", name=<名称>)；进入子目录可再调 list_docs(vid=").append(vid)
-                .append(", docId=<该子目录 docId>)。\n");
+                .append(", name=<名称>)；进入子目录用 list_docs(vid=").append(vid)
+                .append(", path=").append(quoted(childDocPath(path, "<子目录名>"))).append(")。\n");
         if (end < total) {
             sb.append("⚠️ 还有 ").append(total - end).append(" 项未显示：继续调用 list_docs 传 offset=")
                     .append(end).append("；或用 search_files/grep_files 按关键字直接找。");
@@ -1002,6 +1012,78 @@ public class DocSysToolFactory {
             sb.append("  docId=").append(str(d.get("docId"))).append("\n");
         }
         return sb.toString();
+    }
+
+    // ==================== 文档定位（R1-6：path/name 优先） ====================
+
+    /**
+     * 归一化"所在目录的相对路径"（工具层对外只暴露这一种写法，避免模型写出五花八门的 path）。
+     *
+     * <ul>
+     *   <li>{@code null} / {@code ""} / {@code "/"} / {@code "./"} → {@code ""}（仓库根目录）</li>
+     *   <li>去掉前导 {@code /}：{@code "/a/b"} → {@code "a/b/"}</li>
+     *   <li>统一补尾斜杠：{@code "66666"} → {@code "66666/"}（服务端 path 约定以 {@code /} 结尾）</li>
+     * </ul>
+     *
+     * <p>为什么必须归一化：服务端 {@code Path.buildDocIdByName(level, path, name)} 把 {@code path+name}
+     * 直接拼在一起算 hash，多一个或少一个斜杠就是**另一个 docId**（不会报错，只会静默定位到错误对象）。
+     */
+    static String normalizeDocPath(String path) {
+        if (path == null) {
+            return "";
+        }
+        String p = path.trim();
+        while (p.startsWith("/")) {
+            p = p.substring(1);
+        }
+        if (p.isEmpty() || ".".equals(p) || "./".equals(p)) {
+            return "";
+        }
+        if (!p.endsWith("/")) {
+            p = p + "/";
+        }
+        return p;
+    }
+
+    /**
+     * 由"所在目录的相对路径"推导层级 level（= path 中 {@code /} 的个数）。
+     *
+     * <p>服务端 {@code buildBasicDoc} 只在 {@code docId == null} 时才用
+     * {@code Path.buildDocIdByName(level, path, name)} 算 docId；它**不会**从 path 反推 level，
+     * 所以 level 传错 = docId 算错 = 静默定位到别的对象（甚至被当成根目录）。
+     *
+     * <p>实测口径：仓库根目录下的项 {@code path=""} → level 0；{@code "66666/"} 下的项 → level 1。
+     */
+    static int levelOfDocPath(String path) {
+        String p = normalizeDocPath(path);
+        int level = 0;
+        for (int i = 0; i < p.length(); i++) {
+            if (p.charAt(i) == '/') {
+                level++;
+            }
+        }
+        return level;
+    }
+
+    /**
+     * 由"当前目录 + 子目录名"得到子目录自己的 path（下钻用）。
+     *
+     * <p>用于替换“用 docId 下钻”的旧口径：模型只需把本目录 path 与子目录名拼上，
+     * 不需要先拿 docId（docId 会因移动/重命名失效，且多一层需服务端反查的环节）。
+     */
+    static String childDocPath(String parentPath, String childName) {
+        String parent = normalizeDocPath(parentPath);
+        if (childName == null) {
+            return parent;
+        }
+        String n = childName.trim();
+        while (n.startsWith("/")) {
+            n = n.substring(1);
+        }
+        while (n.endsWith("/")) {
+            n = n.substring(0, n.length() - 1);
+        }
+        return parent + n + "/";
     }
 
     private static String describeTarget(Integer vid, String path, Long docId) {

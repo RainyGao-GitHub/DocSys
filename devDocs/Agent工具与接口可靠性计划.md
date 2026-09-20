@@ -102,11 +102,46 @@
 - **方案**：明确语义二选一 —— ① 改成"我的分享列表"（去掉必填参数、改描述）；② 若要"某文档的分享"，改调 `/Doc/getDocShare.do`（需核对其参数）或 `getDocShareList` 后按 docId 过滤。
 - **验收**：护栏断言描述与参数一致；页面问"这个文件有哪些分享"能得到正确答案。
 
-#### R1-4 `get_doc_history` 静默返回仓库根的历史
-- **现状**：`get_doc_history` 只传 `vid`+`docId`；服务端 `getDocHistory.do → getRealDocHistory()` 用 `buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, ...)`，**path/name 为空 → 塌缩为仓库根**（与 move_doc 同源缺陷），于是返回"根目录的历史"而不是该文件的历史——**静默错误**，比报错更危险。
-- **方案**：把 R1 的解析能力复用过来 —— 在 `getDocHistory.do`（以及 `getDocShareList` 等同类 doc 接口）用 `resolveRealDocByDocId()` 补全 path/name；工具侧可选加 `path`/`name` 参数。
-- **验收**：对 `test111.txt` 取历史，返回的条目 path/name 指向该文件；护栏 `TestDocHistoryResolve`（或并入现有探针）；页面 E2E 记录一次。
-- **涉及**：`controller/DocController.java`（`getDocHistory.do`）、`agent/tool/DocSysToolFactory.java`
+#### R1-4 `get_doc_history` 静默返回仓库根的历史 — ✅ 已完成（2026-09-20，**按 path/name 定位实现，不再走 docId 反查**）
+- **现状（改造前）**：`get_doc_history` 只传 `vid`+`docId`；服务端 `getRealDocHistory()` 用 `buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, ...)`，**path/name 为空 → 塌缩为仓库根** → `doc.getDocId()==0` → `queryCommitHistory()` 走"仓库根目录"分支，返回整个仓库的历史且 `status=ok`——**静默错误**，比报错更危险。
+- **实测证据（改造前）**：`reposId=5&docId=102077805632`（test111.txt 的真实 docId）→ **100 条提交**，首条 `删除 [R11B验证]`（根目录的历史），`commitMsg` 含 `test111.txt` 的条目 **0** 条。
+- **方案（用户裁定：path/name 优先，不做 docId 反查）**：
+  - 工具 `get_doc_history` 改为 `required {vid, path, name}`，**schema 不再暴露 docId**；描述里明确"不要传 docId，只传 docId 会静默返回仓库根历史"。
+  - `DocSysClient.getDocHistory()` 增加 `path/name/level/type/maxLogNum/commitId` 参数（服务端本来就支持），旧 2 参重载标 `@Deprecated` 留给 SubAgent/CLI。
+  - 工具层新增统一口径：`normalizeDocPath()`（根目录 = 空串、去掉前导 `/`、补齐尾 `/`）与 `levelOfDocPath()`（= path 中 `/` 的个数），因为服务端 `buildBasicDoc` **不会**从 path 反推 level，level 错 = docId 算错 = 静默定位到别的对象。
+- **实测证据（改造后）**：`reposId=5&path=""&name=test111.txt&level=0` → **2 条提交**，`新增 [test111.txt]` + `修改 [test111.txt]`（commitMsg 命中 2/2）✓；子目录空文件 `66666/1111.txt` → 0 条（该文件确无提交）。
+- **验证口径**：护栏 `TestDocHistoryLocator` **34/34**（path 归一化 10 项 / level 推导 7 项 / childDocPath 4 项 / 线上 docId 指纹 3 项 / schema 7 项 / 页脚口径 3 项）；真实 HTTP 探针 `DocHistoryProbe.ps1`；**页面 E2E**：`get_doc_history {"vid":5,"path":"","name":"test111.txt"}` 1 步工具调用 → 回答"2 条提交，最近一次 修改 [test111.txt]" ✓
+
+#### R1-6 定位方式全面改为 path/name（用户裁定，**试点 = get_doc_history 已完成**）
+- **用户裁定（2026-09-20）**：docId 是 `Path.buildDocIdByName(level, path+name)` 算出的**派生 hash**，不是主键；DocSys 不保证每个文件都有 doc/索引记录，所以"由 docId 反查 path/name"只能靠穷举兜底，而且 docId 随移动/重命名失效。**结论：文件操作接口一律用 path/name 定位，docId 退出参数面。**
+- **本次试点（get_doc_history）✅**：见 R1-4。已顺带统一 `list_docs` 页脚口径（原"进入子目录可再调 list_docs(vid=…, docId=…)"→ 改为 `list_docs(vid=…, path="<子目录名>/")`）。
+- **试点中发现的第 3 个"docId 参数实际不生效"证据**：`ReposController.getSubDocList`（第 2301 行）
+  ```java
+  Doc doc = null;
+  if(path == null) { ...doc = rootDoc; }        // ← 只看 path：path==null 直接当仓库根目录，docId 根本不读
+  if(doc == null) { doc = buildBasicDoc(repos.getId(), docId, null, reposPath, path, name, null, 2, ...); }
+  ```
+  实测：`vid=5` / `vid=5&docId=102199016117` / `vid=5&pid=102199016117` **都返回 79 项（根目录）**，只有 `vid=5&path=66666/` 返回 3 项 ✓ —— 即 `list_docs` 的 docId 参数**从来就没生效过**（页面上模型自己也实测出这一点）。这是"docId 参数面"必须清理的又一个硬证据。
+- **待改清单（下一步，按此顺序做）**：
+
+  | 工具 | 现状（required） | docId/pid 用法 | 目标 |
+  |---|---|---|---|
+  | `move_doc` | `{vid, docId, dstPid}` | 源侧参数在 client 调用里被**写死 null**（schema 都没暴露 srcPath/srcName） | `{vid, srcPath, srcName, dstPath, dstName}`（目标=目录自身的 path/name，根目录=空/空） |
+  | `copy_doc` | `{vid, docId, dstPid}` | 同上 | 同上 |
+  | `delete_doc` | `{vid}` | docId/pid/path/name 全可选 | `{vid, path, name}` |
+  | `rename_doc` | `{vid, dstName}` | docId/pid 可选 | `{vid, path, name, dstName}` |
+  | `create_doc_share` | `{vid, docId}` | docId（端点本身还错 → R1-2） | `{vid, path, name}`（与 R1-2 一起做） |
+  | `list_docs` | `{vid}` | docId 可选（**已实测不生效**）＋描述推荐 docId＋输出每行 docId | 删掉 docId 参数；输出改为以 `path+name` 为主（`docId` 列降为附注或去掉，同步改 `TestListDocsFormat`） |
+  | `get_doc` | `{vid, path, name}` | 已有可选 docId | 去掉 docId 参数 |
+  | `write_note` | `{vid, name, content}` | docId 可选 | 补 `path`，去掉 docId |
+  | `create_folder` / `write_file` | `{vid, name}` / `{vid, name, content}` | 用 `pid`（父目录 ID） | 改用 `path`（目标目录路径，根目录=空） |
+  | `@` 关注对象注入块 | `AgentFocusSupport.describe()` 注入 `docId=99` | docId 进提示词 | 去掉 docId（path 已是主键） |
+  | `AgentController.findNameConflict` | 用 `folderDocId` 调 `getDocList` | docId | 改用 path |
+  | 旧编排/CLI 帮助文本 | `delete-doc <vid> <docId>` 等 | docId-first 语法 | 随 R3-4 一并下线 |
+  | 我在 R1 加的服务端反查 | `BaseController.resolveRealDocByDocId` + `TestDocIdResolve` | 过渡兼容层 | 工具层全部切换完后**删除**（不再需要反查） |
+
+- **验收（每项）**：护栏（schema 不含 docId + path 归一化/level 推导 + 线上 docId 指纹）→ 真实 HTTP 探针 → 页面 E2E 一条。
+
 
 #### R1-5 `list_repos` 也被截断（同类）
 - **现状**：`list_repos` 用 `fmt()` 裸 JSON；仓库对象含 `localSvnPath/svnPwd/remoteStorage/localSvnPath1/…` 20+ 字段。
@@ -180,7 +215,7 @@
 
 | 阶段 | 内容 | 依赖 | 交付 |
 |---|---|---|---|
-| **R1** | R1-1 errCode ✅ → R1-1b 权限/登录/不存在出口 ✅ → R1-1c `docSysErrorLog` 不存在出口 ✅ → R1-4 get_doc_history → R1-5 list_repos → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
+| **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 get_doc_history ✅（path/name）→ **R1-6 定位全面 path/name（试点已完，余下：move/copy/delete/rename/list_docs/share/create_folder/write_* + @注入块）** → R1-5 list_repos → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
 | **R3** | R3-2 全工具体检（产出体检表）→ R3-1 命名 → R3-3 run_skill → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表 + 检查单文档 |
 
@@ -191,7 +226,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R1-1c 后）：`TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
+   - 现基线（2026-09-20 R1-4/R1-6 试点后）：`TestDocHistoryLocator 34` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolE2E` `ListDocsProbe` `ToolChk` `IdProbe` `LockProbe`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -218,6 +253,7 @@
 ## 5. 不变量（不可破）
 
 1. **共享 `.do` 接口的既有语义不变**（Web UI 零回归）——所有加固都在"缺参/过大/归因"三处做加法；改完必须回归一次 UI 关键路径（列目录、上传、移动、删除）。
+2. **工具层的文档定位统一用 path/name**（R1-6 用户裁定）：`path` = 所在目录的相对路径、**以 `/` 结尾**、根目录用空串；`name` = 自身名；`level` = path 中 `/` 的个数（服务端不会从 path 反推 level）。工具 schema 不再暴露 docId；`path+name+level` 必须能算回与线上一致的 docId（已由 `TestDocHistoryLocator` 的线上指纹钉住）。
 2. `.class` 一律输出到 `D:/Dev/DocSys/WebRoot/WEB-INF/classes`，源码树不留 `.class`。
 3. 测试产物写 `%TEMP%\docsys_chk\`（本议题）或 `office/test/tmp/`；**绝不写工程根 `tmp/`**。
 4. 写操作测试只在仓库 5（test）用一次性名字，结束必须清理还原并核对磁盘。
@@ -237,7 +273,8 @@
 | R1-1c | P0 | `docSysErrorLog(…不存在！, rt)` 64 处补码（新增 SHARE_NOT_FOUND） | ✅ | 见本次提交 |
 | R1-2 | P0 | create_doc_share 端点不存在 | ⬜ | |
 | R1-3 | P0 | get_doc_share_list 语义错位 | ⬜ | |
-| R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ⬜ | |
+| R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ✅ | 见本次提交 |
+| R1-6 | P0 | 定位方式全面改为 path/name（**试点 get_doc_history ✅**，余待做） | 🟡 | 试点见本次提交 |
 | R1-5 | P0 | list_repos 截断（18 仓只看 9） | ⬜ | |
 | R2-1 | P1 | 统一工具输出规范 + 抽 helper（23 处 fmt 裸 JSON） | ⬜ | |
 | R2-2 | P1 | get_doc 长文 maxChars/offset | ⬜ | |

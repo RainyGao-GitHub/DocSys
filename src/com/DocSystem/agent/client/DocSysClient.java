@@ -602,13 +602,45 @@ public class DocSysClient {
     /**
      * Get document version history
      * POST /Doc/getDocHistory.do
+     *
+     * <p><b>定位方式（R1-4/R1-6：path/name 优先）</b>：优先传 {@code path}（父目录相对路径，以 "/" 结尾，
+     * 根目录用空串）+ {@code name}（自身名）+ {@code level}（层级，= path 中 '/' 的个数）。
+     * 服务端 {@code buildBasicDoc} 会用 {@code Path.buildDocIdByName(level, path, name)} 反推出 docId，
+     * <b>不需要也不应该由调用方传 docId</b>（docId 是派生 hash，会随移动/重命名失效，
+     * 且只传 docId、path/name 为空时会被服务端当成"仓库根目录"→ 静默返回根目录历史）。
+     *
+     * @deprecated 仅供旧路径（SubAgent/CLI）：新代码请用带 path/name 的重载。
      */
+    @Deprecated
     public Map<String, Object> getDocHistory(Integer reposId, Long docId) throws Exception {
+        return getDocHistory(reposId, docId, null, null, null, null, null, null);
+    }
+
+    /**
+     * 获取文档版本历史（path/name 优先，见上）
+     *
+     * @param path      父目录相对路径（以 "/" 结尾；根目录传 "" 或 null）
+     * @param name      文档名
+     * @param level     层级（path 中 '/' 的个数；为空时服务端会算错 docId，故建议显式传）
+     * @param type      1=文件 2=目录（可为空）
+     * @param maxLogNum 最多返回的提交数（可为空）
+     * @param commitId  从该 commitId 更早的历史开始取（可为空）
+     */
+    public Map<String, Object> getDocHistory(Integer reposId, Long docId, String path, String name,
+                                            Integer level, Integer type, Integer maxLogNum,
+                                            String commitId) throws Exception {
         String url = baseUrl + "/Doc/getDocHistory.do";
         Map<String, String> params = new HashMap<>();
         // T5.3 修复：DocSystem /Doc/getDocHistory.do 的参数名是 reposId（不是 vid）
         if (reposId != null) params.put("reposId", reposId.toString());
-        if (docId != null) params.put("docId", docId.toString());
+        // docId 仅作兼容：有 path/name 时不再传，避免"docId 优先"歧义
+        if (docId != null && (path == null || name == null)) params.put("docId", docId.toString());
+        if (path != null) params.put("path", path);
+        if (name != null) params.put("name", name);
+        if (level != null) params.put("level", level.toString());
+        if (type != null) params.put("type", type.toString());
+        if (maxLogNum != null) params.put("maxLogNum", maxLogNum.toString());
+        if (commitId != null) params.put("commitId", commitId);
 
         Response response = postForm(url, params, sessionCookie);
         try {
