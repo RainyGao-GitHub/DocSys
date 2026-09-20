@@ -56,7 +56,7 @@ public class DocSysSkillExecutor implements SkillExecutor {
      */
     private static final Set<String> BUILT_IN_SKILL_IDS = new HashSet<>(Arrays.asList(
         // System skills（DocSys 自有能力已全部下线，改由工具承担；此处只保留非 DocSys 技能）
-        "help", "help-repos", "help-docs", "help-search",
+        "help", "system_help", "help-repos", "help-docs", "help-search",
         "banner",
         // Web automation skills
         "playwright", "web_automation",
@@ -74,7 +74,9 @@ public class DocSysSkillExecutor implements SkillExecutor {
         try {
             log.debug("DocSysSkillExecutor handling: {} params={}", skillId, params);
             // ---------- SYSTEM ----------
-            if ("help".equals(skillId)) return handleHelp();
+            // R3-2 批 2b：system_help 原来既不在内置白名单、又会被 ExternalSkillExecutor 当成
+            // `docsys help` 命令去跑（dev 无 docsys 可执行文件）→ 必然失败。这里对齐 id。
+            if ("help".equals(skillId) || "system_help".equals(skillId)) return handleHelp();
             if ("help-repos".equals(skillId)) return handleHelpRepos();
             if ("help-docs".equals(skillId)) return handleHelpDocs();
             if ("help-search".equals(skillId)) return handleHelpSearch();
@@ -95,42 +97,28 @@ public class DocSysSkillExecutor implements SkillExecutor {
 
     private SkillExecutionResult handleHelp() {
         StringBuilder sb = new StringBuilder();
-        sb.append("DocSys Agent CLI Commands:\n\n");
-        sb.append("User Management:\n");
-        sb.append("  login <user> <pwd>              - Login to DocSystem\n");
-        sb.append("  logout                          - Logout\n");
-        sb.append("  whoami                          - Show current user info\n\n");
-        sb.append("Repository Management:\n");
-        sb.append("  list-repos                      - List all repositories\n");
-        sb.append("  create-repos <name> [desc] [path] [type] [verCtrl]  - Create new repository\n");
-        sb.append("  delete-repos <vid>              - Delete repository by ID\n");
-        sb.append("  repos-info <vid>                - Get repository details\n");
-        sb.append("  backup <vid> [path]             - Backup repository\n\n");
-        sb.append("Document Operations:\n");
-        sb.append("  list-docs <vid> [pid] [path]   - List documents in repository\n");
-        sb.append("  add-doc <vid> <name> [pid]     - Add document to repository\n");
-        sb.append("  delete-doc <vid> <docId>       - Delete document\n");
-        sb.append("  rename-doc <vid> <docId> <newName> - Rename document\n");
-        sb.append("  get-doc <vid> <docId>           - Get document details\n");
-        sb.append("  download-doc <vid> <docId>     - Download document\n");
-        sb.append("  doc-history <vid> <docId>      - Get version history\n\n");
-        sb.append("Search:\n");
-        sb.append("  search <query> [vid]           - Search documents\n\n");
-        sb.append("AI/Chat:\n");
-        sb.append("  chat <message> [model]        - Chat with AI\n");
-        sb.append("  chat-with-docs <query> [model] - Chat with document context\n");
-        sb.append("  ai-models                       - List available AI models\n\n");
-        sb.append("Help:\n");
-        sb.append("  help-repos                     - Repository commands help\n");
-        sb.append("  help-docs                      - Document commands help\n");
-        sb.append("  help-search                    - Search commands help\n\n");
-        sb.append("Examples:\n");
-        sb.append("  login admin admin2026\n");
-        sb.append("  list-repos\n");
-        sb.append("  create-repos MyProject \"My project\" F:/data/myrepo 0 0\n");
-        sb.append("  list-docs 1\n");
-        sb.append("  search \"important\"\n");
-        sb.append("  chat \"list my documents\"\n");
+        sb.append("DocSys Agent 能力速查（当前实现，2026-09-20）\n\n");
+        sb.append("【仓库】list_repos（无参，先拿 vid）/ get_repos(vid) / create_repos(name,path)\n");
+        sb.append("         delete_repos(vid) / update_repos(vid[,name,info,path]) / backup_repos(vid[,backupStorePath])\n");
+        sb.append("         query_backup_status(taskId)  ← taskId 取自 backup_repos 回执\n\n");
+        sb.append("【目录与文档】list_docs(vid[,path]) / get_doc(vid,path,name[,offset,maxChars])\n");
+        sb.append("         get_doc_history(vid,path,name) / get_doc_share_list([path,name])\n");
+        sb.append("         create_folder(vid,path,name) / write_file(vid,path,name,content) / write_note(vid,path,name,content)\n");
+        sb.append("         delete_doc(vid,path,name) / rename_doc(vid,path,name,dstName)\n");
+        sb.append("         move_doc(vid,srcPath,srcName,dstPath[,dstName]) / copy_doc(同上)\n");
+        sb.append("         create_doc_share(vid,path,name[,sharePwd,shareHours])\n\n");
+        sb.append("【搜索】search_files(vid,query[,path,maxResults])  ← 全文索引，query 是 JSON 条件\n");
+        sb.append("         grep_files(vid,pattern[,path,maxResults])  ← 磁盘逐行扫描，索引没建时用它\n\n");
+        sb.append("【关键约定】\n");
+        sb.append("  1) 定位一律用 path+name（path = 所在目录的相对路径，以 / 结尾；仓库根目录传空串 \"\"）\n");
+        sb.append("  2) docId 是派生值、会随移动/重命名失效，不要用它定位\n");
+        sb.append("  3) 写入/删除/改名/移动/分享/备份/技能 都需要用户确认后才执行\n");
+        sb.append("  4) 长文本分次读：get_doc 表头会给总长，页脚会给下一次的 offset\n");
+        sb.append("  5) 找不到文件时：先 search_files，搜不到再 grep_files（索引可能还没建）\n\n");
+        sb.append("【技能】run_skill(skillId[,params]) —— 可用技能见 run_skill 工具描述\n");
+        sb.append("【联网】web_search(query[,maxResults])\n");
+        sb.append("【附件】attachment(action=list|read[,name]) —— 读本轮上传的临时附件\n");
+        sb.append("【记忆】memory_set(key,value) / memory_get(key) / memory_list —— 跨会话偏好\n");
         return SkillExecutionResult.ok(sb.toString());
     }
 

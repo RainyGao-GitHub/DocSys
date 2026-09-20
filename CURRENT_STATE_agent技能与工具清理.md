@@ -438,6 +438,37 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
 - `write_file` 直调客户端会报 `DOC_LOCKED`（同一请求内先锁后再次锁）但**文件已写入**；
   工具层 `callWithLockRetry` 能自动重试成功 —— 模型侧看到的是成功（这层保护必须保留）。
 
+## R3-2 批 2b：条件注册工具真机验证 + R3-3 run_skill（2026-09-20）
+
+### 实测结论
+- **工具面 = 28 个**（模型自报与代码一致）：只读 10 + 写 12 + memory_*3 + web_search + run_skill + attachment —— 四个条件注册的都在。
+- **memory_* 跨会话有效** ✓：会话 A 写偏好，**新会话 B** 用 `memory_list` 读到同一值（DB-backed）。
+  清理：本次与早前探针写的 `probe.key` / `user.preference` 已从 `agent_user_memory` 删除（2 行），其余 4 条不动。
+  ⚠️ **没有删除工具**：`UserMemoryService.delete` 有方法但未暴露，清探针只能直连 DB。
+- **web_search 真联网** ✓：返回真实结果；模型正确判定“本次搜索没查到有效结果”且**未臆造**，还不区分了“搜索结果/自身知识”。
+  ❗小遗留：摘要带 HTML 实体（`&ensp;`/`&#0183;`）→ 列 R3-12。
+- **attachment** ✓：上传 200 → `list` 列出 `attach_probe.txt`(107B, 文本) → `read` 读出全文，
+  **唯一关键字 `ZQ7X-ATTACH-KEY-2026` 被原样复述**（无臆造）。
+- **R3-3 run_skill**：未知技能 → `No executor found for skill: …` ✓（符合 P3b）；确认门对 run_skill 生效 ✓。
+
+### 两个真缺陷（已修）
+- ❗❗**`system_help` 是死技能**：不在任何内置白名单 → 落到外部 CLI 执行器，被当成 SKILL.md 里的
+  `docsys help` 去跑（dev 无 docsys 可执行文件）→ 必失败。
+- ❗❗**子进程输出乱码**（通用）：`cmd.exe` 输出是系统码页（中文 Windows=GBK），而四处读取点写死 UTF-8 →
+  模型看到 `'docsys' �����ڲ����ⲿ���Ҳ���ǿ����еĳ���…`，无法判断“命令不存在”还是“脚本报错”。
+
+### 修复
+- `ExternalSkillExecutor`：新增 `readProcessOutput`/`detectCharset`（UTF-8 严格可解则 UTF-8，否则回退系统默认码页），
+  替换四处读取点；`system_help` 加入排除集。
+- `DocSysSkillExecutor`：白名单与分支接管 `system_help`；**重写 `handleHelp` 正文**——原来列的是 docId 时代的 CLI 说明
+  （`delete-doc <vid> <docId>`、`download-doc`、`ai-models`、`chat-with-docs` 等已下线命令），
+  现改为“当前 28 个工具 + 5 条关键约定”。
+
+### 验证
+- 护栏 `TestSkillExecEncoding` **34/34**；全量 **23 套 / 949 项**全绿。
+- 页面 E2E：`attachment list/read` 与 `run_skill(system_help)` 均成功且输出可读；模型知实指出“【关键约定】实际有 5 条，不是你说的三条”。
+- 已提交：见下方「未提交改动」
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -449,12 +480,15 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 - **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 ✅**；**R1-5 ✅**；**R1-2 ✅ / R1-3 ✅**；R1 全部完成
 - **R2（P1）**：**R2-1 ✅ / R2-2 ✅ / R2-3 ✅ / R2-4 ✅（本轮）** — 剩余：写操作回执类仍为 `fmt()` 整包 JSON，归入 R3-2 工具体检一并做
-- **R3（P2）**：**R3-2 批 1 ✅ / R3-1 ✅ / R3-2 批 2a ✅（本轮）**；下一步 **R3-2 批 2b**（memory/attachment/web_search 真实装配）→ R3-3 `run_skill` → R3-9 确认弹窗显示参数 → R3-10 跨仓库按路径/名字找 → R3-4/5 清理裁定 → R3-6 检查单
+- **R3（P2）**：**R3-2 批 1 / 批 2a / 批 2b ✅、R3-1 ✅、R3-3 ✅（本轮）**；下一步 **R3-9** 确认弹窗显示参数 → **R3-10** 跨仓库按路径/名字找 → **R3-11** system_help 演示件清理 → **R3-12** web_search 摘要 HTML 实体 → R3-4/5 清理裁定 → R3-6 检查单
   新增两条（R2 页面 E2E 发现）：**R3-9 确认弹窗只显示工具名不显示参数**、**R3-10 缺“跨仓库按路径/名字找”能力**
 
 ## 未提交改动
 
-- 无（R3-2 批 2a 已提交 `79db72883`）
+- R3-2 批 2b 待提交：`src/com/DocSystem/agent/skill/executor/ExternalSkillExecutor.java`、
+  `src/com/DocSystem/agent/skill/executor/DocSysSkillExecutor.java`、
+  `src/com/DocSystem/agent/skill/executor/TestSkillExecEncoding.java`（新增）、
+  `devDocs/Agent工具与接口可靠性计划.md`、本工作卡
 - 已提交：R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 

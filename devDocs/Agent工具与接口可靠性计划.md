@@ -380,7 +380,37 @@
 - ⚠️ **实测附带结论**：`write_file` 直接调客户端会报 `DOC_LOCKED` 失败（同一请求内先锁后再次锁），
   但**工具层 `callWithLockRetry` 能自动重试成功** —— 所以模型侧看到的是成功（这层保护是必要的）。
 
-**批 2b（待做）**：`memory_set/get/list` `attachment` `web_search` `run_skill` 的真实装配验证（与 R3-3 合并）。
+**批 2b（✅ 2026-09-20）：条件注册的 4 个工具真机装配验证 + R3-3 `run_skill`**
+
+- **工具面实测：28 个**（模型自报清单，与代码一致）：只读 10 + 写 12 + `memory_set/get/list` + `web_search` +`run_skill` + `attachment`。
+  即：条件注册的四个（需 `UserMemoryService` / `WebSearchService` / `SkillExecutorRegistry` / 会话目录）在 dev 全部到位。
+- **`memory_*` 跨会话有效** ✓：会话 A 写 `user.preference`，**新会话 B** 用 `memory_list` 读到同一值（DB-backed `UserMemoryService` 正常）。
+  - ⚠️ 清理：本次与早前探针在用户记忆里留的 `probe.key` / `user.preference` 已从 `agent_user_memory` 删掉（共 2 行），
+    其余 4 条（`user_preferences`/`月度总结偏好`/`每日早间习惯`/`优化需求记录`）保持不动。
+  - ⚠️ 无删除工具：`UserMemoryService.delete` 有方法但**没有对应工具**，清探针只能直连 DB（本次就是这么做的）。
+- **`web_search` 真能联网** ✓：返回真实结果（如 `cdn.deepseek.com`）；模型正确地判定“本次搜索没查到有效结果”并**未臆造**，
+  而是明确区分“搜索结果”与“我自身知识（可能已过时）”。
+  - ❗小遗留（列 R3-12）：**摘要里带 HTML 实体**（`&ensp;` / `&#0183;`），进上下文是噪声，渲染时应 unescape。
+- **`attachment`** ✓：上传 200 → `action=list` 列出 `attach_probe.txt`（107B/文本）→ `action=read` 读出全文，
+  **唯一关键字 `ZQ7X-ATTACH-KEY-2026` 被原样复述**（没有臆造内容）。
+- **R3-3 `run_skill`**：
+  - 未知技能 → `No executor found for skill: not_exist_skill_xyz` ✓（符合 P3b 验收标准）；确认门对 `run_skill` 生效 ✓（每次弹窗）。
+  - ❗❗**`system_help` 曾是死技能**（实测）：它**不在任何内置白名单**（`DocSysSkillExecutor` / `ExternalSkillExecutor` 都没有），
+    于是落到外部 CLI 执行器，被当成 SKILL.md 里写的 `docsys help` 命令去跑 —— dev 根本没有 `docsys` 可执行文件 → 必然失败。
+  - ❗❗**子进程输出乱码**（通用缺陷）：`cmd.exe` 输出是系统码页（中文 Windows = GBK/CP936），
+    而 `ExternalSkillExecutor` 四处读取点都写死 UTF-8 → 模型看到
+    `'docsys' �����ڲ����ⲿ���Ҳ���ǿ����еĳ���…`，**无法判断到底是“命令不存在”还是“脚本报错”**。
+  - **修**：① 新增 `readProcessOutput`/`detectCharset`（UTF-8 严格可解则 UTF-8，否则回退系统默认码页）并替换四处读取点；
+    ② `system_help` 由 `DocSysSkillExecutor` 接管（白名单 + 别名分支），并从外部执行器的排除集里声明；
+    ③ **重写内置 `help` 正文**：原来是 docId 时代的 CLI 说明（`delete-doc <vid> <docId>`、`download-doc`、`ai-models`、
+    `chat-with-docs` 等**已下线**命令）→ 会把模型带偏；现改为“当前实现的 28 个工具 + 5 条关键约定”。
+  - **验证（已过）**：护栏 `TestSkillExecEncoding` **34/34**（GBK 字节回退可读 + UTF-8 原样 + 两个执行器的接管/排除集 +
+    help 正文不再含 8 个过期条目、含当前工具与约定）；**页面 E2E 复验**：`run_skill(system_help)` 成功且输出可读的中文速查，
+    模型还如实指出“【关键约定】实际有 5 条，不是你说的三条”。
+  - ❗遗留（列 R3-11）：`WebRoot/WEB-INF/skills/system_help` 自身的演示件已过期（SKILL.md 让跑 `docsys` CLI；
+    `scripts/run.bat` 指向 `http://localhost:8080/api/help` 与 `admin/admin2026`）—— 现在虽然不再被执行，但内容仍会误导。
+
+**批 2 完成**：写回执与条件工具的体检已全部做完（剩 R3-3 的遗留项转入 R3-11/12）。
 
 #### R3-3 `run_skill` 对已下线 DocSys 能力的表现
 - P3b 验收标准里写了"`run_skill("<DocSys能力>")` 应明确报 No executor"，但**未实测**。→ 补一次页面验证并记录。
@@ -427,7 +457,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R3-2 批 2a 后，**22 套 / 915 项断言全绿**）：`TestWriteConfirmGateCoverage 13` / `TestWriteReceiptFormat 47` / `TestReposToolsFormat 46` / `TestToolRegistry 36` / `TestToolOutputContract 82` / `TestListReposFormat 50` / `TestListDocsFormat 25` / `TestDocShareFormat 60` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestWriteTools 52` / `TestAgentSearchWriteTools 56` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestLockRetry 13` / `TestToolUseLoop 36` / `TestToolUseLoopNative 17` / `TestToolUseLoopStreaming 26` / `TestToolSchemaBuilder 7`
+   - 现基线（2026-09-20 R3-2 批 2b 后，**23 套 / 949 项断言全绿**）：`TestSkillExecEncoding 34` / `TestWriteConfirmGateCoverage 13` / `TestWriteReceiptFormat 47` / `TestReposToolsFormat 46` / `TestToolRegistry 36` / `TestToolOutputContract 82` / `TestListReposFormat 50` / `TestListDocsFormat 25` / `TestDocShareFormat 60` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestWriteTools 52` / `TestAgentSearchWriteTools 56` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestLockRetry 13` / `TestToolUseLoop 36` / `TestToolUseLoopNative 17` / `TestToolUseLoopStreaming 26` / `TestToolSchemaBuilder 7`
    - 注意 `TestAgentFocusSupport` 在 `com.DocSystem.agent.focus` 包，其余在 `com.DocSystem.agent.tool`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolPathE2E` `ReposListE2E` `ShareToolE2E` `OutputContractE2E` `MatchProbe` `TotalProbe` `SearchProbe2`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
@@ -483,8 +513,10 @@
 | R2-3 | P1 | search_files/grep_files 大结果验证与紧凑化 | ✅ | 探针：search 19840→2746/页（5 页覆盖 100 条）；grep 687130→3122 |
 | R2-4 | P1 | 命中数语义（服务端不给总数）+ match 大小写引导（页面 E2E 发现） | ✅ | 表头区分“全部命中/已达上限”；页面 E2E 同问法 7 步→4 步、0 次 match 试错 |
 | R3-1 | P2 | 参数命名一致（update_repos.reposId → vid） | ✅ | 统一为 vid 并删掉旧属性；护栏 TestReposToolsFormat 锁定 |
-| R3-2 | P2 | 全工具体检表（24 工具）——**批 1 ✅ / 批 2a ✅ / 批 2b ⬜** | 🔶 | 批 1：探针 31/31、护栏 46/46；批 2a：写回执 + 确认门安全洞（护栏 47/13，页面 E2E 弹窗 1→3 次） |
-| R3-3 | P2 | run_skill 对已下线能力的表现 | ⬜ | |
+| R3-2 | P2 | 全工具体检表（28 工具）——**批 1 ✅ / 批 2a ✅ / 批 2b ✅** | ✅ | 批 1：仓库/备份/当前用户；批 2a：写回执 + 确认门安全洞；批 2b：memory/attachment/web_search/run_skill |
+| R3-3 | P2 | run_skill 对已下线 DocSys 能力的表现 | ✅ | 未知技能报 `No executor found` ✓；`system_help` 死技能 + 子进程乱码已修（护栏 34/34） |
+| R3-11 | P2 | `WebRoot/WEB-INF/skills/system_help` 演示件过期（SKILL.md 让跑 `docsys` CLI；run.bat 指向 8080/api/help + admin2026） | ⬜ | R3-2 批 2b 发现；现已不被执行，但内容误导 |
+| R3-12 | P2 | `web_search` 摘要未清理 HTML 实体（`&ensp;`/`&#0183;`） | ⬜ | R3-2 批 2b 发现；进上下文是噪声 |
 | R3-4 | P2 | 旧编排死代码（SubAgent/MainAgent/LLMIntentParser）处置 | ⬜ | |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ⬜ | |
 | R3-6 | P2 | 新工具上线检查单（流程固化） | ⬜ | |

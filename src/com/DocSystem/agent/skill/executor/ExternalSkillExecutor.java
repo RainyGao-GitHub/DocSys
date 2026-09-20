@@ -61,7 +61,7 @@ public class ExternalSkillExecutor implements SkillExecutor {
 
     private static final Set<String> BUILT_IN_SKILL_IDS = new HashSet<>(Arrays.asList(
         // System skills
-        "help", "help-repos", "help-docs", "help-search",
+        "help", "system_help", "help-repos", "help-docs", "help-search",
         "banner",
         "init-llm", "init-auth",
         // Web automation skills
@@ -323,26 +323,14 @@ public class ExternalSkillExecutor implements SkillExecutor {
 
             // Read stdout
             String stdout;
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-                stdout = sb.toString();
+            try (java.io.InputStream in = process.getInputStream()) {
+                stdout = readProcessOutput(in);
             }
 
             // Read stderr
             String stderr = "";
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getErrorStream(), java.nio.charset.StandardCharsets.UTF_8))) {
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line).append("\n");
-                }
-                stderr = sb.toString().trim();
+            try (java.io.InputStream in = process.getErrorStream()) {
+                stderr = readProcessOutput(in).trim();
             }
 
             boolean finished = process.waitFor(skillTimeout, TimeUnit.SECONDS);
@@ -480,26 +468,14 @@ public class ExternalSkillExecutor implements SkillExecutor {
 
             // Read stdout
             String stdout;
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line).append("\n");
-                }
-                stdout = sb.toString().trim();
+            try (java.io.InputStream in = process.getInputStream()) {
+                stdout = readProcessOutput(in).trim();
             }
 
             // Read stderr
             String stderr;
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getErrorStream(), java.nio.charset.StandardCharsets.UTF_8))) {
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line).append("\n");
-                }
-                stderr = sb.toString().trim();
+            try (java.io.InputStream in = process.getErrorStream()) {
+                stderr = readProcessOutput(in).trim();
             }
 
             boolean finished = process.waitFor(skillTimeout, TimeUnit.SECONDS);
@@ -673,6 +649,39 @@ public class ExternalSkillExecutor implements SkillExecutor {
     private static boolean isWindows() {
         String osName = System.getProperty("os.name", "");
         return osName.toLowerCase().startsWith("windows");
+    }
+
+    /**
+     * 读取子进程输出，按内容判断编码。
+     *
+     * <p><b>为什么不能固定 UTF-8</b>（2026-09-20 真机实测）：`cmd.exe`（以及直接 stdout 的
+     * 系统命令）输出用的是**系统码页**（中文 Windows = GBK/CP936），固定按 UTF-8 解会得到
+     * `'docsys' �����ڲ����ⲿ���Ҳ���ǿ����еĳ���…` 这种乱码 —— 模型拿到后完全无法诊断，
+     * 也不知道到底是"命令不存在"还是"脚本报错"。这里先按 UTF-8 严格解码，遇非法序列就回退
+     * 系统默认码页；写 UTF-8 的脚本（Python 等）行为不变。
+     */
+    static String readProcessOutput(java.io.InputStream in) throws java.io.IOException {
+        java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        byte[] chunk = new byte[4096];
+        int n;
+        while ((n = in.read(chunk)) > 0) {
+            buf.write(chunk, 0, n);
+        }
+        byte[] bytes = buf.toByteArray();
+        return new String(bytes, detectCharset(bytes));
+    }
+
+    /** UTF-8 严格可解 → UTF-8；否则回退系统默认码页（中文 Windows 即 GBK） */
+    static java.nio.charset.Charset detectCharset(byte[] bytes) {
+        try {
+            java.nio.charset.StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                    .decode(java.nio.ByteBuffer.wrap(bytes));
+            return java.nio.charset.StandardCharsets.UTF_8;
+        } catch (java.nio.charset.CharacterCodingException e) {
+            return java.nio.charset.Charset.defaultCharset();
+        }
     }
 
     /**
