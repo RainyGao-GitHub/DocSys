@@ -255,7 +255,8 @@ public class DocSysToolFactory {
     /** R9 Agent 专用索引搜索（T1：/Doc/agentSearchDoc.do mode=index） */
     public static ToolDefinition searchFiles(DocSysClient client) {
         JSONObject props = props(
-                intProp("vid", "仓库ID（必填，单仓库；不确定先调 list_repos）"),
+                intProp("vid", "仓库ID（**可选**）。省略或传 -1 = 跨全部可访问仓库搜索（结果每行带 vid 与仓库名）；" +
+                        "已知在哪个仓库就传 vid，更快也更准。⚠️ 只有搜索能省略 vid：读写/改名/删除等操作一律必须明确 vid。"),
                 strProp("query", "查询条件（必填，JSON 字符串）。格式：{\"must\":[{\"field\":\"content\",\"term\":\"预算\"}],\"should\":[{\"field\":\"name\",\"term\":\"周报\"}],\"mustNot\":[{\"field\":\"comment\",\"term\":\"保密\"}]}。field: name(文件名)/content(文件内容)/comment(备注)；match: term(默认，大小写不敏感、中文分词，**推荐**)/wildcard/prefix/fuzzy。wildcard/prefix/fuzzy 仅对 field=name 生效，且**关键字必须全小写**（实测大写 0 条）；不确定就用 term。"),
                 strProp("path", "目录限定（可选，仓库内相对路径，如 66666/）"),
                 intProp("maxResults", "服务端返回的命中数上限（可选，默认 20，上限 100）。注意：这是**取回多少条**而不是总数；表头说“已达 maxResults 上限”时说明可能还有更多，想看全就把它调大。"),
@@ -263,20 +264,24 @@ public class DocSysToolFactory {
                 intProp("offset", "结果内分页起点（可选，默认 0）"),
                 intProp("limit", "本页显示条数（可选，默认 " + SEARCH_LIST_DEFAULT_LIMIT
                         + "，最大 " + SEARCH_LIST_MAX_LIMIT + "）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "query"});
+        JSONObject schema = objSchema(props, new String[]{"query"});
         return ToolDefinition.builder("search_files",
-                "在指定仓库内基于全文索引搜索文档（文件名/文件内容/备注），支持与或非(must/should/mustNot)组合。"
-                        + "结果是一条条紧凑命中（名称/path/大小/命中类型），表头区分“全部命中”与“已达服务端 maxResults 上限（可能还有更多）”，"
+                "按名字/内容搜索文档（简称/全名都行），**不确定在哪个仓库时可以不传 vid**："
+                        + "那样会跨全部可访问仓库搜索（每个仓库先做 path+name 精确直查，再查全文索引），结果每行带 vid 与仓库名。"
+                        + "拿到 vid 后请把它**显式**传给后续工具（读、写、删除、改名等一律要求 vid）。"
+                        + "结果是一条条紧凑命中（类型/名称/path/大小/命中来源），表头区分“全部命中”与“已达服务端 maxResults 上限（可能还有更多）”，"
                         + "超过一页面时用 offset/limit 翻页（页大小会因路径长度自适应，以表头的区间为准）。"
-                        + "注意：文件刚被直接放入仓库目录、尚未建立索引时可能搜不到——此时改用 grep_files。",
+                        + "⚠️ 索引只覆盖 DocSys 建过索引的条目，因此本工具对“恰好一个不含通配符的 name 条件”会额外做一次**磁盘精确直查**"
+                        + "（path+name 直接确认存在性，含目录、覆盖未建索引项），命中行标注“命中=直查”；"
+                        + "但要找的是**目录内容**仍应直接 list_docs。",
                 args -> {
                     Integer vid = args.getInteger("vid");
-                    if (vid == null) {
-                        return ToolResult.error("vid 必填（仓库ID，不确定先调 list_repos）");
-                    }
                     String query = args.getString("query");
                     if (query == null || query.isEmpty()) {
                         return ToolResult.error("query 必填（JSON 字符串，见参数说明）");
+                    }
+                    if (vid != null && vid.intValue() == -1) {
+                        vid = null;   // -1 与省略等价
                     }
                     String argPath = normalizeDocPath(args.getString("path"));
                     try {
@@ -297,7 +302,7 @@ public class DocSysToolFactory {
     /** R9b Agent 磁盘扫描搜索（T2：/Doc/agentSearchDoc.do mode=grep，不依赖索引） */
     public static ToolDefinition grepFiles(DocSysClient client) {
         JSONObject props = props(
-                intProp("vid", "仓库ID（必填，单仓库；不确定先调 list_repos）"),
+                intProp("vid", "仓库ID（必填，单仓库；不确定先调 list_repos 或用 search_files 不带 vid 找）"),
                 intProp("pattern", "搜索关键词（必填；子串匹配、大小写不敏感）"),
                 strProp("path", "目录限定（可选，仓库内相对路径，如 66666/）"),
                 intProp("maxResults", "服务端返回的命中文件数上限（可选，默认 20，上限 100）。这是**取回多少条**而不是总数；表头说“已达上限”时可能还有更多。"),
@@ -308,7 +313,9 @@ public class DocSysToolFactory {
         return ToolDefinition.builder("grep_files",
                 "直接在仓库磁盘上逐行扫描文本文件内容（不依赖索引，较慢），每个命中文件只回一条 ≤"
                         + GREP_SNIPPET_LEN + " 字符的片段（命中行可能极长，已截断）。"
-                        + "用于 search_files 搜不到的情况（文件刚放入仓库尚未建立索引），或需要精确匹配原始文本时。",
+                        + "用于 search_files 搜不到的情况（文件刚放入仓库尚未建立索引），或需要精确匹配原始文本时。"
+                        + "⚠️ 它**只匹配文件内容**：不匹配文件名、也**从不返回目录**——找名字/找目录请用 search_files（可跨仓库）或 list_docs。"
+                        + "只支持单仓库（vid 必填）：跨仓 grep 等于逐仓全盘扫描，成本量级不同。",
                 args -> {
                     Integer vid = args.getInteger("vid");
                     if (vid == null) {
@@ -2027,20 +2034,80 @@ public class DocSysToolFactory {
             return "搜索结果为空（服务器返回：" + data + "）";
         }
         List<?> all = (List<?>) data;
-        String scope = "仓库 " + vid + (pathFilter == null || pathFilter.isEmpty() ? "" : " / path=" + quoted(pathFilter))
-                + " / 查询=" + shortText(String.valueOf(query), SEARCH_QUERY_LABEL_LEN);
+        Map<?, ?> meta = asMap(resp.get("msgData"));
+        boolean crossRepos = vid == null || Boolean.TRUE.equals(meta.get("crossRepos"));
+        String scope = searchScopeText(vid, pathFilter, query, meta);
         if (all.isEmpty()) {
-            return "没有命中：" + scope + "。\n"
+            return (crossRepos ? "全部仓库都没有命中：" : "没有命中：") + scope + crossReposNote(meta) + "。\n"
                     + "建议：先用默认的 term 模式换关键词（大小写不敏感、子串匹配）；"
                     + "确实需要通配时才用 wildcard/prefix（仅对 name 生效，且关键字必须全小写，大写会 0 条）；"
+                    + "找目录/看目录里有什么用 list_docs（传 path 进入子目录）；"
                     + "文件刚放入仓库、索引还没建时可能搜不到，改用 grep_files 直接在磁盘上扫内容。";
         }
-        return paged("搜索结果", scope, all, offsetArg, limitArg, SEARCH_LIST_CHAR_BUDGET,
-                "search_files", serverCap, (from, to) -> renderHits(all, from, to));
+        return paged("搜索结果", scope + crossReposNote(meta), all, offsetArg, limitArg, SEARCH_LIST_CHAR_BUDGET,
+                "search_files", serverCap, (from, to) -> renderHits(all, from, to, crossRepos))
+                + (crossRepos ? CROSS_REPOS_NEXT_STEP : "");
     }
 
-    /** 渲染 [from,to) 的索引命中行：序号. path+name  大小  命中类型 */
-    private static String renderHits(List<?> all, int from, int to) {
+    /**
+     * 跨仓命中后的固定下一步提示。
+     *
+     * <p>用户裁定（2026-09-20）：只有**搜索**能省略 vid；读写/改名/删除等操作一律必须明确 vid
+     * （没有 vid 的文件访问会操作到错误的对象）。所以跨仓搜索命中后必须明确告诉模型"把 vid 带上"。</p>
+     */
+    private static final String CROSS_REPOS_NEXT_STEP =
+            "下一步：命中行里的 vid 就是“它在哪个仓库”的答案 —— 后续读写/改名/删除请把它显式传进去"
+                    + "（如 list_docs(vid=5, path=\"66666/\")、get_doc(vid=5, path=\"\", name=\"x\")）。\n";
+
+    /** 搜索范围文案：单仓库 → "仓库 5"；跨仓库 → "全部可访问仓库（共 17 个，已扫 17 个）" */
+    private static String searchScopeText(Integer vid, String pathFilter, Object query, Map<?, ?> meta) {
+        StringBuilder sb = new StringBuilder();
+        if (vid == null) {
+            Object total = meta.get("reposTotal");
+            Object scanned = meta.get("reposScanned");
+            sb.append("跨全部可访问仓库（共 ").append(total == null ? "?" : total)
+                    .append(" 个，本次已扫 ").append(scanned == null ? "?" : scanned).append(" 个）");
+        } else {
+            sb.append("仓库 ").append(vid);
+        }
+        if (pathFilter != null && !pathFilter.isEmpty()) {
+            sb.append(" / path=").append(quoted(pathFilter));
+        }
+        sb.append(" / 查询=").append(shortText(String.valueOf(query), SEARCH_QUERY_LABEL_LEN));
+        return sb.toString();
+    }
+
+    /**
+     * 跨仓搜索的额外如实披露：未扫完 / 失败的仓库必须写出来（"没有命中"与"没扫到"是两回事）。
+     * 单仓搜索返回空串。
+     */
+    private static String crossReposNote(Map<?, ?> meta) {
+        if (meta.isEmpty() || !Boolean.TRUE.equals(meta.get("crossRepos"))) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        Object skipped = meta.get("reposSkipped");
+        Object total = meta.get("reposTotal");
+        Object scanned = meta.get("reposScanned");
+        if (intOf(skipped) != null && intOf(skipped).intValue() > 0) {
+            sb.append("；⚠️ 因命中已满/超时，").append(total).append(" 个仓库里有 ")
+                    .append(skipped).append(" 个未扫描（只扫了 ").append(scanned).append(" 个）");
+        }
+        Object failed = meta.get("reposFailed");
+        if (failed instanceof List && !((List<?>) failed).isEmpty()) {
+            sb.append("；⚠️ ").append(((List<?>) failed).size()).append(" 个仓库搜索失败：")
+                    .append(shortText(String.valueOf(failed), 160));
+        }
+        return sb.toString();
+    }
+
+    /** msgData 之类的可选对象字段转 Map（缺失/非对象 → 空 Map） */
+    private static Map<?, ?> asMap(Object o) {
+        return o instanceof Map ? (Map<?, ?>) o : java.util.Collections.emptyMap();
+    }
+
+    /** 渲染 [from,to) 的命中行：序号. [目录]/[文件] 名称  path  大小  命中来源（跨仓时带 vid） */
+    private static String renderHits(List<?> all, int from, int to, boolean crossRepos) {
         StringBuilder sb = new StringBuilder();
         for (int i = from; i < to; i++) {
             Object o = all.get(i);
@@ -2049,12 +2116,40 @@ public class DocSysToolFactory {
                 continue;
             }
             Map<?, ?> h = (Map<?, ?>) o;
-            sb.append(i + 1).append(". ").append(str(h.get("name")))
-                    .append("  ").append(hitPathText(h.get("path")))
-                    .append("  ").append(sizeText(h.get("size")))
-                    .append("  命中=").append(hitTypeText(h.get("hitType"))).append("\n");
+            Integer type = intOf(h.get("type"));
+            boolean isDir = type != null && type.intValue() == 2;
+            sb.append(i + 1).append(". ");
+            if (crossRepos) {
+                // 只写 vid=（不写 reposId，避免看起来像倒原始 JSON 字段）
+                sb.append("vid=").append(h.get("reposId"));
+                String reposName = str(h.get("reposName"));
+                if (!reposName.isEmpty()) {
+                    sb.append("(").append(reposName).append(")");
+                }
+                sb.append("  ");
+            }
+            sb.append(isDir ? "[目录] " : "[文件] ").append(str(h.get("name")));
+            if (isDir) {
+                sb.append("/");
+            }
+            sb.append("  ").append(hitPathText(h.get("path")));
+            if (!isDir) {
+                sb.append("  ").append(sizeText(h.get("size")));
+            }
+            sb.append("  命中=").append(viaText(h)).append("\n");
         }
         return sb.toString();
+    }
+
+    /**
+     * 命中来源文案：直查（path+name 精确命中，不依赖索引）/ 索引（文件名/内容/备注）。
+     * 区分这两者很重要：直查命中说明"索引里可能没有它"，模型据此判断可信度与下一步。
+     */
+    static String viaText(Map<?, ?> hit) {
+        if ("direct".equals(str(hit.get("via")))) {
+            return "直查";
+        }
+        return hitTypeText(hit.get("hitType"));
     }
 
     /**

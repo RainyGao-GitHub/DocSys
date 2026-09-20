@@ -93,7 +93,10 @@ public class TestAgentSearchWriteTools {
         ToolRegistry reg = DocSysToolFactory.createReadOnlyRegistry(client);
 
         ToolResult r1 = reg.execute("search_files", new JSONObject());
-        check("search_files missing vid -> error", !r1.success && r1.error.contains("vid"));
+        // R3-10（2026-09-20）：vid 改为**可选**（省略 = 跨全部可访问仓库搜索），所以这里不再报 vid，
+        // 而是报下一个必填项 query。vid 必填与否的完整断言见 TestSearchCrossRepo。
+        check("search_files 省略 vid 后报 query 缺失（vid 已可选）",
+                !r1.success && r1.error.contains("query") && !r1.error.contains("vid 必填"), r1.error);
 
         JSONObject hasVid = new JSONObject();
         hasVid.put("vid", 1);

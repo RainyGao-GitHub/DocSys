@@ -691,16 +691,18 @@ public class DocSysClient {
      * Agent 专用索引搜索（T1：/Doc/agentSearchDoc.do，mode=index）。
      * 取代原 search_docs 工具（旧 /Doc/searchDoc.do 为人类设计，含路径猜解/base64/多线程编排等冗余）。
      *
-     * @param reposId   仓库ID（必填，单仓库）
+     * @param reposId   仓库ID；**null/-1 = 跨全部可访问仓库搜索**（R3-10：不在仓库详情页时不知道该选哪个仓库）。
+     *                  每个仓库先做"不依赖索引的 path+name 精确直查"，再查索引；命中行带 reposId/reposName。
+     *                  注意：只有**搜索**可以省略，写/读文件的工具必须明确 vid。
      * @param queryJson 查询 DSL JSON（must/should/mustNot × field(name/content/comment) × match(term/wildcard/prefix/fuzzy)）
-     * @param path      目录限定（可选，仓库内相对路径）
+     * @param path      目录限定（可选，仓库内相对路径；跨仓库时逐仓做前缀过滤）
      * @param maxResults 最大结果数（可选，默认 20，上限 100）
      * @param withSnippet 是否返回命中片段（可选，默认 true）
      */
     public Map<String, Object> agentSearchDocs(Integer reposId, String queryJson, String path,
                                                Integer maxResults, Boolean withSnippet) throws Exception {
         Map<String, String> params = new LinkedHashMap<>();
-        params.put("reposId", String.valueOf(reposId));
+        if (reposId != null) params.put("reposId", String.valueOf(reposId));
         params.put("mode", "index");
         if (queryJson != null && !queryJson.isEmpty()) params.put("query", queryJson);
         if (path != null && !path.isEmpty()) params.put("path", path);
@@ -716,7 +718,8 @@ public class DocSysClient {
     public Map<String, Object> grepFiles(Integer reposId, String pattern, String path,
                                          Integer maxResults) throws Exception {
         Map<String, String> params = new LinkedHashMap<>();
-        params.put("reposId", String.valueOf(reposId));
+        // vid 是必填语义（跨仓 grep = 逐仓全盘扫描）；这里仍做 null 判断，让服务端能返回"grep 需要 reposId"的明确错误
+        if (reposId != null) params.put("reposId", String.valueOf(reposId));
         params.put("mode", "grep");
         params.put("pattern", pattern);
         if (path != null && !path.isEmpty()) params.put("path", path);

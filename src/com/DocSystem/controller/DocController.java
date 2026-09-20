@@ -8,9 +8,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -7446,6 +7448,8 @@ public class DocController extends BaseController{
 	
 	//Agent 专用文件搜索接口(2026-09-12): mode=index 基于 Lucene 索引(文件名/内容/备注, 支持与或非 DSL);
 	//mode=grep 磁盘逐行扫描兜底(覆盖直接放入仓库目录尚未建索引的文件)。面向 LLM 工具调用, 返回紧凑结果。
+	//R3-10(2026-09-20): reposId 省略/-1 = 跨全部可访问仓库(搜索专属能力; 写操作工具仍要求 vid 必须明确)。
+	//  跨仓时逐仓: ①先做"不依赖索引的 path+name 精确直查" ②再查 Lucene 索引; 逐仓失败隔离 + 总耗时上限。
 	@RequestMapping("/agentSearchDoc.do")
 	public void agentSearchDoc(Integer reposId, String path, String query, String pattern, String mode,
 			Integer maxResults, Boolean withSnippet,
@@ -7462,12 +7466,30 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		Repos repos = getReposEx(reposId);
-		if(repos == null)
+		//R3-10: 省略 reposId(或 -1) = 跨全部可访问仓库搜索
+		boolean crossRepos = (reposId == null || reposId.intValue() == -1);
+		List<Repos> reposList = new ArrayList<Repos>();
+		if(crossRepos)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
-			writeJson(rt, response);			
-			return;	
+			List<Repos> accessableReposList = getAccessableReposList(reposAccess.getAccessUser().getId());
+			if(accessableReposList == null || accessableReposList.isEmpty())
+			{
+				docSysErrorLog("当前用户没有可访问的仓库，无法跨仓库搜索！", ErrorCode.REPOS_NOT_FOUND, rt);
+				writeJson(rt, response);			
+				return;	
+			}
+			reposList.addAll(accessableReposList);
+		}
+		else
+		{
+			Repos repos = getReposEx(reposId);
+			if(repos == null)
+			{
+				docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
+				writeJson(rt, response);			
+				return;	
+			}
+			reposList.add(repos);
 		}
 		
 		if(maxResults == null || maxResults <= 0)
@@ -7488,6 +7510,14 @@ public class DocController extends BaseController{
 		//磁盘扫描兜底（grep 等价实现）
 		if("grep".equalsIgnoreCase(mode))
 		{
+			if(crossRepos)
+			{
+				//跨仓 grep = 逐仓全盘逐行扫描, 成本量级完全不同(单仓已有 5000 文件/5MB 上限), 明确拒绝而不是偷偷扫一圈
+				docSysErrorLog("grep 模式需要指定 reposId（磁盘逐行扫描只支持单仓库，请先确定仓库）", rt);
+				writeJson(rt, response);			
+				return;	
+			}
+			Repos repos = reposList.get(0);
 			if(pattern == null || pattern.trim().isEmpty())
 			{
 				docSysErrorLog("grep 模式需要 pattern 参数（搜索关键词）", rt);
@@ -7516,37 +7546,177 @@ public class DocController extends BaseController{
 			return;	
 		}
 		
-		List<HitDoc> hits = com.DocSystem.agent.search.AgentSearchExecutor.searchIndex(
-				repos, parsedQuery, pathFilter.isEmpty() ? null : pathFilter, maxResults);
-		
+		//R3-10: 只有"恰好一个不含通配符的 name 条件"才会拿到候选名(见 AgentSearchQuery.exactNameCandidate)
+		String directName = parsedQuery.exactNameCandidate();
+		String indexPathFilter = pathFilter.isEmpty() ? null : pathFilter;
 		List<String> snippetTerms = parsedQuery.collectTerms();
+		
 		List<Map<String, Object>> results = new ArrayList<Map<String, Object>>();
-		for(HitDoc hitDoc : hits)
+		List<String> failedRepos = new ArrayList<String>();
+		Set<String> seenEntries = new HashSet<String>();
+		int scannedRepos = 0;
+		int skippedRepos = 0;
+		long searchStartTime = System.currentTimeMillis();
+		for(int i=0; i<reposList.size(); i++)
 		{
-			Doc doc = hitDoc.doc;
-			Map<String, Object> r = new HashMap<String, Object>();
-			r.put("reposId", reposId);
-			r.put("docId", doc.getDocId());
-			r.put("path", doc.getPath());
-			r.put("name", doc.getName());
-			r.put("type", doc.getType());
-			r.put("size", doc.getSize());
+			if(results.size() >= maxResults || (System.currentTimeMillis() - searchStartTime) > AGENT_SEARCH_TOTAL_TIMEOUT_MS)
+			{
+				//命中已满 或 总耗时超上限: 剩余仓库不再扫描(如实报告, 不假装扫完了)
+				skippedRepos = reposList.size() - i;
+				break;
+			}
+			Repos repos = reposList.get(i);
+			scannedRepos++;
+			try
+			{
+				//① 精确直查(不依赖索引): path+name → docSysGetDoc → 本机 stat / 前置远程确认
+				if(directName != null)
+				{
+					Doc directDoc = agentFindDocDirect(repos, pathFilter, directName);
+					if(directDoc != null && seenEntries.add(entryKey(repos, directDoc)))
+					{
+						results.add(buildAgentSearchHit(repos, directDoc, null, true, crossRepos));
+					}
+				}
+				
+				//② 索引搜索
+				if(results.size() < maxResults)
+				{
+					List<HitDoc> hits = com.DocSystem.agent.search.AgentSearchExecutor.searchIndex(
+							repos, parsedQuery, indexPathFilter, maxResults);
+					for(HitDoc hitDoc : hits)
+					{
+						if(results.size() >= maxResults)
+						{
+							break;
+						}
+						Doc doc = hitDoc.doc;
+						if(!seenEntries.add(entryKey(repos, doc)))
+						{
+							continue;	//直查已命中同一条目
+						}
+						Map<String, Object> r = buildAgentSearchHit(repos, doc, hitDoc, false, crossRepos);
+						if(withSnippet)
+						{
+							String snippet = extractHitSnippet(repos, hitDoc, snippetTerms);
+							if(snippet != null)
+							{
+								r.put("snippet", snippet);
+							}
+						}
+						results.add(r);
+					}
+				}
+			}
+			catch(Exception e)
+			{
+				//逐仓失败隔离: 一个仓库报错(前置仓库连不上/超时/索引损坏)不能毁掉整个跨仓搜索
+				Log.error(e);
+				failedRepos.add(repos.getId() + "(" + repos.getName() + "): " + e.getMessage());
+			}
+		}
+		
+		rt.setData(results);
+		rt.setDataEx(results.size());
+		if(crossRepos)
+		{
+			//跨仓元信息(dataEx 保持"命中的条数"语义不变, 元信息走 msgData)
+			Map<String, Object> meta = new HashMap<String, Object>();
+			meta.put("crossRepos", Boolean.TRUE);
+			meta.put("reposTotal", reposList.size());
+			meta.put("reposScanned", scannedRepos);
+			meta.put("reposSkipped", skippedRepos);
+			meta.put("reposFailed", failedRepos);
+			meta.put("directProbeUsed", Boolean.valueOf(directName != null));
+			rt.setMsgData(meta);
+		}
+		writeJson(rt, response);
+	}
+	
+	/** 跨仓搜索总耗时上限（避免前置仓库连不上时把一次工具调用拖成无限等待） */
+	private static final long AGENT_SEARCH_TOTAL_TIMEOUT_MS = 20000;
+	
+	/**
+	 * R3-10: 不依赖索引的精确直查 —— path+name 精确命中一个条目（文件或目录）。
+	 *
+	 * <p>{@code buildBasicDoc} 用 path+name 算出 docId（纯函数），再交给 {@code docSysGetDoc}：
+	 * 它按 {@code isFSM(repos)} 分派 —— 本机仓库走 {@code fsGetDoc}（一次 {@code File.exists()}），
+	 * 前置仓库（SVN/GIT/文件服务器）走 {@code remoteServerGetDoc} 做远程确认。</p>
+	 *
+	 * <p>⚠️ 不要在这里直接调 {@code fsGetDoc}：它只覆盖 {@code type<3} 的本机仓库，
+	 * 对前置仓库永远是"不存在"（type=0），会造成 100% 假阴性。</p>
+	 *
+	 * @param pathFilter 目录限定（仓库内相对路径，以 "/" 结尾；空 = 仓库根目录）
+	 * @param name       条目名（可含相对路径，如 {@code "66666/中文.txt"}，由 buildBasicDoc 拆分）
+	 * @return 命中的 Doc（type 1=文件 / 2=目录）；不存在或被拒绝时返回 null
+	 */
+	private Doc agentFindDocDirect(Repos repos, String pathFilter, String name)
+	{
+		String entryPath = (pathFilter == null ? "" : pathFilter) + name;
+		if(entryPath.isEmpty() || entryPath.length() > AGENT_SEARCH_MAX_ENTRY_PATH_LEN)
+		{
+			return null;
+		}
+		Doc doc = buildBasicDoc(repos.getId(), null, null, Path.getReposPath(repos), entryPath, "",
+				null, null, true, Path.getReposRealPath(repos), Path.getReposVirtualPath(repos), 0L, "");
+		if(doc == null)
+		{
+			return null;	//非法相对路径(如 ..)会被 Path.seperatePathAndName 拒绝(-2)
+		}
+		Doc hit = docSysGetDoc(repos, doc, false);
+		if(hit == null || hit.getType() == null || hit.getType().intValue() == 0)
+		{
+			return null;	//type 0 = 不存在
+		}
+		return hit;
+	}
+	
+	/** 条目相对路径长度上限（防止把超长 query 拼成路径去 stat） */
+	private static final int AGENT_SEARCH_MAX_ENTRY_PATH_LEN = 1024;
+	
+	/** 去重键：同一仓库下 path+name 相同的条目只出现一次 */
+	private static String entryKey(Repos repos, Doc doc)
+	{
+		String p = doc.getPath() == null ? "" : doc.getPath();
+		String n = doc.getName() == null ? "" : doc.getName();
+		return repos.getId() + "|" + p + n;
+	}
+	
+	/**
+	 * 组装一条 Agent 搜索命中（统一结构）。
+	 *
+	 * @param hitDoc  索引命中的附加信息（直查命中时为 null）
+	 * @param direct  true = path+name 精确直查命中；false = 索引命中
+	 * @param crossRepos 跨仓搜索时额外带上 reposName（模型需要知道"在哪个仓库"）
+	 */
+	private Map<String, Object> buildAgentSearchHit(Repos repos, Doc doc, HitDoc hitDoc, boolean direct, boolean crossRepos)
+	{
+		Map<String, Object> r = new HashMap<String, Object>();
+		r.put("reposId", repos.getId());
+		if(crossRepos)
+		{
+			r.put("reposName", repos.getName());
+		}
+		r.put("docId", doc.getDocId());
+		r.put("path", doc.getPath());
+		r.put("name", doc.getName());
+		r.put("type", doc.getType());
+		r.put("size", doc.getSize());
+		r.put("latestEditTime", doc.getLatestEditTime());
+		if(direct)
+		{
+			r.put("via", "direct");
+			r.put("hitType", HitDoc.HitType_FileName);	//名字精确命中
+			r.put("score", 100);
+		}
+		else
+		{
+			r.put("via", "index");
 			r.put("hitType", hitDoc.hitType);
 			//⚠️ 直接用公有字段：getTotalHitScore() 会调 Log.debug（写文件失败时无限递归）
 			r.put("score", hitDoc.hitScore_Total);
-			if(withSnippet)
-			{
-				String snippet = extractHitSnippet(repos, hitDoc, snippetTerms);
-				if(snippet != null)
-				{
-					r.put("snippet", snippet);
-				}
-			}
-			results.add(r);
 		}
-		rt.setData(results);
-		rt.setDataEx(results.size());
-		writeJson(rt, response);
+		return r;
 	}
 	
 	//Agent 搜索: 提取命中片段(±50 字符纯文本, 不转 base64; 超过 2MB 的文件不读全文)

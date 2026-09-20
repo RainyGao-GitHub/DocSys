@@ -74,6 +74,48 @@ public class AgentSearchQuery {
     }
 
     /**
+     * 【R3-10】提取"可以拿去做不依赖索引的精确直查"的条目名；没把握时返回 null。
+     *
+     * <p><b>为什么需要</b>：Lucene 索引里只有"DocSys 扫描/写入时建立"的条目。直接放进仓库目录、
+     * 或早期就存在但从未被扫描的文件/目录在索引里<b>根本不存在</b>——2026-09-20 实测仓库 5 的索引只覆盖
+     * {@code MxsDoc/} 子树，根目录下 {@code 66666/}、{@code 资料} 等明明在磁盘上却 0 命中。
+     * 直查（{@code path+name → docId → docSysGetDoc}）不依赖索引，一次 stat 就能确认。</p>
+     *
+     * <p><b>宁缺勿滥</b>：只有「must+should 里恰好一个 name 条件、值里不含 {@code *} / {@code ?} 通配符、
+     * 且没有任何 mustNot」时才返回该字面值。其余情况（多个 name 条件、含否定条件、通配/模糊）一律 null
+     * —— 绝不把模糊查询当成精确名去 stat。</p>
+     */
+    public String exactNameCandidate() {
+        if (!mustNot.isEmpty()) {
+            return null;
+        }
+        String found = null;
+        int count = 0;
+        for (Term t : must) {
+            if (!"name".equals(t.field)) {
+                continue;
+            }
+            count++;
+            found = t.term;
+        }
+        for (Term t : should) {
+            if (!"name".equals(t.field)) {
+                continue;
+            }
+            count++;
+            found = t.term;
+        }
+        if (count != 1 || found == null) {
+            return null;
+        }
+        String v = found.trim();
+        if (v.isEmpty() || v.indexOf('*') >= 0 || v.indexOf('?') >= 0) {
+            return null;
+        }
+        return v;
+    }
+
+    /**
      * 解析并校验查询 DSL JSON。
      *
      * @param json DSL JSON 字符串

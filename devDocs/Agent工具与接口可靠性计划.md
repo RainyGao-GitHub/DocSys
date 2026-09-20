@@ -426,8 +426,43 @@
   - **页面 E2E**：`write_file` 弹窗 → `参数：vid=5；path=66666/；name=modal_probe_…md；content=确认弹窗参数验证`；
     `delete_doc` 弹窗 → `参数：vid=5；path=66666/；name=modal_probe_…md`（两次均 `hasParamLine=true`）。
 
-#### R3-10 跨仓库按路径/名字找（⬜ 待做）
-- 模型为了找 `66666/` 在哪个仓库连调 6 次 `list_docs`。候选方案：新增 `find_doc(path,name)`，或让 `list_docs` 在缺 `vid` 时跨仓库搜索。
+#### R3-10 跨仓库按路径/名字找（✅ 2026-09-20 已做）
+- **现象**：模型为了找 `66666/` 在哪个仓库连调 6 次 `list_docs`。
+- **根因（全部实测）**：
+  - **索引不是磁盘镜像**：repo 5 索引 20731 条（文件 19825 / 目录 905，目录**入库**），但按 path 前缀查：`MxsDoc/` 有，
+    `培训资料/`、`正常工作的Office文件/`、`临时目录/`、`知识库/`、`空文件夹上传测试/`、`66666/` **全部 0 命中**
+    （`66666/` 里 3 个文件也不在索引里）；而磁盘 `D:/test/66666`（repo 5 realDocPath）真实存在。
+  - **17 仓逐仓调旧 `search_files` 也没用**：`term` 写法 0 命中；`wildcard` 写法只 1 条无关 png（文件）。
+  - **`grep_files` 救不了**：只匹配**文件内容**，不匹配名字、从不返回目录（实测 20 条全是 css/js 里的颜色值噪声）——
+    旧描述却把模型往这边引（文档误导）。
+  - **人类接口早就能答**：`/Doc/searchDoc.do` 的 `reposId=-1` 即跨全部可访问仓库，第一步 `getHitDoc` →
+    `buildBasicDoc` + `docSysGetDoc`（O(1) stat）。实测一次调用返回 `vid=5 path="" name=66666 type=2`。
+    缺的只是 agent 工具层没接这条腿。
+  - 性能不是瓶颈：逐仓打满 17 仓服务端仅 **725ms（43ms/仓）**；贵的是每次工具调用 = 一次 LLM 往返。
+- **用户裁定**：①`search_files` 的 `vid` 改**可选**（不在仓库详情页时确实不知道该选哪个仓库）；
+  ②`grep_files` 保持 `vid` 必填（跨仓 grep = 逐仓全盘扫描）；③**增/删/改/查/读文件的工具一律必须明确 vid**
+  （没有 vid 的文件访问会操作到错误对象，用户忘了说明的概率远大于他想“随便找个仓库”）；
+  ④跨仓分支必须含**不依赖索引的直查**，单仓也补同一路（避免“缺 vid 反而能找到、给 vid 反而不行”）。
+  - 因此**否定**了原候选“让 `list_docs` 在缺 vid 时跨仓库搜索”（浏览/操作语义不该跨仓，会诱导模型随手挑仓库）。
+- **实现**：
+  - 服务端 `DocController.agentSearchDoc`：`reposId` 省略/-1 → `getAccessableReposList`（与 `searchDoc.do` 同权限口径）逐仓
+    ①`buildBasicDoc` + **`docSysGetDoc`** 直查（本机 stat / 前置远程确认）②索引搜索；逐仓 try/catch 失败隔离 + 20s 总耗时上限
+    （超时/命中满则如实报“未扫描”）；`path` 逐仓前缀过滤；`msgData` 回传跨仓元信息；按 path+name 去重；grep 分支明确拒绝跨仓。
+  - `AgentSearchQuery.exactNameCandidate()`：只有“恰好一个 name 条件 + 值不含 `*`/`?` + 无 mustNot”才拿去做直查（宁缺勿滥）。
+  - 工具层：`search_files` required `["vid","query"]` → `["query"]`；描述写明可跨仓 + 直查语义 + “拿到 vid 后要显式传下去”；
+    `grep_files` 描述如实说明“只匹配文件内容 / 从不返回目录 / 只支持单仓库”；渲染加 `vid=5(test)`、`[目录] name/`、`命中=直查`、
+    未扫完与失败仓库如实披露、跨仓命中后追加下一步提示。
+- **验证**：
+  - 护栏 `TestSearchCrossRepo` **45 项**（含源码 lint：直查必须经 `docSysGetDoc`，`agentFindDocDirect` 内不得出现 `fsGetDoc(`，
+    因为 `fsGetDoc` 只覆盖 `type<3` 本机仓库、对前置仓库 100% 假阴性）→ **全量 32 套 / 1186+45 项断言 0 失败**。
+  - 真探针 `FindCrossRepoE2E` **22/22 PASS**：含 raw Lucene 对照（索引 0 命中 vs 磁盘存在）、跨仓 1 次调用命中
+    `vid=5 / [目录] 66666/ / 命中=直查`、单仓同样命中、vid=11 不串味、跨仓空结果如实、跨仓 grep 被拒、
+    成本对照（跨仓 1 次 93ms vs 逐仓 17 次 366ms）。
+  - **页面 E2E**（deepseek-v4-flash）：问“66666/ 在哪个仓库” → **1 步工具调用**（`search_files` 不带 vid）答出
+    “仓库 test（vid=5）”；追问“里面有哪些文件” → `list_docs({"vid":5,"path":"66666/"})` **1 步**（vid 正确带过去了）。
+    对照改造前的 6 次 `list_docs`。
+- **遗留**：①前置仓库（`remoteServerGetDoc`）dev 无 type≥3 仓库，**无法 E2E**，仅由源码 lint 锁住调用方式；
+  ②实测发现 repo 5 索引只覆盖 `MxsDoc/` 子树 —— 疑似索引同步/重建的覆盖缺陷，已单列为 **R3-13**。
 
 #### R3-3 `run_skill` 对已下线 DocSys 能力的表现
 - P3b 验收标准里写了"`run_skill("<DocSys能力>")` 应明确报 No executor"，但**未实测**。→ 补一次页面验证并记录。
@@ -532,12 +567,11 @@
 | R3-1 | P2 | 参数命名一致（update_repos.reposId → vid） | ✅ | 统一为 vid 并删掉旧属性；护栏 TestReposToolsFormat 锁定 |
 | R3-2 | P2 | 全工具体检表（28 工具）——**批 1 ✅ / 批 2a ✅ / 批 2b ✅** | ✅ | 批 1：仓库/备份/当前用户；批 2a：写回执 + 确认门安全洞；批 2b：memory/attachment/web_search/run_skill |
 | R3-3 | P2 | run_skill 对已下线 DocSys 能力的表现 | ✅ | 未知技能报 `No executor found` ✓；`system_help` 死技能 + 子进程乱码已修（护栏 34/34） |
-| R3-11 | P2 | `WebRoot/WEB-INF/skills/system_help` 演示件过期（SKILL.md 让跑 `docsys` CLI；run.bat 指向 8080/api/help + admin2026） | ⬜ | R3-2 批 2b 发现；现已不被执行，但内容误导 |
-| R3-12 | P2 | `web_search` 摘要未清理 HTML 实体（`&ensp;`/`&#0183;`） | ⬜ | R3-2 批 2b 发现；进上下文是噪声 |
+| R3-11 | P2 | `WebRoot/WEB-INF/skills/system_help` 演示件过期（SKILL.md 让跑 `docsys` CLI；run.bat 指向 8080/api/help + admin2026） | ⬜ | R3-2 批 2b 发现；现已不被执行，但内容误导 || R3-13 | P2 | repo 5 的 Lucene 索引只覆盖 `MxsDoc/` 子树（`培训资料/`、`66666/` 等磁盘上存在但索引 0 条）—— 疑似索引同步/重建的覆盖缺陷 | ⬜ | R3-10 实测发现：这是“索引不是磁盘镜像”的根，直接决定搜索类工具的可信边界 || R3-12 | P2 | `web_search` 摘要未清理 HTML 实体（`&ensp;`/`&#0183;`） | ⬜ | R3-2 批 2b 发现；进上下文是噪声 |
 | R3-4 | P2 | 旧编排死代码（SubAgent/MainAgent/LLMIntentParser）处置 | ⬜ | |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ⬜ | |
 | R3-6 | P2 | 新工具上线检查单（流程固化） | ⬜ | |
 | R3-7 | P2 | `getLoginUser()` 自写响应 → 双写隐患 | ⬜ | |
 | R3-8 | P2 | 移除 `isLockBusy` 文案兜底（R1-1 收尾） | ⬜ | |
 | R3-9 | P2 | 确认弹窗只显示工具名、不显示参数（R2 页面 E2E 发现） | ✅ | 加 `summarizeArgs`（脉敏 + 长值只给长度）；护栏 13→27，页面 E2E 两次弹窗均带参数行 |
-| R3-10 | P2 | 无“跨仓库按路径/名字找”的能力（R2 页面 E2E 发现） | ⬜ | 模型为了找 `66666/` 在哪个仓库连调 6 次 `list_docs`；考虑 `find_doc(path,name)` 或让 `list_docs` 支持不传 vid |
+| R3-10 | P2 | 无“跨仓库按路径/名字找”的能力（R2 页面 E2E 发现） | ✅ | `search_files` 的 vid 改可选（跨仓）+ 不依赖索引的 `docSysGetDoc` 直查；护栏 45 项、探针 22/22、页面 E2E 1 步（旧 6 步）；写/读类工具 vid 仍必填 |
