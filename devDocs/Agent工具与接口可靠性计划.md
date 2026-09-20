@@ -239,7 +239,8 @@
   - `moreHint(remain, toolName, nextOffset)`：全工具统一句式"⚠️ 还有 N 条未显示：继续调用 X 传 offset=N。"。
   - 已改走公共件的工具：`list_repos` `get_repos` `list_docs` `get_doc` `get_doc_share_list` `search_files` `grep_files`。
 - **验收（已过）**：护栏 `TestToolOutputContract` **82/82**，内含源码 lint：列表类工具不得再出现 `fmt(client.getDocList(` / `fmt(client.getReposList(` / `fmt(client.getDocShareList(` / `fmt(client.agentSearchDocs(` / `fmt(client.grepFiles(` / `fmt(client.getRepos(`。
-- **剩余**：写操作回执类（`write_file`/`rename_doc`/`move_doc`/`copy_doc`/`backup_repos`/`run_skill` 等）仍为 `fmt()` 整包 JSON；因这些端点响应对 Agent 无害（无 list 型大数组）、且改回执要逐个核对字段，归入 **R3-2 工具体检**时一并做。
+- **剩余**：写操作回执类（`write_file`/`write_note`/`create_folder`/`rename_doc`/`move_doc`/`copy_doc`/`delete_doc`）当时仍是 `fmt()` 整包 JSON
+  → **✅ 已于 R3-2 批 2a 完成**（`writeReceipt`/`failReceipt`，见下文 R3-2 节）；仓库/备份类已在批 1 完成。
 
 #### R2-2 `get_doc` 内容 4000 字上限（✅ 已落地）
 - **原状**：内容被 `truncate()` 截到 4000 并附 `...(truncated)`（模型能看出被截，但拿不到后文）。
