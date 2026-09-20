@@ -248,6 +248,7 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 - 探针 `MoveToolPathE2E` **20/20**（新增“用 path 在子目录 66666/ 里建目录并删除”）
 - **页面 E2E**：在 `66666/` 下建目录 → 写 `note.md` → `get_doc(path="66666/R6T_.../", name="note.md")` 读回一致 → `delete_doc` 连目录带文件删除；四步全 ok，模型自述“全程按 path+name 定位，未使用 docId” ✓
 - 全量护栏 74/25/13/11/23/24/52/55/29/26/30/55 全绿；磁盘无残留（66666/ 仍为原三文件）
+- 已提交 `a2eb58b7d`
 
 ## 全阶段完成情况
 
@@ -264,8 +265,8 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- 主仓库 `devInt`（**R1-6 第 3 步**）：`agent/tool/DocSysToolFactory.java`、`agent/tool/TestDocHistoryLocator.java`、`agent/tool/TestListDocsFormat.java`、`devDocs/Agent工具与接口可靠性计划.md` + 本卡
-- 已提交：R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R1-6 第 3 步已提交 `a2eb58b7d`）
+- 已提交：R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
