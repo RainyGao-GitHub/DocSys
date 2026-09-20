@@ -289,6 +289,34 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
 - **页面 E2E**：问“列出所有仓库，并说明版本控制类型，一共几个？”→ **1 步** `list_repos{}`，
   首行 `仓库列表：共 17 个，本次显示第 1-17 个`；模型答“共 17 个”、GIT 4 / 磁盘 3 / 无 10 **完全正确**，
   并引用页脚提示主动提出可用 `get_repos(vid=…)`；无 pageerror。  - 已提交 `e8d04b505`
+## R1-2 / R1-3：分享工具修正（2026-09-20）
+
+### 问题（均已实测）
+- **R1-2**：`create_doc_share` 调的 `/Doc/createDocShare.do` **服务端根本没这个映射** → 工具 100% 404（T8.2 “撤销回滚”就是它）。真实端点是 `BussinessController:/addDocShare.do`，参数本来就是 `reposId/path/name + 权限/有效期`（**无 docId**）。
+- **R1-3**：`get_doc_share_list` 把 `vid`+`docId` 标成必填、描述“文档的分享列表”，而 `/Doc/getDocShareList.do` **不接受任何参数**（返回当前用户全部分享）；dev 实测 **32 条 / 11414 字符** → 裸倒 JSON 也会被截断。
+
+### 改动
+- `DocSysClient`：`createDocShare(...)` → `addDocShare(reposId, path, name, sharePwd, shareHours)`（默认与 web 端一致：只读+可下载+7 天）；
+  新增 `deleteDocShare(shareId)`（能创建就要能撤销）；`getDocShareList()` 改**无参**（删掉误导性的 4 参签名）。
+- 工具 `create_doc_share` → `required {vid, path, name}` + 可选 `sharePwd`/`shareHours`（默认 168h）；去 `docId/shareType/expireTime`；
+  新增 `formatShareCreated`（shareId/对象/链接/有效期/密码/权限）；仍 `isWrite+needsConfirm`。
+- 工具 `get_doc_share_list` → 无必填；可选 `path`/`name`（客户端过滤）+ `offset`/`limit`；描述如实说明“服务端口不接受参数”；
+  新增 `formatSharePage`/`renderShares`/`shareAuthSummary`（shareAuth JSON 压成“只读+可下载”；整库分享写“整库”；预算 3600）。
+- CLI：`share list` 改无参、`share create <vid> <dir-path> <name> [pwd] [hours]`、**新增 `share delete <share-id>`**。
+
+### 验证
+- 护栏 `TestDocShareFormat` **60/60**（含源码 lint：不得回退到旧端点/旧方法）；全量 60/50/80/111/25/13/23/24/52/55/29/26/30/55 全绿。
+- 探针 `ShareToolE2E` **23/23**（真环境）：创建成功 → **shareLink 不带 cookie 打开 HTTP 200 且非登录页**（链接真可用）→ 列表能查到 → 撤销后恢复原样。
+- **页面 E2E**：①“把 66666/README.md 生成分享链接”→ 确认弹窗批准 → `create_doc_share{vid:5,path:"66666/",name:"README.md"}`，
+  返回 `shareId=540833249` + 链接 + 有效期至 2026-09-27 16:16 + 密码无 + 只读可下载；模型主动提醒“链接对外、无需登录”。
+  ②“我目前有哪些分享？列出最新几条，并告诉我总数” → **1 步** `get_doc_share_list{}`，首行“共 33 条，本次显示第 1-33 条”，
+  模型答“33 条，1 条有效 / 32 条已过期”并列出最新 5 条（shareId/对象/状态/权限全对）。
+- 环境已清理（页面 E2E 创建的 shareId=540833249 已撤销，分享数回到 32）。
+
+### 新发现（待记入 R3）
+- **确认弹窗只显示工具名**，不显示参数 —— 创建分享这种对外动作，用户看不到“到底在分享哪个文件”。
+- 模型为了找 `66666/` 在哪个仓库，连调了 6 个 `list_docs`（逐仓库试）；当前工具集没有“跨仓库按路径/名字找”的能力（R2/R3 可考虑）。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -298,13 +326,13 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 全部完成 ✅**；**R1-5 ✅（本轮）**；接下来按序：R1-2 `create_doc_share`（工具调不存在的端点）→ R1-3 `get_doc_share_list` 语义 → R2（统一输出/大结果）→ R3
+- **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 ✅**；**R1-5 ✅**；**R1-2 ✅ / R1-3 ✅（本轮）**；R1 全部完成 → 下一步 **R2**（统一输出规范 / 长文本 maxChars+offset / search_files·grep_files 大结果压缩）→ R3
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 无（R1-5 已提交 `e8d04b505`）
+- 待提交（R1-2/R1-3）：`agent/client/DocSysClient.java`、`agent/tool/DocSysToolFactory.java`、`agent/tool/TestDocShareFormat.java`（新增）、`agent/cli/DocSysCLI.java` + `devDocs/Agent工具与接口可靠性计划.md` + 本卡
 - 已提交：R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 

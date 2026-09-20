@@ -88,19 +88,42 @@
 - **踩坑记录**：改完 `BussinessController` 后忘记重新编译该类，HTTP 探针仍拿不到码（表现为"改了没生效"）→ **跨仓库/多文件改动后必须逐个文件 javac，或核对 `WebRoot/WEB-INF/classes` 里对应 .class 的时间戳**。
 - **遗留（不在本项验收范围，均为非 Agent 可达路径，如实列出）**：全树还有 **13 处** 未打码的"不存在"出口 —— `ManageController 5`（bannerConfig/用户/日志文件）、`SalesController 3`、`websocket/BusinessChannel 1`、`websocket/OfficeController 4`（Office 预览链路）。要补齐时按同一套分码规则处理即可。
 
-#### R1-2 `create_doc_share` 指向不存在的端点
-- **现状**：`DocSysClient:1066` 调 `/Doc/createDocShare.do`；**服务端无此映射**（`DocController` 只有 `getDocShareList/verifyDocSharePwd/getDocShare`），真实创建分享在 `BussinessController:/addDocShare.do`（另有 `updateDocShare/deleteDocShare`）。
+#### R1-2 `create_doc_share` 指向不存在的端点 —— ✅ 已完成（2026-09-20，走方案 A：改端点）
+- **现状**：`DocSysClient` 调 `/Doc/createDocShare.do`；**服务端无此映射**（`DocController` 只有 `getDocShareList/verifyDocSharePwd/getDocShare`），真实创建分享在 `BussinessController:/addDocShare.do`（另有 `updateDocShare/deleteDocShare`）。
 - **后果**：模型一旦调用必 404，工具 100% 不可用（记忆中 T8.2 "用户撤销回滚"即此项）。
-- **方案**（二选一，建议 A）：
-  - **A** 改端点：`/Bussiness/addDocShare.do` + 对齐其参数（需先读该接口签名，确认 shareType/pwd/expire 字段名）；
-  - **B** 下线该工具（若分享不在 Agent 目标能力内）→ 同时更新 `TestWriteTools` 计数。
-- **验收**：页面上"把 X 生成分享链接"能真实创建出分享，且分享列表能查到；或（若选 B）工具数 22→21 且护栏同步。
+- **实测真实签名**（`BussinessController:165`）：
+  `addDocShare(taskId, reposId, path, name, isAdmin, access, editEn, addEn, deleteEn, downloadEn, heritable, sharePwd, shareHours, mailSubject)`
+  —— **本身就是 path/name 定位，无 docId**；成功时 `rt.setData(docShare)`，里面带 `shareId` 与 `shareLink`
+  （链接形如 `http://<host>:<port>/DocSystem/web/project.html?vid=<vid>&shareId=<id>`，见 `buildShareLink`）。
+- **本次实现**：
+  - `DocSysClient.createDocShare(...)` → 换成 `addDocShare(reposId, path, name, sharePwd, shareHours)`，默认权限与 web 端
+    `project.js` 一致（`access=1, downloadEn=1, 其余 0, heritable=1`）；新增 `deleteDocShare(shareId)` 与之配对（CLI `share delete` 使用）。
+  - 工具 `create_doc_share` → `required {vid, path, name}` + 可选 `sharePwd`/`shareHours`（默认 **168h = 7 天**），
+    schema 不再暴露 `docId/shareType/expireTime`；描述里写明“不要传 docId”“默认只读+可下载、7 天后过期”
+    以及“分享是对外链接，请先确认”；仍为 `isWrite+needsConfirm`。
+  - 新增 `formatShareCreated`：输出 `shareId / 对象 / 链接 / 有效期至 / 密码 / 权限`，失败时转调 `fmt()` 保留错误码。
+- **验收（已过）**：★ 护栏 `TestDocShareFormat` **60/60**（含源码 lint：不得再出现旧端点/旧方法）；
+  探针 `ShareToolE2E` **23/23**：真环境创建成功（shareId 1767499191）→ **把返回的 shareLink 不带任何 cookie 打开，HTTP 200 且不是登录页**
+  （证明链接真可用，而非假字符串）→ 列表能查到 → 撤销后分享数恢复原样；
+  **页面 E2E**：说“把 66666/README.md 生成一个分享链接” → 确认弹窗批准 → `create_doc_share{vid:5,path:"66666/",name:"README.md"}`
+  返回 `shareId=540833249` + 链接 + `有效期至 2026-09-27 16:16` + 密码无 + 只读可下载，模型还主动提醒“该链接对外访问、无需登录”。
+- ❗ **新发现（列入 R3）**：确认弹窗只显示**工具名**，不显示参数 —— 创建分享这种对外动作，用户看不到“到底在分享哪个文件”。
 
-#### R1-3 `get_doc_share_list` 语义错位
+#### R1-3 `get_doc_share_list` 语义错位 —— ✅ 已完成（2026-09-20）
 - **现状**：工具要求 `vid`+`docId`（标为必填），描述"获取文档的分享列表"；但 `/Doc/getDocShareList.do` **不接任何参数**，返回的是"当前用户分享过的所有文档"。
-- **后果**：模型按描述传参、拿到的是另一回事，容易误判；必填参数纯属误导。
-- **方案**：明确语义二选一 —— ① 改成"我的分享列表"（去掉必填参数、改描述）；② 若要"某文档的分享"，改调 `/Doc/getDocShare.do`（需核对其参数）或 `getDocShareList` 后按 docId 过滤。
-- **验收**：护栏断言描述与参数一致；页面问"这个文件有哪些分享"能得到正确答案。
+- **后果**：模型按描述传参、拿到的是另一回事，容易误判；必填参数纯属误导。实测该接口在 dev 返回 **32 条 / 11414 字符**（远超 `MAX_SUMMARY_LEN` 4000）→ 裸倒 JSON 也会被截断。
+- **本次实现（方案① + 紧凑渲染）**：
+  - `DocSysClient.getDocShareList()` 改为**无参**（服务端不读参数）；删掉误导性的 `(reposId, docId, path, name)` 签名。
+  - 工具 `get_doc_share_list` 去掉必填项，描述如实写“列出**当前用户创建的全部分享**；服务端不接受任何参数，
+    path/name 只是在结果里**过滤**”；新增可选 `path`/`name`（客户端过滤）与 `offset`/`limit`（默认 50 / 最大 200）。
+  - 新增 `formatSharePage` / `renderShares` / `shareAuthSummary`：每行 `shareId / 仓库+对象路径 / 有效期（或已过期）/ 权限`；
+    整库分享（path+name 都空）写“整库”；`shareAuth` 的 12 字段 JSON 压成 `只读+可下载`（常见形态短写）或带位描述；
+    字符预算 3600（与目录列表同级，32 条能一页列全）；失败转调 `fmt()` 保错误码。
+- **验收（已过）**：护栏 `TestDocShareFormat`（schema 无必填/无 vid·docId、描述与真实语义一致、渲染与分页、过滤、错误码）；
+  探针 `ShareToolE2E` 列表断言；**页面 E2E**：问“我目前有哪些分享？列出最新几条，并告诉我总数”→ **1 步** `get_doc_share_list{}`，
+  输出首行 `分享列表：匹配（全部分享）共 33 条，本次显示第 1-33 条`；模型答“共 33 条，仅 1 条有效、32 条已过期”，
+  并列出最新 5 条（shareId/对象/状态/权限全对）。
+- ❗ **新发现（列入 R3）**：分享列表里“整库分享”不少（旧数据 path/name 为空），模型需要能分辨“整库”与“某文件”——已在渲染里写明“整库”。
 
 #### R1-4 `get_doc_history` 静默返回仓库根的历史 — ✅ 已完成（2026-09-20，**按 path/name 定位实现，不再走 docId 反查**）
 - **现状（改造前）**：`get_doc_history` 只传 `vid`+`docId`；服务端 `getRealDocHistory()` 用 `buildBasicDoc(repos.getId(), docId, pid, reposPath, path, name, ...)`，**path/name 为空 → 塌缩为仓库根** → `doc.getDocId()==0` → `queryCommitHistory()` 走"仓库根目录"分支，返回整个仓库的历史且 `status=ok`——**静默错误**，比报错更危险。
@@ -131,7 +154,7 @@
   | `delete_doc` | `{vid}` | docId/pid/path/name 全可选 | ✅ required `{vid, path, name}` |
   | `rename_doc` | `{vid, dstName}` | docId/pid 可选 | ✅ required `{vid, path, name, dstName}` |
   | `get_doc_history` | `{vid, docId}` | docId | ✅ 已改为 `{vid, path, name}` |
-  | `create_doc_share` | `{vid, docId}` | docId（端点本身还错 → R1-2） | ⬜ `{vid, path, name}`（与 R1-2 一起做） |
+  | `create_doc_share` | `{vid, docId}` | docId（端点本身还错 → R1-2） | ✅ `{vid, path, name}` + 真实端点（R1-2） |
   | `list_docs` | `{vid}` | docId 参数（**已实测不生效**）＋描述推荐 docId＋输出每行 docId | ✅ 已删 docId 参数；输出不再带 docId 列 |
   | `get_doc` | `{vid, path, name}` | 已有可选 docId | ✅ 已删 docId |
   | `write_note` | `{vid, name, content}` | docId 可选 | ✅ required `{vid, path, name, content}` |
@@ -266,7 +289,7 @@
 
 | 阶段 | 内容 | 依赖 | 交付 |
 |---|---|---|---|
-| **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 get_doc_history ✅ （path/name）→ **R1-6 定位全面 path/name ✅（含删反查层/注入块/导入冲突/CLI）** → **R1-5 list_repos ✅** → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
+| **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 ✅ → **R1-6 定位全面 path/name ✅** → **R1-5 list_repos ✅** → **R1-2 create_doc_share ✅** → **R1-3 get_doc_share_list ✅** → R2（统一输出/大结果）→ R3 | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
 | **R3** | R3-2 全工具体检（产出体检表）→ R3-1 命名 → R3-3 run_skill → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表 + 检查单文档 |
 
@@ -277,7 +300,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R1-5 后）：`TestListReposFormat 50` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
+   - 现基线（2026-09-20 R1-2/R1-3 后）：`TestDocShareFormat 60` / `TestListReposFormat 50` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolE2E` `ListDocsProbe` `ToolChk` `IdProbe` `LockProbe`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -322,8 +345,8 @@
 | R1-1 | P0 | 后端补 errorCode（替代文案嗅探） | ✅ | `eda22474b` |
 | R1-1b | P0 | 权限/登录/仓库不存在出口补码（三控制器 66 处） | ✅ | 见本次提交 |
 | R1-1c | P0 | `docSysErrorLog(…不存在！, rt)` 64 处补码（新增 SHARE_NOT_FOUND） | ✅ | 见本次提交 |
-| R1-2 | P0 | create_doc_share 端点不存在 | ⬜ | |
-| R1-3 | P0 | get_doc_share_list 语义错位 | ⬜ | |
+| R1-2 | P0 | create_doc_share 端点不存在 | ✅ | 改调 /Bussiness/addDocShare.do + path/name；链接实测无 cookie 可访问 |
+| R1-3 | P0 | get_doc_share_list 语义错位 | ✅ | 改“我的分享列表”（无必填）+ 紧凑分页 + path/name 过滤 |
 | R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ✅ | 见本次提交 |
 | R1-6 | P0 | 定位方式全面改为 path/name（✅ 全部工具 + `@` 注入块 + 导入冲突 + 删反查过渡层 + CLI） | ✅ | 见本次提交 |
 | R1-5 | P0 | list_repos 截断（18 仓只看 9） | ✅ | 紧凑分页渲染 + 不再泄露 svnPwd；探针 28/28、页面 E2E 列全 17 个 |

@@ -22,7 +22,7 @@ import java.util.Scanner;
  * - Doc: list, add, delete, rename, move, copy, get, history
  * - File: upload, download
  * - Lock: lock, unlock
- * - Share: list, create
+ * - Share: list, create, delete
  * - Search: search
  * - AI: chat, rag
  * - Backup: backup, status
@@ -328,16 +328,23 @@ public class DocSysCLI {
     
     private static void cmdShareList(String arg) throws Exception {
         String[] p = arg.split("\\s+");
-        if (p.length < 2) { System.out.println("Usage: share list <repos-id> <doc-id>"); return; }
-        System.out.println(format(client.getDocShareList(parseInt(p[0]), parseLong(p[1]), null, null)));
+        // R1-3：服务端 /Doc/getDocShareList.do 不接受任何参数（返回当前用户的全部分享）
+        System.out.println(format(client.getDocShareList()));
     }
-    
+
     private static void cmdShareCreate(String arg) throws Exception {
         String[] p = arg.split("\\s+");
-        if (p.length < 2) { System.out.println("Usage: share create <repos-id> <doc-id> [type] [password]"); return; }
-        Integer type = p.length > 2 ? parseInt(p[2]) : 0;
+        if (p.length < 3) { System.out.println("Usage: share create <repos-id> <dir-path> <name> [password] [hours]"); return; }
         String pwd = p.length > 3 ? p[3] : null;
-        System.out.println(format(client.createDocShare(parseInt(p[0]), parseLong(p[1]), null, null, type, pwd, null)));
+        Long hours = p.length > 4 ? parseLong(p[4]) : null;
+        // R1-2：真实端点是 /Bussiness/addDocShare.do（原 /Doc/createDocShare.do 不存在）
+        System.out.println(format(client.addDocShare(parseInt(p[0]), dirPath(p[1]), p[2], pwd, hours)));
+    }
+
+    private static void cmdShareDelete(String arg) throws Exception {
+        String[] p = arg.split("\\s+");
+        if (p.length < 1) { System.out.println("Usage: share delete <share-id>"); return; }
+        System.out.println(format(client.deleteDocShare(parseInt(p[0]))));
     }
     
     // ==================== SEARCH & AI ====================
@@ -423,7 +430,7 @@ public class DocSysCLI {
         sb.append("DOC:         doc list|add|delete|rename|move|copy|get|history\n");
         sb.append("FILE:        upload, download\n");
         sb.append("LOCK:        lock, unlock\n");
-        sb.append("SHARE:       share-list, share-create\n");
+        sb.append("SHARE:       share-list, share-create, share-delete\n");
         sb.append("SEARCH/AI:   search, chat, rag\n");
         sb.append("BACKUP:      backup, backup-status\n");
         sb.append("SYSTEM:      system-config, banner, models, status\n");

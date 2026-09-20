@@ -1068,11 +1068,13 @@ public class DocSysClient {
     // ==================== SHARE OPERATIONS ====================
 
     /**
-     * Get document share info
+     * 当前用户的全部分享列表
      * POST /Doc/getDocShareList.do
-     * T5.3 修复：该端点无参数（返回当前用户全部分享列表），原传参无效
+     *
+     * <p>【R1-3】该端点**不接受任何参数**（无 vid/docId/path/name），返回的就是"当前用户分享过的所有文档"。
+     * 旧签名（reposId, docId, path, name）纯属误导：传了也没用。要“某个文件的分享”请在结果里按 path/name 过滤。
      */
-    public Map<String, Object> getDocShareList(Integer reposId, Long docId, String path, String name) throws Exception {
+    public Map<String, Object> getDocShareList() throws Exception {
         String url = baseUrl + "/Doc/getDocShareList.do";
         Response response = postForm(url, new HashMap<String, String>(), sessionCookie);
         try {
@@ -1083,20 +1085,57 @@ public class DocSysClient {
     }
 
     /**
-     * Create document share
-     * POST /Doc/createDocShare.do
+     * 创建文档分享
+     * POST /Bussiness/addDocShare.do
+     *
+     * <p>【R1-2】原实现调 {@code /Doc/createDocShare.do} —— **服务端没有这个映射**（DocController 只有
+     * getDocShareList/getDocShare/verifyDocSharePwd），工具 100% 404。真实创建分享端点在
+     * {@code BussinessController:/addDocShare.do}（另有 updateDocShare/deleteDocShare）。
+     *
+     * <p>参数口径与 web 端 {@code project.js} 一致（只读 + 可下载 + 7 天）：{@code access=1, downloadEn=1,
+     * isAdmin=0, addEn/deleteEn/editEn=0, heritable=1}；服务端 {@code shareHours == null} 时默认 24 小时，
+     * 这里由调用方显式给（工具默认 168 = 7 天）。
+     *
+     * @param path      文档所在目录的相对路径（以 / 结尾，仓库根目录传 ""）—— 服务端 buildBasicDoc 用它定位
+     * @param name      文档名（或目录名）
+     * @param sharePwd  分享密码（可选；null/空 = 无密码）
+     * @param shareHours 有效期小时数（可选；null = 服务端默认 24 小时）
      */
-    public Map<String, Object> createDocShare(Integer reposId, Long docId, String path, String name,
-            Integer shareType, String sharePwd, Long expireTime) throws Exception {
-        String url = baseUrl + "/Doc/createDocShare.do";
+    public Map<String, Object> addDocShare(Integer reposId, String path, String name,
+            String sharePwd, Long shareHours) throws Exception {
+        String url = baseUrl + "/Bussiness/addDocShare.do";
         Map<String, String> params = new HashMap<>();
-        if (reposId != null) params.put("vid", reposId.toString());
-        if (docId != null) params.put("docId", docId.toString());
+        if (reposId != null) params.put("reposId", reposId.toString());
         if (path != null) params.put("path", path);
         if (name != null) params.put("name", name);
-        if (shareType != null) params.put("shareType", shareType.toString());
-        if (sharePwd != null) params.put("sharePwd", sharePwd);
-        if (expireTime != null) params.put("expireTime", expireTime.toString());
+        params.put("isAdmin", "0");
+        params.put("access", "1");
+        params.put("downloadEn", "1");
+        params.put("addEn", "0");
+        params.put("deleteEn", "0");
+        params.put("editEn", "0");
+        params.put("heritable", "1");
+        if (sharePwd != null && !sharePwd.isEmpty()) params.put("sharePwd", sharePwd);
+        if (shareHours != null) params.put("shareHours", shareHours.toString());
+
+        Response response = postForm(url, params, sessionCookie);
+        try {
+            return JSON.parseObject(responseBodyString(response));
+        } finally {
+            response.close();
+        }
+    }
+
+    /**
+     * 删除（撤销）文档分享
+     * POST /Bussiness/deleteDocShare.do
+     *
+     * <p>与 addDocShare 配对：能创建就要能撤销（CLI {@code share delete} 与端到端验证清理都用它）。
+     */
+    public Map<String, Object> deleteDocShare(Integer shareId) throws Exception {
+        String url = baseUrl + "/Bussiness/deleteDocShare.do";
+        Map<String, String> params = new HashMap<>();
+        if (shareId != null) params.put("shareId", shareId.toString());
 
         Response response = postForm(url, params, sessionCookie);
         try {

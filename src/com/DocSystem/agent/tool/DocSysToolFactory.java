@@ -267,18 +267,23 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** R15 分享列表 */
+    /** R15 分享列表（R1-3：服务端不接参数，语义 = 当前用户的全部分享；path/name 仅在结果里过滤） */
     public static ToolDefinition getDocShareList(DocSysClient client) {
         JSONObject props = props(
-                intProp("vid", "仓库ID"),
-                longProp("docId", "文档ID"),
-                strProp("path", "路径（可选）"),
-                strProp("name", "文档名（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "docId"});
-        return ToolDefinition.builder("get_doc_share_list", "获取文档的分享列表",
-                args -> ToolResult.ok(fmt(client.getDocShareList(args.getInteger("vid"),
-                        args.getLong("docId"), args.getString("path"), args.getString("name")))))
-                .parameters(schema)
+                strProp("path", "只看某个目录下的分享（可选，过滤条件；如 \"66666/\"，根目录传空串）"),
+                strProp("name", "只看某个文档的分享（可选，过滤条件）"),
+                intProp("offset", "分页起点（可选，默认 0）"),
+                intProp("limit", "本页条数（可选，默认 " + SHARE_LIST_DEFAULT_LIMIT
+                        + "，最大 " + SHARE_LIST_MAX_LIMIT + "）"));
+        return ToolDefinition.builder("get_doc_share_list",
+                "列出**当前用户创建的全部分享**（每条含 shareId / 对象路径 / 有效期 / 权限）。"
+                + "注意：服务端 /Doc/getDocShareList.do 不接受任何参数，返回的就是这份全量列表——"
+                + "想只看某个文件的分享，请传 path（可再加 name）在结果里过滤。"
+                + "列表过长时会自动分页（表头给总数与区间），用 offset/limit 翻页。",
+                args -> ToolResult.ok(formatSharePage(client.getDocShareList(),
+                        args.getString("path"), args.getString("name"),
+                        args.getInteger("offset"), args.getInteger("limit"))))
+                .parameters(objSchema(props, null))
                 .build();
     }
 
@@ -544,22 +549,26 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** W12 创建文档分享 */
+    /** W12 创建文档分享（R1-2：改用真实端点 /Bussiness/addDocShare.do；R1-6：path/name 定位） */
     public static ToolDefinition createDocShare(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                longProp("docId", "文档ID（必填）"),
-                strProp("path", "路径（可选）"),
-                strProp("name", "文档名（可选）"),
-                intProp("shareType", "分享类型（可选）"),
-                strProp("sharePwd", "分享密码（可选）"),
-                longProp("expireTime", "过期时间戳（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "docId"});
-        return ToolDefinition.builder("create_doc_share", "创建文档分享链接",
-                args -> ToolResult.ok(fmt(client.createDocShare(
-                        args.getInteger("vid"), args.getLong("docId"), args.getString("path"),
-                        args.getString("name"), args.getInteger("shareType"),
-                        args.getString("sharePwd"), args.getLong("expireTime")))))
+                strProp("path", "待分享对象所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
+                strProp("name", "待分享的文件/目录名（必填，来自 list_docs 的 name 列）"),
+                strProp("sharePwd", "分享密码（可选，不传则无密码）"),
+                longProp("shareHours", "有效期小时数（可选，默认 " + SHARE_DEFAULT_HOURS + " = 7 天）"));
+        JSONObject schema = objSchema(props, new String[]{"vid", "path", "name"});
+        return ToolDefinition.builder("create_doc_share",
+                "为文档/目录创建分享链接（默认只读 + 可下载，" + (SHARE_DEFAULT_HOURS / 24) + " 天后过期）。"
+                + "定位用 path+name：path 是它所在目录的相对路径（以 / 结尾，根目录空串），name 是它自己的名字，"
+                + "两者都从 list_docs 结果里取。不要传 docId。"
+                + "返回 shareId 与可直接发给别人的 shareLink；要限制访问时传 sharePwd。"
+                + "分享一旦创建就是一个对外的链接（会绕过登录鉴权，仅靠密码/有效期保护），请先跟用户确认再调用。",
+                args -> ToolResult.ok(formatShareCreated(client.addDocShare(
+                        args.getInteger("vid"), normalizeDocPath(args.getString("path")), args.getString("name"),
+                        args.getString("sharePwd"),
+                        args.getLong("shareHours") == null ? Long.valueOf(SHARE_DEFAULT_HOURS)
+                                : args.getLong("shareHours")))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -1182,6 +1191,229 @@ public class DocSysToolFactory {
         case 3: return "磁盘";
         default: return String.valueOf(v);
         }
+    }
+
+    // ==================== 分享渲染（R1-2 / R1-3，2026-09-20） ====================
+
+    /** 分享默认有效期（小时）——与 web 端 project.js 的默认值一致（7 天） */
+    static final int SHARE_DEFAULT_HOURS = 7 * 24;
+
+    /** get_doc_share_list 单页默认/最大条数 */
+    static final int SHARE_LIST_DEFAULT_LIMIT = 50;
+    static final int SHARE_LIST_MAX_LIMIT = 200;
+
+    /** 分享列表字符预算（与目录列表同级；低于 MAX_SUMMARY_LEN，避免被 truncate 砍成半截） */
+    private static final int SHARE_LIST_CHAR_BUDGET = 3600;
+
+    /**
+     * 把 `/Doc/getDocShareList.do` 的响应渲染成<b>紧凑清单</b>（+ 可选 path/name 过滤 + offset/limit 分页）。
+     *
+     * <p>实测 dev 环境 32 条分享的原始 JSON 是 **11414 字符**（每条含 shareAuth 原样 JSON 字符串 + 9 个字段），
+     * 直接交给 {@code fmt()} 会被截到 4000 —— 后面的分享全都看不到。这里只保留
+     * {@code shareId / 仓库 / 对象路径 / 有效期 / 权限}，并给总数与翻页提示。
+     *
+     * <p>注意：服务端**不接受任何参数**，所以 path/name 只能在已取回的列表上做客户端过滤
+     * （工具描述已如实说明）。
+     */
+    static String formatSharePage(Map<String, Object> resp, String pathFilter, String nameFilter,
+                                  Integer offsetArg, Integer limitArg) {
+        if (resp == null) {
+            return "(empty response)";
+        }
+        if (!"ok".equals(String.valueOf(resp.get("status")))) {
+            return fmt(resp);   // 失败保留 errorCode + 处置提示
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof List)) {
+            return "分享列表为空（服务器返回：" + data + "）";
+        }
+        List<?> rawList = (List<?>) data;
+        String pathWanted = normalizeDocPath(pathFilter);
+        String nameWanted = nameFilter == null ? "" : nameFilter.trim();
+
+        List<Object> all = new java.util.ArrayList<Object>();
+        for (Object o : rawList) {
+            if (!(o instanceof Map)) {
+                continue;
+            }
+            Map<?, ?> s = (Map<?, ?>) o;
+            if (!pathWanted.isEmpty() && !pathWanted.equals(normalizeDocPath(str(s.get("path"))))) {
+                continue;
+            }
+            if (!nameWanted.isEmpty() && !nameWanted.equals(str(s.get("name")))) {
+                continue;
+            }
+            all.add(o);
+        }
+        String scope = (pathWanted.isEmpty() && nameWanted.isEmpty()) ? "（全部分享）"
+                : "（过滤条件：" + (pathWanted.isEmpty() ? "" : "path=\"" + pathWanted + "\" ")
+                        + (nameWanted.isEmpty() ? "" : "name=\"" + nameWanted + "\"") + "）";
+        if (rawList.isEmpty()) {
+            return "当前用户还没有创建过任何分享。";
+        }
+        if (all.isEmpty()) {
+            return "分享列表共 " + rawList.size() + " 条，但没有匹配 " + scope + " 的条目。";
+        }
+
+        int total = all.size();
+        int offset = offsetArg == null ? 0 : Math.max(0, offsetArg.intValue());
+        int limit = limitArg == null ? SHARE_LIST_DEFAULT_LIMIT
+                : Math.min(SHARE_LIST_MAX_LIMIT, Math.max(1, limitArg.intValue()));
+        if (offset >= total) {
+            return "匹配 " + scope + " 的分享共 " + total + " 条；offset=" + offset
+                    + " 已超出范围（有效范围 0~" + (total - 1) + "）。";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("分享列表：匹配 ").append(scope).append(" 共 ").append(total)
+                .append(" 条，本次显示第 ").append(offset + 1).append("-");
+        int end = Math.min(total, offset + limit);
+        String body = renderShares(all, offset, end);
+        int cap = SHARE_LIST_CHAR_BUDGET - sb.length() - 200;
+        while (body.length() > cap && end - offset > 1) {
+            end = offset + Math.max(1, (end - offset) * 3 / 4);
+            body = renderShares(all, offset, end);
+        }
+        sb.append(end).append(" 条\n").append(body);
+        if (rawList.size() != total) {
+            sb.append("（当前用户共有 ").append(rawList.size()).append(" 条分享，已按条件过滤）\n");
+        }
+        sb.append("说明：shareLink 可拼成 <访问地址>/DocSystem/web/project.html?vid=<vid>&shareId=<shareId>；")
+                .append("撤销分享请在 Web 界面操作（或调 /Bussiness/deleteDocShare.do）。\n");
+        if (end < total) {
+            sb.append("⚠️ 还有 ").append(total - end).append(" 条未显示：继续调用 get_doc_share_list 传 offset=")
+                    .append(end).append("。");
+        }
+        return sb.toString();
+    }
+
+    /** 渲染 [from, to) 区间的分享行 */
+    private static String renderShares(List<?> all, int from, int to) {
+        long now = System.currentTimeMillis();
+        StringBuilder sb = new StringBuilder();
+        for (int i = from; i < to; i++) {
+            Map<?, ?> s = (Map<?, ?>) all.get(i);
+            String name = str(s.get("name"));
+            String path = str(s.get("path"));
+            sb.append(i + 1).append(". shareId=").append(str(s.get("shareId")))
+                    .append("  ").append(shareTargetText(s.get("vid"), s.get("reposName"), path, name));
+            Long expire = longOf(s.get("expireTime"));
+            if (expire == null) {
+                sb.append("  有效期=未设置");
+            } else if (expire.longValue() <= now) {
+                sb.append("  已过期（").append(dateTimeText(expire)).append("）");
+            } else {
+                sb.append("  有效至 ").append(dateTimeText(expire))
+                        .append("（剩 ").append((expire.longValue() - now) / 3600000L).append("h）");
+            }
+            sb.append("  权限=").append(shareAuthSummary(s.get("shareAuth")));
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    /** 分享对象文案：整库（path/name 都空）要写清楚，否则用户会误以为是某个文件 */
+    private static String shareTargetText(Object vid, Object reposName, String path, String name) {
+        String repos = str(reposName);
+        String head = "仓库 " + str(vid) + (repos.isEmpty() ? "" : "「" + repos + "」");
+        if (name.isEmpty() && path.isEmpty()) {
+            return head + " 整库";
+        }
+        return head + " " + path + name;
+    }
+
+    /**
+     * 把 shareAuth（JSON 字符串）压成一句人话；解析失败时原样返回。
+     *
+     * <p>“只读 + 可下载（其余位全 0）”是最常见的分享形态（web 端与 create_doc_share 的默认），
+     * 单独给个短写法，否则 30+ 条列表光权限描述就多出好几千字符（会触发预算回收、少列条目）。
+     */
+    static String shareAuthSummary(Object shareAuth) {
+        String raw = str(shareAuth);
+        if (raw.isEmpty()) {
+            return "未设置";
+        }
+        try {
+            JSONObject a = JSON.parseObject(raw);
+            if (intValue(a.get("access")) == 1 && intValue(a.get("downloadEn")) == 1
+                    && intValue(a.get("editEn")) == 0 && intValue(a.get("addEn")) == 0
+                    && intValue(a.get("deleteEn")) == 0 && intValue(a.get("isAdmin")) == 0) {
+                return "只读+可下载";
+            }
+            StringBuilder sb = new StringBuilder();
+            if (intValue(a.get("access")) == 1) {
+                sb.append("可访问");
+            } else {
+                sb.append("无访问权");
+            }
+            if (intValue(a.get("downloadEn")) == 1) {
+                sb.append("+可下载");
+            }
+            if (intValue(a.get("editEn")) == 1) {
+                sb.append("+可编辑");
+            }
+            if (intValue(a.get("addEn")) == 1) {
+                sb.append("+可新增");
+            }
+            if (intValue(a.get("deleteEn")) == 1) {
+                sb.append("+可删除");
+            }
+            if (intValue(a.get("isAdmin")) == 1) {
+                sb.append("+管理");
+            }
+            if (intValue(a.get("heritable")) == 1) {
+                sb.append("（子目录可继承）");
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return raw;
+        }
+    }
+
+    /**
+     * 渲染 `/Bussiness/addDocShare.do` 的创建结果（data 就是新建的 DocShare，含 shareId/shareLink）。
+     * 失败时交给 {@code fmt()} 保留 errorCode + 处置提示。
+     */
+    static String formatShareCreated(Map<String, Object> resp) {
+        if (resp == null) {
+            return "(empty response)";
+        }
+        if (!"ok".equals(String.valueOf(resp.get("status")))) {
+            return fmt(resp);
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof Map)) {
+            return "分享已创建，但服务端未返回分享详情（返回：" + data + "）。";
+        }
+        Map<?, ?> s = (Map<?, ?>) data;
+        StringBuilder sb = new StringBuilder("已创建分享：\n");
+        sb.append("  shareId：").append(str(s.get("shareId"))).append("\n");
+        sb.append("  对象：").append(shareTargetText(s.get("vid"), s.get("reposName"),
+                str(s.get("path")), str(s.get("name")))).append("\n");
+        String link = str(s.get("shareLink"));
+        sb.append("  链接：").append(link.isEmpty() ? "（服务端未返回，可用 shareId 在 Web 界面查看）" : link).append("\n");
+        Long expire = longOf(s.get("expireTime"));
+        if (expire != null) {
+            sb.append("  有效期至：").append(dateTimeText(expire)).append("\n");
+        }
+        String pwd = str(s.get("sharePwd"));
+        sb.append("  密码：").append(pwd.isEmpty() ? "无" : "有（调用时传入的密码）").append("\n");
+        sb.append("  权限：只读 + 可下载（子目录可继承）\n");
+        sb.append("把链接（以及密码）交给用户即可；链接自带 shareId，访问时无需登录。");
+        return sb.toString();
+    }
+
+    private static int intValue(Object o) {
+        Integer v = intOf(o);
+        return v == null ? 0 : v.intValue();
+    }
+
+    /** 精确到分钟的时间文案（分享有效期需要看到时刻，dateText 只到天） */
+    private static String dateTimeText(Long millis) {
+        if (millis == null || millis.longValue() <= 0) {
+            return "";
+        }
+        return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date(millis.longValue()));
     }
 
     // ==================== 文档定位（R1-6：path/name 优先） ====================
