@@ -342,7 +342,45 @@ public final class AgentFocusSupport {
         return sb.toString();
     }
 
-    /** 单行描述：类型 + 标签 + 路径/id + 说明 */
+    /**
+     * 把任意形式的目录 path 归一到 DocSys 的服务端口径：**所在目录的相对路径、以 {@code /} 结尾、根目录为空串**。
+     *
+     * <ul>
+     *   <li>去首尾斜杠：{@code "/"} → {@code ""}（仓库根），{@code "/66666/"} → {@code "66666/"}</li>
+     *   <li>折叠重复斜杠与 {@code .} 段：{@code "a//./b"} → {@code "a/b/"}</li>
+     *   <li>统一补尾斜杠：{@code "66666"} → {@code "66666/"}</li>
+     * </ul>
+     *
+     * <p>为什么必须归一化：服务端 {@code Path.buildDocIdByName(level, path+name)} 把 {@code path+name}
+     * 直接拼在一起算 hash，多一个或少一个斜杠就是**另一个 docId**（不会报错，只会静默定位到错误对象）；
+     * 而 {@code ReposController.getSubDocList} 只把 {@code path == null} 当成仓库根，
+     * 传 {@code "/"} 会得到一个 level 偏移的“伪根目录”。
+     *
+     * <p>本方法是 agent 层 path 口径的<b>唯一实现</b>（工具层 {@code DocSysToolFactory.normalizeDocPath} 转调它）。
+     */
+    public static String normalizePath(String path) {
+        if (path == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String seg : path.trim().split("/")) {
+            // 丢弃空段（折叠重复斜杠与首尾斜杠）与 "." 段；".." 交给服务端拒绝（seperatePathAndName 返回 -2）
+            if (seg.isEmpty() || ".".equals(seg)) {
+                continue;
+            }
+            sb.append(seg).append('/');
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 单行描述：类型 + 标签 + 路径/id + 说明。
+     *
+     * <p>【R1-6】不再输出 {@code docId=}：docId 是 {@code Path.getDocId(level, path+name)} 的派生哈希
+     * （不是主键，移动/重命名后即变），DocSys 也没有为每个文件保证 doc/索引记录，
+     * 用 docId 反查 path/name 不可靠。注入块只给 {@code vid + path + name}（fullPath 已是完整相对路径），
+     * 模型据此就能调用所有文件工具。
+     */
     public static String describe(FocusItem it) {
         StringBuilder sb = new StringBuilder();
         if (KIND_REPOS.equals(it.getKind())) {
@@ -352,11 +390,7 @@ public final class AgentFocusSupport {
               .append(" (vid=").append(it.getVid()).append(")");
         } else {
             sb.append("文件「").append(it.getLabel()).append("」 ").append(fullPath(it))
-              .append(" (vid=").append(it.getVid());
-            if (it.getDocId() != null) {
-                sb.append(", docId=").append(it.getDocId());
-            }
-            sb.append(")");
+              .append(" (vid=").append(it.getVid()).append(")");
         }
         if (it.getNote() != null && !it.getNote().isEmpty()) {
             sb.append(" — 说明：").append(it.getNote());
@@ -422,6 +456,8 @@ public final class AgentFocusSupport {
             return out;
         }
         // 注入块里每个对象占一行，直到下一个 "【" 开头的行为止
+        // 注：docId 分组（R1-6 前写的旧注入块）**只为兼容已落库的历史消息**；
+        // 新块不再输出 docId（见 describe()），回显时 docId 为 null 不影响 chips 渲染与重新定位。
         java.util.regex.Pattern p = java.util.regex.Pattern.compile(
                 "^\\d+\\.\\s*(仓库|目录|文件)「(.*?)」\\s*(\\S*)\\s*\\(vid=(\\d+)(?:,\\s*docId=(\\d+))?\\)(?:\\s*—\\s*说明：(.*))?$");
         String[] lines = content.split("\n");

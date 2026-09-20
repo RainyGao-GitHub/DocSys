@@ -168,9 +168,29 @@ public class TestAgentFocusSupport {
         check("fullPath no leading slash", "/x/a.txt".equals(AgentFocusSupport.fullPath(item("file", 1, "x", "a.txt", "a.txt", null))));
         check("fullPath trailing slash trimmed", "/x/a.txt".equals(AgentFocusSupport.fullPath(item("file", 1, "/x/", "a.txt", "a.txt", null))));
         check("describe repos", "仓库「R」(vid=2)".equals(AgentFocusSupport.describe(item("repos", 2, null, null, "R", null))));
-        check("describe file with docId",
-                "文件「a.txt」 /a.txt (vid=1, docId=99)".equals(
+        // R1-6：docId 是派生哈希（移动/重命名即变，且不一定有 doc/索引记录）→ 注入块不再带 docId，
+        // 只用 vid + 完整相对路径定位
+        check("describe file 不带 docId",
+                "文件「a.txt」 /a.txt (vid=1)".equals(
                         AgentFocusSupport.describe(item("file", 1, "/", "a.txt", "a.txt", null, 99L))));
+        check("describe dir 不带 docId",
+                "目录「d」 /x/d (vid=1)".equals(
+                        AgentFocusSupport.describe(item("dir", 1, "/x", "d", "d", null))));
+        testNormalizePath();
+    }
+
+    /** R1-6：agent 层统一的 path 口径（工具层与注入块共用；多一个斜杠就是另一个 docId） */
+    private static void testNormalizePath() {
+        check("normalize null → 根", "".equals(AgentFocusSupport.normalizePath(null)));
+        check("normalize \"/\" → 根", "".equals(AgentFocusSupport.normalizePath("/")));
+        check("normalize \"\" → 根", "".equals(AgentFocusSupport.normalizePath("")));
+        check("normalize \".\" → 根", "".equals(AgentFocusSupport.normalizePath(".")));
+        check("normalize 补尾斜杠", "66666/".equals(AgentFocusSupport.normalizePath("66666")));
+        check("normalize 去首斜杠", "66666/".equals(AgentFocusSupport.normalizePath("/66666")));
+        check("normalize 保持尾斜杠", "66666/".equals(AgentFocusSupport.normalizePath("66666/")));
+        check("normalize 折叠重复斜杠与 .", "a/b/".equals(AgentFocusSupport.normalizePath("/a//./b")));
+        check("normalize 多层", "a/b/c/".equals(AgentFocusSupport.normalizePath("a/b/c")));
+        check("normalize 空白", "".equals(AgentFocusSupport.normalizePath("   ")));
     }
 
     /** 注入块回读：标题剥离 + 历史消息反解（P1 不落 schema 的关键闭环） */
@@ -192,8 +212,15 @@ public class TestAgentFocusSupport {
         check("roundtrip: file label", "红楼梦.docx".equals(back.get(0).getLabel()));
         check("roundtrip: file path/name", "/".equals(back.get(0).getPath())
                 && "红楼梦.docx".equals(back.get(0).getName()));
-        check("roundtrip: file vid/docId", Integer.valueOf(1).equals(back.get(0).getVid())
-                && Long.valueOf(102389818263L).equals(back.get(0).getDocId()));
+        // R1-6：新写入的注入块不再带 docId（历史旧块仍能解析出 docId，靠的是正则里的可选分组）
+        check("roundtrip: 新块不含 docId", msg.indexOf("docId=") < 0);
+        check("roundtrip: file vid、docId 为空", Integer.valueOf(1).equals(back.get(0).getVid())
+                && back.get(0).getDocId() == null);
+        check("legacy: 旧块里的 docId 仍可解析",
+                Long.valueOf(99L).equals(
+                        AgentFocusSupport.parseInjectedBlock(
+                                AgentFocusSupport.BLOCK_HEAD + "\n1. 文件「a.txt」 /a.txt (vid=1, docId=99)\n\n问题")
+                                .get(0).getDocId()));
         check("roundtrip: file note", "这是最新需求文档".equals(back.get(0).getNote()));
         check("roundtrip: dir path/name", "/资料/".equals(back.get(1).getPath())
                 && "合同".equals(back.get(1).getName()));

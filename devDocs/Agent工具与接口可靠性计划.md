@@ -136,10 +136,10 @@
   | `get_doc` | `{vid, path, name}` | 已有可选 docId | ✅ 已删 docId |
   | `write_note` | `{vid, name, content}` | docId 可选 | ✅ required `{vid, path, name, content}` |
   | `create_folder` / `write_file` | `{vid, name}` / `{vid, name, content}` | `pid`（父目录 ID） | ✅ 均改为 required `{vid, path, name[, content]}`，pid 下线 |
-  | `@` 关注对象注入块 | `AgentFocusSupport.describe()` 注入 `docId=99` | docId 进提示词 | ⬜ 去掉 docId |
-  | `AgentController.findNameConflict` | 用 `folderDocId` 调 `getDocList` | docId | ⬜ 改用 path |
-  | 旧编排/CLI 帮助文本 | `delete-doc <vid> <docId>` 等 | docId-first 语法 | ⬜ 随 R3-4 下线 |
-  | 我在 R1 加的服务端反查 | `BaseController.resolveRealDocByDocId` + `TestDocIdResolve` | 过渡兼容层 | ⬜ 工具层全部切换完后**删除** |
+  | `@` 关注对象注入块 | `AgentFocusSupport.describe()` 注入 `docId=99` | docId 进提示词 | ✅ 不再输出 docId（旧历史块仍可解析） |
+  | `AgentController.findNameConflict` | 用 `folderDocId` 调 `getDocList` | docId | ✅ 改用 path（并修掉“子目录导入永远只查根目录”的真 bug） |
+  | 旧编排/CLI 帮助文本 | `delete-doc <vid> <docId>` 等 | docId-first 语法 | ✅ CLI `doc list/delete/rename/move/copy/get/history` 全改 path/name；SubAgent 历史改 path/name |
+  | 我在 R1 加的服务端反查 | `BaseController.resolveRealDocByDocId` + `TestDocIdResolve` | 过渡兼容层 | ✅ **已删除**；`DocController` 四个写接口改为“doctId-only 报 INVALID_PARAM” |
 
 - **本次已完成（move/copy，2026-09-20）**：
   - 工具口径：`move_doc`/`copy_doc` → `required {vid, srcPath, srcName, dstPath}`（`dstName` 可选 = 新名）；
@@ -162,6 +162,20 @@
   - 验证：护栏 `TestDocHistoryLocator` **74/74**（新增 `checkPathNameOnly`：六个工具逐一断言“无 docId/pid/dstPid + path 必填 + required 集合 + 描述提醒”）＋ `TestListDocsFormat` 改为“不再输出 docId 列”；
     探针 `MoveToolPathE2E` **20/20**（新增“用 path 在子目录 66666/ 里建目录并删除”）；
     **页面 E2E**：在 `66666/` 下建目录 → 写 `note.md` → `get_doc(path="66666/R6T_.../", name="note.md")` 读回一致 → `delete_doc` 连目录带文件删除，4 步全 ok，模型自述“全程按 path+name 定位，未使用 docId” ✓
+
+- **本次已完成（第 4 步：收尾——注入块 / 导入冲突 / 删反查层 / CLI，2026-09-20）**：
+  - **注入块去 docId**：`AgentFocusSupport.describe()` 不再输出 `docId=`（只用 `vid + 完整相对路径`）；`parseInjectedBlock` 的 docId 分组**保留**，只为兼容已落库的旧消息。
+  - **导入同名冲突探测（真 bug）**：`AgentController.findNameConflict` 原来传 `folderDocId/pid` + `path=null` —— 而 `getSubDocList` 只看 `path` → **子目录导入时永远只查仓库根目录**，同名冲突探测形同虚设（上传遇同名是“直接覆盖 + 新生版本”，会静默改掉用户文件）。改为按 `path` 查询，并把入库 path 统一归一化。
+  - **删服务端反查层**：`BaseController` 的 `resolveRealDocByDocId` / `deriveDocLevelFromDocId` / `verifyResolvedDoc` / `findDocInFileSystemByDocId` / `walkDocTreeForDocId`（共 ~180 行）全删；`TestDocIdResolve` 删除；`DocSysClient` 的 `@Deprecated getDocHistory(reposId, docId)` 两参重载也删。
+  - **docId-only 不再静默变成“仓库根”**：`DocController` 的 `deleteDoc/renameDoc/moveDoc/copyDoc` 在缺 `path+name`（源名）时直接回 `INVALID_PARAM` + 文案“docId 定位已下线（docId 是派生值，移动/重命名后即失效），请改用 path+name 定位”；`move/copy` 另拦“给了非 0 `dstPid` 却没给 `dstPath`”（`dstPath=""` 合法 = 仓库根）。
+  - **CLI 去 docId**：`doc list|delete|rename|move|copy|get|history` 全部改 path/name（根目录写 `.` 或 `/`，归一化为空串）；`SubAgent.handleDocHistory` 改用 8 参重载传 path/name。
+  - 新增护栏 `TestDocHistoryLocator.testDocIdResolverRetired()`：**源码 lint** —— DocController 不得再出现 `resolveRealDocByDocId`、BaseController 不得再有反查层定义、`dstPid 定位已下线` 错误出口恰为 2 个、DocSysClient 无两参 `getDocHistory`、`describe()` 不输出 docId。
+- **第 4 步验证（全部实测）**：
+  - 护栏 `TestDocHistoryLocator` **80/80**、`TestAgentFocusSupport` **111/111**（新增 `normalizePath` 10 项 + `describe` 不带 docId + “新块不含 docId、旧块仍可解析”）；全量护栏 80/25/23/24/13/52/55/29/26/30/55 全绿。
+  - HTTP 探针（真接口，重启后）：`deleteDoc.do?reposId=5&docId=102199016117` / `renameDoc.do?...&dstName=zzz` / `moveDoc.do?...&dstPath=66666/` → 全部 `INVALID_PARAM` + 路径提示；`moveDoc/copyDoc` 传 `dstPid` 不传 `dstPath` → 同样拒绝；**磁盘未被误删**（`66666/` 与 `test111.txt` 完好）。
+  - 探针 `MoveToolPathE2E` **20/20**（含“用 path 在子目录 `66666/` 里建目录并删除”）。
+  - **页面 E2E**：`@` 选 `66666/README.md` → 发问“读取我关注的这个文件” → 2 步工具调用全按 path/name（`get_doc{vid:5,path:"66666/",name:"README.md"}` / `list_docs{vid:5,path:"66666/"}`），模型如实回答“文件存在但 0 字节为空”；回读该会话消息：`focus[0].docId = null`（证明落库的注入块已无 `docId=`）。
+  - **导入冲突（真 API）**：同名 `1111.txt` 导入 `66666/` → `errorCode=DOC_EXISTS`（“目标目录已存在同名文件，请确认是否替换”），原文件字节/时间未变 ✓；无同名的新文件导入 `66666/` → 成功，服务端回 `path=66666/ level=1 docId=204085893585`，**与 `Path.buildDocIdByName(1,"66666/","probe_r16_new.txt")` 逐位一致**（证明归一化后的 path 算出的正是 canonical docId）；随后用 path/name 删除并确认磁盘无残留。
 
 - **验收（每项）**：护栏（schema 不含 docId + path 归一化 + 线上 docId 指纹）→ 真实探针 → 页面 E2E 一条。
 
@@ -249,7 +263,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R1-6 第 3 步后）：`TestDocHistoryLocator 74` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
+   - 现基线（2026-09-20 R1-6 第 4 步后）：`TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolE2E` `ListDocsProbe` `ToolChk` `IdProbe` `LockProbe`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -297,7 +311,7 @@
 | R1-2 | P0 | create_doc_share 端点不存在 | ⬜ | |
 | R1-3 | P0 | get_doc_share_list 语义错位 | ⬜ | |
 | R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ✅ | 见本次提交 |
-| R1-6 | P0 | 定位方式全面改为 path/name（✅ get_doc_history / move / copy / delete / rename / list_docs / get_doc / write_* / create_folder；余：`@` 注入块去 docId、删反查过渡层） | 🟡 | 见本次提交 |
+| R1-6 | P0 | 定位方式全面改为 path/name（✅ 全部工具 + `@` 注入块 + 导入冲突 + 删反查过渡层 + CLI） | ✅ | 见本次提交 |
 | R1-5 | P0 | list_repos 截断（18 仓只看 9） | ⬜ | |
 | R2-1 | P1 | 统一工具输出规范 + 抽 helper（23 处 fmt 裸 JSON） | ⬜ | |
 | R2-2 | P1 | get_doc 长文 maxChars/offset | ⬜ | |

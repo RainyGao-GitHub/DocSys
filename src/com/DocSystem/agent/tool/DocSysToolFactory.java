@@ -1041,18 +1041,9 @@ public class DocSysToolFactory {
      * 直接拼在一起算 hash，多一个或少一个斜杠就是**另一个 docId**（不会报错，只会静默定位到错误对象）。
      */
     static String normalizeDocPath(String path) {
-        if (path == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (String seg : path.trim().split("/")) {
-            // 丢弃空段（折叠重复斜杠与首尾斜杠）与 "." 段；".." 交给服务端拒绝（seperatePathAndName 返回 -2）
-            if (seg.isEmpty() || ".".equals(seg)) {
-                continue;
-            }
-            sb.append(seg).append('/');
-        }
-        return sb.toString();
+        // 口径唯一实现在 AgentFocusSupport.normalizePath（注入块与工具层必须同一套规则，
+        // 否则「模型看到的 path」与「工具发出去的 path」会差一个斜杠 = 另一个 docId）
+        return com.DocSystem.agent.focus.AgentFocusSupport.normalizePath(path);
     }
 
     /**

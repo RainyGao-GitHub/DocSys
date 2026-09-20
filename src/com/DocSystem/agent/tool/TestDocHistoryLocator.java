@@ -39,7 +39,7 @@ public class TestDocHistoryLocator {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         testNormalizePath();
         testLevelOfPath();
         testChildDocPath();
@@ -48,6 +48,7 @@ public class TestDocHistoryLocator {
         testMoveCopySchema();
         testOtherDocToolsUsePathName();
         testListDocsFooterTeachesPath();
+        testDocIdResolverRetired();
 
         System.out.println("======== TestDocHistoryLocator: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
@@ -216,5 +217,64 @@ public class TestDocHistoryLocator {
         check("描述里提醒不要用 docId", def.description != null && def.description.contains("不要传 docId"));
         check("描述里说明只传 docId 会静默返回仓库根历史",
                 def.description != null && def.description.contains("仓库根"));
+    }
+
+    /**
+     * 源码 lint：docId 反查过渡层必须彻底消失（R1-6 收尾）。
+     *
+     * <p>反查层（{@code resolveRealDocByDocId} 及 derive/verify/FS 枚举四个辅助方法）是"用 docId 定位"的
+     * 最后一块地基：它一旦被调用方依赖，path/name 就会被当成可选（服务端 {@code buildBasicDoc} 在
+     * path+name 同时为空时把文档改写成**仓库根目录** → deleteDoc 变删根）。所以钉死：
+     * <ol>
+     *   <li>DocController / BaseController 里不能再出现这些名字；</li>
+     *   <li>四个写接口给了"docId 定位已下线"的明确提示（INVALID_PARAM，不再静默操作根目录）；</li>
+     *   <li>DocSysClient 的两参 {@code getDocHistory(reposId, docId)} 重载已删；</li>
+     *   <li>注入块描述不再输出 docId。</li>
+     * </ol>
+     */
+    private static void testDocIdResolverRetired() throws Exception {
+        String docController = readSource("src/com/DocSystem/controller/DocController.java");
+        String baseController = readSource("src/com/DocSystem/controller/BaseController.java");
+        String client = readSource("src/com/DocSystem/agent/client/DocSysClient.java");
+        String focus = readSource("src/com/DocSystem/agent/focus/AgentFocusSupport.java");
+        if (docController == null || baseController == null || client == null || focus == null) {
+            return;
+        }
+
+        check("DocController 不再调用 resolveRealDocByDocId",
+                !docController.contains("resolveRealDocByDocId"));
+        check("BaseController 不再有 docId 反查层",
+                !baseController.contains("Doc resolveRealDocByDocId(")
+                        && !baseController.contains("int deriveDocLevelFromDocId(")
+                        && !baseController.contains("Doc findDocInFileSystemByDocId(")
+                        && !baseController.contains("walkDocTreeForDocId("));
+        check("deleteDoc 明确拒绝 docId-only",
+                docController.contains("docId 定位已下线") && docController.contains("ErrorCode.INVALID_PARAM"));
+        check("moveDoc/copyDoc 都拒绝 dstPid-only",
+                countOccurrences(docController, "docSysErrorLog(\"dstPid 定位已下线") == 2,
+                "错误出口数=" + countOccurrences(docController, "docSysErrorLog(\"dstPid 定位已下线"));
+        check("DocSysClient 已无 docId-only 的 getDocHistory 重载",
+                !client.contains("getDocHistory(Integer reposId, Long docId)"));
+        check("AgentFocusSupport.describe 不再输出 docId",
+                !focus.contains("sb.append(\", docId=\").append(it.getDocId())"));
+    }
+
+    private static String readSource(String path) throws Exception {
+        java.io.File f = new java.io.File(path);
+        if (!f.exists()) {
+            check("源文件存在: " + path, false, "未找到（工作目录必须是工程根）");
+            return null;
+        }
+        return new String(java.nio.file.Files.readAllBytes(f.toPath()), java.nio.charset.Charset.forName("UTF-8"));
+    }
+
+    private static int countOccurrences(String s, String sub) {
+        int n = 0;
+        int i = s.indexOf(sub);
+        while (i >= 0) {
+            n++;
+            i = s.indexOf(sub, i + sub.length());
+        }
+        return n;
     }
 }

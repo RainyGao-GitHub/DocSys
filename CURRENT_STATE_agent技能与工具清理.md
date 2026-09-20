@@ -250,6 +250,24 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 - 全量护栏 74/25/13/11/23/24/52/55/29/26/30/55 全绿；磁盘无残留（66666/ 仍为原三文件）
 - 已提交 `a2eb58b7d`
 
+## R1-6 第 4 步：收尾——注入块 / 导入冲突 / 删反查层 / CLI（2026-09-20）
+
+### 改动
+- **注入块去 docId**：`AgentFocusSupport.describe()` 不再输出 `docId=`（只用 `vid + 完整相对路径`）；`parseInjectedBlock` 的 docId 分组**保留**，仅供回读旧消息
+- **导入同名冲突（真 bug）**：`AgentController.findNameConflict` 原传 `folderDocId/pid` + `path=null`，而 `getSubDocList` **只看 path** → 子目录导入永远只查仓库根，冲突探测形同虚设（同名上传是“直接覆盖+新生版本”，会静默改掉用户文件）；改为按 path 查询，并把入库 path 归一化
+- **删服务端反查层**：`BaseController` 的 `resolveRealDocByDocId`/`deriveDocLevelFromDocId`/`verifyResolvedDoc`/`findDocInFileSystemByDocId`/`walkDocTreeForDocId`（~180 行）全删；删 `TestDocIdResolve`；删 `DocSysClient` 的 `@Deprecated getDocHistory(reposId, docId)` 两参重载
+- **docId-only 不再静默变“仓库根”**：`DocController` 四个写接口缺 path+name（源名）时直接 `INVALID_PARAM` + “docId 定位已下线…请改用 path+name”；`move/copy` 另拦“给非 0 dstPid 却不给 dstPath”（`dstPath=""` 合法 = 仓库根）
+- **CLI 去 docId**：`doc list|delete|rename|move|copy|get|history` 全改 path/name（根目录写 `.` 或 `/`）；`SubAgent.handleDocHistory` 改用 8 参重载
+- 新增护栏 `TestDocHistoryLocator.testDocIdResolverRetired()`：源码 lint（反查层不得再出现 / docId-only 错误出口 / describe 不输出 docId / client 无两参重载）
+
+### 验证
+- 护栏：`TestDocHistoryLocator` **80/80**、`TestAgentFocusSupport` **111/111**（新增 `normalizePath` 10 项 + describe 不带 docId + 新块不含 docId / 旧块仍可解析）；全量 80/25/23/24/13/52/55/29/26/30/55 全绿
+- HTTP 探针（重启后真接口）：五个 docId-only / dstPid-only 请求全部 `INVALID_PARAM` + 路径提示，**磁盘未被误删**（`66666/`、`test111.txt` 完好）
+- 探针 `MoveToolPathE2E` **20/20**
+- **页面 E2E**：`@` 选 `66666/README.md` → 问“读取我关注的这个文件” → 2 步工具调用全按 path/name（`get_doc{vid:5,path:"66666/",name:"README.md"}`、`list_docs{path:"66666/"}`），模型如实答“0 字节空文件”；回读该会话消息：`focus[0].docId = null`（证注入块已无 `docId=`）
+- **导入冲突真 API**：同名 `1111.txt` → `DOC_EXISTS`（原文件字节/时间未变）；新文件 → 成功，服务端回 `path=66666/ level=1 docId=204085893585`，与 `Path.buildDocIdByName(1,"66666/","probe_r16_new.txt")` **逐位一致**；用 path/name 删除后磁盘无残留
+- 已提交 `a2eb58b7d`（第 3 步）；本步 commit 见下
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -259,13 +277,13 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 已做：get_doc_history / move / copy / delete / rename / list_docs / get_doc / write_file / write_note / create_folder ✅（本次第 3 步）**；余：`@` 注入块（`AgentFocusSupport`）去 docId → 删 `BaseController.resolveRealDocByDocId` 过渡层与 `TestDocIdResolve`；然后 R1-5 `list_repos` 截断 → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
+- **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 全部完成 ✅（第 4 步已删反查层/注入块/导入冲突/CLI）**；接下来按序：R1-5 `list_repos` 截断 → R1-2 `create_doc_share`（端点错）→ R1-3 `get_doc_share_list` 语义 → R2（统一输出/大结果）→ R3
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 无（R1-6 第 3 步已提交 `a2eb58b7d`）
+- 待提交（R1-6 第 4 步）：`agent/focus/AgentFocusSupport.java`、`agent/focus/TestAgentFocusSupport.java`、`agent/controller/AgentController.java`、`agent/tool/DocSysToolFactory.java`、`agent/tool/TestDocHistoryLocator.java`、`agent/tool/TestDocIdResolve.java`（删除）、`agent/client/DocSysClient.java`、`agent/orchestrator/SubAgent.java`、`agent/cli/DocSysCLI.java`、`controller/BaseController.java`、`controller/DocController.java` + `devDocs/Agent工具与接口可靠性计划.md` + 本卡
 - 已提交：R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 

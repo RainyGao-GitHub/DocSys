@@ -2787,11 +2787,14 @@ public class AgentController {
      *
      * @return "file"（同名文件）/ "dir"（同名目录）/ null（无冲突或列表拿不到，按无冲突处理）
      */
-    private String findNameConflict(DocSysClient client, Integer reposId, Long folderDocId, String fileName) {
+    private String findNameConflict(DocSysClient client, Integer reposId, String dirPath, String fileName) {
         try {
-            // 目标目录用它的 docId 定位；根目录（docId 为 null/0）不传 → 服务端返回仓库根目录
-            Long docId = (folderDocId != null && folderDocId > 0) ? folderDocId : null;
-            Map<String, Object> list = client.getDocList(reposId, docId, null, null);
+            // 【R1-6】目标目录只能用 path 定位：ReposController.getSubDocList 只把 path==null 当仓库根，
+            // docId/pid 它**从来不读**（实测 vid=5&docId=… 与 vid=5 返回完全相同的根目录列表）
+            // → 旧实现（传 folderDocId + path=null）在子目录入库时永远只查根目录，同名冲突探测形同虚设。
+            String canonical = AgentFocusSupport.normalizePath(dirPath);
+            Map<String, Object> list = client.getDocList(reposId, null, null,
+                    canonical.isEmpty() ? null : canonical);
             Object data = list != null ? list.get("data") : null;
             if (!(data instanceof List)) {
                 return null;
@@ -2847,9 +2850,13 @@ public class AgentController {
             }
             byte[] data = Files.readAllBytes(src.toPath());
             DocSysClient client = getSessionClient(servletRequest.getSession().getId());
+            // 【R1-6】入库目标目录统一按 path 口径归一化（根目录 = ""）：
+            // 前端传的 "/" 会被服务端当成一个“level 偏移的伪根目录”（path 未规范化 → docId 静默算错），
+            // 冲突探测也会因 path=="/" 落到另一个 doc 上。
+            String targetPath = AgentFocusSupport.normalizePath(body.getPath());
             // 同名冲突：默认不覆盖，交给用户确认（前端拿 DOC_EXISTS 弹“是否替换”，确认后带 force 重发）
             if (!body.isForce()) {
-                String conflict = findNameConflict(client, body.getReposId(), body.getPid(), name);
+                String conflict = findNameConflict(client, body.getReposId(), targetPath, name);
                 if ("dir".equals(conflict)) {
                     return AgentResponse.error("目标目录已存在同名文件夹，无法入库：" + name, "DOC_EXISTS");
                 }
@@ -2859,8 +2866,7 @@ public class AgentController {
             }
             Map<String, Object> result = client.uploadFile(body.getReposId(),
                     body.getPid() != null ? body.getPid() : 0L,
-                    body.getPath() != null ? body.getPath() : "/",
-                    name, data, name);
+                    targetPath, name, data, name);
             boolean ok = result != null && ("ok".equals(result.get("status"))
                     || Boolean.TRUE.equals(result.get("success")));
             if (!ok) {

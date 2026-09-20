@@ -191,7 +191,7 @@ public class SubAgent {
             } else if ("download_doc".equals(taskType) || "download-document".equals(taskType)) {
                 result = handleDownloadDoc(docSysClient, params.get("vid"), params.get("docId"), params.get("path"), params.get("name"));
             } else if ("doc_history".equals(taskType) || "version-history".equals(taskType)) {
-                result = handleDocHistory(docSysClient, params.get("vid"), params.get("docId"));
+                result = handleDocHistory(docSysClient, params.get("vid"), params.get("path"), params.get("name"));
             // ========== SEARCH COMMANDS ==========
             } else if ("search_doc".equals(taskType) || "search".equals(taskType) || "search-docs".equals(taskType)) {
                 result = handleSearchDoc(docSysClient, params.get("query"), params.get("vid"));
@@ -641,12 +641,12 @@ public class SubAgent {
         }
     }
     
-    private AgentResponse handleDocHistory(DocSysClient client, String vidStr, String docIdStr) {
+    private AgentResponse handleDocHistory(DocSysClient client, String vidStr, String path, String name) {
         try {
             Integer vid = vidStr != null ? Integer.parseInt(vidStr) : null;
-            Long docId = docIdStr != null ? Long.parseLong(docIdStr) : null;
-            
-            Map<String, Object> response = client.getDocHistory(vid, docId);
+
+            // R1-6：只用 path+name 定位（docId 是派生值；只传 docId 会被服务端当成仓库根 → 静默返回整库历史）
+            Map<String, Object> response = client.getDocHistory(vid, null, path, name, null, null, null, null);
             return AgentResponse.ok("Version History:\n" + response);
         } catch (Exception e) {
             return AgentResponse.error("Failed to get history: " + e.getMessage());

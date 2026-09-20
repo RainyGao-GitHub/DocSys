@@ -3,6 +3,7 @@ package com.DocSystem.agent.cli;
 import com.DocSystem.agent.client.DocSysClient;
 import com.DocSystem.agent.core.AgentContext;
 import com.DocSystem.agent.core.AgentResponse;
+import com.DocSystem.agent.focus.AgentFocusSupport;
 import com.DocSystem.agent.orchestrator.MainAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -221,12 +222,21 @@ public class DocSysCLI {
     }
     
     // ==================== DOCUMENT COMMANDS ====================
-    
+
+    /**
+     * 目录参数约定（R1-6：一律用 path 定位，不再用 docId/pid）：
+     * 根目录写 {@code .} 或 {@code /}（归一化为空串），子目录写相对路径（{@code 66666/} 或 {@code 66666}）。
+     */
+    private static String dirPath(String raw) {
+        return AgentFocusSupport.normalizePath(raw);
+    }
+
     private static void cmdDocList(String arg) throws Exception {
         String[] p = arg.split("\\s+");
         Integer vid = p.length > 0 && !p[0].isEmpty() ? parseInt(p[0]) : null;
-        Long pid = p.length > 1 ? parseLong(p[1]) : 0L;
-        System.out.println(format(client.getDocList(vid, pid, null)));
+        String dir = p.length > 1 ? dirPath(p[1]) : "";
+        // 服务端只把 path == null 当成仓库根（空串会落到另一条分支）
+        System.out.println(format(client.getDocList(vid, null, null, dir.isEmpty() ? null : dir)));
     }
     
     private static void cmdDocAdd(String arg) throws Exception {
@@ -237,38 +247,44 @@ public class DocSysCLI {
     
     private static void cmdDocDelete(String arg) throws Exception {
         String[] p = arg.split("\\s+");
-        if (p.length < 2) { System.out.println("Usage: doc delete <repos-id> <doc-id>"); return; }
-        System.out.println(format(client.deleteDoc(parseInt(p[0]), parseLong(p[1]), null, null, null, null, null)));
+        if (p.length < 3) { System.out.println("Usage: doc delete <repos-id> <dir-path> <name>   (目录写 . 表示仓库根)"); return; }
+        System.out.println(format(client.deleteDoc(parseInt(p[0]), null, null, dirPath(p[1]), p[2], null, null)));
     }
     
     private static void cmdDocRename(String arg) throws Exception {
         String[] p = arg.split("\\s+");
-        if (p.length < 3) { System.out.println("Usage: doc rename <repos-id> <doc-id> <new-name>"); return; }
-        System.out.println(format(client.renameDoc(parseInt(p[0]), parseLong(p[1]), null, null, null, null, p[2], null)));
+        if (p.length < 4) { System.out.println("Usage: doc rename <repos-id> <dir-path> <name> <new-name>"); return; }
+        System.out.println(format(client.renameDoc(parseInt(p[0]), null, null, dirPath(p[1]), p[2], null, p[3], null)));
     }
     
     private static void cmdDocMove(String arg) throws Exception {
         String[] p = arg.split("\\s+");
-        if (p.length < 3) { System.out.println("Usage: doc move <repos-id> <doc-id> <target-pid>"); return; }
-        System.out.println(format(client.moveDoc(parseInt(p[0]), parseLong(p[1]), null, null, null, null, parseLong(p[2]), null, null, null, null, null)));
+        if (p.length < 4) { System.out.println("Usage: doc move <repos-id> <src-dir> <src-name> <dst-dir> [new-name]"); return; }
+        String dstName = p.length > 4 ? p[4] : null;
+        System.out.println(format(client.moveDoc(parseInt(p[0]), null, null, dirPath(p[1]), p[2], null,
+                null, dirPath(p[3]), dstName, null, null, null)));
     }
     
     private static void cmdDocCopy(String arg) throws Exception {
         String[] p = arg.split("\\s+");
-        if (p.length < 3) { System.out.println("Usage: doc copy <repos-id> <doc-id> <target-pid>"); return; }
-        System.out.println(format(client.copyDoc(parseInt(p[0]), parseLong(p[1]), null, null, null, null, parseLong(p[2]), null, null, null, null, null)));
+        if (p.length < 4) { System.out.println("Usage: doc copy <repos-id> <src-dir> <src-name> <dst-dir> [new-name]"); return; }
+        String dstName = p.length > 4 ? p[4] : null;
+        System.out.println(format(client.copyDoc(parseInt(p[0]), null, null, dirPath(p[1]), p[2], null,
+                null, dirPath(p[3]), dstName, null, null, null)));
     }
     
     private static void cmdDocGet(String arg) throws Exception {
         String[] p = arg.split("\\s+");
-        if (p.length < 2) { System.out.println("Usage: doc get <repos-id> <doc-id>"); return; }
-        System.out.println(format(client.getDoc(parseInt(p[0]), parseLong(p[1]), null, null)));
+        if (p.length < 3) { System.out.println("Usage: doc get <repos-id> <dir-path> <name>"); return; }
+        System.out.println(format(client.getDoc(parseInt(p[0]), null, dirPath(p[1]), p[2])));
     }
     
     private static void cmdDocHistory(String arg) throws Exception {
         String[] p = arg.split("\\s+");
-        if (p.length < 2) { System.out.println("Usage: doc history <repos-id> <doc-id>"); return; }
-        System.out.println(format(client.getDocHistory(parseInt(p[0]), parseLong(p[1]))));
+        if (p.length < 3) { System.out.println("Usage: doc history <repos-id> <dir-path> <name>"); return; }
+        // level 传 null：让服务端自行规范化 path 并反推 level（传错 level 会静默定位到别的对象）
+        System.out.println(format(client.getDocHistory(parseInt(p[0]), null, dirPath(p[1]), p[2],
+                null, null, null, null)));
     }
     
     // ==================== FILE TRANSFER ====================
@@ -417,6 +433,8 @@ public class DocSysCLI {
         sb.append("  repos list\n");
         sb.append("  repos add myrepo /data/repos\n");
         sb.append("  doc list 1\n");
+        sb.append("  doc list 1 66666/          (子目录；根目录写 .)\n");
+        sb.append("  doc get 1 . README.md      (按 path+name 定位，不用 docId)\n");
         sb.append("  doc add 1 myfolder\n");
         sb.append("  search \"report\"\n");
         sb.append("  chat \"list my files\"\n");
