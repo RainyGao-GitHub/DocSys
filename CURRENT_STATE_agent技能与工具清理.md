@@ -348,6 +348,54 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
   模型当轮改 `maxResults=100` 重查得 `共 34 条（全部命中）`并翻第二页；**0 次 match 模式试错**。
 - 已提交 `353565ee0`（R2-1/R2-2/R2-3/R2-4）
 
+## R3-2 批 1：工具体检（仓库管理 + 备份 + 当前用户，2026-09-20）
+
+### 抽出来的系统性缺陷（影响全部 24 个工具）
+- **❗必填参数校验对全部工具都失效**：`objSchema(props, String[])` 把 `String[]` 直接塞进 schema，
+  而 `ToolRegistry.validateParams` 只认 `instanceof List` → 全部真实工具的必填校验被静默跳过。
+  症状：`create_repos{}` 不报缺必填，而抛 `Parameter specified as non-null is null: method okhttp3.FormBody$Builder.add`。
+  为何护栏没拦住：`TestToolRegistry.testExecuteMissingParam` 是**手搓 JSONArray 的测试桩**，测不到工厂产出。
+- **❗非 JSON 响应（500 HTML 页）变成模型的推理负担**：`delete_repos{vid:不存在}` 让服务端 NPE → HTTP 500 + HTML（4136 字符），
+  工具报的是 fastjson 语法错（模型看不懂）。
+- **❗描述过短的工具体**：`create_repos` 5 字、`update_repos` 6 字、`backup_repos`/`query_backup_status` 8 字、`get_login_user` 10 字。
+
+### 改动
+- `DocSysToolFactory.objSchema`：`required` 改输出 `JSONArray`（一行修全部工具）；`ToolRegistry.validateParams` 兼容 `Iterable`/`Object[]`，
+  错误文案改为 `missing required parameter 'x'（参数确实为空时请显式传空串 ""）`。
+- `DocSysClient.responseBodyString`：非 JSON 响应统一兜底成 `{"status":"fail","errorCode":"INTERNAL","msgInfo":"…"}`，
+  并从 HTML 里提炼 `<h1>` 人话（30+ 调用点无需改动）。
+- `ReposController.deleteRepos`：`getReposEx(vid)` 为 null 时直接 `repos.getId()` → NPE/500；已加存在性检查回 `REPOS_NOT_FOUND`。
+- `create_repos`：**服务端不拦同名/同路径重复创建（实测会生成第 2 条记录）** → 工具层前查重报 `REPOS_EXISTS`；
+  新增 `formatReposCreated`（给名称/路径/vid/下一步）；描述补 type/verCtrl 取值与 path 语义。
+- `update_repos`（R3-1）：必填改为 `vid` 并**删掉 `reposId` 属性**（唯一调用方是 LLM，不存在旧调用方缓存）；
+  空字段直接报错；新增 `formatReposUpdated`（只列改了什么；改 path 提醒旧目录不会搬）。
+- `delete_repos`：描述改为如实（**实测只删记录/权限，磁盘文件目录保留**）；新增 `formatReposDeleted`
+  （仓库名 + 保留目录 + 彻底清理办法）；名称/路径取不到时回退 `getReposList`（备份进行中 `getRepos` 会失败）。
+- `backup_repos`/`query_backup_status`：新增 `formatBackupTask`/`backupStateText`——原始响应 **1047 字符**且内嵌
+  `reposAccess.accessUser`（含 **`pwd` 密码哈希 / email / tel / requestIP**），现只留任务ID/状态/目标文件/存储目录（**183 字符**）；
+  描述写清 taskId 只能来自 backup_repos 回执（**任务 ID 字段是 `id`，形如 `19-20260920201904`，响应里没有 taskId 字段**）。
+- `get_login_user`：改紧凑回执（原来倒 231 字符 JSON，含手机号/邮箱），新增 `formatLoginUser`/`userTypeLabel`。
+
+### 验证
+- 新护栏 `TestReposToolsFormat` **46/46**（schema/必填/描述长度与关键事实/6 个渲染器的成功+失败+敏感字段不外泄）。
+- `TestToolRegistry` 29→**36**（新增“**直接查工厂产出**”的回归锁，正是它本应拦住上述系统性缺陷）。
+- 探针 `ReposToolsE2E` **31/31**（真环境）：建临时仓库→查重拒建→改名/改描述→备份→查任务→删不存在（REPOS_NOT_FOUND）→
+  删除→**仓库集合与 17 个基线逐项一致**；删后磁盘目录仍在（系统设计）由探针自己清理。
+- 全量 **20 套 / 856 项断言**全绿；**页面 E2E**（4 步、1 次确认弹窗）：`list_repos`（17 个）→ `get_repos{vid:5}` →
+  `query_backup_status{5-20260101000000}` → 模型答“TASK_NOT_FOUND，需用 backup_repos 重新发起，不要沿用旧 ID”；
+  `delete_repos{vid:999999}` → 批准 → `REPOS_NOT_FOUND`，模型答“并没有真的删掉任何东西”。
+- 已提交：见下方「未提交改动」
+
+### 遗留 / 教训
+- **探针教训**：破坏性探针必须把删除临时对象放进 `finally`。第一版没写，中途 `NumberFormatException`（列表主键字段猜错）
+  → 留下 2 个临时仓库，已手工清理。
+- **实测细节（下次直接用）**：仓库列表项主键字段是 **`id`**（不是 vid/reposId）；临时仓库不能放 `D:/test/` 下
+  （那是仓库 5 的存储目录，服务端按前缀判“已被使用”）；备份进行中对同一仓库 `getRepos` 会失败（仓库忙）。
+- **R3-2 批 2 待做**：`write_note`/`write_file`/`create_folder`/`delete_doc`/`rename_doc`/`move_doc`/`copy_doc`/`create_doc_share`/`get_doc_share_list`
+  的**写回执紧凑化**（R2 遗留）+ `memory_*`/`attachment`/`web_search` 的真实装配验证（与 R3-3 合并）。
+- **页面 E2E 再次印证 R3-9**：`delete_repos{vid:999999}` 的确认弹窗只写“此操作将执行写操作 [delete_repos]”，
+  用户看不到到底要删哪个仓库。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -359,12 +407,15 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 - **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 ✅**；**R1-5 ✅**；**R1-2 ✅ / R1-3 ✅**；R1 全部完成
 - **R2（P1）**：**R2-1 ✅ / R2-2 ✅ / R2-3 ✅ / R2-4 ✅（本轮）** — 剩余：写操作回执类仍为 `fmt()` 整包 JSON，归入 R3-2 工具体检一并做
-- **R3（P2）**：全工具体检表（含写回执紧凑化）、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化；
+- **R3（P2）**：**R3-2 批 1 ✅ / R3-1 ✅（本轮）**；下一步 **R3-2 批 2**（写回执紧凑化 + memory/attachment/web_search）→ R3-3 `run_skill` → R3-9 确认弹窗显示参数 → R3-10 跨仓库按路径/名字找 → R3-4/5 清理裁定 → R3-6 检查单
   新增两条（R2 页面 E2E 发现）：**R3-9 确认弹窗只显示工具名不显示参数**、**R3-10 缺“跨仓库按路径/名字找”能力**
 
 ## 未提交改动
 
-- 无（R2 已提交 `353565ee0`）
+- R3-2 批 1 待提交：`src/com/DocSystem/agent/tool/DocSysToolFactory.java`、`src/com/DocSystem/agent/tool/ToolRegistry.java`、
+  `src/com/DocSystem/agent/client/DocSysClient.java`、`src/com/DocSystem/controller/ReposController.java`、
+  `src/com/DocSystem/agent/tool/TestReposToolsFormat.java`（新增）、`src/com/DocSystem/agent/tool/TestToolRegistry.java`、
+  `src/com/DocSystem/agent/tool/TestAgentSearchWriteTools.java`、`devDocs/Agent工具与接口可靠性计划.md`、本工作卡
 - 已提交：R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 

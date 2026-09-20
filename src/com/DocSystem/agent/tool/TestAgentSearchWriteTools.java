@@ -39,12 +39,16 @@ public class TestAgentSearchWriteTools {
     }
 
     private static void check(String name, boolean cond) {
+        check(name, cond, null);
+    }
+
+    private static void check(String name, boolean cond, String detail) {
         if (cond) {
             pass++;
             System.out.println("[PASS] " + name);
         } else {
             fail++;
-            System.out.println("[FAIL] " + name);
+            System.out.println("[FAIL] " + name + (detail == null ? "" : "  -> " + detail));
         }
     }
 
@@ -109,11 +113,21 @@ public class TestAgentSearchWriteTools {
 
         JSONObject hasVid = new JSONObject();
         hasVid.put("vid", 1);
-        ToolResult r1b = reg.execute("write_file", hasVid);
-        check("write_file missing content -> error", !r1b.success && r1b.error.contains("content"));
+        // R3-2 体检：给全 path/name，只缺 content —— 这样断言的才是"缺 content"本身。
+        // （旧写法只传 vid，实际是 path 先缺；必填校验修好之前会误绿）
+        JSONObject noContent = new JSONObject();
+        noContent.put("vid", 1);
+        noContent.put("path", "66666/");
+        noContent.put("name", "a.txt");
+        ToolResult r1b = reg.execute("write_file", noContent);
+        check("write_file missing content -> error", !r1b.success && r1b.error.contains("content"), r1b.error);
 
-        ToolResult r2 = reg.execute("write_note", hasVid);
-        check("write_note missing content -> error", !r2.success && r2.error.contains("content"));
+        ToolResult r2 = reg.execute("write_note", noContent);
+        check("write_note missing content -> error", !r2.success && r2.error.contains("content"), r2.error);
+
+        ToolResult r3 = reg.execute("write_file", new JSONObject());
+        check("write_file 完全空参报第一个缺的必填字段", !r3.success
+                && r3.error.contains("missing required parameter"), r3.error);
     }
 
     // ---------- 查询 DSL 解析 ----------

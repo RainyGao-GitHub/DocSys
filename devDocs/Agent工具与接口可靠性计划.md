@@ -280,16 +280,62 @@
   `grep_files` 一次到位（`共 16 条（全部命中）`）；`search_files` 默认调用即看到 `已达 maxResults=20 上限，可能还有更多命中`，
   模型当轮就按提示用 `maxResults=100` 重查（得 `共 34 条（全部命中）`）并翻第二页；**0 次 match 模式试错**。
 
-### R3 — P2：一致性、体检、清理
+### R3 — P2：一致性、体检、清理（进行中：批 1 ✅ 2026-09-20）
 
-#### R3-1 工具参数命名一致性
-- `update_repos` 用 `reposId`，其余工具用 `vid` → 统一为 `vid`（保留 `reposId` 作为兼容别名）；顺带核对 `backup_repos(vid)`/`query_backup_status(taskId)`/`delete_repos(vid)` 等描述与实际一致。
+#### R3-0 工具体检的**系统性发现**（批 1 抽出来的，影响全部 24 个工具）
+- **❗必填参数校验对全部工具都失效**（已修）：`objSchema(props, String[])` 把 `String[]` 直接塞进 schema，
+  而 `ToolRegistry.validateParams` 只认 `instanceof List` → **所有真实工具的必填校验被静默跳过**。
+  实测症状：`create_repos{}` 不报“缺必填”，而抛 `Parameter specified as non-null is null: method okhttp3.FormBody$Builder.add`（模型看不懂）。
+  为什么护栏没拦住：`TestToolRegistry.testExecuteMissingParam` 是**手搓 JSONArray**（`JSON.parseArray`）的测试桩，
+  永远测不到工厂产出的 `String[]` —— 典型的“测试自己造了个正确的 fixture，把生产者 bug 盖住”。
+  → 修：`objSchema` 输出 `JSONArray`；`validateParams` 兼容 `Iterable`/`Object[]`；错误文案改为
+  `missing required parameter 'x'（参数确实为空时请显式传空串 ""）`；新增 **直接查工厂产出** 的回归锁（`TestToolRegistry` 29→36）。
+- **❗非 JSON 响应直接变成模型的“推理负担”**（已修）：服务端 500 时 Tomcat 回 HTML 错误页，
+  各调用点 `JSON.parseObject` 抛 fastjson 语法错，工具报给模型的是 `syntax error, pos 1, line 1, column 2<html>…`。
+  → 修：`DocSysClient.responseBodyString` 统一兜底成 `{"status":"fail","errorCode":"INTERNAL","msgInfo":"…"}`，
+  并把 HTML 里 `<h1>` 提炼成一句人话（30+ 个调用点无需改动）。
+- **❗描述过短的工具体（模型无从下手）**：`create_repos` 5 字、`update_repos` 6 字、`backup_repos`/`query_backup_status` 8 字、
+  `get_login_user` 10 字。→ 本批已重写这 5 个；**其余工具的描述质量 lint 归 R3-2 后续批次**。
+- ✅ **实测环境提示**：仓库管理类工具的临时仓库**不能放在 `D:/test/` 下**——那是仓库 5 的存储目录，
+  服务端按前缀判定 "已被使用"（`newRealDocPath duplicated: repos id=5 name=test realDocPath=D:/test/`）；
+  也不存在 “all repos” 列表项字段叫 `vid`：**列表项主键字段是 `id`**。
 
-#### R3-2 全工具"体检"（逐个最小真实调用，含失败路径）
-- 名单：`create_repos` `delete_repos` `update_repos` `backup_repos` `query_backup_status` `write_note` `write_file` `create_doc_share` `get_doc_share_list` `get_doc_history` `get_doc` `get_repos` `list_repos` `memory_set/get/list` `attachment` `run_skill` `web_search` `create_folder` `delete_doc` `rename_doc` `move_doc` `copy_doc`
-- 每项检查：**端点存在性 → 参数名 → docId-only 场景 → 大目录/大结果场景 → 确认门 → 失败归因**。
-- 产出：一张"工具体检表"（工具 / 端点 / 最小调用命令 / 结果 / 遗留问题）追加入本文档。
-- 注意：写操作会真实改数据 —— 一律在仓库 5（test，`D:/test/`）用一次性名字做，并清理还原。
+#### R3-1 工具参数命名一致性（✅ 已随批 1 完成）
+- `update_repos` 的孤例参数名 `reposId` → 统一为 **`vid`**（必填），并**直接删掉 `reposId` 属性**。
+  - 为什么没按原计划“保留兼容别名”：本工具的唯一调用方是 LLM，它每次读 schema，不存在旧调用方缓存；
+    留一个已废弃的参数名只会让模型偶尔用错，正是 R3-1 要消除的问题。
+- 顺带校对：`backup_repos(vid)` / `query_backup_status(taskId)` / `delete_repos(vid)` / `create_repos(name,path)` 描述与实际一致。
+
+#### R3-2 全工具"体检"（逐个最小真实调用，含失败路径）——**批 1 ✅ / 批 2 ⬜**
+
+**批 1（已完成）：仓库管理 4 + 备份 2 + 当前用户 1**
+
+| 工具 | 端点 | 真机结果 | 本批修正 |
+|------|------|----------|----------|
+| `get_login_user` | `/User/getLoginUser.do` | ok，231 字符含 `tel`(手机号)/`email` | 改紧凑回执（2 行，无 PII）；补描述 |
+| `create_repos` | `/Repos/addRepos.do` | 创建成功（仓库 17→18）；**服务端不拦同名/同路径重复创建，会生成第 2 条记录** | 工具层前查重（命中报 `REPOS_EXISTS`）；回执给 vid；描述补 type/verCtrl 取值与 path 语义 |
+| `get_repos` | `/Repos/getRepos.do` | ok，113 字符，不泄露 `svnPwd/localSvnPath` | 无（R1-5 已改） |
+| `update_repos` | `/Repos/updateReposInfo.do` | ok；“没有任何可改字段”原来会发空请求 | 参数名统一 `vid`；空字段直接报错；回执只列改了什么；改 path 提醒旧目录不会搬 |
+| `delete_repos` | `/Repos/deleteRepos.do` | ok；**实测只删记录与权限/授权，磁盘文件目录保留** | 描述改为如实（不再写“不可恢复”）；回执给仓库名 + 保留目录 + 彻底清理办法 |
+| `backup_repos` | `/Repos/backupRepos.do` | ok，原始响应 **1047 字符**，内嵌 `repos` + `reposAccess.accessUser`（含 **`pwd` 密码哈希、email、tel、requestIP**） | 新增 `formatBackupTask`：只留任务ID/状态/目标文件/存储目录（**183 字符**），不再泄露凭据；描述说明 taskId 来源 |
+| `query_backup_status` | `/Repos/queryReposFullBackupTask.do` | 不存在的 ID → `TASK_NOT_FOUND`（已经带码，R1-1 成果）；**任务 ID 字段是 `id`（形如 `19-20260920201904`），响应里没有 `taskId` 字段** | 描述写清“taskId 只能来自 backup_repos 回执”；回执改紧凑；状态码映射 `0/1/2`+`stopFlag` |
+
+- **服务端附带修复**：`ReposController.deleteRepos` 在 `getReposEx(vid)` 返回 null 时直接 `repos.getId()` → **NPE → HTTP 500 + HTML 错误页**；
+  已加存在性检查，回 **`REPOS_NOT_FOUND`**（对齐 R1-1 打码模式）。
+- **验收（已过）**：
+  - 新护栏 `TestReposToolsFormat` **46/46**（schema/必填/描述长度与关键事实/6 个渲染器的成功+失败+敏感字段不外泄）；
+  - 探针 `ReposToolsE2E` **31/31**（真环境，建临时仓库→查重→改名→改描述→备份→查任务→删不存在→删除→**仓库集合与 17 个基线逐项一致**）；
+  - 全量 20 套护栏 **856 项断言** 全绿（新增 TestReposToolsFormat 46；TestToolRegistry 29→36；TestAgentSearchWriteTools 55→56）；
+  - **页面 E2E**（4 步、1 次确认弹窗）：`list_repos`（17 个，含“没有 vid=15”这种真实细节）→ `get_repos{vid:5}` →
+    `query_backup_status{5-20260101000000}` → 模型复述“`TASK_NOT_FOUND`，需用 backup_repos 重新发起，不要沿用旧 ID”；
+    `delete_repos{vid:999999}` → 确认弹窗批准 → `REPOS_NOT_FOUND`，模型答“并没有真的删掉任何东西”。
+- ⚠️ **探针工程教训**：破坏性体检探针必须把“删除临时对象”放进 `finally`。第一版本没写，探针中途
+  `NumberFormatException`（列表主键字段猜错）→ **留下 2 个临时仓库**，需手工清理。
+- ⚠️ **顺带发现**：备份任务进行中对同一仓库调 `getRepos` 会失败（仓库忙）→ 回执取名称/目录必须回退 `getReposList`
+  （已实现，否则 `delete_repos` 回执会丢名称与目录）。
+
+**批 2（待做）**：`write_note` `write_file` `create_folder` `delete_doc` `rename_doc` `move_doc` `copy_doc` `create_doc_share` `get_doc_share_list`
+的**写回执紧凑化**（R2 遗留）+ `memory_set/get/list` `attachment` `run_skill` `web_search` 的真实装配验证（后四个靠页面 E2E，与 R3-3 合并）。
 
 #### R3-3 `run_skill` 对已下线 DocSys 能力的表现
 - P3b 验收标准里写了"`run_skill("<DocSys能力>")` 应明确报 No executor"，但**未实测**。→ 补一次页面验证并记录。
@@ -327,7 +373,7 @@
 |---|---|---|---|
 | **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 ✅ → **R1-6 定位全面 path/name ✅** → **R1-5 list_repos ✅** → **R1-2 create_doc_share ✅** → **R1-3 get_doc_share_list ✅** → R2（统一输出/大结果）→ R3 | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
-| **R3** | R3-2 全工具体检（产出体检表）→ R3-1 命名 → R3-3 run_skill → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表 + 检查单文档 |
+| **R3** | R3-0（体检暴露的系统性缺陷，已修）→ R3-2 批 1（仓库/备份/当前用户 7 个）✅ → R3-1 命名 ✅ → R3-2 批 2（写回执紧凑化 + memory/attachment/web_search）→ R3-3 run_skill → R3-9/10 → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
 
 > 每完成一项：更新本文状态列 → 更新工作卡"当前进展/未提交改动" → 提交（`devInt` 主干）。
 
@@ -336,7 +382,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R2 后）：`TestToolOutputContract 82` / `TestDocShareFormat 60` / `TestListReposFormat 50` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`（15 套全绿）
+   - 现基线（2026-09-20 R3-2 批 1 后，**20 套 / 856 项断言全绿**）：`TestReposToolsFormat 46` / `TestToolRegistry 36` / `TestToolOutputContract 82` / `TestListReposFormat 50` / `TestListDocsFormat 25` / `TestDocShareFormat 60` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestWriteTools 52` / `TestAgentSearchWriteTools 56` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestLockRetry 13` / `TestToolUseLoop 36` / `TestToolUseLoopNative 17` / `TestToolUseLoopStreaming 26` / `TestToolSchemaBuilder 7`
    - 注意 `TestAgentFocusSupport` 在 `com.DocSystem.agent.focus` 包，其余在 `com.DocSystem.agent.tool`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolPathE2E` `ReposListE2E` `ShareToolE2E` `OutputContractE2E` `MatchProbe` `TotalProbe` `SearchProbe2`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
@@ -391,8 +437,8 @@
 | R2-2 | P1 | get_doc 长文 maxChars/offset | ✅ | 探针：31390 字符分 11 窗口读全且逐字符一致 |
 | R2-3 | P1 | search_files/grep_files 大结果验证与紧凑化 | ✅ | 探针：search 19840→2746/页（5 页覆盖 100 条）；grep 687130→3122 |
 | R2-4 | P1 | 命中数语义（服务端不给总数）+ match 大小写引导（页面 E2E 发现） | ✅ | 表头区分“全部命中/已达上限”；页面 E2E 同问法 7 步→4 步、0 次 match 试错 |
-| R3-1 | P2 | 参数命名一致（update_repos.reposId → vid） | ⬜ | |
-| R3-2 | P2 | 全工具体检表（22 工具） | ⬜ | |
+| R3-1 | P2 | 参数命名一致（update_repos.reposId → vid） | ✅ | 统一为 vid 并删掉旧属性；护栏 TestReposToolsFormat 锁定 |
+| R3-2 | P2 | 全工具体检表（24 工具）——**批 1 ✅（仓库/备份/当前用户 7 个）/ 批 2 ⬜** | 🔶 | 批 1：探针 31/31、护栏 46/46、页面 E2E 4 步；批 2 见 R3-2 节 |
 | R3-3 | P2 | run_skill 对已下线能力的表现 | ⬜ | |
 | R3-4 | P2 | 旧编排死代码（SubAgent/MainAgent/LLMIntentParser）处置 | ⬜ | |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ⬜ | |

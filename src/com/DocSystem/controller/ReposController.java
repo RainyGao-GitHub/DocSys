@@ -877,6 +877,12 @@ public class ReposController extends BaseController{
 		}
 		
 		Repos repos = getReposEx(vid);
+		if(repos == null)	//R3-2 体检修复：vid 不存在时 getReposEx 返回 null，原来下一行直接 NPE → HTTP 500 + HTML 错误页
+		{
+			rt.setError("仓库不存在！", ErrorCode.REPOS_NOT_FOUND);
+			writeJson(rt, response);
+			return;
+		}
 		setReposIsBusy(repos.getId(), true);
 		
 		if(reposService.deleteRepos(vid) == 0)

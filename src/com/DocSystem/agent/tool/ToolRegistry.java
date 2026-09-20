@@ -218,11 +218,20 @@ public class ToolRegistry {
             return null;
         }
         Object requiredObj = schema.get("required");
-        if (requiredObj instanceof List) {
-            for (Object o : (List<?>) requiredObj) {
+        Iterable<?> required = null;
+        if (requiredObj instanceof Iterable) {
+            // JSONArray/String[]/List 都实现 Iterable —— 不再只认 List，避免调用方
+            // 塞了 String[] 就静默丢掉全部必填校验（2026-09-20 体检发现）
+            required = (Iterable<?>) requiredObj;
+        } else if (requiredObj instanceof Object[]) {
+            required = java.util.Arrays.asList((Object[]) requiredObj);
+        }
+        if (required != null) {
+            for (Object o : required) {
                 String field = String.valueOf(o);
                 if (!args.containsKey(field) || args.get(field) == null) {
-                    return "missing required parameter '" + field + "'";
+                    return "missing required parameter '" + field + "'"
+                            + "（参数确实为空时请显式传空串 \"\"；若不需要该参数请换用其他工具）";
                 }
             }
         }

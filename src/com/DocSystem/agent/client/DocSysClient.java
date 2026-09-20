@@ -1327,9 +1327,57 @@ public class DocSysClient {
         }
     }
 
+    /**
+     * 读取响应体；**非 JSON 响应（例如 Tomcat 的 500 HTML 错误页）统一翻译成失败 JSON**。
+     *
+     * <p>R3-2 体检实测：`delete_repos{vid:不存在}` 让服务端 NPE → HTTP 500 + Tomcat HTML 错误页（4136 字符），
+     * 各调用点 `JSON.parseObject(...)` 直接抛 fastjson 语法错，工具层报给模型的是
+     * “syntax error, pos 1, line 1, column 2&lt;html&gt;&lt;head&gt;…”，模型完全无法处置。
+     * 这里统一兜底成 `{"status":"fail","errorCode":"INTERNAL","msgInfo":"…"}`，
+     * 这样所有 30+ 个调用点无需改动就都能给出带错误码的可读结论。
+     */
     private String responseBodyString(Response response) throws java.io.IOException {
         ResponseBody body = response.body();
-        return body != null ? body.string() : "";
+        String text = body != null ? body.string() : "";
+        String trimmed = text.trim();
+        if (!trimmed.isEmpty() && trimmed.charAt(0) != '{' && trimmed.charAt(0) != '[') {
+            return "{\"status\":\"fail\",\"errorCode\":\"INTERNAL\",\"msgInfo\":\""
+                    + escapeJson(serverErrorSummary(response, trimmed)) + "\"}";
+        }
+        return text;
+    }
+
+    /** 从 HTML 错误页/纯文本里提炼一句可读的失败原因（不把整页 HTML 倒给模型） */
+    private String serverErrorSummary(Response response, String trimmed) {
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("<h1[^>]*>(.*?)</h1>", java.util.regex.Pattern.DOTALL).matcher(trimmed);
+        String detail = null;
+        if (m.find()) {
+            detail = m.group(1).replaceAll("<[^>]+>", "").replaceAll("\\s+", " ").trim();
+        }
+        if (detail == null || detail.isEmpty()) {
+            detail = trimmed.length() > 120 ? trimmed.substring(0, 120) + "…" : trimmed;
+        }
+        String status = response == null ? "?" : String.valueOf(response.code());
+        return "服务端返回非 JSON 响应（HTTP " + status + "）：" + detail
+                + "；这通常是服务端内部错误，可改用 list_repos/get_repos 确认对象是否存在，不要重试同一调用";
+    }
+
+    private static String escapeJson(String s) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '"' || c == '\\') {
+                sb.append('\\').append(c);
+            } else if (c == '\n' || c == '\r') {
+                sb.append(' ');
+            } else if (c < 0x20) {
+                continue;
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     private String extractSessionCookie(Response response) {

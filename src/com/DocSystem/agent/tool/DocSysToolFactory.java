@@ -106,9 +106,51 @@ public class DocSysToolFactory {
 
     /** R1 当前登录用户 */
     public static ToolDefinition getLoginUser(DocSysClient client) {
-        return ToolDefinition.builder("get_login_user", "获取当前登录用户信息",
-                args -> ToolResult.ok(fmt(client.getLoginUser())))
+        return ToolDefinition.builder("get_login_user",
+                "查看当前登录用户（名称/userId/角色）与可用性。"
+                        + "用于回答“我是谁/我有什么权限”，或确认会话是否有效；不返回邮箱/手机号等个人信息。",
+                args -> ToolResult.ok(formatLoginUser(client.getLoginUser())))
                 .build();
+    }
+
+    /**
+     * 当前用户紧凑回执。
+     *
+     * <p>实测原实现 `fmt()` 倒整包 JSON（231 字符），包含 `tel`（手机号）、`email`、`docSysType` 等
+     * 与任务无关的个人信息；这里只留名称/id/角色。
+     */
+    static String formatLoginUser(Map<String, Object> resp) {
+        if (!isOk(resp)) {
+            return fmt(resp);
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof Map)) {
+            return "未获取到登录用户信息（服务器返回：" + shortText(String.valueOf(data), 80) + "）";
+        }
+        Map<?, ?> u = (Map<?, ?>) data;
+        String name = str(u.get("name"));
+        String id = str(u.get("id"));
+        return "当前登录用户：" + (name.isEmpty() ? "（未匿名）" : name) + "（userId=" + id + "，角色："
+                + userTypeLabel(u.get("type")) + "）\n"
+                + "⚠️ 会话无效时会返回未登录错误（NOT_LOGIN），此时应提示用户重新登录。";
+    }
+
+    /** 用户类型文案（type：0 普通用户 / 1 管理员 / 2 超级管理员） */
+    static String userTypeLabel(Object type) {
+        Integer t = intOf(type);
+        if (t == null) {
+            return "未知";
+        }
+        switch (t) {
+            case 0:
+                return "普通用户";
+            case 1:
+                return "管理员";
+            case 2:
+                return "超级管理员";
+            default:
+                return "类型 " + t;
+        }
     }
 
     /** R2 列出仓库（R1-5：紧凑分页渲染，不再裸倒 JSON） */
@@ -314,11 +356,87 @@ public class DocSysToolFactory {
 
     /** R16 备份任务状态 */
     public static ToolDefinition queryBackupStatus(DocSysClient client) {
-        JSONObject schema = objSchema(props(strProp("taskId", "备份任务ID（必填）")), new String[]{"taskId"});
-        return ToolDefinition.builder("query_backup_status", "查询备份任务状态",
-                args -> ToolResult.ok(fmt(client.queryBackupStatus(args.getString("taskId")))))
+        JSONObject schema = objSchema(props(
+                strProp("taskId", "备份任务 ID（必填）。取自 backup_repos 回执里的“任务ID”，形如 \"19-20260920201904\"；"
+                        + "不要自己拼，也不要沿用过期的 ID")), new String[]{"taskId"});
+        return ToolDefinition.builder("query_backup_status",
+                "查一个仓库全量备份任务的进度/结果（状态、进度、目标文件、失败原因）。"
+                        + "taskId 只能从 backup_repos 的回执里拿（格式：仓库id-时间戳）；"
+                        + "任务不存在会回 TASK_NOT_FOUND，此时应用 backup_repos 重新发起，不要重试同一个 ID。",
+                args -> {
+                    String taskId = args.getString("taskId");
+                    try {
+                        return ToolResult.ok(formatBackupTask(client.queryBackupStatus(taskId), taskId));
+                    } catch (Exception e) {
+                        return ToolResult.error("query_backup_status failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .build();
+    }
+
+    /**
+     * 备份任务回执（backup_repos / query_backup_status 共用）。
+     *
+     * <p><b>为什么不倒原始 JSON</b>（2026-09-20 实测）：响应 1047 字符，里面嵌了整个 `repos` 对象与
+     * `reposAccess.accessUser` —— 含**用户密码哈希（pwd）、邮箱、手机号、requestIP**，既占上下文又泄露敏感信息。
+     * 这里只保留：任务 ID / 状态 / 目标文件 / 存储目录 / 说明。
+     */
+    static String formatBackupTask(Map<String, Object> resp, String fallbackTaskId) {
+        if (!isOk(resp)) {
+            return fmt(resp);
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof Map)) {
+            return "备份任务 " + fallbackTaskId + "：服务器未返回任务详情（响应：" + shortText(String.valueOf(data), 120) + "）";
+        }
+        Map<?, ?> m = (Map<?, ?>) data;
+        String id = str(m.get("id"));
+        StringBuilder sb = new StringBuilder("备份任务 " + (id.isEmpty() ? fallbackTaskId : id) + "：\n");
+        sb.append("- 状态：").append(backupStateText(m.get("status"), m.get("stopFlag")));
+        if (m.get("info") != null) {
+            sb.append("（").append(shortText(str(m.get("info")), 60)).append("）");
+        }
+        String targetName = str(m.get("targetName"));
+        if (!targetName.isEmpty()) {
+            sb.append("\n- 目标文件：").append(targetName);
+        }
+        String targetPath = str(m.get("targetPath"));
+        if (!targetPath.isEmpty()) {
+            sb.append("\n- 存储目录：").append(targetPath);
+        }
+        Object size = m.get("targetSize");
+        if (size != null && String.valueOf(size).length() > 0 && !"0".equals(String.valueOf(size))) {
+            sb.append("\n- 文件大小：").append(sizeText(size));
+        }
+        String backupTime = str(m.get("backupTime"));
+        if (!backupTime.isEmpty()) {
+            sb.append("\n- 发起时间：").append(backupTime);
+        }
+        sb.append("\n（备份异步执行；稍后再用同一个 taskId 调 query_backup_status 看进度）");
+        return sb.toString();
+    }
+
+    /** 备份任务状态（state/stopFlag 是真实字段，已实测） */
+    static String backupStateText(Object status, Object stopFlag) {
+        Integer s = intOf(status);
+        boolean stopped = stopFlag != null && Boolean.parseBoolean(String.valueOf(stopFlag));
+        if (stopped) {
+            return "已中止";
+        }
+        if (s == null) {
+            return "未知";
+        }
+        switch (s) {
+            case 0:
+                return "已完成";
+            case 1:
+                return "进行中";
+            case 2:
+                return "失败";
+            default:
+                return "状态码 " + s;
+        }
     }
 
     // ==================== 写操作工具（T3.2，全部 needsConfirm） ====================
@@ -326,49 +444,237 @@ public class DocSysToolFactory {
     /** W1 创建仓库 */
     public static ToolDefinition createRepos(DocSysClient client) {
         JSONObject props = props(
-                strProp("name", "仓库名称（必填）"),
-                strProp("path", "存储路径（必填）"),
+                strProp("name", "仓库名称（必填）。同名仓库已存在时会直接拒绝"),
+                strProp("path", "仓库存储目录的绝对路径（必填，如 \"C:/DocSysReposes/20/\"）。"
+                        + "该目录不能是已有仓库路径的子目录（服务端会报“已被使用”）；目录不存在时服务端会创建"),
                 strProp("info", "描述（可选）"),
-                intProp("type", "仓库类型（0=本地，默认0）"),
-                intProp("verCtrl", "版本控制（0=无，1=SVN，2=GIT，可选）"));
+                intProp("type", "仓库类型（可选，0=文件管理系统（默认）/3=SVN 前置/4=GIT 前置/5=文件服务器前置）"),
+                intProp("verCtrl", "版本控制（可选，0=无（默认）/1=SVN/2=GIT/3=磁盘）"));
         JSONObject schema = objSchema(props, new String[]{"name", "path"});
-        return ToolDefinition.builder("create_repos", "创建新仓库",
-                args -> ToolResult.ok(fmt(client.addRepos(
-                        args.getString("name"), args.getString("info"),
-                        args.getInteger("type"), args.getString("path"),
-                        null, args.getInteger("verCtrl"), null, null, null, null, null,
-                        null, null, null, null, null, null))))
+        return ToolDefinition.builder("create_repos",
+                "新建一个仓库（会在指定 path 建目录，并写入仓库配置与权限记录）。"
+                        + "生效范围是**全局**（所有有权限的用户都能看到），属管理动作：请先向用户确认名称与存储路径。"
+                        + "成功后回执会给出新仓库的 vid（后续 list_docs/write_file 等都要用它）。"
+                        + "⚠️ 服务端**不会拦截同名/同路径重复创建**（实测会生成第 2 条仓库记录）——本工具已先查一遍，"
+                        + "命中同名就拒绝并报 REPOS_EXISTS。",
+                args -> {
+                    String name = args.getString("name");
+                    String path = args.getString("path");
+                    try {
+                        String exists = findExistingRepos(client, name, path);
+                        if (exists != null) {
+                            return ToolResult.error(exists);
+                        }
+                        Map<String, Object> resp = client.addRepos(
+                                name, args.getString("info"),
+                                args.getInteger("type"), path,
+                                null, args.getInteger("verCtrl"), null, null, null, null, null,
+                                null, null, null, null, null, null);
+                        return ToolResult.ok(formatReposCreated(resp, name, path, findReposIdByName(client, name)));
+                    } catch (Exception e) {
+                        return ToolResult.error("create_repos failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
+    }
+
+    /** 创建前同名/同路径查重（服务端不拦重复创建，实测会生成第 2 条记录） */
+    @SuppressWarnings("unchecked")
+    private static String findExistingRepos(DocSysClient client, String name, String path) throws Exception {
+        Map<String, Object> resp = client.getReposList();
+        Object data = resp == null ? null : resp.get("data");
+        if (!(data instanceof List)) {
+            return null;
+        }
+        String normPath = path == null ? "" : path.replace('\\', '/');
+        for (Object o : (List<Object>) data) {
+            if (!(o instanceof Map)) {
+                continue;
+            }
+            Map<String, Object> m = (Map<String, Object>) o;
+            String existName = str(m.get("name"));
+            String existPath = str(m.get("path"));
+            if (name != null && name.equals(existName)) {
+                return "仓库已存在：名称「" + name + "」已被 vid=" + m.get("id") + " 占用（REPOS_EXISTS）。"
+                        + "请换一个名称，或先用 get_repos 查看现有仓库。";
+            }
+            if (!normPath.isEmpty() && existPath.replace('\\', '/').replaceAll("/+$", "")
+                    .equals(normPath.replaceAll("/+$", ""))) {
+                return "仓库已存在：存储路径 " + path + " 已被名称「" + existName + "」(vid=" + m.get("id")
+                        + ") 占用（REPOS_EXISTS）。请换一个存储目录。";
+            }
+        }
+        return null;
+    }
+
+    /** 创建后回查 vid（addRepos 的响应不带 id，但模型下一步要用） */
+    @SuppressWarnings("unchecked")
+    private static Integer findReposIdByName(DocSysClient client, String name) {
+        try {
+            Map<String, Object> resp = client.getReposList();
+            Object data = resp == null ? null : resp.get("data");
+            if (data instanceof List) {
+                for (Object o : (List<Object>) data) {
+                    Map<String, Object> m = (Map<String, Object>) o;
+                    if (name != null && name.equals(str(m.get("name")))) {
+                        return intOf(m.get("id"));
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // 查不到 vid 不影响创建结果，回执里会提示用 list_repos 查
+        }
+        return null;
+    }
+
+    /** 创建仓库回执（不回原始 JSON；失败时回原 JSON 以保留 errorCode） */
+    static String formatReposCreated(Map<String, Object> resp, String name, String path, Integer vid) {
+        if (!isOk(resp)) {
+            return fmt(resp);
+        }
+        return "已创建仓库：\n"
+                + "名称：" + name + "\n"
+                + "路径：" + path + "\n"
+                + "vid：" + (vid == null ? "（未回查到，请用 list_repos 确认）" : String.valueOf(vid)) + "\n"
+                + "下一步：用 list_docs(vid=" + (vid == null ? "…" : String.valueOf(vid))
+                + ") 看目录，或直接 write_file/create_folder 写入。";
     }
 
     /** W2 删除仓库 */
     public static ToolDefinition deleteRepos(DocSysClient client) {
-        JSONObject schema = objSchema(props(intProp("vid", "仓库ID（必填）")), new String[]{"vid"});
-        return ToolDefinition.builder("delete_repos", "删除仓库（不可恢复，需确认）",
-                args -> ToolResult.ok(fmt(client.deleteRepos(args.getInteger("vid")))))
+        JSONObject schema = objSchema(props(intProp("vid", "仓库ID（必填，来自 list_repos）")), new String[]{"vid"});
+        return ToolDefinition.builder("delete_repos",
+                "删除仓库（属破坏性管理动作，会影响所有有权限的用户，必须先跟用户确认）。"
+                        + "实际行为（已实测）：删除仓库配置与**权限/文档授权记录**；"
+                        + "⚠️ **磁盘上的文件目录不会被删除**（数据保留，可在管理后台勾选“删除数据”彻底清理）。"
+                        + "回执会告知保留目录的位置。删除后原有的 docId/path 全部失效。",
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    try {
+                        // 先取一份名称/路径用于回执（删除后查不到了）。
+                        // ⚠️ 实测：备份任务进行中对同一仓库调 getRepos 会失败（仓库忙）——
+                        // 所以这里还要回退到 getReposList()（列表读不受忙状态影响），否则回执会丢名称与目录。
+                        String[] label = lookupReposLabel(client, vid);
+                        return ToolResult.ok(formatReposDeleted(client.deleteRepos(vid), vid, label[0], label[1]));
+                    } catch (Exception e) {
+                        return ToolResult.error("delete_repos failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
     }
 
-    /** W3 更新仓库信息 */
+    /** 取仓库的 [名称, 存储路径]：先试 getRepos（详情），失败则回退 getReposList（列表） */
+    @SuppressWarnings("unchecked")
+    private static String[] lookupReposLabel(DocSysClient client, Integer vid) {
+        try {
+            Map<String, Object> detail = client.getRepos(vid);
+            Object data = detail == null ? null : detail.get("data");
+            if (data instanceof Map) {
+                Map<?, ?> m = (Map<?, ?>) data;
+                String name = str(m.get("name"));
+                String path = str(m.get("path"));
+                if (!name.isEmpty() || !path.isEmpty()) {
+                    return new String[]{name, path};
+                }
+            }
+        } catch (Exception ignored) {
+            // 仓库忙/无权限 → 走列表兜底
+        }
+        try {
+            Map<String, Object> resp = client.getReposList();
+            Object data = resp == null ? null : resp.get("data");
+            if (data instanceof List) {
+                for (Object o : (List<Object>) data) {
+                    Map<String, Object> m = (Map<String, Object>) o;
+                    if (vid != null && vid.equals(intOf(m.get("id")))) {
+                        return new String[]{str(m.get("name")), str(m.get("path"))};
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // 取不到就只回状态
+        }
+        return new String[]{"", ""};
+    }
+
+    /** 删除仓库回执（失败保留错误码） */
+    static String formatReposDeleted(Map<String, Object> resp, Integer vid, String name, String path) {
+        if (!isOk(resp)) {
+            return fmt(resp);
+        }
+        String label = name == null || name.isEmpty() ? "" : "「" + name + "」";
+        return "已删除仓库" + label + "（vid=" + vid + "）：仓库配置、权限与文档授权记录已移除。\n"
+                + "⚠️ 磁盘文件未删除" + (path == null || path.isEmpty() ? "（目录位置未知，可在管理后台查看）"
+                        : "：" + path) + "\n"
+                + "如需彻底清理数据，请在管理后台的仓库列表里勾选“删除数据”后重试。";
+    }
+
+    /** W3 更新仓库信息（R3-1：参数名与其他工具统一为 vid；旧名 reposId 已下线，不再对外暴露） */
     public static ToolDefinition updateRepos(DocSysClient client) {
         JSONObject props = props(
-                intProp("reposId", "仓库ID（必填）"),
-                strProp("name", "新名称（可选）"),
-                strProp("info", "新描述（可选）"),
-                strProp("path", "新路径（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"reposId"});
-        return ToolDefinition.builder("update_repos", "更新仓库信息",
-                args -> ToolResult.ok(fmt(client.updateReposInfo(
-                        args.getInteger("reposId"), args.getString("name"), args.getString("info"),
-                        null, args.getString("path"), null, null, null, null, null, null, null,
-                        null, null, null, null, null))))
+                intProp("vid", "仓库ID（必填，来自 list_repos）"),
+                strProp("name", "新名称（可选，不传则不改）"),
+                strProp("info", "新描述（可选，不传则不改）"),
+                strProp("path", "新存储路径（可选，一般不要改）"));
+        JSONObject schema = objSchema(props, new String[]{"vid"});
+        return ToolDefinition.builder("update_repos",
+                "修改仓库的名称/描述/存储路径（只改传入的字段，其余保持原样）。"
+                        + "仓库 ID 参数是 **vid**（早期版本的 reposId 已废弃，不要再传；只有本工具曾用过这个别名）。"
+                        + "改名前建议先跟用户确认。",
+                args -> {
+                    Integer vid = args.getInteger("vid") != null ? args.getInteger("vid") : args.getInteger("reposId");
+                    String name = args.getString("name");
+                    String info = args.getString("info");
+                    String path = args.getString("path");
+                    if (name == null && info == null && path == null) {
+                        return ToolResult.error("没有要修改的字段：name / info / path 至少传一个");
+                    }
+                    try {
+                        String before = null;
+                        if (path != null) {
+                            Map<String, Object> detail = client.getRepos(vid);
+                            Object data = detail == null ? null : detail.get("data");
+                            if (data instanceof Map) {
+                                before = str(((Map<?, ?>) data).get("path"));
+                            }
+                        }
+                        return ToolResult.ok(formatReposUpdated(client.updateReposInfo(
+                                vid, name, info, null, path, null, null, null, null, null, null, null,
+                                null, null, null, null, null), vid, name, info, path, before));
+                    } catch (Exception e) {
+                        return ToolResult.error("update_repos failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
+    }
+
+    /** 更新仓库回执（失败保留错误码；改存储路径时提醒旧目录不会搬） */
+    static String formatReposUpdated(Map<String, Object> resp, Integer vid, String name, String info, String path,
+                                     String pathBefore) {
+        if (!isOk(resp)) {
+            return fmt(resp);
+        }
+        StringBuilder sb = new StringBuilder("已更新仓库 vid=" + vid + "：");
+        if (name != null) {
+            sb.append("\n- 名称 → ").append(name);
+        }
+        if (info != null) {
+            sb.append("\n- 描述 → ").append(shortText(info, 60));
+        }
+        if (path != null) {
+            sb.append("\n- 存储路径 → ").append(path);
+            if (pathBefore != null && !pathBefore.isEmpty() && !pathBefore.equals(path)) {
+                sb.append("\n⚠️ 只改了配置指向：旧目录 ").append(pathBefore)
+                        .append(" 里的文件没有搬过去，如需迁移请手工处理。");
+            }
+        }
+        return sb.toString();
     }
 
     /** W4a 创建目录（文件夹）（R1-6：pid → path） */
@@ -603,11 +909,21 @@ public class DocSysToolFactory {
     public static ToolDefinition backupRepos(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                strProp("backupStorePath", "备份存储路径（可选）"));
+                strProp("backupStorePath", "备份文件存放目录的绝对路径（可选，不传用服务端默认）"));
         JSONObject schema = objSchema(props, new String[]{"vid"});
-        return ToolDefinition.builder("backup_repos", "触发仓库完整备份",
-                args -> ToolResult.ok(fmt(client.backupRepos(
-                        args.getInteger("vid"), args.getString("backupStorePath")))))
+        return ToolDefinition.builder("backup_repos",
+                "触发一次仓库**全量备份**（异步：立即返回任务信息，备份完成后会生成 zip）。"
+                        + "回执里的“任务 ID”（形如 19-20260920201904）就是后续调 query_backup_status 要传的 taskId。"
+                        + "备份会占用磁盘（仓库越大越久），属管理动作，请先确认目标仓库与存放目录。",
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    try {
+                        return ToolResult.ok(formatBackupTask(client.backupRepos(
+                                vid, args.getString("backupStorePath")), null));
+                    } catch (Exception e) {
+                        return ToolResult.error("backup_repos failed: " + e.getMessage());
+                    }
+                })
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
@@ -1969,7 +2285,15 @@ public class DocSysToolFactory {
         schema.put("type", "object");
         schema.put("properties", props);
         if (required != null) {
-            schema.put("required", required);
+            // ⚠️ 必须是 JSONArray（不能直接放 String[]）：ToolRegistry.validateParams 用
+            // `instanceof List` 判定必填项，String[] 不满足 → 整个工厂的必填校验会被静默跳过。
+            // 症状（2026-09-20 体检实测）：create_repos{} 不报“缺必填”，而是抛
+            // “Parameter specified as non-null is null: method okhttp3.FormBody$Builder.add”（模型看不懂）。
+            com.alibaba.fastjson.JSONArray arr = new com.alibaba.fastjson.JSONArray();
+            for (String r : required) {
+                arr.add(r);
+            }
+            schema.put("required", arr);
         }
         return schema;
     }

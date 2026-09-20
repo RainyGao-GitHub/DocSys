@@ -29,6 +29,7 @@ public class TestToolRegistry {
         testWriteFlag();
         testReadOnlyRoleFiltering();
         testExecutionListener();
+        testFactorySchemaRequiredIsValidatable();
         System.out.println("\n======== TestToolRegistry: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -38,12 +39,16 @@ public class TestToolRegistry {
     // ---------- helpers ----------
 
     private static void check(String name, boolean cond) {
+        check(name, cond, null);
+    }
+
+    private static void check(String name, boolean cond, String detail) {
         if (cond) {
             pass++;
             System.out.println("[PASS] " + name);
         } else {
             fail++;
-            System.out.println("[FAIL] " + name);
+            System.out.println("[FAIL] " + name + (detail == null ? "" : "  -> " + detail));
         }
     }
 
@@ -151,6 +156,60 @@ public class TestToolRegistry {
         check("missing required param -> error", !r.success && r.error.contains("vid"));
         ToolResult ok = reg.execute("get_doc", args("{\"vid\":5}"));
         check("with param -> success", ok.success);
+    }
+
+    /**
+     * R3-2 体检回归锁（2026-09-20）：上面那个测试很早就绿，**但它是手搓 JSONArray**（`JSON.parseArray`），
+     * 而工厂用 `objSchema(props, String[])` 把 `String[]` 直接塞进 schema → `validateParams` 里
+     * `instanceof List` 不成立 → **全部真实工具的必填校验都被静默跳过**。
+     * 实测症状：`create_repos{}` 不报缺必填，而抛
+     * “Parameter specified as non-null is null: method okhttp3.FormBody$Builder.add”。
+     * 这里改为**直接检查工厂产出**（不看手搓桩），并验证缺参数不会走到 executor。
+     */
+    private static void testFactorySchemaRequiredIsValidatable() {
+        // 用假地址的 client：只查 schema / 走校验分支，不会发网络请求
+        com.DocSystem.agent.client.DocSysClient client =
+                new com.DocSystem.agent.client.DocSysClient("http://127.0.0.1:1/DocSystem");
+        ToolRegistry reg = DocSysToolFactory.createFullRegistry(client);
+
+        int withRequired = 0;
+        boolean allIterable = true;
+        for (ToolDefinition d : reg.list()) {
+            Object req = d.parameters == null ? null : d.parameters.get("required");
+            if (req == null) {
+                continue;
+            }
+            withRequired++;
+            if (!(req instanceof Iterable) && !(req instanceof Object[])) {
+                allIterable = false;
+                System.out.println("      required 非忭代类型: " + d.name + " -> " + req.getClass().getName());
+            }
+        }
+        check("工厂产出的 required 都是可校验类型（Iterable）：共 " + withRequired + " 个工具带必填",
+                allIterable && withRequired >= 15);
+
+        // 缺必填必须在 executor 之前就被拦下（不能抛 NPE / 不能真发请求）
+        for (String tool : new String[]{"create_repos", "delete_repos", "update_repos", "get_doc"}) {
+            ToolResult r = reg.execute(tool, new JSONObject());
+            check("工厂工具缺必填被拦下：" + tool,
+                    !r.success && r.error != null && r.error.contains("missing required parameter"),
+                    r.error);
+        }
+        // 空串必须视为“显式传值”，否则模型没法表达“根目录”
+        ToolDefinition rootDoc = DocSysToolFactory.getDoc(client);
+        ToolResult emptyPath = validateOnly(rootDoc, args("{\"vid\":5,\"path\":\"\",\"name\":\"a.txt\"}"));
+        check("path 传空串不算缺参（根目录场景）", emptyPath.success, emptyPath.error);
+        ToolResult missingName = validateOnly(rootDoc, args("{\"vid\":5,\"path\":\"\"}"));
+        check("path 给了但 name 缺失仍被拦下", !missingName.success
+                && missingName.error.contains("name"), missingName.error);
+    }
+
+    /** 只走 ToolRegistry 的校验分支（不真执行 executor）：用一个“必填已齐”的参数跑一个小注册表。 */
+    private static ToolResult validateOnly(ToolDefinition def, JSONObject args) {
+        ToolRegistry reg = new ToolRegistry();
+        reg.register(ToolDefinition.builder(def.name, def.description, a -> ToolResult.ok("executed"))
+                .parameters(def.parameters).build());
+        return reg.execute(def.name, args);
     }
 
     private static void testExecuteException() {
