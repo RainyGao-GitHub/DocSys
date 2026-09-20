@@ -140,7 +140,7 @@ public class TestListReposFormat {
         String p2 = DocSysToolFactory.formatReposPage(full, 0, 5);
         check("limit=5 → 5 行", countLines(p2) == 5, "lines=" + countLines(p2));
         check("limit=5 → 表头区间 1-5", p2.contains("本次显示第 1-5 个"));
-        check("limit=5 → 给出 offset=5 翻页提示", p2.contains("还有 12 个未显示") && p2.contains("offset=5"));
+        check("limit=5 → 给出 offset=5 翻页提示", p2.contains("还有 12 条未显示") && p2.contains("offset=5"));
         String p3 = DocSysToolFactory.formatReposPage(full, 15, null);
         check("offset=15 → 2 行", countLines(p3) == 2, "lines=" + countLines(p3));
         String p4 = DocSysToolFactory.formatReposPage(full, 99, null);

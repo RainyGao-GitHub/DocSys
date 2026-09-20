@@ -318,6 +318,36 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
 - **确认弹窗只显示工具名**，不显示参数 —— 创建分享这种对外动作，用户看不到“到底在分享哪个文件”。
 - 模型为了找 `66666/` 在哪个仓库，连调了 6 个 `list_docs`（逐仓库试）；当前工具集没有“跨仓库按路径/名字找”的能力（R2/R3 可考虑）。
 
+## R2：大结果 / 长文本统一策略（2026-09-20）
+
+### 实测原始体积（真数据，仓库 5）
+- `search_files` 宽泛查询（`name=`.` wildcard）：**100 条 / 19840 字符** → 旧实现 `truncate` 后只剩半截 JSON。
+- `grep_files` 关键词“测试”：16 个命中文件 / **687130 字符（0.7MB）**，**单条就 272035 字符**——
+  服务端 `snippet` 只有 200 字上限，但**`line` 字段无上限**，旧实现把 `line` 也倒了出去。
+- `get_doc` 内容：任何 > 4000 字的文本都只能看到开头 4000 字 + `...(truncated)`，后文无法取。
+
+### 改动（只动工具层 + 一个护栏）
+- **公共渲染件**（`DocSysToolFactory` 内）：`RowRenderer` + `PageBody` + `fitPage(...)`（超出字符预算时按 3/4 逐次回收条数，至少 1 条）
+  + `paged(title, scope, all, offset, limit, budget, toolName, serverCap, rows)` + `moreHint(...)`（全工具统一“还有 N 条未显示”句式）。
+- **R2-2 `get_doc`**：新增 `offset`/`maxChars`（默认 3000，上限 20000）；表头给总字符数与本次区间，页脚给下一次 `offset`。
+- **R2-3 `search_files`/`grep_files`**：新增 `offset`/`limit`；search 每行 `序号. name path="…" size 命中=…`；
+  grep 每行 `序号. path+name size` + `片段：≤120 字符`，**不再输出 `line`**；预算 3400。
+- **R2-4（页面 E2E 发现后补修）**：
+  - 服务端**不给真实总数**（`dataEx` 就是 `data.size()`），`maxResults<=0`→20、`>100`→100；
+    改为：等于上限时写 `服务端返回 N 条（已达 maxResults=N 上限，可能还有更多命中）` + `调大 maxResults（当前 N，上限 100）重查`，
+    不足上限才写 `共 N 条（全部命中）`；新增 `effectiveMaxResults()`。
+  - `wildcard`/`prefix`/`fuzzy` 仅对 `field=name` 且**索引侧是小写**：`prefix README`→0、`prefix readme`→34、`wildcard *README*`→0、`*eadme*`→34；
+    默认 `term` 大小写不敏感（`README`→34）。→ 参数说明改写为“不确定就用 term；要用通配必须全小写”，零命中建议不再推 `fuzzy/wildcard`。
+
+### 验证
+- 护栏 `TestToolOutputContract` **82/82**（含 list 型不得裸 `fmt` 的源码 lint）；全量 **82/60/50/25/80/111/52/55/29/26/30/55/23/24/13** 全绿。
+- 探针 `OutputContractE2E` **33/33**（真环境）：31390 字符文件**分 11 窗口读全且逐字符一致**；`maxChars=20000` 一次读 20000 字；
+  search 19840→**2746 字符/页**、**翻 5 页去重覆盖全部 100 条**；grep 687130→**3122 字符**、16 行+16 片段完整；两种上限提示各验一次。
+- **页面 E2E（同一句提示词，改造前 7 步 → 改造后 4 步）**：
+  `grep_files` → `共 16 条（全部命中）`；`search_files` 默认调用即报 `已达 maxResults=20 上限，可能还有更多命中`，
+  模型当轮改 `maxResults=100` 重查得 `共 34 条（全部命中）`并翻第二页；**0 次 match 模式试错**。
+- 已提交：见下方「未提交改动」
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -327,13 +357,14 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 ✅**；**R1-5 ✅**；**R1-2 ✅ / R1-3 ✅（本轮）**；R1 全部完成 → 下一步 **R2**（统一输出规范 / 长文本 maxChars+offset / search_files·grep_files 大结果压缩）→ R3
-- **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
-- **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
+- **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 ✅**；**R1-5 ✅**；**R1-2 ✅ / R1-3 ✅**；R1 全部完成
+- **R2（P1）**：**R2-1 ✅ / R2-2 ✅ / R2-3 ✅ / R2-4 ✅（本轮）** — 剩余：写操作回执类仍为 `fmt()` 整包 JSON，归入 R3-2 工具体检一并做
+- **R3（P2）**：全工具体检表（含写回执紧凑化）、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化；
+  新增两条（R2 页面 E2E 发现）：**R3-9 确认弹窗只显示工具名不显示参数**、**R3-10 缺“跨仓库按路径/名字找”能力**
 
 ## 未提交改动
 
-- 无（R1-2/R1-3 已提交 `270166139`）
+- R2 待提交：`src/com/DocSystem/agent/tool/DocSysToolFactory.java`、`src/com/DocSystem/agent/tool/TestToolOutputContract.java`（新增）、`src/com/DocSystem/agent/tool/TestListReposFormat.java`（文案断言跟进）、`devDocs/Agent工具与接口可靠性计划.md`、本工作卡
 - 已提交：R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 

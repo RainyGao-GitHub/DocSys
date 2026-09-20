@@ -163,18 +163,26 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** R6 文档内容（R1-6：path+name 定位，已去掉 docId 参数） */
+    /** R6 文档内容（R1-6：path+name 定位；R2-2：offset/maxChars 分窗口续读） */
     public static ToolDefinition getDoc(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID"),
                 strProp("path", "文档所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
-                strProp("name", "文档名（必填，来自 list_docs 结果的 name 列）"));
+                strProp("name", "文档名（必填，来自 list_docs 结果的 name 列）"),
+                intProp("offset", "正文起始位置（可选，默认 0；分次读长文件时用页脚给的 offset 续读）"),
+                intProp("maxChars", "本次最多返回的字符数（可选，默认 " + DOC_TEXT_DEFAULT_MAX
+                        + "，上限 " + DOC_TEXT_MAX + "）"));
         JSONObject schema = objSchema(props, new String[]{"vid", "path", "name"});
         return ToolDefinition.builder("get_doc",
-                "获取文档内容（docText）。定位用 path+name：path 是它所在目录的相对路径（以 / 结尾，根目录空串），"
-                + "name 是文件名，两者都从 list_docs 结果里取。不要传 docId。",
-                args -> ToolResult.ok(fmt(client.getDoc(args.getInteger("vid"),
-                        null, normalizeDocPath(args.getString("path")), args.getString("name")))))
+                "读取文档的**文本内容**。定位用 path+name：path 是它所在目录的相对路径（以 / 结尾，根目录空串），"
+                + "name 是文件名，两者都从 list_docs 结果里取。不要传 docId。"
+                + "长文本分次读：表头会给总字符数与本次区间，未读完时页脚会给出下一次的 offset。"
+                + "非文本文件（压缩包/可执行文件等）没有文本表示，只返回元信息。",
+                args -> ToolResult.ok(formatDocContent(
+                        client.getDoc(args.getInteger("vid"), null,
+                                normalizeDocPath(args.getString("path")), args.getString("name")),
+                        args.getInteger("vid"), normalizeDocPath(args.getString("path")), args.getString("name"),
+                        args.getInteger("offset"), args.getInteger("maxChars"))))
                 .parameters(schema)
                 .build();
     }
@@ -206,13 +214,18 @@ public class DocSysToolFactory {
     public static ToolDefinition searchFiles(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填，单仓库；不确定先调 list_repos）"),
-                strProp("query", "查询条件（必填，JSON 字符串）。格式：{\"must\":[{\"field\":\"content\",\"term\":\"预算\"}],\"should\":[{\"field\":\"name\",\"term\":\"周报\",\"match\":\"fuzzy\"}],\"mustNot\":[{\"field\":\"comment\",\"term\":\"保密\"}]}。field: name(文件名)/content(文件内容)/comment(备注)；match: term(默认,中文分词)/wildcard/prefix/fuzzy(后三种仅 name)"),
-                strProp("path", "目录限定（可选，仓库内相对路径，如 /docs/2026）"),
-                intProp("maxResults", "最大结果数（可选，默认 20，上限 100）"),
-                boolProp("withSnippet", "是否返回命中片段（可选，默认 true）"));
+                strProp("query", "查询条件（必填，JSON 字符串）。格式：{\"must\":[{\"field\":\"content\",\"term\":\"预算\"}],\"should\":[{\"field\":\"name\",\"term\":\"周报\"}],\"mustNot\":[{\"field\":\"comment\",\"term\":\"保密\"}]}。field: name(文件名)/content(文件内容)/comment(备注)；match: term(默认，大小写不敏感、中文分词，**推荐**)/wildcard/prefix/fuzzy。wildcard/prefix/fuzzy 仅对 field=name 生效，且**关键字必须全小写**（实测大写 0 条）；不确定就用 term。"),
+                strProp("path", "目录限定（可选，仓库内相对路径，如 66666/）"),
+                intProp("maxResults", "服务端返回的命中数上限（可选，默认 20，上限 100）。注意：这是**取回多少条**而不是总数；表头说“已达 maxResults 上限”时说明可能还有更多，想看全就把它调大。"),
+                boolProp("withSnippet", "是否返回命中片段（可选，默认 true）"),
+                intProp("offset", "结果内分页起点（可选，默认 0）"),
+                intProp("limit", "本页显示条数（可选，默认 " + SEARCH_LIST_DEFAULT_LIMIT
+                        + "，最大 " + SEARCH_LIST_MAX_LIMIT + "）"));
         JSONObject schema = objSchema(props, new String[]{"vid", "query"});
         return ToolDefinition.builder("search_files",
                 "在指定仓库内基于全文索引搜索文档（文件名/文件内容/备注），支持与或非(must/should/mustNot)组合。"
+                        + "结果是一条条紧凑命中（名称/path/大小/命中类型），表头区分“全部命中”与“已达服务端 maxResults 上限（可能还有更多）”，"
+                        + "超过一页面时用 offset/limit 翻页（页大小会因路径长度自适应，以表头的区间为准）。"
                         + "注意：文件刚被直接放入仓库目录、尚未建立索引时可能搜不到——此时改用 grep_files。",
                 args -> {
                     Integer vid = args.getInteger("vid");
@@ -223,10 +236,14 @@ public class DocSysToolFactory {
                     if (query == null || query.isEmpty()) {
                         return ToolResult.error("query 必填（JSON 字符串，见参数说明）");
                     }
+                    String argPath = normalizeDocPath(args.getString("path"));
                     try {
-                        return ToolResult.ok(fmt(client.agentSearchDocs(
-                                vid, query, args.getString("path"),
-                                args.getInteger("maxResults"), args.getBoolean("withSnippet"))));
+                        return ToolResult.ok(formatSearchPage(client.agentSearchDocs(
+                                vid, query, argPath.isEmpty() ? null : argPath,
+                                args.getInteger("maxResults"), args.getBoolean("withSnippet")),
+                                vid, argPath.isEmpty() ? null : argPath, query,
+                                args.getInteger("offset"), args.getInteger("limit"),
+                                effectiveMaxResults(args.getInteger("maxResults"))));
                     } catch (Exception e) {
                         return ToolResult.error("search_files failed: " + e.getMessage());
                     }
@@ -239,12 +256,16 @@ public class DocSysToolFactory {
     public static ToolDefinition grepFiles(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填，单仓库；不确定先调 list_repos）"),
-                strProp("pattern", "搜索关键词（必填）"),
-                strProp("path", "目录限定（可选，仓库内相对路径，如 /docs/2026）"),
-                intProp("maxResults", "最大结果数（可选，默认 20，上限 100）"));
+                intProp("pattern", "搜索关键词（必填；子串匹配、大小写不敏感）"),
+                strProp("path", "目录限定（可选，仓库内相对路径，如 66666/）"),
+                intProp("maxResults", "服务端返回的命中文件数上限（可选，默认 20，上限 100）。这是**取回多少条**而不是总数；表头说“已达上限”时可能还有更多。"),
+                intProp("offset", "结果内分页起点（可选，默认 0）"),
+                intProp("limit", "本页显示条数（可选，默认 " + SEARCH_LIST_DEFAULT_LIMIT
+                        + "，最大 " + SEARCH_LIST_MAX_LIMIT + "）"));
         JSONObject schema = objSchema(props, new String[]{"vid", "pattern"});
         return ToolDefinition.builder("grep_files",
-                "直接在仓库磁盘上逐行扫描文本文件内容（不依赖索引，较慢）。"
+                "直接在仓库磁盘上逐行扫描文本文件内容（不依赖索引，较慢），每个命中文件只回一条 ≤"
+                        + GREP_SNIPPET_LEN + " 字符的片段（命中行可能极长，已截断）。"
                         + "用于 search_files 搜不到的情况（文件刚放入仓库尚未建立索引），或需要精确匹配原始文本时。",
                 args -> {
                     Integer vid = args.getInteger("vid");
@@ -255,10 +276,14 @@ public class DocSysToolFactory {
                     if (pattern == null || pattern.isEmpty()) {
                         return ToolResult.error("pattern 必填（搜索关键词）");
                     }
+                    String argPath = normalizeDocPath(args.getString("path"));
                     try {
-                        return ToolResult.ok(fmt(client.grepFiles(
-                                vid, pattern, args.getString("path"),
-                                args.getInteger("maxResults"))));
+                        return ToolResult.ok(formatGrepPage(client.grepFiles(
+                                vid, pattern, argPath.isEmpty() ? null : argPath,
+                                args.getInteger("maxResults")),
+                                pattern, argPath.isEmpty() ? null : argPath,
+                                args.getInteger("offset"), args.getInteger("limit"),
+                                effectiveMaxResults(args.getInteger("maxResults"))));
                     } catch (Exception e) {
                         return ToolResult.error("grep_files failed: " + e.getMessage());
                     }
@@ -939,6 +964,51 @@ public class DocSysToolFactory {
         return "";
     }
 
+    // ==================== 列表渲染公共件（R2-1：所有列表类工具共用） ====================
+
+    /** 渲染 [from, to) 区间的行（各个列表工具自己实现） */
+    interface RowRenderer {
+        String render(int from, int to);
+    }
+
+    /** 一页正文 + 实际结束下标 */
+    static final class PageBody {
+        final int end;
+        final String body;
+
+        PageBody(int end, String body) {
+            this.end = end;
+            this.body = body;
+        }
+    }
+
+    /**
+     * 按<b>字符预算</b>确定本页实际显示到哪一条（并渲染正文）。
+     *
+     * <p>列表类工具统一走它，保证两条不变量：
+     * <ol>
+     *   <li>输出**永远不会**超过预算（预算低于 {@link #MAX_SUMMARY_LEN}，所以不会出现"半截 JSON"）；</li>
+     *   <li>条数被回收时，调用方必须在表头写清区间、在页脚给出 `offset=<end>` 续页提示
+     *       （宁可少列几条，也不能悄悄丢数据）。</li>
+     * </ol>
+     *
+     * @param budget 本页正文允许的字符数（已扣除表头/页脚余量的由调用方传入）
+     */
+    static PageBody fitPage(int total, int offset, int limit, int budget, RowRenderer rows) {
+        int end = Math.min(total, offset + limit);
+        String body = rows.render(offset, end);
+        while (body.length() > budget && end - offset > 1) {
+            end = offset + Math.max(1, (end - offset) * 3 / 4);
+            body = rows.render(offset, end);
+        }
+        return new PageBody(end, body);
+    }
+
+    /** 统一的"还有 N 条未显示"续页提示（各列表工具措辞一致，模型只看一种句式） */
+    static String moreHint(long remain, String toolName, int nextOffset) {
+        return "⚠️ 还有 " + remain + " 条未显示：继续调用 " + toolName + " 传 offset=" + nextOffset + "。";
+    }
+
     // ==================== 目录列表渲染（分页 + 紧凑，2026-09-20） ====================
 
     /** list_docs 单页默认/最大条数 */
@@ -991,23 +1061,19 @@ public class DocSysToolFactory {
         sb.append("目录列表：").append(where).append("  共 ").append(total)
                 .append(" 项，本次显示第 ").append(offset + 1).append("-");
 
-        int end = Math.min(total, offset + limit);   // 先按 limit 取，字符超预算再回收
-        String body = renderEntries(all, offset, end);
-        int cap = DOC_LIST_CHAR_BUDGET - sb.length() - 220;   // 给表头/页脚留余量
-        while (body.length() > cap && end - offset > 1) {
-            end = offset + Math.max(1, (end - offset) * 3 / 4);
-            body = renderEntries(all, offset, end);
-        }
-
+        // 先按 limit 取，字符超预算再回收条数（表头/页脚已预留余量）
+        int cap = DOC_LIST_CHAR_BUDGET - sb.length() - 220;
+        PageBody page = fitPage(total, offset, limit, cap,
+                (from, to) -> renderEntries(all, from, to));
+        int end = page.end;
         sb.append(end).append(" 项\n");
-        sb.append(body);
+        sb.append(page.body);
         sb.append("\n说明：上表各项的 path 与本目录相同（").append(displayPath(path)).append("），");
         sb.append("读取内容用 get_doc(vid=").append(vid).append(", path=").append(quoted(pathLabel(path)))
                 .append(", name=<名称>)；进入子目录用 list_docs(vid=").append(vid)
                 .append(", path=").append(quoted(childDocPath(path, "<子目录名>"))).append(")。\n");
         if (end < total) {
-            sb.append("⚠️ 还有 ").append(total - end).append(" 项未显示：继续调用 list_docs 传 offset=")
-                    .append(end).append("；或用 search_files/grep_files 按关键字直接找。");
+            sb.append(moreHint(total - end, "list_docs", end)).append(" 也可用 search_files/grep_files 按关键字直接找。");
         }
         return sb.toString();
     }
@@ -1088,19 +1154,15 @@ public class DocSysToolFactory {
 
         StringBuilder sb = new StringBuilder();
         sb.append("仓库列表：共 ").append(total).append(" 个，本次显示第 ").append(offset + 1).append("-");
-        int end = Math.min(total, offset + limit);
-        String body = renderRepos(all, offset, end);
         int cap = REPOS_LIST_CHAR_BUDGET - sb.length() - 200;   // 给表头/页脚留余量
-        while (body.length() > cap && end - offset > 1) {
-            end = offset + Math.max(1, (end - offset) * 3 / 4);
-            body = renderRepos(all, offset, end);
-        }
-        sb.append(end).append(" 个\n").append(body);
+        PageBody page = fitPage(total, offset, limit, cap,
+                (from, to) -> renderRepos(all, from, to));
+        int end = page.end;
+        sb.append(end).append(" 个\n").append(page.body);
         sb.append("说明：用 vid 调用 list_docs(vid=<vid>) 列目录、search_files(vid=<vid>) 检索；")
                 .append("单个仓库的完整配置用 get_repos(vid=<vid>)。\n");
         if (end < total) {
-            sb.append("⚠️ 还有 ").append(total - end).append(" 个未显示：继续调用 list_repos 传 offset=")
-                    .append(end).append("。");
+            sb.append(moreHint(total - end, "list_repos", end));
         }
         return sb.toString();
     }
@@ -1267,22 +1329,18 @@ public class DocSysToolFactory {
         StringBuilder sb = new StringBuilder();
         sb.append("分享列表：匹配 ").append(scope).append(" 共 ").append(total)
                 .append(" 条，本次显示第 ").append(offset + 1).append("-");
-        int end = Math.min(total, offset + limit);
-        String body = renderShares(all, offset, end);
         int cap = SHARE_LIST_CHAR_BUDGET - sb.length() - 200;
-        while (body.length() > cap && end - offset > 1) {
-            end = offset + Math.max(1, (end - offset) * 3 / 4);
-            body = renderShares(all, offset, end);
-        }
-        sb.append(end).append(" 条\n").append(body);
+        PageBody page = fitPage(total, offset, limit, cap,
+                (from, to) -> renderShares(all, from, to));
+        int end = page.end;
+        sb.append(end).append(" 条\n").append(page.body);
         if (rawList.size() != total) {
             sb.append("（当前用户共有 ").append(rawList.size()).append(" 条分享，已按条件过滤）\n");
         }
         sb.append("说明：shareLink 可拼成 <访问地址>/DocSystem/web/project.html?vid=<vid>&shareId=<shareId>；")
                 .append("撤销分享请在 Web 界面操作（或调 /Bussiness/deleteDocShare.do）。\n");
         if (end < total) {
-            sb.append("⚠️ 还有 ").append(total - end).append(" 条未显示：继续调用 get_doc_share_list 传 offset=")
-                    .append(end).append("。");
+            sb.append(moreHint(total - end, "get_doc_share_list", end));
         }
         return sb.toString();
     }
@@ -1414,6 +1472,282 @@ public class DocSysToolFactory {
             return "";
         }
         return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date(millis.longValue()));
+    }
+
+    // ==================== 文档正文渲染（R2-2：分窗口续读） ====================
+
+    /** get_doc 正文本页默认/上限字符数（默认值保证整段输出 < MAX_SUMMARY_LEN） */
+    static final int DOC_TEXT_DEFAULT_MAX = 3000;
+    static final int DOC_TEXT_MAX = 20000;
+
+    /**
+     * 渲染 `/Doc/getDoc.do` 的正文（带 offset/maxChars 分窗口 + 续读提示）。
+     *
+     * <p><b>为什么需要</b>：原实现直接把整个响应交给 {@code fmt()}，长文本会在 4000 字符处被硬截断，
+     * 模型只看到"文件开头"却拿不到后文（也无法自己续读）。现在表头给出"总长/本次区间"，
+     * 页脚给出明确的续读调用（`offset=<end>`）。
+     *
+     * <p>非文本文件（服务端不返回 docText，如 zip/exe）：只回元信息并说明原因，不再倒一坨 JSON。
+     */
+    static String formatDocContent(Map<String, Object> resp, Integer vid, String path, String name,
+                                   Integer offsetArg, Integer maxCharsArg) {
+        if (resp == null) {
+            return "(empty response)";
+        }
+        if (!"ok".equals(String.valueOf(resp.get("status")))) {
+            return fmt(resp);   // 失败保留 errorCode + 处置提示
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof Map)) {
+            return "文件不存在或无法读取：" + docTargetText(vid, path, name) + "（服务器返回：" + data + "）";
+        }
+        Map<?, ?> d = (Map<?, ?>) data;
+        String target = docTargetText(vid, path, name);
+        Long size = longOf(d.get("size"));
+        Object textObj = d.get("docText");
+        if (textObj == null) {
+            return "文件（非文本，无正文可读）：" + target + "\n"
+                    + "  大小：" + sizeText(size) + "\n"
+                    + "  说明：get_doc 只返回文本内容（txt/md/代码/Office 转换后的文本等）；"
+                    + "此文件类型没有文本表示，需要原件请在 Web 界面预览/下载。";
+        }
+        String text = String.valueOf(textObj);
+        int total = text.length();
+        if (total == 0) {
+            return "文件内容为空（0 字符）：" + target + "（大小 " + sizeText(size) + "）。";
+        }
+
+        int offset = offsetArg == null ? 0 : Math.max(0, offsetArg.intValue());
+        if (offset >= total) {
+            return target + " 的正文共 " + total + " 字符；offset=" + offset
+                    + " 已超出范围（有效范围 0~" + (total - 1) + "）。";
+        }
+        int max = maxCharsArg == null ? DOC_TEXT_DEFAULT_MAX
+                : Math.min(DOC_TEXT_MAX, Math.max(1, maxCharsArg.intValue()));
+        int end = Math.min(total, offset + max);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("文件内容：").append(target)
+                .append("（大小 ").append(sizeText(size)).append("，正文共 ").append(total).append(" 字符）\n");
+        sb.append(offset == 0 && end == total
+                ? "已显示全文（第 1-" + total + " 字符）：\n"
+                : "本次显示第 " + (offset + 1) + "-" + end + " 字符：\n");
+        sb.append("────────\n").append(text, offset, end).append("\n────────\n");
+        if (end < total) {
+            sb.append("⚠️ 还有 ").append(total - end).append(" 字符未显示：继续调用 get_doc(vid=").append(vid)
+                    .append(", path=").append(quoted(pathLabel(path))).append(", name=").append(quoted(name))
+                    .append(", offset=").append(end).append(")。");
+        }
+        return sb.toString();
+    }
+
+    /** 文档定位文案（仓库 / path / name），三个工具共用 */
+    static String docTargetText(Integer vid, String path, String name) {
+        String p = path == null || path.isEmpty() ? "" : path;
+        return "仓库 " + vid + " / " + displayPath(p) + name;
+    }
+
+    // ==================== 搜索结果渲染（R2-3：紧凑 + 分页） ====================
+
+    /** 搜索结果单页默认/最大条数（服务端上限由 maxResults 控制） */
+    static final int SEARCH_LIST_DEFAULT_LIMIT = 50;
+    static final int SEARCH_LIST_MAX_LIMIT = 200;
+    private static final int SEARCH_LIST_CHAR_BUDGET = 3400;
+
+    /**
+     * 服务端 `maxResults` 的默认值与上限（实测：不传/传 0 → 20；传 300/1000 → 仍 100）。
+     *
+     * <p><b>为什么重要</b>：服务端**不返回真实总数**（`dataEx` 就是 `data.size()`），只把命中截到
+     * maxResults 条。所以“返回条数 == maxResults”只能说明“**可能还有更多**”，不能当作总数——
+     * 2026-09-20 页面 E2E 里模型把表头的“共 20 条”当成总数，又花一轮重查才发现是 34 条。
+     */
+    static final int SERVER_DEFAULT_RESULTS = 20;
+    static final int SERVER_MAX_RESULTS = 100;
+
+    /** 服务端 maxResults 的有效值（null/<=0 → 默认 20；超上限按 100 计） */
+    static int effectiveMaxResults(Integer arg) {
+        int v = arg == null ? 0 : arg.intValue();
+        return v <= 0 ? SERVER_DEFAULT_RESULTS : Math.min(v, SERVER_MAX_RESULTS);
+    }
+
+    /** 命中数已达服务端上限时的下一步提示（实测服务端上限 100 条） */
+    static String capNote(int cap) {
+        return cap >= SERVER_MAX_RESULTS
+                ? "ℹ️ 已到服务端上限 " + SERVER_MAX_RESULTS + " 条：想看到更多命中请缩小范围（加 must / 限定 path）。"
+                : "ℹ️ 可能还有更多命中：调大 maxResults（当前 " + cap + "，上限 " + SERVER_MAX_RESULTS + "）重查。";
+    }
+
+    /** grep 片段与索引命中的展示上限（服务端 snippet 可达 200 字符，命中行本身可能几十万字符） */
+    static final int GREP_SNIPPET_LEN = 120;
+    private static final int SEARCH_QUERY_LABEL_LEN = 60;
+
+    /**
+     * `search_files`（全文索引）结果渲染：紧凑清单 + offset/limit 分页。
+     *
+     * <p>实测 dev：宽泛查询（wildcard "."）在仓库 5 返回 **100 条 / 19840 字符**，远超 fmt 上限 4000
+     * —— 之前模型只能看到前 13 条左右、后面是半截 JSON。
+     */
+    static String formatSearchPage(Map<String, Object> resp, Integer vid, String pathFilter, Object query,
+                                   Integer offsetArg, Integer limitArg, int serverCap) {
+        if (!isOk(resp)) {
+            return fmt(resp);
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof List)) {
+            return "搜索结果为空（服务器返回：" + data + "）";
+        }
+        List<?> all = (List<?>) data;
+        String scope = "仓库 " + vid + (pathFilter == null || pathFilter.isEmpty() ? "" : " / path=" + quoted(pathFilter))
+                + " / 查询=" + shortText(String.valueOf(query), SEARCH_QUERY_LABEL_LEN);
+        if (all.isEmpty()) {
+            return "没有命中：" + scope + "。\n"
+                    + "建议：先用默认的 term 模式换关键词（大小写不敏感、子串匹配）；"
+                    + "确实需要通配时才用 wildcard/prefix（仅对 name 生效，且关键字必须全小写，大写会 0 条）；"
+                    + "文件刚放入仓库、索引还没建时可能搜不到，改用 grep_files 直接在磁盘上扫内容。";
+        }
+        return paged("搜索结果", scope, all, offsetArg, limitArg, SEARCH_LIST_CHAR_BUDGET,
+                "search_files", serverCap, (from, to) -> renderHits(all, from, to));
+    }
+
+    /** 渲染 [from,to) 的索引命中行：序号. path+name  大小  命中类型 */
+    private static String renderHits(List<?> all, int from, int to) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = from; i < to; i++) {
+            Object o = all.get(i);
+            if (!(o instanceof Map)) {
+                sb.append(i + 1).append(". ").append(o).append("\n");
+                continue;
+            }
+            Map<?, ?> h = (Map<?, ?>) o;
+            sb.append(i + 1).append(". ").append(str(h.get("name")))
+                    .append("  ").append(hitPathText(h.get("path")))
+                    .append("  ").append(sizeText(h.get("size")))
+                    .append("  命中=").append(hitTypeText(h.get("hitType"))).append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * `grep_files`（磁盘扫描）结果渲染：命中文件 + **截断后的片段**。
+     *
+     * <p>实测 dev：仓库 5 搜“测试”命中的 16 条里，一条日志文件的"命中行"就有几十万字符，整个响应
+     * **687130 字符**（0.7MB）——原实现 fmt 后只留 4000 字符的半截 JSON，模型完全拿不到可用信息。
+     * 这里每行只给 path/name + 大小 + ≤{@link #GREP_SNIPPET_LEN} 字符的片段（服务端的 `line` 字段不输出）。
+     */
+    static String formatGrepPage(Map<String, Object> resp, String pattern, String pathFilter,
+                                 Integer offsetArg, Integer limitArg, int serverCap) {
+        if (!isOk(resp)) {
+            return fmt(resp);
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof List)) {
+            return "扫描结果为空（服务器返回：" + data + "）";
+        }
+        List<?> all = (List<?>) data;
+        String scope = "关键词「" + pattern + "」"
+                + (pathFilter == null || pathFilter.isEmpty() ? "" : "，path=" + quoted(pathFilter));
+        if (all.isEmpty()) {
+            return "没有命中：" + scope + "。\n建议：换关键词（大小写不敏感、子串匹配）；限定 path 缩小范围。";
+        }
+        return paged("内容扫描结果", scope, all, offsetArg, limitArg, SEARCH_LIST_CHAR_BUDGET,
+                "grep_files", serverCap, (from, to) -> renderGrepHits(all, from, to));
+    }
+
+    /** 渲染 [from,to) 的 grep 命中行（片段截断；不输出原始 line 字段） */
+    private static String renderGrepHits(List<?> all, int from, int to) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = from; i < to; i++) {
+            Object o = all.get(i);
+            if (!(o instanceof Map)) {
+                sb.append(i + 1).append(". ").append(o).append("\n");
+                continue;
+            }
+            Map<?, ?> h = (Map<?, ?>) o;
+            String name = str(h.get("name"));
+            String path = normalizeDocPath(str(h.get("path")));
+            sb.append(i + 1).append(". ").append(path).append(name)
+                    .append("  ").append(sizeText(h.get("size"))).append("\n");
+            String snip = str(h.get("snippet"));
+            Object lineObj = h.get("line");
+            String source = snip.isEmpty() && lineObj != null ? str(lineObj) : snip;
+            sb.append("   片段：").append(shortText(source, GREP_SNIPPET_LEN)).append("\n");
+        }
+        return sb.toString();
+    }
+
+    /** 索引命中的 path 文案（服务端口径：所在目录，以 / 结尾，根目录为空） */
+    private static String hitPathText(Object path) {
+        String p = normalizeDocPath(str(path));
+        return p.isEmpty() ? "path=\"\"" : "path=" + quoted(p);
+    }
+
+    /** hitType 是位掩码（1=文件名 2=内容 4=备注） */
+    static String hitTypeText(Object hitType) {
+        Integer t = intOf(hitType);
+        if (t == null) {
+            return "未知";
+        }
+        StringBuilder sb = new StringBuilder();
+        if ((t.intValue() & 1) != 0) {
+            sb.append("文件名");
+        }
+        if ((t.intValue() & 2) != 0) {
+            sb.append(sb.length() > 0 ? "+内容" : "内容");
+        }
+        if ((t.intValue() & 4) != 0) {
+            sb.append(sb.length() > 0 ? "+备注" : "备注");
+        }
+        return sb.length() == 0 ? "未知(" + t + ")" : sb.toString();
+    }
+
+    private static boolean isOk(Map<String, Object> resp) {
+        return resp != null && "ok".equals(String.valueOf(resp.get("status")));
+    }
+
+    /**
+     * 通用分页骨架：表头（命中数 / 本次区间）+ 正文 + 续页提示（列表类工具统一句式）。
+     *
+     * @param serverCap 服务端返回条数上限（0/负数 = 该来源不受上限约束，可视为"全部命中"）。
+     *                  <b>为什么需要它</b>：服务端不会给出真实总数，把 "20 条"（= maxResults 默认值）
+     *                  写成"共 20 条"会让模型误以为这就是全部命中（2026-09-20 页面 E2E 实测踩坑）。
+     *                  这里改为：等于上限时明说"已达上限、可能还有更多"，不到上限才说"全部命中"。
+     */
+    private static String paged(String title, String scope, List<?> all, Integer offsetArg, Integer limitArg,
+                                int budget, String toolName, int serverCap, RowRenderer rows) {
+        int total = all.size();
+        int cap = Math.max(0, serverCap);
+        boolean capped = cap > 0 && total >= cap;
+        int offset = offsetArg == null ? 0 : Math.max(0, offsetArg.intValue());
+        int limit = limitArg == null ? SEARCH_LIST_DEFAULT_LIMIT
+                : Math.min(SEARCH_LIST_MAX_LIMIT, Math.max(1, limitArg.intValue()));
+        String countText = capped
+                ? "服务端返回 " + total + " 条（已达 maxResults=" + cap + " 上限，可能还有更多命中）"
+                : "共 " + total + " 条（全部命中）";
+        if (offset >= total) {
+            return title + "：" + scope + " " + countText + "；offset=" + offset
+                    + " 已超出范围（有效范围 0~" + (total - 1) + "）。";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(title).append("：").append(scope).append("  ").append(countText)
+                .append("，本次显示第 ").append(offset + 1).append("-");
+        PageBody page = fitPage(total, offset, limit, budget - sb.length() - 200, rows);
+        sb.append(page.end).append(" 条\n").append(page.body);
+        if (page.end < total) {
+            sb.append("\n").append(moreHint(total - page.end, toolName, page.end));
+        }
+        if (capped) {
+            sb.append("\n").append(capNote(cap));
+        }
+        return sb.toString();
+    }
+
+    /** 单行文案截断（超出加省略号） */
+    static String shortText(String s, int maxLen) {
+        if (s == null) {
+            return "";
+        }
+        String t = s.replace('\n', ' ').replace('\r', ' ').trim();
+        return t.length() <= maxLen ? t : t.substring(0, maxLen) + "…";
     }
 
     // ==================== 文档定位（R1-6：path/name 优先） ====================
