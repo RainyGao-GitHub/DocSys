@@ -266,7 +266,7 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 - 探针 `MoveToolPathE2E` **20/20**
 - **页面 E2E**：`@` 选 `66666/README.md` → 问“读取我关注的这个文件” → 2 步工具调用全按 path/name（`get_doc{vid:5,path:"66666/",name:"README.md"}`、`list_docs{path:"66666/"}`），模型如实答“0 字节空文件”；回读该会话消息：`focus[0].docId = null`（证注入块已无 `docId=`）
 - **导入冲突真 API**：同名 `1111.txt` → `DOC_EXISTS`（原文件字节/时间未变）；新文件 → 成功，服务端回 `path=66666/ level=1 docId=204085893585`，与 `Path.buildDocIdByName(1,"66666/","probe_r16_new.txt")` **逐位一致**；用 path/name 删除后磁盘无残留
-- 已提交 `a2eb58b7d`（第 3 步）；本步 commit 见下
+- 已提交 `a2eb58b7d`（第 3 步）；**第 4 步 = `79b04752f`**
 
 ## 全阶段完成情况
 
@@ -283,8 +283,8 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- 待提交（R1-6 第 4 步）：`agent/focus/AgentFocusSupport.java`、`agent/focus/TestAgentFocusSupport.java`、`agent/controller/AgentController.java`、`agent/tool/DocSysToolFactory.java`、`agent/tool/TestDocHistoryLocator.java`、`agent/tool/TestDocIdResolve.java`（删除）、`agent/client/DocSysClient.java`、`agent/orchestrator/SubAgent.java`、`agent/cli/DocSysCLI.java`、`controller/BaseController.java`、`controller/DocController.java` + `devDocs/Agent工具与接口可靠性计划.md` + 本卡
-- 已提交：R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R1-6 第 4 步已提交 `79b04752f`）
+- 已提交：R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
