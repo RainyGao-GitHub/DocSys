@@ -216,7 +216,7 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 ### 下一步（R1-6 剩余清单）
 `move_doc`/`copy_doc`（需新增 srcPath/srcName，目标改 path/name）→ `delete_doc`/`rename_doc` 提必填 path+name → `list_docs` 删 docId 参数且输出改 path 为主 → `get_doc`/`write_note` 去 docId → `create_folder`/`write_file` 的 `pid` 改 `path` → `@` 注入块去 docId → 最后删除 `resolveRealDocByDocId` 过渡层
 
-## R1-6 第 2 步：move_doc / copy_doc 改 path/name 口径（2026-09-20）
+## R1-6 第 2 步：move_doc / copy_doc 改 path/name 口径（2026-09-20）— ✅ 已提交 `614a1c7a5`
 
 ### 改动
 - 工具 `move_doc`/`copy_doc`：`required {vid, srcPath, srcName, dstPath}`，`dstName` 可选（= 新名）；**不再暴露 docId/dstPid/srcPid**
