@@ -82,8 +82,9 @@ public class Log {
             
             randomFile.close();
             return true;
-        } catch (IOException e) {
-        	Log.info(e);
+        } catch (Exception e) {
+        	//理论上日志文件总是存在的，如果无法写入，通常是初始化或设置文件，进行提示就可以了
+        	System.out.println("日志文件【" + filePath + "】写入失败，请检查Log是否正确初始化或者日志路径是否有写入权限!!!");
         }
         return false;
     }
