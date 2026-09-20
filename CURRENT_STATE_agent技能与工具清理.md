@@ -173,6 +173,25 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 - `NO_PERMISSION` **只有静态/机制证据，无真实 HTTP 证据**：dev 只有 Admin（超级管理员），注册普通账号被“账号格式不正确/需验证码”挡住。需第二条账号后才能补。
 - 新发现：`docSysErrorLog(<消息含“不存在”>, rt)` **66 处**未打码（Doc 44 / Bussiness 14 / Base 5 / Repos 3）→ 已记为计划的 **R1-1c**（`getDocOfficeLink` 用不存在文件名请求实测就是无码的 `{"msgInfo":"zzz_nofile.txt 不存在！"}`）。
 
+## R1-1c “对象不存在”出口补码（2026-09-20）—— 让模型不再反复试同一个名字
+
+### 打了什么（64 处，按语义分码）
+- `仓库 … 不存在！` → `REPOS_NOT_FOUND`：DocController 31 + BussinessController 5
+- `文件 … 不存在！` / `当前版本文件 … 不存在` / `[path+name] 不存在！` → `DOC_NOT_FOUND`：Doc 11 + Base 4 + Repos 2 + Bussiness 6
+- `分享信息不存在！` → **新增码 `SHARE_NOT_FOUND`**（Doc 2 + Bussiness 2；工具层提示“重新获取分享列表，不要沿用旧 shareId”）
+- `仓库密钥不存在！` → `INTERNAL`（服务端配置缺失，非调用方可解；给 `INTERNAL` 补了处置提示）
+
+### 验证证据
+- 护栏 `TestPermissionErrorCoding` **24/24**（新增“不存在类出口必须带码” lint，覆盖 Repos/Doc/Base/Bussiness 四个文件）
+- 真实 HTTP：`/Doc/agentSearchDoc.do?reposId=999`（`search_files` 路径）→ REPOS_NOT_FOUND；`/Doc/getDocHistory.do?reposId=999`（`get_doc_history` 路径）→ REPOS_NOT_FOUND；`/Bussiness/getDocOfficeLink.do` 传不存在文件名 → DOC_NOT_FOUND（改造前无码）
+- **Agent 页面 E2E**：读 test111.txt 成功 + 读不存在的 zzz_nofile_abc.txt → 一次即报 `DOC_NOT_FOUND`，模型明确回复“已按要求不再重试” ✓
+
+### 踩坑
+- 改完 `BussinessController` **忘了重新编译该类** → 探针仍无码（“改了没生效”）；多文件改动后要逐个 javac 或核对 `.class` 时间戳
+
+### 遗留（非 Agent 可达，如实列出）
+- 全树还有 13 处“不存在”出口未打码：`ManageController 5`（banner 配置/用户/日志文件）、`SalesController 3`、`websocket/BusinessChannel 1`、`websocket/OfficeController 4`（Office 预览链路）
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -182,14 +201,15 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0，先做）**：R1-1 ✅ `eda22474b` → R1-1b ✅ `16ac39a43`/`142c2014` → R1-1c `docSysErrorLog(…不存在！)` 66 处 → R1-4 `get_doc_history` → R1-5 `list_repos` → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
+- **R1（P0，先做）**：R1-1 ✅ `eda22474b` → R1-1b ✅ `16ac39a43`/`142c2014` → **R1-1c ✅（待提交）** → R1-4 `get_doc_history` 静默返回仓库根历史 → R1-5 `list_repos` 截断 → R1-2 `create_doc_share` → R1-3 `get_doc_share_list`
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 无（主库与 websocket 库均干净；R1-1 = `eda22474b`、R1-1b = `16ac39a43` / websocket `142c2014`）
-- 已提交：R1-1b = 主库 `16ac39a43` + websocket 库 `142c2014`；R1-1 错误码 = `eda22474b`；工作卡记录 = `78fae07f3`；可靠性计划 = `9c675b79a`；move_doc 修复 = `b5c85bf9f`；list_docs 分页 = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`；UTF-8 修复 = `3c774d101`
+- 主仓库 `devInt`（**R1-1c**）：`common/ErrorCode.java`（+SHARE_NOT_FOUND）、`agent/tool/DocSysToolFactory.java`（+SHARE_NOT_FOUND/INTERNAL 提示）、`agent/tool/TestPermissionErrorCoding.java`（+不存在类 lint）、`controller/{DocController,BaseController,ReposController}.java`、`devDocs/Agent工具与接口可靠性计划.md` + 本卡
+- **websocket 仓库**：`BussinessController.java`
+- 已提交：R1-1b = 主库 `16ac39a43` + websocket `142c2014`；R1-1 = `eda22474b`；工作卡 = `78fae07f3`/`017ea08b7`；CLAUDE.md = `e3d9d9e53`；计划 = `9c675b79a`；move_doc = `b5c85bf9f`；list_docs = `10f9e21f8`；P1 = `a3b2da425`；P2 = `7621521ca`；P3a = `fcf727d5f`；P3b-读 = `72963c8f0`；P3b-写 = `f364529e4`；P4 = `8a776af35`
 - office 仓库：与本任务无关
 
 ## 生效约束

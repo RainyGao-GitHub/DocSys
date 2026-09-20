@@ -1020,7 +1020,7 @@ public class ReposController extends BaseController{
 		File file = new File(path, name);
 		if(file.exists() == false)
 		{
-			docSysErrorLog("仓库密钥不存在！", rt);		
+			docSysErrorLog("仓库密钥不存在！", ErrorCode.INTERNAL, rt);		
 			writeJson(rt, response);			
 			addSystemLog(request, login_user, "backupReposEncryptConfig", "backupReposEncryptConfig", "备份仓库密钥", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;
@@ -2194,7 +2194,7 @@ public class ReposController extends BaseController{
 			Doc tmpDoc = docSysGetDoc(repos, rootDoc, false);
 			if(tmpDoc == null || tmpDoc.getType() == null || tmpDoc.getType() == 0)
 			{
-				docSysErrorLog("[" + rootDoc.getPath() + rootDoc.getName() + "] 不存在！",rt);
+				docSysErrorLog("[" + rootDoc.getPath() + rootDoc.getName() + "] 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 				writeJson(rt, response);			
 				return;
 			}
@@ -2308,7 +2308,7 @@ public class ReposController extends BaseController{
 				File rootFile = new File(localRootPath + reposAccess.getRootDocPath(), reposAccess.getRootDocName());
 				if(rootFile.exists() == false)
 				{
-					docSysErrorLog("[" + rootDoc.getPath() + rootDoc.getName() + "] 不存在！",rt);
+					docSysErrorLog("[" + rootDoc.getPath() + rootDoc.getName() + "] 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 					writeJson(rt, response);			
 					return;
 				}

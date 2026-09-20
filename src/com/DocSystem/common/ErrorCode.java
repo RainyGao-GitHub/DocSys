@@ -41,6 +41,9 @@ public class ErrorCode {
     /** 异步任务（备份/全量备份/压缩等）不存在或已过期回收——调用方应重新发起任务，而不是重试同一个 taskId */
     public static final String TASK_NOT_FOUND = "TASK_NOT_FOUND";
 
+    /** 分享记录不存在或已被撤销——调用方应重新获取分享列表，而不是沿用旧 shareId */
+    public static final String SHARE_NOT_FOUND = "SHARE_NOT_FOUND";
+
     /** 其它内部错误 */
     public static final String INTERNAL = "INTERNAL";
 

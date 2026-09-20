@@ -73,11 +73,20 @@
 - **未覆盖（如实记录）**：`NO_PERMISSION` 只有"源码 lint + 序列化/机制"证据，**没有真实 HTTP 证据**——dev 环境只有超级管理员 Admin，注册普通账号被"账号格式不正确/需验证码"挡住。要有第二条账号后才能补这条 E2E。
 - **结构提醒**：`websocket/BussinessController.java` 与 `BusinessBaseController.java` 归属**独立仓库 `src/com/DocSystem/websocket`（分支 master）**，不在主仓库（主仓库 `.gitignore` 排除整棵 `websocket`），提交要分开。
 
-#### R1-1c 剩余"对象不存在"出口补码（**R1-1b 的直接续作，本次未做**）
-- **现状**：`docSysErrorLog(<消息含"不存在">, rt)` 共 **66 处**未打码：`DocController 44` / `BussinessController 14` / `BaseController 5` / `ReposController 3`。样例：`docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt)`、`docSysErrorLog("仓库 " + reposId + " 不存在！", rt)`、`docSysErrorLog("分享信息不存在！", rt)`。
-- **后果**：模型"按名字操作一个不存在的文件"时拿到的仍是纯文案，会反复重试同一个名字（正是 R1 想消灭的模式）；`BussinessController` 那 14 处直接影响 R1-2/R1-3 的分享工具。
-- **方案**：`BaseFunction` 已有带码重载 `docSysErrorLog(logStr, errorCode, rt)`，按语义传 `DOC_NOT_FOUND` / `REPOS_NOT_FOUND` / `INVALID_PARAM`。
-- **验收**：`TestPermissionErrorCoding` 增加一组"不存在类出口必须带码"的 lint 断言；`Bussiness/getDocOfficeLink` 用不存在的文件名请求时返回 `DOC_NOT_FOUND`（本次实测该请求正是无码的 `{"msgInfo":"zzz_nofile.txt 不存在！"}`）。
+#### R1-1c 剩余"对象不存在"出口补码 — ✅ 已完成（2026-09-20）
+- **现状（改造前）**：`docSysErrorLog(<消息含"不存在">, rt)` 共 **66 处**未打码：`DocController 44` / `BussinessController 14`（含 1 处注释）/ `BaseController 5`（含 1 处早已打码）/ `ReposController 3`。样例：`docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt)`、`docSysErrorLog("仓库 " + reposId + " 不存在！", rt)`、`docSysErrorLog("分享信息不存在！", rt)`。
+- **后果**：模型"按名字操作一个不存在的文件"时拿到的仍是纯文案，会反复重试同一个名字（正是 R1 想消灭的模式）。
+- **已落地**：统一用带码重载 `docSysErrorLog(logStr, errorCode, rt)`，按语义分码：
+  - `"仓库 " + reposId + " 不存在！"` → `REPOS_NOT_FOUND`（DocController 31 + BussinessController 5 = 36 处，全部是各接口入口的 repos==null 守卫）
+  - `"文件 … 不存在！"` / `"当前版本文件 … 不存在"` / `"[" + path+name + "] 不存在！"` → `DOC_NOT_FOUND`（DocController 11 + BaseController 4 + ReposController 2 + BussinessController 6 = 23 处）
+  - `"分享信息不存在！"` → **新增码 `SHARE_NOT_FOUND`**（DocController 2 + BussinessController 2；工具层提示"重新获取分享列表，不要沿用旧 shareId"）
+  - `"仓库密钥不存在！"`（ReposController）→ `INTERNAL`（服务端配置缺失，非调用方可解；同时给 `INTERNAL` 补了处置提示）
+- **验证（实测）**：
+  - 护栏 `TestPermissionErrorCoding` **24/24**：新增一组"不存在类出口必须带码"的 lint（覆盖 Repos/Doc/Base/Bussiness 四个文件），全树同规则无残留
+  - 真实 HTTP：`/Doc/agentSearchDoc.do?reposId=999`（= `search_files` 工具路径）→ `REPOS_NOT_FOUND`；`/Doc/getDocHistory.do?reposId=999`（= `get_doc_history` 工具路径）→ `REPOS_NOT_FOUND`；`/Bussiness/getDocOfficeLink.do` 传不存在的文件名 → `DOC_NOT_FOUND`（改造前是无码的 `{"msgInfo":"zzz_nofile.txt 不存在！"}`）
+  - **Agent 页面 E2E**：「读 test111.txt + 读不存在的 zzz_nofile_abc.txt」→ 读成功；读不存在**一次即报 `DOC_NOT_FOUND` 且模型不复重试**（正是本项要达成的效果）
+- **踩坑记录**：改完 `BussinessController` 后忘记重新编译该类，HTTP 探针仍拿不到码（表现为"改了没生效"）→ **跨仓库/多文件改动后必须逐个文件 javac，或核对 `WebRoot/WEB-INF/classes` 里对应 .class 的时间戳**。
+- **遗留（不在本项验收范围，均为非 Agent 可达路径，如实列出）**：全树还有 **13 处** 未打码的"不存在"出口 —— `ManageController 5`（bannerConfig/用户/日志文件）、`SalesController 3`、`websocket/BusinessChannel 1`、`websocket/OfficeController 4`（Office 预览链路）。要补齐时按同一套分码规则处理即可。
 
 #### R1-2 `create_doc_share` 指向不存在的端点
 - **现状**：`DocSysClient:1066` 调 `/Doc/createDocShare.do`；**服务端无此映射**（`DocController` 只有 `getDocShareList/verifyDocSharePwd/getDocShare`），真实创建分享在 `BussinessController:/addDocShare.do`（另有 `updateDocShare/deleteDocShare`）。
@@ -171,7 +180,7 @@
 
 | 阶段 | 内容 | 依赖 | 交付 |
 |---|---|---|---|
-| **R1** | R1-1 errCode ✅ → R1-1b 权限/登录/不存在出口 ✅ → R1-1c `docSysErrorLog` 不存在出口（66 处）→ R1-4 get_doc_history → R1-5 list_repos → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
+| **R1** | R1-1 errCode ✅ → R1-1b 权限/登录/不存在出口 ✅ → R1-1c `docSysErrorLog` 不存在出口 ✅ → R1-4 get_doc_history → R1-5 list_repos → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
 | **R3** | R3-2 全工具体检（产出体检表）→ R3-1 命名 → R3-3 run_skill → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表 + 检查单文档 |
 
@@ -182,7 +191,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R1-1b 后）：`TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 16` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
+   - 现基线（2026-09-20 R1-1c 后）：`TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolE2E` `ListDocsProbe` `ToolChk` `IdProbe` `LockProbe`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -225,7 +234,7 @@
 | — | — | list_docs 大目录截断 → 紧凑分页清单 | ✅ | `10f9e21f8` |
 | R1-1 | P0 | 后端补 errorCode（替代文案嗅探） | ✅ | `eda22474b` |
 | R1-1b | P0 | 权限/登录/仓库不存在出口补码（三控制器 66 处） | ✅ | 见本次提交 |
-| R1-1c | P0 | `docSysErrorLog(…不存在！, rt)` 66 处补码 | ⬜ | |
+| R1-1c | P0 | `docSysErrorLog(…不存在！, rt)` 64 处补码（新增 SHARE_NOT_FOUND） | ✅ | 见本次提交 |
 | R1-2 | P0 | create_doc_share 端点不存在 | ⬜ | |
 | R1-3 | P0 | get_doc_share_list 语义错位 | ⬜ | |
 | R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ⬜ | |

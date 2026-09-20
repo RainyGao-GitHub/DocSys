@@ -890,6 +890,12 @@ public class DocSysToolFactory {
         if (ErrorCode.TASK_NOT_FOUND.equals(errorCode)) {
             return "（该任务不存在或已被回收：请重新发起任务，不要沿用旧 taskId）";
         }
+        if (ErrorCode.SHARE_NOT_FOUND.equals(errorCode)) {
+            return "（分享不存在或已被撤销：请重新获取分享列表，不要沿用旧 shareId）";
+        }
+        if (ErrorCode.INTERNAL.equals(errorCode)) {
+            return "（服务端内部错误：重试无效，请记录错误码并反馈管理员）";
+        }
         return "";
     }
 

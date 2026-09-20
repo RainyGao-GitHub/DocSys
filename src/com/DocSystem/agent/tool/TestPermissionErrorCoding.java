@@ -29,6 +29,7 @@ public class TestPermissionErrorCoding {
     private static final String[] SOURCES = {
             "src/com/DocSystem/controller/ReposController.java",
             "src/com/DocSystem/controller/DocController.java",
+            "src/com/DocSystem/controller/BaseController.java",
             "src/com/DocSystem/websocket/BussinessController.java",
     };
 
@@ -62,12 +63,17 @@ public class TestPermissionErrorCoding {
             List<String> notLogin = new ArrayList<String>();
             List<String> reposNotFound = new ArrayList<String>();
             List<String> bareIllegal = new ArrayList<String>();
+            List<String> notFoundLog = new ArrayList<String>();
 
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
                 String t = line.trim();
                 if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) {
                     continue; // 注释里的示例代码不算
+                }
+                // R1-1c：“对象不存在”类出口（docSysErrorLog）必须带码
+                if (t.contains("docSysErrorLog(") && t.contains("不存在") && !t.contains("ErrorCode.")) {
+                    notFoundLog.add((i + 1) + ": " + t);
                 }
                 boolean isSetError = t.contains("rt.setError(");
                 if (!isSetError) {
@@ -97,6 +103,8 @@ public class TestPermissionErrorCoding {
                     String.join(" | ", reposNotFound));
             check(src + " 非法访问点均先置 NO_PERMISSION", bareIllegal.isEmpty(),
                     String.join(" | ", bareIllegal));
+            check(src + " 不存在类出口（docSysErrorLog）全部带码", notFoundLog.isEmpty(),
+                    String.join(" | ", notFoundLog));
         }
 
         testSetPermissionErrorHelperIsCoded();

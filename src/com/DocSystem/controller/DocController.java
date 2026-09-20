@@ -533,7 +533,7 @@ public class DocController extends BaseController{
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
 		{
-			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 
 			writeJson(rt, response);
 			
@@ -715,7 +715,7 @@ public class DocController extends BaseController{
 		Doc srcDbDoc = docSysGetDoc(repos, srcDoc, false);
 		if(srcDbDoc == null || srcDbDoc.getType() == 0)
 		{
-			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);	
 			addSystemLog(request, reposAccess.getAccessUser(), "moveDoc", "moveDoc", "移动", taskId, "失败", repos, srcDoc, dstDoc, buildSystemLogDetailContent(rt));	
 
@@ -903,7 +903,7 @@ public class DocController extends BaseController{
 		Doc tmpDoc = docSysGetDoc(repos, srcDoc, false);
 		if(tmpDoc == null || tmpDoc.getType() == 0)
 		{
-			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);	
 			copyAfterHandler(0, srcDoc, dstDoc, reposAccess, context, rt);
 			return;
@@ -1055,7 +1055,7 @@ public class DocController extends BaseController{
 		Doc tmpDoc = docSysGetDoc(repos, srcDoc, false);
 		if(tmpDoc == null || tmpDoc.getType() == null ||tmpDoc.getType() == 0)
 		{
-			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + srcDoc.getName() + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			
 			copyAfterHandler(0, srcDoc, dstDoc, reposAccess, context, rt);			
@@ -1186,7 +1186,7 @@ public class DocController extends BaseController{
 		Doc fsDoc = fsGetDoc(repos, doc);
 		if(fsDoc == null || fsDoc.getType() != 1)
 		{
-			docSysErrorLog("clearOfficeEditCache() 文件不存在或不是文件类型", rt);
+			docSysErrorLog("clearOfficeEditCache() 文件不存在或不是文件类型", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -1253,7 +1253,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1310,7 +1310,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -1434,7 +1434,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposInfo(reposId, reposAccess.getDocShare());
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2334,7 +2334,7 @@ public class DocController extends BaseController{
 		Doc dbDoc = docSysGetDoc(repos, doc, false);
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
-			docSysErrorLog("文件 " + path + name + " 不存在！", rt);
+			docSysErrorLog("文件 " + path + name + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			addSystemLog(request, reposAccess.getAccessUser(), "updateDocContent", "updateDocContent", "修改文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));			
 			return;
@@ -2426,7 +2426,7 @@ public class DocController extends BaseController{
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		if(docType == null)
 		{
-			docSysErrorLog("docType is null", rt);
+			 docSysErrorLog("docType is null", rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2441,7 +2441,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -2630,7 +2630,7 @@ public class DocController extends BaseController{
 		if(localEntry.getType() == 0)
 		{
 			Log.debug("downloadDocPrepare_FSM() Doc " +doc.getPath() + doc.getName() + " 不存在");			
-			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", rt);
+			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + "不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			return;		
 		}
 		
@@ -3190,7 +3190,7 @@ public class DocController extends BaseController{
 		File localEntry = new File(localParentPath, targetName);
 		if(false == localEntry.exists())
 		{
-			docSysErrorLog("文件 " + localParentPath + targetName + " 不存在！", rt);
+			docSysErrorLog("文件 " + localParentPath + targetName + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			throw new Exception(rt.getMsgInfo());
 		}
 
@@ -3862,7 +3862,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			//writeJson(rt, response);			
 			//return;
 			throw new Exception(rt.getMsgInfo());
@@ -4325,7 +4325,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4380,7 +4380,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4464,7 +4464,7 @@ public class DocController extends BaseController{
 		
 		if(dbDoc == null || dbDoc.getType() == 0)
 		{
-			docSysErrorLog("文件 " + path+name + " 不存在！", rt);
+			docSysErrorLog("文件 " + path+name + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -4584,7 +4584,7 @@ public class DocController extends BaseController{
 		Doc tmpDoc = docSysGetDoc(repos, doc, false);
 		if(tmpDoc == null || tmpDoc.getType() == null || tmpDoc.getType() == 0)
 		{
-			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", rt);
+			docSysErrorLog("文件 " + doc.getPath() + doc.getName() + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -4883,7 +4883,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -5131,7 +5131,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -5289,7 +5289,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -5384,7 +5384,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -5534,7 +5534,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -5701,7 +5701,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -5830,7 +5830,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -5984,7 +5984,7 @@ public class DocController extends BaseController{
 		successDocList = verReposCheckOutLegacy(repos, false, vDoc, userTmpDir, targetName, commitId, true, downloadList, HistoryType_VirtualDoc);
 		if(successDocList == null)
 		{
-			docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在",rt);
+			docSysErrorLog("当前版本文件 " + vDoc.getPath() + vDoc.getName() + " 不存在", ErrorCode.DOC_NOT_FOUND, rt);
 			docSysDebugLog("verReposCheckOut Failed path:" + vDoc.getPath() + " name:" + vDoc.getName() + " userTmpDir:" + userTmpDir + " targetName:" + targetName, rt);
 			writeJson(rt, response);	
 			return;
@@ -6127,7 +6127,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6218,7 +6218,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6264,7 +6264,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6353,7 +6353,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6433,7 +6433,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6472,7 +6472,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6554,7 +6554,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6634,7 +6634,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6673,7 +6673,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6755,7 +6755,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6837,7 +6837,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6876,7 +6876,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -6958,7 +6958,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -7050,7 +7050,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -7093,7 +7093,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -7266,7 +7266,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;
 		}
@@ -7383,7 +7383,7 @@ public class DocController extends BaseController{
 		DocShare docShare = getDocShare(shareId);
 		if(docShare == null)
 		{
-			docSysErrorLog("分享信息不存在！", rt);
+			docSysErrorLog("分享信息不存在！", ErrorCode.SHARE_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -7423,7 +7423,7 @@ public class DocController extends BaseController{
 		DocShare docShare = getDocShare(shareId);
 		if(docShare == null)
 		{
-			docSysErrorLog("分享信息不存在！", rt);
+			docSysErrorLog("分享信息不存在！", ErrorCode.SHARE_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -7558,7 +7558,7 @@ public class DocController extends BaseController{
 		Repos repos = getReposEx(reposId);
 		if(repos == null)
 		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", rt);
+			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
 			writeJson(rt, response);			
 			return;	
 		}

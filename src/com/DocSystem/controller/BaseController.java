@@ -2339,7 +2339,7 @@ public class BaseController  extends BaseFunction{
 		File localEntry = new File(localParentPath,targetName);
 		if(false == localEntry.exists())
 		{
-			docSysErrorLog("文件 " + localParentPath + targetName + " 不存在！", rt);
+			docSysErrorLog("文件 " + localParentPath + targetName + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			//writeJson(rt, response);			
 			//return;
 			throw new Exception(rt.getMsgInfo());
@@ -2408,7 +2408,7 @@ public class BaseController  extends BaseFunction{
 		File file = new File(dstPath);
 		if(!file.exists())
 		{	
-			docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
+			docSysErrorLog("文件  "+ dstPath + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -2473,7 +2473,7 @@ public class BaseController  extends BaseFunction{
 		File file = new File(dstPath);
 		if(!file.exists())
 		{	
-			docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
+			docSysErrorLog("文件  "+ dstPath + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
@@ -2539,7 +2539,7 @@ public class BaseController  extends BaseFunction{
 		File file = new File(dstPath);
 		if(!file.exists())
 		{	
-			docSysErrorLog("文件  "+ dstPath + " 不存在！", rt);
+			docSysErrorLog("文件  "+ dstPath + " 不存在！", ErrorCode.DOC_NOT_FOUND, rt);
 			writeJson(rt, response);
 			return;
 		}
