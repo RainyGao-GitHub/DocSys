@@ -432,7 +432,7 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
   仓库根 79 项 / `66666/` 3 项与基线逐项一致，磁盘无残留。
 - **页面 E2E 重跑同一句话**：确认弹窗 **1 次 → 3 次**（write_file / write_note / delete_doc 各一次），
   回执全部为“✅ 已…”，删后目录回到 3 项。
-- 已提交：见下方「未提交改动」
+- 已提交 `79db72883`（R3-2 批 2a）
 
 ### 实测附带结论
 - `write_file` 直调客户端会报 `DOC_LOCKED`（同一请求内先锁后再次锁）但**文件已写入**；
@@ -454,13 +454,8 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- R3-2 批 2a 待提交：`src/com/DocSystem/agent/tool/DocSysToolFactory.java`、
-  `src/com/DocSystem/controller/DocController.java`、`src/com/DocSystem/agent/tool/AuditWriteConfirmGate.java`、
-  `src/com/DocSystem/agent/controller/AuditLogService.java`、
-  `src/com/DocSystem/agent/tool/TestWriteReceiptFormat.java`（新增）、
-  `src/com/DocSystem/agent/tool/TestWriteConfirmGateCoverage.java`（新增）、
-  `devDocs/Agent工具与接口可靠性计划.md`、本工作卡
-- 已提交：R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R3-2 批 2a 已提交 `79db72883`）
+- 已提交：R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
