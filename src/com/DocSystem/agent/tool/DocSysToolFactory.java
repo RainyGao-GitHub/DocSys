@@ -128,42 +128,44 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** R5 文档列表 */
+    /** R5 文档列表（R1-6：下钻用 path，不再有 docId 参数——实测该参数在服务端不生效） */
     public static ToolDefinition listDocs(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                longProp("docId", "子文件夹的 docId（可选，来自 list_docs 结果的 docId）"),
-                strProp("path", "子文件夹相对路径（可选，如 \"DocSys\" 或 \"DocSys/sub\"）"),
+                strProp("path", "目录的相对路径（可选，如 \"66666/\"；“根目录”传空串或省略）"),
                 intProp("offset", "分页起点（可选，默认 0）"),
                 intProp("limit", "本页条数（可选，默认 " + DOC_LIST_DEFAULT_LIMIT + "，最大 " + DOC_LIST_MAX_LIMIT + "）"));
         JSONObject schema = objSchema(props, new String[]{"vid"});
         return ToolDefinition.builder("list_docs",
-                "列出指定仓库/目录的文档清单（紧凑表格：类型/名称/大小/日期/docId）。"
-                + "不传 docId/path 时返回仓库根目录内容；查看子文件夹请传该文件夹的 docId（推荐）或相对路径 path。"
+                "列出指定仓库/目录的文档清单（紧凑表格：类型/名称/大小/日期）。"
+                + "不传 path 时返回仓库根目录内容；查看子目录请传该子目录的 path（如 \"66666/\"）。"
                 + "目录项多时结果会自动分页（表头给出总数与当前区间），用 offset/limit 翻页；"
                 + "找特定文件建议用 search_files/grep_files 按关键字检索，而不是逐页翻目录。",
-                args -> ToolResult.ok(formatDocListPage(
-                        client.getDocList(args.getInteger("vid"),
-                                args.getLong("docId"), null, args.getString("path")),
-                        args.getInteger("vid"), args.getString("path"), args.getLong("docId"),
-                        args.getInteger("offset"), args.getInteger("limit"))))
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    String normPath = normalizeDocPath(args.getString("path"));
+                    String argPath = normPath.isEmpty() ? null : normPath;
+                    return ToolResult.ok(formatDocListPage(
+                            client.getDocList(vid, null, null, argPath),
+                            vid, argPath, null,
+                            args.getInteger("offset"), args.getInteger("limit")));
+                })
                 .parameters(schema)
                 .build();
     }
 
-    /** R6 文档内容 */
+    /** R6 文档内容（R1-6：path+name 定位，已去掉 docId 参数） */
     public static ToolDefinition getDoc(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID"),
-                longProp("docId", "文档ID"),
-                strProp("path", "文档路径（必填，来自 list_docs 结果的 data[].path，如 \"DocSys/\"）"),
-                strProp("name", "文档名（必填，来自 list_docs 结果的 data[].name）"));
+                strProp("path", "文档所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
+                strProp("name", "文档名（必填，来自 list_docs 结果的 name 列）"));
         JSONObject schema = objSchema(props, new String[]{"vid", "path", "name"});
         return ToolDefinition.builder("get_doc",
-                "获取文档内容（docText）。注意：必须同时传 path 和 name（来自 list_docs 结果的 data[].path 与 data[].name），"
-                + "仅传 docId 无法返回内容。",
+                "获取文档内容（docText）。定位用 path+name：path 是它所在目录的相对路径（以 / 结尾，根目录空串），"
+                + "name 是文件名，两者都从 list_docs 结果里取。不要传 docId。",
                 args -> ToolResult.ok(fmt(client.getDoc(args.getInteger("vid"),
-                        args.getLong("docId"), args.getString("path"), args.getString("name")))))
+                        null, normalizeDocPath(args.getString("path")), args.getString("name")))))
                 .parameters(schema)
                 .build();
     }
@@ -330,16 +332,17 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** W4a 创建目录（文件夹） */
+    /** W4a 创建目录（文件夹）（R1-6：pid → path） */
     public static ToolDefinition createFolder(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
+                strProp("path", "父目录的相对路径（必填，如 \"66666/\"；根目录传空串 \"\"）"),
                 strProp("name", "目录名（必填）"),
-                longProp("pid", "父目录ID（可选，0=根）"),
-                strProp("path", "路径（可选）"),
                 strProp("commitMsg", "提交信息（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "name"});
-        return ToolDefinition.builder("create_folder", "创建目录（文件夹）",
+        JSONObject schema = objSchema(props, new String[]{"vid", "path", "name"});
+        return ToolDefinition.builder("create_folder",
+                "在指定目录下创建文件夹。path = 父目录的相对路径（根目录传空串），name = 新目录名；"
+                        + "定位全用 path，不要传 docId 或 pid。",
                 args -> {
                     Integer vid = args.getInteger("vid");
                     if (vid == null) {
@@ -347,7 +350,7 @@ public class DocSysToolFactory {
                     }
                     try {
                         return ToolResult.ok(fmt(callWithLockRetry("create_folder", () -> client.addDoc(
-                                vid, args.getLong("pid"), args.getString("path"),
+                                vid, null, normalizeDocPath(args.getString("path")),
                                 args.getString("name"), 2, null, null, args.getString("commitMsg")))));
                     } catch (Exception e) {
                         return ToolResult.error("create_folder failed: " + e.getMessage());
@@ -362,13 +365,14 @@ public class DocSysToolFactory {
     public static ToolDefinition writeFile(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                strProp("path", "路径（可选，如 /docs/2026）"),
+                strProp("path", "目标目录的相对路径（必填，如 \"66666/\"；根目录传空串 \"\"）"),
                 strProp("name", "文件名（必填，含后缀）"),
                 strProp("content", "文件内容（必填，大模型生成的文本，UTF-8，1MB 以内）"),
                 strProp("commitMsg", "提交信息（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "name", "content"});
+        JSONObject schema = objSchema(props, new String[]{"vid", "path", "name", "content"});
         return ToolDefinition.builder("write_file",
                 "创建或覆盖写入【文本】文件（txt/md/json/xml/sql/代码/脚本等）。文件不存在则创建，存在则覆盖。"
+                        + "path = 目标目录的相对路径（根目录传空串），name = 文件名（含后缀）；不要传 docId/pid。"
                         + "写入的是仓库实体文件。仅支持文本类型，Office 文件暂不支持。"
                         + "要写备注（虚拟内容）用 write_note，建目录用 create_folder。",
                 args -> {
@@ -382,7 +386,7 @@ public class DocSysToolFactory {
                     }
                     try {
                         return ToolResult.ok(fmt(callWithLockRetry("write_file", () -> client.writeTextDoc(
-                                vid, args.getString("path"),
+                                vid, normalizeDocPath(args.getString("path")),
                                 args.getString("name"), content, args.getString("commitMsg")))));
                     } catch (Exception e) {
                         return ToolResult.error("write_file failed: " + e.getMessage());
@@ -397,15 +401,14 @@ public class DocSysToolFactory {
     public static ToolDefinition writeNote(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                strProp("path", "路径（可选）"),
+                strProp("path", "文档所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
                 strProp("name", "文档名（必填）"),
                 strProp("content", "备注内容（必填）"),
-                longProp("docId", "文档ID（可选，已知道时可加快定位）"),
                 strProp("commitMsg", "提交信息（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "name", "content"});
+        JSONObject schema = objSchema(props, new String[]{"vid", "path", "name", "content"});
         return ToolDefinition.builder("write_note",
                 "创建或更新文档【备注】（虚拟内容，不产生实体文件）。文档不存在时自动创建文档条目并写入备注。"
-                        + "要写入实体文件用 write_file。",
+                        + "定位用 path+name（都从 list_docs 取）；不要传 docId。要写入实体文件用 write_file。",
                 args -> {
                     Integer vid = args.getInteger("vid");
                     if (vid == null) {
@@ -416,11 +419,11 @@ public class DocSysToolFactory {
                         return ToolResult.error("content 必填（备注内容）");
                     }
                     try {
-                        String path = args.getString("path");
+                        String path = normalizeDocPath(args.getString("path"));
                         String name = args.getString("name");
                         String commitMsg = args.getString("commitMsg");
                         Map<String, Object> res = callWithLockRetry("write_note", () -> client.updateDocContent(
-                                vid, args.getLong("docId"), path, name, content, null, commitMsg));
+                                vid, null, path, name, content, null, commitMsg));
                         String status = res != null ? String.valueOf(res.get("status")) : "fail";
                         String msg = res != null ? String.valueOf(res.get("msgInfo")) : "";
                         if ("ok".equals(status)) {
@@ -442,41 +445,39 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** W5 删除文档 */
+    /** W5 删除文档（R1-6：path/name 必填） */
     public static ToolDefinition deleteDoc(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
-                longProp("docId", "文档ID"),
-                longProp("pid", "父目录ID（可选）"),
-                strProp("path", "路径（可选）"),
-                strProp("name", "文档名（可选）"),
+                strProp("path", "文档所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
+                strProp("name", "文档名（必填）"),
                 strProp("commitMsg", "提交信息（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid"});
-        return ToolDefinition.builder("delete_doc", "删除文档（需确认）",
+        JSONObject schema = objSchema(props, new String[]{"vid", "path", "name"});
+        return ToolDefinition.builder("delete_doc",
+                "删除文档（文件或目录，需确认）。定位用 path+name（都从 list_docs 取）；不要传 docId/pid。",
                 args -> ToolResult.ok(fmt(callWithLockRetry("delete_doc", () -> client.deleteDoc(
-                        args.getInteger("vid"), args.getLong("docId"), args.getLong("pid"),
-                        args.getString("path"), args.getString("name"), null,
+                        args.getInteger("vid"), null, null,
+                        normalizeDocPath(args.getString("path")), args.getString("name"), null,
                         args.getString("commitMsg"))))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
                 .build();
     }
 
-    /** W6 重命名文档 */
+    /** W6 重命名文档（R1-6：path/name 必填；dstName = 新名） */
     public static ToolDefinition renameDoc(DocSysClient client) {
         JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
+                strProp("path", "文档所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
+                strProp("name", "文档原名（必填）"),
                 strProp("dstName", "新名称（必填）"),
-                longProp("docId", "文档ID"),
-                longProp("pid", "父目录ID（可选）"),
-                strProp("path", "路径（可选）"),
-                strProp("name", "原名（可选）"),
                 strProp("commitMsg", "提交信息（可选）"));
-        JSONObject schema = objSchema(props, new String[]{"vid", "dstName"});
-        return ToolDefinition.builder("rename_doc", "重命名文档",
+        JSONObject schema = objSchema(props, new String[]{"vid", "path", "name", "dstName"});
+        return ToolDefinition.builder("rename_doc",
+                "重命名文档（文件或目录）。定位用 path+name（都从 list_docs 取），dstName 是新名字；不要传 docId/pid。",
                 args -> ToolResult.ok(fmt(callWithLockRetry("rename_doc", () -> client.renameDoc(
-                        args.getInteger("vid"), args.getLong("docId"), args.getLong("pid"),
-                        args.getString("path"), args.getString("name"), null,
+                        args.getInteger("vid"), null, null,
+                        normalizeDocPath(args.getString("path")), args.getString("name"), null,
                         args.getString("dstName"), args.getString("commitMsg"))))))
                 .parameters(schema)
                 .isWrite(true).needsConfirm(true)
@@ -1019,8 +1020,7 @@ public class DocSysToolFactory {
             } else {
                 sb.append("  ").append(sizeText(d.get("size")));
             }
-            sb.append("  ").append(dateText(d.get("latestEditTime")));
-            sb.append("  docId=").append(str(d.get("docId"))).append("\n");
+            sb.append("  ").append(dateText(d.get("latestEditTime"))).append("\n");
         }
         return sb.toString();
     }

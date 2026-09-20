@@ -46,6 +46,7 @@ public class TestDocHistoryLocator {
         testPathNameIsCompleteLocator();
         testGetDocHistorySchema();
         testMoveCopySchema();
+        testOtherDocToolsUsePathName();
         testListDocsFooterTeachesPath();
 
         System.out.println("======== TestDocHistoryLocator: " + pass + " passed, " + fail + " failed ========");
@@ -89,6 +90,45 @@ public class TestDocHistoryLocator {
         check("move_doc 的 dstName 语义是“新名”（与 rename_doc 一致）",
                 mv.parameters.getJSONObject("properties").getJSONObject("dstName")
                         .getString("description").contains("新名"));
+    }
+
+    /**
+     * 其余文档类工具的参数面（R1-6 第 3 步）：一律 path/name 定位，不得再暴露 docId/pid。
+     * 每个工具都断言：没有 docId/pid/dstPid 参数 + 必填集合完整（path 必填，避免模型“猜根目录”）。
+     */
+    private static void testOtherDocToolsUsePathName() {
+        checkPathNameOnly("get_doc", DocSysToolFactory.getDoc(null), new String[]{"vid", "path", "name"});
+        checkPathNameOnly("delete_doc", DocSysToolFactory.deleteDoc(null), new String[]{"vid", "path", "name"});
+        checkPathNameOnly("rename_doc", DocSysToolFactory.renameDoc(null),
+                new String[]{"vid", "path", "name", "dstName"});
+        checkPathNameOnly("create_folder", DocSysToolFactory.createFolder(null), new String[]{"vid", "path", "name"});
+        checkPathNameOnly("write_file", DocSysToolFactory.writeFile(null),
+                new String[]{"vid", "path", "name", "content"});
+        checkPathNameOnly("write_note", DocSysToolFactory.writeNote(null),
+                new String[]{"vid", "path", "name", "content"});
+
+        ToolDefinition listDocs = DocSysToolFactory.listDocs(null);
+        JSONObject listProps = listDocs.parameters.getJSONObject("properties");
+        check("list_docs 不再暴露 docId（该参数在服务端从来不生效）", !listProps.containsKey("docId"),
+                listProps.keySet().toString());
+        check("list_docs 下钻口径改为 path", listDocs.description.contains("path")
+                && !listDocs.description.contains("docId"));
+    }
+
+    private static void checkPathNameOnly(String toolName, ToolDefinition def, String[] expectedRequired) {
+        JSONObject props = def.parameters.getJSONObject("properties");
+        JSONArray required = def.parameters.getJSONArray("required");
+        check(toolName + " 不再暴露 docId/pid/dstPid",
+                !props.containsKey("docId") && !props.containsKey("pid") && !props.containsKey("dstPid"),
+                props.keySet().toString());
+        check(toolName + " 暴露 path 且为必填", props.containsKey("path")
+                && required != null && required.contains("path"), String.valueOf(required));
+        check(toolName + " required = " + java.util.Arrays.toString(expectedRequired),
+                required != null && required.size() == expectedRequired.length
+                        && java.util.Arrays.asList(expectedRequired).containsAll(required),
+                String.valueOf(required));
+        check(toolName + " 描述里提醒不要传 docId",
+                def.description != null && def.description.contains("不要传 docId"));
     }
 
     /**

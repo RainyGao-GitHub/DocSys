@@ -128,14 +128,14 @@
   |---|---|---|---|
   | `move_doc` | `{vid, docId, dstPid}` | 源侧参数在 client 调用里被**写死 null** | ✅ 已改为 `{vid, srcPath, srcName, dstPath, dstName?}` |
   | `copy_doc` | `{vid, docId, dstPid}` | 同上 | ✅ 同上 |
-  | `delete_doc` | `{vid}` | docId/pid/path/name 全可选 | ✅ 已用 path/name 实测通过（schema 收紧待做） |
-  | `rename_doc` | `{vid, dstName}` | docId/pid 可选 | ✅ 已用 path/name 实测通过（schema 收紧待做） |
+  | `delete_doc` | `{vid}` | docId/pid/path/name 全可选 | ✅ required `{vid, path, name}` |
+  | `rename_doc` | `{vid, dstName}` | docId/pid 可选 | ✅ required `{vid, path, name, dstName}` |
   | `get_doc_history` | `{vid, docId}` | docId | ✅ 已改为 `{vid, path, name}` |
   | `create_doc_share` | `{vid, docId}` | docId（端点本身还错 → R1-2） | ⬜ `{vid, path, name}`（与 R1-2 一起做） |
-  | `list_docs` | `{vid}` | docId 可选（**已实测不生效**）＋描述推荐 docId＋输出每行 docId | 部分✅（页脚已改 path 口径）；剩：删 docId 参数 + 输出改 path 为主 |
-  | `get_doc` | `{vid, path, name}` | 已有可选 docId | ⬜ 去掉 docId 参数 |
-  | `write_note` | `{vid, name, content}` | docId 可选 | ⬜ 补 `path`，去 docId |
-  | `create_folder` / `write_file` | `{vid, name}` / `{vid, name, content}` | 用 `pid`（父目录 ID） | ⬜ 改用 `path`（目标目录路径，根目录=空） |
+  | `list_docs` | `{vid}` | docId 参数（**已实测不生效**）＋描述推荐 docId＋输出每行 docId | ✅ 已删 docId 参数；输出不再带 docId 列 |
+  | `get_doc` | `{vid, path, name}` | 已有可选 docId | ✅ 已删 docId |
+  | `write_note` | `{vid, name, content}` | docId 可选 | ✅ required `{vid, path, name, content}` |
+  | `create_folder` / `write_file` | `{vid, name}` / `{vid, name, content}` | `pid`（父目录 ID） | ✅ 均改为 required `{vid, path, name[, content]}`，pid 下线 |
   | `@` 关注对象注入块 | `AgentFocusSupport.describe()` 注入 `docId=99` | docId 进提示词 | ⬜ 去掉 docId |
   | `AgentController.findNameConflict` | 用 `folderDocId` 调 `getDocList` | docId | ⬜ 改用 path |
   | 旧编排/CLI 帮助文本 | `delete-doc <vid> <docId>` 等 | docId-first 语法 | ⬜ 随 R3-4 下线 |
@@ -153,6 +153,15 @@
     新探针 `MoveToolPathE2E` **16/16**：全程无 docId/dstPid —— 建两个目录 → 移入（dstPath="B/"）→
     从子目录移回（srcPath="B/" 非空）→ 复制并改名（dstName）→ 重命名 → 逐个 path/name 删除 → 磁盘无残留；
     **页面 E2E**：模型 6 步写完“建→移入→移回→删”，并主动说明“严格按 srcPath+srcName / dstPath 操作，未依赖 docId/dstPid” ✓
+
+- **本次已完成（第 3 步：其余文档工具，2026-09-20）**：
+  - `delete_doc` → required `{vid, path, name}`；`rename_doc` → required `{vid, path, name, dstName}`（均已去 docId/pid）
+  - `list_docs`：**删掉 docId 参数**（实测该参数在服务端从来不生效）；行内不再输出 `docId=`（定位靠表头的 path + 行内 name）
+  - `get_doc` → 删 docId；`create_folder` → `pid` 改 `path`（required）；`write_file`/`write_note` → path 提为必填、去 docId
+  - 所有 path 入参统一过 `normalizeDocPath()`；`list_docs` 传空 path 时仍传 null（保持服务端“path==null 即根目录”的已证行为）
+  - 验证：护栏 `TestDocHistoryLocator` **74/74**（新增 `checkPathNameOnly`：六个工具逐一断言“无 docId/pid/dstPid + path 必填 + required 集合 + 描述提醒”）＋ `TestListDocsFormat` 改为“不再输出 docId 列”；
+    探针 `MoveToolPathE2E` **20/20**（新增“用 path 在子目录 66666/ 里建目录并删除”）；
+    **页面 E2E**：在 `66666/` 下建目录 → 写 `note.md` → `get_doc(path="66666/R6T_.../", name="note.md")` 读回一致 → `delete_doc` 连目录带文件删除，4 步全 ok，模型自述“全程按 path+name 定位，未使用 docId” ✓
 
 - **验收（每项）**：护栏（schema 不含 docId + path 归一化 + 线上 docId 指纹）→ 真实探针 → 页面 E2E 一条。
 
@@ -240,7 +249,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R1-6 move/copy 后）：`TestDocHistoryLocator 48` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
+   - 现基线（2026-09-20 R1-6 第 3 步后）：`TestDocHistoryLocator 74` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestDocIdResolve 11` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolE2E` `ListDocsProbe` `ToolChk` `IdProbe` `LockProbe`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -288,7 +297,7 @@
 | R1-2 | P0 | create_doc_share 端点不存在 | ⬜ | |
 | R1-3 | P0 | get_doc_share_list 语义错位 | ⬜ | |
 | R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ✅ | 见本次提交 |
-| R1-6 | P0 | 定位方式全面改为 path/name（试点 get_doc_history ✅；move/copy ✅；余：delete/rename schema、list_docs 输出、get_doc/write_*、create_folder pid→path、@注入块） | 🟡 | 见本次提交 |
+| R1-6 | P0 | 定位方式全面改为 path/name（✅ get_doc_history / move / copy / delete / rename / list_docs / get_doc / write_* / create_folder；余：`@` 注入块去 docId、删反查过渡层） | 🟡 | 见本次提交 |
 | R1-5 | P0 | list_repos 截断（18 仓只看 9） | ⬜ | |
 | R2-1 | P1 | 统一工具输出规范 + 抽 helper（23 处 fmt 裸 JSON） | ⬜ | |
 | R2-2 | P1 | get_doc 长文 maxChars/offset | ⬜ | |

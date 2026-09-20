@@ -77,7 +77,7 @@ public class TestListDocsFormat {
         check("不会被截断", p1.length() <= 4000 && !p1.contains("(truncated)"));
         check("目录行带 [目录] 与前缀", p1.contains("[目录] 目录_0_测试/"));
         check("文件行带 [文件] 与大小", p1.contains("[文件] 文件1_产品介绍.md") && p1.contains("2.0KB"));
-        check("含 docId", p1.contains("docId=100000000000"));
+        check("不再输出 docId 列（R1-6：行首以 path+name 定位）", !p1.contains("docId="));
         check("含日期", p1.contains("2026-"));
         check("中文名保留", p1.contains("产品介绍"));
         check("不再输出原始 JSON 字段", !p1.contains("localRootPath") && !p1.contains("reposPath"));
@@ -123,7 +123,7 @@ public class TestListDocsFormat {
         check("超长场景不超字符预算", p6.length() <= 4000 && !p6.contains("(truncated)"));
         check("超长场景区间自洽（显示 1-N）", p6.matches("(?s).*本次显示第 1-\\d+ 项.*"));
         check("超长场景给出剩余提示", p6.contains("未显示") && p6.contains("offset="));
-        check("超长场景表头含 docId 与路径", p6.contains("docId=12345") && p6.contains("很长的路径/子目录/"));
+        check("超长场景表头含路径", p6.contains("很长的路径/子目录/"));
 
         System.out.println("======== TestListDocsFormat: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
