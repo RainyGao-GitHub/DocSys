@@ -346,7 +346,7 @@ dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000
 - **页面 E2E（同一句提示词，改造前 7 步 → 改造后 4 步）**：
   `grep_files` → `共 16 条（全部命中）`；`search_files` 默认调用即报 `已达 maxResults=20 上限，可能还有更多命中`，
   模型当轮改 `maxResults=100` 重查得 `共 34 条（全部命中）`并翻第二页；**0 次 match 模式试错**。
-- 已提交：见下方「未提交改动」
+- 已提交 `353565ee0`（R2-1/R2-2/R2-3/R2-4）
 
 ## 全阶段完成情况
 
@@ -364,8 +364,8 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- R2 待提交：`src/com/DocSystem/agent/tool/DocSysToolFactory.java`、`src/com/DocSystem/agent/tool/TestToolOutputContract.java`（新增）、`src/com/DocSystem/agent/tool/TestListReposFormat.java`（文案断言跟进）、`devDocs/Agent工具与接口可靠性计划.md`、本工作卡
-- 已提交：R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R2 已提交 `353565ee0`）
+- 已提交：R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
