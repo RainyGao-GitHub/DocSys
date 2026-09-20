@@ -550,6 +550,43 @@ ame="66666" → **0 命中**（旧实现必然搜不到）；磁盘 D:/test/6666
 emoteServerGetDoc）dev 无 type≥3 仓库，**无法 E2E**，仅靠源码 lint 锁住调用方式（如实记录，不假装验过）
 - 新发现已单列 **R3-13**：repo 5 索引只覆盖 MxsDoc/ 子树（疑似索引同步/重建覆盖缺陷）
 
+## R3-11：help 技能族整族删除（2026-09-20，用户裁定 A+C）
+
+### 发现（比原记录严重得多）
+- 原记录只说"`system_help` 演示件过期"。核查发现**磁盘件是编造的**：`SKILL.md` 教模型跑 `docsys help`
+  （dev 无此可执行文件）、`scripts/run.bat` 指向 `http://localhost:8080/api/help` + 占位凭据、
+  `references/api.md` 写了一个**不存在**的 `GET /System/help.do`、`references/related-skills.md` 指向不存在的兄弟技能。
+- **三个 sibling 同族**：`help-repos`/`help-docs`/`help-search` 在白名单里但**从未被注册**（模型看不见）
+  → **猜 id 就能命中**，返回 docId 时代的 CLI 表（`create-repos <name> <desc> <path>`、
+  **`delete-doc <vid> <docId>`**、`search <query> [vid]`）→ 工具名全不存在、docId 定位已下线 = 把模型引回废弃用法。
+- **`SubAgent` 里还有最陈旧的一份**（含硬编码 `login admin admin2026` 示例），且 `taskType="help*"` **可达**
+  （`MainAgent.executeSubTasks` → `subAgent.execute`）。
+
+### 裁定与实现（A+C）
+- 用户裁定：`system_help` 实用价值低（速查内容与工具 schema 重复）→ **整族删除**。
+  删前核对：那 5 条约定逐条都在工具描述里有对应表述 → **不丢信息**。
+- 删了：`DocSysSkillExecutor` 白名单 + 4 个 handler；`ExternalSkillExecutor` 排除集 5 个 id；
+  `SkillManager` 的 `system_help` 注册；`SubAgent` 的 4 个 handler + 4 个 taskType 分支 + `getCategory` help 分类；
+  `git rm -r WebRoot/WEB-INF/skills/system_help`；手工删运行期副本 `C:\DocSysReposes\skills\system_help`。
+
+### 验证
+- 护栏 `TestSkillExecEncoding` 重写为 **46 项**：5 个 id 逐个断言 `canHandle=false` + `execute` 返 `Unknown skill`；
+  `banner`/`web_search`/`playwright` 仍正常；源码 lint 锁四个文件不得复活 + 技能目录已删除。
+  → **全量 32 套 / 1199 项断言 0 失败**。
+- live：`GET /agent/skills` 技能数 **7 → 6**（`java-expert, browser_use, web_search, playwright, ant-expert, banner`）。
+- **页面 E2E**：让模型"执行 system_help 技能" → 它先判断列表里没有、为稳妥仍实际调用一次（确认弹窗 ✓）→
+  **`❌ run_skill 失败：No executor found for skill: system_help`** → 如实答"技能不存在"+ 列出 6 个真实技能 +
+  建议改用 `banner`（未臆造，正是 P3b 口径）。
+- 已提交 `697ba19b2`（含计划文档 R3-11 章节 + 状态表）
+
+### 踩坑（护栏自身）
+- `external.canHandle("help-repos")` 在离开排除集后**不再短路** → 走外部技能目录查找 → 触碰
+  `BaseFunction.<clinit>` → 裸 JVM 中 `Log` 写文件失败递归 StackOverflow（栈全是 `Log.info`）→ 改用源码 lint。
+- 源码 lint 断言方法必须用**方法定义形式**（`private SkillExecutionResult handleHelp`）；裸名字会被注释里的历史记录命中。
+
+### 相关观察（未做，留 R3-4）
+- `banner` 技能保留，但其"快速开始"仍是旧 CLI 味道（`login <user> <pwd>`、`list-repos`、`search <关键词>`、`help`）。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -568,8 +605,8 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- 无（R3-10 代码与文档已提交 `7a0a9242a`；本工作卡随后单独提交）
-- 已提交：R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R3-11 代码与文档已提交 `697ba19b2`；本工作卡随后单独提交）
+- 已提交：R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
