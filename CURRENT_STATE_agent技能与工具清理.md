@@ -268,6 +268,28 @@ realDoc 的 `docId` **不是数据库主键**，而是 `Path.getDocId(level, pat
 - **导入冲突真 API**：同名 `1111.txt` → `DOC_EXISTS`（原文件字节/时间未变）；新文件 → 成功，服务端回 `path=66666/ level=1 docId=204085893585`，与 `Path.buildDocIdByName(1,"66666/","probe_r16_new.txt")` **逐位一致**；用 path/name 删除后磁盘无残留
 - 已提交 `a2eb58b7d`（第 3 步）；**第 4 步 = `79b04752f`**
 
+## R1-5：list_repos / get_repos 紧凑分页渲染（2026-09-20）
+
+### 问题（真数据）
+dev 环境 **17 个仓库的原始 JSON = 7716 字符** > `MAX_SUMMARY_LEN` 4000 → `fmt()` 截到 4000 后
+**最后一个仓库 `MxsDoc产品介绍` 根本不在前缀里**（模型只能看到前 9 个）；原文还含 `svnPwd/svnPwd1` **明文密码**。
+
+### 改动（只动工具层）
+- 新增 `formatReposPage` / `renderRepos` / `formatOneRepos` / `reposTypeLabel` / `verCtrlLabel`：
+  - 每行只留 `vid / 名称 / 类型 / 版本控制 / 本地路径`（`info` 与 `name` 不同时才补“说明=…”）；
+  - `offset/limit` 分页（默认 50 / 最大 200）＋字符预算 3000（< fmt 上限，永不产生半截 JSON）；
+  - 失败时**转调 `fmt()`** 保留 `errorCode` + 处置提示（`formatDocListPage` 的失败分支同样修了——原来直接拼 `msgInfo` 会把错误码丢掉）；
+  - `svnPwd/svnPwd1/localSvnPath/svnPath/svnUser/remoteStorage/lockBy` 等一律不进输出；
+  - 标签与 `manager/addRepos.html` 选项对齐：type 1=文件管理系统/3=SVN前置/4=GIT前置/5=文件服务器前置；verCtrl 0=无/1=SVN/2=GIT/3=磁盘。
+- `list_repos` schema 加可选 `offset/limit`（无必填）；`get_repos` 改紧凑渲染。
+
+### 验证
+- 新护栏 `TestListReposFormat` **50/50**（紧凑/分页/越界/空列表/失败带码/敏感字段不出/标签映射/schema）；
+- 探针 `ReposListE2E` **28/28**（真环境）：7716 → **856 字符**，17 个仓库名与 vid **0 缺失**，分页两页拼齐，`svnPwd` 字段名与真实值都不出现；
+- **页面 E2E**：问“列出所有仓库，并说明版本控制类型，一共几个？”→ **1 步** `list_repos{}`，
+  首行 `仓库列表：共 17 个，本次显示第 1-17 个`；模型答“共 17 个”、GIT 4 / 磁盘 3 / 无 10 **完全正确**，
+  并引用页脚提示主动提出可用 `get_repos(vid=…)`；无 pageerror。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -277,13 +299,13 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 **以 `devDocs/Agent工具与接口可靠性计划.md` 为准**（2026-09-20 建立的总清单，含全部待办与验收口径）。摘要：
 
-- **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 全部完成 ✅（第 4 步已删反查层/注入块/导入冲突/CLI）**；接下来按序：R1-5 `list_repos` 截断 → R1-2 `create_doc_share`（端点错）→ R1-3 `get_doc_share_list` 语义 → R2（统一输出/大结果）→ R3
+- **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 全部完成 ✅**；**R1-5 ✅（本轮）**；接下来按序：R1-2 `create_doc_share`（工具调不存在的端点）→ R1-3 `get_doc_share_list` 语义 → R2（统一输出/大结果）→ R3
 - **R2（P1）**：统一工具输出规范（现仍有 23 处 `fmt()` 裸 JSON，会被 4000 字砍成半截）+ `get_doc` 长文 `maxChars/offset` + `search_files/grep_files` 大结果验证
 - **R3（P2）**：全工具体检表、参数命名一致（`update_repos.reposId`→`vid`）、`run_skill` 实测、旧编排死代码处置、上线检查单固化
 
 ## 未提交改动
 
-- 无（R1-6 第 4 步已提交 `79b04752f`）
+- 待提交（R1-5）：`agent/tool/DocSysToolFactory.java`、`agent/tool/TestListReposFormat.java`（新增）+ `devDocs/Agent工具与接口可靠性计划.md` + 本卡
 - 已提交：R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 

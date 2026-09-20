@@ -180,11 +180,25 @@
 - **验收（每项）**：护栏（schema 不含 docId + path 归一化 + 线上 docId 指纹）→ 真实探针 → 页面 E2E 一条。
 
 
-#### R1-5 `list_repos` 也被截断（同类）
+#### R1-5 `list_repos` 也被截断（同类）——✅ 已完成（2026-09-20）
 - **现状**：`list_repos` 用 `fmt()` 裸 JSON；仓库对象含 `localSvnPath/svnPwd/remoteStorage/localSvnPath1/…` 20+ 字段。
 - **证据**：2026-09-19 22:48 日志 `[ToolUseLoop][PARSE] ... head=[当前用户可见的仓库列表（接口返回在第 9 个后被截断，以下为可确认部分）` —— 18 个仓库只看到 9 个。
-- **方案**：仿 `formatDocListPage` 做 `formatReposPage`：只留 `id/name/type/verCtrl/realDocPath/info`，分页（默认 50）。顺带把 `get_repos` 也换成紧凑渲染。
-- **验收**：护栏 + 真实探针（18 个仓库一次列全，无截断）；页面"列出所有仓库"能列全并说明版本控制类型。
+  - **探针实测（可复现的硬证据）**：dev 环境 17 个仓库的原始 JSON **7716 字符** > `MAX_SUMMARY_LEN` 4000；
+    把原始 JSON 截到 4000 后，**最后一个仓库 `MxsDoc产品介绍` 根本不在前缀里**（`ReposListE2E` 直接断言这一点）。
+- **方案（已实现）**：仿 `formatDocListPage` 新增 `formatReposPage` / `renderRepos` / `formatOneRepos`：
+  - 每行只留 `vid / 名称 / 类型 / 版本控制 / 本地路径`（`info` 与 `name` 不同时才补“说明=…”）；
+  - `offset/limit` 分页（默认 50 / 最大 200）＋字符预算 3000（低于 fmt 上限，确保永远不会被砍成半截）；
+  - 失败时**转调 `fmt()`** 保留 `errorCode` + 处置提示（原来直接拼 `msgInfo` 会把错误码丢掉——`formatDocListPage` 同样修了）；
+  - **顺带不再把敏感字段倒进上下文**：原文含 `svnPwd/svnPwd1`（明文密码）、`localSvnPath/svnPath/svnUser`、`remoteStorage` 等，现已全不进输出；
+  - `get_repos` 也换紧凑渲染（`类型/版本控制/本地路径/归属/说明` + `list_docs(vid=…)` 提示）。
+  - 类型/版本控制文案与 `manager/addRepos.html` 选项对齐：类型 1=文件管理系统 / 3=SVN前置 / 4=GIT前置 / 5=文件服务器前置；verCtrl 0=无 / 1=SVN / 2=GIT / 3=磁盘。
+- **验收（已过）**：
+  - 新护栏 `TestListReposFormat` **50/50**（紧凑/分页/越界/空列表/失败带码/敏感字段不出/标签映射/schema 无必填）；
+  - 探针 `ReposListE2E` **28/28**（真环境）：原始 JSON 7716 → 新输出 **856 字符**，17 个仓库名与 vid **0 缺失**，
+    最后那个仓库出现了；分页两页拼齐；`svnPwd` 字段名与真实值都不出现；`get_repos` 输出不到原文 1/5；
+  - **页面 E2E**：问“列出所有仓库，并说明每个仓库的版本控制类型，一共几个？”→ **1 步工具调用** `list_repos{}`，
+    输出首行 `仓库列表：共 17 个，本次显示第 1-17 个`；模型答“共 17 个”，按 GIT 4 / 磁盘 3 / 无 10 分类**完全正确**
+    （与实测 verCtrl 分布一致），并引用页脚提示主动提出可用 `get_repos(vid=…)` 看单个仓库；无 pageerror。
 
 ### R2 — P1：大结果 / 长文本的统一策略
 
@@ -252,7 +266,7 @@
 
 | 阶段 | 内容 | 依赖 | 交付 |
 |---|---|---|---|
-| **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 get_doc_history ✅（path/name）→ **R1-6 定位全面 path/name（试点已完，余下：move/copy/delete/rename/list_docs/share/create_folder/write_* + @注入块）** → R1-5 list_repos → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
+| **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 get_doc_history ✅ （path/name）→ **R1-6 定位全面 path/name ✅（含删反查层/注入块/导入冲突/CLI）** → **R1-5 list_repos ✅** → R1-2 create_doc_share → R1-3 get_doc_share_list | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
 | **R3** | R3-2 全工具体检（产出体检表）→ R3-1 命名 → R3-3 run_skill → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表 + 检查单文档 |
 
@@ -263,7 +277,7 @@
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R1-6 第 4 步后）：`TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
+   - 现基线（2026-09-20 R1-5 后）：`TestListReposFormat 50` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestListDocsFormat 25` / `TestLockRetry 13` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestWriteTools 52` / `TestAgentSearchWriteTools 55` / `TestToolRegistry 29` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55`
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolE2E` `ListDocsProbe` `ToolChk` `IdProbe` `LockProbe`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -312,7 +326,7 @@
 | R1-3 | P0 | get_doc_share_list 语义错位 | ⬜ | |
 | R1-4 | P0 | get_doc_history 静默返回仓库根历史 | ✅ | 见本次提交 |
 | R1-6 | P0 | 定位方式全面改为 path/name（✅ 全部工具 + `@` 注入块 + 导入冲突 + 删反查过渡层 + CLI） | ✅ | 见本次提交 |
-| R1-5 | P0 | list_repos 截断（18 仓只看 9） | ⬜ | |
+| R1-5 | P0 | list_repos 截断（18 仓只看 9） | ✅ | 紧凑分页渲染 + 不再泄露 svnPwd；探针 28/28、页面 E2E 列全 17 个 |
 | R2-1 | P1 | 统一工具输出规范 + 抽 helper（23 处 fmt 裸 JSON） | ⬜ | |
 | R2-2 | P1 | get_doc 长文 maxChars/offset | ⬜ | |
 | R2-3 | P1 | search_files/grep_files 大结果验证与紧凑化 | ⬜ | |

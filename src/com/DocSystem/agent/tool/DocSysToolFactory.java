@@ -111,19 +111,28 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** R2 列出仓库 */
+    /** R2 列出仓库（R1-5：紧凑分页渲染，不再裸倒 JSON） */
     public static ToolDefinition listRepos(DocSysClient client) {
-        return ToolDefinition.builder("list_repos", "列出当前用户可见的仓库列表",
-                args -> ToolResult.ok(fmt(client.getReposList())))
+        JSONObject props = props(
+                intProp("offset", "分页起点（可选，默认 0）"),
+                intProp("limit", "本页条数（可选，默认 " + REPOS_LIST_DEFAULT_LIMIT
+                        + "，最大 " + REPOS_LIST_MAX_LIMIT + "）"));
+        return ToolDefinition.builder("list_repos",
+                "列出当前用户可见的仓库（紧凑清单：vid/名称/类型/版本控制/本地路径）。"
+                + "拿到 vid 后用它调用 list_docs / search_files / get_repos 等工具。"
+                + "仓库多时结果会自动分页（表头给出总数与当前区间），用 offset/limit 翻页。",
+                args -> ToolResult.ok(formatReposPage(client.getReposList(),
+                        args.getInteger("offset"), args.getInteger("limit"))))
+                .parameters(objSchema(props, null))
                 .build();
     }
 
-    /** R4 仓库详情 */
+    /** R4 仓库详情（R1-5：同样改紧凑渲染，顺带避免把 svnPwd 等明文配置倒进上下文） */
     public static ToolDefinition getRepos(DocSysClient client) {
         JSONObject props = props(intProp("vid", "仓库ID"));
         JSONObject schema = objSchema(props, new String[]{"vid"});
-        return ToolDefinition.builder("get_repos", "获取指定仓库的详细信息",
-                args -> ToolResult.ok(fmt(client.getRepos(args.getInteger("vid")))))
+        return ToolDefinition.builder("get_repos", "获取指定仓库的详细信息（vid/名称/类型/版本控制/本地路径/归属）",
+                args -> ToolResult.ok(formatOneRepos(client.getRepos(args.getInteger("vid")))))
                 .parameters(schema)
                 .build();
     }
@@ -946,7 +955,8 @@ public class DocSysToolFactory {
         }
         String status = String.valueOf(resp.get("status"));
         if (!"ok".equals(status)) {
-            return "list_docs 失败: " + resp.get("msgInfo");
+            // 失败交给 fmt：保留服务端 errorCode + 处置提示（直接拼 msgInfo 会把错误码丢掉）
+            return fmt(resp);
         }
 
         String where = describeTarget(vid, path, docId);
@@ -1023,6 +1033,155 @@ public class DocSysToolFactory {
             sb.append("  ").append(dateText(d.get("latestEditTime"))).append("\n");
         }
         return sb.toString();
+    }
+
+    // ==================== 仓库列表渲染（分页 + 紧凑，R1-5，2026-09-20） ====================
+
+    /** list_repos 单页默认/最大条数 */
+    static final int REPOS_LIST_DEFAULT_LIMIT = 50;
+    static final int REPOS_LIST_MAX_LIMIT = 200;
+
+    /** 仓库列表字符预算（低于 MAX_SUMMARY_LEN，确保不会被 truncate 砍成半截） */
+    private static final int REPOS_LIST_CHAR_BUDGET = 3000;
+
+    /**
+     * 把 `/Repos/getReposList.do` 的响应渲染成<b>紧凑清单</b>，并按 offset/limit 分页。
+     *
+     * <p><b>为什么不再直接倒 JSON</b>：每项有 26 个字段（localSvnPath/svnPwd/svnPwd1/remoteStorage/
+     * lockBy/lockTime/…），单条约 450 字符；17 个仓库即 7.7KB，被 {@link #truncate} 砍到 4000 字符后
+     * 正好断在第 9 个仓库中间 —— 模型既拿不全仓库、也看不到后面的条目
+     * （2026-09-19 日志 `[ToolUseLoop][PARSE] ... 接口返回在第 9 个后被截断`）。
+     * 而且原文含 <b>svnPwd/svnPwd1（明文密码）</b>，本就不该进模型上下文。
+     */
+    static String formatReposPage(Map<String, Object> resp, Integer offsetArg, Integer limitArg) {
+        if (resp == null) {
+            return "(empty response)";
+        }
+        if (!"ok".equals(String.valueOf(resp.get("status")))) {
+            return fmt(resp);   // 失败保留 errorCode + 处置提示
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof List)) {
+            return "仓库列表为空（服务器返回：" + data + "）";
+        }
+        List<?> all = (List<?>) data;
+        int total = all.size();
+        if (total == 0) {
+            return "当前用户没有可见的仓库。";
+        }
+
+        int offset = offsetArg == null ? 0 : Math.max(0, offsetArg.intValue());
+        int limit = limitArg == null ? REPOS_LIST_DEFAULT_LIMIT
+                : Math.min(REPOS_LIST_MAX_LIMIT, Math.max(1, limitArg.intValue()));
+        if (offset >= total) {
+            return "共 " + total + " 个仓库；offset=" + offset + " 已超出范围（有效范围 0~" + (total - 1) + "）。";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("仓库列表：共 ").append(total).append(" 个，本次显示第 ").append(offset + 1).append("-");
+        int end = Math.min(total, offset + limit);
+        String body = renderRepos(all, offset, end);
+        int cap = REPOS_LIST_CHAR_BUDGET - sb.length() - 200;   // 给表头/页脚留余量
+        while (body.length() > cap && end - offset > 1) {
+            end = offset + Math.max(1, (end - offset) * 3 / 4);
+            body = renderRepos(all, offset, end);
+        }
+        sb.append(end).append(" 个\n").append(body);
+        sb.append("说明：用 vid 调用 list_docs(vid=<vid>) 列目录、search_files(vid=<vid>) 检索；")
+                .append("单个仓库的完整配置用 get_repos(vid=<vid>)。\n");
+        if (end < total) {
+            sb.append("⚠️ 还有 ").append(total - end).append(" 个未显示：继续调用 list_repos 传 offset=")
+                    .append(end).append("。");
+        }
+        return sb.toString();
+    }
+
+    /** 渲染 [from, to) 区间的仓库行（只给模型真正需要的字段；不含 svnPwd 等敏感项） */
+    private static String renderRepos(List<?> all, int from, int to) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = from; i < to; i++) {
+            Object o = all.get(i);
+            if (!(o instanceof Map)) {
+                sb.append(i + 1).append(". ").append(o).append("\n");
+                continue;
+            }
+            Map<?, ?> r = (Map<?, ?>) o;
+            String name = str(r.get("name"));
+            sb.append(i + 1).append(". vid=").append(str(r.get("id"))).append("  「").append(name).append("」")
+                    .append("  ").append(reposTypeLabel(r.get("type")))
+                    .append(" / 版本控制=").append(verCtrlLabel(r.get("verCtrl")));
+            String localPath = str(r.get("realDocPath"));
+            if (!localPath.isEmpty()) {
+                sb.append("  本地路径=").append(localPath);
+            }
+            String info = str(r.get("info"));
+            if (!info.isEmpty() && !info.equals(name)) {
+                sb.append("  说明=").append(info.length() > 30 ? info.substring(0, 30) + "…" : info);
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    /** 单个仓库详情（紧凑；失败时保留 errorCode） */
+    static String formatOneRepos(Map<String, Object> resp) {
+        if (resp == null) {
+            return "(empty response)";
+        }
+        if (!"ok".equals(String.valueOf(resp.get("status")))) {
+            return fmt(resp);
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof Map)) {
+            return "仓库不存在（服务器返回：" + data + "）";
+        }
+        Map<?, ?> r = (Map<?, ?>) data;
+        StringBuilder sb = new StringBuilder("仓库 vid=").append(str(r.get("id")))
+                .append("  「").append(str(r.get("name"))).append("」\n");
+        sb.append("  类型：").append(reposTypeLabel(r.get("type"))).append("\n");
+        sb.append("  版本控制：").append(verCtrlLabel(r.get("verCtrl"))).append("\n");
+        String localPath = str(r.get("realDocPath"));
+        sb.append("  本地路径：").append(localPath.isEmpty() ? "（系统默认位置）" : localPath).append("\n");
+        String owner = str(r.get("owner"));
+        if (!owner.isEmpty()) {
+            sb.append("  归属：").append(owner).append("\n");
+        }
+        String info = str(r.get("info"));
+        if (!info.isEmpty()) {
+            sb.append("  说明：").append(info).append("\n");
+        }
+        sb.append("用 list_docs(vid=").append(str(r.get("id"))).append(") 查看它的目录内容。");
+        return sb.toString();
+    }
+
+    /** 仓库类型文案（与 manager/addRepos.html 的选项一致） */
+    static String reposTypeLabel(Object type) {
+        Integer t = intOf(type);
+        if (t == null) {
+            return "未知类型";
+        }
+        switch (t.intValue()) {
+        case 1: return "文件管理系统";
+        case 3: return "SVN前置";
+        case 4: return "GIT前置";
+        case 5: return "文件服务器前置";
+        default: return "类型" + t;
+        }
+    }
+
+    /** 版本控制文案（与 manager/addRepos.html 的选项一致；裸值，调用方自加“版本控制=”前缀） */
+    static String verCtrlLabel(Object verCtrl) {
+        Integer v = intOf(verCtrl);
+        if (v == null) {
+            return "未配置";
+        }
+        switch (v.intValue()) {
+        case 0: return "无";
+        case 1: return "SVN";
+        case 2: return "GIT";
+        case 3: return "磁盘";
+        default: return String.valueOf(v);
+        }
     }
 
     // ==================== 文档定位（R1-6：path/name 优先） ====================
