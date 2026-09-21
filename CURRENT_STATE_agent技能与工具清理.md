@@ -620,6 +620,50 @@ emoteServerGetDoc）dev 无 type≥3 仓库，**无法 E2E**，仅靠源码 lint
 - **R3-14**：`DocSysClient:1359` 的 `serverErrorSummary` 提炼 HTML 错误页 `<h1>` 时**只去标签不解码实体**
   （Tomcat 会把异常里的 `<`/`&` 转义成 `&lt;`/`&amp;`）→ 同类缺陷，另一条链路
 
+## R3-4 / R3-5：旧编排封口 + 零调用方法删除（2026-09-21，✅ 用户裁定「方案 1」）
+
+### 裁定依据（可达性取证，避免把"像死代码"当死代码）
+
+| 集群 | 规模 | 可达性（实测） |
+|---|---|---|
+| `ToolUseLoop`（主路径） | 672 行 | **活**：dev 日志 `[ToolUseLoop]` 479 条 |
+| 旧编排 `SubAgent`+`LLMIntentParser`+`MainAgent` legacy 段 | **~3130 行**（SubAgent 1432 / 34 个 `handle*`；`decomposeTask` 493 行 / 53 处 `addSubTask`） | **可达但从未跑过**（日志 `SubAgent`/`Decomposed into` = 0） |
+| `DocSysCLI` | 475 行 | **无生产调用者**（只有它自己 + `TestDocShareFormat` 读源码 lint） |
+| 零调用者 client 方法 | — | `getManagerReposList` / `getSessionCookie` / `getSystemEmailConfig` |
+
+三条入口逐条核过：① ToolLoop 失败兜底（`runToolUseLoop` 为 null = 抛异常或重试仍失败，**运行期真会发生**）；
+② `POST /agent/execute`（全仓无调用者）；③ 灰度开关（默认 true，文档明写它是回退开关）。
+**用户裁定（"这部分代码没什么实质影响"）：方案 1 = 保守封口** —— 不删旧编排（保留降级答案），但冻结；CLI 不动。
+
+### 做了什么
+- **R3-5**：只删零调用者 3 个方法（`getManagerReposList()`/`getSystemEmailConfig(String)`/`getSessionCookie()`）；
+  **CLI 专属方法全部保留**（`getAiModelList`/`getDocSysConfig`/`ragChat`/`lockDoc`/`unlockDoc`/`searchDocs`/`getBannerConfig`/`getSystemConfig`）；
+  `devDocs/tool-inventory.md` 的 R3/R14 两行与辅助方法清单同步标注已下线。
+- **R3-4 封口三件套**：① `MainAgent.process` ×3 重载 + `SubAgent` 类 + `LLMIntentParser` 类 → `@Deprecated`（javadoc 写"仅兜底、禁止新增能力"）；
+  ② 旧编排内部（`extractIntent`/`decomposeTask`/`executeSubTasks`/`getOrCreateSubAgent`/`TaskDecomposition`）→ `LEGACY-FALLBACK` 标记注释；
+  ③ **兜底触发率可观测**：`MainAgent.LEGACY_FALLBACK_TAG` + `logLegacyFallback(event, detail)`，旧编排进入点 + SSE 两处回退站点统一打点。
+- 顺带：修正 `SubAgent` 类注释里过期的分类说明（`7. SysOps - help, config, banner`，help 族已在 R3-11 删除）。
+
+### ⚠️⚠️ 踩坑：打点必须走 `com.DocSystem.common.Log`
+第一版用 slf4j `log.warn("{} LEGACY-FALLBACK …")` → **应用日志里一条都没有**。原因：本工程 `log4j.rootLogger=info,stdout`，
+slf4j 只落 stdout；**只有 `com.DocSystem.common.Log` 才写 docsys.log**（早前已记录在仓库记忆里，本次仍先踩了一次）。
+⇒ 凡是要靠 grep 统计的日志，必须用 `Log`，否则等于没打。
+
+### 验证（三件套）
+- **护栏**：新增 `TestLegacyFallbackGuard` **38 项** —— 反射断言 3 个方法确已删除 + 相邻方法未误删；3 个 `process` 重载全部 `@Deprecated`；
+  `SubAgent`/`LLMIntentParser` 类 `@Deprecated`；封口标记齐全；**标记日志必须走 `Log` 而非 slf4j**（源码 lint）；
+  **冻结基线 tripwire**（`SubAgent.handle*`=34、`MainAgent.addSubTask`=53，涨了=有人在往旧编排加能力）→
+  **全量 33 套 / 1255 项 0 失败**（R3-12 后为 32 套 / 1219 项）
+- **真实探针（正向触发兜底）**：临时挂 `tomcat/bin/setenv.bat`（`CATALINA_OPTS=-Dagent.tool-loop.enabled=false`，即文档里的回退开关）→
+  重启 → 页面发「列出所有仓库」→ 得**旧编排裸文本**（无工具卡片/无分页）：`Repositories: [1] 测试仓库2 … `（17 个仓库）；
+  应用日志出现 **`2026-09-21 11:18:42 [warn] [LEGACY-FALLBACK] legacy-orchestration-entered (reason=tool-loop-disabled)`** ✓
+  → 标记机制 + reason 取值 + `Log` 渠道三件事同时得证，并**顺带取得"旧编排今天答成什么样"的实证**（明显比工具路径退化）。
+  探针后删 `setenv.bat` 并重启回默认（已核对 `Test-Path`=False、JVM 命令行无 `tool-loop`）
+- **页面 E2E（正常路径回归）**：① 「列出仓库 5 根目录下 66666/ 里的文件」→ **1 步** `list_docs`，3 文件 + 紧凑表格；
+  ② 「读取仓库 5 根目录下 test111.txt 的内容」→ **4 步**（`list_docs` → `search_files`【命中=直查】→ `list_docs(offset=50)` → `get_doc`），
+  读出正文 + "大小 20B，正文共 10 字符" → 读写通道未受删除影响；
+  ③ 日志复核 `LEGACY-FALLBACK` 仍为 1 条（探针那次）、`[ToolUseLoop][NATIVE]` 164→168 → **正常路径无误报**
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -631,15 +675,17 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 - **R1（P0）**：R1-1/1b/1c ✅；R1-4 ✅；**R1-6 ✅**；**R1-5 ✅**；**R1-2 ✅ / R1-3 ✅**；R1 全部完成
 - **R2（P1）**：**R2-1 ✅ / R2-2 ✅ / R2-3 ✅ / R2-4 ✅（本轮）** — 剩余：写操作回执类仍为 `fmt()` 整包 JSON，归入 R3-2 工具体检一并做
-- **R3（P2）**：**R3-2 批 1/2a/2b ✅、R3-1 ✅、R3-3 ✅、R3-9 ✅**；**R3-10 实施中**（代码+护栏已完成 32 套/1186 项全绿，
-  待探针与页面 E2E）→ **R3-11** system_help 演示件清理 → **R3-12** web_search 摘要 HTML 实体 → R3-4/5 清理裁定 → R3-6 检查单
+- **R3（P2）**：**R3-2 批 1/2a/2b ✅、R3-1 ✅、R3-3 ✅、R3-9 ✅、R3-10 ✅、R3-11 ✅、R3-12 ✅、R3-4/5 ✅**
+  （R3-4/5 = 用户裁定**方案 1（保守封口）**：旧编排不删但 `@Deprecated` + 封口 + `[LEGACY-FALLBACK]` 打点；
+  `DocSysClient` 只删 3 个零调用者方法，CLI 不动）→ 剩余：R3-6 检查单（R3-13 用户暂缓 / R3-14 待定）
+  可直接开工的下一条 = **R3-6 新工具上线检查单**（流程固化，写进 devDocs 复用）
   新增两条（R2 页面 E2E 发现）：**R3-9 确认弹窗只显示工具名不显示参数**、**R3-10 缺“跨仓库按路径/名字找”能力**
   新增一条（R3-10 实测发现，待单列）：**repo 5 索引只覆盖 `MxsDoc/` 子树，疑似索引同步/重建覆盖缺陷**
 
 ## 未提交改动
 
-- 无（R3-12 代码与计划文档已提交 `7f1516ecb`；本工作卡随后单独提交）
-- 已提交：R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R3-4/R3-5 已提交 `95cd0c1f9`；本工作卡随后单独提交）
+- 已提交：R3-4/R3-5 = `95cd0c1f9`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
