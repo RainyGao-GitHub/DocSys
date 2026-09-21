@@ -527,10 +527,32 @@
     **全卡无 `&ensp;`/`&#…;`**；模型还如实标注"第 5 条是另一个同名项目"。
 - **同类隐患排查**：agent 包内只找到一处同类（见 R3-14），未做（用户要求不扩范围）。
 
-#### R3-14 `DocSysClient.serverErrorSummary` 提炼 HTML 错误页时不解码实体（⬜ 待定）
-- `DocSysClient:1359` 从 HTML 错误页提 `<h1>` 时只 `replaceAll("<[^>]+", "")` 去标签，**未解码实体**；
-  Tomcat 错误页会把异常消息里的 `<`/`&` 转义成 `&lt;`/`&amp;` → 会以实体形态进模型上下文（与 R3-12 同类）。
-- 修法建议：把 R3-12 的实体解码抽成公共小工具复用；**本次未做**（避免扩范围，且需先定工具类放哪个包）。
+#### R3-14 `DocSysClient.serverErrorSummary` 提炼 HTML 错误页的问题（⬜ 待定，2026-09-21 复核改写）
+
+**位置**：`DocSysClient.serverErrorSummary(Response, String)`（`responseBodyString` 的唯一调用方；非 JSON 响应统一兜底成
+`{"status":"fail","errorCode":"INTERNAL","msgInfo":"服务端返回非 JSON 响应（HTTP xxx）：<h1>…；这通常是服务端内部错误，可改用 list_repos/get_repos 确认对象是否存在，不要重试同一调用"}`）。
+
+**已实测（真实 dev 服务器取证）**
+- 取一张真实容器错误页（`curl /Doc/getDoc.do?reposId=5&docId=abc` → HTTP 400，968 字节）：
+  `<h1>HTTP Status 400 - </h1> … <p><b>message</b> <u></u></p><p><b>description</b> <u>The request sent by the client was syntactically incorrect.</u></p>`。
+- 该页 **h1 里没有原因**（message 为空）→ 现在给模型的是
+  `服务端返回非 JSON 响应（HTTP 400）：HTTP Status 400 -`：**状态重复一遍、原因一个字没有**；
+  真正有用的 `<b>description</b>`（"请求语法错误"）被整段丢弃。
+- 追加的处置建议在 4xx 场景**方向是错的**：参数格式错被说成"服务端内部错误"，还把模型往"改用 list_repos 确认对象是否存在"引（实测 400/404 两个形状都是这样）。
+- 这一组页面上**没有任何实体**（实测 `&xxx;` 出现 0 次）→ 实体问题在这些页面上不会发生（见下条）。
+
+**代码级证据（尚未端到端复现）**
+- Tomcat 7.0.56 的 `ErrorReportValve` 把 `RequestUtil.filter(response.getMessage())`（null 时取 `throwable.getMessage()`）
+  同时放进 `<h1>` 的 `{1}` 与 `<p><b>message</b>`；而 `RequestUtil.filter` 字节码明确把
+  `<`→`&lt;`、`>`→`&gt;`、`&`→`&amp;`、`"`→`&quot;`（`javap` 实测）→ **异常消息进入错误页时是实体形态**。
+- 因此**真实 500**（有异常消息）时，`serverErrorSummary` 只 `replaceAll("<[^>]+>", "")` 去标签、**不解码实体**
+  → `&lt;`/`&amp;` 会进模型上下文（与 R3-12 同类）。
+- 复现条件：需要一个真实抛异常的 500（dev 里 DocSys 对非法参数一律返回 JSON；`docId=abc` 是 Spring 绑定失败 → 容器 400，
+  message 为空）→ **待有真 500 才能采到页面**。
+
+**修法建议（未做）**：`serverErrorSummary` 改成 ①优先取 `<p><b>message</b>`（无则 description）②复用 R3-12 的实体解码
+（需先把 `WebSearchService` 里的解码抽成公共小工具，放 `com.DocSystem.common`）③处置建议按 4xx/5xx 分流
+（4xx = 参数/路径问题，别引导去"确认对象是否存在"）。**本次未做**（用户要求不扩范围）。
 
 #### R3-3 `run_skill` 对已下线 DocSys 能力的表现
 - P3b 验收标准里写了"`run_skill("<DocSys能力>")` 应明确报 No executor"，但**未实测**。→ 补一次页面验证并记录。
@@ -681,7 +703,7 @@ slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才�
 | R3-3 | P2 | run_skill 对已下线 DocSys 能力的表现 | ✅ | 未知技能报 `No executor found` ✓；子进程乱码已修（护栏 34/34）。当时的"`system_help` 死技能已修"已被 R3-11 接管——最终处置是**整族删除** |
 | R3-11 | P2 | help 技能族过期/编造内容（演示件教跑不存在的 CLI、端点、占位凭据；三 sibling 是 docId 时代 CLI 文案） | ✅ | 用户裁定 (A)+(C)：整族删除 → 调用得到明确"未知技能"；护栏 TestSkillExecEncoding 46 + 全量 32 套/1199 项 |
 | R3-12 | P2 | `web_search` 摘要未清理 HTML 实体（`&ensp;`/`&#0183;`） | ✅ | 改为通用实体解码 + Unicode 空白归一；护栏 30→50、探针 8/8（源 113 处实体 → 清洗后 0 残留）、页面 E2E 干净 |
-| R3-14 | P2 | `DocSysClient.serverErrorSummary` 提炼 HTML 错误页时不去实体（与 R3-12 同类） | ⬜ | 本次 R3-12 排查发现；用户要求不扩范围，单列待定 |
+| R3-14 | P2 | `DocSysClient.serverErrorSummary` 非 JSON 错误页提炼：只取 h1（丢掉 message/description）、不解码实体、4xx 误报为“服务端内部错误” | ⬜ | 2026-09-21 实测改写：真 400/404 页 h1 无原因且无实体（原因在 `<b>description</b>`）；实体问题只存于真 500（字节码证据，待复现） |
 | R3-13 | P2 | repo 5 的 Lucene 索引只覆盖 `MxsDoc/` 子树（`培训资料/`、`66666/` 等磁盘上存在但索引 0 条）—— 疑似索引同步/重建的覆盖缺陷 | ⬜（用户暂缓） | R3-10 实测发现。用户判断"应是其他原因导致"，**先不查** |
 | R3-4 | P2 | 旧编排（SubAgent/MainAgent/LLMIntentParser）处置：**用户裁定方案 1 = 保守封口** | ✅ | 不删（ToolLoop 失败的安全网），改：入口 `@Deprecated` + 封口注释 + 新增 `[LEGACY-FALLBACK]` 打点；护栏 38 项（含冻结基线 tripwire）、探针（回退开关强制触发）1 条标记 + 旧编排实际输出、全量 33 套/1255 项 0 失败 |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ✅ | 只删**零调用者** 3 个（`getManagerReposList`/`getSessionCookie`/`getSystemEmailConfig`）；CLI 专属方法全保留（方案 1 不动 CLI）；`tool-inventory.md` 同步标注 |
