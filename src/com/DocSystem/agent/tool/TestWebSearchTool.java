@@ -188,13 +188,35 @@ public class TestWebSearchTool {
         testEntitySourceLint();
     }
 
-    /** 源码 lint：钉死"通用解码"，防止退回硬编码 6 实体的老实现 */
+    /**
+     * 源码 lint：钉死"通用解码"，防止退回硬编码 6 实体的老实现。
+     * R3-14 后实现移到共用件 {@code com.DocSystem.agent.util.HtmlText}（WebSearchService 只转发）。
+     */
     private static void testEntitySourceLint() {
-        java.io.File f = new java.io.File("src/com/DocSystem/agent/search/WebSearchService.java");
-        if (!f.exists()) {
-            f = new java.io.File("D:/Dev/DocSys/src/com/DocSystem/agent/search/WebSearchService.java");
+        String src = readSource("src/com/DocSystem/agent/search/WebSearchService.java");
+        String util = readSource("src/com/DocSystem/agent/util/HtmlText.java");
+        if (src == null || util == null) {
+            check("能读到 WebSearchService/HtmlText 源码（lint 前置）", false);
+            return;
         }
-        String src = null;
+        check("stripHtml 转发到共用清洗件 HtmlText.clean", src.contains("HtmlText.clean("));
+        check("共用件实现通用实体解码", util.contains("decodeEntity("));
+        check("共用件处理 Unicode 空白（nbsp/ensp 等）", util.contains("normalizeSpaces("));
+        check("支持十进制数字实体", util.contains("body.charAt(0) == '#'"));
+        check("支持十六进制数字实体", util.contains("parseInt(body.substring(2), 16)"));
+        check("不再退回硬编码 6 实体的老写法",
+                !src.contains("replaceAll(\"&nbsp;\", \" \")") && !util.contains("replaceAll(\"&nbsp;\", \" \")"), "");
+    }
+
+    /** 读工程内源文件（工作目录 = 工程根；兼容从绝对路径运行） */
+    private static String readSource(String relative) {
+        java.io.File f = new java.io.File(relative);
+        if (!f.exists()) {
+            f = new java.io.File("D:/Dev/DocSys/" + relative);
+        }
+        if (!f.exists()) {
+            return null;
+        }
         try (java.io.BufferedReader r = new java.io.BufferedReader(
                 new java.io.InputStreamReader(new java.io.FileInputStream(f), "UTF-8"))) {
             StringBuilder sb = new StringBuilder();
@@ -202,16 +224,10 @@ public class TestWebSearchTool {
             while ((line = r.readLine()) != null) {
                 sb.append(line).append('\n');
             }
-            src = sb.toString();
+            return sb.toString();
         } catch (Exception e) {
-            check("能读到 WebSearchService 源码（lint 前置）", false);
-            return;
+            return null;
         }
-        check("stripHtml 走通用实体解码", src.contains("unescapeHtmlEntities("));
-        check("stripHtml 处理 Unicode 空白（nbsp/ensp 等）", src.contains("normalizeUnicodeSpaces("));
-        check("支持十进制数字实体", src.contains("body.charAt(0) == '#'"));
-        check("支持十六进制数字实体", src.contains("parseInt(body.substring(2), 16)"));
-        check("不再退回硬编码 6 实体的老写法", !src.contains("replaceAll(\"&nbsp;\", \" \")"), "");
     }
 
     private static void testJsonParse() throws Exception {

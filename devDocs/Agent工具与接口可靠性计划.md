@@ -527,7 +527,7 @@
     **全卡无 `&ensp;`/`&#…;`**；模型还如实标注"第 5 条是另一个同名项目"。
 - **同类隐患排查**：agent 包内只找到一处同类（见 R3-14），未做（用户要求不扩范围）。
 
-#### R3-14 `DocSysClient.serverErrorSummary` 提炼 HTML 错误页的问题（⬜ 待定，2026-09-21 复核改写）
+#### R3-14 `DocSysClient.serverErrorSummary` 提炼 HTML 错误页的问题（✅ 2026-09-21 修复，用户裁定「那就修掉」）
 
 **位置**：`DocSysClient.serverErrorSummary(Response, String)`（`responseBodyString` 的唯一调用方；非 JSON 响应统一兜底成
 `{"status":"fail","errorCode":"INTERNAL","msgInfo":"服务端返回非 JSON 响应（HTTP xxx）：<h1>…；这通常是服务端内部错误，可改用 list_repos/get_repos 确认对象是否存在，不要重试同一调用"}`）。
@@ -550,9 +550,34 @@
 - 复现条件：需要一个真实抛异常的 500（dev 里 DocSys 对非法参数一律返回 JSON；`docId=abc` 是 Spring 绑定失败 → 容器 400，
   message 为空）→ **待有真 500 才能采到页面**。
 
-**修法建议（未做）**：`serverErrorSummary` 改成 ①优先取 `<p><b>message</b>`（无则 description）②复用 R3-12 的实体解码
-（需先把 `WebSearchService` 里的解码抽成公共小工具，放 `com.DocSystem.common`）③处置建议按 4xx/5xx 分流
-（4xx = 参数/路径问题，别引导去"确认对象是否存在"）。**本次未做**（用户要求不扩范围）。
+**修法（已做）**：
+1. **抽公共清洗件** `com.DocSystem.agent.util.HtmlText`（`stripTags`/`decodeEntities`/`normalizeSpaces`/`clean`/`oneLine`）：
+   R3-12 写在 `WebSearchService` 里的实体解码整体搬过去（`WebSearchService.stripHtml` 变成一行转发），
+   两个消费者共用同一口径 —— 避免“一处修了另一处忘”。
+2. **逐级取原因**：`<p><b>message</b>>` → `<p><b>description</b>>` → h1 里 `HTTP Status 400 - ` 之后的部分 → 原文截断 120 字符；
+   每一级都过 `HtmlText.clean`（去标签 + 解码实体 + 空白归一）。
+3. **处置提示/错误码按状态分类**：400/405/406/415 → `INVALID_PARAM` + “请求本身的问题…修正后再试，不要原样重试”；
+   401→`NOT_LOGIN`、403→`NO_PERMISSION`；404 → `INTERNAL` + “接口地址不存在（客户端调错路径，属实现缺陷）”；
+   5xx → `INTERNAL` + “服务端内部错误…不要重试同一调用”。
+
+**验证（三件套齐）**：
+- 护栏新增 `TestServerErrorSummary` **33 项**：用**真实 Tomcat 页形态**做输入（真 400/404 页、500 页含转义异常消息），
+  断言 ①400 页给出 description 里的真原因、`INVALID_PARAM`、不再说“服务端内部错误”；②404 指向接口地址不存在；
+  ③500 的 `&lt;name&gt;`/`&amp;`/`&quot;q&quot;` 被解码（无实体残留）、且带引号的消息不破坏 JSON；
+  ④逐级退化（h1 正文/原文截断）；⑤已 JSON 的响应原样返回、空响应体不硬造错误；⑥共用件基础行为
+  （具名/十进制/十六进制实体、未收录实体原样保留、Unicode 空白归一）；⑦源码 lint：两个消费者都必须走共用件。
+  → **全量 34 套 / 1291 项 0 失败**（修前 33 套 / 1257 项）。
+- **真实探针 `R314Probe`（真 HTTP + 真代码路径）**：登录 → `getReposList` 仍走 JSON（status=ok，回归）→
+  curl 级请求 `/Doc/getDoc.do?reposId=5&docId=abc` 拿到真容器 400 页 → 反射调用真实的 `responseBodyString(Response)`：
+  - 修后：`{"status":"fail","errorCode":"INVALID_PARAM","msgInfo":"服务端返回非 JSON 响应（HTTP 400）：
+    The request sent by the client was syntactically incorrect.；这是请求本身的问题：请检查调用参数/路径是否正确…修正后再试，不要原样重试"}`
+  - 修前（同一张页）：`…（HTTP 400）：HTTP Status 400 -；这通常是服务端内部错误，可改用 list_repos/get_repos 确认对象是否存在，不要重试同一调用`
+  → **10/10 PASS**（含“无实体残留”“无整页 HTML 噪声”）。
+- **页面 E2E（回归）**：让模型 `web_search` 查 DocSys → 1 步、摘要里 `·`/`…` 正常字符、
+  工具卡片里 `&xxx;` 实体残留 **0**、U+00A0/U+2002 残留 **0** —— 即“解码逻辑搬家后 web_search 未回退”。
+
+**未覆盖（如实记录）**：真 500 页（异常消息带转义）**仍未端到端采到**（dev 里 DocSys 对非法参数一律返 JSON），
+该形态由护栏的合成页 + `javap` 核实的 Tomcat 行为共同锁定；真 4xx 路径已由探针端到端覆盖。
 
 #### R3-3 `run_skill` 对已下线 DocSys 能力的表现
 - P3b 验收标准里写了"`run_skill("<DocSys能力>")` 应明确报 No executor"，但**未实测**。→ 补一次页面验证并记录。
@@ -634,7 +659,7 @@ slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才�
 |---|---|---|---|
 | **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 ✅ → **R1-6 定位全面 path/name ✅** → **R1-5 list_repos ✅** → **R1-2 create_doc_share ✅** → **R1-3 get_doc_share_list ✅** → R2（统一输出/大结果）→ R3 | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
-| **R3** | R3-2 全工具体检（批 1/2a/2b 全 ✅）→ R3-1 命名 ✅ → R3-3 run_skill ✅ → **R3-9 确认弹窗 ✅** → **R3-10 跨仓库找 ✅** → **R3-11 help 技能族删除 ✅** → **R3-12 摘要实体清理 ✅** → **R3-4/5 旧编排封口 + 零调用方法删除 ✅**（用户裁定方案 1）→ R3-13（用户暂缓）/ R3-14 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
+| **R3** | R3-2 全工具体检（批 1/2a/2b 全 ✅）→ R3-1 命名 ✅ → R3-3 run_skill ✅ → **R3-9 确认弹窗 ✅** → **R3-10 跨仓库找 ✅** → **R3-11 help 技能族删除 ✅** → **R3-12 摘要实体清理 ✅** → **R3-4/5 旧编排封口 + 零调用方法删除 ✅**（用户裁定方案 1）→ **R3-14 错误页提炼修复 ✅** → R3-13（用户暂缓）→ R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
 
 > 每完成一项：更新本文状态列 → 更新工作卡"当前进展/未提交改动" → 提交（`devInt` 主干）。
 
@@ -703,7 +728,7 @@ slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才�
 | R3-3 | P2 | run_skill 对已下线 DocSys 能力的表现 | ✅ | 未知技能报 `No executor found` ✓；子进程乱码已修（护栏 34/34）。当时的"`system_help` 死技能已修"已被 R3-11 接管——最终处置是**整族删除** |
 | R3-11 | P2 | help 技能族过期/编造内容（演示件教跑不存在的 CLI、端点、占位凭据；三 sibling 是 docId 时代 CLI 文案） | ✅ | 用户裁定 (A)+(C)：整族删除 → 调用得到明确"未知技能"；护栏 TestSkillExecEncoding 46 + 全量 32 套/1199 项 |
 | R3-12 | P2 | `web_search` 摘要未清理 HTML 实体（`&ensp;`/`&#0183;`） | ✅ | 改为通用实体解码 + Unicode 空白归一；护栏 30→50、探针 8/8（源 113 处实体 → 清洗后 0 残留）、页面 E2E 干净 |
-| R3-14 | P2 | `DocSysClient.serverErrorSummary` 非 JSON 错误页提炼：只取 h1（丢掉 message/description）、不解码实体、4xx 误报为“服务端内部错误” | ⬜ | 2026-09-21 实测改写：真 400/404 页 h1 无原因且无实体（原因在 `<b>description</b>`）；实体问题只存于真 500（字节码证据，待复现） |
+| R3-14 | P2 | `DocSysClient.serverErrorSummary` 非 JSON 错误页提炼：只取 h1（丢掉 message/description）、不解码实体、4xx 误报为“服务端内部错误” | ✅ | 改为 message→description→h1正文逐级取 + 走共用件 `util/HtmlText`（R3-12 解码搬家）+ 按 4xx/5xx 分类提示与错误码；护栏 33 项、全量 34 套/1291 项 0 失败、真探针 10/10（真 400 页）、页面 E2E web_search 实体残留 0 |
 | R3-13 | P2 | repo 5 的 Lucene 索引只覆盖 `MxsDoc/` 子树（`培训资料/`、`66666/` 等磁盘上存在但索引 0 条）—— 疑似索引同步/重建的覆盖缺陷 | ⬜（用户暂缓） | R3-10 实测发现。用户判断"应是其他原因导致"，**先不查** |
 | R3-4 | P2 | 旧编排（SubAgent/MainAgent/LLMIntentParser）处置：**用户裁定方案 1 = 保守封口** | ✅ | 不删（ToolLoop 失败的安全网），改：入口 `@Deprecated` + 封口注释 + 新增 `[LEGACY-FALLBACK]` 打点；护栏 38 项（含冻结基线 tripwire）、探针（回退开关强制触发）1 条标记 + 旧编排实际输出、全量 33 套/1255 项 0 失败 |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ✅ | 只删**零调用者** 3 个（`getManagerReposList`/`getSessionCookie`/`getSystemEmailConfig`）；CLI 专属方法全保留（方案 1 不动 CLI）；`tool-inventory.md` 同步标注 |

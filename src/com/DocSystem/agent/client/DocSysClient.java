@@ -3,6 +3,7 @@ package com.DocSystem.agent.client;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.DocSystem.agent.util.HtmlText;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -1296,39 +1297,103 @@ public class DocSysClient {
     }
 
     /**
-     * 读取响应体；**非 JSON 响应（例如 Tomcat 的 500 HTML 错误页）统一翻译成失败 JSON**。
+     * 读取响应体；**非 JSON 响应（例如 Tomcat 的 HTML 错误页）统一翻译成失败 JSON**。
      *
      * <p>R3-2 体检实测：`delete_repos{vid:不存在}` 让服务端 NPE → HTTP 500 + Tomcat HTML 错误页（4136 字符），
      * 各调用点 `JSON.parseObject(...)` 直接抛 fastjson 语法错，工具层报给模型的是
      * “syntax error, pos 1, line 1, column 2&lt;html&gt;&lt;head&gt;…”，模型完全无法处置。
-     * 这里统一兜底成 `{"status":"fail","errorCode":"INTERNAL","msgInfo":"…"}`，
+     * 这里统一兜底成 `{"status":"fail","errorCode":"…","msgInfo":"…"}`，
      * 这样所有 30+ 个调用点无需改动就都能给出带错误码的可读结论。
+     *
+     * <p>【R3-14】`errorCode` 按 HTTP 状态分发（4xx → INVALID_PARAM/NOT_LOGIN/NO_PERMISSION，
+     * 其余 → INTERNAL）：旧实现一律 INTERNAL（“服务端内部错误”），把参数错也说成服务端问题。
      */
-    private String responseBodyString(Response response) throws java.io.IOException {
+    String responseBodyString(Response response) throws java.io.IOException {
         ResponseBody body = response.body();
         String text = body != null ? body.string() : "";
         String trimmed = text.trim();
         if (!trimmed.isEmpty() && trimmed.charAt(0) != '{' && trimmed.charAt(0) != '[') {
-            return "{\"status\":\"fail\",\"errorCode\":\"INTERNAL\",\"msgInfo\":\""
-                    + escapeJson(serverErrorSummary(response, trimmed)) + "\"}";
+            int status = response == null ? 0 : response.code();
+            return "{\"status\":\"fail\",\"errorCode\":\"" + errorCodeForHttpStatus(status) + "\",\"msgInfo\":\""
+                    + escapeJson(serverErrorSummary(status, trimmed)) + "\"}";
         }
         return text;
     }
 
-    /** 从 HTML 错误页/纯文本里提炼一句可读的失败原因（不把整页 HTML 倒给模型） */
-    private String serverErrorSummary(Response response, String trimmed) {
+    /**
+     * 从容器 HTML 错误页/纯文本里提炼一句可读的失败原因（不把整页 HTML 倒给模型）。
+     *
+     * <p>【R3-14 修】原实现只取 `&lt;h1&gt;`：实测容器 400/404 页的 h1 是 `HTTP Status 400 - `（message 为空），
+     * 真正的原因在 `&lt;p&gt;&lt;b&gt;description&lt;/b&gt;` 里 → 模型拿到的是“状态重复一遍、原因一个字没有”，
+     * 还被引导去“改用 list_repos 确认对象是否存在”（4xx 场景方向是错的）。现在：
+     * ① `&lt;p&gt;&lt;b&gt;message&lt;/b&gt;`（异常消息）→ ② 无则 `description` → ③ 无则 h1 里 “HTTP Status 400 - ” 之后的部分
+     * → ④ 全无则截原文前 120 字符；实体解码（Tomcat 把异常消息转义成 `&amp;lt;`/`&amp;amp;`/`&amp;quot;`）；
+     * 处置提示按状态分类（4xx=调用方问题、5xx=服务端问题）。
+     */
+    private String serverErrorSummary(int status, String trimmed) {
+        String detail = HtmlText.clean(extractTagText(trimmed, "message"));
+        if (detail.isEmpty()) {
+            detail = HtmlText.clean(extractTagText(trimmed, "description"));
+        }
+        if (detail.isEmpty()) {
+            detail = HtmlText.clean(h1Detail(trimmed));
+        }
+        if (detail.isEmpty()) {
+            detail = HtmlText.oneLine(trimmed.length() > 120 ? trimmed.substring(0, 120) + "…" : trimmed);
+        }
+        return "服务端返回非 JSON 响应（HTTP " + (status <= 0 ? "?" : String.valueOf(status)) + "）：" + detail
+                + "；" + statusGuidance(status);
+    }
+
+    /** 取容器错误页里 `&lt;p&gt;&lt;b&gt;label&lt;/b&gt; &lt;u&gt;…&lt;/u&gt;` 的正文；无则空串 */
+    private static String extractTagText(String html, String label) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(
+                "<p><b>\\s*" + java.util.regex.Pattern.quote(label) + "\\s*</b>\\s*<u>(.*?)</u>",
+                java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL).matcher(html);
+        return m.find() ? m.group(1) : "";
+    }
+
+    /** 取 h1 正文里 “HTTP Status 400 - ” 之后的部分（h1 无正文 → 空串；无横线 → 整段 h1） */
+    private static String h1Detail(String html) {
         java.util.regex.Matcher m = java.util.regex.Pattern
-                .compile("<h1[^>]*>(.*?)</h1>", java.util.regex.Pattern.DOTALL).matcher(trimmed);
-        String detail = null;
-        if (m.find()) {
-            detail = m.group(1).replaceAll("<[^>]+>", "").replaceAll("\\s+", " ").trim();
+                .compile("<h1[^>]*>(.*?)</h1>", java.util.regex.Pattern.DOTALL).matcher(html);
+        if (!m.find()) {
+            return "";
         }
-        if (detail == null || detail.isEmpty()) {
-            detail = trimmed.length() > 120 ? trimmed.substring(0, 120) + "…" : trimmed;
+        String h1 = m.group(1).replaceAll("<[^>]+>", " ").trim();
+        int dash = h1.indexOf(" - ");
+        return dash >= 0 ? h1.substring(dash + 3) : h1;
+    }
+
+    /** 按 HTTP 状态给模型一句可执行的处置提示（4xx=调用方问题，5xx=服务端问题） */
+    private static String statusGuidance(int status) {
+        if (status == 400 || status == 405 || status == 406 || status == 415) {
+            return "这是请求本身的问题：请检查调用参数/路径是否正确（例如 vid 必须是数字、path 需以 / 结尾），修正后再试，不要原样重试";
         }
-        String status = response == null ? "?" : String.valueOf(response.code());
-        return "服务端返回非 JSON 响应（HTTP " + status + "）：" + detail
-                + "；这通常是服务端内部错误，可改用 list_repos/get_repos 确认对象是否存在，不要重试同一调用";
+        if (status == 401 || status == 403) {
+            return "这是认证/权限问题：不要重试同一调用，请先确认登录状态与对象权限";
+        }
+        if (status == 404) {
+            return "HTTP 404 在这里通常意味着接口地址不存在（客户端调错路径，属实现缺陷），不要重试同一调用";
+        }
+        if (status >= 500) {
+            return "这是服务端内部错误：不要重试同一调用；如需确认对象是否存在可改用 list_repos/get_repos";
+        }
+        return "服务端返回了非预期内容：不要重试同一调用，必要时记录状态码反馈管理员";
+    }
+
+    /** 把 HTTP 状态映射成工具层错误码（R3-14：4xx 不再一律报 INTERNAL） */
+    private static String errorCodeForHttpStatus(int status) {
+        if (status == 400 || status == 405 || status == 406 || status == 415) {
+            return com.DocSystem.common.ErrorCode.INVALID_PARAM;
+        }
+        if (status == 401) {
+            return com.DocSystem.common.ErrorCode.NOT_LOGIN;
+        }
+        if (status == 403) {
+            return com.DocSystem.common.ErrorCode.NO_PERMISSION;
+        }
+        return com.DocSystem.common.ErrorCode.INTERNAL;
     }
 
     private static String escapeJson(String s) {
