@@ -724,6 +724,40 @@ Tomcat 行为共同锁定。真 4xx 路径已被探针端到端覆盖。
 - 页面 E2E（模板样例/回归）：读 1 步（3 文件）→ 建文件夹 2 步 + 1 弹窗（参数行 `vid=5；path=66666/；name=R36检查单验证`）
   → 删除 4 步 + 1 弹窗 → 答"还剩 3 项"；磁盘核对 `D:\test\66666` 无残留；`LEGACY-FALLBACK` 仍 1、`[ToolUseLoop][NATIVE]` 168→183
 
+## R3-7：登录态响应归属（2026-09-21，✅ 用户裁定「按A开工」）
+
+### 开工前核实的调用方清单（用户要求先查调用方）
+- `getLoginUser(...)` 服务端调用 **23 处**（ReposController 19 / BussinessController 2 / UserController 1 / BaseController 1）
+- `checkAndGetAccessInfo` 调用 **约 95 处**；**关键事实：它从不写响应**（只设码 + `return null`）
+- 23 + 95 处里**没有一处**在拿到 `null` 后继续执行；只有 1 处（`DocController.downloadDocChunked`）用 `throw` 代替响应
+- 实测固定现象：无 cookie 访 `/Repos/getReposList.do`、`/Doc/getDoc.do` 返回的是**内部文案**（“用户未登录”）→ 调用方设的码/文案被顶掉（R1-1 真因）
+
+### 做了什么（方案 A）
+1. `BaseController.getLoginUser`：删 3 处内部 `writeJson`（自动登录失败/成功/未登录），**自动登录成功改 `return loginUser`**（不再“写响应 + return null”），
+   方法注释写明契约：`User`=已认证；`null`=未认证/被拒（原因看 `rt`）；**本方法不写响应**。
+2. **连带修掉 9 个“靠内部写响应兜底”的站点** —— 这是本项的真实回归面，护栏当场抓出来的：
+   `DocController` 7 处（`downloadDocChunked`、`downloadDoc`×3、`downloadVideo`、`downloadImg`、`downloadDocEx`）+ `websocket/OfficeController` 3 处
+   （`downloadHistory`/`downloadHistoryDiff`/`downloadfile`，顺带补 `import com.DocSystem.common.ErrorCode`）。
+   它们的 `reposAccess == null` 分支早已被写成“注释掉 `writeJson`/`return` + `throw`”，去掉内部写后未登录会变 **500 错误页**；
+   统一改为 `setErrorCodeIfAbsent(NO_PERMISSION)` + `docSysErrorLog` + `writeJson` + `return`。
+3. 其余约 100 处调用点不动（它们本来自己写响应）。
+
+### 验证（三件套）
+- **护栏** `TestLoginUserResponseContract` **36 项**（源码 lint + 反向自测：`getLoginUser` 体内不得写响应、未登录出口保留码、自动登 录成功必须 `return loginUser`、契约写进注释；每个调用点必须紧邻判空；每个 access-info 站点必须自己写且不得用 `throw`）
+  → **全量 36 套 / 1356 项 0 失败**（本项开始前 35 套 / 1320 项）
+- **真探针** `LoginResponseContractProbe` **18/18**：调用方文案不再被顶掉；4 个原本 500 的站点恢复 JSON（`NOT_LOGIN`/`NO_PERMISSION`）；
+  只带 `dsuser`/`dstoken` 时自动登录透明（`/Repos/getReposList.do` 返回**仓库列表**而非用户对象；`/User/getLoginUser.do` 返回 `"pwd":""` 用户）
+- **页面 E2E**：读「列出仓库 5 根目录」→ 无弹窗答 79 项；建文件夹 `R37验证` → 1 弹窗（`vid=5；path=66666/；name=R37验证`）→ 磁盘核对存在；删除 → 1 弹窗 → 剩 3 项；
+  `[ToolUseLoop][NATIVE]` 183 → 190、`[LEGACY-FALLBACK]` 仍为 1
+
+### 踩坑
+- Spring MVC 控制器**必须 `-parameters -g` 编译**（`do_compile.ps1 -Spring`）：漏了会缺参数名 → 所有带命名参数的方法运行期 500
+  （`IllegalArgumentException: Name for argument type ... not available`）。本次先漏一次，探针当场暴露 4 个接口 500。
+
+### 残留（非本项引入，如实记录）
+- `OfficeController` 的 `repos == null` 分支（3 处）同为“注释掉 writeJson + `throw`”形态 → “仓库不存在”仍会是 500 页（不在 本项范围）
+- 非 AJAX 且无 session 的请求被 `MyInterceptor` 跳 `tologin`（302）——前端全 AJAX，不受影响
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -739,14 +773,18 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
   （R3-4/5 = 用户裁定**方案 1（保守封口）**：旧编排不删但 `@Deprecated` + 封口 + `[LEGACY-FALLBACK]` 打点；
   `DocSysClient` 只删 3 个零调用者方法，CLI 不动）→ **R3-14 错误页提炼修复 ✅**（用户裁定「那就修掉」）
   → **R3-6 新工具上线检查单 ✅**（新建检查单文档 + `TestToolOnboarding` 护栏 + 抓修死端点 `/Manage/getDocSysConfig.do`）
-  → 剩余：**R3-7**（`getLoginUser()` 自写响应 → 双写隐患）/ **R3-8**（移除 `isLockBusy` 文案兜底）；R3-13 用户暂缓
-  可直接开工的下一条 = **R3-7**（改后端出口写法，风险中等，需逐调用方核对 null 后不再续写）
+  → **R3-7 登录态响应归属 ✅**（用户裁定方案 A：`getLoginUser` 不再自己写响应、自动登录成功返回用户；
+  连带修 9 个靠内部写响应兜底的站点；护栏 36 项 + 探针 18/18 + 页面 E2E）
+  → 剩余：**R3-8**（移除 `isLockBusy` 文案兜底）；R3-13 用户暂缓
+  可直接开工的下一条 = **R3-8**（改动小：把兜底收紧为“`errorCode == null` 且 msgInfo 含锁句式” + `TestLockRetry` 加反向断言）
+  新增两条残留（R3-7 记录，均非本项引入）：`OfficeController` 的 `repos == null` 同形 throw 块（3 处，返回 500 页）；
+  自动登录成功保留了 `rt.setData(loginUser)`（按方案 A）
   新增两条（R2 页面 E2E 发现）：**R3-9 确认弹窗只显示工具名不显示参数**、**R3-10 缺“跨仓库按路径/名字找”能力**
   新增一条（R3-10 实测发现，待单列）：**repo 5 索引只覆盖 `MxsDoc/` 子树，疑似索引同步/重建覆盖缺陷**
 
 ## 未提交改动
 
-- 无（R3-6 已提交 `1801cdaad`；本工作卡随后单独提交）
+- 待提交（R3-7）：主库 `BaseController.java`/`DocController.java`/`TestLoginUserResponseContract.java`（新）+ 计划文档；websocket 库 `OfficeController.java`；本工作卡随后单独提交
 - 已提交：R3-6 = `1801cdaad`；R3-14 = `55c9a243e`（工作卡 `bf909c2cc`）；R3-4/R3-5 = `95cd0c1f9`（工作卡 `60c70a4fb`）；R3-14 复核改写 = `971dcb151`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
