@@ -24,7 +24,7 @@
 |---|-----------|-------------------|-----------|---------------------|------|
 | R1 | `get_login_user` | `getLoginUser()` | POST /User/getLoginUser.do | `{}` | 当前登录用户信息 |
 | R2 | `list_repos` | `getReposList()` | POST /Repos/getReposList.do | `{}` | 当前用户可见仓库列表 |
-| R3 | `list_repos_admin` | `getManagerReposList()` | POST /Repos/getManagerReposList.do | `{}` | 全部仓库（管理员） |
+| R3 | ~~`list_repos_admin`~~ | ~~`getManagerReposList()`~~ | ~~POST /Repos/getManagerReposList.do~~ | — | 已下线（工具删，R3-5 连带删方法） |
 | R4 | `get_repos` | `getRepos(vid)` | POST /Repos/getRepos.do | `{"vid": "int(必填)"}` | 仓库详情 |
 | R5 | `list_docs` | `getDocList(vid,pid,path)` | POST /Doc/getDocList.do | `{"vid":"int(必填)","pid":"long(可选)","path":"string(可选)"}` | 文档列表 |
 | R6 | `get_doc` | `getDoc(reposId,docId,path,name)` | POST /Doc/getDoc.do | `{"vid":"int","docId":"long","path":"string(可选)","name":"string(可选)"}` | 文档内容 |
@@ -35,7 +35,7 @@
 | R11 | `get_sys_config` | `getDocSysConfig()` | POST /Repos/getDocSysConfig.do | `{}` | 系统配置 |
 | R12 | `get_system_config` | `getSystemConfig()` | POST /Manage/getDocSysConfig.do | `{}` | 系统配置（Manage） |
 | R13 | `get_banner_config` | `getBannerConfig(serverIP)` | POST /Manage/getBannerConfig.do | `{"serverIP":"string(可选)"}` | Banner 配置 |
-| R14 | `get_email_config` | `getSystemEmailConfig(authCode)` | POST /Manage/getSystemEmailConfig.do | `{"authCode":"string(可选)"}` | 邮件配置 |
+| R14 | ~~`get_email_config`~~ | ~~`getSystemEmailConfig(authCode)`~~ | ~~POST /Manage/getSystemEmailConfig.do~~ | — | 已下线（工具删，R3-5 连带删方法） |
 | R15 | `get_doc_share_list` | `getDocShareList(reposId,docId,path,name)` | POST /Doc/getDocShareList.do | `{"vid":"int","docId":"long","path":"string(可选)","name":"string(可选)"}` | 文档分享列表 |
 | R16 | `query_backup_status` | `queryBackupStatus(taskId)` | POST /Repos/queryReposFullBackupTask.do | `{"taskId":"string(必填)"}` | 备份任务状态 |
 | R17 | `ai_chat` | `chat(message,llmName)` | POST /Repos/AIChat.do (SSE) | `{"message":"string(必填)","llmName":"string(可选)"}` | AI 对话（返回流式原文） |
@@ -86,7 +86,9 @@
 
 ## 6. 辅助方法（非工具，不进 ToolRegistry）
 
-`getBaseUrl()` / `isLoggedIn()` / `getCurrentUsername()` / `getSessionCookie()` / `setSessionCookie()` / `copy()` / `copyWithSession()` —— 内部基础设施，不暴露给 LLM。
+`getBaseUrl()` / `isLoggedIn()` / `getCurrentUsername()` / `setSessionCookie()` / `copy()` / `copyWithSession()` —— 内部基础设施，不暴露给 LLM。
+
+> R3-5（2026-09-21）：`getSessionCookie()` / `getManagerReposList()` / `getSystemEmailConfig()` 为**零调用者**，已从 `DocSysClient` 删除；仅被 `DocSysCLI`/旧编排使用的方法保留（R3-4 方案 1 = CLI 不动）。
 
 ---
 

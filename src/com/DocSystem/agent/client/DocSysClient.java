@@ -163,20 +163,6 @@ public class DocSysClient {
     }
 
     /**
-     * Get all repositories (admin only)
-     * POST /Repos/getManagerReposList.do
-     */
-    public Map<String, Object> getManagerReposList() throws Exception {
-        String url = baseUrl + "/Repos/getManagerReposList.do";
-        Response response = postForm(url, new HashMap<String, String>(), sessionCookie);
-        try {
-            return JSON.parseObject(responseBodyString(response));
-        } finally {
-            response.close();
-        }
-    }
-
-    /**
      * Get repository details
      * POST /Repos/getRepos.do
      * Params: vid (repository ID)
@@ -992,23 +978,6 @@ public class DocSysClient {
     }
 
     /**
-     * Get system email configuration
-     * POST /Manage/getSystemEmailConfig.do
-     */
-    public Map<String, Object> getSystemEmailConfig(String authCode) throws Exception {
-        String url = baseUrl + "/Manage/getSystemEmailConfig.do";
-        Map<String, String> params = new HashMap<>();
-        if (authCode != null) params.put("authCode", authCode);
-
-        Response response = postForm(url, params, sessionCookie);
-        try {
-            return JSON.parseObject(responseBodyString(response));
-        } finally {
-            response.close();
-        }
-    }
-
-    /**
      * Initialize DocSystem (admin)
      * POST /Manage/docSysInit.do
      */
@@ -1160,10 +1129,6 @@ public class DocSysClient {
 
     public String getCurrentUsername() {
         return currentUsername;
-    }
-
-    public String getSessionCookie() {
-        return sessionCookie;
     }
 
     public void setSessionCookie(String cookie) {

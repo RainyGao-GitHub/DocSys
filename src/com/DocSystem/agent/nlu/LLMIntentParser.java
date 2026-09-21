@@ -37,7 +37,14 @@ import java.util.concurrent.TimeoutException;
  * <b>No session history pollution:</b> requests are sent as single-shot
  * HTTP calls directly to the Ollama endpoint without touching the
  * LLMService conversation history.
+ *
+ * <p><b>LEGACY-FALLBACK（R3-4 裁定，2026-09-21）</b>：本类只被旧编排使用
+ * （{@code MainAgent} 的 {@code decomposeTask} 段），主路径 {@code ToolUseLoop} 不依赖它。
+ * 处置 = **冻结**：只修 bug，禁止新增能力（新能力做成工具）。
+ *
+ * @deprecated R3-4（2026-09-21）：旧编排兜底组件，随旧编排冻结。
  */
+@Deprecated
 public class LLMIntentParser {
 
     private static final Logger log = LoggerFactory.getLogger(LLMIntentParser.class);

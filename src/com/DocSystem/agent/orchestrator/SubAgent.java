@@ -37,10 +37,19 @@ import java.util.Map;
  * 4. SearchOps - search, web_search
  * 5. ChatOps   - chat, rag_chat
  * 6. ToolOps   - backup, lock, unlock
- * 7. SysOps    - help, config, banner
+ * 7. SysOps    - config, system-config, banner（help 族已于 R3-11 删除）
  * 8. BrowserOps - playwright, browser_use
  * 9. InitOps   - init, init-auth
+ *
+ * <p><b>LEGACY-FALLBACK（R3-4 裁定，2026-09-21）</b>：本类属于**旧编排兜底**，不是主路径
+ * （主路径是 {@code ToolUseLoop} + 工具，见 {@code MainAgent} 类注释）。只由
+ * {@code MainAgent.executeSubTasks()} 构造，即仅在 ToolUseLoop 失败或
+ * {@code agent.tool-loop.enabled=false} 时运行。
+ * 处置 = **冻结**：只修 bug，禁止新增 taskType 分支 / handle* 方法；新能力一律做成工具。
+ *
+ * @deprecated R3-4（2026-09-21）：旧编排兜底组件，随旧编排冻结；请优先扩展工具面。
  */
+@Deprecated
 public class SubAgent {
 
     private static final Logger log = LoggerFactory.getLogger(SubAgent.class);

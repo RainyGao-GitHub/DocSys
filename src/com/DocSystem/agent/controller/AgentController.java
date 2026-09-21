@@ -295,6 +295,10 @@ public class AgentController {
     /**
      * 执行核心逻辑（认证之后）。username/jsessionid 必须在请求线程内解析好，
      * 以便 SSE 等后台线程也能安全调用（不依赖已回收的 request）。
+     *
+     * <p><b>LEGACY-FALLBACK（R3-4）</b>：本方法是走 {@code MainAgent.process()}（旧编排）
+     * 的入口，只在 ToolUseLoop 失败/关闭时被调用（见 SSE 分支与 /agent/execute）。
+     * 主路径是 {@code runToolLoopWithSse}/{@code runToolUseLoopStreaming}。
      */
     private AgentResponse runCommand(String command, String username, String jsessionid) {
         return runCommand(command, username, jsessionid, null);
@@ -1395,11 +1399,16 @@ public class AgentController {
                                 emitter.complete();
                                 return;
                             }
-                            // null → 回退旧路径
+                            // null → 回退旧路径（LEGACY-FALLBACK 站点之一；进入旧编排的标记日志由
+                            // MainAgent.process 打，grep "LEGACY-FALLBACK" 即可统计兜底触发次数）
                             log.warn("ToolUseLoop SSE path returned null, falling back to legacy");
+                            com.DocSystem.agent.orchestrator.MainAgent.logLegacyFallback(
+                                    "sse-tool-loop-returned-null", null);
                             com.DocSystem.agent.orchestrator.MainAgent.markToolLoopAttempted();
                         } catch (Exception ex) {
                             log.warn("ToolUseLoop SSE path failed, falling back to legacy: {}", ex.getMessage());
+                            com.DocSystem.agent.orchestrator.MainAgent.logLegacyFallback(
+                                    "sse-tool-loop-failed", ex.getMessage());
                             com.DocSystem.agent.orchestrator.MainAgent.markToolLoopAttempted();
                         }
                     }

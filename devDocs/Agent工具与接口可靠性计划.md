@@ -535,11 +535,55 @@
 #### R3-3 `run_skill` 对已下线 DocSys 能力的表现
 - P3b 验收标准里写了"`run_skill("<DocSys能力>")` 应明确报 No executor"，但**未实测**。→ 补一次页面验证并记录。
 
-#### R3-4 旧编排死代码处置
-- `SubAgent` / `MainAgent` / `LLMIntentParser` 仍有旧分类编排（P2 时"未动"）。→ 裁定：下线 / 保留但标注 deprecated / 仅保留 CLI 入口。
+#### R3-4 旧编排处置 + R3-5 `DocSysClient` 遗留方法（✅ 2026-09-21，用户裁定「方案 1 = 保守封口」）
 
-#### R3-5 `DocSysClient` 中已下线工具的方法
-- `getAiModelList` / `getDocSysConfig` / `ragChat` / `lockDoc` / `unlockDoc` 已无工具引用，仅 CLI/SubAgent 用（`DocSysCLI:220`、`SubAgent:728`）。→ 随 R3-4 一并裁定。
+**裁定前的可达性取证（实测，避免把"看着像死代码"当死代码）**
+
+| 集群 | 规模 | 可达性 |
+|---|---|---|
+| `ToolUseLoop`（主路径） | 672 行 | **活**：dev 日志 `[ToolUseLoop]` 479 条 |
+| 旧编排 = `SubAgent` + `LLMIntentParser` + `MainAgent` legacy 段 | **~3130 行**（SubAgent 1432 含 **34 个 `handle*`**；`decomposeTask` 单方法 493 行、53 处 `addSubTask`；MainAgent 1425） | **可达但从未跑过**：日志里 `SubAgent`/`Decomposed into`/`legacy` **全 0 次** |
+| `DocSysCLI` | 475 行 | **无生产调用者**（全仓只有它自己 + `TestDocShareFormat` 读源码做 lint）；它正是 R3-5 那批方法留存的唯一理由 |
+| 零调用者 client 方法 | — | `getManagerReposList` / `getSessionCookie` / `getSystemEmailConfig`（纯死代码） |
+
+旧编排的三条入口逐条核过：① ToolLoop 失败兜底 —— `runToolUseLoop` 返回 null 只有"抛异常"或"畸形终止重试一次仍失败"两种**运行期真会发生**的情况（不是配置问题），日志里 `falling back to legacy` = 0 次；
+② `POST /agent/execute` —— 全仓（前端/文档/脚本）**无调用者**；③ 灰度开关 `agent.tool-loop.enabled=false`（默认 true，`devDocs/Agent工具化改造开发上下文.md` 明写它是回退开关）。
+
+**用户裁定（2026-09-21）：方案 1 = 保守封口**（"这部分代码没什么实质影响"）——不删旧编排（保留 ToolLoop 失败时的降级答案），但**冻结**；CLI 不动。
+
+**做了什么**
+- **R3-5 删零调用者方法**（3 个）：`getManagerReposList()`、`getSystemEmailConfig(String)`、`getSessionCookie()`。
+  **只被 `DocSysCLI` 用的方法一律保留**（`getAiModelList`/`getDocSysConfig`/`ragChat`/`lockDoc`/`unlockDoc`/`searchDocs`/`getBannerConfig`/`getSystemConfig`）——方案 1 不动 CLI。
+- **R3-4 封口三件套**：
+  ① `MainAgent.process(...)` 三个重载 + `SubAgent` 类 + `LLMIntentParser` 类 → `@Deprecated`（javadoc 写明"仅兜底、禁止新增能力"）；
+  ② 旧编排内部（`extractIntent`/`decomposeTask`/`executeSubTasks`/`getOrCreateSubAgent`/`TaskDecomposition`）→ `LEGACY-FALLBACK` 标记注释；
+  ③ **兜底触发率可观测**：新增 `MainAgent.LEGACY_FALLBACK_TAG` + `MainAgent.logLegacyFallback(event, detail)`，旧编排进入点与 SSE 两处回退站点统一打点。
+- **顺带**：修正 `SubAgent` 类注释里过期的分类说明（`7. SysOps - help, config, banner` → help 族已在 R3-11 删除）；
+  `devDocs/tool-inventory.md` 中指向已删方法的 R3/R14 两行与 `getSessionCookie()` 标注为已下线。
+
+**⚠️⚠️ 打点必须走 `com.DocSystem.common.Log`（本次踩坑）**
+第一版用 slf4j `log.warn("{} LEGACY-FALLBACK …")` —— **在应用日志里一条都看不到**。原因：本工程 `log4j.rootLogger=info,stdout`，
+slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才写 docsys.log**（与 `[ToolUseLoop][STEP]` 同渠道，早有记录）。
+正因如此，"兜底触发率"这类**要靠 grep 统计的日志必须用 Log**，否则等于没打。
+
+**验证证据（三件套齐）**
+- **护栏**：新增 `TestLegacyFallbackGuard` **38 项**（反射断言 3 个方法确已删除 + 相邻方法未误删；3 个 `process` 重载全部 `@Deprecated`；
+  `SubAgent`/`LLMIntentParser` 类 `@Deprecated`；封口标记齐全；标记日志走 `Log` 而非 slf4j；**冻结基线 tripwire**：
+  `SubAgent.handle*` = 34、`MainAgent.addSubTask` = 53，涨了就是有人往旧编排加能力）。
+  → **全量 33 套 / 1255 项 0 失败**（R3-12 后为 32 套 / 1219 项）。
+- **真实探针（正向触发兜底）**：临时挂 `tomcat/bin/setenv.bat`（`CATALINA_OPTS=-Dagent.tool-loop.enabled=false`，
+  即文档里的回退开关）重启 → 页面发「列出所有仓库」，得**旧编排原始输出**（无工具卡片、无分页/紧凑渲染）：
+  `Repositories: [1] 测试仓库2 - 测试仓库2 (type:1, path:C:/DocSysReposes/) …`（**17 个仓库全列**（vid 1–14/16–18），
+  格式即 `SubAgent.handleListRepos` 的裸文本）；
+  应用日志出现 **`2026-09-21 11:18:42 [warn] [LEGACY-FALLBACK] legacy-orchestration-entered (reason=tool-loop-disabled)`** ✓
+  → 标记机制、reason 取值、`Log` 渠道三件事同时得证；**顺带取得"旧编排今天到底答成什么样"的实证**（比工具路径明显退化）。
+  探针后删除 `setenv.bat` 并重启回默认（已核对 `Test-Path` = False）。
+- **页面 E2E（正常路径回归，重启回默认后）**：
+  ① 「列出仓库 5 根目录下 66666/ 里的文件」→ **1 步** `list_docs({vid:5, path:"66666/"})`，答"3 个文件"并给紧凑表格（1111.txt / README.md / 中文.txt）；
+  ② 「读取仓库 5 根目录下 test111.txt 的内容」→ **4 步** `list_docs(path="")` → `search_files`（**命中=直查**）→ `list_docs(offset=50)` → `get_doc`，
+  读出正文`大家好，我是测试文件` + "大小 20B，正文共 10 字符（已显示全文）" → **读写通道未受 R3-5 删除影响**；
+  ③ 日志复核：`LEGACY-FALLBACK` **仍为 1 条**（探针那次），`[ToolUseLoop][NATIVE]` 164 → 168 → **正常路径不会误打兜底标记**（无误报），
+  且探针钩子已删除（`Test-Path` = False、JVM 命令行无 `tool-loop` 属性）。
 
 #### R3-6 流程固化：新工具上线检查单（写进 devDocs 复用）
 - 端点存在性核对（`@RequestMapping` grep）
@@ -568,7 +612,7 @@
 |---|---|---|---|
 | **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 ✅ → **R1-6 定位全面 path/name ✅** → **R1-5 list_repos ✅** → **R1-2 create_doc_share ✅** → **R1-3 get_doc_share_list ✅** → R2（统一输出/大结果）→ R3 | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
-| **R3** | R3-2 全工具体检（批 1/2a/2b 全 ✅）→ R3-1 命名 ✅ → R3-3 run_skill ✅ → **R3-9 确认弹窗 ✅** → **R3-10 跨仓库找 ✅** → **R3-11 help 技能族删除 ✅** → **R3-12 摘要实体清理 ✅** → R3-13（用户暂缓）/ R3-14 → R3-4/5 清理裁定 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
+| **R3** | R3-2 全工具体检（批 1/2a/2b 全 ✅）→ R3-1 命名 ✅ → R3-3 run_skill ✅ → **R3-9 确认弹窗 ✅** → **R3-10 跨仓库找 ✅** → **R3-11 help 技能族删除 ✅** → **R3-12 摘要实体清理 ✅** → **R3-4/5 旧编排封口 + 零调用方法删除 ✅**（用户裁定方案 1）→ R3-13（用户暂缓）/ R3-14 → R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
 
 > 每完成一项：更新本文状态列 → 更新工作卡"当前进展/未提交改动" → 提交（`devInt` 主干）。
 
@@ -639,8 +683,8 @@
 | R3-12 | P2 | `web_search` 摘要未清理 HTML 实体（`&ensp;`/`&#0183;`） | ✅ | 改为通用实体解码 + Unicode 空白归一；护栏 30→50、探针 8/8（源 113 处实体 → 清洗后 0 残留）、页面 E2E 干净 |
 | R3-14 | P2 | `DocSysClient.serverErrorSummary` 提炼 HTML 错误页时不去实体（与 R3-12 同类） | ⬜ | 本次 R3-12 排查发现；用户要求不扩范围，单列待定 |
 | R3-13 | P2 | repo 5 的 Lucene 索引只覆盖 `MxsDoc/` 子树（`培训资料/`、`66666/` 等磁盘上存在但索引 0 条）—— 疑似索引同步/重建的覆盖缺陷 | ⬜（用户暂缓） | R3-10 实测发现。用户判断"应是其他原因导致"，**先不查** |
-| R3-4 | P2 | 旧编排死代码（SubAgent/MainAgent/LLMIntentParser）处置 | ⬜ | |
-| R3-5 | P2 | DocSysClient 遗留方法清理 | ⬜ | |
+| R3-4 | P2 | 旧编排（SubAgent/MainAgent/LLMIntentParser）处置：**用户裁定方案 1 = 保守封口** | ✅ | 不删（ToolLoop 失败的安全网），改：入口 `@Deprecated` + 封口注释 + 新增 `[LEGACY-FALLBACK]` 打点；护栏 38 项（含冻结基线 tripwire）、探针（回退开关强制触发）1 条标记 + 旧编排实际输出、全量 33 套/1255 项 0 失败 |
+| R3-5 | P2 | DocSysClient 遗留方法清理 | ✅ | 只删**零调用者** 3 个（`getManagerReposList`/`getSessionCookie`/`getSystemEmailConfig`）；CLI 专属方法全保留（方案 1 不动 CLI）；`tool-inventory.md` 同步标注 |
 | R3-6 | P2 | 新工具上线检查单（流程固化） | ⬜ | |
 | R3-7 | P2 | `getLoginUser()` 自写响应 → 双写隐患 | ⬜ | |
 | R3-8 | P2 | 移除 `isLockBusy` 文案兜底（R1-1 收尾） | ⬜ | |

@@ -45,12 +45,43 @@ import java.util.concurrent.Executors;
  * 3. Result aggregation - combine results from sub-agents
  * 4. Experience extraction - learn from successful executions
  * 5. Collaborative learning - track behavior, get recommendations
+ *
+ * <p><b>LEGACY-FALLBACK（R3-4 裁定，2026-09-21）</b>：只有本类的旧编排
+ * （{@code process()} → {@code decomposeTask} → {@code executeSubTasks} → {@link SubAgent}）
+ * 属于兜底性质。**主路径是 {@link ToolUseLoop}**，由 AgentController SSE 直接驱动。
+ * 旧编排只在两种情况下运行：① ToolUseLoop 返回 null / 抛异常（SSE 路径或本类内部）；
+ * ② 灰度开关 {@code agent.tool-loop.enabled=false}。处置 = **冻结**：只修 bug，
+ * 禁止在此新增能力、禁止新增 taskType 分支；新能力一律做成工具。
+ * 每次进入旧编排都会打 {@link #LEGACY_FALLBACK_TAG} 日志，用于统计兜底真实触发率
+ * （攒够数据再决定删除还是保留）。
  */
 @Service
 public class MainAgent {
     
     private static final Logger log = LoggerFactory.getLogger(MainAgent.class);
     private static final int MAX_PARALLEL_TASKS = 5;
+
+    /**
+     * 旧编排兜底标记（R3-4）：统一日志前缀，便于一次 grep 统计“兜底真实触发次数”。
+     * dev 统计：grep -c "LEGACY-FALLBACK" C:\TomcatForDocSysDev\docsys\tomcat\logs\docsys.log
+     */
+    public static final String LEGACY_FALLBACK_TAG = "[LEGACY-FALLBACK]";
+
+    /**
+     * 打“旧编排兜底”标记日志（R3-4）。
+     *
+     * <p>⚠️ **必须走 {@code com.DocSystem.common.Log}**（与 {@code [ToolUseLoop][STEP]} 同渠道
+     * = 应用日志 docsys.log），不要用 slf4j 的 {@code log}：本工程 slf4j 只落 stdout
+     * （log4j rootLogger=info,stdout），而排障/统计看的是 Log 写的那个文件。
+     *
+     * @param event  事件名（sse-tool-loop-returned-null / sse-tool-loop-failed /
+     *               legacy-orchestration-entered）
+     * @param detail 补充信息（可 null）
+     */
+    public static void logLegacyFallback(String event, String detail) {
+        com.DocSystem.common.Log.warn(LEGACY_FALLBACK_TAG + " " + event
+                + (detail == null || detail.isEmpty() ? "" : " (" + detail + ")"));
+    }
 
     @Value("${agent.task-timeout:60}")
     private long taskTimeoutSeconds;
@@ -207,11 +238,15 @@ public class MainAgent {
     }
     
     /**
-     * Process user query - main entry point
+     * Process user query - 旧编排入口（LEGACY-FALLBACK，见类注释）.
      * @param sessionInfo - SessionInfo object containing authenticated session details
      *
      * Best Practice: Use request-scoped DocSysClient instance to avoid thread-safety issues
+     *
+     * @deprecated R3-4（2026-09-21）：旧编排已被 {@link ToolUseLoop} 取代，本入口仅作
+     *     ToolUseLoop 失败时的兜底。禁止在此新增能力；新能力请做成工具。
      */
+    @Deprecated
     public AgentResponse process(String userQuery, AgentContext context, Object sessionInfo) {
         // 获取 per-session DocSysClient（如果已设置）
         DocSysClient clientFromSession = null;
@@ -228,7 +263,10 @@ public class MainAgent {
      * Process user query with explicit DocSysClient (backward-compat, no model selection).
      * @param sessionInfo - SessionInfo object containing authenticated session details
      * @param client - Per-session DocSysClient (from AgentController session pool)
+     *
+     * @deprecated R3-4（2026-09-21）：旧编排入口（LEGACY-FALLBACK），见类注释。
      */
+    @Deprecated
     public AgentResponse process(String userQuery, AgentContext context, Object sessionInfo, DocSysClient client) {
         return process(userQuery, context, sessionInfo, client, null);
     }
@@ -238,7 +276,11 @@ public class MainAgent {
      * @param sessionInfo - SessionInfo object containing authenticated session details
      * @param client - Per-session DocSysClient (from AgentController session pool)
      * @param resolvedLlm - 用户选定的模型配置，null=使用系统默认
+     *
+     * @deprecated R3-4（2026-09-21）：旧编排主体（LEGACY-FALLBACK），见类注释。
+     *     进入时会打 {@link #LEGACY_FALLBACK_TAG} 日志。
      */
+    @Deprecated
     public AgentResponse process(String userQuery, AgentContext context, Object sessionInfo,
                                   DocSysClient client,
                                   com.DocSystem.agent.llm.ResolvedLlmConfig resolvedLlm) {
@@ -254,7 +296,8 @@ public class MainAgent {
         boolean forceToolLoop = userQuery != null && userQuery.trim().startsWith("/tool");
         String toolQuery = forceToolLoop ? userQuery.trim().substring(5).trim() : userQuery;
         boolean toolLoopAlreadyAttempted = consumeToolLoopAttempted();
-        if ((toolLoopEnabled || forceToolLoop) && !toolLoopAlreadyAttempted) {
+        boolean toolLoopWanted = (toolLoopEnabled || forceToolLoop) && !toolLoopAlreadyAttempted;
+        if (toolLoopWanted) {
             log.info("ToolUseLoop {} — routing query: {}",
                     forceToolLoop ? "(forced by /tool prefix)" : "(enabled)", toolQuery);
             AgentResponse toolResp = runToolUseLoop(toolQuery, context, authenticatedClient,
@@ -265,6 +308,13 @@ public class MainAgent {
             // ToolUseLoop 失败 → 回退旧路径（保留灰度安全网）
             log.warn("ToolUseLoop failed, falling back to legacy path");
         }
+
+        // ===== LEGACY-FALLBACK：旧编排入口（R3-4 裁定）=====
+        // 执行到这里 = 主路径（ToolUseLoop）没有给出答案。统一打标记日志（走应用日志渠道，
+        // 一次 grep 即可统计兜底真实触发次数；攒数据决定删除还是保留，见类注释）。
+        logLegacyFallback("legacy-orchestration-entered",
+                "reason=" + (toolLoopAlreadyAttempted ? "tool-loop-failed-in-sse-path"
+                        : (toolLoopWanted ? "tool-loop-returned-null" : "tool-loop-disabled")));
 
         // 提取用户信息用于学习系统
         String userId = extractUserId(sessionInfo);
@@ -794,8 +844,12 @@ public class MainAgent {
         return username != null && "Admin".equalsIgnoreCase(username);
     }
     
+    // ===== LEGACY-FALLBACK 旧编排（R3-4 冻结，2026-09-21）：以下 NL 解析 / 任务分解 / 子任务执行 =====
+    // 仅供 ToolUseLoop 失败兜底使用（见类注释）。只修 bug，禁止新增能力、禁止新增
+    // decomposition.addSubTask(...) 分支；新能力请做成工具（DocSysToolFactory）。
+
     /**
-     * 简单提取意图
+     * 简单提取意图（LEGACY-FALLBACK）
      */
     private String extractIntent(String query) {
         query = query.toLowerCase();
@@ -810,7 +864,7 @@ public class MainAgent {
     }
     
     /**
-     * Decompose user task into smaller sub-tasks
+     * Decompose user task into smaller sub-tasks（LEGACY-FALLBACK 旧编排）
      */
     private TaskDecomposition decomposeTask(String userQuery, AgentContext context) {
         TaskDecomposition decomposition = new TaskDecomposition();
@@ -1302,7 +1356,7 @@ public class MainAgent {
     }
     
     /**
-     * Execute sub-tasks in parallel
+     * Execute sub-tasks in parallel（LEGACY-FALLBACK 旧编排）
      * @param authenticatedClient - Request-scoped DocSysClient with session already set
      */
     private TaskExecutionResult executeSubTasks(TaskDecomposition decomposition, AgentContext context,
@@ -1372,7 +1426,7 @@ public class MainAgent {
     }
     
     /**
-     * Get or create a sub-agent from pool
+     * Get or create a sub-agent from pool（LEGACY-FALLBACK 旧编排）
      */
     private SubAgent getOrCreateSubAgent(String taskId) {
         return subAgentPool.computeIfAbsent(taskId,
@@ -1448,6 +1502,10 @@ public class MainAgent {
     }
     
     // Inner classes for task management
+    /**
+     * 任务分解结果（LEGACY-FALLBACK 旧编排）：仅 {@link SubAgent} 旧调度使用；
+     * 主路径 ToolUseLoop 用工具调用循环，不经此类。
+     */
     public static class TaskDecomposition {
         private final java.util.List<SubTask> subTasks = new java.util.ArrayList<>();
         
