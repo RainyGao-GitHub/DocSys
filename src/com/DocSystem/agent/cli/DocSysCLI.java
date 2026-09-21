@@ -384,7 +384,9 @@ public class DocSysCLI {
     // ==================== SYSTEM ====================
     
     private static void cmdSystemConfig() throws Exception {
-        System.out.println(format(client.getSystemConfig()));
+        // R3-6：原调 client.getSystemConfig() —— 那个方法打的是不存在的 /Manage/getDocSysConfig.do，
+        // 必然 404。改为可用端点（/Repos/getDocSysConfig.do，与 `repos config` 同源）。
+        System.out.println(format(client.getDocSysConfig()));
     }
     
     private static void cmdBanner(String arg) throws Exception {

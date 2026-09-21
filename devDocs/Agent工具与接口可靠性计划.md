@@ -632,14 +632,59 @@ slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才�
   ③ 日志复核：`LEGACY-FALLBACK` **仍为 1 条**（探针那次），`[ToolUseLoop][NATIVE]` 164 → 168 → **正常路径不会误打兜底标记**（无误报），
   且探针钩子已删除（`Test-Path` = False、JVM 命令行无 `tool-loop` 属性）。
 
-#### R3-6 流程固化：新工具上线检查单（写进 devDocs 复用）
-- 端点存在性核对（`@RequestMapping` grep）
-- 参数名核对（服务端签名 vs 客户端 put key）
-- **docId-only 调用**必须能工作（否则要求 path+name）
-- 输出是否可能超 4000（列表/长文本一律紧凑渲染 + 分页）
-- 写工具是否 `isWrite+needsConfirm`，确认门是否真的弹出
-- 失败是否**可归因**（有错误码/明确文案），不能退化成"稍后重试"
-- 护栏 + 真实探针 + 页面 E2E 三件套
+#### R3-6 流程固化：新工具上线检查单（✅ 2026-09-21，用户确认「新建文档 / 做端点 lint / 存量问题修掉」）
+
+**为什么重写**：本条原稿有一条 bullet「**docId-only 调用必须能工作**（否则要求 path+name）」——它与 **R1-6 的裁定方向相反**
+（R1-6 用户裁定 docId 是派生 hash、**退出参数面**，服务端 docId-only 必须报 `INVALID_PARAM` 而非静默成功）。
+且原稿是"待办清单"而非"可复用流程"，还缺后来踩出来的教训（确认门白名单、日志渠道、描述禁止编造、条件工具真机装配…）。
+→ 用户裁定：**重新梳理**，并把机械项固化成可执行命令。已核实现状：`DocSysToolFactory` 里**已无** `docId`/`pid`/`dstPid`/`reposId` 任何参数。
+
+**交付物 1：检查单文档 `devDocs/Agent新工具上线检查单.md`（新建）**
+
+| 段 | 内容要点（每项都写"为什么/先例 + 怎么查"） |
+|---|---|
+| 0 设计期 | 能力归属（DocSys 自有能力→工具，只有外部/可进化插件才做技能，R3-11）；**定位一律 path/name、schema 不得出现 docId/pid/dstPid**（R1-6）；不知道在哪个仓库时先用跨仓 `search_files` 拿 vid 再显式传下去（R3-10）；写工具 `isWrite+needsConfirm`（R3-2a/R3-9）；**输出体量先估上限**（≤3600 字、必须分页、禁止裸 `fmt()`，R1-5/R2-1/R2-3）；失败要带 errorCode + 处置提示（R1-1/R3-14）；参数命名统一（`vid` 而非 `reposId`，R3-1） |
+| 1 实现期自检 | 端点存在性（自动，本项新增）；参数名对齐；`required ⊆ properties`；描述质量；client 方法有调用者；**契约类护栏必须直接检查工厂产出**（R3-0 的教训） |
+| 2 三件套验收 | 护栏（含源码 lint 的写法要求）/ 真实探针（真数据 + 对照 + `finally` 清理）/ 页面 E2E（重启后重新登录、1 读 1 写、看步数与"模型有没有被描述带偏"） |
+| 3 提交与上线 | 编译产物目录、重启后真机装配、多仓库分开提交、CRLF/无 BOM 与提交信息 BOM 坑、**要 grep 的日志必须走 `com.DocSystem.common.Log`**（R3-4）、上线后观察一轮 |
+| 4 验收记录模板 | 可直接粘贴的模板 + 一份**已填示例**（R3-14 那条） |
+| 5 常见坑索引 | 8 条（输出截断 / write_file 回显正文 / 裸 JVM `Log` 递归 / okhttp header / Select-String 大小写 / PowerShell 重写 md / `--amend` 改 hash / 大仓库 grep 与重启口径） |
+
+**交付物 2：可执行护栏 `TestToolOnboarding`（29 项）** —— 把机械项变成一条命令：
+
+- **端点存在性**（此前**唯一没有护栏覆盖**的空白，R1-2 是手工发现的）：`DocSysClient` 里每个 `/Xxx/yyy.do`
+  必须能在控制器里找到映射（**类级 `@RequestMapping` 前缀 × 方法级 mapping** 拼接；`controller/**` + `websocket/**`，跳过 office 仓库）。
+  实测扫描：**client 端点 37 个 / 控制器可路由 238 条 / 控制器文件 48 个**。
+  - ⚠️ **必须容忍 `.do` 后缀差异**：`UserController` 写的是 `@RequestMapping(value="getLoginUser")`（无 `.do`），
+    靠 Spring 的 suffix pattern matching 应答 `/User/getLoginUser.do`；不容忍就会误报 3 个正常端点。
+    容忍后仍能抓到真缺失（去后缀也不存在）。
+- **自带反向自测（6 项）**：喂伪造 client/controller 源码，必须报出不存在端点、不误报存在端点、注释行不采集、
+  后缀容忍不得放过真缺失 —— 护栏最怕"永远绿"，先证明它真能抓。
+- 整表 **schema 自洽**（`required ⊆ properties`）、**参数不得出现 docId/pid/dstPid/reposId**。
+- 整表 **描述质量**：长度 ≥12；不含已下线用法/占位凭据；**提到 docId 必须同时说明它不可用**（同一句里要有
+  不要/不得/已下线/失效/不含… 否则判不合规）+ 该规则的自测 4 项。
+- **检查单文档本身**存在且 6 个章节齐全（防流程被架空）。
+
+**交付物 3：新护栏抓到并修掉的真缺陷（"存量问题修掉"）**
+
+| 缺陷 | 证据 | 处置 |
+|---|---|---|
+| `DocSysClient.getSystemConfig()` 打的是 **`/Manage/getDocSysConfig.do`——ManageController 里根本没有这个映射**（Manage 只有 `getDocSysInitConfig/getOfficeEditorConfig/getBannerConfig/getSystemEmailConfig/getSystemInfo…`）→ 属 R1-2 同类"端点不存在"缺陷 | 真机探针：该 URL **HTTP 404**（去掉 `.do` 也 404，排除后缀差异） | 删除该死方法；唯一调用方 `DocSysCLI` 的 `system config` 改调**可用端点** `/Repos/getDocSysConfig.do`（探针 200）。CLI 命令本身保留（R3-4 方案 1 "CLI 不动"） |
+| `delete_repos` 描述含 `docId` | 原句"删除后原有的 docId/path 全部失效"——**是有效说明**，不是教模型传参 | **不改文案**；把护栏规则精确化（同一句里必须有"失效/不要/已下线…"），并加自测防止这条规则被悄悄放宽 |
+
+**验证**
+- 护栏：新增 `TestToolOnboarding` **29 项** → **全量 35 套 / 1320 项 0 失败**（本项开始前 34 套 / 1291 项）
+- 真探针 `EndpointExistenceProbe` **9/9**：真登录 → `/Manage/getDocSysConfig.do` **404**（真死端点，去后缀也 404）→
+  `/User/getLoginUser.do`、`/User/register.do`、`/User/logout.do` 均 **200**（后缀容忍成立，不是放水）→
+  `/Repos/getDocSysConfig.do` **200**（CLI 新目标可用）→ 抽查 12 个端点**全部非 404**
+- 页面 E2E：按检查单的"验收记录模板"实跑一次样例（**流程项没有新行为，这是模板可用性/回归验证，不冒充新功能验证**）：
+  ① 读「列出仓库 5 根目录下 66666/ 里有哪些文件」→ **1 步** `list_docs`，答 3 个文件 ✓
+  ② 写「在 66666/ 下新建文件夹 R36检查单验证」→ **2 步**（create_folder + 复查 list_docs）+ **1 次确认弹窗**，
+  弹窗参数行 `参数：vid=5；path=66666/；name=R36检查单验证` → 批准后成功，目录变 4 项 ✓
+  ③ 清理「删除该文件夹」→ **4 步** + **1 次确认弹窗**（参数行含 `commitMsg=删除 R36检查单验证 目录`）→ 删除成功，答"还剩 3 项" ✓
+  ④ 磁盘核对：`D:\test\66666` 回到 `1111.txt / README.md / 中文.txt`，**`R36检查单验证` 不存在**（无残留）✓
+  ⑤ 日志复核：`LEGACY-FALLBACK` 仍为 1（R3-4 探针那次）、`[ToolUseLoop][NATIVE]` 168 → 183（主路径活跃、无兜底误报）
+- 计划文档 §3 验证口径的"现基线"已同步为 **35 套 / 1320 项**，并指向新检查单
 
 #### R3-7 `getLoginUser()` 自己写响应（R1-1 发现的隐患）
 - **现状**：`BaseController.getLoginUser()` 未登录分支内部就 `writeJson(rt, response)` 然后 `return null`。后果有二：① 调用方再写的错误码/文案**永远到不了客户端**（R1-1 的真因）；② 若调用方没判 null 继续 `writeJson`，会形成**二次写响应**（已提交的响应头之后写，轻则报错重则截断）。
@@ -659,7 +704,7 @@ slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才�
 |---|---|---|---|
 | **R1** | R1-1 errCode ✅ → R1-1b ✅ → R1-1c ✅ → R1-4 ✅ → **R1-6 定位全面 path/name ✅** → **R1-5 list_repos ✅** → **R1-2 create_doc_share ✅** → **R1-3 get_doc_share_list ✅** → R2（统一输出/大结果）→ R3 | 无 | 一提交一项，每项都过五步验证 |
 | **R2** | R2-1 抽 helper 并定规范 → R2-3 search/grep → R2-2 get_doc 长文 | R1-1（错误码）建议先落 | 输出规范定型 + 护栏 `TestToolOutputContract` |
-| **R3** | R3-2 全工具体检（批 1/2a/2b 全 ✅）→ R3-1 命名 ✅ → R3-3 run_skill ✅ → **R3-9 确认弹窗 ✅** → **R3-10 跨仓库找 ✅** → **R3-11 help 技能族删除 ✅** → **R3-12 摘要实体清理 ✅** → **R3-4/5 旧编排封口 + 零调用方法删除 ✅**（用户裁定方案 1）→ **R3-14 错误页提炼修复 ✅** → R3-13（用户暂缓）→ R3-6 检查单 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
+| **R3** | R3-2 全工具体检（批 1/2a/2b 全 ✅）→ R3-1 命名 ✅ → R3-3 run_skill ✅ → **R3-9 确认弹窗 ✅** → **R3-10 跨仓库找 ✅** → **R3-11 help 技能族删除 ✅** → **R3-12 摘要实体清理 ✅** → **R3-4/5 旧编排封口 + 零调用方法删除 ✅**（用户裁定方案 1）→ **R3-14 错误页提炼修复 ✅** → **R3-6 新工具上线检查单 ✅**（含端点存在性 lint）→ R3-13（用户暂缓）→ R3-7 / R3-8 | R1/R2 完成后 | 体检表（本页 R3-2 节）+ 检查单文档 |
 
 > 每完成一项：更新本文状态列 → 更新工作卡"当前进展/未提交改动" → 提交（`devInt` 主干）。
 
@@ -668,8 +713,16 @@ slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才�
 ## 3. 验证口径（三件套，缺一不可）
 
 1. **护栏**（纯 JVM）：`java -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" com.DocSystem.agent.tool.TestXxx`
-   - 现基线（2026-09-20 R3-9 后，**23 套 / 963 项断言全绿**）：`TestWriteConfirmGateCoverage 27` / `TestSkillExecEncoding 34` / `TestWriteReceiptFormat 47` / `TestReposToolsFormat 46` / `TestToolRegistry 36` / `TestToolOutputContract 82` / `TestListReposFormat 50` / `TestListDocsFormat 25` / `TestDocShareFormat 60` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestWriteTools 52` / `TestAgentSearchWriteTools 56` / `TestUserMemoryTools 26` / `TestWebSearchTool 30` / `TestToolCallParser 55` / `TestReturnAjaxErrorCode 23` / `TestPermissionErrorCoding 24` / `TestLockRetry 13` / `TestToolUseLoop 36` / `TestToolUseLoopNative 17` / `TestToolUseLoopStreaming 26` / `TestToolSchemaBuilder 7`
-   - 注意 `TestAgentFocusSupport` 在 `com.DocSystem.agent.focus` 包，其余在 `com.DocSystem.agent.tool`
+   - **现基线（2026-09-21 R3-6 后）：35 套 / 1320 项断言全绿**（框定范围：`src\com\DocSystem\agent` 下的 `Test*.java`）。
+     已有套件：`TestToolOnboarding 29` / `TestServerErrorSummary 33` / `TestLegacyFallbackGuard 38` / `TestWriteConfirmGateCoverage 27` /
+     `TestWriteReceiptFormat 47` / `TestReposToolsFormat 46` / `TestToolRegistry 36` / `TestToolOutputContract 82` / `TestListReposFormat 50` /
+     `TestListDocsFormat 25` / `TestDocShareFormat 60` / `TestDocHistoryLocator 80` / `TestAgentFocusSupport 111` / `TestWriteTools 52` /
+     `TestAgentSearchWriteTools 56` / `TestUserMemoryTools 26` / `TestWebSearchTool 50` / `TestToolCallParser 55` / `TestReturnAjaxErrorCode 23` /
+     `TestPermissionErrorCoding 24` / `TestLockRetry 13` / `TestToolUseLoop 36` / `TestToolUseLoopNative 17` / `TestToolUseLoopStreaming 26` /
+     `TestToolSchemaBuilder 7` / `TestSearchCrossRepo 45` / `TestSkillExecEncoding 46` / `TestAgentSearchIndex` / `TestAttachmentTool` /
+     `TestAgentAttachmentSupport` / `TestAgentConfig` / `TestResolvedLlmConfig` / `TestNativeToolCallStream` / `TestStreamChatChunks` / `TestStepAudit`
+   - 注意 `TestAgentFocusSupport` 在 `com.DocSystem.agent.focus` 包，其余在各功能包（`tool`/`client`/`orchestrator`/`search`…）
+   - **新增工具/接口前先跑 `TestToolOnboarding`**（见 `devDocs/Agent新工具上线检查单.md`）
 2. **真实探针**（Java 直连 8100，走工具层）：`%TEMP%\docsys_chk\*.java`（`MoveToolPathE2E` `ReposListE2E` `ShareToolE2E` `OutputContractE2E` `MatchProbe` `TotalProbe` `SearchProbe2`），用**真实数据**（仓库 5 根目录 79 项、仓库 1 大仓）
 3. **Agent 页面 E2E**（`Admin`/`Admin`，真实 LLM + 确认门）：每轮至少 1 读 1 写，结果贴进提交说明
    - 登录/发消息/确认弹窗/读取回复的 Playwright 配方见 `/memories/repo/agent-skill-tool-cleanup.md`
@@ -732,7 +785,7 @@ slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才�
 | R3-13 | P2 | repo 5 的 Lucene 索引只覆盖 `MxsDoc/` 子树（`培训资料/`、`66666/` 等磁盘上存在但索引 0 条）—— 疑似索引同步/重建的覆盖缺陷 | ⬜（用户暂缓） | R3-10 实测发现。用户判断"应是其他原因导致"，**先不查** |
 | R3-4 | P2 | 旧编排（SubAgent/MainAgent/LLMIntentParser）处置：**用户裁定方案 1 = 保守封口** | ✅ | 不删（ToolLoop 失败的安全网），改：入口 `@Deprecated` + 封口注释 + 新增 `[LEGACY-FALLBACK]` 打点；护栏 38 项（含冻结基线 tripwire）、探针（回退开关强制触发）1 条标记 + 旧编排实际输出、全量 33 套/1255 项 0 失败 |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ✅ | 只删**零调用者** 3 个（`getManagerReposList`/`getSessionCookie`/`getSystemEmailConfig`）；CLI 专属方法全保留（方案 1 不动 CLI）；`tool-inventory.md` 同步标注 |
-| R3-6 | P2 | 新工具上线检查单（流程固化） | ⬜ | |
+| R3-6 | P2 | 新工具上线检查单（流程固化） | ✅ | 新建 `devDocs/Agent新工具上线检查单.md`（设计期/自检/三件套/提交/模板/坑索引）；新增可执行护栏 `TestToolOnboarding` 29 项（端点存在性 + 反向自测 + schema/描述/文档自检）；**据此抓到并修掉死端点** `/Manage/getDocSysConfig.do`；全量 35 套/1320 项 |
 | R3-7 | P2 | `getLoginUser()` 自写响应 → 双写隐患 | ⬜ | |
 | R3-8 | P2 | 移除 `isLockBusy` 文案兜底（R1-1 收尾） | ⬜ | |
 | R3-9 | P2 | 确认弹窗只显示工具名、不显示参数（R2 页面 E2E 发现） | ✅ | 加 `summarizeArgs`（脉敏 + 长值只给长度）；护栏 13→27，页面 E2E 两次弹窗均带参数行 |

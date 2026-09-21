@@ -947,19 +947,12 @@ public class DocSysClient {
 
     // ==================== SYSTEM MANAGEMENT ====================
 
-    /**
-     * Get system configuration
-     * POST /Manage/getDocSysConfig.do
-     */
-    public Map<String, Object> getSystemConfig() throws Exception {
-        String url = baseUrl + "/Manage/getDocSysConfig.do";
-        Response response = postForm(url, new HashMap<String, String>(), sessionCookie);
-        try {
-            return JSON.parseObject(responseBodyString(response));
-        } finally {
-            response.close();
-        }
-    }
+    // R3-6：原 `getSystemConfig()` 打的是 `/Manage/getDocSysConfig.do` ——
+    // 该端点**在 ManageController 里根本不存在**（Manage 只有 getDocSysInitConfig/getOfficeEditorConfig/
+    // getBannerConfig/getSystemEmailConfig/getSystemInfo… ），实际可用的系统配置端点是
+    // `/Repos/getDocSysConfig.do`（见 getDocSysConfig()）。属 R1-2 同类“端点不存在”缺陷，
+    // 已删除该方法（唯一调用方 DocSysCLI 的 `system config` 改调 getDocSysConfig()），
+    // 并由护栏 TestToolOnboarding 的“端点存在性”检查拦住复发。
 
     /**
      * Get system banner configuration
