@@ -2833,6 +2833,13 @@ public class BaseController  extends BaseFunction{
 	}
 		
 	/***************************Basic Functions For Driver Level  **************************/
+	/**
+	 * 取当前登录用户。
+	 *
+	 * <p><b>契约（R3-7 起）</b>：返回值 {@code User} = 已认证；{@code null} = 未认证/被拒（原因看 {@code rt}）。
+	 * <b>本方法不写响应</b>，由调用方统一写（旧实现自己写 + return null，导致调用方设的码/文案到不了客户端，
+	 * 同一请求内还会写两次响应）。自动登录成功时同样返回该用户，调用方按正常已登录流程继续。
+	 */
 	public User getLoginUser(HttpSession session, HttpServletRequest request, HttpServletResponse response, ReturnAjax rt)
 	{
 		//TODO: 检查是否为安全环境下的访问
@@ -2859,8 +2866,7 @@ public class BaseController  extends BaseFunction{
 				{
 					Log.debug("自动登录失败");
 					rt.setMsgData("自动登陆失败");
-					writeJson(rt, response);
-					return null;
+					return null;	//R3-7：响应由调用方写
 				}
 				
 				if(checkIfClientNetworkIsSafeForUser(request, loginUser.getId()) == false)
@@ -2882,16 +2888,15 @@ public class BaseController  extends BaseFunction{
 				Log.debug("用户cookie保存成功");
 				Log.debug("SESSION ID:" + session.getId());
 
-				rt.setData(loginUser);	//将数据库取出的用户信息返回至前台
-				writeJson(rt, response);
-				return null;
+				rt.setData(loginUser);	//保留：/User/getLoginUser.do 端点据它返回用户信息
+				//R3-7：自动登录成功 = 已认证 → 返回该用户（null 仅表示未认证/被拒）
+				return loginUser;
 			}
 			else
 			{
-				//注意：本方法自己 writeJson 就把响应写出去了（调用方随后再 writeJson 不会生效），
-				//所以错误码必须打在这里，否则调用方那处带码的 docSysErrorLog 到不了客户端（R1-1 实测踩坑）
+				//R3-7：只设码/文案，响应统一由调用方写。
+				//旧实现自己 writeJson + return null → 调用方设的码与文案到不了客户端（R1-1 实测踩坑）
 				rt.setError("用户未登录", ErrorCode.NOT_LOGIN);
-				writeJson(rt, response);
 				return null;
 			}
 		}

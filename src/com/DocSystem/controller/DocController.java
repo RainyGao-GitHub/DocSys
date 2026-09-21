@@ -2916,9 +2916,10 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				docSysErrorLog("非法仓库访问！", rt);
-				//writeJson(rt, response);
-				//return;	
-				throw new Exception(rt.getMsgInfo());
+				//R3-7：checkAndGetAccessInfo 只设码不写响应，故这里必须自己写并 return（否则未登录/无权限会变成 500 错误页）
+				rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);
+				writeJson(rt, response);
+				return;
 			}
 		}
 		
@@ -2994,8 +2995,12 @@ public class DocController extends BaseController{
 			reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);
 			if(reposAccess == null)
 			{
+				//R3-7：checkAndGetAccessInfo 只设码不写响应；这里必须自己写并 return，
+				//否则（未登录/无权限）会抛到 Spring 变成 500 错误页
+				rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);
 				docSysErrorLog("非法仓库访问！", rt);
-				throw new Exception(rt.getMsgInfo());
+				writeJson(rt, response);
+				return;
 			}
 		}
 		
@@ -3200,9 +3205,9 @@ public class DocController extends BaseController{
 		Log.infoHead("************** downloadVideo ****************");
 		Log.info("downloadVideo reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn 
 				+ " convertType:" + convertType + " disposition:" + disposition);
-		
+
 		ReturnAjax rt = new ReturnAjax();
-		
+
 		ReposAccess reposAccess = null;
 		//Convert authCode and shareId same with Non Rest Style request
 		if(authCode.equals("0"))
@@ -3213,7 +3218,7 @@ public class DocController extends BaseController{
 		{
 			shareId = null;
 		}
-	
+
 		if(authCode != null)
 		{
 			if(checkAuthCode(authCode, null, rt) == null)
@@ -3231,9 +3236,10 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				docSysErrorLog("非法仓库访问！", rt);
-				//writeJson(rt, response);			
-				//return;
-				throw new Exception(rt.getMsgInfo());
+				//R3-7：checkAndGetAccessInfo 只设码不写响应，故这里必须自己写并 return（否则未登录/无权限会变成 500 错误页）
+				rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);
+				writeJson(rt, response);
+				return;
 			}
 		}
 		
@@ -3302,9 +3308,9 @@ public class DocController extends BaseController{
 	{
 		Log.infoHead("************** downloadImg ****************");
 		Log.info("downloadImg reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn + " disposition:" + disposition);
-		
+
 		ReturnAjax rt = new ReturnAjax();
-		
+
 		ReposAccess reposAccess = null;
 		//Convert authCode and shareId same with Non Rest Style request
 		if(authCode.equals("0"))
@@ -3315,7 +3321,7 @@ public class DocController extends BaseController{
 		{
 			shareId = null;
 		}
-	
+
 		if(authCode != null)
 		{
 			if(checkAuthCode(authCode, null, rt) == null)
@@ -3333,9 +3339,10 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				docSysErrorLog("非法仓库访问！", rt);
-				//writeJson(rt, response);			
-				//return;
-				throw new Exception(rt.getMsgInfo());
+				//R3-7：checkAndGetAccessInfo 只设码不写响应，故这里必须自己写并 return（否则未登录/无权限会变成 500 错误页）
+				rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);
+				writeJson(rt, response);
+				return;
 			}
 		}
 		
@@ -3482,9 +3489,9 @@ public class DocController extends BaseController{
 	{
 		Log.infoHead("************** downloadDoc ****************");
 		Log.info("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn + " disposition:" + disposition);
-		
+
 		ReturnAjax rt = new ReturnAjax();
-		
+
 		ReposAccess reposAccess = null;
 		//Convert authCode and shareId same with Non Rest Style request
 		if(authCode.equals("0"))
@@ -3495,7 +3502,7 @@ public class DocController extends BaseController{
 		{
 			shareId = null;
 		}
-	
+
 		if(authCode != null)
 		{
 			if(checkAuthCode(authCode, null, rt) == null)
@@ -3513,9 +3520,10 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				docSysErrorLog("非法仓库访问！", rt);
-				//writeJson(rt, response);			
-				//return;
-				throw new Exception(rt.getMsgInfo());
+				//R3-7：checkAndGetAccessInfo 只设码不写响应，故这里必须自己写并 return（否则未登录/无权限会变成 500 错误页）
+				rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);
+				writeJson(rt, response);
+				return;
 			}
 		}
 		
@@ -3572,9 +3580,9 @@ public class DocController extends BaseController{
 	{
 		Log.infoHead("************** downloadDoc ****************");
 		Log.info("downloadDoc reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn + " disposition:" + disposition);
-		
+
 		ReturnAjax rt = new ReturnAjax();
-		
+
 		ReposAccess reposAccess = null;
 		//Convert authCode and shareId same with Non Rest Style request
 		if(authCode.equals("0"))
@@ -3585,7 +3593,7 @@ public class DocController extends BaseController{
 		{
 			shareId = null;
 		}
-	
+
 		if(authCode != null)
 		{
 			if(checkAuthCode(authCode, null, rt) == null)
@@ -3603,9 +3611,10 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				docSysErrorLog("非法仓库访问！", rt);
-				//writeJson(rt, response);			
-				//return;
-				throw new Exception(rt.getMsgInfo());
+				//R3-7：checkAndGetAccessInfo 只设码不写响应，故这里必须自己写并 return（否则未登录/无权限会变成 500 错误页）
+				rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);
+				writeJson(rt, response);
+				return;
 			}
 		}
 		
@@ -3663,9 +3672,9 @@ public class DocController extends BaseController{
 	{
 		Log.infoHead("************** downloadDocEx ****************");
 		Log.info("downloadDocEx reposId:" + vid + " path:" + path + " name:" + name + " targetPath:" + targetPath + " targetName:" + targetName + " authCode:" + authCode + " shareId:" + shareId + " encryptEn:" + encryptEn);
-		
+
 		ReturnAjax rt = new ReturnAjax();
-		
+
 		ReposAccess reposAccess = null;
 		//Convert authCode and shareId same with Non Rest Style request
 		if(authCode.equals("0"))
@@ -3676,7 +3685,7 @@ public class DocController extends BaseController{
 		{
 			shareId = null;
 		}
-	
+
 		if(authCode != null)
 		{
 			if(checkAuthCode(authCode, null, rt) == null)
@@ -3694,9 +3703,10 @@ public class DocController extends BaseController{
 			if(reposAccess == null)
 			{
 				docSysErrorLog("非法仓库访问！", rt);
-				//writeJson(rt, response);			
-				//return;
-				throw new Exception(rt.getMsgInfo());
+				//R3-7：checkAndGetAccessInfo 只设码不写响应，故这里必须自己写并 return（否则未登录/无权限会变成 500 错误页）
+				rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);
+				writeJson(rt, response);
+				return;
 			}
 		}
 		
