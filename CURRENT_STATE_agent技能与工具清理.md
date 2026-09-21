@@ -693,6 +693,37 @@ slf4j 只落 stdout；**只有 `com.DocSystem.common.Log` 才写 docsys.log**（
 真 500 页（异常消息带转义）**未端到端采到**（dev 里 DocSys 对非法参数一律返 JSON）；该形态由护栏合成页 + `javap` 核实的
 Tomcat 行为共同锁定。真 4xx 路径已被探针端到端覆盖。
 
+## R3-6：新工具上线检查单（2026-09-21，✅ 用户裁定「新建文档 / 做端点 lint / 存量问题修掉」）
+
+### 为什么重写
+原稿有一条「**docId-only 调用必须能工作**」的 bullet，与 **R1-6 裁定方向相反**（R1-6：docId 是派生 hash、退出参数面，
+服务端 docId-only 必须报 `INVALID_PARAM`）。且原稿是"待办清单"不是"可复用流程"，还缺后续踩出来的教训。
+现状核实：`DocSysToolFactory` 里**已无** `docId`/`pid`/`dstPid`/`reposId` 任何参数。
+
+### 交付物
+1. **`devDocs/Agent新工具上线检查单.md`（新建）**：0 设计期（能力归属/定位口径/读写字类/输出体量/失败归因/命名）→
+   1 实现期自检 → 2 三件套验收 → 3 提交与上线（含日志渠道、多仓库归属、CRLF/BOM）→ 4 验收记录模板（含已填示例）→
+   5 常见坑索引（8 条先例）。每项都写"为什么（先例）+ 怎么查"。
+2. **`TestToolOnboarding` 护栏 29 项**（把机械项变成一条命令）：
+   - **端点存在性**（此前唯一没有护栏覆盖的空白）：`DocSysClient` 每个 `/Xxx/yyy.do` ↔ 控制器「类级前缀 × 方法级 mapping」
+     拼接比对。实测扫描 **client 端点 37 / 控制器可路由 238 / 控制器文件 48**。
+   - ⚠️ **必须容忍 `.do` 后缀差异**：`UserController` 写的是 `@RequestMapping(value="getLoginUser")`（无 `.do`），
+     靠 Spring suffix pattern matching 应答 `/User/getLoginUser.do` → 不容忍会误报 3 个正常端点；容忍后仍能抓真缺失。
+   - **反向自测 6 项**（伪造 client/controller，必须抓到不存在、不误报存在、注释不采集、后缀容忍不放过真缺失）+
+     docId 描述规则自测 4 项 —— 护栏最怕"永远绿"。
+   - schema 自洽（`required ⊆ properties`、无 docId/pid/dstPid/reposId）、描述质量（长度/禁用词/docId 必须说明不可用）、
+     检查单文档存在且章节齐全。
+3. **据新护栏抓到并修掉的真缺陷**：`DocSysClient.getSystemConfig()` 打的是 **`/Manage/getDocSysConfig.do`**，
+   而 ManageController **根本没有这个映射**（属 R1-2 同类）→ 真机探针 **404**（去 `.do` 也 404）。
+   处置：删该死方法；`DocSysCLI` 的 `system config` 改调可用端点 `/Repos/getDocSysConfig.do`（探针 200），CLI 命令保留。
+
+### 验证
+- 护栏：`TestToolOnboarding` **29/29** → **全量 35 套 / 1320 项 0 失败**（本项开始前 34 套 / 1291 项）
+- 真探针 `EndpointExistenceProbe` **9/9**：真登录 → 死端点 404（去后缀也 404）→ `/User/getLoginUser.do`/`register.do`/`logout.do`
+  均 200（后缀容忍成立）→ `/Repos/getDocSysConfig.do` 200 → 抽查 12 个端点全部非 404
+- 页面 E2E（模板样例/回归）：读 1 步（3 文件）→ 建文件夹 2 步 + 1 弹窗（参数行 `vid=5；path=66666/；name=R36检查单验证`）
+  → 删除 4 步 + 1 弹窗 → 答"还剩 3 项"；磁盘核对 `D:\test\66666` 无残留；`LEGACY-FALLBACK` 仍 1、`[ToolUseLoop][NATIVE]` 168→183
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -707,15 +738,16 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 - **R3（P2）**：**R3-2 批 1/2a/2b ✅、R3-1 ✅、R3-3 ✅、R3-9 ✅、R3-10 ✅、R3-11 ✅、R3-12 ✅、R3-4/5 ✅**
   （R3-4/5 = 用户裁定**方案 1（保守封口）**：旧编排不删但 `@Deprecated` + 封口 + `[LEGACY-FALLBACK]` 打点；
   `DocSysClient` 只删 3 个零调用者方法，CLI 不动）→ **R3-14 错误页提炼修复 ✅**（用户裁定「那就修掉」）
-  → 剩余：**R3-6 检查单**（R3-13 用户暂缓）
-  可直接开工的下一条 = **R3-6 新工具上线检查单**（流程固化，写进 devDocs 复用）
+  → **R3-6 新工具上线检查单 ✅**（新建检查单文档 + `TestToolOnboarding` 护栏 + 抓修死端点 `/Manage/getDocSysConfig.do`）
+  → 剩余：**R3-7**（`getLoginUser()` 自写响应 → 双写隐患）/ **R3-8**（移除 `isLockBusy` 文案兜底）；R3-13 用户暂缓
+  可直接开工的下一条 = **R3-7**（改后端出口写法，风险中等，需逐调用方核对 null 后不再续写）
   新增两条（R2 页面 E2E 发现）：**R3-9 确认弹窗只显示工具名不显示参数**、**R3-10 缺“跨仓库按路径/名字找”能力**
   新增一条（R3-10 实测发现，待单列）：**repo 5 索引只覆盖 `MxsDoc/` 子树，疑似索引同步/重建覆盖缺陷**
 
 ## 未提交改动
 
-- 无（R3-14 已提交 `55c9a243e`；本工作卡随后单独提交）
-- 已提交：R3-14 = `55c9a243e`；R3-4/R3-5 = `95cd0c1f9`（工作卡 `60c70a4fb`）；R3-14 复核改写 = `971dcb151`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R3-6 已提交 `1801cdaad`；本工作卡随后单独提交）
+- 已提交：R3-6 = `1801cdaad`；R3-14 = `55c9a243e`（工作卡 `bf909c2cc`）；R3-4/R3-5 = `95cd0c1f9`（工作卡 `60c70a4fb`）；R3-14 复核改写 = `971dcb151`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
