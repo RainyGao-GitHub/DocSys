@@ -724,7 +724,7 @@ Tomcat 行为共同锁定。真 4xx 路径已被探针端到端覆盖。
 - 页面 E2E（模板样例/回归）：读 1 步（3 文件）→ 建文件夹 2 步 + 1 弹窗（参数行 `vid=5；path=66666/；name=R36检查单验证`）
   → 删除 4 步 + 1 弹窗 → 答"还剩 3 项"；磁盘核对 `D:\test\66666` 无残留；`LEGACY-FALLBACK` 仍 1、`[ToolUseLoop][NATIVE]` 168→183
 
-## R3-7：登录态响应归属（2026-09-21，✅ 用户裁定「按A开工」）
+## R3-7：登录态响应归属（2026-09-21，✅ 用户裁定「按A开工」；已提交 主库 `9d4d6d7b5` / websocket 库 `bbebedc1`）
 
 ### 开工前核实的调用方清单（用户要求先查调用方）
 - `getLoginUser(...)` 服务端调用 **23 处**（ReposController 19 / BussinessController 2 / UserController 1 / BaseController 1）
@@ -784,7 +784,7 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- 待提交（R3-7）：主库 `BaseController.java`/`DocController.java`/`TestLoginUserResponseContract.java`（新）+ 计划文档；websocket 库 `OfficeController.java`；本工作卡随后单独提交
+- 无（R3-7 已提交：主库 `9d4d6d7b5`（代码 + 计划文档）/ `18a55884f`（本工作卡）；websocket 库 `bbebedc1`（OfficeController））
 - 已提交：R3-6 = `1801cdaad`；R3-14 = `55c9a243e`（工作卡 `bf909c2cc`）；R3-4/R3-5 = `95cd0c1f9`（工作卡 `60c70a4fb`）；R3-14 复核改写 = `971dcb151`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
