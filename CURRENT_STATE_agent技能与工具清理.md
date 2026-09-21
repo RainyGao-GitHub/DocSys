@@ -664,6 +664,35 @@ slf4j 只落 stdout；**只有 `com.DocSystem.common.Log` 才写 docsys.log**（
   读出正文 + "大小 20B，正文共 10 字符" → 读写通道未受删除影响；
   ③ 日志复核 `LEGACY-FALLBACK` 仍为 1 条（探针那次）、`[ToolUseLoop][NATIVE]` 164→168 → **正常路径无误报**
 
+## R3-14：非 JSON 错误页提炼修复（2026-09-21，✅ 用户裁定「那就修掉」）
+
+### 修前实测（真机取证）
+真实容器 400 页（`curl /Doc/getDoc.do?reposId=5&docId=abc`，968 字节）：
+`<h1>HTTP Status 400 - </h1> … <p><b>message</b> <u></u></p><p><b>description</b> <u>The request sent by the client was syntactically incorrect.</u></p>`
+旧实现只取 `<h1>` → 模型拿到 `服务端返回非 JSON 响应（HTTP 400）：HTTP Status 400 -；这通常是服务端内部错误，
+可改用 list_repos/get_repos 确认对象是否存在，不要重试同一调用` —— **状态重复一遍、原因一个字没有，
+4xx 被说成服务端错误，还被引向"确认对象是否存在"**。
+（实体问题：Tomcat 7 用 `RequestUtil.filter` 把异常消息转义成 `&lt;`/`&amp;`/`&quot;`（`javap` 核实），旧实现只去标签不解码；
+但真 400/404 页 message 为空 → **实测这两个形状无实体**。）
+
+### 修法
+1. **抽公共清洗件** `com.DocSystem.agent.util.HtmlText`（`stripTags/decodeEntities/normalizeSpaces/clean/oneLine`）：
+   R3-12 写在 `WebSearchService` 里的解码整体搬过去（`stripHtml` 变一行转发）→ 两个消费者共用同一口径，杜绝"一处修了另一处忘"。
+2. **逐级取原因**：`<p><b>message</b>>` → `description` → h1 里 `HTTP Status 400 - ` 之后 → 原文截断 120；每级都过 `HtmlText.clean`。
+3. **提示与错误码按状态分类**：400/405/406/415 → `INVALID_PARAM` + "请求本身的问题…修正后再试，不要原样重试"；
+   401→`NOT_LOGIN`、403→`NO_PERMISSION`；404 → `INTERNAL` + "接口地址不存在（客户端调错路径，属实现缺陷）"；5xx → `INTERNAL` + "服务端内部错误…"。
+
+### 验证
+- 护栏新增 `TestServerErrorSummary` **33 项**（真实 Tomcat 页形态：真 400/404 + 500 转义消息；逐级退化；已 JSON 原样返回；
+  共用件 6 项；两处消费者的源码 lint）→ **全量 34 套 / 1291 项 0 失败**（修前 33 套 / 1257 项）
+- 真探针 `R314Probe`（%TEMP%\docsys_chk）**10/10**：登录 → `getReposList` 仍 status=ok（回归）→ 真容器 400 页
+  → 反射调用真实 `responseBodyString`，输出含 description 真原因、`INVALID_PARAM`、无实体残留、无整页 HTML 噪声
+- 页面 E2E（回归）：`web_search` 查 DocSys → **1 步**，摘要 `·`/`…` 正常，工具卡片实体残留 **0**、U+00A0/U+2002 残留 **0**
+
+### 未覆盖（如实记录）
+真 500 页（异常消息带转义）**未端到端采到**（dev 里 DocSys 对非法参数一律返 JSON）；该形态由护栏合成页 + `javap` 核实的
+Tomcat 行为共同锁定。真 4xx 路径已被探针端到端覆盖。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -677,15 +706,16 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 - **R2（P1）**：**R2-1 ✅ / R2-2 ✅ / R2-3 ✅ / R2-4 ✅（本轮）** — 剩余：写操作回执类仍为 `fmt()` 整包 JSON，归入 R3-2 工具体检一并做
 - **R3（P2）**：**R3-2 批 1/2a/2b ✅、R3-1 ✅、R3-3 ✅、R3-9 ✅、R3-10 ✅、R3-11 ✅、R3-12 ✅、R3-4/5 ✅**
   （R3-4/5 = 用户裁定**方案 1（保守封口）**：旧编排不删但 `@Deprecated` + 封口 + `[LEGACY-FALLBACK]` 打点；
-  `DocSysClient` 只删 3 个零调用者方法，CLI 不动）→ 剩余：R3-6 检查单（R3-13 用户暂缓 / R3-14 待定）
+  `DocSysClient` 只删 3 个零调用者方法，CLI 不动）→ **R3-14 错误页提炼修复 ✅**（用户裁定「那就修掉」）
+  → 剩余：**R3-6 检查单**（R3-13 用户暂缓）
   可直接开工的下一条 = **R3-6 新工具上线检查单**（流程固化，写进 devDocs 复用）
   新增两条（R2 页面 E2E 发现）：**R3-9 确认弹窗只显示工具名不显示参数**、**R3-10 缺“跨仓库按路径/名字找”能力**
   新增一条（R3-10 实测发现，待单列）：**repo 5 索引只覆盖 `MxsDoc/` 子树，疑似索引同步/重建覆盖缺陷**
 
 ## 未提交改动
 
-- 无（R3-4/R3-5 已提交 `95cd0c1f9`；本工作卡随后单独提交）
-- 已提交：R3-4/R3-5 = `95cd0c1f9`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
+- 无（R3-14 已提交 `55c9a243e`；本工作卡随后单独提交）
+- 已提交：R3-14 = `55c9a243e`；R3-4/R3-5 = `95cd0c1f9`（工作卡 `60c70a4fb`）；R3-14 复核改写 = `971dcb151`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
 ## 生效约束
