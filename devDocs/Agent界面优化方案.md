@@ -213,4 +213,74 @@
 
 - 预览对比页是临时文件（`WebRoot/web/agent/_icon_preview.html`），**已删除、未提交**；源副本留在 `%TEMP%\docsys_chk\`。
 - 变更文件：`WebRoot/web/agent/index.html`（CSS 3 处 + JS 图标函数）、本记录。
+
+## 10. 「@」关注对象：说明与正文共用同一个消息框（2026-09-22）
+
+### 10.1 参考模型与问题
+
+- **原实现**：消息框上方 chips 行下面**另开一个小编辑器**（`#focusNoteEditor` + `#focusNoteInput`，`maxlength=500` + `0 / 500` 字数提示）。点 chip → 展开独立小框写说明。
+  问题（用户口径）：**"消息另外开了一个编辑框……想和学术伴的致谢里一样实现共用消息框，这样空间利用率更高，视觉效果也很好"**。
+- **参照实现**：学术伴原型 `C:\Users\65205\Desktop\一点效率\学术伴网站设计方案`（`thesis-writing/thanks` 章节）+ ScholarOS 源码 `AcknowledgeAgentPanel.tsx` / `useAcknowledgeObjectDrafts.ts`。实测（本地 8899 起静态服务 + 浏览器逐步点过）行为：
+  1. 选中对象是**输入框内部**的 chips（`@导师 ×`），点 chip = 把**同一个文本框**切到"补充对 X 的致谢"槽位，**占位文案随对象变化**（两行：一行说明、一行示例）；
+  2. 一个文本框承载"通用正文"与"各对象备注"两类槽位（源码里的 `GENERAL_DRAFT`）：**切换槽位前保存、切换后载入** → 每个对象分别填写、互不覆盖；
+  3. 点输入区之外 → 退出对象槽位回到正文（源码注释原文大意：否则对象恒有一项处于选中态，用户输入会被记成对象备注而**写不了正文**）；
+  4. 发送时正文取通用槽位，各对象备注作为结构化数据随行。
+
+### 10.2 实现（纯前端，只动 `WebRoot/web/agent/index.html`；后端 `focus` 协议不变）
+
+**槽位机制**（复用既有草稿存储 `state.focusDrafts` / sessionStorage）：
+
+- 新增保留键 `FOCUS_MSG_SLOT = '__message__'` 表示"消息槽"，对象说明沿用 `focusKey(it)` 作为键 —— 两者同一份草稿字典。
+- `focusSlotText()` / `setFocusSlotText()` / `messageSlotText()` / `saveActiveSlot()`：读写槽位；`saveActiveSlot()` 由输入框 input 事件驱动（说明槽同步 `setFocusNote()` + 只重绘 chips，不重建 textarea 以免光标跳动）。
+- `applyFocusSlot()`：**唯一的"切换槽位"出口** —— 载入槽位文本、换占位文案、按槽位增删 `maxlength`（说明 500 / 正文无限制）、给 `.input-container` 加/去 `note-mode`、刷 chips 高亮、`autoResizeTextarea()`。`renderFocusBar()` 因此不再碰输入框内容（避免 chip 重绘把正在输入的字冲掉）。
+
+**DOM / CSS**：
+
+- 删除 `#focusNoteEditor` / `#focusNoteInput` / `#focusNoteTip` 三个元素与其 CSS（`.focus-note-editor`×2、`.focus-note-foot`、深色主题 2 条）。
+- 新增 `.input-container.note-mode`（浅色描边 `#8fbaf0`、聚焦 `#4a8fe7` + 蓝色柔光；深色 `#3f5f96`）= "现在填的是对象说明"的视觉提示，与 chip 的 `editing` 高亮配合。
+
+**进入 / 退出**：
+
+- 点对象 chip = `openFocusNote(idx)`（切到该对象说明槽并聚焦输入框）；**同一 chip 再点一次 = 收起**回到消息槽。
+- 点 composer 之外 → 退出说明态：文档级 click 用**事件路径 `composedPath()`** 判定（点 chip 会重渲染 chips、被点节点随即脱离 DOM，`contains(target)` 会误判"点在外面"），凡事件路径含 `.input-container` 一律算"在里面" —— `@` / `/` 按钮、picker 面板、附件区都在框内，不会误退出。
+- 发送后自动退出说明态（`executeWithGeneration()` 内清消息槽 + `applyFocusSlot()`）。
+
+**发送语义**（关键点，否则会"发错内容"）：
+
+- `sendMessage()` 取 **`messageSlotText()`**（消息槽）而不是输入框可见文本 —— 说明态下可见文本是该对象的说明。
+- **空正文 + 处于说明态** → 明确提示"请先在消息框里写本轮的要求（刚才填写的是对象说明，只在选中的对象上生效）"并退回消息槽。理由：后端空 `command` 直接 `immediateSseError("EMPTY_COMMAND")`，静默 return 会让用户以为按钮坏了；同时把说明填了、正文没写的坑当场讲清。
+- 生成中排队路径同样只清消息槽（正文不进说明槽）。
+- 发送后**对象说明作为草稿保留**（chip 上 ✎ 仍在），下一轮继续可用。
+
+**边界处理**：
+
+- 说明态下不触发 `@` / `/` 内联 picker（说明是自由文本，`/` 应该是字面字符）；退出说明态后 `/` 菜单照旧。`#messageInput` 的 input 监听顺序：`autoResizeTextarea()` → `saveActiveSlot()` → picker。
+- `loadFocusDrafts()` 强制清空消息槽 → 刷新页面后输入框仍为空（与改造前一致），对象说明草稿照旧恢复。
+- **"带上下文进入页面"的自动添加对象**（`addFocusItem`，由 `initFocusFromContext` 调用）**不**切到说明槽：否则用户一进来看到输入框是"补充对 X 的说明"，会把说明当成正文框写。填写说明统一从**点击 chip** 进入。
+- **未改**：`snapshotFocus()` 载荷形状、`focus[].note` 字段、后端注入块与历史反解（`loadSessionHistory`）、chip 的 ✎ 标记与 `title="点击填写/修改说明"`。
+
+### 10.3 验证（dev 8100，真页面逐步操作）
+
+| 检查 | 结果 |
+|---|---|
+| 旧编辑器是否已移除 | `#focusNoteEditor` / `#focusNoteInput` 均为 `null`；`renderFocusNote` 等旧函数已无引用 ✓ |
+| @ 弹窗选完对象点"确定" | 回到**消息槽**：占位 = "输入消息…"、`note-mode` = false、`maxlength` 属性 = 无、已写正文不被清 ✓ |
+| 点 chip | 占位变两行 `补充对「测试仓库2」的说明（可选）\n例：所有历史资料都在这里…`（`::placeholder` 计算值 `white-space: pre-wrap`，两行确实渲染）、`maxlength=500`、`.input-container.note-mode=true`、chip 加 `editing` 高亮、输入框自动聚焦 ✓ |
+| 填说明 → 切到对象 2 → 再切回对象 1 | 各自文本独立；两个 chip 都有 ✎；`state.focusDrafts` = `{__message__: "列出…", "dir\|1\|/\|": "这是整库的说明…", "dir\|1\|/\|MxsDoc": "…"}` ✓ |
+| 同一 chip 再点一次 | 收起 → 回到正文，**正文原文恢复**（`列出仓库 5 的…`）、`note-mode=false` ✓ |
+| 点 composer 之外（BODY） | 退出说明态：占位/`maxlength` 复位、说明文本**不丢**（草稿 + chip ✎ 都在）✓ |
+| 说明态按 Enter 且正文为空 | 弹出提示"请先在消息框里写本轮的要求…"，退回消息槽，**不发请求**、说明保留 ✓ |
+| 说明态输入 `/` | 不弹操作菜单（"/" 记为说明文本）；退出说明态后输入 `/` → 操作菜单正常弹出（`picker.mode=operation`）✓ |
+| 真发送（正文 + 2 个对象说明） | 客户端载荷 `focus=[{…,"note":"这是整库的说明：所有资料都在这"},{…,"note":"MxsDoc 目录：产品文档在这里"}]` ✓；气泡上两个 chip 的 tooltip 就是各自说明 ✓；发送后消息槽清空、退出说明态、说明作为草稿保留 ✓ |
+| 服务端是否真收到说明 | 取回该会话消息：`last.focus` 反解出两条 **note 原文一致** ✓；模型回复末尾主动提到"本轮给出的两个关注对象（「测试仓库2」根目录、`/MxsDoc`）" → 说明确实进了注入块 ✓ |
+| 控制台 | 无新增报错（仅生成结束时 `stream` 的 `ERR_ABORTED`，为前端收流后主动 abort 的既有噪声）✓ |
+| 回归 | 守卫测试 **36 套 / 1361 断言 / 0 失败**（未触及 index.html）✓ |
+
+### 10.4 备注（取舍与踩坑）
+
+- **取舍**：@ 弹窗"确定"后回**消息槽**而不是停在最后一个对象的说明槽。理由：一次勾选多个对象是"选资料"的手势，接下来要写本轮要求；若停在说明槽，用户写的正文会被记成某个对象的说明（学术伴源码注释点名的坑）。需要"选完即填说明"的话，点 chip 一步即可。若用户偏好"确定后直接进说明槽"，改 `confirmFocusDialog()` 一行即可。
+- **踩坑**：`textarea.maxLength = -1` 抛 `IndexSizeError`（"not positive or 0"）→ 退出说明态时必须 `removeAttribute('maxlength')`、进入时 `setAttribute('maxlength', 500)`。首轮实测被浏览器 `pageError` 抓到，已修。
+- **测试脚本坑（非产品问题）**：批量点 chips 时必须每次重新 `querySelectorAll()` —— `renderFocusChips()` 会重建 DOM，缓存的 NodeList 里是脱离文档的旧节点，其 click 既不冒泡到 `#focusChips`（委托失效）也不冒泡到 `document`，表现为"点了没反应"。
+- 变更文件：`WebRoot/web/agent/index.html`、本记录。
+
  

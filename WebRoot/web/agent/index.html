@@ -1882,14 +1882,13 @@
         .op-chip-slot { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; }
         .op-chip-slot .focus-chip { padding: 2px 4px 2px 7px; }
         .op-chip-slot .focus-chip .chip-label { max-width: 150px; }
-        .focus-note-editor { margin-top: 6px; border: 1px solid #ddd; border-radius: 6px; padding: 8px; background: #fafafa; }
-        .focus-note-editor textarea { width: 100%; resize: vertical; border: 1px solid #e0e0e0; border-radius: 4px; padding: 6px; font-size: 12px; font-family: inherit; box-sizing: border-box; }
-        .focus-note-foot { text-align: right; margin-top: 3px; font-size: 11px; color: #999; }
+        /* P1.6 共用消息框：填写对象说明时，框体给一条蓝色 accent（对象 chip 同步高亮）*/
+        .input-container.note-mode { border-color: #8fbaf0; }
+        .input-container.note-mode:focus-within { border-color: #4a8fe7; box-shadow: 0 0 0 3px rgba(74,143,231,0.12); }
         body.dark-theme .focus-chip { background: #202028; border-color: #3a3a4a; color: #c8cdd8; }
         body.dark-theme .focus-chip.editing { background: #1e2b45; border-color: #3f5f96; color: #8fb6ff; }
         body.dark-theme .focus-chip.op { background: #16302a; border-color: #275246; color: #7fd7ac; }
-        body.dark-theme .focus-note-editor { background: #1c1c2a; border-color: #33334d; }
-        body.dark-theme .focus-note-editor textarea { background: #141420; color: #ddd; border-color: #33334d; }
+        body.dark-theme .input-container.note-mode { border-color: #3f5f96; }
 
         /* P1.5：关注对象目录树弹窗 */
         #focusDialog .dialog { width: 620px; max-width: 94vw; max-height: 84vh; display: flex; flex-direction: column; }
@@ -2129,10 +2128,6 @@
                         </div>
                         <div class="focus-bar composer-chips" id="focusBar" style="display:none;">
                             <div class="focus-chips" id="focusChips"></div>
-                            <div class="focus-note-editor" id="focusNoteEditor" style="display:none;">
-                                <textarea id="focusNoteInput" rows="2" maxlength="500" placeholder="说明这个对象是什么、怎么用（可选）"></textarea>
-                                <div class="focus-note-foot"><span id="focusNoteTip">0 / 500</span></div>
-                            </div>
                         </div>
                         <div class="composer-input">
                             <textarea id="messageInput" placeholder="输入消息、问题或命令；输入 @ 选择关注对象，输入 / 选择操作" rows="1"></textarea>
@@ -3656,14 +3651,24 @@
     // Claude Code style: streaming + interruptable generation
     async function sendMessage() {
         var input = document.getElementById('messageInput');
-        var content = input.value.trim();
-        if (!content) return;
+        var content = messageSlotText().trim();   // P1.6：正文取【消息】槽（不是当前可见的对象说明）
+        if (!content) {
+            if (state.activeFocusKey) {
+                // 共用消息框后：用户可能把对象说明填了、正文没写。后端空 command 直接 400，
+                // 这里不能静默无反应 → 明确提示，并退回【消息】槽位让他写正文（说明已作为草稿留在 chip 上）
+                showMessage('请先在消息框里写本轮的要求（刚才填写的是对象说明，只在选中的对象上生效）', 'info');
+                closeFocusNote();
+                if (input) { try { input.focus(); } catch (e) { /* ignore */ } }
+            }
+            return;
+        }
 
         // If already generating, queue this message and return
         if (state.isGenerating) {
             state.pendingMessages.push(content);
             showMessage('消息已加入队列 (' + state.pendingMessages.length + ' 条待发送)', 'info');
-            input.value = '';
+            setFocusSlotText(FOCUS_MSG_SLOT, '');
+            if (!state.activeFocusKey) input.value = '';
             updateSendButton();
             return;
         }
@@ -3694,8 +3699,10 @@
         }
         historyIndex = -1;
 
-        // Clear input immediately
-        input.value = '';
+        // Clear input immediately（P1.6：清空【消息】槽并退出说明态；对象说明作为草稿保留，供下一轮继续用）
+        setFocusSlotText(FOCUS_MSG_SLOT, '');
+        if (state.activeFocusKey) { state.activeFocusKey = null; }
+        applyFocusSlot();
         hideAutocomplete();
 
         maybeWarnOperationWithoutMaterials();   // 模式缺资料 → 轻提示（不拦发送）
@@ -3962,6 +3969,10 @@
     var DOCSYS_BASE = '/DocSystem';
     var FOCUS_MAX = 10;
     var FOCUS_NOTE_MAX = 500;
+    /** 共用消息框（P1.6）：消息槽位在 focusDrafts 里的保留键（对象说明用 focusKey(it)）*/
+    var FOCUS_MSG_SLOT = '__message__';
+    /** 消息框默认占位文案（退出说明态时恢复）*/
+    var MESSAGE_PLACEHOLDER = '输入消息、问题或命令；输入 @ 选择关注对象，输入 / 选择操作';
     var OPERATION_CATALOG = [
         { id: 'ask', label: '问答', desc: '基于所选资料回答问题', needsMaterials: true },
         { id: 'summarize', label: '总结资料', desc: '汇总所选资料的要点', needsMaterials: true },
@@ -4094,6 +4105,8 @@
         } catch (e) {
             state.focusDrafts = {};
         }
+        // 对象说明沿用草稿；「消息」槽位不跨刷新恢复（与改造前“打开页面输入框是空的”一致）
+        state.focusDrafts[FOCUS_MSG_SLOT] = '';
     }
 
     function persistFocusDrafts() {
@@ -4121,7 +4134,6 @@
     // ---------- chips 渲染 ----------
     function renderFocusBar() {
         renderFocusChips();
-        renderFocusNote();
     }
 
     function renderFocusChips() {
@@ -4166,47 +4178,90 @@
         return null;
     }
 
-    function renderFocusNote() {
-        var box = document.getElementById('focusNoteEditor');
-        var input = document.getElementById('focusNoteInput');
-        if (!box || !input) return;
-        var it = activeFocusItem();
-        if (!it) {
-            box.style.display = 'none';
-            state.activeFocusKey = null;
-            renderFocusChips();   // 取消选中：chip 背景恢复留白
-            return;
-        }
-        box.style.display = 'block';
-        input.value = getFocusNote(it);
-        input.placeholder = (it.kind === 'repos' || (it.kind === 'dir' && !it.name))
-            ? '这个仓库的用途，例：所有历史资料都在这里（关注它就代表关注整个仓库）'
-            : (it.kind === 'dir' ? '例：请使用这个目录下的资料做参考' : '这个文件是什么/怎么用，例：这是最新需求文档');
-        updateFocusNoteTip();
-        renderFocusChips();       // 选中态 chip 高亮
+    /* ---------- 共用消息框（P1.6，参照学术伴致谢）----------
+       一个输入框承载两个槽位：【消息】与【当前对象的说明】。
+       参照实现：学术伴原型（网页设计方案的 thesis-writing/thanks 章节）与真实代码
+       AcknowledgeAgentPanel.handleObjectPick / handleChange / handleOutsideComposer：
+       - 点对象 chip = 把消息框切到「补充对 X 的说明」槽位（占位文案随之变化）；
+       - 切换槽位前保存、切换后载入 → 每个对象分别填写、互不覆盖；
+       - 点 composer 以外的地方 = 退出说明态、回到【消息】槽位
+         （否则对象恒有一项处于选中态，用户输入会被记成对象说明而写不了正文）；
+       - 发送时正文取【消息】槽位，各对象说明随 focus[] 结构化带走（后端协议不变）。*/
+
+    function focusSlotText(slotKey) {
+        var v = state.focusDrafts[slotKey];
+        return (v === undefined || v === null) ? '' : v;
     }
 
-    /** 关闭用途编辑器并清除选中状态（点空白处 / 再点同一 chip）*/
+    function setFocusSlotText(slotKey, text) {
+        var v = text || '';
+        if (slotKey !== FOCUS_MSG_SLOT && v.length > FOCUS_NOTE_MAX) v = v.substring(0, FOCUS_NOTE_MAX);
+        state.focusDrafts[slotKey] = v;
+        persistFocusDrafts();
+    }
+
+    /** 本轮消息正文（取【消息】槽，不是当前可见的说明）*/
+    function messageSlotText() {
+        return focusSlotText(FOCUS_MSG_SLOT);
+    }
+
+    /** 输入框每次变化：实时写回当前槽位（对象说明同时同步到 focus[] 与 chip 上的 ✎）*/
+    function saveActiveSlot(text) {
+        var it = activeFocusItem();
+        if (it) {
+            setFocusNote(it, text);
+            renderFocusChips();   // 只刷 chips（不重建 textarea，避免光标跳动）
+        } else {
+            setFocusSlotText(FOCUS_MSG_SLOT, text);
+        }
+    }
+
+    function focusNotePlaceholder(it) {
+        var name = it.label || it.name || ('#' + it.vid);
+        var hint = it.kind === 'dir' && !it.name
+            ? '例：所有历史资料都在这里（关注它就代表关注整个仓库）'
+            : (it.kind === 'dir' ? '例：请使用这个目录下的资料做参考' : '例：这是最新需求文档');
+        return '补充对「' + name + '」的说明（可选）\n' + hint;
+    }
+
+    /** 切换输入框到当前槽位（【消息】或某个对象的说明）：内容 + 占位 + 长度限制 + chip 高亮*/
+    function applyFocusSlot() {
+        var input = document.getElementById('messageInput');
+        var box = document.querySelector('.input-container');
+        var it = activeFocusItem();
+        if (!it) state.activeFocusKey = null;   // 对象已被移除/清空 → 归一为【消息】槽
+        if (box) box.classList.toggle('note-mode', !!it);
+        renderFocusChips();       // 选中态 chip 高亮 / ✎ 标记
+        if (!input) return;
+        if (it) {
+            input.value = getFocusNote(it);
+            input.setAttribute('maxlength', FOCUS_NOTE_MAX);
+            input.placeholder = focusNotePlaceholder(it);
+        } else {
+            input.value = focusSlotText(FOCUS_MSG_SLOT);
+            // 消息无长度上限：必须摘掉属性（写 maxLength=-1 会抛 IndexSizeError）
+            input.removeAttribute('maxlength');
+            input.placeholder = MESSAGE_PLACEHOLDER;
+        }
+        autoResizeTextarea(input);
+    }
+
+    /** 退出说明态、回到【消息】槽位（点空白处 / 再点同一 chip / 发送后）*/
     function closeFocusNote() {
         if (!state.activeFocusKey) return;
         state.activeFocusKey = null;
-        renderFocusNote();
+        applyFocusSlot();
     }
 
-    function updateFocusNoteTip() {
-        var input = document.getElementById('focusNoteInput');
-        var tip = document.getElementById('focusNoteTip');
-        if (input && tip) tip.textContent = input.value.length + ' / ' + FOCUS_NOTE_MAX;
-    }
-
+    /** 点 chip：进入该对象的说明槽；再点一次 = 收起（回到【消息】槽）*/
     function openFocusNote(idx) {
         var it = (state.focus || [])[idx];
         if (!it) return;
         var key = focusKey(it);
-        if (state.activeFocusKey === key) { closeFocusNote(); return; }   // 再点一次 = 收起
-        state.activeFocusKey = key;
-        renderFocusNote();
-        var input = document.getElementById('focusNoteInput');
+        if (state.activeFocusKey === key) { closeFocusNote(); return; }
+        state.activeFocusKey = key;   // 旧槽位无需显式保存：input 事件已实时写回
+        applyFocusSlot();
+        var input = document.getElementById('messageInput');
         if (input) { try { input.focus(); } catch (e) { /* ignore */ } }
     }
 
@@ -4216,7 +4271,7 @@
         for (var i = 0; i < (state.focus || []).length; i++) {
             if (focusKey(state.focus[i]) === key) {
                 // D8：同一对象不允许重复 → 聚焦已有项
-                state.activeFocusKey = key;
+                state.activeFocusKey = null;
                 renderFocusBar();
                 showMessage('该对象已在关注列表中', 'info');
                 return;
@@ -4227,7 +4282,9 @@
             return;
         }
         state.focus.push(item);
-        state.activeFocusKey = key;
+        // 注意：这里是"带上下文进入页面"的自动添加（不是用户手点），不能把消息框切到说明槽，
+        // 否则用户进来时输入框是"补充对 X 的说明"，会以为那是正文框。填写说明靠点击 chip 进入。
+        state.activeFocusKey = null;
         renderFocusBar();
     }
 
@@ -4235,11 +4292,12 @@
         var it = (state.focus || [])[idx];
         if (!it) return;
         var key = focusKey(it);
+        var wasActive = (state.activeFocusKey === key);
         state.focus.splice(idx, 1);
-        if (state.activeFocusKey === key) state.activeFocusKey = null;
+        if (wasActive) state.activeFocusKey = null;
         var last = (state.focus || [])[state.focus.length - 1];
         if (!state.activeFocusKey && last) state.activeFocusKey = focusKey(last);
-        renderFocusBar();   // 草稿保留（移除对象不删草稿）
+        applyFocusSlot();   // 草稿保留（移除对象不删草稿）；被移除的正在填写时切到最后一个对象
     }
 
     function setOperation(id, label) {
@@ -4566,7 +4624,8 @@
         d.open = false;
         d.snapshot = null;
         fdEl('focusDialog').classList.remove('active');
-        renderFocusBar();
+        state.activeFocusKey = null;   // 选完对象回到【消息】槽：接下来该写本轮要求了
+        applyFocusSlot();
         var input = fdEl('messageInput');
         if (input) { try { input.focus(); } catch (e) { /* ignore */ } }
     }
@@ -4635,13 +4694,13 @@
         d.importAtt = null;
         d.importTarget = null;
         fdEl('focusDialog').classList.remove('active');
-        if (!wasImport) renderFocusBar();
+        if (!wasImport) { state.activeFocusKey = null; applyFocusSlot(); }
     }
 
     function clearFocusDialog() {
         state.focus = [];
         state.activeFocusKey = null;
-        renderFocusBar();
+        applyFocusSlot();
         renderFocusDialog();
     }
 
@@ -5072,30 +5131,21 @@
             removeAttachment(parseInt(rem, 10));
         }
     });
-    // 点空白处（既不在 chips 也不在用途编辑器内）→ 关闭用途编辑器并清除选中态
+    // 点 composer 以外的地方 → 退出对象说明态（回到【消息】槽位）
+    // 必须这样做的原因（与学术伴 AcknowledgeAgentPanel.handleOutsideComposer 注释一致）：
+    // 否则对象恒有一项处于选中态，用户输入会被记成对象说明而写不了正文。
     // 注意：必须用事件路径（composedPath）判定——点 chip 会先重渲染 chips，
-    // 被点击的节点随即脱离 DOM，此时 contains(target) 会误判为"点在外面"。
+    // 被点击的节点随即脱离 DOM，此时 contains(target) 会误判为“点在外面”。
     document.addEventListener('click', function(e) {
         if (!state.activeFocusKey) return;
-        var chips = document.getElementById('focusChips');
-        var noteBox = document.getElementById('focusNoteEditor');
+        var box = document.querySelector('.input-container');
         var path = (e.composedPath && e.composedPath()) || [];
         for (var i = 0; i < path.length; i++) {
-            if (path[i] === chips || path[i] === noteBox) return;
+            if (box && path[i] === box) return;
         }
         var t = e.target;
-        if (chips && t && chips.contains(t)) return;
-        if (noteBox && t && noteBox.contains(t)) return;
+        if (box && t && box.contains && box.contains(t)) return;
         closeFocusNote();
-    });
-    document.getElementById('focusNoteInput').addEventListener('input', function(e) {
-        var it = activeFocusItem();
-        if (!it) return;
-        var v = e.target.value;
-        if (v.length > FOCUS_NOTE_MAX) { v = v.substring(0, FOCUS_NOTE_MAX); e.target.value = v; }
-        setFocusNote(it, v);
-        updateFocusNoteTip();
-        renderFocusChips();   // 只刷 chips（避免重建 textarea 造成光标跳动）
     });
     // 点击面板/输入框外 → 关闭选择器
     document.addEventListener('click', function(e) {
@@ -5174,6 +5224,10 @@
     document.getElementById('messageInput').addEventListener('input', function(e) {
         // 自动 resize textarea
         autoResizeTextarea(e.target);
+        // P1.6：先写回当前槽位（【消息】或当前对象的说明）——切换对象/失焦都不会丢字
+        saveActiveSlot(e.target.value);
+        // 自动 resize 后必须重新描一次 chips（无重绘，仅内容）；说明态下不弹 @ / 内联菜单
+        if (state.activeFocusKey) return;
         // P1：@ / 选择器接管输入（技能已并入 / 菜单，见 D4，不再触发旧技能 autocomplete）
         if (handlePickerInput(e.target)) return;
         hideAutocomplete();
