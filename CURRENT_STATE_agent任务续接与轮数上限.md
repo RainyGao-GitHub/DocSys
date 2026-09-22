@@ -62,21 +62,24 @@
    - 另外实测：`[ToolUseLoop][WRAPUP] maxTurns=5 toolCalls=31 answerLen=3217`（收尾轮确实产出阶段性结论）
    - 无配置回退：临时键 `agent_max_turns` 已从 dev 库删除（默认 25 生效）
 
+9. ✅ **已提交**：主仓库 `D:/Dev/DocSys`（`devInt`）commit **`8353fe0ed`**（7 files changed, +630/-76；含代码 + 本卡）
+
 ## 下一步
 
 1. P3（下一轮）：前端「继续」入口（`done.meta.truncated=true` 时出现）+ 服务端续接上下文注入（复用 `TranscriptCompactor.summarize`，还需一个"未完成任务"标记）
 2. P4 可选：完成判定（autopilot 式自动继续）
-3. 本卡最后再提交一次（记录 P3 进度）；后续子项切换时同步本卡三处
+3. 会话恢复协议入口：`CLAUDE.md` 第 1 步仍指向旧卡 `CURRENT_STATE_agent技能与工具清理.md`（已封卡）——已向用户提议改指向本卡，待裁定
 
-## 未提交改动（2026-09-22，P1+P2）
+## 未提交改动
 
-- `src/com/DocSystem/agent/orchestrator/ToolUseResult.java`（+truncated/partial）
-- `src/com/DocSystem/agent/orchestrator/ToolUseLoop.java`（预算可配 + 收尾轮 + 折叠式裁剪）
-- `src/com/DocSystem/agent/orchestrator/TranscriptCompactor.java`（**新文件**）
-- `src/com/DocSystem/agent/orchestrator/MainAgent.java`（truncated 交付 + 重试续接 + 读配置）
-- `src/com/DocSystem/agent/config/AgentConfigService.java`（+KEY_AGENT_MAX_TURNS）
-- `src/com/DocSystem/agent/orchestrator/TestToolUseLoop.java`（护栏同步）
-- 本卡 + 计划：计划已于 `395e31b9b` 提交；本卡本次的更新随代码一起提交
+- 无。P1+P2 的 7 个文件（含本卡）已随 `8353fe0ed` 提交：
+  - `src/com/DocSystem/agent/orchestrator/ToolUseResult.java`（+truncated/partial）
+  - `src/com/DocSystem/agent/orchestrator/ToolUseLoop.java`（预算可配 + 收尾轮 + 折叠式裁剪）
+  - `src/com/DocSystem/agent/orchestrator/TranscriptCompactor.java`（**新文件**）
+  - `src/com/DocSystem/agent/orchestrator/MainAgent.java`（truncated 交付 + 重试续接 + 读配置）
+  - `src/com/DocSystem/agent/config/AgentConfigService.java`（+KEY_AGENT_MAX_TURNS）
+  - `src/com/DocSystem/agent/orchestrator/TestToolUseLoop.java`（护栏同步）
+  - 本卡（计划已于 `395e31b9b` 单独提交）
 
 ## 生效约束
 
