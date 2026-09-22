@@ -724,7 +724,7 @@ Tomcat 行为共同锁定。真 4xx 路径已被探针端到端覆盖。
 - 页面 E2E（模板样例/回归）：读 1 步（3 文件）→ 建文件夹 2 步 + 1 弹窗（参数行 `vid=5；path=66666/；name=R36检查单验证`）
   → 删除 4 步 + 1 弹窗 → 答"还剩 3 项"；磁盘核对 `D:\test\66666` 无残留；`LEGACY-FALLBACK` 仍 1、`[ToolUseLoop][NATIVE]` 168→183
 
-## R3-7：登录态响应归属（2026-09-21，✅ 用户裁定「按A开工」；已提交 主库 `9d4d6d7b5` / websocket 库 `bbebedc1`）
+## R3-7：登录态响应归属（2026-09-21 实施 / 2026-09-22 修正范围，✅ 用户裁定「按A开工」；主库 `9d4d6d7b5` + 修正 `d0ac17443`、websocket 库 `bbebedc1` + 修正 `e2ee29b9`）
 
 ### 开工前核实的调用方清单（用户要求先查调用方）
 - `getLoginUser(...)` 服务端调用 **23 处**（ReposController 19 / BussinessController 2 / UserController 1 / BaseController 1）
@@ -735,28 +735,35 @@ Tomcat 行为共同锁定。真 4xx 路径已被探针端到端覆盖。
 ### 做了什么（方案 A）
 1. `BaseController.getLoginUser`：删 3 处内部 `writeJson`（自动登录失败/成功/未登录），**自动登录成功改 `return loginUser`**（不再“写响应 + return null”），
    方法注释写明契约：`User`=已认证；`null`=未认证/被拒（原因看 `rt`）；**本方法不写响应**。
-2. **连带修掉 9 个“靠内部写响应兜底”的站点** —— 这是本项的真实回归面，护栏当场抓出来的：
-   `DocController` 7 处（`downloadDocChunked`、`downloadDoc`×3、`downloadVideo`、`downloadImg`、`downloadDocEx`）+ `websocket/OfficeController` 3 处
-   （`downloadHistory`/`downloadHistoryDiff`/`downloadfile`，顺带补 `import com.DocSystem.common.ErrorCode`）。
-   它们的 `reposAccess == null` 分支早已被写成“注释掉 `writeJson`/`return` + `throw`”，去掉内部写后未登录会变 **500 错误页**；
-   统一改为 `setErrorCodeIfAbsent(NO_PERMISSION)` + `docSysErrorLog` + `writeJson` + `return`。
+2. **下载类 10 个站点：保持作者本意（抛异常、不写响应体）** —— ❗ 我最初以“去掉内部写会变成 500 页”为由把它们改成了写 JSON，
+   **2026-09-22 用户指出“这几处应该是故意这样设置的，从注释掉的代码看得出来”**，查 git 历史完全证实：
+   - `DocController`：`24e1ff247`（2023-02-09 yuan）**「downloadDoc: 文件下载失败导致错误信息当作了文件内容 → 1. 抛出异常」**；
+   - `OfficeController`：`a15c1a8cf`（2023-02-10 ragao）**「office-editor: download异常处理」**。
+   两个提交都把下载失败分支的 `writeJson + return` **成对注释掉**改成 `throw`（JSON 200 会被客户端当成“下载成功的文件内容”落盘）。
+   ⇒ **已逐字节回退我的 10 处改动**（`git diff <R3-7 之前> -- DocController.java / OfficeController.java` **为空**），
+   并把“10 处例外”写进护栏白名单 + tripwire（多一个少一个都报错）。
 3. 其余约 100 处调用点不动（它们本来自己写响应）。
 
-### 验证（三件套）
-- **护栏** `TestLoginUserResponseContract` **36 项**（源码 lint + 反向自测：`getLoginUser` 体内不得写响应、未登录出口保留码、自动登 录成功必须 `return loginUser`、契约写进注释；每个调用点必须紧邻判空；每个 access-info 站点必须自己写且不得用 `throw`）
-  → **全量 36 套 / 1356 项 0 失败**（本项开始前 35 套 / 1320 项）
-- **真探针** `LoginResponseContractProbe` **18/18**：调用方文案不再被顶掉；4 个原本 500 的站点恢复 JSON（`NOT_LOGIN`/`NO_PERMISSION`）；
+### 验证（三件套，回退后重跑）
+- **护栏** `TestLoginUserResponseContract` **41 项**（源码 lint + 反向自测：`getLoginUser` 体内不得写响应、未登录出口保留码、自动登录成功必须 `return loginUser`、契约写进注释；
+  每个调用点必须紧邻判空；**access-info 站点 95 个：非白名单必须自己写响应且不得 `throw`；白名单（10 个下载类）必须抛异常且不得写响应体；tripwire 实测“抛异常形态 10 个 = 白名单 10 个”**）
+  → **全量 36 套 / 1361 项 0 失败**（本项开始前 35 套 / 1320 项）
+- **真探针** `LoginResponseContractProbe` **17/17**：调用方文案不再被顶掉；**下载类失败返回非 200（不再把错误信息当文件内容）**；
   只带 `dsuser`/`dstoken` 时自动登录透明（`/Repos/getReposList.do` 返回**仓库列表**而非用户对象；`/User/getLoginUser.do` 返回 `"pwd":""` 用户）
-- **页面 E2E**：读「列出仓库 5 根目录」→ 无弹窗答 79 项；建文件夹 `R37验证` → 1 弹窗（`vid=5；path=66666/；name=R37验证`）→ 磁盘核对存在；删除 → 1 弹窗 → 剩 3 项；
-  `[ToolUseLoop][NATIVE]` 183 → 190、`[LEGACY-FALLBACK]` 仍为 1
+- **页面 E2E（回退后重跑）**：读「66666/ 下有哪些文件」→ 1 步无弹窗答 3 项；建文件夹 `R37回退验证` → 2 步 + 1 弹窗（`vid=5；path=66666/；name=R37回退验证`）→ 磁盘核对存在；
+  删除 → 2 步 + 1 弹窗 → 剩 3 项；`[ToolUseLoop][NATIVE]` 190 → 195、`[LEGACY-FALLBACK]` 仍为 1
 
 ### 踩坑
 - Spring MVC 控制器**必须 `-parameters -g` 编译**（`do_compile.ps1 -Spring`）：漏了会缺参数名 → 所有带命名参数的方法运行期 500
   （`IllegalArgumentException: Name for argument type ... not available`）。本次先漏一次，探针当场暴露 4 个接口 500。
 
+### 教训（比代码本身重要）
+- **“注释掉 `writeJson` + 写 `throw`”不一定是脏代码**：先 `git log -S`/`blame` 看它是不是为修某个具体缺陷才长成这样。
+  本次我当成缺陷改了 10 处，实际是在把 2023 年修掉的“错误信息当成文件内容”缺陷装回去。
+- 修正后的护栏不再“一刀切”，而是 **规则 + 显式白名单 + tripwire**：既不放过真正的漏写响应，也不把有意设计当回归。
+
 ### 残留（非本项引入，如实记录）
-- `OfficeController` 的 `repos == null` 分支（3 处）同为“注释掉 writeJson + `throw`”形态 → “仓库不存在”仍会是 500 页（不在 本项范围）
-- 非 AJAX 且无 session 的请求被 `MyInterceptor` 跳 `tologin`（302）——前端全 AJAX，不受影响
+- 非 AJAX 且无 session 的请求被 `MyInterceptor` 跳 `tologin`（302）——前端全 AJAX，不受影响（探针已加 AJAX 头复核）
 
 ## 全阶段完成情况
 
@@ -784,7 +791,7 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- 无（R3-7 已提交：主库 `9d4d6d7b5`（代码 + 计划文档）/ `18a55884f`（本工作卡）；websocket 库 `bbebedc1`（OfficeController））
+- 无（R3-7 及其修正已提交：主库 `9d4d6d7b5`、修正 `d0ac17443`（含计划文档）、工作卡 `18a55884f`/`b64ee22a4`/本提交；websocket 库 `bbebedc1`、修正 `e2ee29b9`）
 - 已提交：R3-6 = `1801cdaad`；R3-14 = `55c9a243e`（工作卡 `bf909c2cc`）；R3-4/R3-5 = `95cd0c1f9`（工作卡 `60c70a4fb`）；R3-14 复核改写 = `971dcb151`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
