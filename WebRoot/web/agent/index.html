@@ -1860,11 +1860,20 @@
         .focus-chip.editing { background: #dceaff; border-color: #8fbaf0; color: #1257a8; }
         .focus-chip.op { background: #eefaf3; border-color: #c8ecd9; color: #0f7b52; }
         .focus-chip .chip-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
-        /* P1.5：类型图标（复用 project 页目录树的 zTree 图标资源）*/
+        /* P1.5：类型图标（目录 / 文件复用 project 页目录树的 zTree 图标资源；整库见下方“整库图标”）*/
         .fi { width: 15px; height: 15px; flex: none; vertical-align: -2px; }
         .fi-ico { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: none; }
         .fi-ico svg { width: 14px; height: 14px; display: block; }
+        /* 整库图标（方案 E）：线条图标，颜色走 currentColor，深色主题只换色
+           尺寸：比同行的文件/目录图标大一档（用户要求“仓库图标大一点”）*/
+        .fi-ico.repo-ico { color: #4C6FFF; width: 17px; height: 17px; vertical-align: -3px; }
+        .fi-ico.repo-ico svg { width: 17px; height: 17px; }
+        body.dark-theme .fi-ico.repo-ico { color: #95ABFF; }
         .ft-row .fi { width: 16px; height: 16px; vertical-align: -3px; }
+        .ft-row .fi-ico { width: 16px; height: 16px; }
+        .ft-row .fi-ico svg { width: 15px; height: 15px; }
+        .ft-row .fi-ico.repo-ico { width: 18px; height: 18px; vertical-align: -4px; }
+        .ft-row .fi-ico.repo-ico svg { width: 18px; height: 18px; }
         .focus-chip .chip-note-dot { color: #f0a020; font-size: 11px; }
         .focus-chip .chip-badge { font-size: 10px; color: #999; }
         .focus-chip .chip-x { border: none; background: none; color: inherit; cursor: pointer; font-size: 13px; line-height: 1; padding: 0 2px; }
@@ -3986,9 +3995,8 @@
         return focusTypeLabel(it ? it.kind : '');
     }
 
-    // ---------- 类型图标（P1.5：复用 project 页目录树的 zTree 图标资源）----------
+    // ---------- 类型图标：目录 / 文件复用 project 页目录树的 zTree 图标资源；整库改为内联线条 SVG（方案 E）----------
     var ICON_BASE = '/DocSystem/web/static/zTree/css/metroStyle/img/';
-    var ICON_OTHER_BASE = '/DocSystem/web/images/file_icon/icon_others/';
 
     /** 文件扩展名 → 图标名（与 project 树 getDiyFileIconType 的映射保持一致）*/
     function focusFileIconName(name) {
@@ -4017,20 +4025,36 @@
         return 'file_' + (map[suffix] || 'unknown') + '.svg';
     }
 
-    /** 类型图标 <img>：整库 = 库文件夹，目录 = 文件夹，文件 = 按扩展名 */
+    /** 类型图标：整库 = 线条双层图标（方案 E，2026-09-22 用户选定）；目录 / 文件 = project 页目录树的 zTree 图标资源（保持原样）*/
     function focusItemIconHtml(it) {
-        var src, tip;
-        if (it && it.kind === 'dir' && !it.name) {
-            src = ICON_OTHER_BASE + 'folder_public.png';
-            tip = '整库（整个仓库）';
-        } else if (it && it.kind === 'dir') {
-            src = ICON_BASE + 'folder_close.svg';
-            tip = '目录';
-        } else {
-            src = ICON_BASE + focusFileIconName(it ? it.name : '');
-            tip = '文件';
+        if (it && it.kind === 'dir' && !it.name) return focusRepoIconHtml();
+        if (it && it.kind === 'dir') {
+            return '<img class="fi" src="' + ICON_BASE + 'folder_close.svg" alt="" title="目录">';
         }
-        return '<img class="fi" src="' + src + '" alt="" title="' + tip + '">';
+        return '<img class="fi" src="' + ICON_BASE + focusFileIconName(it ? it.name : '') + '" alt="" title="文件">';
+    }
+
+    /* ---------- 整库图标（方案 E，2026-09-22 用户选定）----------
+       用户口径：只换“整库”一个图标——旧的是 2011 年 Windows Live 的公共文件夹 PNG，
+       语义不对（public ≠ 整库）且 15px 下发糊；换成**双层叠放**的线条图标，
+       跟“目录”的黄色实心文件夹在**结构上**就不同（不只差颜色），更容易区分。
+       颜色走 currentColor，深浅主题在 CSS 里换色；目录/文件图标不动。*/
+    var OBJ_ICON_STROKE = '1.7';
+    /** 收紧 viewBox：图形实际只占 0 0 24 24 的约 70%，留白让图标看起来很“小”；
+     *  裁到图形的紧致外框（含描边）后，同样 15px 盒子里画得更大（用户要求“仓库图标大一点”）*/
+    var OBJ_ICON_VIEWBOX = '1.6 1.95 18.9 18.9';
+    function objIconSvg(inner) {
+        return '<svg viewBox="' + OBJ_ICON_VIEWBOX + '" fill="none" stroke="currentColor" stroke-width="' + OBJ_ICON_STROKE
+            + '" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+    }
+    var FOLDER_PATH = 'M2.6 9.4A2.1 2.1 0 0 1 4.7 7.3h3.9c.53 0 1.04.2 1.42.57l.7.7c.38.37.89.57 1.42.57h5.16A2.1 2.1 0 0 1 19.4 11.2v6.1a2.1 2.1 0 0 1-2.1 2.1H4.7a2.1 2.1 0 0 1-2.1-2.1z';
+    /** 整库（整个仓库）：双层叠放 = 多个目录的集合
+     *  后层露出上沿 + 右沿短竖线，保证 15px 下也能一眼看出“两层” */
+    function focusRepoIconHtml() {
+        return '<span class="fi-ico repo-ico" title="整库（整个仓库）">'
+            + objIconSvg('<path d="M5.9 6.1a2 2 0 0 1 2-1.9h3.4c.55 0 1.08.22 1.47.6l.66.68c.39.38.92.6 1.47.6h3.4v1.6" stroke-opacity=".55"/>'
+                + '<path d="' + FOLDER_PATH + '"/>')
+            + '</span>';
     }
 
     /** 「操作 / 技能」标签图标：彩色内联 SVG（与彩色对象图标同一视觉语言）

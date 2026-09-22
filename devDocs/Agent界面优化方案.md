@@ -177,4 +177,40 @@
 ### 8.4 部署提示
 
 - 改了 Java → 必须 `javac ... -d WebRoot/WEB-INF/classes`（本次命令附 `-parameters -g`，因为该类里存在依赖参数名解析的 `@RequestParam`）+ **重启 dev Tomcat**（目录/联接部署不自动重载类）。
-- 已知既有噪声（非本次引入）：客户端中途断开 SSE 时，后台线程继续 `emitter.send()`，日志会刷 `SSE send failed: ResponseBodyEmitter is already set complete`（`sendSse` 已有 try/catch，只是量大）。后续可加"连接已断开即停止推送"的短路。 
+- 已知既有噪声（非本次引入）：客户端中途断开 SSE 时，后台线程继续 `emitter.send()`，日志会刷 `SSE send failed: ResponseBodyEmitter is already set complete`（`sendSse` 已有 try/catch，只是量大）。后续可加"连接已断开即停止推送"的短路。
+
+## 9. 「@」关注对象的图标调整：整库图标换新（2026-09-22，用户选定）
+
+### 9.1 问题（用户口径 + 实测）
+
+- 整库图标原为 `web/images/file_icon/icon_others/folder_public.png` —— 2011 年 Windows Live 的"公共文件夹"（浅蓝底 + 白圆 + 小人）；
+  `.fi` 只有 **15px**，渲染出来只剩"蓝色色块 + 一个白点"，既糊又**语义不对**（public ≠ 整个仓库）。
+- 用户的目标（原话）：**"整库"和"目录"要有结构上的区分，不能只是颜色不同** ——
+  "其他图标终究看起来还是像目录（只不过颜色不同），方案E给人视觉差异非常大，反而更容易区分"。
+- 做法：先做了一版"真尺寸 15px + 放大 + 浅/深色 chip + 与操作/技能混排"的**对比预览页**（5 个方案）给用户看，再落实现。
+
+### 9.2 实现（纯前端，只动 `WebRoot/web/agent/index.html`，无 Java 改动）
+
+- **只换"整库"一个图标**；目录 / 文件图标保持原样（zTree metroStyle 的 `folder_close.svg` / `file_*.svg`）——用户明确"只换掉仓库的图标就够了"。
+- 新图标 = **内联线条 SVG**（`objIconSvg()` + `FOLDER_PATH` + `focusRepoIconHtml()`）：前层单层文件夹，后层露出**上沿 + 右沿短竖线** = 双层叠放，
+  与"目录"的黄色**实心**文件夹在几何结构上就不同（不靠色相区分）。`focusItemIconHtml()` 统一出口，chips / 目录树 / 历史回显共用。
+- 颜色走 `currentColor`：`.fi-ico.repo-ico { color:#4C6FFF }`；`body.dark-theme` 下换 `#95ABFF`（深色主题只换颜色，不动几何）。
+- **尺寸放大（用户第二轮反馈"仓库图标太小"）**：
+  1. `viewBox` 从 `0 0 24 24` 收紧为 **`1.6 1.95 18.9 18.9`** —— 图形原本只占盒子约 70%，留白让它显得小；
+  2. chips 内 `.fi-ico.repo-ico` 15px → **17px**；目录树内 `.ft-row .fi-ico.repo-ico` → **18px**（同级文件/目录仍 15/16px，让根行略突出）；
+  3. 顺带给 `.fi-ico.repo-ico` 加 `vertical-align` 与同级 `img.fi` 对齐。
+- 清理：删掉不再使用的 `ICON_OTHER_BASE`（整库 PNG 基址）；试探期的 `.fi-ico.dir-ico` 规则随"目录回到原图标"一并删除。
+
+### 9.3 验证（dev 8100，真页面）
+
+| 检查 | 结果 |
+|---|---|
+| 目录树根行 | `span.fi-ico.repo-ico`，18×18，内联 SVG；`title="整库（整个仓库）"` |
+| 目录树目录行 | `img.fi` = `folder_close.svg`，16×16（未变） |
+| chips | 整库 17×17 线条双层；目录 15×15 黄文件夹 |
+| 深色主题 | `.fi-ico.repo-ico` 计算色 = `rgb(149,171,255)`（`#95ABFF`）✓；浅色 = `rgb(76,111,255)` ✓ |
+| 回归 | 发「列出仓库 5 的 `66666/` 目录下有哪些文件」→ **1 步**工具调用、答 3 个文件、无 JS 报错 ✓ |
+
+- 预览对比页是临时文件（`WebRoot/web/agent/_icon_preview.html`），**已删除、未提交**；源副本留在 `%TEMP%\docsys_chk\`。
+- 变更文件：`WebRoot/web/agent/index.html`（CSS 3 处 + JS 图标函数）、本记录。
+ 
