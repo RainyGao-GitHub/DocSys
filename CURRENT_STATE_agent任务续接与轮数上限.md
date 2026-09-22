@@ -8,7 +8,7 @@
 解决"多步任务跑到一半被硬切断、且已做的工作全部丢失"：
 `ToolUseLoop.MAX_TURNS = 10` 的硬上限 + 超限后**返回错误串**（不是阶段成果）+ 重试**从头再来丢掉观察** + `trimTranscript` **整条丢弃**早期工具结果。
 
-- 状态：**P1+P2 已提交（`8353fe0ed`/`d8c826789`）；P3 代码完成 + 护栏 37 套/1409 项/0 失败 + 页面 E2E 已验证 → 待提交**
+- 状态：**P1+P2（`8353fe0ed`/`d8c826789`）与 P3（`5725c0431`）均已提交、已验证；本任务分期全部完成（P4 为可选、待数据）**
 - 计划（唯一口径来源）：`devDocs/Agent任务续接与轮数上限改造计划.md`
 - 用户原话（本次触发）："目前我们的Agent设计的轮数限制导致了我有些任务其实没有完成就结束了"
 
@@ -62,8 +62,7 @@
    - 另外实测：`[ToolUseLoop][WRAPUP] maxTurns=5 toolCalls=31 answerLen=3217`（收尾轮确实产出阶段性结论）
    - 无配置回退：临时键 `agent_max_turns` 已从 dev 库删除（默认 25 生效）
 
-9. ✅ **已提交**：主仓库 `D:/Dev/DocSys`（`devInt`）commit **`8353fe0ed`**（7 files changed, +630/-76；含代码 + 本卡）
-10. ✅ **P3（前端「继续」入口 + 服务端续接上下文）代码完成**（2026-09-22）：
+9. ✅ **已提交**：主仓库 `D:/Dev/DocSys`（`devInt`）commit **`8353fe0ed`**（7 files changed, +630/-76；含代码 + 本卡）10. ✅ **P3（前端「继续」入口 + 服务端续接上下文）代码完成**（2026-09-22）：
     - 新增 `session/ContinuationStore.java`：到顶时把「本轮结论 + 工具进展摘要」写进**会话 metadata 的 `pendingContinuation` 键**（复用 `agent_sessions.metadata`，**不新增表**）；续接短语（整条消息 = 继续/接着做/go on…）且有标记时注入 `[SYSTEM] 这是上一段的续接…不要重复已经完成的部分` + 结论 + 进展摘要，**取用即清**
     - `session/SessionService.java`：新增 metadata 自定义键读写（`getMetaValue/metaValueOf/putMetaJson/removeMeta`，合并保留 `title`）+ 供测试注入的 `setRepository`
     - `orchestrator/MainAgent.java`：流式/非流式两路径接入 `applyContinuationContext(...)`（注入）与 `savePendingContinuation(...)`（记录）
@@ -74,6 +73,7 @@
     - 跨重启持久化：两次 Tomcat 重启后标记仍可续（`[Continuation][TAKE] … pending=used`）
     - 日志：`[Continuation][SAVE] … saved=ok` / `[Continuation][TAKE] … pending=used`；今日 `[WRAPUP]` 4 次、`LEGACY-FALLBACK` 0 次、`SAVE-FAIL` 0 次
     - 护栏：**37 套 / 1409 项 / 0 失败**（新增 `TestContinuationStore` 28 项；旧基线 1361）
+12. ✅ **P3 已提交**：主仓库 `devInt` commit **`5725c0431`**（8 files changed, +647/-11）
 
 ## 下一步
 
@@ -83,16 +83,16 @@
 
 ## 未提交改动
 
-- P3（2026-09-22，待提交）：
-  - `src/com/DocSystem/agent/session/ContinuationStore.java`（**新文件**）
-  - `src/com/DocSystem/agent/session/SessionService.java`（metadata 自定义键 + setRepository）
-  - `src/com/DocSystem/agent/session/TestContinuationStore.java`（**新文件**，护栏 28 项）
-  - `src/com/DocSystem/agent/orchestrator/MainAgent.java`（注入/记录钩子）
+- 无。P3 的 8 个文件（含本卡）已随 **`5725c0431`** 提交：
+  - `session/ContinuationStore.java`（**新**，续接标记 + 上下文注入）
+  - `session/SessionService.java`（metadata 自定义键读写 + setRepository）
+  - `session/TestContinuationStore.java`（**新**，护栏 28 项）
+  - `orchestrator/MainAgent.java`（注入/记录钩子）
   - `WebRoot/web/agent/index.html`（到顶页脚 + 「继续」）
   - `devDocs/Agent任务续接与轮数上限改造计划.md`（P3 实施记录 + 基线刷新）
   - `CLAUDE.md`（会话恢复入口改指本卡）
   - 本卡
-- 已提交（上一期）：`8353fe0ed` 代码 / `d8c826789` 本卡收尾
+- 上一期已提交：`8353fe0ed` 代码 / `d8c826789` 本卡收尾（具体文件清单见下节）
   - `src/com/DocSystem/agent/orchestrator/ToolUseResult.java`（+truncated/partial）
   - `src/com/DocSystem/agent/orchestrator/ToolUseLoop.java`（预算可配 + 收尾轮 + 折叠式裁剪）
   - `src/com/DocSystem/agent/orchestrator/TranscriptCompactor.java`（**新文件**）
