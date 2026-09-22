@@ -765,6 +765,27 @@ Tomcat 行为共同锁定。真 4xx 路径已被探针端到端覆盖。
 ### 残留（非本项引入，如实记录）
 - 非 AJAX 且无 session 的请求被 `MyInterceptor` 跳 `tologin`（302）——前端全 AJAX，不受影响（探针已加 AJAX 头复核）
 
+## UI 优化（非计划项，用户临时要求）
+
+### 1. 「@」关注对象：整库图标换新 + 放大 — ✅ 已提交（主库 `3fafb7bfc`）
+
+- 用户口径：仓库图标不好看（浅蓝 2011 年 `folder_public.png`），**“整库”与“目录”要有结构上的区分，不能只是颜色不同**；后续追加“仓库图标需要大一点”。
+- 做法：**只换整库**一个图标 → 内联线条 SVG（双层叠放：前层文件夹 + 后层上沿/右沿）+ `color: currentColor`（浅色 `#4C6FFF` / 深色 `#95ABFF`）；`viewBox` 收紧为 `1.6 1.95 18.9 18.9`；chips 17px / 目录树 18px（目录、文件图标未动）。
+- 详情：`devDocs/Agent界面优化方案.md` §9；预览对比页 `_icon_preview.html` 已删（未提交）。
+
+### 2. 「@」关注对象：说明与正文共用同一个消息框 — ✅ 已提交（主库 `db8a1f59d`）
+
+- 用户口径：“消息另外开了一个编辑框……想和学术伴的致谢里一样实现共用消息框，空间利用率更高、视觉效果也好”。
+- 参考模型（实测原型 + 读源码）：学术伴原型 `C:\Users\65205\Desktop\一点效率\学术伴网站设计方案`（`thesis-writing/thanks`）与 ScholarOS `AcknowledgeAgentPanel.tsx` / `useAcknowledgeObjectDrafts.ts`：一个输入框承载【通用正文】+【各对象备注】两套槽位，点对象 chip 切槽、占位文案随对象变、切换时保存/载入，点输入区外退出对象槽（否则写不了正文）。
+- 实现（纯前端，只动 `WebRoot/web/agent/index.html`；后端 `focus` 协议不变）：
+  - 删 `#focusNoteEditor`/`#focusNoteInput`/`#focusNoteTip` + `.focus-note-*` CSS（5 条）；新增 `.input-container.note-mode` 蓝色描边（浅色/深色各一）。
+  - 新增 `FOCUS_MSG_SLOT='__message__'` 消息槽 + `focusSlotText/setFocusSlotText/messageSlotText/saveActiveSlot/applyFocusSlot`；槽位数据复用 `state.focusDrafts`（sessionStorage 草稿）。
+  - 点 chip = `openFocusNote()` 切槽（同一 chip 再点收起）；点 composer 之外（`composedPath` 判定路径含 `.input-container`）退出；发送后自动退出。
+  - 发送取 **`messageSlotText()`**（不是可见文本）；空正文 + 说明态 → 明确提示并退回消息槽（后端空 command = `EMPTY_COMMAND`，不能静默）；说明态下不触 `@`/`/` 内联 picker；刷新后消息槽强制为空（与改造前一致）；`addFocusItem`（带上下文进页面的自动添加）**不**切槽。
+  - **未改**：`snapshotFocus()` 形状、`focus[].note` 字段、后端注入块/历史反解、chip 的 ✎ 与 tooltip。
+- 验证（真页面逐步点 + 真发送）：槽位切换/各自独立/正文恢复/点外部退出/空正文拦阻 全过；发送载荷 `focus[].note` 两条原文一致 ✓；服务端 `getSessionMessages` 反解出的 note 一致、模型回复主动提到“本轮给出的两个关注对象” → 说明确实进了注入块 ✓；栏护 36 套/1361 断言全绿；无新增 JS 报错。
+- 详情：`devDocs/Agent界面优化方案.md` §10（含取舍、`maxLength=-1` 抛 `IndexSizeError` 踩坑）。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -791,8 +812,9 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- 无（R3-7 及其修正已提交：主库 `9d4d6d7b5`、修正 `d0ac17443`（含计划文档）、工作卡 `18a55884f`/`b64ee22a4`/`6976e92b5`；websocket 库 `bbebedc1`、修正 `e2ee29b9`）
-- 顺带（非计划项，用户临时要求）：「@」关注对象的**整库图标换新 + 放大** —— 主库 `3fafb7bfc`（`WebRoot/web/agent/index.html` + `devDocs/Agent界面优化方案.md` §9）
+- 无（本轮 UI 两项已提交：整库图标 `3fafb7bfc`、共用消息框 `db8a1f59d`）
+- R3-7 及其修正已提交：主库 `9d4d6d7b5`、修正 `d0ac17443`（含计划文档）、工作卡 `18a55884f`/`b64ee22a4`/`6976e92b5`；websocket 库 `bbebedc1`、修正 `e2ee29b9`
+- 顺带（非计划项，用户临时要求）：「@」关注对象的**整库图标换新 + 放大** —— 主库 `3fafb7bfc`（`WebRoot/web/agent/index.html` + `devDocs/Agent界面优化方案.md` §9）；**共用消息框** —— 主库 `db8a1f59d`（§10）
 - 已提交：R3-6 = `1801cdaad`；R3-14 = `55c9a243e`（工作卡 `bf909c2cc`）；R3-4/R3-5 = `95cd0c1f9`（工作卡 `60c70a4fb`）；R3-14 复核改写 = `971dcb151`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
 
