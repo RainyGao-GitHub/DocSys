@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +26,13 @@ import java.util.regex.Pattern;
  *   <li>每个 {@code getLoginUser} 调用点必须立刻判空（{@code if(<var> == null)}），
  *       判空分支自己决定怎么回（写 JSON / SSE 发消息 / 向上抛 null 交给上层写）。</li>
  *   <li>{@code checkAndGetAccessInfo} 只设码不写响应：每个 {@code = checkAndGetAccessInfo(...)} 站点
- *       必须在紧随其后的窗口里自己 {@code writeJson}，且不得用 {@code throw} 代替响应
- *       （先例：{@code DocController.downloadDocChunked} 未登录时抛异常 → 500 错误页）。</li>
+ *       必须在紧随其后的窗口里自己 {@code writeJson}。</li>
+ *   <li><b>显式例外（下载类接口）</b>：下载接口的失败出口**故意不写响应体、直接抛异常** ——
+ *       2023-02-09 yuan「downloadDoc: 文件下载失败导致错误信息当作了文件内容 / 1. 抛出异常」、
+ *       2023-02-10 ragao「office-editor: download异常处理」当时把 {@code writeJson + return}
+ *       成对注释掉改成 {@code throw}，就是因为 JSON 200 会被客户端当成文件内容落盘。
+ *       白名单 = {@link #DOWNLOAD_THROW_ALLOWLIST}（10 处），**多一个少一个都报错**：
+ *       不在白名单的站点用 throw 代替响应 → 报错；白名单站点又回头写响应体 → 报错。</li>
  * </ol>
  *
  * <p>护栏最怕"永远绿"，所以每个检测器都有反向自测：喂一份**故意违规**的源码必须被抓到，
@@ -44,6 +50,28 @@ public class TestLoginUserResponseContract {
             "public User getLoginUser(HttpSession session, HttpServletRequest request, HttpServletResponse response, ReturnAjax rt)";
 
     private static final String DOWNLOAD_CHUNKED_SIG = "public void downloadDocChunked(";
+
+    /**
+     * 下载类接口的“失败即抛异常、不写响应体”白名单（file:method）。
+     *
+     * <p>依据：2023-02-09 yuan「downloadDoc: 文件下载失败导致错误信息当作了文件内容 / 1. 抛出异常」、
+     * 2023-02-10 ragao「office-editor: download异常处理」。
+     * 这两个提交把下载接口失败分支的 {@code writeJson(rt, response); return;} 成对注释掉改成
+     * {@code throw new Exception(rt.getMsgInfo())}，原因是 JSON 200 会被客户端当成"下载成功的文件内容"落盘。
+     * 所以这些站点是"调用方写响应"契约的显式例外，**不得**回头改成写 JSON。
+     */
+    static final String[] DOWNLOAD_THROW_ALLOWLIST = {
+            "DocController.java:downloadDocChunked",
+            "DocController.java:downloadDoc",
+            "DocController.java:downloadDoc",
+            "DocController.java:downloadDoc",
+            "DocController.java:downloadVideo",
+            "DocController.java:downloadImg",
+            "DocController.java:downloadDocEx",
+            "OfficeController.java:downloadHistory",
+            "OfficeController.java:downloadHistoryDiff",
+            "OfficeController.java:downloadfile",
+    };
 
     private static int pass = 0;
     private static int fail = 0;
@@ -235,34 +263,97 @@ public class TestLoginUserResponseContract {
         check("checkAndGetAccessInfo 站点数量合理（>=50，防正则失效）", sites.size() >= 50, String.valueOf(sites.size()));
 
         List<String> v = accessInfoCallSiteViolations(sources);
-        check("每个 checkAndGetAccessInfo 站点自己写响应且不靠 throw（0 违规）", v.isEmpty(), String.valueOf(v));
+        check("access-info 站点要么自己写响应，要么是白名单里的下载类抛异常（0 违规）", v.isEmpty(), String.valueOf(v));
+
+        // tripwire：抛异常形态的站点集合必须恰好等于白名单（多一个/少一个都失败）
+        List<String> actual = new ArrayList<String>();
+        for (Map.Entry<String, String> e : sources.entrySet()) {
+            actual.addAll(throwStyleSiteKeys(e.getKey(), e.getValue()));
+        }
+        List<String> expected = new ArrayList<String>(Arrays.asList(DOWNLOAD_THROW_ALLOWLIST));
+        List<String> missing = new ArrayList<String>(expected);
+        missing.removeAll(actual);
+        List<String> extra = new ArrayList<String>(actual);
+        extra.removeAll(expected);
+        System.out.println("  ↳ 抛异常形态站点 " + actual.size() + " 个（白名单 " + expected.size() + " 个）");
+        check("下载类白名单站点全部保持抛异常形态（少一个 = 错误信息又会被当成文件内容）", missing.isEmpty(), String.valueOf(missing));
+        check("没有白名单之外的站点改用抛异常代替响应", extra.isEmpty(), String.valueOf(extra));
     }
 
-    /** 站点违规（纯函数）：紧邻窗口内必须出现写响应调用，且不得出现 throw new */
+    /** 取出文件里所有"抛异常形态"的 access-info 站点（file:method），必须是 String 列表 */
+    static List<String> throwStyleSiteKeys(String fileKey, String src) {
+        List<String> out = new ArrayList<String>();
+        String[] lines = stripComments(src).split("\n", -1);
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].indexOf("= checkAndGetAccessInfo(") < 0) {
+                continue;
+            }
+            String win = window(lines, i, 9);
+            if (win.contains("throw new")) {
+                out.add(shortFileName(fileKey) + ":" + enclosingMethodName(lines, i));
+            }
+        }
+        return out;
+    }
+
+    /** 站点违规（纯函数）：非白名单站点必须写响应，不得用 throw；白名单站点必须抛异常且不得写响应体 */
     static List<String> accessInfoCallSiteViolations(Map<String, String> sources) {
         List<String> out = new ArrayList<String>();
+        List<String> allow = Arrays.asList(DOWNLOAD_THROW_ALLOWLIST);
         for (Map.Entry<String, String> e : sources.entrySet()) {
             String[] lines = stripComments(e.getValue()).split("\n", -1);
             for (int i = 0; i < lines.length; i++) {
                 if (lines[i].indexOf("= checkAndGetAccessInfo(") < 0) {
                     continue;
                 }
-                StringBuilder win = new StringBuilder();
-                for (int j = i; j <= Math.min(i + 9, lines.length - 1); j++) {
-                    win.append(lines[j]).append('\n');
-                }
-                String w = win.toString();
+                String w = window(lines, i, 9);
+                String file = shortFileName(e.getKey());
+                String key = file + ":" + enclosingMethodName(lines, i);
                 boolean writes = w.contains("writeJson(") || w.contains("emitter.send(") || w.contains("writer.write(");
-                if (!writes) {
-                    out.add(e.getKey() + ":" + (i + 1) + " null 分支没有写响应（checkAndGetAccessInfo 只设码不写）");
-                }
-                Matcher tm = Pattern.compile("throw new").matcher(w);
-                if (tm.find()) {
-                    out.add(e.getKey() + ":" + (i + 1) + " null 分支用 throw 代替响应 → 未登录会变成 500 错误页");
+                boolean throwsNew = w.contains("throw new");
+                if (allow.contains(key)) {
+                    if (!throwsNew) {
+                        out.add(key + " (L" + (i + 1) + ") 下载类站点不再是抛异常形态");
+                    }
+                    if (writes) {
+                        out.add(key + " (L" + (i + 1) + ") 下载类站点不得写响应体（2023-02-09：错误信息会被当成文件内容）");
+                    }
+                } else {
+                    if (!writes) {
+                        out.add(key + " (L" + (i + 1) + ") null 分支没有写响应（checkAndGetAccessInfo 只设码不写）");
+                    }
+                    if (throwsNew) {
+                        out.add(key + " (L" + (i + 1) + ") 不在白名单却用 throw 代替响应 → 未登录会变成 500 错误页");
+                    }
                 }
             }
         }
         return out;
+    }
+
+    private static String shortFileName(String fileKey) {
+        int i = fileKey.replace('\\', '/').lastIndexOf('/');
+        return i < 0 ? fileKey : fileKey.replace('\\', '/').substring(i + 1);
+    }
+
+    /** 站点窗口 */
+    private static String window(String[] lines, int from, int extra) {
+        StringBuilder sb = new StringBuilder();
+        for (int j = from; j <= Math.min(from + extra, lines.length - 1); j++) {
+            sb.append(lines[j]).append('\n');
+        }
+        return sb.toString();
+    }
+
+    /** 向上找最近的制表符缩进的方法签名，取出方法名（用于白名单比对） */
+    static String enclosingMethodName(String[] lines, int site) {
+        for (int i = site - 1; i >= 0; i--) {
+            Matcher m = Pattern.compile("^\\t(?:public|private|protected)\\s+(?:[\\w\\.<>\\[\\],\\s]+?)?(\\w+)\\s*\\(").matcher(lines[i]);
+            if (m.find()) {
+                return m.group(1);
+            }
+        }
+        return "?";
     }
 
     // ==================== ⑤ downloadDocChunked ====================
@@ -274,10 +365,10 @@ public class TestLoginUserResponseContract {
             return;
         }
         List<String> v = downloadDocChunkedViolations(src);
-        check("downloadDocChunked 非法访问分支写 JSON 后 return（0 违规）", v.isEmpty(), String.valueOf(v));
+        check("downloadDocChunked 失败分支保持作者设计（抛异常、不写响应体）（0 违规）", v.isEmpty(), String.valueOf(v));
     }
 
-    /** downloadDocChunked 违规（纯函数） */
+    /** downloadDocChunked 违规（纯函数）：下载类接口失败必须抛异常，不得写响应体（2023-02-09 修复） */
     static List<String> downloadDocChunkedViolations(String src) {
         List<String> out = new ArrayList<String>();
         if (src == null) {
@@ -295,17 +386,14 @@ public class TestLoginUserResponseContract {
             out.add("找不到 reposAccess == null 分支");
             return out;
         }
-        if (!block.contains("writeJson(")) {
-            out.add("reposAccess == null 分支没有 writeJson → 响应没人写");
+        if (!block.contains("throw new Exception(rt.getMsgInfo())")) {
+            out.add("reposAccess == null 分支没有抛异常（下载失败会变成 200 响应体）");
         }
-        if (!block.contains("return;")) {
-            out.add("reposAccess == null 分支没有 return → 会带着 null 继续执行");
+        if (block.contains("writeJson(")) {
+            out.add("reposAccess == null 分支写了响应体 → JSON 会被客户端当成文件内容（2023-02-09 bug）");
         }
-        if (block.contains("throw new")) {
-            out.add("reposAccess == null 分支用 throw 代替响应 → 未登录变 500 错误页");
-        }
-        if (!body.contains("writeJson(rt, response);")) {
-            out.add("方法体内没有 writeJson(rt, response)");
+        if (block.contains("return;")) {
+            out.add("reposAccess == null 分支自己 return（下载类应为抛异常，不自己写响应）");
         }
         return out;
     }
@@ -373,38 +461,66 @@ public class TestLoginUserResponseContract {
         check("反向自测：判空写法不误报", getLoginUserCallSiteViolations(c2).isEmpty(),
                 String.valueOf(getLoginUserCallSiteViolations(c2)));
 
-        // D. checkAndGetAccessInfo 站点只 throw 不写 → 抓到
+        // D. checkAndGetAccessInfo 站点：非白名单站点只 throw → 抓到；白名单站点抛异常 → 不报
         Map<String, String> a1 = new HashMap<String, String>();
         a1.put("FakeDocController.java", "class FakeDocController {\n"
-                + "  public void m() {\n"
-                + "    reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);\n"
-                + "    if(reposAccess == null)\n"
-                + "    {\n"
-                + "      docSysErrorLog(\"非法仓库访问！\", rt);\n"
-                + "      throw new Exception(rt.getMsgInfo());\n"
-                + "    }\n"
-                + "  }\n"
+                + "\tpublic void someReadApi() {\n"
+                + "\t\treposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);\n"
+                + "\t\tif(reposAccess == null)\n"
+                + "\t\t{\n"
+                + "\t\t\tdocSysErrorLog(\"非法仓库访问！\", rt);\n"
+                + "\t\t\tthrow new Exception(rt.getMsgInfo());\n"
+                + "\t\t}\n"
+                + "\t}\n"
                 + "}\n");
         List<String> v4 = accessInfoCallSiteViolations(a1);
-        check("反向自测：站点只 throw 被抓到2条（无写 + throw）", v4.size() == 2, String.valueOf(v4));
+        check("反向自测：非白名单站点只 throw 被抓到 2 条（无写 + throw）", v4.size() == 2, String.valueOf(v4));
+
+        // 白名单站点（DocController.java:downloadDoc）抛异常不写 → 0 违规（作者设计）
+        Map<String, String> aAllow = new HashMap<String, String>();
+        aAllow.put("src/com/DocSystem/controller/DocController.java", "class DocController {\n"
+                + "\tpublic void downloadDoc(Integer vid, HttpSession session, HttpServletResponse response)\n"
+                + "\t{\n"
+                + "\t\treposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);\n"
+                + "\t\tif(reposAccess == null)\n"
+                + "\t\t{\n"
+                + "\t\t\tdocSysErrorLog(\"非法仓库访问！\", rt);\n"
+                + "\t\t\tthrow new Exception(rt.getMsgInfo());\n"
+                + "\t\t}\n"
+                + "\t}\n"
+                + "}\n");
+        check("反向自测：白名单里的下载站点抛异常不误报", accessInfoCallSiteViolations(aAllow).isEmpty(),
+                String.valueOf(accessInfoCallSiteViolations(aAllow)));
+
+        // 白名单站点回头写响应体（当年那个 bug）→ 抓到
+        Map<String, String> aAllowBad = new HashMap<String, String>();
+        aAllowBad.put("src/com/DocSystem/controller/DocController.java", "class DocController {\n"
+                + "\tpublic void downloadDoc(Integer vid, HttpSession session, HttpServletResponse response)\n"
+                + "\t{\n"
+                + "\t\treposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);\n"
+                + "\t\tif(reposAccess == null)\n"
+                + "\t\t{\n"
+                + "\t\t\tdocSysErrorLog(\"非法仓库访问！\", rt);\n"
+                + "\t\t\twriteJson(rt, response);\n"
+                + "\t\t\treturn;\n"
+                + "\t\t}\n"
+                + "\t}\n"
+                + "}\n");
+        check("反向自测：白名单站点回头写 JSON 被抓到", !accessInfoCallSiteViolations(aAllowBad).isEmpty(),
+                String.valueOf(accessInfoCallSiteViolations(aAllowBad)));
 
         Map<String, String> a2 = new HashMap<String, String>();
         a2.put("FakeDocController.java", "class FakeDocController {\n"
                 + "  public void m() {\n"
                 + "    reposAccess = checkAndGetAccessInfo(shareId, session, request, response, null, null, null, false, rt);\n"
-                + "    if(reposAccess == null)\n"
-                + "    {\n"
-                + "      rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION);\n"
-                + "      writeJson(rt, response);\n"
-                + "      return;\n"
-                + "    }\n"
+                + "    if(reposAccess == null) { writeJson(rt, response); return; }\n"
                 + "  }\n"
                 + "}\n");
         check("反向自测：站点自己写响应不误报", accessInfoCallSiteViolations(a2).isEmpty(),
                 String.valueOf(accessInfoCallSiteViolations(a2)));
 
-        // E. downloadDocChunked 回到抛异常写法 → 抓到
-        String badChunked = "class DocController {\n"
+        // E. downloadDocChunked：作者设计的抛异常写法必须 0 违规；改成写 JSON 必须被抓
+        String goodChunked = "class DocController {\n"
                 + "\tpublic void downloadDocChunked(Integer vid, String reposPath, String targetPath, String targetName,\n"
                 + "\t\t\tHttpSession session, HttpServletRequest request, HttpServletResponse response, ReturnAjax rt) throws Exception\n"
                 + "\t{\n"
@@ -416,8 +532,13 @@ public class TestLoginUserResponseContract {
                 + "\t\t}\n"
                 + "\t}\n"
                 + "}\n";
+        check("反向自测：downloadDocChunked 抛异常写法 0 违规", downloadDocChunkedViolations(goodChunked).isEmpty(),
+                String.valueOf(downloadDocChunkedViolations(goodChunked)));
+
+        String badChunked = goodChunked.replace("docSysErrorLog(\"非法仓库访问！\", rt);\n\t\t\tthrow new Exception(rt.getMsgInfo());",
+                "docSysErrorLog(\"非法仓库访问！\", rt);\n\t\t\twriteJson(rt, response);\n\t\t\treturn;");
         List<String> v5 = downloadDocChunkedViolations(badChunked);
-        check("反向自测：downloadDocChunked 抛异常写法被抓到", v5.size() >= 3, String.valueOf(v5));
+        check("反向自测：downloadDocChunked 写 JSON 被抓到（错误信息会被当成文件内容）", !v5.isEmpty(), String.valueOf(v5));
     }
 
     // ==================== 工具方法 ====================

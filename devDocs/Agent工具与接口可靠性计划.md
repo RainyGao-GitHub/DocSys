@@ -686,22 +686,31 @@ slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才�
   ⑤ 日志复核：`LEGACY-FALLBACK` 仍为 1（R3-4 探针那次）、`[ToolUseLoop][NATIVE]` 168 → 183（主路径活跃、无兜底误报）
 - 计划文档 §3 验证口径的"现基线"已同步为 **35 套 / 1320 项**，并指向新检查单
 
-#### R3-7 `getLoginUser()` 自己写响应（✅ 2026-09-21 修复，用户裁定「按A开工，因为这样 getLoginUser 的返回值含义统一，后续更容易处理」）
+#### R3-7 `getLoginUser()` 自己写响应（✅ 2026-09-21 修复，用户裁定「按A开工，因为这样 getLoginUser 的返回值含义统一，后续更容易处理」；2026-09-22 **经用户指出后修正范围**：下载类站点的“抛异常”是作者有意设计，已逐字节回退我最初的改动）
 - **现状**：`BaseController.getLoginUser()` 未登录分支内部就 `writeJson(rt, response)` 然后 `return null`。后果有二：① 调用方再写的错误码/文案**永远到不了客户端**（R1-1 的真因）；② 若调用方没判 null 继续 `writeJson`，会形成**二次写响应**。
 - **开工前核实（用户要求先查调用方）**：服务端 23 处 `getLoginUser(...)` 调用 + `checkAndGetAccessInfo` 约 95 处；**没有任何一处在拿到 `null` 后继续执行**；只有 1 处（`DocController.downloadDocChunked`）用 `throw` 代替响应；关键事实：**`checkAndGetAccessInfo` 从不写响应**。
 - **方案 A（已实施）**：
   1. `BaseController.getLoginUser`：删掉 3 处内部 `writeJson`（②自动登录失败 ④自动登录成功 ⑤未登录），保留 `setError/setMsgData/setData`；**④ 改为 `return loginUser`**（不再是"写响应 + return null"）。方法注释写明契约：`User` = 已认证；`null` = 未认证/被拒（原因看 `rt`）；**本方法不写响应**，由调用方写。
-  2. 连带修掉 9 个"靠内部写响应兜底"的站点 —— **这是本项的真实回归面，由新护栏当场抓出**，不算扩范围：这些站点的 `reposAccess == null` 分支只有 `docSysErrorLog` + `throw new Exception(rt.getMsgInfo())`（`writeJson`/`return` 早在仓库里被注释掉了），旧实现里响应是 `getLoginUser` 顺手写出去的，去掉内部写之后会变成 **500 错误页**。统一改为 `rt.setErrorCodeIfAbsent(ErrorCode.NO_PERMISSION); docSysErrorLog(...); writeJson(rt, response); return;` —— `DocController` 7 处（`downloadDocChunked`、`downloadDoc`×3、`downloadVideo`、`downloadImg`、`downloadDocEx`）+ `websocket/OfficeController` 3 处（`downloadHistory`/`downloadHistoryDiff`/`downloadfile`，顺带补 `import com.DocSystem.common.ErrorCode`）。
+  2. **不改那 10 个“下载类”站点**（§§ 我最初以“去掉内部写会变成 500 页”为由把它们改成写 JSON，**经用户指出后已全部逐字节回退**）。
+     证据（git 历史，而非猜测）：
+     - `DocController`：`24e1ff247`（2023-02-09 yuan）**“downloadDoc: 文件下载失败导致错误信息当作了文件内容 → 1. 抛出异常”**；
+     - `OfficeController`：`a15c1a8cf`（2023-02-10 ragao）**“office-editor: download异常处理”** —— 两个提交都把下载失败分支的 `writeJson + return`
+       **成对注释掉**改成 `throw new Exception(rt.getMsgInfo())`，原因：JSON 200 会被客户端当成“下载成功的文件内容”落盘（静默写坏文件）。
+     - 结论：这些站点是“调用方写响应”契约的**显式例外**，**不得**改成写 JSON；我原来的“修”等于把 2023 年修掉的缺陷又装回去了。
+     - 附：`repos == null` 那三处同属这个形态（且 UI 上不可达：office 编辑器只会为已存在的仓库发 URL；只有伪造 vid 才到得了），一并保持原样。
+     ⇒ R3-7 去掉内部写之后，这些站点在未登录时**真的会走到抛异常**（不再是“错误信息 200 当成文件内容”），与作者本意一致。
   3. 其余约 100 处调用点**不动**（它们本来自己写响应）。
-- **护栏**：新增 `src/com/DocSystem/agent/tool/TestLoginUserResponseContract.java` **36 项**（源码级 lint + 反向自测）：`getLoginUser` 方法体内不得出现 `writeJson`、必须保留 `setError(用户未登录, NOT_LOGIN)` 后直接 `return null`、自动登录成功必须 `return loginUser`、契约必须写在方法注释里；每个 `getLoginUser` 调用点必须紧邻判空；每个 `= checkAndGetAccessInfo(...)` 站点必须在窗口内自己写响应且不得用 `throw` 代替；`downloadDocChunked` 的 null 块必须写 JSON + `return`。每个检测器都有反向自测（**喂故意违规的源码必须报错 / 喂合规源码必须 0 违规 / 关键词只出现在注释里不得误报**）。→ **全量 36 套 / 1356 项 0 失败**（本项开始前 35 套 / 1320 项）
-- **真探针 `LoginResponseContractProbe` 18/18**（真 Tomcat 8100）：
+- **护栏**：新增 `src/com/DocSystem/agent/tool/TestLoginUserResponseContract.java` **41 项**（源码级 lint + 反向自测）：`getLoginUser` 方法体内不得出现 `writeJson`、必须保留 `setError(用户未登录, NOT_LOGIN)` 后直接 `return null`、自动登录成功必须 `return loginUser`、契约必须写在方法注释里；每个 `getLoginUser` 调用点必须紧邻判空；**`= checkAndGetAccessInfo(...)` 站点（实测 95 个）：不在白名单的必须自己写响应且不得用 `throw`，白名单（10 个下载类站点）必须抛异常且不得写响应体**；
+  白名单以 **file:method 形式写死在护栏里**，并配 tripwire：**抛异常形态的站点集合必须恰好等于白名单（多一个/少一个都报错）** —— 实测“站点 95 个 / 抛异常形态 10 个（白名单 10 个）”。每个检测器都有反向自测（**喂故意违规的源码必须报错 / 喂合规源码必须 0 违规 / 关键词只出现在注释里不得误报 / 白名单站点回头写 JSON 必须报错**）。→ **全量 36 套 / 1361 项 0 失败**（本项开始前 35 套 / 1320 项）
+- **真探针 `LoginResponseContractProbe` 17/17**（真 Tomcat 8100）：
   ① 无 cookie 请求 `/Repos/getReposList.do`、`/Doc/getDoc.do` → `200 {"errorCode":"NOT_LOGIN","msgInfo":"用户未登录，请先登录！\n用户未登录"}` —— **调用方文案不再被内部文案顶掉**，证明同一请求只有一次写响应；
-  ② 原本靠"内部已写响应"兜底的站点无 cookie 访问 → 全部 **200 JSON**，**不再是 500 错误页**：`/Doc/downloadDocChunked.do`（`shareId=` 空 → `NOT_LOGIN`；`shareId=1` 分享不存在 → `NO_PERMISSION`）、`/Doc/downloadDoc.do`、`/web/static/office-editor/downloadfile/0`；
+  ② **下载类接口（作者设计）：失败即非 200、不写响应体** —— `/Doc/downloadDocChunked.do`（`shareId=` 空、`shareId=1` 分享不存在两种）、`/Doc/downloadDoc.do`、`/web/static/office-editor/downloadfile/0` 均回 **500 错误页**（不是 `200 {…}` JSON）；这正是 2023-02-09 «错误信息当作文件内容» 修复想要的行为；
   ③ 自动登录透明：只带 `dsuser`/`dstoken`、不带 `JSESSIONID` → `/Repos/getReposList.do` 返回**仓库列表**（旧实现会把 `getLoginUser` 内部写的**用户对象**顶回来，前端根本拿不到列表）；`/User/getLoginUser.do` 返回 `"pwd":""` 的用户（旧实现返回未清空的用户对象）；
   ④ 信息项：自动登录后 `/Doc/downloadDocChunked.do` 会真正进入下载流程（探针传空 `targetPath` → `压缩目录失败` 500，栈位 `DocController:3034`，属探针参数问题，与本次改动无关）。
-- **页面 E2E**（真页面 `web/agent/index.html`，Admin 登录）：① 读「列出仓库 5 的根目录下有哪些文件」→ 无弹窗，答出 79 项 ✓；② 写「在 `66666/` 下新建文件夹 `R37验证`」→ **1 次确认弹窗**（`参数：vid=5；path=66666/；name=R37验证`）→ 成功，磁盘核对 `5_DISK_RRepos\<日期>\<时间戳>\66666\R37验证` 存在 ✓；③ 清理「删除该文件夹并列 `66666/`」→ **1 次确认弹窗** → 删除成功、剩 3 项 ✓；④ 日志复核：`[ToolUseLoop][NATIVE]` 183 → 190，`[LEGACY-FALLBACK]` 仍为 1（无兜底误报）✓
-- **残留（如实记录，均非本项引入）**：
-  - `websocket/OfficeController` 的 `repos == null` 分支（3 处）同样是"注释掉 `writeJson` + `throw`"的形态：未登录用户到不了那儿（前面访问检查先返回），但"仓库不存在"会用 500 页代替 JSON；本项不扩范围，留作后续。
+- **页面 E2E**（真页面 `web/agent/index.html`，Admin 登录；回退后重跑）：① 读「列出仓库 5 的 `66666/` 下有哪些文件」→ **1 步** 工具调用、无弹窗，答 3 项 ✓；② 写「新建文件夹 `R37回退验证`」→ **2 步** + **1 次确认弹窗**（`参数：vid=5；path=66666/；commitMsg=新建文件夹 R37回退验证；name=R37回退验证`）→ 成功，磁盘核对 `5_DISK_RRepos\<日期>\<时间戳>\66666\R37回退验证` 存在 ✓；③ 清理「删除该文件夹并列 `66666/`」→ **2 步** + **1 次确认弹窗** → 删除成功、剩 3 项 ✓；④ 日志复核：`[ToolUseLoop][NATIVE]` 190 → 195，`[LEGACY-FALLBACK]` 仍为 1（无兜底误报）✓
+- **修正记录 / 教训**：我最初把“`reposAccess == null` 分支只有 `docSysErrorLog + throw`”一律当成缺陷（并改了 10 处）。**用户指出“这几处应该是故意这样设置的，从注释掉的代码看得出来”**；查 git 历史证实——这是 2023 年两个提交的刻意修复（见上）。⇒ 教训：**“注释掉 `writeJson` + 写 `throw`”这种形态不一定是历史遗留脏代码，先 `git log -S`/`blame` 看它是不是为了修某个具体缺陷才长成这样的**；本次回退后 `git diff <R3-7 之前> -- DocController.java / OfficeController.java` **为空（逐字节一致）**。
+- **其他残留（如实记录，非本项引入）**：
+
   - 非 AJAX 且无 session 的请求会被 `MyInterceptor.preHandle` 跳 `tologin.do?option=reload`（302）：所以用 curl（不带 `X-Requested-With`）看 `/User/getLoginUser.do` 是 302；前端全是 AJAX 调用不受影响，探针已加 AJAX 头复核。
   - 自动登录成功分支按方案 A **保留 `rt.setData(loginUser)`**：`/User/getLoginUser.do` 会用自己的 `setPwd("")` 后的对象覆盖 `data`（已实测 `"pwd":""`）。
 - **踩坑**：Spring MVC 控制器**必须带 `-parameters -g` 编译**（`do_compile.ps1 -Spring`）。本次先漏了这个开关，编译产物缺参数名信息，探针立刻暴露 4 个接口 500（`IllegalArgumentException: Name for argument type [java.lang.Integer] not available`），重编 + 重启后恢复。**手动编译控制器一律走 `-Spring`。**
@@ -801,7 +810,7 @@ slf4j 只落 stdout/Eclipse 控制台；**只有 `com.DocSystem.common.Log` 才�
 | R3-4 | P2 | 旧编排（SubAgent/MainAgent/LLMIntentParser）处置：**用户裁定方案 1 = 保守封口** | ✅ | 不删（ToolLoop 失败的安全网），改：入口 `@Deprecated` + 封口注释 + 新增 `[LEGACY-FALLBACK]` 打点；护栏 38 项（含冻结基线 tripwire）、探针（回退开关强制触发）1 条标记 + 旧编排实际输出、全量 33 套/1255 项 0 失败 |
 | R3-5 | P2 | DocSysClient 遗留方法清理 | ✅ | 只删**零调用者** 3 个（`getManagerReposList`/`getSessionCookie`/`getSystemEmailConfig`）；CLI 专属方法全保留（方案 1 不动 CLI）；`tool-inventory.md` 同步标注 |
 | R3-6 | P2 | 新工具上线检查单（流程固化） | ✅ | 新建 `devDocs/Agent新工具上线检查单.md`（设计期/自检/三件套/提交/模板/坑索引）；新增可执行护栏 `TestToolOnboarding` 29 项（端点存在性 + 反向自测 + schema/描述/文档自检）；**据此抓到并修掉死端点** `/Manage/getDocSysConfig.do`；全量 35 套/1320 项 |
-| R3-7 | P1 | `getLoginUser()` 自写响应 → 双写隐患 + 调用方错误码/文案被丢弃 | ✅ | 方案 A：`getLoginUser` 删 3 处内部 `writeJson`、自动登录成功改 `return loginUser`、契约写进方法注释；连带修掉 9 个靠内部写响应兜底的站点（否则变 500 页）；护栏 `TestLoginUserResponseContract` 36 项（含反向自测）→ 全量 36 套/1356 项；真探针 18/18（4 个站点从 500 页恢复 JSON、自动登录透明、whoami 的 pwd 已清空）；页面 E2E 读 1 步 + 写建/删各 1 弹窗 |
+| R3-7 | P1 | `getLoginUser()` 自写响应 → 双写隐患 + 调用方错误码/文案被丢弃 | ✅ | 方案 A：`getLoginUser` 删 3 处内部 `writeJson`、自动登录成功改 `return loginUser`、契约写进方法注释；**下载类 10 个站点保持作者本意（抛异常、不写响应体，2023-02-09/02-10 两次刻意修复）——我最初改成写 JSON、经用户指出后逐字节回退**；护栏 `TestLoginUserResponseContract` 41 项（含白名单 tripwire + 反向自测）→ 全量 36 套/1361 项；真探针 17/17（调用方文案生效、下载类失败非 200、自动登录透明、whoami 的 pwd 已清空）；页面 E2E 读 1 步 + 写建/删各 1 弹窗 |
 | R3-8 | P2 | 移除 `isLockBusy` 文案兜底（R1-1 收尾） | ⬜ | |
 | R3-9 | P2 | 确认弹窗只显示工具名、不显示参数（R2 页面 E2E 发现） | ✅ | 加 `summarizeArgs`（脉敏 + 长值只给长度）；护栏 13→27，页面 E2E 两次弹窗均带参数行 |
 | R3-10 | P2 | 无“跨仓库按路径/名字找”的能力（R2 页面 E2E 发现） | ✅ | `search_files` 的 vid 改可选（跨仓）+ 不依赖索引的 `docSysGetDoc` 直查；护栏 45 项、探针 22/22、页面 E2E 1 步（旧 6 步）；写/读类工具 vid 仍必填 |
