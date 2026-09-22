@@ -34,6 +34,12 @@ public class AgentConfigService {
      */
     public static final String KEY_AGENT_TOOL_CHOICE = "agent_tool_choice";
 
+    /**
+     * P1：单次请求的工具轮数预算（agent_max_turns）。未配置 → 默认 25；
+     * 越界由 ToolUseLoop.setMaxTurns 钳制到 [5, 50]。到顶不再直接失败，而是交付阶段性成果。
+     */
+    public static final String KEY_AGENT_MAX_TURNS = "agent_max_turns";
+
     @Autowired
     private AgentConfigRepository repository;
 

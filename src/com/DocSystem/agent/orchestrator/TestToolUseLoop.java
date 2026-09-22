@@ -17,7 +17,9 @@ import java.util.Map;
  *  - 未知工具：registry 返回 error → 回灌继续
  *  - 畸形 tool_call：回灌重试提示 → 最终成功
  *  - 连续畸形超过上限 → 终止
- *  - 超 MAX_TURNS → error + maxTurnsExceeded
+ *  - 超轮数预算（P1）：先跑“预算收尾轮” → 有文字则 success + truncated（交付阶段性成果）；
+ *    收尾轮仍只会调工具、没文字 → error + maxTurnsExceeded
+ *  - 转录超限（P2）：折叠成 [TOOL_RESULT_SUMMARY]（保留工具名/结论）而不是整条丢弃
  *  - adminOnly 工具对非管理员不可见（prompt 不含该工具）
  */
 public class TestToolUseLoop {
@@ -32,6 +34,8 @@ public class TestToolUseLoop {
         testMalformedRetryThenSuccess();
         testTooManyMalformedAbort();
         testMaxTurnsExceeded();
+        testBudgetWrapupPartial();
+        testMaxTurnsConfigurable();
         testAdminFilteringInPrompt();
         testConsecutiveIdenticalToolCall();
         testTranscriptTrimming();
@@ -180,7 +184,7 @@ public class TestToolUseLoop {
     }
 
     private static void testMaxTurnsExceeded() {
-        // 一直调工具不回答 → 超 MAX_TURNS
+        // 一直调工具不回答 → 超轮数预算：收尾轮仍然只会调工具（剥掉标记后无文字）→ 回退为 error
         List<String> script = new ArrayList<>();
         for (int i = 0; i < ToolUseLoop.MAX_TURNS + 2; i++) {
             script.add("<tool_call>{\"name\":\"list_repos\",\"arguments\":{}}</tool_call>");
@@ -191,8 +195,86 @@ public class TestToolUseLoop {
 
         check("max turns: not success", !r.success);
         check("max turns: flag set", r.maxTurnsExceeded);
-        check("max turns: turns=" + ToolUseLoop.MAX_TURNS, r.turns == ToolUseLoop.MAX_TURNS);
+        check("max turns: not truncated", !r.truncated);
+        check("max turns: turns=" + (ToolUseLoop.MAX_TURNS + 1) + " (incl. wrap-up)",
+                r.turns == ToolUseLoop.MAX_TURNS + 1);
         check("max turns: toolCalls=" + ToolUseLoop.MAX_TURNS, r.toolCalls == ToolUseLoop.MAX_TURNS);
+    }
+
+    /**
+     * P1：预算到顶但收尾轮给出了阶段性文字 → success + truncated（不再无声失败）。
+     */
+    private static void testBudgetWrapupPartial() {
+        // 前 MAX_TURNS 轮一直调工具，收尾轮给出“已完成 / 还缺 / 下一步”
+        List<String> script = new ArrayList<>();
+        for (int i = 0; i < ToolUseLoop.MAX_TURNS; i++) {
+            script.add("<tool_call>{\"name\":\"get_repos\",\"arguments\":{\"vid\":" + i + "}}</tool_call>");
+        }
+        script.add("① 已完成：查到 25 个仓库；② 还缺：仓库 26；③ 下一步：继续查 26。");
+
+        List<List<Map<String, String>>> seen = new ArrayList<>();
+        ToolUseLoop loop = new ToolUseLoop(recording(script, seen), buildRegistry(false), false);
+        ToolUseResult r = loop.run("查全部仓库");
+
+        check("wrap-up: success (partial delivered)", r.success);
+        check("wrap-up: truncated flag", r.truncated);
+        check("wrap-up: not maxTurnsExceeded", !r.maxTurnsExceeded);
+        check("wrap-up: turns=MAX_TURNS+1", r.turns == ToolUseLoop.MAX_TURNS + 1);
+        check("wrap-up: toolCalls=MAX_TURNS", r.toolCalls == ToolUseLoop.MAX_TURNS);
+        check("wrap-up: answer kept", r.message != null && r.message.contains("已完成"));
+
+        // 收尾轮必须带上“预算用尽”提示（否则模型不知道要收口）
+        List<Map<String, String>> lastMessages = seen.get(seen.size() - 1);
+        boolean hasHint = false;
+        for (Map<String, String> m : lastMessages) {
+            if (m.get("content") != null && m.get("content").contains("工具预算已用尽")) {
+                hasHint = true;
+                break;
+            }
+        }
+        check("wrap-up: budget hint injected", hasHint);
+
+        // 收尾轮不得再执行工具（转录里只有 MAX_TURNS 条工具结果）
+        int resultCount = 0;
+        for (Map<String, String> m : r.transcript) {
+            if (m.get("content") != null && m.get("content").startsWith("[TOOL_RESULT")) {
+                resultCount++;
+            }
+        }
+        check("wrap-up: no extra tool executed", resultCount == ToolUseLoop.MAX_TURNS);
+    }
+
+    /**
+     * P1：轮数预算可配（agent_max_turns 入口）且越界钳制。
+     */
+    private static void testMaxTurnsConfigurable() {
+        // 同一个脚本（5 轮工具 + 第 6 轮文字回答）：预算 10 → 正常收尾；预算 5 → 走收尾轮但仍有阶段性成果
+        List<String> script = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            script.add("<tool_call>{\"name\":\"get_repos\",\"arguments\":{\"vid\":" + i + "}}</tool_call>");
+        }
+        script.add("查完了：共 5 个仓库。");
+
+        ToolUseLoop wide = new ToolUseLoop(scripted(script), buildRegistry(false), false);
+        wide.setMaxTurns(10);
+        ToolUseResult r1 = wide.run("查仓库");
+        check("configurable: maxTurns kept (10)", wide.getMaxTurns() == 10);
+        check("configurable: budget 10 → success & not truncated", r1.success && !r1.truncated);
+        check("configurable: turns=6", r1.turns == 6);
+
+        ToolUseLoop narrow = new ToolUseLoop(scripted(script), buildRegistry(false), false);
+        narrow.setMaxTurns(5);
+        ToolUseResult r2 = narrow.run("查仓库");
+        check("configurable: budget 5 → partial & truncated", r2.success && r2.truncated);
+        check("configurable: turns=6 (incl. wrap-up)", r2.turns == 6);
+        check("configurable: toolCalls=5", r2.toolCalls == 5);
+
+        ToolUseLoop high = new ToolUseLoop(scripted(script), buildRegistry(false), false);
+        high.setMaxTurns(999);
+        check("configurable: clamp high → MAX_TURNS_LIMIT",
+                high.getMaxTurns() == ToolUseLoop.MAX_TURNS_LIMIT);
+        high.setMaxTurns(1);
+        check("configurable: clamp low → MIN_TURNS", high.getMaxTurns() == ToolUseLoop.MIN_TURNS);
     }
 
     private static void testAdminFilteringInPrompt() {
@@ -286,7 +368,7 @@ public class TestToolUseLoop {
 
     private static void testTranscriptTrimming() {
         // 每轮 3 个不同工具调用（避开 identical 检测），8 轮后消息数 2+8*4=34 → 触发裁剪到 ≤30，
-        // 第 9 轮给出最终回答（未超 MAX_TURNS=10）。
+        // 第 9 轮给出最终回答（未超轮数预算）。
         List<String> script = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             String turn = "<tool_call>{\"name\":\"list_repos\",\"arguments\":{}}</tool_call>"
@@ -305,5 +387,24 @@ public class TestToolUseLoop {
         check("trimming: not maxTurnsExceeded", !r.maxTurnsExceeded);
         // transcript 不应无限膨胀（裁剪后 ≤ 31）
         check("trimming: transcript capped", r.transcript.size() <= 31);
+
+        // P2：超限是“折叠成摘要”而不是整条丢弃 —— 早期工具名/结论仍可见
+        boolean hasSummary = false;
+        boolean summaryKeepsName = false;
+        for (Map<String, String> m : r.transcript) {
+            String c = m.get("content");
+            if (c == null || !c.startsWith("[TOOL_RESULT_SUMMARY")) {
+                continue;
+            }
+            hasSummary = true;
+            if (c.contains("tool=list_repos") || c.contains("tool=get_repos")) {
+                summaryKeepsName = true;
+            }
+        }
+        check("trimming: folded into summary (not dropped)", hasSummary);
+        check("trimming: summary keeps tool name", summaryKeepsName);
+        // 首条用户请求不能被裁掉
+        check("trimming: first user query kept",
+                "连续查询".equals(r.transcript.get(1).get("content")));
     }
 }

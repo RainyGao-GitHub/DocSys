@@ -544,23 +544,16 @@ public class MainAgent {
                         "turns", String.valueOf(tr.turns));
             }
             if (tr.success) {
-                AgentResponse resp = AgentResponse.ok(tr.message);
-                resp.withProcessingTime(duration);
-                resp.addMetadata("toolLoop", "turns=" + tr.turns + ", toolCalls=" + tr.toolCalls);
-                return resp;
+                return loopResponse(tr, duration, null);
             }
 
-            // T5.1 失败重试：maxTurnsExceeded / 畸形终止时，注入"直接回答"提示重试一次
+            // T5.1 失败重试：注入"直接回答"提示重试一次；P1 起额外携带上一段查到的进展（不重复劳动）
             log.warn("ToolUseLoop failed ({}), retrying once with direct-answer hint", tr.message);
             com.DocSystem.agent.orchestrator.ToolUseResult retry = loop.run(
-                    toolQuery + "\n\n[SYSTEM] 如果无法通过工具完成，请直接基于已有信息回答用户，或说明限制。",
-                    priorHistory);
+                    retryQueryWithProgress(toolQuery, tr), priorHistory);
             if (retry.success) {
                 log.info("ToolUseLoop retry succeeded: turns={}, toolCalls={}", retry.turns, retry.toolCalls);
-                AgentResponse resp = AgentResponse.ok(retry.message);
-                resp.withProcessingTime(System.currentTimeMillis() - loopStart);
-                resp.addMetadata("toolLoop", "retry=true, turns=" + retry.turns + ", toolCalls=" + retry.toolCalls);
-                return resp;
+                return loopResponse(retry, System.currentTimeMillis() - loopStart, "retry=true");
             }
             return null;
         } catch (Exception e) {
@@ -600,32 +593,64 @@ public class MainAgent {
                         "turns", String.valueOf(tr.turns));
             }
             if (tr.success) {
-                AgentResponse resp = AgentResponse.ok(tr.message);
-                resp.withProcessingTime(duration);
-                resp.addMetadata("toolLoop", "streaming=true, turns=" + tr.turns + ", toolCalls=" + tr.toolCalls);
-                return resp;
+                return loopResponse(tr, duration, "streaming=true");
             }
 
-            // T5.1 失败重试：注入"直接回答"提示重试一次（重试前通知前端清空已流式内容）
+            // T5.1 失败重试：注入"直接回答"提示重试一次（重试前通知前端清空已流式内容）；
+            // P1 起额外携带上一段查到的进展，避免重试重头再来（转录重置 → 观察丢掉）
             log.warn("ToolUseLoop(streaming) failed ({}), retrying once with direct-answer hint", tr.message);
             if (streamSink != null) {
                 streamSink.onRetry();
             }
             com.DocSystem.agent.orchestrator.ToolUseResult retry = loop.runStreaming(
-                    toolQuery + "\n\n[SYSTEM] 如果无法通过工具完成，请直接基于已有信息回答用户，或说明限制。",
-                    priorHistory, streamSink);
+                    retryQueryWithProgress(toolQuery, tr), priorHistory, streamSink);
             if (retry.success) {
                 log.info("ToolUseLoop(streaming) retry succeeded: turns={}, toolCalls={}", retry.turns, retry.toolCalls);
-                AgentResponse resp = AgentResponse.ok(retry.message);
-                resp.withProcessingTime(System.currentTimeMillis() - loopStart);
-                resp.addMetadata("toolLoop", "streaming=true, retry=true, turns=" + retry.turns + ", toolCalls=" + retry.toolCalls);
-                return resp;
+                return loopResponse(retry, System.currentTimeMillis() - loopStart, "streaming=true, retry=true");
             }
             return null;
         } catch (Exception e) {
             log.error("ToolUseLoop(streaming) exception", e);
             return null;
         }
+    }
+
+    /**
+     * P1：把工具循环结果转成响应 —— 预算到顶（truncated）时追加「可能未完成 + 怎么继续」提示，
+     * 并在 meta 里标记 {@code truncated=true}（前端据此渲染「继续」入口，见计划 P3）。
+     * 非 truncated 时 meta 与改造前完全一致（SSE 协议只增不改）。
+     */
+    private static AgentResponse loopResponse(
+            com.DocSystem.agent.orchestrator.ToolUseResult tr, long durationMs, String extraMeta) {
+        String answer = tr.message;
+        if (tr.truncated) {
+            answer = tr.message + "\n\n---\n⚠️ 本轮工具预算到顶（" + tr.turns + " 轮 / " + tr.toolCalls
+                    + " 次工具调用），任务**可能未完成**。回复「继续」我会基于上面的进展接着做。";
+        }
+        AgentResponse resp = AgentResponse.ok(answer);
+        resp.withProcessingTime(durationMs);
+        String prefix = (extraMeta == null || extraMeta.isEmpty()) ? "" : extraMeta + ", ";
+        resp.addMetadata("toolLoop", prefix + "turns=" + tr.turns + ", toolCalls=" + tr.toolCalls);
+        if (tr.truncated) {
+            resp.addMetadata("truncated", "true");
+        }
+        return resp;
+    }
+
+    /**
+     * P1：失败重试要「带着上一段查到的东西」继续 —— 把第一段的工具结果压成进展摘要拼进提示，
+     * 而不是让模型从零重来（原来只加一句"直接回答"，转录重置导致观察全丢）。
+     */
+    private static String retryQueryWithProgress(
+            String toolQuery, com.DocSystem.agent.orchestrator.ToolUseResult failed) {
+        StringBuilder sb = new StringBuilder(toolQuery);
+        sb.append("\n\n[SYSTEM] 如果无法通过工具完成，请直接基于已有信息回答用户，或说明限制。");
+        String carried = com.DocSystem.agent.orchestrator.TranscriptCompactor.summarize(
+                failed == null ? null : failed.transcript, 2000);
+        if (!carried.isEmpty()) {
+            sb.append("\n[SYSTEM] 上一段已经查到的信息（不要重复调用同样的工具/参数）：\n").append(carried);
+        }
+        return sb.toString();
     }
 
     /**
@@ -709,6 +734,18 @@ public class MainAgent {
         } else {
             loop = com.DocSystem.agent.orchestrator.ToolUseLoop.forLlmServiceNative(
                     llmService, registry, resolvedLlm, isAdmin, toolChoice);
+        }
+        // P1：轮数预算（agent_config.agent_max_turns；未配置/非法 → ToolUseLoop 默认值，越界钳制）
+        if (agentConfigService != null) {
+            String maxTurnsCfg = agentConfigService.getGlobal(
+                    com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_MAX_TURNS);
+            if (maxTurnsCfg != null && !maxTurnsCfg.trim().isEmpty()) {
+                try {
+                    loop.setMaxTurns(Integer.parseInt(maxTurnsCfg.trim()));
+                } catch (NumberFormatException nfe) {
+                    log.warn("agent_max_turns 配置不是整数（{}），使用默认值 {}", maxTurnsCfg, loop.getMaxTurns());
+                }
+            }
         }
         // T8.5：工具链每步审计（每轮/每工具：轮次/工具/参数摘要/结果摘要/耗时）→
         // 用 DocSys 自带 Log 接口打结构化日志（写 docsys.log，可下载 grep 排查）。

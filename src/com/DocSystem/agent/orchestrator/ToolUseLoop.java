@@ -37,7 +37,8 @@ import java.util.Map;
  *     result = registry.execute(call)
  *     messages += toolResult(call, result) // 工具结果回灌
  * }
- * → 超轮数，返回 error
+ * → 预算到顶：先跑一轮「预算收尾」（不下发 tools、忽略模型给出的工具调用），
+ *   拿到一段阶段性结论 → success + truncated=true；收尾也没文字 → error + maxTurnsExceeded=true
  * </pre>
  *
  * <p>设计要点：</p>
@@ -46,14 +47,33 @@ import java.util.Map;
  *   <li>消息列表由本类自行管理（不用 LLMService.conversationHistory），以便自定义 system 提示词。</li>
  *   <li>工具结果以 role=user + {@code [TOOL_RESULT name=...]} 标记回灌（兼容不支持 tool role 的模型）。</li>
  *   <li>所有请求级配置为局部变量，不写共享字段（线程安全）。</li>
+ *   <li><b>轮数预算</b>：默认 {@link #MAX_TURNS}，可经 {@link #setMaxTurns(int)} 覆盖（agent_config.agent_max_turns）。
+ *       预算用完不再直接报错，而是多跑一轮「预算收尾」产出阶段结论（见 {@link #BUDGET_WRAPUP_HINT}）——
+ *       参照 Claude Code “到顶交付 partial + 怎么继续”，避免多步任务的无声失败。</li>
+ *   <li><b>上下文裁剪</b>：超限时先把手工具结果<b>折叠成一行摘要</b>（{@code [TOOL_RESULT_SUMMARY]}），
+ *       而不是整条丢弃；且原生通道的折叠是“assistant(tool_calls) + 整组 tool 结果”整体替换，保持配对合法。</li>
  * </ul>
  */
 public class ToolUseLoop {
 
     private static final Logger log = LoggerFactory.getLogger(ToolUseLoop.class);
 
-    /** 单次请求最大轮数（LLM 调用次数硬上限） */
-    public static final int MAX_TURNS = 10;
+    /** 单次请求默认最大工具轮数（LLM 调用次数预算；可经 setMaxTurns 覆盖） */
+    public static final int MAX_TURNS = 25;
+
+    /** 预算下限（setMaxTurns 钳制用） */
+    public static final int MIN_TURNS = 5;
+
+    /** 预算上限（setMaxTurns 钳制用） */
+    public static final int MAX_TURNS_LIMIT = 50;
+
+    /**
+     * 预算收尾提示（P1）：最后一轮不再下发 tools，只要一段文字结论。
+     * 要求模型自己说清“已完成 / 还缺什么 / 下一步”，这样到顶也是可交付的阶段性结果。
+     */
+    static final String BUDGET_WRAPUP_HINT =
+            "[SYSTEM] 工具预算已用尽。请立即基于已有信息给出回答，**不要再调用任何工具**：\n"
+          + "① 已完成什么（含关键结论/数据）；② 还缺什么（明确说出未完成的部分）；③ 建议的下一步。";
 
     /** 连续 tool_call 格式错误最大次数（超过则放弃，防死循环） */
     private static final int MAX_MALFORMED = 3;
@@ -61,8 +81,20 @@ public class ToolUseLoop {
     /** 连续相同工具调用最大次数（超过则注入提示，防死循环） */
     private static final int MAX_IDENTICAL_CALLS = 3;
 
-    /** 对话转录最大消息条数（超出裁剪最早的工具结果，防上下文膨胀） */
+    /** 对话转录最大消息条数（超出先折叠最早的工具结果，再删摘要，防上下文膨胀） */
     private static final int MAX_TRANSCRIPT_SIZE = 30;
+
+    /** 对话转录总字符上限（超限同样先折叠；无完整结果可折叠则截断最长一条） */
+    private static final int MAX_TRANSCRIPT_CHARS = 60000;
+
+    /** 截断单条工具结果时的保留长度 */
+    private static final int TRUNCATED_RESULT_CHARS = 400;
+
+    /** 裁剪循环的最大步数（防任何病理情况下的死循环） */
+    private static final int MAX_TRIM_STEPS = 200;
+
+    /** 本实例的工具轮预算（默认 {@link #MAX_TURNS}，由 MainAgent 从 agent_config.agent_max_turns 覆盖） */
+    private int maxTurns = MAX_TURNS;
 
     private final LlmCaller llmCaller;
     private final StreamingLlmCaller streamingLlmCaller;
@@ -265,6 +297,20 @@ public class ToolUseLoop {
     }
 
     /**
+     * 设置本实例的工具轮预算（P1）——越界钳制到 [{@link #MIN_TURNS}, {@link #MAX_TURNS_LIMIT}]。
+     * 每个请求单独构建本实例，无并发复用，故可用实例字段。
+     */
+    public void setMaxTurns(int turns) {
+        this.maxTurns = Math.max(MIN_TURNS, Math.min(MAX_TURNS_LIMIT, turns));
+        log.info("ToolUseLoop maxTurns set to {}", this.maxTurns);
+    }
+
+    /** 当前预算（护栏/日志用） */
+    public int getMaxTurns() {
+        return maxTurns;
+    }
+
+    /**
      * System prompt 装饰器（T8.6）—— 对默认工具链 system prompt 做后处理。
      * MainAgent 注入闭包：读取管理员配置的 override/suffix 并应用；null → 用默认。
      */
@@ -382,7 +428,7 @@ public class ToolUseLoop {
         }
 
         try {
-            while (turns < MAX_TURNS) {
+            while (turns < maxTurns) {
                 turns++;
                 LlmTurnResult turn = turnRunner.run(messages);
                 log.debug("ToolUseLoop turn {}: textLen={}, nativeCalls={}, toolsRejected={}",
@@ -465,11 +511,54 @@ public class ToolUseLoop {
             return ToolUseResult.error("工具推理失败: " + e.getMessage(), toStringMaps(messages), turns, toolCalls, false);
         }
 
-        log.warn("ToolUseLoop exceeded MAX_TURNS={}", MAX_TURNS);
+        // ===== P1 预算收尾：不再直接报错，先让模型用已有信息产出一段结论 =====
+        log.warn("ToolUseLoop exceeded maxTurns={} (toolCalls={}), running budget wrap-up turn", maxTurns, toolCalls);
+        // 原生通道：不再下发 tools（复用“端点拒绝 tools”的同一开关）；
+        // 文本通道：模型仍可能吐 <tool_call>，收尾轮一律不执行（见下面的 stripToolCallMarkup）
+        if (nativeToolsEnabled != null) {
+            nativeToolsEnabled[0] = false;
+        }
+        messages.add(userMsg(BUDGET_WRAPUP_HINT));
+        turns++;   // 收尾轮也是 1 次 LLM 调用，计入 turns 元数据
+        try {
+            LlmTurnResult wrap = turnRunner.run(messages);
+            String wrapText = stripToolCallMarkup(wrap.text == null ? "" : wrap.text).trim();
+            if (!wrapText.isEmpty()) {
+                com.DocSystem.common.Log.info("[ToolUseLoop][WRAPUP] maxTurns=" + maxTurns
+                        + " toolCalls=" + toolCalls + " answerLen=" + wrapText.length());
+                return ToolUseResult.partial(wrapText, toStringMaps(messages), turns, toolCalls);
+            }
+            log.warn("ToolUseLoop budget wrap-up produced no text, falling back to error");
+        } catch (Exception e) {
+            log.warn("ToolUseLoop budget wrap-up turn failed: {}", e.getMessage());
+        }
+
         return ToolUseResult.error(
                 "处理超时：AI 连续调用工具过多仍未给出回答（已中断）。请缩小请求范围或重试。",
                 toStringMaps(messages), turns, toolCalls, true);
     }
+
+    /**
+     * 去掉模型输出里的工具调用标记（收尾轮专用）：
+     * 先走 {@link ToolCallParser#normalizeEscapedMarkup} 归一化转义变体，再删整块标记。
+     */
+    private static String stripToolCallMarkup(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        String s = ToolCallParser.normalizeEscapedMarkup(text);
+        s = TOOL_CALL_BLOCK.matcher(s).replaceAll(" ");
+        s = FUNCTIONS_BLOCK.matcher(s).replaceAll(" ");
+        return s.trim();
+    }
+
+    private static final java.util.regex.Pattern TOOL_CALL_BLOCK =
+            java.util.regex.Pattern.compile("<tool_call>.*?</tool_call>",
+                    java.util.regex.Pattern.DOTALL | java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    private static final java.util.regex.Pattern FUNCTIONS_BLOCK =
+            java.util.regex.Pattern.compile("<functions\\b[^>]*>.*?</functions>",
+                    java.util.regex.Pattern.DOTALL | java.util.regex.Pattern.CASE_INSENSITIVE);
 
     /**
      * 执行单个工具调用（原生/文本通道共用）：重复调用检测、SSE 事件、step 审计、结果回灌。
@@ -632,28 +721,176 @@ public class ToolUseLoop {
     }
 
     /**
-     * 上下文裁剪：消息总数超 MAX_TRANSCRIPT_SIZE 时，丢弃最早的工具结果消息（保留 system + user 开头）。
+     * 上下文裁剪（P2）：超限时**先折叠、再删**——
+     * <ol>
+     *   <li>条数超 {@link #MAX_TRANSCRIPT_SIZE}：把最早的一整轮工具结果折叠成一条
+     *       {@code [TOOL_RESULT_SUMMARY tool=xxx] <一行>}（保留“发生过什么”）；</li>
+     *   <li>无可折叠轮次时，删最早的中间消息（保留 system + 首条 user）；</li>
+     *   <li>总字符超 {@link #MAX_TRANSCRIPT_CHARS}：同样先折叠，最后才截断最长的一条结果。</li>
+     * </ol>
+     * ⚠️ 原生通道的折叠必须是 “assistant(tool_calls) + 整组 tool 结果” 整体替换成一条 user 消息，
+     * 否则会留下“assistant 带 tool_calls 但缺 tool 结果”的非法转录（OpenAI 兼容端点会 400）。
      */
     private static void trimTranscript(List<Map<String, Object>> messages) {
-        while (messages.size() > MAX_TRANSCRIPT_SIZE) {
-            // 从位置 2 起找第一条 [TOOL_RESULT] user 消息或 role=tool 消息删除
-            boolean removed = false;
-            for (int i = 2; i < messages.size(); i++) {
-                Map<String, Object> m = messages.get(i);
-                Object content = m.get("content");
-                boolean toolResult = "user".equals(m.get("role"))
-                        && content != null && content.toString().startsWith("[TOOL_RESULT");
-                if (toolResult || "tool".equals(m.get("role"))) {
-                    messages.remove(i);
-                    removed = true;
-                    break;
-                }
+        int folded = 0;
+        int guard = 0;
+        while (messages.size() > MAX_TRANSCRIPT_SIZE && guard++ < MAX_TRIM_STEPS) {
+            int[] round = findOldestFoldableRound(messages);
+            if (round != null) {
+                foldRound(messages, round[0], round[1]);
+                folded++;
+                continue;
             }
-            if (!removed) {
-                // 没有可删的工具结果 → 删位置 2（最早的中间消息）
-                messages.remove(2);
+            if (messages.size() <= 3) {
+                break;
+            }
+            messages.remove(2);
+        }
+        guard = 0;
+        while (totalChars(messages) > MAX_TRANSCRIPT_CHARS && guard++ < MAX_TRIM_STEPS) {
+            int[] round = findOldestFoldableRound(messages);
+            if (round != null) {
+                foldRound(messages, round[0], round[1]);
+                folded++;
+                continue;
+            }
+            int longest = findLongestToolResult(messages);
+            if (longest < 0) {
+                break;
+            }
+            truncateContent(messages.get(longest), TRUNCATED_RESULT_CHARS);
+        }
+        if (folded > 0) {
+            com.DocSystem.common.Log.info("[ToolUseLoop][TRIM] folded=" + folded
+                    + " messages=" + messages.size() + " chars=" + totalChars(messages));
+        }
+    }
+
+    /**
+     * 找最早“可折叠的一轮”：assistant 消息 + 紧随其后的工具结果消息组。
+     *
+     * @return {startIndex, endIndexExclusive}；无可折叠轮次时 null
+     */
+    private static int[] findOldestFoldableRound(List<Map<String, Object>> messages) {
+        for (int i = 2; i < messages.size() - 1; i++) {
+            if (!"assistant".equals(messages.get(i).get("role"))) {
+                continue;
+            }
+            if (!isFullToolResultMsg(messages.get(i + 1))) {
+                continue;
+            }
+            int end = i + 1;
+            while (end < messages.size() && isFullToolResultMsg(messages.get(end))) {
+                end++;
+            }
+            return new int[]{i, end};
+        }
+        return null;
+    }
+
+    /** 工具结果消息：[TOOL_RESULT...]/[TOOL_RESULT_SUMMARY...] 的 user 消息，或原生 role=tool */
+    private static boolean isToolResultMsg(Map<String, Object> m) {
+        if (m == null) {
+            return false;
+        }
+        if ("tool".equals(m.get("role"))) {
+            return true;
+        }
+        Object content = m.get("content");
+        return "user".equals(m.get("role")) && content != null
+                && content.toString().startsWith("[TOOL_RESULT");
+    }
+
+    /** 是否“完整”（未压缩）的工具结果 —— 已是摘要的不再重复折叠 */
+    private static boolean isFullToolResultMsg(Map<String, Object> m) {
+        if (!isToolResultMsg(m)) {
+            return false;
+        }
+        Object content = m.get("content");
+        return content == null || !content.toString().startsWith("[TOOL_RESULT_SUMMARY");
+    }
+
+    /**
+     * 把 [start, end) 的一轮折叠成一条 [TOOL_RESULT_SUMMARY] user 消息。
+     * 原生通道从 assistant.tool_calls 按序取工具名（tool 消息本身不带名字）。
+     */
+    private static void foldRound(List<Map<String, Object>> messages, int start, int end) {
+        List<String> names = extractToolCallNames(messages.get(start));
+        StringBuilder sb = new StringBuilder("[TOOL_RESULT_SUMMARY] 本轮工具结果已压缩（"
+                + (end - start - 1) + " 条）：\n");
+        for (int i = start + 1; i < end; i++) {
+            Object content = messages.get(i).get("content");
+            String raw = content == null ? "" : content.toString();
+            int k = i - start - 1;
+            String name = k < names.size() ? names.get(k) : null;
+            sb.append(TranscriptCompactor.summaryLine(name, raw)).append('\n');
+            if (sb.length() > TranscriptCompactor.FOLDED_ROUND_CHARS) {
+                sb.append("…（本轮更多结果已省略）\n");
+                break;
             }
         }
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("role", "user");
+        summary.put("content", sb.toString().trim());
+        messages.set(start, summary);
+        for (int i = end - 1; i > start; i--) {
+            messages.remove(i);
+        }
+    }
+
+    /** 从 assistant 消息的 tool_calls 里按序取工具名（原生通道折叠用） */
+    private static List<String> extractToolCallNames(Map<String, Object> assistantMsg) {
+        List<String> names = new ArrayList<>();
+        Object tcs = assistantMsg == null ? null : assistantMsg.get("tool_calls");
+        if (tcs instanceof com.alibaba.fastjson.JSONArray) {
+            com.alibaba.fastjson.JSONArray arr = (com.alibaba.fastjson.JSONArray) tcs;
+            for (int i = 0; i < arr.size(); i++) {
+                com.alibaba.fastjson.JSONObject tc = arr.getJSONObject(i);
+                com.alibaba.fastjson.JSONObject fn = tc == null ? null : tc.getJSONObject("function");
+                names.add(fn == null ? null : fn.getString("name"));
+            }
+        }
+        return names;
+    }
+
+    /** 找完整工具结果里内容最长的那条（字符超限时截断用） */
+    private static int findLongestToolResult(List<Map<String, Object>> messages) {
+        int idx = -1;
+        int max = -1;
+        for (int i = 2; i < messages.size(); i++) {
+            if (!isFullToolResultMsg(messages.get(i))) {
+                continue;
+            }
+            Object content = messages.get(i).get("content");
+            int len = content == null ? 0 : content.toString().length();
+            if (len > max) {
+                max = len;
+                idx = i;
+            }
+        }
+        return idx;
+    }
+
+    private static void truncateContent(Map<String, Object> m, int keep) {
+        Object content = m.get("content");
+        if (content == null) {
+            return;
+        }
+        String s = content.toString();
+        if (s.length() > keep) {
+            m.put("content", s.substring(0, keep) + "…（已截断，需要请重新调用）");
+        }
+    }
+
+    private static int totalChars(List<Map<String, Object>> messages) {
+        int total = 0;
+        for (Map<String, Object> m : messages) {
+            Object content = m.get("content");
+            if (content != null) {
+                total += content.toString().length();
+            }
+        }
+        return total;
     }
 
     private static String truncate(String s) {
