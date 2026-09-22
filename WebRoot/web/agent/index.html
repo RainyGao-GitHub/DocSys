@@ -41,11 +41,6 @@
         .ai-markdown-render table { border-collapse: collapse; width: 100%; margin: 8px 0; }
         .ai-markdown-render th,.ai-markdown-render td { border: 1px solid #ddd; padding: 6px 12px; text-align: left; }
         .ai-markdown-render th { background: #f5f5f5; }
-        body.dark-theme .ai-markdown-render h1,body.dark-theme .ai-markdown-render h2,body.dark-theme .ai-markdown-render h3 { color: #e0e0e0; }
-        body.dark-theme .ai-markdown-render code { background: #2a2a4a; }
-        body.dark-theme .ai-markdown-render blockquote { border-color: #00ff88; color: #888; }
-        body.dark-theme .ai-markdown-render th { background: #16213e; }
-        body.dark-theme .ai-markdown-render th,body.dark-theme .ai-markdown-render td { border-color: #3a3a5a; }
     </style>
     <style>
         /* DocSys Style - Professional, No Emojis */
@@ -830,37 +825,6 @@
             color: #fff;
         }
         .confirm-danger:hover { filter: brightness(1.05); }
-        body.dark-theme .confirm-dialog { background: #1e2233; }
-        body.dark-theme .confirm-title { color: #e6e9f2; }
-        body.dark-theme .confirm-msg { color: #b9bfd0; }
-        body.dark-theme .confirm-reject { background: #2a2f45; color: #c5c9d6; }
-        body.dark-theme .confirm-reject:hover { background: #333950; }
-
-        /* dark theme 适配 */
-        body.dark-theme .process-container {
-            background: #1c1f2e;
-            border-color: #343a52;
-        }
-        body.dark-theme .process-container[open] .process-body { border-color: #343a52; }
-        body.dark-theme .process-summary { color: #9aa0b4; }
-        body.dark-theme .process-summary:hover { background: #232741; }
-        body.dark-theme .reasoning-text { color: #7d8299; border-left-color: #3a3f5c; }
-        body.dark-theme .intermediate-text { color: #8b90a6; }
-        body.dark-theme .tool-card {
-            background: #20243a;
-            border-color: #343a52;
-        }
-        body.dark-theme .tool-card.running { background: #1a2540; border-color: #2f5fb0; }
-        body.dark-theme .tool-card.failed { background: #2e1f24; border-color: #6e3333; }
-        body.dark-theme .tool-card-name { color: #d6dae6; }
-        body.dark-theme .tool-card-args { background: #161a2c; color: #9aa0b4; }
-        body.dark-theme .tool-card-result { color: #c5c9d6; }
-        body.dark-theme .tool-card.failed .tool-card-result { color: #ef8f8f; }
-        body.dark-theme .confirm-dialog { background: #22263c; }
-        body.dark-theme .confirm-title { color: #e0e4f0; }
-        body.dark-theme .confirm-msg { color: #b6bccf; }
-        body.dark-theme .confirm-reject { background: #2e3248; color: #c5c9d6; }
-        body.dark-theme .confirm-reject:hover { background: #3a3f5a; }
 
         /* Input Area - 优化版 */
         .input-area {
@@ -1640,178 +1604,6 @@
             background: #f5f5f5;
         }
 
-        /* Dark Theme */
-        body.dark-theme {
-            background: #1a1a2e;
-            color: #e0e0e0;
-        }
-        body.dark-theme .top-bar {
-            background: #16213e;
-            border-color: #2a2a4a;
-        }
-        body.dark-theme .top-bar-btn {
-            background: #16213e;
-            border-color: #2a2a4a;
-            color: #b0b0b0;
-        }
-        body.dark-theme .top-bar-btn:hover {
-            border-color: #00ff88;
-            color: #00ff88;
-        }
-        body.dark-theme .session-dropdown {
-            background: #16213e;
-            border-color: #2a2a4a;
-        }
-        body.dark-theme .session-dropdown-header {
-            background: #16213e;
-            border-color: #2a2a4a;
-            color: #888;
-        }
-        body.dark-theme .soul-chip {
-            background: #16213e;
-            border-color: #2a2a4a;
-            color: #b0b0b0;
-        }
-        body.dark-theme .soul-chip:hover { border-color: #00ff88; color: #00ff88; }
-        body.dark-theme .soul-chip .health-text { color: #b0b0b0; }
-        body.dark-theme .soul-chip-level { color: #00ff88; }
-        body.dark-theme .soul-chip-sep { color: #444; }
-        body.dark-theme .toolbar-btn { color: #b0b0b0; }
-        body.dark-theme .toolbar-btn:hover { color: #00ff88; border-color: #00ff88; }
-        body.dark-theme .toolbar-sep { background: #2a2a4a; }
-        body.dark-theme .chat-container {
-            background: #1a1a2e;
-        }
-        body.dark-theme .messages-area {
-            background: #1a1a2e;
-        }
-        body.dark-theme .message-body {
-            background: #2a2a4a;
-            color: #e0e0e0;
-            border-color: #3a3a5a;
-        }
-        body.dark-theme .input-area {
-            background: #16213e;
-            border-color: #2a2a4a;
-        }
-        body.dark-theme .input-container textarea {
-            background: #2a2a4a;
-            color: #e0e0e0;
-            border-color: #3a3a5a;
-        }
-        body.dark-theme .input-container textarea:focus {
-            border-color: #00ff88;
-        }
-        body.dark-theme .send-btn {
-            background: #009a61;
-        }
-        body.dark-theme .session-item {
-            color: #b0b0b0;
-        }
-        body.dark-theme .session-item:hover {
-            background: #2a2a4a;
-        }
-        body.dark-theme .session-item.active {
-            background: #0f3460;
-            color: #00ff88;
-        }
-        body.dark-theme .quick-tag {
-            background: #0f3460;
-            color: #00ff88;
-            border-color: #009a61;
-        }
-        body.dark-theme .quick-tag.is-selected {
-            background: #009a61;
-            color: #fff;
-        }
-        body.dark-theme .empty-state h3 {
-            color: #e0e0e0;
-        }
-        body.dark-theme .empty-state p {
-            color: #888;
-        }
-        body.dark-theme .upload-btn {
-            background: transparent;
-            border-color: transparent;
-            color: #b0b0b0;
-        }
-        body.dark-theme .upload-btn:hover {
-            background: #2a2a4a;
-            border-color: #3a3a5a;
-            color: #00ff88;
-        }
-        body.dark-theme .input-container {
-            background: #1a1a2e;
-            border-color: #2a2a4a;
-        }
-        body.dark-theme .input-container:focus-within {
-            border-color: #00ff88;
-            box-shadow: 0 0 0 3px rgba(0,255,136,0.15);
-        }
-        body.dark-theme .input-area {
-            background: linear-gradient(to bottom, #16213e, #1a1a2e);
-        }
-        body.dark-theme .input-shortcut kbd {
-            background: #2a2a4a;
-            border-color: #3a3a5a;
-            color: #b0b0b0;
-        }
-        body.dark-theme .input-tip {
-            color: #888;
-        }
-        body.dark-theme .dialog {
-            background: #16213e;
-        }
-        body.dark-theme .dialog-header {
-            border-color: #2a2a4a;
-        }
-        body.dark-theme .dialog-body {
-            border-color: #2a2a4a;
-        }
-        body.dark-theme .dialog-title {
-            color: #e0e0e0;
-        }
-        body.dark-theme .help-section-title {
-            color: #00ff88;
-            border-color: #2a2a4a;
-        }
-        body.dark-theme .help-cmd {
-            background: #2a2a4a;
-            color: #b0b0b0;
-        }
-        body.dark-theme .help-cmd:hover {
-            background: #3a3a5a;
-        }
-        body.dark-theme .help-cmd-name {
-            color: #00ff88;
-        }
-        body.dark-theme .help-cmd-desc {
-            color: #888;
-        }
-        body.dark-theme .form-row label {
-            color: #b0b0b0;
-        }
-        body.dark-theme .form-row input,
-        body.dark-theme .form-row select {
-            background: #2a2a4a;
-            border-color: #3a3a5a;
-            color: #e0e0e0;
-        }
-        body.dark-theme .settings-form h4 {
-            color: #b0b0b0;
-        }
-        body.dark-theme .help-shortcuts h4 {
-            color: #b0b0b0;
-        }
-        body.dark-theme kbd {
-            background: #2a2a4a;
-            border-color: #3a3a5a;
-            color: #e0e0e0;
-        }
-        body.dark-theme .shortcut {
-            color: #888;
-        }
-
         /* P2：附件 chips（本轮对话的输入，默认临时，不入仓库）*/
         .attach-bar { padding: 0 2px 0; }
         .attach-chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -1828,8 +1620,6 @@
             font-size: 10px; padding: 1px 6px; border-radius: 8px;
             background: #e2f3e8; color: #2e6a4a; border: 1px solid #c7e5d3; flex: none;
         }
-        body.dark-theme .attach-chip.imported { background: #17281f; border-color: #2f5440; color: #93cfa8; }
-        body.dark-theme .attach-chip .ac-done { background: #1e3527; color: #9fd8b3; border-color: #2f5440; }
         .attach-chip .ac-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
         /* 仅上传中的进度文字（附件本身不显示大小）*/
         .attach-chip .ac-progress { font-size: 10px; color: #a08c5a; }
@@ -1843,9 +1633,6 @@
             font-size: 13px; line-height: 1; padding: 0 2px;
         }
         .attach-chip .ac-x:hover { color: #d33; }
-        body.dark-theme .attach-chip { background: #2a2418; border-color: #4a3f28; color: #e0c98a; }
-        body.dark-theme .attach-chip .ac-progress { color: #a08c5a; }
-        body.dark-theme .attach-chip .ac-import { background: #332b1c; border-color: #4a3f28; color: #d8bb76; }
 
         /* P1：关注对象（@）/ 操作（/）chips */
         .focus-bar { padding: 0 2px 0; }
@@ -1864,11 +1651,10 @@
         .fi { width: 15px; height: 15px; flex: none; vertical-align: -2px; }
         .fi-ico { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: none; }
         .fi-ico svg { width: 14px; height: 14px; display: block; }
-        /* 整库图标（方案 E）：线条图标，颜色走 currentColor，深色主题只换色
+        /* 整库图标（方案 E）：线条图标，颜色走 currentColor
            尺寸：比同行的文件/目录图标大一档（用户要求“仓库图标大一点”）*/
         .fi-ico.repo-ico { color: #4C6FFF; width: 17px; height: 17px; vertical-align: -3px; }
         .fi-ico.repo-ico svg { width: 17px; height: 17px; }
-        body.dark-theme .fi-ico.repo-ico { color: #95ABFF; }
         .ft-row .fi { width: 16px; height: 16px; vertical-align: -3px; }
         .ft-row .fi-ico { width: 16px; height: 16px; }
         .ft-row .fi-ico svg { width: 15px; height: 15px; }
@@ -1885,10 +1671,6 @@
         /* P1.6 共用消息框：填写对象说明时，框体给一条蓝色 accent（对象 chip 同步高亮）*/
         .input-container.note-mode { border-color: #8fbaf0; }
         .input-container.note-mode:focus-within { border-color: #4a8fe7; box-shadow: 0 0 0 3px rgba(74,143,231,0.12); }
-        body.dark-theme .focus-chip { background: #202028; border-color: #3a3a4a; color: #c8cdd8; }
-        body.dark-theme .focus-chip.editing { background: #1e2b45; border-color: #3f5f96; color: #8fb6ff; }
-        body.dark-theme .focus-chip.op { background: #16302a; border-color: #275246; color: #7fd7ac; }
-        body.dark-theme .input-container.note-mode { border-color: #3f5f96; }
 
         /* P1.5：关注对象目录树弹窗 */
         #focusDialog .dialog { width: 620px; max-width: 94vw; max-height: 84vh; display: flex; flex-direction: column; }
@@ -1924,16 +1706,6 @@
         .fd-btn:hover { background: #efefef; }
         .fd-btn.primary { background: #009a61; border-color: #009a61; color: #fff; }
         .fd-btn.primary:hover { background: #008753; }
-        body.dark-theme .focus-dialog-toolbar select,
-        body.dark-theme .focus-dialog-toolbar input { background: #141420; color: #ddd; border-color: #33334d; }
-        body.dark-theme .ft-row { color: #ccc; }
-        body.dark-theme .ft-row:hover { background: #23233a; }
-        body.dark-theme .ft-row.selected { background: #1e2b45; }
-        body.dark-theme .ft-kind { border-color: #3a3a5a; color: #9aa0b4; }
-        body.dark-theme .focus-dialog-foot { border-color: #33334d; }
-        body.dark-theme .fd-count { color: #9aa0b4; }
-        body.dark-theme .fd-btn { background: #242436; color: #ccc; border-color: #3a3a5a; }
-        body.dark-theme .fd-btn.primary { background: #009a61; border-color: #009a61; color: #fff; }
 
         /* P1：通用选择器面板（@ 对象 / / 操作+技能） */
         .suggestion-panel {
@@ -1954,11 +1726,6 @@
         .suggestion-empty { padding: 10px; font-size: 12px; color: #999; }
         .suggestion-foot { padding: 6px 10px; border-top: 1px solid #f0f0f0; font-size: 11px; color: #999; display: flex; gap: 10px; }
         #focusBtn, #opBtn { font-size: 14px; font-weight: 600; }
-        body.dark-theme .suggestion-panel { background: #1b1b28; border-color: #33334d; }
-        body.dark-theme .suggestion-head, body.dark-theme .suggestion-foot { border-color: #2a2a40; color: #aaa; }
-        body.dark-theme .suggestion-item:hover, body.dark-theme .suggestion-item.selected { background: #232338; }
-        body.dark-theme .suggestion-item .item-title { color: #e6e6e6; }
-        body.dark-theme .suggestion-item .item-kind { background: #2a2a40; color: #9aa4b2; }
 
         /* Autocomplete */
         .autocomplete-suggestions {
@@ -1974,10 +1741,6 @@
             z-index: 100;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
         }
-        body.dark-theme .autocomplete-suggestions {
-            background: #2a2a4a;
-            border-color: #3a3a5a;
-        }
         .autocomplete-item {
             padding: 8px 12px;
             cursor: pointer;
@@ -1990,17 +1753,10 @@
         .autocomplete-item.selected {
             background: #e8f5e9;
         }
-        body.dark-theme .autocomplete-item:hover,
-        body.dark-theme .autocomplete-item.selected {
-            background: #0f3460;
-        }
         .autocomplete-item-name {
             font-family: 'Courier New', monospace;
             color: #009a61;
             font-weight: 600;
-        }
-        body.dark-theme .autocomplete-item-name {
-            color: #00ff88;
         }
         .autocomplete-item-desc {
             color: #999;
@@ -2009,9 +1765,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-        }
-        body.dark-theme .autocomplete-item-desc {
-            color: #666;
         }
 
         /* Re-login prompt */
@@ -2023,17 +1776,10 @@
             text-align: center;
             margin: 10px 0;
         }
-        body.dark-theme .relogin-prompt {
-            background: #3a2a1a;
-            border-color: #6a4a2a;
-        }
         .relogin-prompt p {
             color: #e65100;
             font-size: 13px;
             margin-bottom: 10px;
-        }
-        body.dark-theme .relogin-prompt p {
-            color: #ff9800;
         }
         .relogin-prompt button {
             padding: 8px 20px;
@@ -2325,14 +2071,6 @@
             </div>
             <div class="dialog-body">
                 <div class="settings-form">
-                    <div class="form-row">
-                        <label>主题</label>
-                        <select id="themeSelect">
-                            <option value="dark">深色</option>
-                            <option value="light">浅色</option>
-                        </select>
-                    </div>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 12px 0;">
                     <h4 style="margin-bottom: 12px; color: #555; font-size: 13px;">Soul 进化控制</h4>
                     <div class="form-row">
                         <label>自动学习</label>
@@ -2410,7 +2148,6 @@
         attachments: [],      // P2：当前会话的临时附件（不入仓库）
         attachUploading: null, // P2：{name, percent}
         settings: {
-            theme: 'light',
             autoLearn: true,
             healthCheckInterval: 60
         },
@@ -2451,15 +2188,10 @@
             }
         } catch (e) { /* ignore */ }
 
-        // Apply theme immediately
-        if (state.settings.theme === 'dark') {
-            document.body.classList.add('dark-theme');
-        }
+        // 2026-09-22：深浅主题设置已移除（只保留浅色）——历史 localStorage 里的 theme 键直接忽略
 
         // Populate settings form
         setTimeout(function() {
-            var themeSel = document.getElementById('themeSelect');
-            if (themeSel) themeSel.value = state.settings.theme;
             var autoLearn = document.getElementById('autoLearn');
             if (autoLearn) autoLearn.value = state.settings.autoLearn ? 'true' : 'false';
             var healthInterval = document.getElementById('healthCheckInterval');
@@ -4049,7 +3781,7 @@
        用户口径：只换“整库”一个图标——旧的是 2011 年 Windows Live 的公共文件夹 PNG，
        语义不对（public ≠ 整库）且 15px 下发糊；换成**双层叠放**的线条图标，
        跟“目录”的黄色实心文件夹在**结构上**就不同（不只差颜色），更容易区分。
-       颜色走 currentColor，深浅主题在 CSS 里换色；目录/文件图标不动。*/
+       颜色走 currentColor；目录/文件图标不动。*/
     var OBJ_ICON_STROKE = '1.7';
     /** 收紧 viewBox：图形实际只占 0 0 24 24 的约 70%，留白让图标看起来很“小”；
      *  裁到图形的紧致外框（含描边）后，同样 15px 盒子里画得更大（用户要求“仓库图标大一点”）*/
@@ -5606,8 +5338,6 @@
     // ==================== Pending Uploads Handler ====================
     // Save settings
     document.getElementById('saveSettingsBtn').addEventListener('click', function() {
-        var newTheme = document.getElementById('themeSelect').value;
-        state.settings.theme = newTheme;
         state.settings.autoLearn = document.getElementById('autoLearn').value === 'true';
         state.settings.healthCheckInterval = parseInt(document.getElementById('healthCheckInterval').value);
 
@@ -5615,13 +5345,6 @@
         try {
             localStorage.setItem('docsys_settings', JSON.stringify(state.settings));
         } catch (e) { /* ignore */ }
-
-        // Apply theme immediately
-        if (newTheme === 'dark') {
-            document.body.classList.add('dark-theme');
-        } else {
-            document.body.classList.remove('dark-theme');
-        }
 
         showMessage('设置已保存', 'success');
         document.getElementById('settingsDialog').classList.remove('active');

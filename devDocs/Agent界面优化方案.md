@@ -75,6 +75,7 @@
 - index.html 内联样式：删除 `.sidebar*`、`.section-header`、`.section-btn` 规则；**保留** `.session-list` / `.session-item*`（下拉列表复用）；新增 `.top-bar` / `.session-dropdown` / `.soul-chip` / 底部工具按钮样式；新增窄屏媒体查询。
 - `css/styles.css`：**不动**（ui.html 仍在用）。
 - 深色主题（index.html `body.dark-theme` 区块）：删除 sidebar 相关规则；为新组件补 dark 变体。
+  - ⚠️ **已失效（2026-09-22 起）**：主题设置整体移除、只保留浅色，全部 `body.dark-theme` 规则已删 → 见 §11。
 
 ### 4.4 响应式（iframe 内视口=弹层宽度，@media 生效）
 
@@ -93,7 +94,7 @@
 - [ ] Soul 芯片：数据刷新、tooltip、点击打开技能弹窗（完整 Soul 数据同步）
 - [ ] 底部：帮助/技能/设置三弹窗；`Ctrl+H`；模型选择/管理不受影响
 - [ ] 视口：ArtDialog 停靠态（≈500px）与全屏直链（宽）两种；最大化/还原
-- [ ] 主题：浅色/深色
+- [ ] 主题：**仅浅色**（深/浅切换已于 2026-09-22 移除，见 §11）
 - [ ] 无控制台报错；`sessionList` 隐藏状态下渲染不影响
 
 ## 6. 变更记录
@@ -281,6 +282,34 @@
 - **取舍**：@ 弹窗"确定"后回**消息槽**而不是停在最后一个对象的说明槽。理由：一次勾选多个对象是"选资料"的手势，接下来要写本轮要求；若停在说明槽，用户写的正文会被记成某个对象的说明（学术伴源码注释点名的坑）。需要"选完即填说明"的话，点 chip 一步即可。若用户偏好"确定后直接进说明槽"，改 `confirmFocusDialog()` 一行即可。
 - **踩坑**：`textarea.maxLength = -1` 抛 `IndexSizeError`（"not positive or 0"）→ 退出说明态时必须 `removeAttribute('maxlength')`、进入时 `setAttribute('maxlength', 500)`。首轮实测被浏览器 `pageError` 抓到，已修。
 - **测试脚本坑（非产品问题）**：批量点 chips 时必须每次重新 `querySelectorAll()` —— `renderFocusChips()` 会重建 DOM，缓存的 NodeList 里是脱离文档的旧节点，其 click 既不冒泡到 `#focusChips`（委托失效）也不冒泡到 `document`，表现为"点了没反应"。
+- 变更文件：`WebRoot/web/agent/index.html`、本记录。
+
+## 11. 移除「主题」设置：只保留浅色（2026-09-22，用户要求）
+
+### 11.1 用户口径
+
+- 原话：**"把 Agent 主题的深浅设置去掉，就只保留浅色的，我想我们还是专注于功能本身，后续代码修改和升级也更简单"**。
+- 动机（构成）：每加一个组件都要同步维护一份 dark 变体（本文件里 `body.dark-theme` 规则共 **137 行**），维护成本明显高于收益；而风格一致性靠浅色一套规则就够。
+
+### 11.2 删除范围（只动 `WebRoot/web/agent/index.html`，无 Java 改动）
+
+- **设置弹窗**：删掉「主题」一行（`<label>主题</label>` + `<select id="themeSelect">` + 其下的 `<hr>` 分隔线）；弹窗现在直接从「Soul 进化控制」开始。
+- **JS**：`state.settings` 去掉 `theme`；`loadSettings()` 删掉"立即应用主题"（`classList.add('dark-theme')`）与 `themeSel` 回填；保存处理器删掉读 `themeSelect` / 写 `state.settings.theme` / 加去 `dark-theme` 类。
+- **CSS**：删除全部 `body.dark-theme ...` 规则（含 `/* Dark Theme */`、`/* dark theme 适配 */` 两个注释块），共 137 行；其中包含后期新增组件的 dark 变体（整库图标 `#95ABFF`、共用消息框 `note-mode`、关注对象 chips、附件 chips、目录树弹窗、建议面板、autocomplete、relogin 提示等）。
+- **兼容**：老用户 `localStorage.docsys_settings` 里可能仍带 `theme:'dark'` —— 载入时按"只认 `state.settings` 已存在的键"过滤，`theme` 被直接忽略；**不需要迁移脚本**，也不需要清缓存。
+
+### 11.3 验证（dev 8100，真页面）
+
+| 检查 | 结果 |
+|---|---|
+| 全文件 `dark-theme` 残留 | **0 处**；内联 JS 经 `vm.Script` 整体校验 **0 错误** |
+| 登录后形态 | `document.body.className = ""`；`body` 计算背景 `rgb(245,245,245)`、文字色 `rgb(51,51,51)`（浅色） |
+| 设置弹窗 | 仅剩「自动学习」「健康检测间隔」+ 清除告警/性能报告；`#themeSelect` 已不存在；保存 → toast「设置已保存」，`docsys_settings` 变为 `{"autoLearn":true,"healthCheckInterval":60}`（不再写 `theme`） |
+| 老配置迁移 | 手工把 `localStorage.docsys_settings` 写成 `{"theme":"dark",...}` 再刷新 → 无 `dark-theme` 类、仍浅色渲染 ✓ |
+| Markdown 渲染回归（删 CSS 后） | 表格 `th` `#f5f5f5` / `td` 边框 `#ddd`、引用左边框 `#009a61`、标题 `#333` 均为浅色原值；`.ai-markdown-render pre code` 仍是深色代码块（原有设计，未动） |
+| 页面整体 | 顶栏/会话控件/Soul 芯片/消息区/输入框/@·/·附件·发送/底部工具行与模型选择器 全部正常，无 pageerror |
+
+- ⚠️ **未动的相邻资产（不扩范围）**：`WebRoot/web/agent/ui.html`（旧版 UI，配 `js/app-vanilla.js`）也有一个 `#theme-select`，但它**从未**应用任何 dark 类（`app-vanilla.js` 只把值存进 settings），且 `css/styles.css` 里没有任何 dark 规则 → 那个控件实际是空转的；本次未改。若要彻底清掉，需同时动 `ui.html` + `app-vanilla.js`，建议单独评估。
 - 变更文件：`WebRoot/web/agent/index.html`、本记录。
 
  
