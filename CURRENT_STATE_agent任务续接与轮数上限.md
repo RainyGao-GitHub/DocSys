@@ -8,7 +8,7 @@
 解决"多步任务跑到一半被硬切断、且已做的工作全部丢失"：
 `ToolUseLoop.MAX_TURNS = 10` 的硬上限 + 超限后**返回错误串**（不是阶段成果）+ 重试**从头再来丢掉观察** + `trimTranscript` **整条丢弃**早期工具结果。
 
-- 状态：**P1+P2 代码已完成、编译通过、护栏 1381/0、页面 E2E 已验证（V1/V2/V4/V6）→ 待提交**
+- 状态：**P1+P2 已提交（`8353fe0ed`/`d8c826789`）；P3 代码完成 + 护栏 37 套/1409 项/0 失败 + 页面 E2E 已验证 → 待提交**
 - 计划（唯一口径来源）：`devDocs/Agent任务续接与轮数上限改造计划.md`
 - 用户原话（本次触发）："目前我们的Agent设计的轮数限制导致了我有些任务其实没有完成就结束了"
 
@@ -63,16 +63,36 @@
    - 无配置回退：临时键 `agent_max_turns` 已从 dev 库删除（默认 25 生效）
 
 9. ✅ **已提交**：主仓库 `D:/Dev/DocSys`（`devInt`）commit **`8353fe0ed`**（7 files changed, +630/-76；含代码 + 本卡）
+10. ✅ **P3（前端「继续」入口 + 服务端续接上下文）代码完成**（2026-09-22）：
+    - 新增 `session/ContinuationStore.java`：到顶时把「本轮结论 + 工具进展摘要」写进**会话 metadata 的 `pendingContinuation` 键**（复用 `agent_sessions.metadata`，**不新增表**）；续接短语（整条消息 = 继续/接着做/go on…）且有标记时注入 `[SYSTEM] 这是上一段的续接…不要重复已经完成的部分` + 结论 + 进展摘要，**取用即清**
+    - `session/SessionService.java`：新增 metadata 自定义键读写（`getMetaValue/metaValueOf/putMetaJson/removeMeta`，合并保留 `title`）+ 供测试注入的 `setRepository`
+    - `orchestrator/MainAgent.java`：流式/非流式两路径接入 `applyContinuationContext(...)`（注入）与 `savePendingContinuation(...)`（记录）
+    - 前端 `WebRoot/web/agent/index.html`：`done.meta.truncated=true` → 气泡下「⏸ 预算到顶（N 轮）」+「继续」按钮（点击走普通发送路径发"继续"，并收起该页脚）；新增 `buildTruncatedFooterHtml/applyDoneMeta/continueFromTruncated` + CSS + 点击委托
+11. ✅ **P3 验证通过（2026-09-22 23:26~23:40 实测）**：
+    - 页脚渲染：`.truncated-footer` + 徽标 `⏸ 预算到顶（6 轮）` + 「继续」按钮；点击后 `truncated=false`、按钮置灰、只触发 1 次发送、输入框内容为"继续"
+    - 续接真的不重做（V3）：段1（预算=5）5 次工具调用 → 点「继续」 → 段2 仅 `turns=2 / toolCalls=1`（**未重复** `list_repos`/`get_repos`），并交付完整结果
+    - 跨重启持久化：两次 Tomcat 重启后标记仍可续（`[Continuation][TAKE] … pending=used`）
+    - 日志：`[Continuation][SAVE] … saved=ok` / `[Continuation][TAKE] … pending=used`；今日 `[WRAPUP]` 4 次、`LEGACY-FALLBACK` 0 次、`SAVE-FAIL` 0 次
+    - 护栏：**37 套 / 1409 项 / 0 失败**（新增 `TestContinuationStore` 28 项；旧基线 1361）
 
 ## 下一步
 
-1. P3（下一轮）：前端「继续」入口（`done.meta.truncated=true` 时出现）+ 服务端续接上下文注入（复用 `TranscriptCompactor.summarize`，还需一个"未完成任务"标记）
-2. P4 可选：完成判定（autopilot 式自动继续）
-3. 会话恢复协议入口：`CLAUDE.md` 第 1 步仍指向旧卡 `CURRENT_STATE_agent技能与工具清理.md`（已封卡）——已向用户提议改指向本卡，待裁定
+1. P4（可选，待数据）：完成判定驱动自动续跑（需先拿 P1-P3 真实数据：多步任务占比/平均轮数/续接率）
+2. 观察期：`agent_max_turns` 默认 25 的成本/等待是否可接受（计划 §6 风险行）
+3. 用户已裁定：`CLAUDE.md` 会话恢复第 1 步已改指向本卡（✅）
 
 ## 未提交改动
 
-- 无。P1+P2 的 7 个文件（含本卡）已随 `8353fe0ed` 提交：
+- P3（2026-09-22，待提交）：
+  - `src/com/DocSystem/agent/session/ContinuationStore.java`（**新文件**）
+  - `src/com/DocSystem/agent/session/SessionService.java`（metadata 自定义键 + setRepository）
+  - `src/com/DocSystem/agent/session/TestContinuationStore.java`（**新文件**，护栏 28 项）
+  - `src/com/DocSystem/agent/orchestrator/MainAgent.java`（注入/记录钩子）
+  - `WebRoot/web/agent/index.html`（到顶页脚 + 「继续」）
+  - `devDocs/Agent任务续接与轮数上限改造计划.md`（P3 实施记录 + 基线刷新）
+  - `CLAUDE.md`（会话恢复入口改指本卡）
+  - 本卡
+- 已提交（上一期）：`8353fe0ed` 代码 / `d8c826789` 本卡收尾
   - `src/com/DocSystem/agent/orchestrator/ToolUseResult.java`（+truncated/partial）
   - `src/com/DocSystem/agent/orchestrator/ToolUseLoop.java`（预算可配 + 收尾轮 + 折叠式裁剪）
   - `src/com/DocSystem/agent/orchestrator/TranscriptCompactor.java`（**新文件**）
@@ -83,9 +103,10 @@
 
 ## 生效约束
 
-- 本任务**是否需要先提交**：不需要（未改任何既有未提交代码）。
+- 本任务**是否需要先提交**：不需要（上一期已提交；本期为 P3 新增）。
 - 编译输出目录铁律：`-d WebRoot/WEB-INF/classes`，源码树不得出现 `.class`；Spring 控制器必须 `-parameters -g`。
 - 测试/探针产物写 `%TEMP%\docsys_chk\`；**绝不写工程根 `tmp/`**。
 - SSE 协议只做**加法**（`done.meta` 加字段），不改既有事件；旧编排封口策略（R3-4/R3-5）不动。
+- 续接标记**不新增表**（放会话 metadata）；新增/改动会话存储时注意 SQLite 下 update 返回值假阴性（按“不抛异常即成功”判定）。
 - 提交归属：Agent 核心代码 + 计划 + 工作卡 → 主仓库 `D:/Dev/DocSys`（`devInt`）。
-- 每期结束先跑全量护栏（不得低于 36 套 / **1381** 项）再提交，提交信息写清"验了什么"。
+- 每期结束先跑全量护栏（不得低于 37 套 / **1409** 项）再提交，提交信息写清"验了什么"。

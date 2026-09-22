@@ -133,6 +133,10 @@ public class MainAgent {
     @Autowired(required = false)
     private com.DocSystem.agent.session.ConversationHistoryService conversationHistoryService;
 
+    /** P3：到顶后的"未完成任务"标记 + 续接上下文（未装配时无续接能力，行为同改造前） */
+    @Autowired(required = false)
+    private com.DocSystem.agent.session.ContinuationStore continuationStore;
+
     /** T8.3 用户记忆存储（memory_set/get/list 工具）；未装配时不注册 memory 工具 */
     @Autowired(required = false)
     private com.DocSystem.agent.memory.UserMemoryService userMemoryService;
@@ -533,7 +537,8 @@ public class MainAgent {
             // T5.2b 会话记忆：续接会话时加载历史消息作为上下文
             java.util.List<java.util.Map<String, String>> priorHistory = loadSessionHistory(historySessionId);
             long loopStart = System.currentTimeMillis();
-            com.DocSystem.agent.orchestrator.ToolUseResult tr = loop.run(toolQuery, priorHistory);
+            com.DocSystem.agent.orchestrator.ToolUseResult tr = loop.run(
+                    applyContinuationContext(toolQuery, historySessionId), priorHistory);
             long duration = System.currentTimeMillis() - loopStart;
             log.info("ToolUseLoop finished: success={}, turns={}, toolCalls={}, cost={}ms",
                     tr.success, tr.turns, tr.toolCalls, duration);
@@ -544,6 +549,7 @@ public class MainAgent {
                         "turns", String.valueOf(tr.turns));
             }
             if (tr.success) {
+                savePendingContinuation(tr, historySessionId);
                 return loopResponse(tr, duration, null);
             }
 
@@ -553,6 +559,7 @@ public class MainAgent {
                     retryQueryWithProgress(toolQuery, tr), priorHistory);
             if (retry.success) {
                 log.info("ToolUseLoop retry succeeded: turns={}, toolCalls={}", retry.turns, retry.toolCalls);
+                savePendingContinuation(retry, historySessionId);
                 return loopResponse(retry, System.currentTimeMillis() - loopStart, "retry=true");
             }
             return null;
@@ -581,7 +588,8 @@ public class MainAgent {
             // T5.2b 会话记忆：续接会话时加载历史消息作为上下文
             java.util.List<java.util.Map<String, String>> priorHistory = loadSessionHistory(historySessionId);
             long loopStart = System.currentTimeMillis();
-            com.DocSystem.agent.orchestrator.ToolUseResult tr = loop.runStreaming(toolQuery, priorHistory, streamSink);
+            com.DocSystem.agent.orchestrator.ToolUseResult tr = loop.runStreaming(
+                    applyContinuationContext(toolQuery, historySessionId), priorHistory, streamSink);
             long duration = System.currentTimeMillis() - loopStart;
             log.info("ToolUseLoop(streaming) finished: success={}, turns={}, toolCalls={}, cost={}ms",
                     tr.success, tr.turns, tr.toolCalls, duration);
@@ -593,6 +601,7 @@ public class MainAgent {
                         "turns", String.valueOf(tr.turns));
             }
             if (tr.success) {
+                savePendingContinuation(tr, historySessionId);
                 return loopResponse(tr, duration, "streaming=true");
             }
 
@@ -606,6 +615,7 @@ public class MainAgent {
                     retryQueryWithProgress(toolQuery, tr), priorHistory, streamSink);
             if (retry.success) {
                 log.info("ToolUseLoop(streaming) retry succeeded: turns={}, toolCalls={}", retry.turns, retry.toolCalls);
+                savePendingContinuation(retry, historySessionId);
                 return loopResponse(retry, System.currentTimeMillis() - loopStart, "streaming=true, retry=true");
             }
             return null;
@@ -651,6 +661,45 @@ public class MainAgent {
             sb.append("\n[SYSTEM] 上一段已经查到的信息（不要重复调用同样的工具/参数）：\n").append(carried);
         }
         return sb.toString();
+    }
+
+    /**
+     * P3：续接请求（"继续/接着做"）→ 把「上一段未完成」的结论与工具进展前置注入；
+     * 非续接请求、无未完成标记、未装配 ContinuationStore 时**原样返回**（行为同改造前）。
+     */
+    private String applyContinuationContext(String toolQuery, String sessionId) {
+        if (continuationStore == null) {
+            return toolQuery;
+        }
+        try {
+            String ctx = continuationStore.takeContinuationContext(sessionId, toolQuery);
+            if (ctx == null || ctx.isEmpty()) {
+                return toolQuery;
+            }
+            log.info("ToolUseLoop continuation context injected: sessionId={}, ctxLen={}", sessionId, ctx.length());
+            return ctx + "\n\n" + toolQuery;
+        } catch (Exception e) {
+            log.warn("续接上下文注入失败（按普通消息处理）: {}", e.getMessage());
+            return toolQuery;
+        }
+    }
+
+    /**
+     * P3：预算到顶交付 → 记一条"未完成任务"标记（结论 + 工具进展摘要），供下一条"继续"注入。
+     * 非 truncated（正常完成）时不记，且不改任何既有存储。
+     */
+    private void savePendingContinuation(
+            com.DocSystem.agent.orchestrator.ToolUseResult tr, String sessionId) {
+        if (tr == null || !tr.truncated || continuationStore == null) {
+            return;
+        }
+        try {
+            String progress = com.DocSystem.agent.orchestrator.TranscriptCompactor.summarize(
+                    tr.transcript, 1500);
+            continuationStore.savePending(sessionId, tr.message, progress, tr.turns, tr.toolCalls);
+        } catch (Exception e) {
+            log.warn("记录未完成标记失败（不影响本轮交付）: {}", e.getMessage());
+        }
     }
 
     /**

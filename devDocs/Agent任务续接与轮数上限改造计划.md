@@ -120,6 +120,20 @@
   （需要在会话维度记一条"未完成任务"状态：优先放现有会话存储，不新增表）。
 - 验收：点「继续」后模型从上次断点接着做（不重头再来），并最终交付完整结果。
 
+**P3 实施记录（2026-09-22 已完成 + 页面 E2E 验证）**
+
+| 点 | 定案 |
+|---|---|
+| 未完成任务标记存哪 | **复用会话 metadata**（`agent_sessions.metadata` 的 `pendingContinuation` 键，与 `title` 同级），**不新增表** |
+| 写入时机 | 到顶交付（`ToolUseResult.truncated`）→ `ContinuationStore.savePending(sessionId, 结论, 工具进展摘要, turns, toolCalls)`；结论/进展分别封顶 1200/1500 字符 |
+| 语义入口 | 仅当**整条消息**就是续接短语（继续 / 接着做 / go on / continue…，见 `ContinuationStore.CONTINUATION_QUERY`）且有标记时注入；否则按普通消息处理（避免把旧上下文反复注入） |
+| 取用即清 | `takeContinuationContext` 注入后立刻删键；没有断点时的“继续”= 普通消息 |
+| 注入内容 | `[SYSTEM] 这是上一段任务的续接…**不要重复已经完成的部分**` + 上一段结论 + 工具进展摘要 + “只补做缺失的部分，最后给完整结果” |
+| 前端 | `done.meta.truncated=true` → 气泡下渲染「⏸ 预算到顶（N 轮）」+「继续」按钮（点击→走普通发送路径发“继续”，并收起该页脚） |
+| 关键文件 | `session/ContinuationStore.java`（新）、`session/SessionService.java`（metadata 自定义键读写）、`orchestrator/MainAgent.java`（注入/记录钩子）、`WebRoot/web/agent/index.html`（页脚 + 点击委托） |
+| 护栏 | 新增 `TestContinuationStore`（28 项：短语识别/存取/取用即清/非续接不消费/不影响 title/无会话降级/截断） |
+| 实测（V3） | 段1（预算5）5 次工具调用到顶 → 点「继续」→ 段2 仅 `turns=2 / toolCalls=1`（**未重复** list_repos/get_repos），完成收尾；跨 Tomcat 重启后标记仍可续（`[Continuation][TAKE] … pending=used`） |
+
 ### P4（可选，待数据）：完成判定驱动自动续跑
 
 - 等价 Copilot `chat.autopilot.advanced.enabled` / Claude `/goal`：用**低成本模型**判定"用户请求是否已完成"，
@@ -149,7 +163,7 @@
 - 编译输出 `-d WebRoot/WEB-INF/classes`，源码树不得出现 `.class`；Spring 控制器编译带 `-parameters -g`。
 - 测试/探针产物写 `%TEMP%\docsys_chk\`；**绝不写工程根 `tmp/`**。
 - 提交归属：Agent 核心代码 + 本计划 + 工作卡 → 主仓库（`D:/Dev/DocSys`，`devInt`）。
-- 每期结束先跑全量护栏（基线 36 套 / 1361 项）再提交；提交信息写清"验了什么"。
+- 每期结束先跑全量护栏（当前基线 **37 套 / 1409 项**，随护栏增加而上升）再提交；提交信息写清"验了什么"。
 
 ## 8. 进度锚点（卡更新规则）
 

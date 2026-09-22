@@ -1792,6 +1792,39 @@
         .relogin-prompt button:hover {
             background: #007a4d;
         }
+
+        /* P3：预算到顶（truncated）——徽标 + 「继续」入口 */
+        .truncated-footer {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 2px;
+            padding: 8px 10px;
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 8px;
+        }
+        .truncated-badge {
+            font-size: 12px;
+            color: #8d6e00;
+            font-weight: 600;
+        }
+        .continue-btn {
+            padding: 4px 14px;
+            background: #009a61;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .continue-btn:hover { background: #007a4d; }
+        .continue-btn:disabled { background: #9e9e9e; cursor: default; }
+        .truncated-hint {
+            font-size: 12px;
+            color: #9e8b3f;
+        }
     </style>
 </head>
 <body>
@@ -3092,6 +3125,8 @@
             if (msg.isRelogin) {
                 html += '<div class="relogin-prompt"><p>请重新登录以继续使用</p><button onclick="showLoginScreen()">重新登录</button></div>';
             }
+            // P3：预算到顶 → 气泡下“预算到顶 N 轮”+「继续」按钮
+            html += buildTruncatedFooterHtml(msg);
             html += '</div></div>';
         }
         list.innerHTML = html;
@@ -3101,6 +3136,50 @@
         setTimeout(function() {
             if (area) area.scrollTop = area.scrollHeight;
         }, 0);
+    }
+
+    /** P3：到顶续接页脚 —— 「预算到顶 N 轮」徽标 + 「继续」按钮（仅 truncated 的 assistant 气泡） */
+    function buildTruncatedFooterHtml(msg) {
+        if (!msg || msg.role !== 'assistant' || !msg.truncated) return '';
+        var turns = msg.truncatedTurns ? ('（' + msg.truncatedTurns + ' 轮）') : '';
+        return '<div class="truncated-footer">'
+             + '<span class="truncated-badge">⏸ 预算到顶' + turns + '</span>'
+             + '<button type="button" class="continue-btn" title="接着做剩余部分">继续</button>'
+             + '<span class="truncated-hint">只补做未完成的部分，不会重复已完成的工作</span>'
+             + '</div>';
+    }
+
+    /** P3：解析 done.meta —— 记下到顶状态（truncated / turns）供渲染用 */
+    function applyDoneMeta(msg, meta) {
+        if (!msg || !meta) return;
+        msg.truncated = (meta.truncated === true || meta.truncated === 'true');
+        var m = /turns=(\d+)/.exec(String(meta.toolLoop || ''));
+        msg.truncatedTurns = m ? parseInt(m[1], 10) : null;
+    }
+
+    /** P3：点「继续」→ 走普通发送路径发一条"继续"（服务端据未完成标记注入续接上下文） */
+    function continueFromTruncated(btn) {
+        if (state.isGenerating) {
+            showMessage('正在生成中，请稍候', 'info');
+            return;
+        }
+        var input = document.getElementById('messageInput');
+        if (!input) return;
+        // 该断点已被消费：收起这条回答下的续接页脚（避免重复点）
+        if (btn) {
+            var host = btn.closest ? btn.closest('[data-msg-index]') : null;
+            var idx = host ? parseInt(host.getAttribute('data-msg-index'), 10) : -1;
+            if (idx >= 0 && state.messages[idx]) {
+                state.messages[idx].truncated = false;
+                state.messages[idx].continuationStarted = true;
+            }
+            btn.disabled = true;
+            btn.textContent = '继续中…';
+        }
+        input.value = '继续';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        var sendBtn = document.getElementById('sendBtn');
+        if (sendBtn) sendBtn.click();
     }
 
     /** P1：用户气泡中的「/ 操作」与「@ 对象」chips（仅当前页面会话内存中有值；历史消息按文本显示） */
@@ -3590,6 +3669,8 @@
                             msg.content = event.fullContent || fullContent;
                             msg.liveText = '';
                             msg.isGenerating = false;
+                            // P3：到顶标记（truncated）→ 渲染「预算到顶 N 轮」+「继续」
+                            applyDoneMeta(msg, event.meta);
                             // 结束：一次性全量渲染（智能 markdown/mermaid）
                             renderMessages();
                         } else if (event.type === 'confirm') {
@@ -3619,6 +3700,7 @@
                         lastMsg.content = lastEvent.fullContent || fullContent;
                         lastMsg.liveText = '';
                         lastMsg.isGenerating = false;
+                        applyDoneMeta(lastMsg, lastEvent.meta);   // P3：到顶标记
                         renderMessages();
                     }
                 } catch (e) {}
@@ -4889,6 +4971,15 @@
     });
     document.getElementById('stopBtn').addEventListener('click', function() {
         stopGeneration();
+    });
+
+    // P3：气泡里的「继续」按钮（委托绑定，重渲染后依然有效）
+    document.getElementById('messagesList').addEventListener('click', function(e) {
+        var t = e.target;
+        var btn = (t && t.closest) ? t.closest('.continue-btn') : null;
+        if (!btn) return;
+        e.preventDefault();
+        continueFromTruncated(btn);
     });
 
     document.getElementById('messageInput').addEventListener('keydown', function(e) {
