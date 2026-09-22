@@ -258,7 +258,8 @@
 - 说明态下不触发 `@` / `/` 内联 picker（说明是自由文本，`/` 应该是字面字符）；退出说明态后 `/` 菜单照旧。`#messageInput` 的 input 监听顺序：`autoResizeTextarea()` → `saveActiveSlot()` → picker。
 - `loadFocusDrafts()` 强制清空消息槽 → 刷新页面后输入框仍为空（与改造前一致），对象说明草稿照旧恢复。
 - **"带上下文进入页面"的自动添加对象**（`addFocusItem`，由 `initFocusFromContext` 调用）**不**切到说明槽：否则用户一进来看到输入框是"补充对 X 的说明"，会把说明当成正文框写。填写说明统一从**点击 chip** 进入。
-- **未改**：`snapshotFocus()` 载荷形状、`focus[].note` 字段、后端注入块与历史反解（`loadSessionHistory`）、chip 的 ✎ 标记与 `title="点击填写/修改说明"`。
+- **未改**：`snapshotFocus()` 载荷形状、`focus[].note` 字段、后端注入块与历史反解（`loadSessionHistory`）、chip 的 `title="点击填写/修改说明"`。
+  （当时还保留了 chip 上的 ✎「已填写说明」标记，**已于同日晚些时候移除**，见 §10.5。）
 
 ### 10.3 验证（dev 8100，真页面逐步操作）
 
@@ -267,9 +268,9 @@
 | 旧编辑器是否已移除 | `#focusNoteEditor` / `#focusNoteInput` 均为 `null`；`renderFocusNote` 等旧函数已无引用 ✓ |
 | @ 弹窗选完对象点"确定" | 回到**消息槽**：占位 = "输入消息…"、`note-mode` = false、`maxlength` 属性 = 无、已写正文不被清 ✓ |
 | 点 chip | 占位变两行 `补充对「测试仓库2」的说明（可选）\n例：所有历史资料都在这里…`（`::placeholder` 计算值 `white-space: pre-wrap`，两行确实渲染）、`maxlength=500`、`.input-container.note-mode=true`、chip 加 `editing` 高亮、输入框自动聚焦 ✓ |
-| 填说明 → 切到对象 2 → 再切回对象 1 | 各自文本独立；两个 chip 都有 ✎；`state.focusDrafts` = `{__message__: "列出…", "dir\|1\|/\|": "这是整库的说明…", "dir\|1\|/\|MxsDoc": "…"}` ✓ |
+| 填说明 → 切到对象 2 → 再切回对象 1 | 各自文本独立；（当时 chip 上还有 ✎）`state.focusDrafts` = `{__message__: "列出…", "dir\|1\|/\|": "这是整库的说明…", "dir\|1\|/\|MxsDoc": "…"}` ✓ |
 | 同一 chip 再点一次 | 收起 → 回到正文，**正文原文恢复**（`列出仓库 5 的…`）、`note-mode=false` ✓ |
-| 点 composer 之外（BODY） | 退出说明态：占位/`maxlength` 复位、说明文本**不丢**（草稿 + chip ✎ 都在）✓ |
+| 点 composer 之外（BODY） | 退出说明态：占位/`maxlength` 复位、说明文本**不丢**（草稿在）✓ |
 | 说明态按 Enter 且正文为空 | 弹出提示"请先在消息框里写本轮的要求…"，退回消息槽，**不发请求**、说明保留 ✓ |
 | 说明态输入 `/` | 不弹操作菜单（"/" 记为说明文本）；退出说明态后输入 `/` → 操作菜单正常弹出（`picker.mode=operation`）✓ |
 | 真发送（正文 + 2 个对象说明） | 客户端载荷 `focus=[{…,"note":"这是整库的说明：所有资料都在这"},{…,"note":"MxsDoc 目录：产品文档在这里"}]` ✓；气泡上两个 chip 的 tooltip 就是各自说明 ✓；发送后消息槽清空、退出说明态、说明作为草稿保留 ✓ |
@@ -283,6 +284,14 @@
 - **踩坑**：`textarea.maxLength = -1` 抛 `IndexSizeError`（"not positive or 0"）→ 退出说明态时必须 `removeAttribute('maxlength')`、进入时 `setAttribute('maxlength', 500)`。首轮实测被浏览器 `pageError` 抓到，已修。
 - **测试脚本坑（非产品问题）**：批量点 chips 时必须每次重新 `querySelectorAll()` —— `renderFocusChips()` 会重建 DOM，缓存的 NodeList 里是脱离文档的旧节点，其 click 既不冒泡到 `#focusChips`（委托失效）也不冒泡到 `document`，表现为"点了没反应"。
 - 变更文件：`WebRoot/web/agent/index.html`、本记录。
+
+### 10.5 追加：移除 chip 上的 ✎「已填写说明」标记（2026-09-22，用户要求）
+
+- 用户口径：**"那个铅笔图标不需要显示，如果用户有写过内容，他自己应该知道的，或者会点开看的，加个标记增加了不必要的逻辑"**。
+- 改动：`renderFocusChips()` 不再取 `getFocusNote(it)` 拼 `<span class="chip-note-dot">✎</span>`，同时删掉 `.focus-chip .chip-note-dot` CSS 与该处两行注释里的 ✎ 提法。
+  （`getFocusNote()` 本身保留：`applyFocusSlot()` 与 `snapshotFocus()` 还在用。）
+- 说明内容本身不受影响：仍存在 `state.focusDrafts` 与 `focus[].note`，点 chip 就能看到已写的内容；气泡上的 chip tooltip（`title=note`）也保留。
+- 验证：填过说明的 chip 不再出现 ✎；点 chip 仍能正确载入该对象的说明文本；发送载荷 `focus[].note` 不变；无 pageerror。
 
 ## 11. 移除「主题」设置：只保留浅色（2026-09-22，用户要求）
 

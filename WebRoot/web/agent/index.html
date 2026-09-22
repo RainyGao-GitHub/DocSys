@@ -1660,7 +1660,6 @@
         .ft-row .fi-ico svg { width: 15px; height: 15px; }
         .ft-row .fi-ico.repo-ico { width: 18px; height: 18px; vertical-align: -4px; }
         .ft-row .fi-ico.repo-ico svg { width: 18px; height: 18px; }
-        .focus-chip .chip-note-dot { color: #f0a020; font-size: 11px; }
         .focus-chip .chip-badge { font-size: 10px; color: #999; }
         .focus-chip .chip-x { border: none; background: none; color: inherit; cursor: pointer; font-size: 13px; line-height: 1; padding: 0 2px; }
         .focus-chip .chip-x:hover { color: #d33; }
@@ -3878,13 +3877,11 @@
         var html = '';
         for (var i = 0; i < (state.focus || []).length; i++) {
             var it = state.focus[i];
-            var note = getFocusNote(it);
             var editing = (state.activeFocusKey && focusKey(it) === state.activeFocusKey);
             html += '<span class="focus-chip' + (editing ? ' editing' : '')
                  + '" data-focus-idx="' + i + '" title="点击填写/修改说明">'
                  + focusItemIconHtml(it)
                  + '<span class="chip-label">' + escapeHtml(it.label || it.name || ('#' + it.vid)) + '</span>'
-                 + (note ? '<span class="chip-note-dot" title="已填写说明">✎</span>' : '')
                  + '<button class="chip-x" data-focus-remove="' + i + '" title="移除对象">&times;</button>'
                  + '</span>';
         }
@@ -3937,7 +3934,7 @@
         return focusSlotText(FOCUS_MSG_SLOT);
     }
 
-    /** 输入框每次变化：实时写回当前槽位（对象说明同时同步到 focus[] 与 chip 上的 ✎）*/
+    /** 输入框每次变化：实时写回当前槽位（对象说明同步到 focus[]，chip 不另做标记）*/
     function saveActiveSlot(text) {
         var it = activeFocusItem();
         if (it) {
@@ -3963,7 +3960,7 @@
         var it = activeFocusItem();
         if (!it) state.activeFocusKey = null;   // 对象已被移除/清空 → 归一为【消息】槽
         if (box) box.classList.toggle('note-mode', !!it);
-        renderFocusChips();       // 选中态 chip 高亮 / ✎ 标记
+        renderFocusChips();       // 选中态 chip 高亮
         if (!input) return;
         if (it) {
             input.value = getFocusNote(it);
