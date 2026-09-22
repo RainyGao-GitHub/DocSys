@@ -786,6 +786,17 @@ Tomcat 行为共同锁定。真 4xx 路径已被探针端到端覆盖。
 - 验证（真页面逐步点 + 真发送）：槽位切换/各自独立/正文恢复/点外部退出/空正文拦阻 全过；发送载荷 `focus[].note` 两条原文一致 ✓；服务端 `getSessionMessages` 反解出的 note 一致、模型回复主动提到“本轮给出的两个关注对象” → 说明确实进了注入块 ✓；栏护 36 套/1361 断言全绿；无新增 JS 报错。
 - 详情：`devDocs/Agent界面优化方案.md` §10（含取舍、`maxLength=-1` 抛 `IndexSizeError` 踩坑）。
 
+### 3. 移除「主题」设置（只保留浅色）— ✅ 已提交（主库 `332fe6834`）
+
+- 用户口径：“把 Agent 主题的深浅设置去掉，就只保留浅色的，我想我们还是专注于功能本身，后续代码修改和升级也更简单。”
+- 改动（只动 `WebRoot/web/agent/index.html`，无 Java）：
+  - 设置弹窗删掉「主题」一行（`themeSelect` + 分隔 `hr`）；`state.settings` 去 `theme`；`loadSettings()`/保存处理器去掉主题读取与应用。
+  - 删除全部 `body.dark-theme ...` 规则（含两个注释块）共 **137 行**，含后期新增组件（整库图标/note-mode/关注对象 chips/附件 chips/目录树弹窗/建议面板/autocomplete 等）的 dark 变体。
+  - 兼容：老用户 localStorage 里遗留的 `theme:'dark'` 被直接忽略（载入时只认 `state.settings` 已有的键），**无需迁移脚本**。
+- 验证：全文件 `dark-theme` 残留 **0**；内联 JS `vm.Script` 0 错误；登录后 body 无该类且浅色（`#f5f5f5`/`#333`）；设置弹窗只剩 Soul 两项，保存后 `docsys_settings` 不再含 theme；手写 `theme:'dark'` 后刷新仍浅色；markdown 表格/引用/标题浅色原值；无 pageerror。
+- ⚠️ 未动（不扩范围）：`ui.html` + `js/app-vanilla.js` 里的同名 `#theme-select`（它从未应用任何 dark 类、`styles.css` 也无 dark 规则，实际空转）。
+- 详情：`devDocs/Agent界面优化方案.md` §11。
+
 ## 全阶段完成情况
 
 P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `72963c8f0` / P3b-写 ✅ `f364529e4` / P4 ✅ `8a776af35`；文档 `92b81351c` / `a6ad776dd`
@@ -812,8 +823,7 @@ P1 ✅ `a3b2da425` / P2 ✅ `7621521ca` / P3a ✅ `fcf727d5f` / P3b-读 ✅ `729
 
 ## 未提交改动
 
-- 无（本轮 UI 两项已提交：整库图标 `3fafb7bfc`、共用消息框 `db8a1f59d`）
-- R3-7 及其修正已提交：主库 `9d4d6d7b5`、修正 `d0ac17443`（含计划文档）、工作卡 `18a55884f`/`b64ee22a4`/`6976e92b5`；websocket 库 `bbebedc1`、修正 `e2ee29b9`
+- 无（本轮 UI 三项均已提交：整库图标 `3fafb7bfc`、共用消息框 `db8a1f59d`、移除主题设置 `332fe6834`；R3-7 及其修正：主库 `9d4d6d7b5`/`d0ac17443`、工作卡 `18a55884f`/`b64ee22a4`/`6976e92b5`、websocket `bbebedc1`/`e2ee29b9`）
 - 顺带（非计划项，用户临时要求）：「@」关注对象的**整库图标换新 + 放大** —— 主库 `3fafb7bfc`（`WebRoot/web/agent/index.html` + `devDocs/Agent界面优化方案.md` §9）；**共用消息框** —— 主库 `db8a1f59d`（§10）
 - 已提交：R3-6 = `1801cdaad`；R3-14 = `55c9a243e`（工作卡 `bf909c2cc`）；R3-4/R3-5 = `95cd0c1f9`（工作卡 `60c70a4fb`）；R3-14 复核改写 = `971dcb151`；R3-12 = `7f1516ecb`；R3-11 = `697ba19b2`；R3-10 = `7a0a9242a`；R3-9 = `560c933a6`；R3-2 批 2b = `9c98af6d8`；R3-2 批 2a = `79db72883`；R3-2 批 1 = `8599083bd`；R2 = `353565ee0`；R1-2/R1-3 = `270166139`；R1-5 = `e8d04b505`；R1-6 第 4 步 = `79b04752f`；R1-6 第 3 步 = `a2eb58b7d`；R1-6 move/copy = `614a1c7a5`；R1-4/R1-6 试点 = `6d625166c`；R1-1c = `22687f84b`/`b16c72f4`；R1-1b = `16ac39a43`/`142c2014`；R1-1 = `eda22474b`
 - office 仓库：与本任务无关
