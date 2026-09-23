@@ -16,13 +16,14 @@
    手动档**不提供**"记住授权"，保持"每次都要确认"的纯粹语义）
 2. **规则（收敛例外）**：**自动档**的确认弹窗给"作用域授权"，授权后**同作用域内同类操作不再询问**（作用域维度：该工具 / 该目录（含子目录）/ 该仓库；**生命周期只到本会话**）。
 
-判定优先级（单一决策函数，**模式 → 硬清单 → 规则**，规则最优先覆盖）：
+判定优先级（单一决策函数，求值顺序 **绝对保护 → 计划模式 → 会话规则 → 硬清单 → 模式默认**，自上而下第一条命中即生效）：
 
 ```
-计划模式        → 写工具 DENY（不弹窗；引导模型先出计划，用户批准后切档执行）
-会话内显式规则命中 → ALLOW        ← 覆盖硬清单（含删除/权限变更）
-硬清单（危险类别） → ASK          ← 自动档也要问；仅“全部允许”档不问
-其余写操作       → 手动/计划: ASK ；自动/全部允许: ALLOW
+绝对保护（ABSOLUTE）    → ASK   ← delete_repos 等；永远确认，不受模式/规则影响
+计划模式               → 写工具 DENY（不弹窗；引导模型先出计划，用户批准后切档执行）
+会话内显式规则命中       → ALLOW ← 覆盖硬清单（含删除/权限变更），但**不能覆盖绝对保护**
+硬清单（危险类别）       → ASK   ← 自动档也要问；仅"全部允许"档不问
+其余写操作             → 手动/计划: ASK ；自动/全部允许: ALLOW
 ```
 
 ## 1. 现状与证据（代码锚点）
@@ -63,7 +64,7 @@
 | 计划 | `plan` | 只读工具照跑（调研/列目录/读文件）；**写工具直接拒绝**，并在提示词里要求模型**先输出一份可执行计划**；用户点「批准并执行」→ 自动切到 `auto` 档 + 把该计划作为上下文注入后继续执行 | Claude/Gemini 的 `plan`（**带闭环**） |
 | 手动（**新会话默认**） | `manual` | 所有 `needsConfirm` 工具逐个弹确认（= 现状，回归基线）；**不提供“记住授权”** | `default` / Manual |
 | 自动 | `auto` | 常规写操作（`NORMAL`）默认放行；**硬清单（删除/权限变更）仍弹确认**；弹窗可选作用域授权，授权后同作用域内**包括危险项**都不再问 | `acceptEdits` + 作用域授权 |
-| 全部允许 | `allowAll` | **全部放行**（含删除/权限变更）；前端常驻醒目横幅 + 可一键切回；开启时二次确认；管理员可全局禁用 | `bypassPermissions` / Allow all / `yolo` |
+| 全部允许 | `allowAll` | **除绝对保护外全部放行**（含删除/权限变更）；前端常驻醒目横幅 + 可一键切回；开启时二次确认（文案写明“除删除仓库外全部不问”）；管理员可全局禁用 | `bypassPermissions` / Allow all / `yolo` |
 
 **计划模式的闭环（P1 一并做，否则该档是个死胡同）**
 
@@ -73,17 +74,16 @@
    - 「批准并执行」→ 切 `auto` 档 + 发一条“我批准了计划，请按计划执行”（服务端把计划文本作上下文注入，复用 P3 的续接注入思路）；
 4. 计划模式下未执行任何写操作 → 审计只记被拒绝的尝试。
 
-### 3.2 硬清单（危险类别，自动档也必须确认）
+### 3.2 绝对保护 + 硬清单（风险类别挂在 `ToolDefinition` 上）
 
-> 作用范围：“自动”档仍需确认；**“全部允许”档不问**（用户明确选择全放），但开启时二次确认 + 常驻横幅 + 全量审计。
+风险类别**显式声明**（`riskClass`），不靠名字猜：`NORMAL / DESTRUCTIVE / PERMISSION / **ABSOLUTE**`。
 
-风险类别挂在 `ToolDefinition` 上**显式声明**（`riskClass: NORMAL / DESTRUCTIVE / PERMISSION`），不靠名字猜。
-
-| 类别 | 初始归类（实现时逐工具核对语义后可微调） |
-|---|---|
-| `DESTRUCTIVE` | `delete_repos`、`delete_doc`、`move_doc`、`rename_doc`、`update_repos`、`run_skill`（技能可执行任意逻辑） |
-| `PERMISSION` | `create_doc_share`（外链分享）、`update_repos`（若含成员/权限变更→归此类） |
-| `NORMAL` | `create_repos`、`create_folder`、`write_file`、`write_note`、`copy_doc`、`backup_repos` |
+| 类别 | 语义 | 初始归类（实现时逐工具核对语义后可微调） |
+|---|---|---|
+| **`ABSOLUTE`（绝对保护）** | **永远 ASK**：任何档位（含“全部允许”）都要确认；**会话规则也不能豁免**（用户 2026-09-23 裁定：删仓库风险过大） | `delete_repos`；（待用户点头的边界：`run_skill` 可执行任意逻辑、也能间接删仓库，建议一并纳入） |
+| `DESTRUCTIVE` | 自动档仍 ASK；“全部允许”档放行；规则可豁免 | `delete_doc`、`move_doc`、`rename_doc`、`update_repos`（若含物理路径变更） |
+| `PERMISSION` | 同 `DESTRUCTIVE`（权限/共享变更） | `create_doc_share`、`update_repos`（成员/权限/配置变更） |
+| `NORMAL` | 自动/全部允许档直接放行 | `create_repos`、`create_folder`、`write_file`、`write_note`、`copy_doc`、`backup_repos` |
 
 - 只读工具（`isWrite=false`）不参与判定。
 - `memory_set` 现状 `needsConfirm=false`（低风险自我记忆）→ 保持不参与。
@@ -93,7 +93,7 @@
 - 触发：**自动档**弹窗里用户选择作用域后点“批准并记住”（`plan`/`manual`/`allowAll` 档不产生规则）。
 - 作用域维度（三者任选其一，最细优先）：`该工具` / `该目录（含子目录）` / `该仓库`。
 - **生命周期：只到本会话**（用户裁定：授权作用域只做会话级）→ 存 `agent_sessions.metadata.permissionRules`，会话删除即失效；**不落 agent_config、不新增表、不跨会话继承**。
-- 规则命中即 ALLOW，**覆盖硬清单**（用户在作用域内的删除/权限变更也不再问——否则整理目录仍会被打断）。- 规则可见可撤：前端模式 chip 下拉里列出"本会话已授权 N 条"并可一键清空。
+- 规则命中即 ALLOW，**覆盖硬清单**（用户在作用域内的删除/权限变更也不再问——否则整理目录仍会被打断），但**不覆盖绝对保护**（`delete_repos` 永远弹）。- 规则可见可撤：前端模式 chip 下拉里列出"本会话已授权 N 条"并可一键清空。
 
 ### 3.4 存储与开关
 
@@ -126,20 +126,21 @@
 | V5 | **自动档作用域规则**：弹窗选"此目录内不再询问" → 同目录 `write_file`/`move_doc`/`delete_doc` 各 ≥3 次**均不再弹**；换目录仍弹 | 页面 E2E + `[Permission] decision=ALLOW reason=rule(dir)` 日志 |
 | V6 | **规则只到本会话**：新会话/清空规则后重新弹；服务端不持久化跨会话规则 | 护栏（规则存储断言）+ 页面 E2E |
 | V7 | **管理员禁用"全部允许"**：UI 不提供该档；服务端收到 `allowAll` 降级为 `auto` 并有提示 | 护栏 + 页面 E2E（配置 `agent_permission_allow_all_enabled=false`） |
-| V8 | **回归**：全量护栏不低于当前基线 **37 套 / 1409 项**；`TestWriteConfirmGateCoverage` 按模式重写后仍全绿 | `run_guards.ps1` 输出 |
+| V8 | **绝对保护**：`delete_repos` 在 **4 个档位下都弹确认**（含"全部允许"档）；且在自动档已授权含该仓库的作用域规则时**仍弹** | 护栏（判定矩阵全覆盖）+ 页面 E2E |
+| V9 | **回归**：全量护栏不低于当前基线 **37 套 / 1409 项**；`TestWriteConfirmGateCoverage` 按模式重写后仍全绿 | `run_guards.ps1` 输出 |
 
 ## 5. 分期
 
 ### P1（必做）：模式骨架 + 四档基础行为 + **计划模式闭环** + 会话级存储 + 可见性
 
-- 新增 `agent/permission/`：`PermissionMode`（枚举 `plan/manual/auto/allowAll` + `fromId`/`isValid`/默认 `manual`）、`ToolRisk`（`NORMAL/DESTRUCTIVE/PERMISSION`）、`PermissionDecision`（ALLOW/ASK/DENY + reason）、`PermissionPolicy`（**纯函数判定**：mode × risk × rules → decision；无 Spring，可离线护栏）。
+- 新增 `agent/permission/`：`PermissionMode`（枚举 `plan/manual/auto/allowAll` + `fromId`/`isValid`/默认 `manual`）、`ToolRisk`（`NORMAL/DESTRUCTIVE/PERMISSION/ABSOLUTE`）、`PermissionDecision`（ALLOW/ASK/DENY + reason）、`PermissionPolicy`（**纯函数判定**：absolutes × mode × risk × rules → decision；无 Spring，可离线护栏）。
 - `ToolDefinition` 加 `riskClass`（默认 NORMAL）+ Builder 方法 `riskClass(...)`；`DocSysToolFactory` 按 §3.2 标注。
 - `ToolRegistry.execute()`：`needsConfirm` 分支改为"先问策略"——`DENY → 直接返回错误`；`ASK → 走 confirmGate`；`ALLOW → 跳过 gate（但记审计）`。策略为 null 时保持现状（向后兼容测试）。
 - `MainAgent`：构建 registry 时注入策略（模式取自会话 metadata / 请求参数），并把模式与规则一起传给门（规则 P2 才用）。
 - **计划模式闭环**：`plan` 档下写工具 DENY 文案 + system prompt 计划段落（只调研 + 输出可执行计划）+ 前端「批准并执行」（切 `auto` 并注入计划后继续）/「批准但逐步确认」（切 `manual`）。
 - 前端：顶部模式 chip（4 档，`allowAll` 在管理员禁用时置灰）+ `allowAll`/`plan` 醒目色 + 请求带 `permissionMode`。
-- 护栏：新增 `TestPermissionPolicy`（判定矩阵：4 模式 × 3 风险 × 规则命中/未命中，含"规则覆盖硬清单"、"自动档硬清单仍 ASK"、"全部允许档全部 ALLOW"、"计划档写工具 DENY"）；改写 `TestWriteConfirmGateCoverage`。
-- 验证：V1 / V2 / V3 / V4 / V7 / V8 + 页面 E2E。
+- 护栏：新增 `TestPermissionPolicy`（判定矩阵：4 模式 × 4 风险 × 规则命中/未命中，含"绝对保护在 4 档全 ASK"、"规则不能豁免绝对保护"、"自动档硬清单仍 ASK"、"全部允许档非绝对保护全 ALLOW"、"计划档写工具 DENY"）；改写 `TestWriteConfirmGateCoverage`。
+- 验证：V1 / V2 / V3 / V4 / V7 / V8 / V9 + 页面 E2E。
 
 ### P2（必做，消除确认疲劳）：自动档 + 作用域授权
 
@@ -152,6 +153,7 @@
 ### P3（推荐）：治理与统计
 
 - 管理员全局开关 `agent_permission_allow_all_enabled`（UI + 服务端强制降级）。
+- 绝对保护清单可配置（`agent_config` 里的追加名单；**`delete_repos` 始终在内且不可移除**）。
 - 审计/统计：按模式的写操作分布、自动批准次数、规则命中次数。
 - 文档：`devDocs/` 使用说明 + 记忆文件更新。
 
@@ -168,7 +170,8 @@
 
 | 风险 | 说明 | 应对 |
 |---|---|---|
-| 全部允许档误删 | 用户开"全部允许"后批量删除（该档对硬清单也不问） | 开启时二次确认（弹窗写明后果）；审计全量记录；前端常驻醒目横幅 + 一键切回；管理员可全局禁用（P3） |
+| 全部允许档误删 | 用户开"全部允许"后批量删除（该档对硬清单不问） | **`delete_repos` 已被绝对保护挡掉**；其余删除属用户已知风险；开启时二次确认（文案写明"除删除仓库外全部不问"）+ 审计全量 + 常驻横幅 + 一键切回 + 管理员可禁用 |
+| `run_skill` 绕过保护 | 技能可执行任意逻辑（间接删仓库） | 待用户点头：建议**纳入绝对保护**（全部允许档下技能调用仍问）；若不纳入，至少在开启全部允许的二次确认里写明"含技能执行" |
 | 自动档被误以为"什么都不问" | 用户选"自动"后仍被删除操作打断 | chip 下拉里写清每档语义（自动＝常规自动、危险仍确认）；硬清单命中时弹窗文案说明"该操作属危险类别" |
 | 规则过宽 | "该仓库内不再询问"覆盖删除 | 作用域授权是显式选择（按钮文案写清"含删除等危险操作"）；chip 里可一键清空 |
 | 会话 metadata 膨胀 | 规则条目过多 | 规则条数上限（如 50 条）+ 同类合并；只在自动档产生 |
