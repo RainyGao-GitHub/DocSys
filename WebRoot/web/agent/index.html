@@ -1825,6 +1825,77 @@
             font-size: 12px;
             color: #9e8b3f;
         }
+
+        /* P1：权限模式 chip + 菜单 */
+        .perm-chip { font-size: 12px; padding: 4px 10px; border-radius: 6px; }
+        .perm-chip.perm-plan { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
+        .perm-chip.perm-auto { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+        .perm-chip.perm-allowall { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; font-weight: 600; }
+        .perm-menu {
+            display: none;
+            position: absolute;
+            bottom: 46px;
+            left: 12px;
+            z-index: 60;
+            min-width: 300px;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.14);
+            padding: 8px;
+        }
+        .perm-menu.show { display: block; }
+        .perm-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 8px 10px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #333;
+        }
+        .perm-item:hover { background: #f5f5f5; }
+        .perm-item.active { background: #eef6ff; font-weight: 600; }
+        .perm-item .perm-desc { display: block; font-size: 12px; color: #888; font-weight: 400; margin-top: 2px; }
+        .perm-menu-foot {
+            border-top: 1px solid #eee;
+            margin-top: 6px;
+            padding-top: 6px;
+            font-size: 12px;
+            color: #777;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .perm-menu-foot button { font-size: 12px; padding: 3px 10px; border-radius: 6px; cursor: pointer; }
+
+        /* P1：计划模式闭环页脚 */
+        .plan-footer {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 2px;
+            padding: 8px 10px;
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+        }
+        .plan-badge { font-size: 12px; color: #0d47a1; font-weight: 600; }
+        .plan-btn-secondary {
+            padding: 4px 12px;
+            background: #fff;
+            color: #0d47a1;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .plan-btn-secondary:hover { background: #f0f8ff; }
     </style>
 </head>
 <body>
@@ -1914,6 +1985,9 @@
                             <div class="composer-tools">
                                 <button class="toolbar-btn" id="focusBtn" title="关注对象 (@)">@</button>
                                 <button class="toolbar-btn" id="opBtn" title="操作 (/)">/</button>
+                                <!-- P1：权限模式 chip（计划/手动/自动/全部允许） -->
+                                <button class="toolbar-btn perm-chip" id="permChipBtn" title="权限模式">🛡 手动</button>
+                                <div class="perm-menu" id="permMenu"></div>
                                 <!-- 已选操作 chip：放在消息框下面、/ 按钮之后 -->
                                 <div class="op-chip-slot" id="opChipSlot"></div>
                             </div>
@@ -2179,6 +2253,8 @@
         allSkills: [],       // All available skills from API for autocomplete
         attachments: [],      // P2：当前会话的临时附件（不入仓库）
         attachUploading: null, // P2：{name, percent}
+        // P1：权限模式（计划/手动/自动/全部允许）+ 本会话已授权规则
+        permission: { mode: 'manual', rules: [], localChangedAt: 0 },
         settings: {
             autoLearn: true,
             healthCheckInterval: 60
@@ -3127,6 +3203,8 @@
             }
             // P3：预算到顶 → 气泡下“预算到顶 N 轮”+「继续」按钮
             html += buildTruncatedFooterHtml(msg);
+            // P1：计划模式产出 → 「批准并执行」/「批准但逐步确认」
+            html += buildPlanFooterHtml(msg);
             html += '</div></div>';
         }
         list.innerHTML = html;
@@ -3138,8 +3216,181 @@
         }, 0);
     }
 
-    /** P3：到顶续接页脚 —— 「预算到顶 N 轮」徽标 + 「继续」按钮（仅 truncated 的 assistant 气泡） */
-    function buildTruncatedFooterHtml(msg) {
+    // ==================== P1：权限模式（计划/手动/自动/全部允许） ====================
+
+    var PERM_MODES = [
+        { id: 'plan', label: '计划', desc: '只做调研并输出计划；写操作不执行' },
+        { id: 'manual', label: '手动', desc: '每个写操作都要确认（默认）' },
+        { id: 'auto', label: '自动', desc: '常规写操作自动通过；删除/权限变更仍需确认' },
+        { id: 'allowAll', label: '全部允许', desc: '除删仓库等绝对保护外全部自动通过（谨慎）' }
+    ];
+
+    /** 当前模式 id（未加载时按默认手动） */
+    function currentPermMode() {
+        return (state.permission && state.permission.mode) || 'manual';
+    }
+
+    function permModeInfo(id) {
+        for (var i = 0; i < PERM_MODES.length; i++) {
+            if (PERM_MODES[i].id === id) return PERM_MODES[i];
+        }
+        return PERM_MODES[1];
+    }
+
+    /** 渲染模式 chip（含醒目色与已授权条数提示） */
+    function renderPermChip() {
+        var btn = document.getElementById('permChipBtn');
+        if (!btn) return;
+        var id = currentPermMode();
+        var info = permModeInfo(id);
+        btn.textContent = '🛡 ' + info.label;
+        btn.classList.remove('perm-plan', 'perm-auto', 'perm-allowall');
+        if (id === 'plan') btn.classList.add('perm-plan');
+        else if (id === 'auto') btn.classList.add('perm-auto');
+        else if (id === 'allowAll') btn.classList.add('perm-allowall');
+        var n = (state.permission && state.permission.rules) ? state.permission.rules.length : 0;
+        btn.title = '权限模式：' + info.label + ' — ' + info.desc + (n ? ('；本会话已授权 ' + n + ' 条') : '');
+    }
+
+    function renderPermMenu() {
+        var menu = document.getElementById('permMenu');
+        if (!menu) return;
+        var id = currentPermMode();
+        var html = '';
+        PERM_MODES.forEach(function(m) {
+            html += '<button type="button" class="perm-item' + (m.id === id ? ' active' : '')
+                 + '" data-perm-mode="' + m.id + '">' + m.label
+                 + '<span class="perm-desc">' + m.desc + '</span></button>';
+        });
+        var n = (state.permission && state.permission.rules) ? state.permission.rules.length : 0;
+        html += '<div class="perm-menu-foot"><span>本会话已授权 ' + n + ' 条'
+             + '</span><button type="button" id="permClearRulesBtn">清空授权</button></div>';
+        menu.innerHTML = html;
+    }
+
+    function openPermMenu() {
+        renderPermMenu();
+        var menu = document.getElementById('permMenu');
+        if (menu) menu.classList.add('show');
+    }
+
+    function closePermMenu() {
+        var menu = document.getElementById('permMenu');
+        if (menu) menu.classList.remove('show');
+    }
+
+    function permMenuIsOpen() {
+        var menu = document.getElementById('permMenu');
+        return !!(menu && menu.classList.contains('show'));
+    }
+
+    /** 从服务端读当前会话的模式与已授权规则 */
+    async function loadPermission() {
+        var startedAt = Date.now();
+        try {
+            var sid = state.sessionId || '';
+            var res = await fetch('/DocSystem/agent/permission?sessionId=' + encodeURIComponent(sid),
+                    { credentials: 'same-origin' });
+            var ret = await res.json();
+            // 竞态防护：本地在本次请求之后改过模式 → 丢弃过期响应（否则会把刚切的档位盖回去）
+            if (state.permission.localChangedAt && state.permission.localChangedAt > startedAt) {
+                renderPermChip();
+                return;
+            }
+            if (ret && ret.status === 'ok' && ret.data) {
+                state.permission.mode = ret.data.mode || 'manual';
+                state.permission.rules = ret.data.rules || [];
+            }
+        } catch (e) {
+            // 读不到就保留本地值（不阻断对话）
+        }
+        renderPermChip();
+    }
+
+    /** 切换模式（乐观更新 + 失败回滚） */
+    async function setPermissionMode(mode) {
+        var prev = currentPermMode();
+        if (prev === mode) { closePermMenu(); return; }
+        state.permission.localChangedAt = Date.now();   // 标记本地变更（防过期响应盖回）
+        state.permission.mode = mode;
+        renderPermChip();
+        closePermMenu();
+        try {
+            var body = 'mode=' + encodeURIComponent(mode)
+                     + '&sessionId=' + encodeURIComponent(state.sessionId || '');
+            var res = await fetch('/DocSystem/agent/permission/mode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body,
+                credentials: 'same-origin'
+            });
+            var ret = await res.json();
+            if (!ret || ret.status !== 'ok') {
+                throw new Error((ret && ret.message) ? ret.message : '切换失败');
+            }
+            var info = permModeInfo(mode);
+            showMessage('权限模式已切为「' + info.label + '」：' + info.desc,
+                    (mode === 'allowAll') ? 'error' : 'success');
+        } catch (e) {
+            state.permission.mode = prev;
+            renderPermChip();
+            showMessage('切换权限模式失败：' + e.message, 'error');
+        }
+    }
+
+    async function clearPermissionRules() {
+        try {
+            var body = 'sessionId=' + encodeURIComponent(state.sessionId || '');
+            await fetch('/DocSystem/agent/permission/rules/clear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body,
+                credentials: 'same-origin'
+            });
+            state.permission.rules = [];
+            renderPermChip();
+            renderPermMenu();
+            showMessage('已清空本会话的授权规则', 'success');
+        } catch (e) {
+            showMessage('清空授权失败：' + e.message, 'error');
+        }
+    }
+
+    /** P1：计划模式闭环页脚（模式=计划 的那轮回答下给「批准并执行」/「批准但逐步确认」） */
+    function buildPlanFooterHtml(msg) {
+        if (!msg || msg.role !== 'assistant' || !msg.planMode) return '';
+        return '<div class="plan-footer">'
+             + '<span class="plan-badge">🧭 计划模式产出</span>'
+             + '<button type="button" class="continue-btn" data-plan-approve="auto">批准并执行</button>'
+             + '<button type="button" class="plan-btn-secondary" data-plan-approve="manual">批准但逐步确认</button>'
+             + '<span class="truncated-hint">批准后会切到对应档位并让我按这份计划开工</span>'
+             + '</div>';
+    }
+
+    /** 批准计划：切档 → 发一条“按计划执行”（计划文本已在会话历史里，服务端会带上） */
+    function approvePlan(btn, targetMode) {
+        if (state.isGenerating) {
+            showMessage('正在生成中，请稍候', 'info');
+            return;
+        }
+        if (btn) {
+            var host = btn.closest ? btn.closest('[data-msg-index]') : null;
+            var idx = host ? parseInt(host.getAttribute('data-msg-index'), 10) : -1;
+            if (idx >= 0 && state.messages[idx]) state.messages[idx].planMode = false;
+            btn.disabled = true;
+            btn.textContent = '执行中...';
+        }
+        setPermissionMode(targetMode).then(function () {
+            var input = document.getElementById('messageInput');
+            if (!input) return;
+            input.value = '我批准了上面的计划，请按上面的计划开始执行。';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            var sendBtn = document.getElementById('sendBtn');
+            if (sendBtn) sendBtn.click();
+        });
+    }
+
+    /** P3：到顶续接页脚 —— 「预算到顶 N 轮」徽标 + 「继续」按钮（仅 truncated 的 assistant 气泡） */    function buildTruncatedFooterHtml(msg) {
         if (!msg || msg.role !== 'assistant' || !msg.truncated) return '';
         var turns = msg.truncatedTurns ? ('（' + msg.truncatedTurns + ' 轮）') : '';
         return '<div class="truncated-footer">'
@@ -3536,7 +3787,9 @@
             intermediate: [],
             toolCalls: [],
             time: formatTime(),
-            isGenerating: true
+            isGenerating: true,
+            // P1：本轮是否是计划模式发起（是 → 回答下给「批准并执行」）
+            planMode: currentPermMode() === 'plan'
         });
         var assistantIndex = state.messages.length - 1;
         renderMessages();
@@ -3730,6 +3983,8 @@
         if (state.sessionId) {
             setTimeout(function() { loadSessionsFromServer(); }, 800);
         }
+        // P1：刷新权限模式与已授权规则（会话内可能已变化）
+        setTimeout(loadPermission, 900);
 
         // Refresh soul evolution data after interaction
         setTimeout(refreshSoulData, 1000);
@@ -4976,10 +5231,41 @@
     // P3：气泡里的「继续」按钮（委托绑定，重渲染后依然有效）
     document.getElementById('messagesList').addEventListener('click', function(e) {
         var t = e.target;
+        var planBtn = (t && t.closest) ? t.closest('[data-plan-approve]') : null;
+        if (planBtn) {
+            e.preventDefault();
+            approvePlan(planBtn, planBtn.getAttribute('data-plan-approve'));
+            return;
+        }
         var btn = (t && t.closest) ? t.closest('.continue-btn') : null;
         if (!btn) return;
         e.preventDefault();
         continueFromTruncated(btn);
+    });
+
+    // P1：权限模式 chip / 菜单
+    document.getElementById('permChipBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (permMenuIsOpen()) { closePermMenu(); } else { openPermMenu(); }
+    });
+    document.getElementById('permMenu').addEventListener('click', function(e) {
+        var t = e.target;
+        var clearBtn = (t && t.closest) ? t.closest('#permClearRulesBtn') : null;
+        if (clearBtn) { e.preventDefault(); clearPermissionRules(); return; }
+        var item = (t && t.closest) ? t.closest('[data-perm-mode]') : null;
+        if (item) {
+            e.preventDefault();
+            setPermissionMode(item.getAttribute('data-perm-mode'));
+        }
+    });
+    document.addEventListener('click', function(e) {
+        if (!permMenuIsOpen()) return;
+        var t = e.target;
+        var menu = document.getElementById('permMenu');
+        var chip = document.getElementById('permChipBtn');
+        if (menu && t && menu.contains(t)) return;
+        if (chip && t && chip.contains(t)) return;
+        closePermMenu();
     });
 
     document.getElementById('messageInput').addEventListener('keydown', function(e) {
@@ -5533,6 +5819,8 @@
         initFocusFromContext();
         renderFocusBar();
         loadSessionsFromServer();   // T5.2a 从服务端加载会话历史
+        loadPermission();           // P1：加载会话权限模式（计划/手动/自动/全部允许）
+        renderPermChip();
     }
 
     // ==================== 模型选择 ====================

@@ -110,6 +110,10 @@ public class AgentController {
     @Autowired(required = false)
     private com.DocSystem.agent.config.AgentConfigService agentConfigService;
 
+    /** P1：会话级权限模式与规则（未装配 → 模式接口返回默认值/报错） */
+    @Autowired(required = false)
+    private com.DocSystem.agent.permission.PermissionStore permissionStore;
+
     // Streaming executor — exposed to DocSysAgentApplication for graceful shutdown
     private final ExecutorService streamingExecutor = Executors.newCachedThreadPool();
 
@@ -2004,6 +2008,116 @@ public class AgentController {
         } catch (Exception e) {
             log.error("Toggle skill failed", e);
             return AgentResponse.error("操作失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * P1：读取当前会话的权限模式与已授权规则（前端模式 chip 用）。
+     *
+     * <p>返回：当前模式（含 label/description）、全部可选档位、会话内规则条数、以及
+     * 管理员开关状态（P3 接入前默认允许"全部允许"档）。</p>
+     */
+    @GetMapping("/permission")
+    public AgentResponse getPermission(
+            @RequestParam(value = "sessionId", required = false) String sessionId,
+            HttpServletRequest request) {
+        try {
+            String sid = resolvePermissionSessionId(sessionId, request);
+            com.DocSystem.agent.permission.PermissionMode mode =
+                    permissionStore != null
+                            ? permissionStore.getMode(sid)
+                            : com.DocSystem.agent.permission.PermissionMode.DEFAULT;
+            java.util.List<com.DocSystem.agent.permission.PermissionRule> rules =
+                    permissionStore != null ? permissionStore.getRules(sid) : java.util.Collections.emptyList();
+            java.util.List<Map<String, String>> modes = new java.util.ArrayList<>();
+            for (com.DocSystem.agent.permission.PermissionMode m
+                    : com.DocSystem.agent.permission.PermissionMode.values()) {
+                Map<String, String> item = new HashMap<>();
+                item.put("id", m.id);
+                item.put("label", m.label);
+                item.put("description", m.description);
+                modes.add(item);
+            }
+            java.util.List<String> ruleTexts = new java.util.ArrayList<>();
+            for (com.DocSystem.agent.permission.PermissionRule r : rules) {
+                ruleTexts.add(r.describe());
+            }
+            Map<String, Object> data = new HashMap<>();
+            data.put("mode", mode.id);
+            data.put("label", mode.label);
+            data.put("description", mode.description);
+            data.put("modes", modes);
+            data.put("rules", ruleTexts);
+            data.put("absoluteGuarded",
+                    new java.util.ArrayList<>(com.DocSystem.agent.permission.ToolRiskCatalog.ABSOLUTE_GUARDED));
+            return AgentResponse.ok(data);
+        } catch (Exception e) {
+            log.warn("getPermission failed: {}", e.getMessage());
+            return AgentResponse.error("读取权限模式失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * P1：切换当前会话的权限模式（计划 / 手动 / 自动 / 全部允许）。
+     *
+     * <p>会话级存储（{@code agent_sessions.metadata.permissionMode}）；非法值拒绝；
+     * 未登录也能读默认模式，但切换需要登录（与写操作一致）。</p>
+     */
+    @PostMapping("/permission/mode")
+    public AgentResponse setPermissionMode(
+            @RequestParam("mode") String mode,
+            @RequestParam(value = "sessionId", required = false) String sessionId,
+            HttpServletRequest request) {
+        try {
+            com.DocSystem.agent.permission.PermissionMode target =
+                    com.DocSystem.agent.permission.PermissionMode.fromId(mode);
+            if (target == null) {
+                return AgentResponse.error("非法权限模式: " + mode);
+            }
+            if (permissionStore == null) {
+                return AgentResponse.error("权限模式不可用（服务未装配）");
+            }
+            String sid = resolvePermissionSessionId(sessionId, request);
+            if (!permissionStore.setMode(sid, target)) {
+                return AgentResponse.error("切换权限模式失败（会话不存在）");
+            }
+            Map<String, Object> data = new HashMap<>();
+            data.put("mode", target.id);
+            data.put("label", target.label);
+            data.put("sessionId", sid);
+            return AgentResponse.ok(data);
+        } catch (Exception e) {
+            log.warn("setPermissionMode failed: {}", e.getMessage());
+            return AgentResponse.error("切换权限模式失败: " + e.getMessage());
+        }
+    }
+
+    /** P1：清空本会话已授权规则（模式 chip 里"清空授权"用） */
+    @PostMapping("/permission/rules/clear")
+    public AgentResponse clearPermissionRules(
+            @RequestParam(value = "sessionId", required = false) String sessionId,
+            HttpServletRequest request) {
+        try {
+            if (permissionStore == null) {
+                return AgentResponse.error("权限模式不可用（服务未装配）");
+            }
+            String sid = resolvePermissionSessionId(sessionId, request);
+            permissionStore.clearRules(sid);
+            return AgentResponse.ok(Collections.singletonMap("cleared", "true"));
+        } catch (Exception e) {
+            return AgentResponse.error("清空授权失败: " + e.getMessage());
+        }
+    }
+
+    /** 权限模式的会话 id：优先前端传的对话会话 id，其次 HTTP 会话 id（两者都无 → null） */
+    private String resolvePermissionSessionId(String sessionId, HttpServletRequest request) {
+        if (sessionId != null && !sessionId.trim().isEmpty()) {
+            return sessionId.trim();
+        }
+        try {
+            return request != null ? request.getSession().getId() : null;
+        } catch (Exception e) {
+            return null;
         }
     }
 

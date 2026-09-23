@@ -39,6 +39,8 @@ public class TestWriteConfirmGateCoverage {
         testWhitelistCoversAllWriteTools();
         testGateStructure();
         testArgsSummary();
+        testRiskCatalogCoverage();
+        testModeDecisions();
         System.out.println("\n======== TestWriteConfirmGateCoverage: " + pass + " passed, " + fail
                 + " failed ========");
         if (fail > 0) {
@@ -115,6 +117,140 @@ public class TestWriteConfirmGateCoverage {
         check("审计服务保留 force 重载", audit.contains("boolean force"), audit);
         check("审计服务无 force 时仍走名字判断（兼容旧调用方）",
                 audit.contains("if (!force && !isWriteOperation(operation))"), audit);
+    }
+
+    /**
+     * ④ P1：每个 needsConfirm 工具都必须有**显式风险登记**（或工具自带 riskClass）。
+     *
+     * <p>目的：新增写工具忘了登记 → 这条直接红，而不是静默按 fail-safe（绝对保护）
+     * 或更糟的 NORMAL 放行。自动档/全部允许档的行为全靠这张表。</p>
+     */
+    private static void testRiskCatalogCoverage() {
+        DocSysClient client = new DocSysClient("http://127.0.0.1:1/DocSystem");
+        ToolRegistry reg = DocSysToolFactory.createFullRegistry(client);
+        reg.register(DocSysToolFactory.runSkillTool(null, null));
+
+        List<String> unregistered = new ArrayList<String>();
+        for (ToolDefinition d : reg.list()) {
+            if (!d.needsConfirm) {
+                continue;
+            }
+            if (d.riskClass == null
+                    && !com.DocSystem.agent.permission.ToolRiskCatalog.isRegistered(d.name)) {
+                unregistered.add(d.name);
+            }
+        }
+        check("每个 needsConfirm 工具都有风险登记（或显式 riskClass）",
+                unregistered.isEmpty(), "未登记=" + unregistered);
+        check("delete_repos 登记为绝对保护",
+                com.DocSystem.agent.permission.ToolRiskCatalog.registered("delete_repos")
+                        == com.DocSystem.agent.permission.ToolRisk.ABSOLUTE);
+        check("删文档/移动/改名/更新仓库 = 破坏性",
+                com.DocSystem.agent.permission.ToolRiskCatalog.registered("delete_doc")
+                        == com.DocSystem.agent.permission.ToolRisk.DESTRUCTIVE
+                        && com.DocSystem.agent.permission.ToolRiskCatalog.registered("move_doc")
+                        == com.DocSystem.agent.permission.ToolRisk.DESTRUCTIVE
+                        && com.DocSystem.agent.permission.ToolRiskCatalog.registered("rename_doc")
+                        == com.DocSystem.agent.permission.ToolRisk.DESTRUCTIVE
+                        && com.DocSystem.agent.permission.ToolRiskCatalog.registered("update_repos")
+                        == com.DocSystem.agent.permission.ToolRisk.DESTRUCTIVE);
+        check("外链分享 = 权限变更",
+                com.DocSystem.agent.permission.ToolRiskCatalog.registered("create_doc_share")
+                        == com.DocSystem.agent.permission.ToolRisk.PERMISSION);
+    }
+
+    /**
+     * ⑤ P1：模式判定真的作用在确认门上（不是只测纯函数）。
+     *
+     * <p>用手动、自动、全部允许、计划四个档位驱动 {@link ToolRegistry#execute}，
+     * 断言确认门的调用次数与执行结果；另验证"策略未注入 = 行为同改造前"。</p>
+     */
+    private static void testModeDecisions() {
+        final List<String> gateCalls = new ArrayList<String>();
+        ToolRegistry reg = new ToolRegistry();
+        reg.register(fakeWrite("write_file"));
+        reg.register(fakeWrite("delete_doc"));
+        reg.register(fakeWrite("delete_repos"));
+        reg.setConfirmGate((name, a) -> {
+            gateCalls.add(name);
+            return true;
+        });
+
+        // 手动档：三个都弹
+        gateCalls.clear();
+        reg.setPermissionContext(new com.DocSystem.agent.permission.PermissionContext(
+                com.DocSystem.agent.permission.PermissionMode.MANUAL, null));
+        reg.execute("write_file", new com.alibaba.fastjson.JSONObject(), false);
+        reg.execute("delete_doc", new com.alibaba.fastjson.JSONObject(), false);
+        reg.execute("delete_repos", new com.alibaba.fastjson.JSONObject(), false);
+        check("手动档：3 个写工具都经确认门", gateCalls.size() == 3, String.valueOf(gateCalls));
+
+        // 自动档：常规不弹，危险/绝对保护弹
+        gateCalls.clear();
+        reg.setPermissionContext(new com.DocSystem.agent.permission.PermissionContext(
+                com.DocSystem.agent.permission.PermissionMode.AUTO, null));
+        ToolResult w = reg.execute("write_file", new com.alibaba.fastjson.JSONObject(), false);
+        check("自动档：write_file 不弹确认", gateCalls.isEmpty(), String.valueOf(gateCalls));
+        check("自动档：write_file 真的执行了", w.success);
+        reg.execute("delete_doc", new com.alibaba.fastjson.JSONObject(), false);
+        reg.execute("delete_repos", new com.alibaba.fastjson.JSONObject(), false);
+        check("自动档：delete_doc / delete_repos 仍弹（硬清单 + 绝对保护）",
+                gateCalls.size() == 2 && gateCalls.contains("delete_doc")
+                        && gateCalls.contains("delete_repos"), String.valueOf(gateCalls));
+
+        // 全部允许档：常规/危险都不弹，删仓库仍弹
+        gateCalls.clear();
+        reg.setPermissionContext(new com.DocSystem.agent.permission.PermissionContext(
+                com.DocSystem.agent.permission.PermissionMode.ALLOW_ALL, null));
+        reg.execute("write_file", new com.alibaba.fastjson.JSONObject(), false);
+        reg.execute("delete_doc", new com.alibaba.fastjson.JSONObject(), false);
+        check("全部允许档：常规与危险都不弹", gateCalls.isEmpty(), String.valueOf(gateCalls));
+        reg.execute("delete_repos", new com.alibaba.fastjson.JSONObject(), false);
+        check("全部允许档：delete_repos 仍弹（绝对保护）",
+                gateCalls.size() == 1 && "delete_repos".equals(gateCalls.get(0)), String.valueOf(gateCalls));
+
+        // 自动档 + 规则命中：危险项不再弹
+        List<com.DocSystem.agent.permission.PermissionRule> rules =
+                new ArrayList<com.DocSystem.agent.permission.PermissionRule>();
+        rules.add(new com.DocSystem.agent.permission.PermissionRule(
+                com.DocSystem.agent.permission.PermissionRule.Kind.TOOL, "delete_doc", null, null));
+        gateCalls.clear();
+        reg.setPermissionContext(new com.DocSystem.agent.permission.PermissionContext(
+                com.DocSystem.agent.permission.PermissionMode.AUTO, rules));
+        reg.execute("delete_doc", new com.alibaba.fastjson.JSONObject(), false);
+        check("自动档 + 规则命中：delete_doc 不弹（消除确认疲劳）",
+                gateCalls.isEmpty(), String.valueOf(gateCalls));
+
+        // 自动档 + 规则命中：绝对保护仍弹（规则不可豁免）
+        rules.add(new com.DocSystem.agent.permission.PermissionRule(
+                com.DocSystem.agent.permission.PermissionRule.Kind.TOOL, "delete_repos", null, null));
+        gateCalls.clear();
+        reg.setPermissionContext(new com.DocSystem.agent.permission.PermissionContext(
+                com.DocSystem.agent.permission.PermissionMode.AUTO, rules));
+        reg.execute("delete_repos", new com.alibaba.fastjson.JSONObject(), false);
+        check("自动档 + 规则命中：delete_repos 仍弹（绝对保护优先）",
+                gateCalls.size() == 1, String.valueOf(gateCalls));
+
+        // 计划档：写操作被拒且不弹
+        gateCalls.clear();
+        reg.setPermissionContext(new com.DocSystem.agent.permission.PermissionContext(
+                com.DocSystem.agent.permission.PermissionMode.PLAN, null));
+        ToolResult denied = reg.execute("write_file", new com.alibaba.fastjson.JSONObject(), false);
+        check("计划档：写操作被拒绝（提示改出计划）",
+                !denied.success && denied.error != null && denied.error.contains("计划模式"),
+                String.valueOf(denied.error));
+        check("计划档：不触发确认门", gateCalls.isEmpty(), String.valueOf(gateCalls));
+
+        // 策略未注入：行为同改造前（每次都弹）
+        gateCalls.clear();
+        reg.setPermissionContext(null);
+        reg.execute("write_file", new com.alibaba.fastjson.JSONObject(), false);
+        check("未注入策略：仍每次都弹（向后兼容）", gateCalls.size() == 1, String.valueOf(gateCalls));
+    }
+
+    private static ToolDefinition fakeWrite(String name) {
+        return ToolDefinition.builder(name, "fake" + name, a -> ToolResult.ok("ok"))
+                .isWrite(true).needsConfirm(true).build();
     }
 
     /** ③ R3-9：确认弹窗必须能看到“到底动哪个对象” */
