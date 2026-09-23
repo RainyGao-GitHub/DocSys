@@ -1826,16 +1826,25 @@
             color: #9e8b3f;
         }
 
-        /* P1：权限模式 chip + 菜单 */
-        .perm-chip { font-size: 12px; padding: 4px 10px; border-radius: 6px; }
+        /* P1：权限模式 chip + 菜单（放在输入框下方工具条、帮助图标前面） */
+        .perm-slot { position: relative; display: inline-flex; align-items: center; }
+        .perm-chip {
+            width: auto;
+            min-width: 0;
+            height: 26px;
+            padding: 0 10px;
+            font-size: 12px;
+            border-radius: 6px;
+            gap: 2px;
+        }
         .perm-chip.perm-plan { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
         .perm-chip.perm-auto { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
         .perm-chip.perm-allowall { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; font-weight: 600; }
         .perm-menu {
             display: none;
             position: absolute;
-            bottom: 46px;
-            left: 12px;
+            bottom: 34px;
+            left: 0;
             z-index: 60;
             min-width: 300px;
             background: #fff;
@@ -1985,9 +1994,6 @@
                             <div class="composer-tools">
                                 <button class="toolbar-btn" id="focusBtn" title="关注对象 (@)">@</button>
                                 <button class="toolbar-btn" id="opBtn" title="操作 (/)">/</button>
-                                <!-- P1：权限模式 chip（计划/手动/自动/全部允许） -->
-                                <button class="toolbar-btn perm-chip" id="permChipBtn" title="权限模式">🛡 手动</button>
-                                <div class="perm-menu" id="permMenu"></div>
                                 <!-- 已选操作 chip：放在消息框下面、/ 按钮之后 -->
                                 <div class="op-chip-slot" id="opChipSlot"></div>
                             </div>
@@ -2004,6 +2010,11 @@
                     </div>
                     <div class="input-bottom-bar">
                         <div class="input-tools">
+                            <!-- P1：权限模式 chip（计划/手动/自动/全部允许）—— 放在帮助图标前面 -->
+                            <span class="perm-slot">
+                                <button class="toolbar-btn perm-chip" id="permChipBtn" title="权限模式">手动模式</button>
+                                <div class="perm-menu" id="permMenu"></div>
+                            </span>
                             <button class="toolbar-btn" id="helpBtn" title="命令帮助 (Ctrl+H)">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                             </button>
@@ -3219,10 +3230,10 @@
     // ==================== P1：权限模式（计划/手动/自动/全部允许） ====================
 
     var PERM_MODES = [
-        { id: 'plan', label: '计划', desc: '只做调研并输出计划；写操作不执行' },
-        { id: 'manual', label: '手动', desc: '每个写操作都要确认（默认）' },
-        { id: 'auto', label: '自动', desc: '常规写操作自动通过；删除/权限变更仍需确认' },
-        { id: 'allowAll', label: '全部允许', desc: '除删仓库等绝对保护外全部自动通过（谨慎）' }
+        { id: 'manual', label: '手动模式', chip: '手动模式', desc: '每个写操作都要确认（默认）' },
+        { id: 'plan', label: '计划模式', chip: '计划模式', desc: '只做调研并输出计划；写操作不执行' },
+        { id: 'auto', label: '自动模式', chip: '自动模式', desc: '常规写操作自动通过；删除/权限变更仍需确认' },
+        { id: 'allowAll', label: '全部允许', chip: '全部允许', desc: '除删仓库等绝对保护外全部自动通过（谨慎）' }
     ];
 
     /** 当前模式 id（未加载时按默认手动） */
@@ -3243,7 +3254,7 @@
         if (!btn) return;
         var id = currentPermMode();
         var info = permModeInfo(id);
-        btn.textContent = '🛡 ' + info.label;
+        btn.textContent = info.chip || info.label;
         btn.classList.remove('perm-plan', 'perm-auto', 'perm-allowall');
         if (id === 'plan') btn.classList.add('perm-plan');
         else if (id === 'auto') btn.classList.add('perm-auto');
