@@ -628,3 +628,39 @@ dev Tomcat 一直"启动成功却看不到改动"的根因：**Eclipse WTP 的 T
 | 移除附件后再上传同名文件 | 标记随移除清掉 → 可再次入库 ✓ |
 | 刷新页面 | `✓ 已入库` 仍在（`imported` 来自服务端）✓ |
 | 护栏 | `TestAgentAttachmentSupport` **86**、`TestAttachmentTool` **16**、`TestAgentFocusSupport` **98**、`TestResolvedLlmConfig` **7** 全绿；index.html 语法 0 error ✓ |
+
+## 15. 焦点入口与弹窗的两处修正（2026-09-24）
+
+### 15.1 从 project 页面进 Agent 时，多选只有第一个被 @（缺陷）
+
+**现象**（用户反馈）：在 project 页面选中**多个**文件/目录，点 AI 图标进 Agent，只有**一个**对象变成关注对象。
+
+**根因**：`project.js` 只往 URL 里塞了单个对象（`ctxVid/ctxPath/ctxName/ctxDocId`），Agent 侧 `initFocusFromContext()` 也只认这一个；而 project 页面的树本来就有多选能力（`getSelectedNodes()`）。
+
+**修复**：新增跨窗口上下文接口 `getAgentContextItems()`（`project.js`），语义：
+
+1. 树里有多选 → 返回每一项 `{kind:'file'|'dir', vid, path, name, docId}`（`type===2` ⇒ 目录；无名根节点跳过）
+2. 没有多选但当前打开了文档 → 返回当前文档
+3. 都没有 → `{kind:'dir', vid, path:'/', name:''}`（整库）
+4. 整体包在 `try/catch` 里（父窗口函数异常不能连累 Agent 初始化）
+
+Agent 侧 `initFocusFromContext()` 改为：**优先** `window.parent.getAgentContextItems()`（特性探测）→ `addFocusItems(items)`；拿不到（独立窗口打开/旧版父页面）才回落到 URL 参数。`addFocusItems()` 按 `focusKey` 去重、受 `FOCUS_MAX = 10` 限制，越界时提示一次「最多只能选择 10 个关注对象，已忽略 N 个」；正常情形提示一次「已自动关注所选 N 个对象（可点 chip 的 × 移除）」。另加 `backfillRootLabels()`：树里只有叶子（没有祖先节点）时补上根标签，避免 chip 只显示文件名。
+
+**实测**（8100，浏览器）：Ctrl 选 3 个目录 → 3 个 chip + 提示「已自动关注所选 3 个对象」✓；Shift 选 6 → 6 个 chip ✓；选 11 个 → 截到 10 个 chip + 忽略提示 ✓；未选中任何对象进入 → 单 chip「测试仓库2」（整库）✓。
+
+### 15.2 弹窗里的「清空」易误操作（用户反馈 → 三道防护）
+
+**现象**：「清空」原本紧挨「取消/确定」，选了很多对象时误点一下全没了，只能重选。
+
+**修复**（三道，互补）：
+
+1. **挪位置**：`清空` 移出 `.fd-btns` 按钮组，单独放到页脚**最左**；`.fd-count`（已选 N / 10）居中间弹性位（`margin-right: auto`）把两组拉开（实测间距 ≈ 344 px）。
+2. **降调 + 禁用**：`.fd-btn-quiet` 无边框淡灰，仅 hover 变红；`renderFocusDialog()` 里 `clearBtn.disabled = importMode || (state.focus||[]).length === 0`（没有可清的对象时按钮是灰的，且"有东西可清"这件事可见）。
+3. **二次确认**：`clearFocusDialog()` 改 async，弹 `uiDialog`（title「清空已选对象」、ok「清空」danger 红、cancel「再想想」），只有点为「清空」才真正 `state.focus = []` + `applyFocusSlot()` + `renderFocusDialog()`。
+
+> 兜底恢复路径（本来就有）：弹窗内选择是**暂存**的，`cancelFocusDialog()` 会用打开弹窗时的快照 `d.snapshot` 整体还原 —— 所以「确定清空」之后只要还没点「确定」提交，点弹窗的「取消」仍可整批找回。确认框文案里已写明这点。
+
+**实测**（8100，浏览器）：选 3 个 → 弹窗页脚顺序 清空 | 已选 3/10 | … | 取消 | 确定 ✓；点清空 → 确认框出现在弹窗**上层**（`z-index` 11000 > 1000）✓；点「再想想」→ 仍是「已选 3 / 10」，chip 3 个 ✓；点「清空」→ 计数 0、按钮转 disabled、chip 清空 ✓；再点弹窗「取消」→ 3 个 chip 全部还原 ✓。
+
+**护栏**：`TestFocusContextFrontendLint` 扩到 **33** 断言 —— 锁住「清空不在 `.fd-btns` 组内」「清空排在计数之前」「quiet/disabled 样式存在」「`clearFocusDialog` 必须先 `uiDialog` 且 `if (!ok) return;`」「取消快照还原」这些写法，防止后续改动把防护改回去。全量护栏：**44 suites / 1869 断言 / 0 fail**。
+

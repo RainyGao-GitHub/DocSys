@@ -225,6 +225,78 @@ function getSelectedNodes()
 	return treeNodes;
 }
 
+/**
+ * Agent 上下文对象（点 AI 图标时自动「@」的对象）—— 供 Agent 页（同源 iframe）直取
+ *
+ * 规则（2026-09-24 用户要求：多选时只 @ 到一个）：
+ *  1. 树里选了**多个**（Ctrl 点选 / Shift 连选）→ 全部返回；
+ *  2. 选了一个 → 返回它（单文件打开的场景与改造前一致）；
+ *  3. 一个都没选 → 回落「当前打开的文档」，再回落「仓库根目录（整库）」。
+ *
+ * 为什么走函数而不是 URL 参数：多选可能有十几个（路径还长），URL 会撑爆 Tomcat 8KB 请求行；
+ * 同源 iframe 直接调父页函数最稳。返回 [{kind:'file'|'dir', vid, path, name, docId}]。
+ */
+function getAgentContextItems()
+{
+	var items = [];
+	var vid = null;
+	if(typeof gReposInfo !== 'undefined' && gReposInfo && gReposInfo.id)
+	{
+		vid = gReposInfo.id;
+	}
+
+	try
+	{
+		var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		var selectedNodes = treeObj ? treeObj.getSelectedNodes() : null;
+		if(selectedNodes != null && selectedNodes.length > 0)
+		{
+			for(var i = 0; i < selectedNodes.length; i++)
+			{
+				var node = selectedNodes[i];
+				if(node == null || !node.name)
+				{
+					continue;	// 根节点（name 空）不参与：它是"整库"，由下面的回落分支表达
+				}
+				items.push({
+					kind: (node.type === 2 ? 'dir' : 'file'),
+					vid: vid,
+					path: node.path || '',
+					name: node.name,
+					docId: node.docId || null
+				});
+			}
+		}
+	}
+	catch(e)
+	{
+		console.warn("getAgentContextItems() tree query failed", e);
+	}
+
+	if(items.length > 0)
+	{
+		return items;
+	}
+
+	// 无选中：保持既有单对象语义（当前打开文档 → 仓库根目录）
+	if(typeof gDocInfo !== 'undefined' && gDocInfo && gDocInfo.name)
+	{
+		items.push({
+			kind: (gDocInfo.type === 2 ? 'dir' : 'file'),
+			vid: vid,
+			path: gDocInfo.path || '',
+			name: gDocInfo.name,
+			docId: gDocInfo.docId || null
+		});
+	}
+	else if(vid)
+	{
+		// P1.5：仓库根目录 = 整库（kind=dir + name 空 + path=/）
+		items.push({ kind: 'dir', vid: vid, path: '/', name: '', docId: null });
+	}
+	return items;
+}
+
 function DoPaste(treeNodes,dstParentNode, isCopy)
 {
 	console.log("DoPaste()",treeNodes,dstParentNode);

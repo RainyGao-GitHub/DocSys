@@ -5,6 +5,11 @@
 - 前卡 `CURRENT_STATE_agentOffice读写选型.md`：P1 读 ✅、P2 新建 ✅、P2 修改 ✅，**已收尾**（保留供查询）
 - 本卡是**当前任务**的唯一口径处：必读上下文 / 当前进展 / 生效约束（含是否先提交）
 
+## 追加范围（2026-09-24，用户当场提的两处 UX 修正，与本卡同批收尾）
+
+5. **从 project 页多选进 Agent，只有第一个被 @** → 已修（跨窗口 `getAgentContextItems()` 接口）
+6. **关注对象弹窗「清空」容易误操作** → 已修（挪位 + 降调/禁用 + 二次确认，三道防护）
+
 ## 用户裁定（2026-09-23）
 
 1. **方案 B**：链接放在**本轮最终回答**里（跟随回答落库 → 刷新/切会话后仍在），不是只放（易失的）工具卡片
@@ -56,10 +61,22 @@
    - 刷新/换页后链接仍在（history 里持久化）；`write_file` 产物同样有链接（markdown 图标）
    - E2E 痕迹已清理（vid=1 link_test.docx / vid=5 cross_repo.md 已删并核对磁盘无残留）
 
+6. ✅ **多选 @ 修（2026-09-24）**：`project.js` 新增 `getAgentContextItems()`（树多选 → 全部；否则当前文档；否则整库）；
+   Agent 侧 `initFocusFromContext()` 优先读父窗口接口（特性探测）→ `addFocusItems()` 去重 + `FOCUS_MAX=10` 截断 + `backfillRootLabels()`
+   实测：Ctrl 选 3 → 3 chip；Shift 选 6 → 6 chip；选 11 → 10 chip + 忽略提示；未选 → 单 chip「测试仓库2」（整库）✓
+7. ✅ **「清空」防误操作（2026-09-24）**：清空移出 `.fd-btns` 放页脚最左（间距 ≈344px）+ `.fd-btn-quiet` 降调
+   + 计数 `margin-right:auto` 居中 + `disabled`（无可清对象时）+ `uiDialog` 二次确认（danger 红，`if(!ok) return;`）
+   实测：确认框在弹窗**上层**（11000 > 1000）；「再想想」→ 仍 3 个；「清空」→ 计数 0 / 按钮 disabled / chip 空；
+   之后再点弹窗「取消」→ 3 个 chip 全部还原（快照兜底路径真实可用）✓
+   截图：`src/com/DocSystem/websocket/office/test/tmp/focusdialog/01~03_*.png`
+8. ✅ **守约**：新增 `agent/focus/TestFocusContextFrontendLint.java`（**33** 断言，锁 project.js 多选接口 + 弹窗防护写法）
+   → **全量 44 套 / 1869 断言 / 0 失败**
+
 ## 下一步
 
 - 待用户验收后收尾本卡（如需调整：是否需要 rename/move/copy 也纳入、是否要卡片内也显示链接）
 - 可选后续：把该链接机制推广到“分享链接”形态（现在已有 `create_doc_share` 工具，不重复）
+- ✅ 2026-09-24 的两处修正已完成、已浏览器实测、已提交（见下）
 
 ## 必读上下文（续接锚点）
 
@@ -85,7 +102,7 @@
 
 ## 未提交改动
 
-- 主仓库待提交：
-  - 新增：`src/com/DocSystem/agent/tool/AgentProductLink.java`、`src/com/DocSystem/agent/tool/TestAgentProductLink.java`、`devDocs/Agent产物链接方案.md`
-  - 修改：`ToolUseLoop.java`、`MainAgent.java`、`DocSysToolFactory.java`、`TestToolUseLoop.java`、
-    `WebRoot/web/agent/index.html`、`CLAUDE.md`、本工作卡
+- **无**。2026-09-24 三块工作已全部提交：
+  - `fdd0fa59b` P2a 新建 Office / `048291071` P2b 修改 Office / `e4a2e0e13` 工作卡
+  - `a128a752d` 产物链接（服务端 + 前端 + 护栏 + 方案文档）
+  - `f0c6b5f63`（本批）多选 @ 修 + 「清空」防误操作 + 前端护栏 + `devDocs/Agent关注对象与操作设计方案.md` §15 + 本卡

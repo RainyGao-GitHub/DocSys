@@ -1712,13 +1712,19 @@
         .ft-name { overflow: hidden; text-overflow: ellipsis; }
         .ft-tip { color: #999; font-size: 12px; padding: 8px 10px; }
         .ft-tip.err { color: #c0392b; }
-        .focus-dialog-foot { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-top: 1px solid #eee; }
-        .focus-dialog-foot .fd-count { font-size: 12px; color: #666; }
+        .focus-dialog-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid #eee; }
+        /* 计数占中间弹性空间 → 「清空」独自在左、「取消/确定」靠右，两者拉开距离 */
+        .focus-dialog-foot .fd-count { font-size: 12px; color: #666; margin-right: auto; }
         .fd-btns { display: flex; gap: 8px; }
         .fd-btn { padding: 5px 14px; font-size: 12px; border-radius: 6px; border: 1px solid #d0d0d0; background: #f7f7f7; color: #444; cursor: pointer; }
         .fd-btn:hover { background: #efefef; }
         .fd-btn.primary { background: #009a61; border-color: #009a61; color: #fff; }
         .fd-btn.primary:hover { background: #008753; }
+        /* 破坏性动作（清空）：无边框描边、淡色文字，悬停才显红；禁用时更弱 */
+        .fd-btn-quiet { border-color: transparent; background: transparent; color: #8a94a6; padding: 5px 10px; }
+        .fd-btn-quiet:hover { background: #fdf2f2; color: #d33; }
+        .fd-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+        .fd-btn-quiet[disabled]:hover { background: transparent; color: #8a94a6; }
 
         /* P1：通用选择器面板（@ 对象 / / 操作+技能） */
         .suggestion-panel {
@@ -2101,9 +2107,10 @@
             </div>
             <div class="focus-tree" id="focusTree"></div>
             <div class="focus-dialog-foot">
+                <!-- 「清空」是破坏性动作：放在最左侧、低调样式 + 单独分组，远离「取消/确定」以免误点（2026-09-24） -->
+                <button class="fd-btn fd-btn-quiet" id="focusDialogClear">清空</button>
                 <span class="fd-count" id="focusDialogCount">已选 0 / 10</span>
                 <div class="fd-btns">
-                    <button class="fd-btn" id="focusDialogClear">清空</button>
                     <button class="fd-btn" id="focusDialogCancel">取消</button>
                     <button class="fd-btn primary" id="focusDialogOk">确定</button>
                 </div>
@@ -4942,7 +4949,11 @@
         var searchBox = fdEl('focusDialogSearch');
         if (searchBox) searchBox.style.display = importMode ? 'none' : '';
         var clearBtn = fdEl('focusDialogClear');
-        if (clearBtn) clearBtn.style.display = importMode ? 'none' : '';
+        if (clearBtn) {
+            clearBtn.style.display = importMode ? 'none' : '';
+            // 没有可清的对象时禁用（避免无意义的点击，也让"有东西可清"这件事可见）
+            clearBtn.disabled = importMode || (state.focus || []).length === 0;
+        }
         var okBtn = fdEl('focusDialogOk');
         if (okBtn) okBtn.textContent = importMode ? '导入到此处' : '确定';
         var sel = fdEl('focusDialogRepo');
@@ -5071,11 +5082,29 @@
         if (!wasImport) { state.activeFocusKey = null; applyFocusSlot(); }
     }
 
+    /**
+     * 清空已选对象（破坏性）：先确认再清。
+     *
+     * <p>2026-09-24 用户反馈：原来「清空」紧贴着「取消/确定」，选了很多对象时误点一下全没了，
+     * 又得重新选。除把按钮挪到最左、改成低调样式外，这里再加一道确认；
+     * 另外弹窗内的选择本来就是"暂存"——清空后点「取消」可以整体撤销（见 {@link cancelFocusDialog}）。</p>
+     */
     function clearFocusDialog() {
-        state.focus = [];
-        state.activeFocusKey = null;
-        applyFocusSlot();
-        renderFocusDialog();
+        var n = (state.focus || []).length;
+        if (n === 0) return;    // 按钮此时是 disabled，这里再兜一层
+        uiDialog({
+            title: '清空已选对象',
+            message: '确定清空已选的 ' + n + ' 个关注对象？\n\n若只是误点：点「再想想」或弹窗的「取消」，选择会整体还原。',
+            okText: '清空',
+            cancelText: '再想想',
+            danger: true
+        }).then(function (ok) {
+            if (!ok) return;
+            state.focus = [];
+            state.activeFocusKey = null;
+            applyFocusSlot();
+            renderFocusDialog();
+        });
     }
 
     function focusDialogSearch(q) {
@@ -5379,9 +5408,19 @@
         if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest' });
     }
 
-    /** URL 上下文（D3）：从仓库详情页打开时预置一个可移除的对象 chip */
+    /** URL 上下文（D3）：从仓库详情页打开时预置可移除的对象 chip（支持多选，见 readParentContextItems） */
     function initFocusFromContext() {
         try {
+            // 1) 首选：同源父页（project 页）直给上下文对象列表 —— 支持树里 Ctrl/Shift 多选
+            //    （用户 2026-09-24：多选时必须全部 @ 上，之前只 @ 到一个）
+            var fromParent = readParentContextItems();
+            if (fromParent.length) {
+                addFocusItems(fromParent);
+                backfillRootLabels(fromParent);
+                return;
+            }
+
+            // 2) 回落：URL 参数（project 页首屏/直达链接；projects.html 入口不带 ctx）
             var sp = new URLSearchParams(window.location.search || '');
             var vid = parseInt(sp.get('ctxVid'), 10);
             if (!vid) return;
@@ -5397,29 +5436,110 @@
                 var repo = fdFindRepo(vid);
                 label = repo ? fdRepoLabel(repo) : '当前仓库';
             }
-            addFocusItem({
+            var urlItem = {
                 kind: kind,
                 vid: vid,
                 path: path,
                 name: name,
                 docId: docId,
                 label: label
-            });
+            };
+            addFocusItems([urlItem]);
             // 仓库级入口（无 ctxName）时仓库列表可能还没到 → 到了再回填显示名
-            if (!name) {
-                var rootKey = focusKey({ kind: 'dir', vid: vid, path: path || '/', name: '' });
-                fdEnsureRepos(function () {
-                    var repo2 = fdFindRepo(vid);
-                    if (!repo2) return;
-                    for (var i = 0; i < (state.focus || []).length; i++) {
-                        if (focusKey(state.focus[i]) === rootKey) state.focus[i].label = fdRepoLabel(repo2);
-                    }
-                    renderFocusBar();
-                });
-            }
+            backfillRootLabels([urlItem]);
         } catch (e) {
             console.warn('initFocusFromContext failed', e);
         }
+    }
+
+    /**
+     * 读取父页（project 页）的上下文对象列表：`window.parent.getAgentContextItems()`
+     * （project.js 提供；同源才能取，故用 try/catch 兜住跨域/旧版本页面）
+     */
+    function readParentContextItems() {
+        try {
+            var p = window.parent;
+            if (!p || p === window) return [];
+            if (typeof p.getAgentContextItems !== 'function') return [];
+            var list = p.getAgentContextItems();
+            if (!list || !list.length) return [];
+            var out = [];
+            for (var i = 0; i < list.length; i++) {
+                var it = list[i];
+                if (!it || !it.vid) continue;
+                var kind = (it.kind === 'repos') ? 'dir' : it.kind;
+                if (kind !== 'dir' && kind !== 'file') kind = 'file';
+                var path = it.path || '';
+                if (kind === 'dir' && !it.name) path = '/';     // 整库：name 空 + path=/（与既有口径一致）
+                out.push({
+                    kind: kind,
+                    vid: it.vid,
+                    path: path,
+                    name: it.name || '',
+                    docId: it.docId || null,
+                    label: it.name || ''
+                });
+            }
+            return out;
+        } catch (e) {
+            console.warn('readParentContextItems failed', e);
+            return [];
+        }
+    }
+
+    /**
+     * 批量添加关注对象（多选进页面用）：按 key 去重、受 {@link FOCUS_MAX} 限制、超限只提示一次。
+     * 不切消息框槽位（与 addFocusItem 同一约定：自动添加不等于用户手点 chip）。
+     */
+    function addFocusItems(items) {
+        var added = 0;
+        var skipped = 0;
+        for (var i = 0; i < (items || []).length; i++) {
+            var it = items[i];
+            if (!it || !it.kind || !it.vid) continue;
+            var key = focusKey(it);
+            var dup = false;
+            for (var j = 0; j < (state.focus || []).length; j++) {
+                if (focusKey(state.focus[j]) === key) { dup = true; break; }
+            }
+            if (dup) continue;
+            if ((state.focus || []).length >= FOCUS_MAX) { skipped++; continue; }
+            state.focus.push(it);
+            added++;
+        }
+        state.activeFocusKey = null;
+        renderFocusBar();
+        if (skipped > 0) {
+            showMessage('最多只能选择 ' + FOCUS_MAX + ' 个关注对象，已忽略 ' + skipped + ' 个', 'info');
+        } else if (added > 1) {
+            showMessage('已自动关注所选 ' + added + ' 个对象（可点 chip 的 × 移除）', 'info');
+        }
+    }
+
+    /** 仓库根目录（整库）项：显示名要等仓库列表到达后回填 */
+    function backfillRootLabels(items) {
+        var roots = [];
+        for (var i = 0; i < (items || []).length; i++) {
+            var it = items[i];
+            if (it && it.kind === 'dir' && !it.name) {
+                roots.push({ vid: it.vid, key: focusKey(it) });
+            }
+        }
+        if (!roots.length) return;
+        fdEnsureRepos(function () {
+            var changed = false;
+            for (var r = 0; r < roots.length; r++) {
+                var repo = fdFindRepo(roots[r].vid);
+                if (!repo) continue;
+                for (var i = 0; i < (state.focus || []).length; i++) {
+                    if (focusKey(state.focus[i]) === roots[r].key) {
+                        state.focus[i].label = fdRepoLabel(repo);
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) renderFocusBar();
+        });
     }
 
     // ==================== Events ====================
