@@ -9,7 +9,7 @@
 
 - 计划（唯一口径来源）：`devDocs/Agent权限模式改造计划.md`
 - 用户原话（本次触发）："我看 copilot 和 claude code 都是可以选权限模式的，比如整理目录过程中由于调用移动目录工具，所以需要不断的确认……"
-- 状态：**P1 部分实现（判定层 + 接线 + 护栏 38/1475/0）；前端与 E2E 未做**
+- 状态：**P1 主体完成（后端判定层 + 端点 + 前端 chip/计划闭环 + 护栏 38/1490/0）；仅缺 LLM 实跑页面 E2E**
 
 ## 用户定稿决策（2026-09-23）
 
@@ -42,7 +42,7 @@
 
 ## 基线（开工前实测，用于对比）
 
-- 全量护栏：**37 套 / 1409 断言 / 0 失败**（`%TEMP%\docsys_chk\run_guards.ps1`）
+- 基线（开工前）：**37 套 / 1409 断言 / 0 失败**；当前（P1）：**38 套 / 1490 项 / 0 失败**
 - 现状行为：无模式概念；`needsConfirm` 工具**每次**都弹确认（`AuditWriteConfirmGate` 120s 超时）
 - 编译：`%TEMP%\docsys_chk\do_compile.ps1 -Files "..."`（Spring 控制器加 `-Spring`）
 - dev 环境：`C:\TomcatForDocSysDev\docsys` 8100，junction 挂载（静态即时生效，Java 需重编译 + 重启）
@@ -64,7 +64,13 @@
    - ✅ 技能 risk 声明：`EnhancedSkill.risk` 字段 + `SkillParser` 解析 frontmatter `risk:`（原 `permissions:` 仍是空壳，未动）
    - ✅ 护栏：新增 `TestPermissionPolicy`（**66 项**：矩阵 4模式×4风险、绝对保护 4 档全 ASK 且规则不可豁免、计划档 DENY 优先于规则、规则覆盖硬清单、目录/仓库/工具匹配与路径规范化、技能 fail-safe、目录 fallback）；全量 **38 套 / 1475 项 / 0 失败**（基线 37/1409）
    - ⚠️ **实现偏差（已在计划外说明）**：风险类别用**集中目录** `ToolRiskCatalog`（+`ToolDefinition.riskClass` 可覆盖）而不是逐个改 12 个工具的 builder 链——因为 12 处 `.isWrite(true).needsConfirm(true)` 完全相同、逐个改易漏；安全性由"**未登记 = fail-safe 绝对保护**"兜住，并留护栏强制全覆盖（待做）
-   - ⏳ **未完成（P1 剩余）**：模式切换 REST 端点（前端 chip 用）、前端模式 chip、前端计划闭环按钮（「批准并执行」/「批准但逐步确认」）、`TestWriteConfirmGateCoverage` 按模式重写 + "needsConfirm 工具必须已登记风险"覆盖断言、页面 E2E（V1~V9）
+   - ⏳ **未完成（P1 剩余）**：页面 E2E 的 LLM 实跑（V1 计划档拒写 + 计划闭环 / V3 手动回归 / V4 自动档硬清单仍问 / V7 管理员禁用全部允许 / V9 技能分级）
+10. ✅ **P1 前端 + 端点 + 护栏扩展（2026-09-23，提交 `93df21fea`）**：
+   - 端点：`GET /agent/permission`（模式 + 4 档定义 + 已授权规则 + 绝对保护清单）、`POST /agent/permission/mode`、`POST /agent/permission/rules/clear`
+   - 前端：顶部模式 chip（🛡 四档 + 计划/自动/全部允许 配色）+ 下拉菜单（档位说明 / 已授权条数 / 清空授权）+ 计划闭环页脚（「批准并执行」切 auto、「批准但逐步确认」切 manual）
+   - 🐞 **E2E 暴露并已修**：切换模式后旧的 `loadPermission` 响应会把档位盖回去 → `localChangedAt` 时间戳丢弃过期响应
+   - 护栏：`TestWriteConfirmGateCoverage` +15 项（风险登记全覆盖 + 模式判定真的作用在确认门上）；全量 **38 套 / 1490 项 / 0 失败**
+   - 页面实测：端点返回 4 档 + `absoluteGuarded=["delete_repos"]`，POST 切换后服务端模式生效；JS 语法 0 错误
 
 ## 下一步
 
@@ -81,8 +87,17 @@
 
 ## 未提交改动
 
-- **P1 部分实现（代码）**：`src/com/DocSystem/agent/permission/`（9 个新文件：判定层 + 目录 + 技能 risk + 会话存储 + 护栏）、`tool/ToolDefinition.java`、`tool/ToolRegistry.java`、`orchestrator/MainAgent.java`、`skill/EnhancedSkill.java`、`skill/SkillParser.java`、本卡
-- 已提交（文档）：`d4f5a142c` / `49127d655` / `29ad82f4d` / `6d30dbf85`
+- 无（P1 代码/前端/端点/护栏已随 `03f3df4a6`、`93df21fea` 提交；本卡随下一次提交收尾）
+- 已提交：`d4f5a142c` / `49127d655` / `29ad82f4d` / `6d30dbf85`（文档）+ `03f3df4a6` / `93df21fea`（P1 代码）
+
+## 下一步（P1 收尾）
+
+1. 重启 dev Tomcat（已重启）+ 页面 LLM 实跑：
+   - **计划档**：发“在 vid=1 根目录建个文件夹”→ 应无写入、回答带计划、页脚出现「批准并执行」；点它 → 切自动并执行
+   - **自动档**：发“建一个文件夹 + 写入一个文件”→ 应 0 弹窗；再发“删除刚建的文件”→ 应弹确认
+   - **全部允许档**：删文件不弹；（删仓库需慎重，可只查日志 [Permission] 行验证 decision=ASK reason=absolute）
+2. 验收打点：V1/V2/V3/V4/V8/V9 → 更新本卡 → 提交
+3. 之后开 P2（自动档作用域授权 + confirm 带 scopes + 卡片标注批准方式）
 
 ## 技能调用口径（已定稿，实现要点）
 
