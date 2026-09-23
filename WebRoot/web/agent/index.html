@@ -3308,7 +3308,8 @@
                 renderPermChip();
                 return;
             }
-            if (ret && ret.status === 'ok' && ret.data) {
+            // 注意：AgentResponse 的约定是 {success, message, data}（不是 status:'ok'）
+            if (ret && ret.success === true && ret.data) {
                 state.permission.mode = ret.data.mode || 'manual';
                 state.permission.rules = ret.data.rules || [];
             }
@@ -3336,7 +3337,8 @@
                 credentials: 'same-origin'
             });
             var ret = await res.json();
-            if (!ret || ret.status !== 'ok') {
+            // 注意：AgentResponse 的约定是 {success, message, data}（不是 status:'ok'）
+            if (!ret || ret.success !== true) {
                 throw new Error((ret && ret.message) ? ret.message : '切换失败');
             }
             var info = permModeInfo(mode);
