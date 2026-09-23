@@ -11,16 +11,18 @@
 
 做法（与 Copilot / Claude Code / Gemini CLI 一致的两层结构）：
 
-1. **模式（决定默认行为）**：只读 / 手动 / 智能 / 自动 四档，**新会话默认手动**；
-2. **规则（收敛例外）**：智能档的确认弹窗给"作用域授权"，授权后**同作用域内同类操作不再询问**（作用域维度：该工具 / 该目录（含子目录）/ 该仓库；**生命周期只到本会话**）。
+1. **模式（决定默认行为）**：计划 / 手动 / 自动 / 全部允许 四档，**新会话默认手动**；
+   （2026-09-23 用户二次裁定：原"只读"改名 **计划模式** 并**带 Claude 式闭环**（出计划 → 用户批准 → 自动切回执行）；原"智能"更名为 **自动**、原"自动"更名为 **全部允许（Allow All）**——因为"自动档反而因为硬清单每次都要问"比智能档更烦，命名误导；
+   手动档**不提供**"记住授权"，保持"每次都要确认"的纯粹语义）
+2. **规则（收敛例外）**：**自动档**的确认弹窗给"作用域授权"，授权后**同作用域内同类操作不再询问**（作用域维度：该工具 / 该目录（含子目录）/ 该仓库；**生命周期只到本会话**）。
 
-判定优先级（单一决策函数，**规则 > 硬清单 > 模式**）：
+判定优先级（单一决策函数，**模式 → 硬清单 → 规则**，规则最优先覆盖）：
 
 ```
-只读模式        → 写工具一律 DENY（不弹窗）
+计划模式        → 写工具 DENY（不弹窗；引导模型先出计划，用户批准后切档执行）
 会话内显式规则命中 → ALLOW        ← 覆盖硬清单（含删除/权限变更）
-硬清单（危险类别） → ASK          ← 自动模式也要问
-模式默认         → manual/smart: ASK ；auto: ALLOW
+硬清单（危险类别） → ASK          ← 自动档也要问；仅“全部允许”档不问
+其余写操作       → 手动/计划: ASK ；自动/全部允许: ALLOW
 ```
 
 ## 1. 现状与证据（代码锚点）
@@ -49,18 +51,31 @@
 **取谁不取谁**：取"模式 + 规则"两层结构与 4 档形态（Claude 的 default/acceptEdits/plan/bypass 语义 + Copilot 的"作用域授权"），
 **不取** Assisted（LLM 判定）、不取 dontAsk、不取企业级持久化规则（本任务作用域只到会话，见 §3）。
 
+**命名对齐**（用户 2026-09-23 二次裁定）："只读"→**计划**（含闭环，对齐 `plan`）、原"智能"→**自动**（对齐 `acceptEdits` 的"常规自动通过"语义）、
+原"自动"→**全部允许**（对齐 `bypassPermissions` / Allow all）。原命名的问题：叫"自动"却对硬清单每次都问、叫"智能"反而更自由，用户会选错档。
+
 ## 3. 设计定稿（用户 2026-09-23 裁定）
 
-### 3.1 四档模式
+### 3.1 四档模式（2026-09-23 二次裁定后的命名与语义）
 
 | 档 | id | 行为 | 参照 |
 |---|---|---|---|
-| 只读 | `readonly` | 只读工具照跑；**写工具直接拒绝**（返回 `ToolResult.error("当前为只读模式…切到手动/智能/自动后再执行")`，不弹窗、不落写审计） | Claude/Gemini 的 `plan` |
-| 手动（**新会话默认**） | `manual` | 所有 `needsConfirm` 工具逐个弹确认（= 现状，回归基线） | `default` / Manual |
-| 智能 | `smart` | 手动 + 弹窗带作用域授权；命中会话内规则 → 直接放行（**引用规则覆盖硬清单**） | `acceptEdits` / Assisted 的作用域授权 |
-| 自动 | `auto` | 默认全部放行；**硬清单类别仍弹确认**；前端显示醒目横幅 + 可一键切回 | `bypassPermissions` / Allow all / yolo |
+| 计划 | `plan` | 只读工具照跑（调研/列目录/读文件）；**写工具直接拒绝**，并在提示词里要求模型**先输出一份可执行计划**；用户点「批准并执行」→ 自动切到 `auto` 档 + 把该计划作为上下文注入后继续执行 | Claude/Gemini 的 `plan`（**带闭环**） |
+| 手动（**新会话默认**） | `manual` | 所有 `needsConfirm` 工具逐个弹确认（= 现状，回归基线）；**不提供“记住授权”** | `default` / Manual |
+| 自动 | `auto` | 常规写操作（`NORMAL`）默认放行；**硬清单（删除/权限变更）仍弹确认**；弹窗可选作用域授权，授权后同作用域内**包括危险项**都不再问 | `acceptEdits` + 作用域授权 |
+| 全部允许 | `allowAll` | **全部放行**（含删除/权限变更）；前端常驻醒目横幅 + 可一键切回；开启时二次确认；管理员可全局禁用 | `bypassPermissions` / Allow all / `yolo` |
 
-### 3.2 硬清单（危险类别，自动模式也必须确认）
+**计划模式的闭环（P1 一并做，否则该档是个死胡同）**
+
+1. `plan` 档下 `ToolRegistry` 对写工具返回 DENY，文案：“当前为计划模式：请先把计划写出来（调研可以继续），用户批准后再执行”；
+2. system prompt 追加计划模式段落：只做调研、不尝试写、最后输出**带步骤/目标对象/操作的计划**；
+3. 前端在回答下渲染「批准并执行」（可附带「批准但逐步确认」→ 切 `manual`）：
+   - 「批准并执行」→ 切 `auto` 档 + 发一条“我批准了计划，请按计划执行”（服务端把计划文本作上下文注入，复用 P3 的续接注入思路）；
+4. 计划模式下未执行任何写操作 → 审计只记被拒绝的尝试。
+
+### 3.2 硬清单（危险类别，自动档也必须确认）
+
+> 作用范围：“自动”档仍需确认；**“全部允许”档不问**（用户明确选择全放），但开启时二次确认 + 常驻横幅 + 全量审计。
 
 风险类别挂在 `ToolDefinition` 上**显式声明**（`riskClass: NORMAL / DESTRUCTIVE / PERMISSION`），不靠名字猜。
 
@@ -75,76 +90,77 @@
 
 ### 3.3 规则（仅会话级）
 
-- 触发：**智能档**弹窗里用户选择作用域后点"批准并记住"。
+- 触发：**自动档**弹窗里用户选择作用域后点“批准并记住”（`plan`/`manual`/`allowAll` 档不产生规则）。
 - 作用域维度（三者任选其一，最细优先）：`该工具` / `该目录（含子目录）` / `该仓库`。
 - **生命周期：只到本会话**（用户裁定：授权作用域只做会话级）→ 存 `agent_sessions.metadata.permissionRules`，会话删除即失效；**不落 agent_config、不新增表、不跨会话继承**。
-- 规则命中即 ALLOW，**覆盖硬清单**（用户在作用域内的删除/权限变更也不再问——否则整理目录仍会被打断）。
-- 规则可见可撤：前端模式 chip 下拉里列出"本会话已授权 N 条"并可一键清空。
+- 规则命中即 ALLOW，**覆盖硬清单**（用户在作用域内的删除/权限变更也不再问——否则整理目录仍会被打断）。- 规则可见可撤：前端模式 chip 下拉里列出"本会话已授权 N 条"并可一键清空。
 
 ### 3.4 存储与开关
 
 | 项 | 位置 |
 |---|---|
-| 当前模式（会话级） | `agent_sessions.metadata.permissionMode`（复用 P3 通用键；随请求带 `permissionMode` 时服务端以请求为准并回写） |
+| 当前模式（会话级） | `agent_sessions.metadata.permissionMode`（值 `plan`/`manual`/`auto`/`allowAll`；复用 P3 通用键；随请求带 `permissionMode` 时服务端以请求为准并回写） |
 | 会话规则 | `agent_sessions.metadata.permissionRules`（JSON 数组：`{kind: tool|dir|repo, tool, vid, path}`） |
-| 管理员全局开关 | `agent_config.agent_permission_auto_enabled`（默认 `true`；`false` → UI 不提供自动档 + 服务端把 `auto` 降级为 `manual` 并提示） |
+| 管理员全局开关 | `agent_config.agent_permission_allow_all_enabled`（默认 `true`；`false` → UI 不提供“全部允许”档 + 服务端把 `allowAll` 降级为 `auto` 并提示） |
 | 前端当前值 | 会话内即时展示（并写 `localStorage` 仅作 UI 记忆；**新会话回到手动**） |
 
 ### 3.5 审计与可见性
 
 - **所有**放行（含自动/规则）都要有审计记录：自动放行走 `AuditLogService.record(...)`（PENDING 流程仅用于"需要人批准"的场合）。
-- 工具卡片上标注批准来源：`批准方式=手动 / 规则(该目录) / 自动模式`，便于事后追责。
-- 顶部模式 chip 常驻；`auto` / `readonly` 档用醒目色（对齐 Gemini 的 YOLO 指示）。
+- 工具卡片上标注批准来源：`批准方式=手动 / 规则(该目录) / 自动档 / 全部允许`，便于事后追责。
+- 顶部模式 chip 常驻；`allowAll` / `plan` 档用醒目色（对齐 Gemini 的 YOLO 指示）。
 
 ### 3.6 SSE 协议（只加不改）
 
-- 新增事件 `{"type":"permission","mode":"smart"}`（会话模式变更回执，可选）与 `confirm` 事件**加字段**：`{"type":"confirm",...,"scopes":["tool","dir","repo"]}`（仅智能档下发）。
+- 新增事件 `{"type":"permission","mode":"auto"}`（会话模式变更回执，可选）与 `confirm` 事件**加字段**：`{"type":"confirm",...,"scopes":["tool","dir","repo"]}`（仅自动档下发）。
 - 既有 `confirm` / `done` / `tool_call` / `tool_result` 语义不变。
 
 ## 4. 验收（可量化，逐条给证据）
 
 | # | 验收项 | 证据形式 |
 |---|---|---|
-| V1 | **只读档**：写操作被拒且回答说明原因；无写入、无弹窗 | 页面 E2E + `[Permission] mode=readonly decision=DENY tool=move_doc` 日志 |
-| V2 | **手动档回归**：与改造前一致（每个写工具都弹一次） | 护栏 `TestWriteConfirmGateCoverage`（按模式改写后）+ 页面 E2E |
-| V3 | **自动档**：连续 ≥5 次 `write_file`/`create_folder` 0 弹窗；**`delete_doc`/`create_doc_share` 仍弹**；审计有记录且标注"自动模式" | 页面 E2E（计数弹窗次数）+ 审计查询 |
-| V4 | **智能档作用域规则**：弹窗选"此目录内不再询问" → 同目录 `write_file`/`move_doc`/`delete_doc` 各 ≥3 次**均不再弹**；换目录仍弹 | 页面 E2E + `[Permission] decision=ALLOW reason=rule(dir)` 日志 |
-| V5 | **规则只到本会话**：新会话/清空规则后重新弹；服务端不持久化跨会话规则 | 护栏（规则存储断言）+ 页面 E2E |
-| V6 | **管理员禁用自动档**：UI 不提供该档；服务端收到 `auto` 降级为 `manual` 并有提示 | 护栏 + 页面 E2E（配置 `agent_permission_auto_enabled=false`） |
-| V7 | **回归**：全量护栏不低于当前基线 **37 套 / 1409 项**；`TestWriteConfirmGateCoverage` 按模式重写后仍全绿 | `run_guards.ps1` 输出 |
+| V1 | **计划档**：写工具有 DENY（不弹窗、无写入）；模型输出带步骤的计划 | 页面 E2E + `[Permission] mode=plan decision=DENY tool=move_doc` 日志 |
+| V2 | **计划闭环**：点「批准并执行」→ 切到 `auto` 档 + 计划作为上下文注入 → 模型按计划执行完成 | 页面 E2E + `done.meta.permissionMode=auto` + 日志 `[Permission][PLAN-APPROVED]` |
+| V3 | **手动档回归**：与改造前一致（每个写工具都弹一次）；不出现"记住授权"入口 | 护栏 `TestWriteConfirmGateCoverage`（按模式改写后）+ 页面 E2E |
+| V4 | **自动档**：连续 ≥5 次 `write_file`/`create_folder` 0 弹窗；**`delete_doc`/`create_doc_share` 仍弹**；审计有记录且标注"自动档" | 页面 E2E（计数弹窗次数）+ 审计查询 |
+| V5 | **自动档作用域规则**：弹窗选"此目录内不再询问" → 同目录 `write_file`/`move_doc`/`delete_doc` 各 ≥3 次**均不再弹**；换目录仍弹 | 页面 E2E + `[Permission] decision=ALLOW reason=rule(dir)` 日志 |
+| V6 | **规则只到本会话**：新会话/清空规则后重新弹；服务端不持久化跨会话规则 | 护栏（规则存储断言）+ 页面 E2E |
+| V7 | **管理员禁用"全部允许"**：UI 不提供该档；服务端收到 `allowAll` 降级为 `auto` 并有提示 | 护栏 + 页面 E2E（配置 `agent_permission_allow_all_enabled=false`） |
+| V8 | **回归**：全量护栏不低于当前基线 **37 套 / 1409 项**；`TestWriteConfirmGateCoverage` 按模式重写后仍全绿 | `run_guards.ps1` 输出 |
 
 ## 5. 分期
 
-### P1（必做，核心止血）：模式骨架 + 只读/手动/自动三档 + 会话级存储 + 可见性
+### P1（必做）：模式骨架 + 四档基础行为 + **计划模式闭环** + 会话级存储 + 可见性
 
-- 新增 `agent/permission/`：`PermissionMode`（枚举，含 `fromId`/`isValid`）、`ToolRisk`（枚举）、`PermissionDecision`（ALLOW/ASK/DENY + reason）、`PermissionPolicy`（**纯函数判定**：mode × risk × rules → decision；无 Spring，可离线护栏）。
+- 新增 `agent/permission/`：`PermissionMode`（枚举 `plan/manual/auto/allowAll` + `fromId`/`isValid`/默认 `manual`）、`ToolRisk`（`NORMAL/DESTRUCTIVE/PERMISSION`）、`PermissionDecision`（ALLOW/ASK/DENY + reason）、`PermissionPolicy`（**纯函数判定**：mode × risk × rules → decision；无 Spring，可离线护栏）。
 - `ToolDefinition` 加 `riskClass`（默认 NORMAL）+ Builder 方法 `riskClass(...)`；`DocSysToolFactory` 按 §3.2 标注。
 - `ToolRegistry.execute()`：`needsConfirm` 分支改为"先问策略"——`DENY → 直接返回错误`；`ASK → 走 confirmGate`；`ALLOW → 跳过 gate（但记审计）`。策略为 null 时保持现状（向后兼容测试）。
-- `MainAgent`：构建 registry 时注入策略（模式取自会话 metadata / 请求参数），并把模式与规则一起传给门（智能档 P2 才用）。
-- 前端：顶部模式 chip（4 档，自动档在管理员禁用时置灰）+ `auto`/`readonly` 醒目色 + 请求带 `permissionMode`。
-- 护栏：新增 `TestPermissionPolicy`（判定矩阵：4 模式 × 3 风险 × 规则命中/未命中，含"规则覆盖硬清单"、"自动档硬清单仍 ASK"、"只读档写工具 DENY"）；改写 `TestWriteConfirmGateCoverage`。
-- 验证：V1 / V2 / V3 / V6 / V7 + 页面 E2E。
+- `MainAgent`：构建 registry 时注入策略（模式取自会话 metadata / 请求参数），并把模式与规则一起传给门（规则 P2 才用）。
+- **计划模式闭环**：`plan` 档下写工具 DENY 文案 + system prompt 计划段落（只调研 + 输出可执行计划）+ 前端「批准并执行」（切 `auto` 并注入计划后继续）/「批准但逐步确认」（切 `manual`）。
+- 前端：顶部模式 chip（4 档，`allowAll` 在管理员禁用时置灰）+ `allowAll`/`plan` 醒目色 + 请求带 `permissionMode`。
+- 护栏：新增 `TestPermissionPolicy`（判定矩阵：4 模式 × 3 风险 × 规则命中/未命中，含"规则覆盖硬清单"、"自动档硬清单仍 ASK"、"全部允许档全部 ALLOW"、"计划档写工具 DENY"）；改写 `TestWriteConfirmGateCoverage`。
+- 验证：V1 / V2 / V3 / V4 / V7 / V8 + 页面 E2E。
 
-### P2（必做，消除确认疲劳）：智能档 + 作用域授权
+### P2（必做，消除确认疲劳）：自动档 + 作用域授权
 
-- 弹窗新增作用域选择（该工具 / 该目录 / 该仓库）+ 按钮"批准并记住"；`confirm` 事件带 `scopes`。
+- 弹窗新增作用域选择（该工具 / 该目录（含子目录）/ 该仓库）+ 按钮"批准并记住"；`confirm` 事件带 `scopes`。
 - 规则写入会话 metadata（`permissionRules`），命中即 ALLOW；模式 chip 下拉显示已授权条目 + 一键清空。
-- 工具卡片标注批准来源（手动 / 规则(目录) / 自动）。
-- 护栏：规则命中/作用域包含（子目录）/跨目录不命中/清空规则/规则覆盖硬清单；`TestPermissionRules`。
-- 验证：V4 / V5。
+- 工具卡片标注批准来源（手动 / 规则(目录) / 自动档 / 全部允许）。
+- 护栏：`TestPermissionRules`（命中/子目录包含/跨目录不命中/清空规则/规则覆盖硬清单/规则只在自动档产生）。
+- 验证：V5 / V6。
 
 ### P3（推荐）：治理与统计
 
-- 管理员全局开关 `agent_permission_auto_enabled`（UI + 服务端强制降级）。
-- 审计/统计：按模式的写操作分布、自动批准次数、规则命中次数（`AuditLogService` 已有字段扩展）。
-- 文档：`devDocs/` 更新使用说明 + 记忆文件。
+- 管理员全局开关 `agent_permission_allow_all_enabled`（UI + 服务端强制降级）。
+- 审计/统计：按模式的写操作分布、自动批准次数、规则命中次数。
+- 文档：`devDocs/` 使用说明 + 记忆文件更新。
 
 ## 6. 不做什么（Non-goals）
 
 1. **不做** Assisted（LLM 判定是否危险）那类模式——成本与不确定性都不划算。
 2. **不做** `dontAsk`（未预先授权一律拒绝）。
 3. **不做**跨会话/全局/工作区级持久化规则（用户裁定：作用域只做会话级）。
-4. **不做**只读档的"计划审批后自动执行"闭环（后续单独评估）。
+4. **不做**计划模式下的"计划在线编辑/多轮打磨"（闭环只做：出计划 → 批准（或批准并逐步确认）→ 执行）。
 5. **不改** SSE 既有事件语义（只加字段）；**不动**旧编排封口策略（R3-4/R3-5）。
 6. **不改**工具自身语义与参数（本次只加"是否放行"的判定层）。
 
@@ -152,11 +168,13 @@
 
 | 风险 | 说明 | 应对 |
 |---|---|---|
-| 自动档误删 | 用户开自动档后批量删除 | 硬清单（删除/权限变更）仍确认；审计全量记录；前端横幅常驻 + 一键切回；管理员可全局禁用 |
+| 全部允许档误删 | 用户开"全部允许"后批量删除（该档对硬清单也不问） | 开启时二次确认（弹窗写明后果）；审计全量记录；前端常驻醒目横幅 + 一键切回；管理员可全局禁用（P3） |
+| 自动档被误以为"什么都不问" | 用户选"自动"后仍被删除操作打断 | chip 下拉里写清每档语义（自动＝常规自动、危险仍确认）；硬清单命中时弹窗文案说明"该操作属危险类别" |
 | 规则过宽 | "该仓库内不再询问"覆盖删除 | 作用域授权是显式选择（按钮文案写清"含删除等危险操作"）；chip 里可一键清空 |
-| 会话 metadata 膨胀 | 规则条目过多 | 规则条数上限（如 50 条）+ 同类合并；只在智能档产生 |
-| 护栏口径变化被忽略 | `TestWriteConfirmGateCoverage` 断言"必须弹确认" | P1 内同步改写（手动档必弹 / 只读档拒绝 / 自动档跳过但有审计） |
-| 多用户误开 | 普通用户看不到风险 | 顶部常驻 chip + 自动档醒目色 + 管理员全局开关（P3） |
+| 会话 metadata 膨胀 | 规则条目过多 | 规则条数上限（如 50 条）+ 同类合并；只在自动档产生 |
+| 计划闭环被滥用 | 批准的计划与实际执行不一致 | 计划注入后仍按档位判定（批准只切档，不放宽硬清单）；执行过程照常审计 |
+| 护栏口径变化被忽略 | `TestWriteConfirmGateCoverage` 断言"必须弹确认" | P1 内同步改写（手动档必弹 / 计划档拒绝 / 自动档常规跳过但硬清单仍弹 / 全部允许档全跳过但有审计） |
+| 多用户误开 | 普通用户看不到风险 | 顶部常驻 chip + 全部允许档醒目色 + 管理员全局开关（P3） |
 
 ## 8. 不变量（工程铁律）
 
