@@ -11561,6 +11561,8 @@ public class BaseController  extends BaseFunction{
 		
 		//文件需要转换
 		FileUtil.clearDir(userTmpDir);
+		//按魔数归一化真实格式：WPS 三件套（.wps/.et/.dps）与"改了后缀的 Office 文件"只靠后缀会落进下面的 switch 空档 → 静默读到空内容
+		fileSuffix = FileUtil.detectOfficeActualFormat(filePath, fileSuffix);
 		switch(fileSuffix)
 		{
 		case "doc":
@@ -11608,6 +11610,8 @@ public class BaseController  extends BaseFunction{
 			filePath = tmpFilePath;
 		}
 		
+		//按魔数归一化真实格式（对解密后的文件判定）；WPS 三件套与改后缀的 Office 文件靠这一步才能被正确分发
+		fileSuffix = FileUtil.detectOfficeActualFormat(filePath, fileSuffix);
 		switch(fileSuffix)
 		{
 		case "doc":
@@ -14295,6 +14299,9 @@ public class BaseController  extends BaseFunction{
 		}
 
 		Log.debug("addIndexForRDoc() docId:" + doc.getDocId() + " parentPath:" + doc.getPath() + " name:" + doc.getName() + " repos:" + repos.getName());
+		
+		//按魔数归一化真实格式：WPS 三件套（.wps/.et/.dps）此前不在下面的 switch 里 → 从不建索引
+		fileSuffix = FileUtil.detectOfficeActualFormat(filePath, fileSuffix);
 		
 		boolean ret = false;			
 		switch(fileSuffix)

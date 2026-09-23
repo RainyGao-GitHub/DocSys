@@ -11,12 +11,16 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.io.FileUtils;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Zip;
 import org.apache.tools.ant.types.FileSet;
@@ -1185,6 +1189,8 @@ public class FileUtil {
 		{
 		//text
 		case "txt":
+		//csv（逗号分隔的纯文本表格；此前只被 isOffice 认领却没有抽取分支 → get_doc 会误报"非文本"）
+		case "csv":
 		//markdown
 		case "md":
 		//code
@@ -1962,5 +1968,122 @@ public class FileUtil {
 			return "ppt";
 		}
 		return fileSuffix;
+	}
+
+	/**
+	 * 按「文件魔数」推断 Office 文件的**真实**格式，无法判定时回退到扩展名映射（wps→doc / et→xls / dps→ppt）。
+	 *
+	 * <p><b>为什么需要</b>：WPS 三件套（.wps/.et/.dps）与"改了后缀的 Office 文件"只靠后缀分不出真实格式——
+	 * 内容可能是 OLE 老格式（doc/xls/ppt），也可能是 OOXML 新格式（zip 包）。只按后缀分发会让
+	 * {@code OfficeExtract} 的 switch 落空（wps/et/dps 没有分支）→ 静默读到空内容。
+	 * 魔数优先于后缀，与 {@code OfficeBase.detectActualFormat} 口径一致。</p>
+	 *
+	 * <p>本方法不会抛异常：任何读取/解析失败都退回「后缀映射」的结果。</p>
+	 *
+	 * @param filePath   文件真实路径（加密仓库需传解密后的临时文件）
+	 * @param fileSuffix 文件后缀（小写，来自 {@link #getFileSuffix(String)}）
+	 * @return doc/docx/xls/xlsx/ppt/pptx 之一；无法判定时返回后缀映射结果（原样）
+	 */
+	public static String detectOfficeActualFormat(String filePath, String fileSuffix) {
+		String mapped = convertWpsSuffixToOfficeSuffix(fileSuffix);
+		if (filePath == null) {
+			return mapped;
+		}
+
+		byte[] head = new byte[8];
+		int len = 0;
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(filePath);
+			len = fis.read(head);
+		} catch (Exception e) {
+			return mapped;
+		} finally {
+			if (fis != null) {
+				try {
+					fis.close();
+				} catch (IOException e) {
+					//忽略
+				}
+			}
+		}
+
+		if (len >= 4) {
+			//ZIP（PK\x03\x04）→ OOXML：用包内目录判断 Word/Excel/PowerPoint
+			if ((head[0] & 0xFF) == 0x50 && (head[1] & 0xFF) == 0x4B
+					&& (head[2] & 0xFF) == 0x03 && (head[3] & 0xFF) == 0x04) {
+				String byZip = detectOoxmlByPackage(filePath);
+				return (byZip != null) ? byZip : mapped;
+			}
+			//OLE 复合文档（D0 CF 11 E0 A1 B1 1A E1）→ 看内部流名
+			if (len >= 8 && (head[0] & 0xFF) == 0xD0 && (head[1] & 0xFF) == 0xCF
+					&& (head[2] & 0xFF) == 0x11 && (head[3] & 0xFF) == 0xE0
+					&& (head[4] & 0xFF) == 0xA1 && (head[5] & 0xFF) == 0xB1
+					&& (head[6] & 0xFF) == 0x1A && (head[7] & 0xFF) == 0xE1) {
+				String byOle = detectOleByStreams(filePath);
+				return (byOle != null) ? byOle : mapped;
+			}
+		}
+		return mapped;
+	}
+
+	/** OOXML（zip 包）→ 按包内顶层目录判断：word/ → docx，xl/ → xlsx，ppt/ → pptx */
+	private static String detectOoxmlByPackage(String filePath) {
+		ZipFile zip = null;
+		try {
+			zip = new ZipFile(filePath);
+			Enumeration<? extends ZipEntry> entries = zip.entries();
+			while (entries.hasMoreElements()) {
+				String entryName = entries.nextElement().getName();
+				if (entryName.startsWith("word/")) {
+					return "docx";
+				}
+				if (entryName.startsWith("xl/")) {
+					return "xlsx";
+				}
+				if (entryName.startsWith("ppt/")) {
+					return "pptx";
+				}
+			}
+		} catch (Exception e) {
+			return null;
+		} finally {
+			if (zip != null) {
+				try {
+					zip.close();
+				} catch (IOException e) {
+					//忽略
+				}
+			}
+		}
+		return null;
+	}
+
+	/** OLE 复合文档 → 按内部流名判断：WordDocument→doc，Workbook/Book→xls，PowerPoint Document→ppt */
+	private static String detectOleByStreams(String filePath) {
+		POIFSFileSystem fs = null;
+		try {
+			fs = new POIFSFileSystem(new File(filePath));
+			if (fs.getRoot().hasEntry("WordDocument")) {
+				return "doc";
+			}
+			if (fs.getRoot().hasEntry("Workbook") || fs.getRoot().hasEntry("Book")) {
+				return "xls";
+			}
+			if (fs.getRoot().hasEntry("PowerPoint Document")) {
+				return "ppt";
+			}
+		} catch (Exception e) {
+			return null;
+		} finally {
+			if (fs != null) {
+				try {
+					fs.close();
+				} catch (Exception e) {
+					//忽略
+				}
+			}
+		}
+		return null;
 	}
 }

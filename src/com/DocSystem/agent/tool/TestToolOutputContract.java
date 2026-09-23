@@ -134,8 +134,13 @@ public class TestToolOutputContract {
         String bin = DocSysToolFactory.formatDocContent(docResp(null, 305084366L), 5, "", "docsys-WRE.zip", null, null);
         System.out.println("---- get_doc 非文本 ----");
         System.out.println(bin);
-        check("非文本文件只给元信息（不倒 JSON）", bin.contains("非文本") && !bin.contains("localRootPath"), bin);
+        check("非文本文件只给元信息（不倒 JSON）", bin.contains("无正文可读")
+                && bin.contains("没有文本表示") && !bin.contains("localRootPath"), bin);
         check("非文本文件给大小", bin.contains("291.0MB") || bin.contains("MB"), bin);
+        //P1：Office 族但暂不支持抽取的格式要给**准确原因**（别让模型以为文件没有内容）
+        String odt = DocSysToolFactory.formatDocContent(docResp(null, 2048L), 5, "", "样文.odt", null, null);
+        check("odt 明确报不支持提取", odt.contains("暂不支持文本提取") && odt.contains("docx"), odt);
+        check("odt 不误报为无文本表示", !odt.contains("没有文本表示"), odt);
         check("失败保留错误码", DocSysToolFactory
                 .formatDocContent(failResp("DOC_NOT_FOUND", "文件不存在！"), 5, "", "x", null, null)
                 .contains("[错误码: DOC_NOT_FOUND"));

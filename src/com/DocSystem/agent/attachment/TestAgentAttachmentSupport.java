@@ -25,6 +25,7 @@ public class TestAgentAttachmentSupport {
         testSessionDirAndResolve();
         testReadText();
         testReadBinaryAndOversize();
+        testOfficeAndPdfExtract();
         testRenderLines();
         testSweep();
         testPurgeSession();
@@ -76,6 +77,18 @@ public class TestAgentAttachmentSupport {
         check("kind text", "text".equals(AgentAttachmentSupport.kindOf("a.csv")));
         check("kind doc", "doc".equals(AgentAttachmentSupport.kindOf("a.pdf")));
         check("kind other", "other".equals(AgentAttachmentSupport.kindOf("a.bin")));
+        //P1：WPS 三件套与 ODF/RTF 均归"文档"类（可与图片/普通二进制区分开）
+        check("kind doc wps", "doc".equals(AgentAttachmentSupport.kindOf("a.wps")));
+        check("kind doc et", "doc".equals(AgentAttachmentSupport.kindOf("a.et")));
+        check("kind doc dps", "doc".equals(AgentAttachmentSupport.kindOf("a.dps")));
+        check("kind doc odt", "doc".equals(AgentAttachmentSupport.kindOf("a.odt")));
+        check("extractable docx", AgentAttachmentSupport.isExtractableForText("a.docx"));
+        check("extractable pdf", AgentAttachmentSupport.isExtractableForText("a.pdf"));
+        check("extractable wps", AgentAttachmentSupport.isExtractableForText("a.wps"));
+        check("odt not extractable", !AgentAttachmentSupport.isExtractableForText("a.odt"));
+        check("odt known unsupported", AgentAttachmentSupport.isKnownUnsupportedForText("a.odt"));
+        check("rtf known unsupported", AgentAttachmentSupport.isKnownUnsupportedForText("a.rtf"));
+        check("zip not known-unsupported", !AgentAttachmentSupport.isKnownUnsupportedForText("a.zip"));
         check("item size text", "1.5 KB".equals(new AgentAttachmentSupport.Item("a.txt", "a.txt", 1536).sizeText()));
     }
 
@@ -149,6 +162,118 @@ public class TestAgentAttachmentSupport {
         AgentAttachmentSupport.deleteRecursively(dir);
     }
 
+    /**
+     * P1 新增：Office/PDF 附件抽取。
+     *
+     * <p>用 POI/PDFBox **现场生成**样本（不依赖 office 仓库的 fixture），验证四件事：
+     * ① docx/xls/pdf 能读出内容；② ".wps/.et"（内容与后缀不符）按魔数归一化后照样能读——
+     * 这正是"WPS 文件其实就是 Office 格式换后缀"的证据；③ GBK 文本附件不乱码；
+     * ④ odt 这种 Office 族但不支持的格式给**明确原因**（而不是笼统一句"不是纯文本"）。</p>
+     */
+    private static void testOfficeAndPdfExtract() throws Exception {
+        File dir = AgentAttachmentSupport.sessionDir("uOffice", "sess-office", true);
+
+        //docx
+        File docx = new File(dir, "报告.docx");
+        org.apache.poi.xwpf.usermodel.XWPFDocument d = new org.apache.poi.xwpf.usermodel.XWPFDocument();
+        d.createParagraph().createRun().setText("附件抽取标记：中文内容ABC");
+        FileOutputStream docxOut = new FileOutputStream(docx);
+        d.write(docxOut);
+        docxOut.close();
+        d.close();
+        AgentAttachmentSupport.ReadResult r = AgentAttachmentSupport.readForTool(docx, "报告.docx");
+        check("docx attachment -> text", r != null && "text".equals(r.kind)
+                && r.content != null && r.content.contains("附件抽取标记"));
+        check("docx attachment meta says extracted", r.meta.contains("已抽取为纯文本"));
+
+        //wps：内容其实是 docx（WPS 文件 = Office 格式换后缀）
+        File wps = new File(dir, "旧文书.wps");
+        copyFile(docx, wps);
+        AgentAttachmentSupport.ReadResult rw = AgentAttachmentSupport.readForTool(wps, "旧文书.wps");
+        check("wps(docx content) -> text by magic", rw != null && "text".equals(rw.kind)
+                && rw.content != null && rw.content.contains("附件抽取标记"));
+
+        //et：内容其实是 OLE 老 xls
+        File xls = new File(dir, "台账.xls");
+        org.apache.poi.hssf.usermodel.HSSFWorkbook wb = new org.apache.poi.hssf.usermodel.HSSFWorkbook();
+        wb.createSheet("S").createRow(0).createCell(0).setCellValue("台账标记");
+        FileOutputStream xlsOut = new FileOutputStream(xls);
+        wb.write(xlsOut);
+        xlsOut.close();
+        wb.close();
+        File et = new File(dir, "台账.et");
+        copyFile(xls, et);
+        AgentAttachmentSupport.ReadResult re = AgentAttachmentSupport.readForTool(et, "台账.et");
+        check("et(xls content) -> text by magic", re != null && "text".equals(re.kind)
+                && re.content != null && re.content.contains("台账标记"));
+
+        //pdf
+        File pdf = new File(dir, "说明.pdf");
+        org.apache.pdfbox.pdmodel.PDDocument pd = new org.apache.pdfbox.pdmodel.PDDocument();
+        org.apache.pdfbox.pdmodel.PDPage page = new org.apache.pdfbox.pdmodel.PDPage();
+        pd.addPage(page);
+        org.apache.pdfbox.pdmodel.PDPageContentStream cs =
+                new org.apache.pdfbox.pdmodel.PDPageContentStream(pd, page);
+        cs.beginText();
+        cs.setFont(org.apache.pdfbox.pdmodel.font.PDType1Font.HELVETICA, 12);
+        cs.newLineAtOffset(50, 700);
+        cs.showText("PDF Extract Marker");
+        cs.endText();
+        cs.close();
+        pd.save(pdf);
+        pd.close();
+        AgentAttachmentSupport.ReadResult rp = AgentAttachmentSupport.readForTool(pdf, "说明.pdf");
+        check("pdf attachment -> text", rp != null && "text".equals(rp.kind)
+                && rp.content != null && rp.content.contains("PDF Extract Marker"));
+
+        //GBK 文本附件（改造前一律 UTF-8 读 → 乱码）
+        File gbk = new File(dir, "gbk.csv");
+        Writer gw = new OutputStreamWriter(new FileOutputStream(gbk), Charset.forName("GBK"));
+        gw.write("姓名,金额\n张三,100\n");
+        gw.close();
+        AgentAttachmentSupport.ReadResult rg = AgentAttachmentSupport.readForTool(gbk, "gbk.csv");
+        check("gbk text decoded", rg != null && "text".equals(rg.kind)
+                && rg.content != null && rg.content.contains("张三"));
+
+        //utf-8 文本附件仍按 UTF-8 读（不能被字符集探测误判为 GBK）
+        File utf8 = new File(dir, "utf8.csv");
+        writeFile(utf8, "名称,值\n苹果,3\n");
+        AgentAttachmentSupport.ReadResult ru = AgentAttachmentSupport.readForTool(utf8, "utf8.csv");
+        check("utf8 text still correct", ru != null && "text".equals(ru.kind)
+                && ru.content != null && ru.content.contains("苹果"));
+
+        //odt：Office 族但本期不支持 → 明确原因
+        File odt = new File(dir, "样文.odt");
+        writeFile(odt, "not really odt");
+        AgentAttachmentSupport.ReadResult ro = AgentAttachmentSupport.readForTool(odt, "样文.odt");
+        check("odt -> explicit unsupported reason", ro != null && "binary".equals(ro.kind)
+                && ro.content == null && ro.meta.contains("暂不支持文本提取"));
+        check("odt reason lists supported formats", ro.meta.contains("docx"));
+
+        //图片仍不给内容（不臆造）
+        File png = new File(dir, "p.png");
+        writeFile(png, "PNGDATA");
+        AgentAttachmentSupport.ReadResult ri = AgentAttachmentSupport.readForTool(png, "p.png");
+        check("image still meta only", "binary".equals(ri.kind) && ri.content == null);
+
+        AgentAttachmentSupport.deleteRecursively(dir);
+    }
+
+    private static void copyFile(File src, File dst) throws Exception {
+        java.io.InputStream in = new java.io.FileInputStream(src);
+        java.io.OutputStream out = new FileOutputStream(dst);
+        try {
+            byte[] b = new byte[8192];
+            int n;
+            while ((n = in.read(b)) > 0) {
+                out.write(b, 0, n);
+            }
+        } finally {
+            in.close();
+            out.close();
+        }
+    }
+
     private static void testRenderLines() {
         check("render empty", "".equals(AgentAttachmentSupport.renderLines(null)));
         check("render empty list", "".equals(AgentAttachmentSupport.renderLines(new ArrayList<AgentAttachmentSupport.Item>())));
@@ -157,11 +282,13 @@ public class TestAgentAttachmentSupport {
         items.add(new AgentAttachmentSupport.Item("a.txt", "a.txt", 1024));
         items.add(new AgentAttachmentSupport.Item("p.png", "p.png", 2048));
         items.add(new AgentAttachmentSupport.Item("d.pdf", "d.pdf", 4096));
+        items.add(new AgentAttachmentSupport.Item("u.odt", "u.odt", 5120));
         String lines = AgentAttachmentSupport.renderLines(items);
         check("render lines not head", !lines.contains("【本轮附件】"));
         check("render text line", lines.contains("1. 文本「a.txt」(1.0 KB, 文本，可用 attachment 工具读取内容)"));
         check("render image line", lines.contains("图片「p.png」(2.0 KB, image/png：图片，当前模型无视觉能力，不要臆造图片内容)"));
-        check("render doc line", lines.contains("3. 文档「d.pdf」(4.0 KB, application/pdf：非纯文本，可用 attachment 工具读取（只返回元信息）)"));
+        check("render doc line says extractable", lines.contains("3. 文档「d.pdf」(4.0 KB, application/pdf：文档/PDF，可用 attachment 工具读取（返回抽取的纯文本，无版式与图片）)"));
+        check("render unsupported line", lines.contains("4. 文档「u.odt」(5.0 KB, application/octet-stream：该格式暂不支持文本提取，只能看到元信息)"));
         check("render default is no-vision", lines.contains("无视觉能力"));
 
         // 多模态预备：图片行文案按「本轮图片是否对模型可见」分支（其余行不受影响）
@@ -172,7 +299,7 @@ public class TestAgentAttachmentSupport {
         check("render vision keeps text line",
                 visionLines.contains("1. 文本「a.txt」(1.0 KB, 文本，可用 attachment 工具读取内容)"));
         check("render vision keeps doc line",
-                visionLines.contains("3. 文档「d.pdf」(4.0 KB, application/pdf：非纯文本，可用 attachment 工具读取（只返回元信息）)"));
+                visionLines.contains("3. 文档「d.pdf」(4.0 KB, application/pdf：文档/PDF，可用 attachment 工具读取（返回抽取的纯文本，无版式与图片）)"));
         check("render vision empty", "".equals(AgentAttachmentSupport.renderLines(null, true)));
     }
 

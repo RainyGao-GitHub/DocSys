@@ -425,4 +425,75 @@ public class OfficeExtract {
 			return false;
 	   }
 	}
+
+	/**
+	 * 抽取 Office/PDF 文件的**纯文本**，直接把文本返回（不要求调用方去临时目录取文件）。
+	 *
+	 * <p><b>给谁用</b>：没有仓库上下文的场景——典型是 Agent 的聊天附件（文件只在会话临时目录里），
+	 * 它们走不了 {@code BaseController.checkAndGenerateOfficeContent} 那条带缓存/解密/远程拉取的链路。</p>
+	 *
+	 * <p><b>格式判定以魔数为准</b>（见 {@link FileUtil#detectOfficeActualFormat}），因此
+	 * WPS 三件套（.wps/.et/.dps）以及"改了后缀的 Office 文件"都能正确分发。</p>
+	 *
+	 * @param filePath 源文件路径
+	 * @param fileName 文件名（用于取自然后缀；魔数判定失败时靠它兜底）
+	 * @param tmpDir   临时目录（本方法会在其中生成一个抽取中间文件，读完即删）
+	 * @return 抽取到的文本；格式不支持或解析失败返回 null（调用方据此回明确的错误，而不是空串）
+	 */
+	public static String extractText(String filePath, String fileName, String tmpDir)
+	{
+		if (filePath == null || tmpDir == null || tmpDir.isEmpty()) {
+			return null;
+		}
+		//注意：extractToFileFor* / readDocContentFromFile 内部是 path+name **直接拼接**（见 FileUtil.saveDataToFile），
+		//目录不带尾部斜杠时文件会写到"目录同级"的错误名字上（且 saveDataToFile 仍返回 true）→ 这里必须归一化。
+		String tmpDirPath = tmpDir.endsWith("/") || tmpDir.endsWith("\\") ? tmpDir : (tmpDir + File.separator);
+
+		String format = FileUtil.detectOfficeActualFormat(filePath, FileUtil.getFileSuffix(fileName));
+		if (format == null) {
+			return null;
+		}
+
+		String outName = "officeText_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 100000) + ".txt";
+		boolean ok;
+		switch (format) {
+		case "doc":
+			ok = extractToFileForWord(filePath, tmpDirPath, outName);
+			break;
+		case "docx":
+			ok = extractToFileForWord2007(filePath, tmpDirPath, outName);
+			break;
+		case "ppt":
+			ok = extractToFileForPPT(filePath, tmpDirPath, outName);
+			break;
+		case "pptx":
+			ok = extractToFileForPPT2007(filePath, tmpDirPath, outName);
+			break;
+		case "xls":
+			ok = extractToFileForExcel(filePath, tmpDirPath, outName);
+			break;
+		case "xlsx":
+			ok = extractToFileForExcel2007(filePath, tmpDirPath, outName);
+			break;
+		case "pdf":
+			ok = extractToFileForPdf(filePath, tmpDirPath, outName);
+			break;
+		default:
+			Log.debug("OfficeExtract.extractText() 暂不支持抽取的格式: " + format);
+			return null;
+		}
+
+		if (!ok) {
+			return null;
+		}
+
+		File out = new File(tmpDirPath + outName);
+		if (!out.isFile()) {
+			Log.debug("OfficeExtract.extractText() 抽取产物不存在: " + out.getAbsolutePath());
+			return null;
+		}
+		String text = FileUtil.readDocContentFromFile(tmpDirPath, outName);
+		FileUtil.delFile(out.getAbsolutePath());
+		return text;
+	}
 }

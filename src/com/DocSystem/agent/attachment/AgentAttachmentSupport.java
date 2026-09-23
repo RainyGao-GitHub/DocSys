@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.DocSystem.common.FileUtil;
+import com.DocSystem.common.OfficeExtract;
+
 /**
  * Agent 附件支持类（P2：上传 = 对话输入，默认临时）。
  *
@@ -27,11 +30,13 @@ import java.util.Set;
  * <ul>
  *   <li>会话临时目录：{@code <java.io.tmpdir>/DocSysAgentUpload/<userId>/<sessionId>/}</li>
  *   <li>文件名清洗（防目录穿越/控制字符）、扩展名白名单、MIME 猜测</li>
- *   <li>读取策略：文本类返回内容（有上限），二进制/图片只返回元信息（不臆造内容）</li>
+ *   <li>读取策略：文本类直接返回内容；Office/PDF 走生产同款抽取（POI/PDFBox）后返回文本；
+ *       图片与不支持的格式只返回元信息（不臆造内容）</li>
  *   <li>注入块渲染（【本轮附件】）与超期清理</li>
  * </ul>
  *
- * <p>设计见 {@code devDocs/Agent关注对象与操作设计方案.md}（§14 附件）。</p>
+ * <p>设计见 {@code devDocs/Agent关注对象与操作设计方案.md}（§14 附件）；
+ * Office/PDF 抽取能力见 {@code devDocs/Agent Office读写方案评估.md}（P1）。</p>
  */
 public final class AgentAttachmentSupport {
 
@@ -49,6 +54,32 @@ public final class AgentAttachmentSupport {
     public static final long RETENTION_DAYS = 7;
 
     private static final String ROOT_DIR_NAME = "DocSysAgentUpload";
+
+    /**
+     * 可直接抽取文本的 Office/PDF 后缀（WPS 三件套 .wps/.et/.dps 也在内：按魔数归一化后能被正确分发）。
+     */
+    private static final Set<String> EXTRACTABLE_EXT = new LinkedHashSet<String>();
+    /**
+     * Office 族里「本期明确不支持抽取文本」的后缀。用于给出**准确**原因，
+     * 而不是笼统地回一句"不是纯文本"（那会让模型以为文件没有内容）。
+     */
+    private static final Set<String> KNOWN_UNSUPPORTED_EXT = new LinkedHashSet<String>();
+    /** 抽取类文件的体积上限（超过不抽取：POI/PDFBox 解析大文件又慢又吃内存） */
+    public static final long MAX_EXTRACT_BYTES = 20L * 1024 * 1024;
+    /** 当前支持抽取的格式清单（工具描述与错误文案共用一处） */
+    public static final String SUPPORTED_EXTRACT_HINT = "doc/docx/xls/xlsx/ppt/pptx/pdf/wps/et/dps";
+
+    static {
+        String[] extractable = {"doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf", "wps", "et", "dps"};
+        for (String e : extractable) {
+            EXTRACTABLE_EXT.add(e);
+        }
+        String[] unsupported = {"odt", "ods", "odp", "rtf", "mht", "epub", "fb2", "mobi", "ofd",
+                "docm", "dotx", "dotm", "xlsm", "xltx", "xltm", "xlsb", "pptm", "ppsm", "potx", "potm"};
+        for (String e : unsupported) {
+            KNOWN_UNSUPPORTED_EXT.add(e);
+        }
+    }
 
     /** 文本类扩展名白名单（可直接读取内容） */
     private static final Set<String> TEXT_EXT = new LinkedHashSet<String>();
@@ -216,10 +247,23 @@ public final class AgentAttachmentSupport {
         }
         String ext = extensionOf(name);
         if ("pdf".equals(ext) || "doc".equals(ext) || "docx".equals(ext) || "xls".equals(ext)
-                || "xlsx".equals(ext) || "ppt".equals(ext) || "pptx".equals(ext)) {
+                || "xlsx".equals(ext) || "ppt".equals(ext) || "pptx".equals(ext)
+                // WPS 三件套与 ODF/RTF 同属"文档"类（能被抽取的会返回文本，其余至少标注准确）
+                || "wps".equals(ext) || "et".equals(ext) || "dps".equals(ext)
+                || "odt".equals(ext) || "ods".equals(ext) || "odp".equals(ext) || "rtf".equals(ext)) {
             return "doc";
         }
         return "other";
+    }
+
+    /** 是否属于"可直接抽取文本"的 Office/PDF 后缀 */
+    public static boolean isExtractableForText(String name) {
+        return EXTRACTABLE_EXT.contains(extensionOf(name));
+    }
+
+    /** 是否属于"Office 族但本期不支持抽取文本"的后缀（工具层据此回明确原因） */
+    public static boolean isKnownUnsupportedForText(String name) {
+        return KNOWN_UNSUPPORTED_EXT.contains(extensionOf(name));
     }
 
     // ==================== 元信息 ====================
@@ -315,8 +359,9 @@ public final class AgentAttachmentSupport {
     /**
      * 读取附件供工具返回：
      * <ul>
+     *   <li>Office/PDF（{@link #isExtractableForText}）→ 走生产同款抽取（POI/PDFBox）后返回<b>纯文本</b></li>
      *   <li>文本类且 ≤ {@link #MAX_READ_BYTES} → 返回内容（超 {@link #MAX_READ_CHARS} 截断）</li>
-     *   <li>其余（图片/PDF/Office/超大文本）→ 只返回元信息，提示模型不要臆造内容</li>
+     *   <li>其余（图片/压缩包/超大文件/本期不支持的格式）→ 只返回元信息 + **准确原因**，不臆造内容</li>
      * </ul>
      */
     public static ReadResult readForTool(File file, String name) throws IOException {
@@ -324,33 +369,119 @@ public final class AgentAttachmentSupport {
             return null;
         }
         long size = file.length();
+        String ext = extensionOf(name);
         String mime = mimeOf(name);
         String kind = kindOf(name);
         String meta = "name=" + name + ", size=" + size + "B, mime=" + mime + ", kind=" + kind;
-        if (!isTextLike(name) || size > MAX_READ_BYTES) {
-            String reason = isTextLike(name)
-                    ? "文件过大（>" + (MAX_READ_BYTES / 1024) + "KB），未返回内容"
+
+        //1) Office/PDF：抽取出纯文本（WPS 三件套按魔数归一化后也在这里）
+        if (EXTRACTABLE_EXT.contains(ext)) {
+            if (size > MAX_EXTRACT_BYTES) {
+                return new ReadResult("binary", null, false, meta + "；文件过大（>"
+                        + (MAX_EXTRACT_BYTES / 1024 / 1024) + "MB），未抽取文本");
+            }
+            String text = null;
+            try {
+                text = extractOfficeText(file, name);
+            } catch (Throwable t) {
+                text = null;
+            }
+            if (text == null) {
+                return new ReadResult("binary", null, false, meta
+                        + "；文本抽取失败（文件可能损坏、加密，或扩展名与真实格式不符）");
+            }
+            return textResult(text, meta + "；已抽取为纯文本（只有文字：无版式排版、无表格结构、无图片）");
+        }
+
+        //2) 非文本类：给准确原因，别让模型误以为"文件没内容"
+        if (!isTextLike(name)) {
+            String reason = KNOWN_UNSUPPORTED_EXT.contains(ext)
+                    ? ("格式 " + ext + " 暂不支持文本提取（当前支持：" + SUPPORTED_EXTRACT_HINT + "）")
                     : ("类型 " + kind + "（" + mime + "）不是纯文本，未返回内容");
             return new ReadResult("binary", null, false, meta + "；" + reason);
         }
+
+        //3) 文本类：超上限只给元信息
+        if (size > MAX_READ_BYTES) {
+            return new ReadResult("binary", null, false,
+                    meta + "；文件过大（>" + (MAX_READ_BYTES / 1024) + "KB），未返回内容");
+        }
+        return textResult(readText(file), meta);
+    }
+
+    /** 按 {@link #MAX_READ_CHARS} 截断并组装 text 结果 */
+    private static ReadResult textResult(String text, String meta) {
+        if (text == null) {
+            text = "";
+        }
+        if (text.length() > MAX_READ_CHARS) {
+            return new ReadResult("text", text.substring(0, MAX_READ_CHARS), true, meta);
+        }
+        return new ReadResult("text", text, false, meta);
+    }
+
+    /**
+     * 抽取 Office/PDF 附件的文本（复用生产链路 {@link OfficeExtract#extractText}）。
+     *
+     * @return 抽取到的文本；格式不支持或解析失败返回 null
+     */
+    private static String extractOfficeText(File file, String name) {
+        File tmpDir = new File(rootDir(), "extract");
+        if (!tmpDir.isDirectory() && !tmpDir.mkdirs()) {
+            return null;
+        }
+        return OfficeExtract.extractText(file.getAbsolutePath(), name, tmpDir.getAbsolutePath());
+    }
+
+    /** 读文本类附件（字符集见 {@link #charsetFor(File)}） */
+    private static String readText(File file) throws IOException {
         StringBuilder sb = new StringBuilder();
-        Reader r = new InputStreamReader(new FileInputStream(file), Charset.forName("UTF-8"));
+        Reader r = new InputStreamReader(new FileInputStream(file), charsetFor(file));
         try {
             char[] buf = new char[8192];
             int n;
-            boolean truncated = false;
             while ((n = r.read(buf)) > 0) {
-                if (sb.length() + n > MAX_READ_CHARS) {
-                    sb.append(buf, 0, Math.max(0, MAX_READ_CHARS - sb.length()));
-                    truncated = true;
-                    break;
-                }
                 sb.append(buf, 0, n);
             }
-            return new ReadResult("text", sb.toString(), truncated, meta);
         } finally {
             r.close();
         }
+        return sb.toString();
+    }
+
+    /**
+     * 文本附件的字符集：**先用 UTF-8**，只有当 UTF-8 解出替换字符（U+FFFD）时才用生产侧的
+     * {@link FileUtil#getCharset(String)} 探测结果复读一次（国内 CSV/TXT 常见 GBK，此前一律按 UTF-8 读 → 乱码）。
+     *
+     * <p>顺序不能反：探测对无 BOM 的 UTF-8 有误判为 GBK 的可能，先 UTF-8 才不回归既有行为。</p>
+     */
+    private static Charset charsetFor(File file) {
+        try {
+            int probeLen = (int) Math.min(65536, file.length());
+            byte[] head = new byte[probeLen];
+            FileInputStream in = new FileInputStream(file);
+            int len = 0;
+            int n;
+            try {
+                while (len < probeLen && (n = in.read(head, len, probeLen - len)) > 0) {
+                    len += n;
+                }
+            } finally {
+                in.close();
+            }
+            if (new String(head, 0, len, Charset.forName("UTF-8")).indexOf('\uFFFD') < 0) {
+                return Charset.forName("UTF-8");
+            }
+            String detected = FileUtil.getCharset(file.getAbsolutePath());
+            if (detected != null && !detected.isEmpty()) {
+                if (new String(head, 0, len, Charset.forName(detected)).indexOf('\uFFFD') < 0) {
+                    return Charset.forName(detected);
+                }
+            }
+        } catch (Throwable t) {
+            //探测失败 → UTF-8（改造前行为）
+        }
+        return Charset.forName("UTF-8");
     }
 
     // ==================== 注入块 ====================
@@ -393,8 +524,13 @@ public final class AgentAttachmentSupport {
                         : "：图片，当前模型无视觉能力，不要臆造图片内容");
             } else if ("text".equals(it.kind)) {
                 sb.append(", 文本，可用 attachment 工具读取内容");
+            } else if (isExtractableForText(it.name)) {
+                sb.append(", ").append(it.mime)
+                  .append("：文档/PDF，可用 attachment 工具读取（返回抽取的纯文本，无版式与图片）");
             } else {
-                sb.append(", ").append(it.mime).append("：非纯文本，可用 attachment 工具读取（只返回元信息）");
+                sb.append(", ").append(it.mime).append(isKnownUnsupportedForText(it.name)
+                        ? "：该格式暂不支持文本提取，只能看到元信息"
+                        : "：非纯文本，未提供内容");
             }
             sb.append(")\n");
         }

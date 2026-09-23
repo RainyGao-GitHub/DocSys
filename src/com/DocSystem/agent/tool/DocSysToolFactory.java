@@ -218,8 +218,10 @@ public class DocSysToolFactory {
         return ToolDefinition.builder("get_doc",
                 "读取文档的**文本内容**。定位用 path+name：path 是它所在目录的相对路径（以 / 结尾，根目录空串），"
                 + "name 是文件名，两者都从 list_docs 结果里取。不要传 docId。"
+                + "Office/PDF（" + com.DocSystem.agent.attachment.AgentAttachmentSupport.SUPPORTED_EXTRACT_HINT
+                + "）返回转换后的文本；odt/ods/odp/rtf 等暂不支持提取，会明确报出原因。"
                 + "长文本分次读：表头会给总字符数与本次区间，未读完时页脚会给出下一次的 offset。"
-                + "非文本文件（压缩包/可执行文件等）没有文本表示，只返回元信息。",
+                + "非文本文件（图片/压缩包/可执行文件等）没有文本表示，只返回元信息。",
                 args -> ToolResult.ok(formatDocContent(
                         client.getDoc(args.getInteger("vid"), null,
                                 normalizeDocPath(args.getString("path")), args.getString("name")),
@@ -1018,8 +1020,11 @@ public class DocSysToolFactory {
         JSONObject schema = objSchema(props, new String[]{"action"});
         return ToolDefinition.builder("attachment",
                 "读取本轮用户上传的临时附件（用户随消息上传、不在仓库里的文件）。"
-                + "action=list 列出附件；action=read + name 读取指定附件：文本类返回内容（可能截断），"
-                + "图片/二进制只返回元信息（不得臆造内容）。注意：附件不属于仓库，不要用 get_doc/search_files 去找它们。",
+                + "action=list 列出附件；action=read + name 读取指定附件——"
+                + "文本类直接返回内容；Office/PDF（" + com.DocSystem.agent.attachment.AgentAttachmentSupport.SUPPORTED_EXTRACT_HINT
+                + "）会抽取成纯文本返回（只有文字，无版式/表格结构/图片），文本较大时可能截断；"
+                + "图片与不支持的格式只返回元信息（不得臆造内容）。"
+                + "注意：附件不属于仓库，不要用 get_doc/search_files 去找它们。",
                 args -> {
                     String action = args.getString("action");
                     action = (action == null || action.trim().isEmpty()) ? "list" : action.trim().toLowerCase();
@@ -1943,10 +1948,17 @@ public class DocSysToolFactory {
         Long size = longOf(d.get("size"));
         Object textObj = d.get("docText");
         if (textObj == null) {
-            return "文件（非文本，无正文可读）：" + target + "\n"
+            boolean knownUnsupported = com.DocSystem.agent.attachment.AgentAttachmentSupport
+                    .isKnownUnsupportedForText(name);
+            return "文件（无正文可读）：" + target + "\n"
                     + "  大小：" + sizeText(size) + "\n"
-                    + "  说明：get_doc 只返回文本内容（txt/md/代码/Office 转换后的文本等）；"
-                    + "此文件类型没有文本表示，需要原件请在 Web 界面预览/下载。";
+                    + (knownUnsupported
+                        ? "  说明：格式 " + com.DocSystem.agent.attachment.AgentAttachmentSupport.extensionOf(name)
+                          + " 暂不支持文本提取（当前支持："
+                          + com.DocSystem.agent.attachment.AgentAttachmentSupport.SUPPORTED_EXTRACT_HINT
+                          + "）。要拿原件请在 Web 界面预览/下载。"
+                        : "  说明：get_doc 只返回文本内容（txt/csv/md/代码/Office 转换后的文本等）；"
+                          + "此文件类型没有文本表示，需要原件请在 Web 界面预览/下载。");
         }
         String text = String.valueOf(textObj);
         int total = text.length();

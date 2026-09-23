@@ -25,6 +25,9 @@
 补充：用户提到的"让 x2t/FileConverter 直接产出 Markdown"**目前在两者中都不存在**（7.0.1 版 x2t 无此能力，
 移植代码也无 Markdown 格式常量），属于新增开发，不是选型能白捡的收益（见 §3.4）。
 
+**裁定与进展（2026-09-23）**：用户已采纳本推荐（§5），并同意先做 P1。**P1 当日完成并验证**：附件/仓库内的
+`wps·et·dps`/csv 读取已打通，odt·rtf 改为明确报"暂不支持"；改动与实测数据见 **§7（"简单修改"定义）** 与 **§8（P1 实施记录）**。
+
 ---
 
 ## 1. 先纠正一个前提：Agent「不能读 Office」只对一部分场景成立
@@ -190,7 +193,7 @@ POI 4.0.0 + poi-scratchpad + poi-ooxml；PDFBox 2.0.12；x2t 部署于
 
 | 期 | 目标 | 关键工作 | 验收 |
 |---|---|---|---|
-| **P1（读打通，小）** | 把"已经能读"的读全、把静默失败变成显式错误 | ① 附件链路：Office/pdf 附件走同一抽取路径（服务端 `OfficeExtract` 或本地 POI）② `wps/et/dps` 不再静默空（要么接方案 3 转换，要么明确报"暂不支持该格式"）③ `odt/ods/odp/rtf` 明确报错或接方案 3 ④ **csv 归到文本读取**（一行改动即可，却影响日常） | 对 §1.2 的 G1~G4 每一条给出"能读"或"有明确错误码"的实测结论 |
+| **P1（读打通，小）** ✅ **已完成（2026-09-23，见 §8）** | 把"已经能读"的读全、把静默失败变成显式错误 | ① 附件链路：Office/pdf 附件走同一抽取路径（服务端 `OfficeExtract` 或本地 POI）② `wps/et/dps` 不再静默空（按**魔数**归一化，实测已通）③ `odt/ods/odp/rtf` 明确报"暂不支持"④ **csv 归到文本读取** | 对 §1.2 的 G1~G4 每一条给出"能读"或"有明确错误码"的实测结论 → ✅ 已给出（§8.2） |
 | **P2（写打通，中）** | 新增 `write_office` 工具 + `agentWriteDocx.do` | 服务端复用 `agentWriteText.do` 的既有链路（`addDoc` + 锁 + 版本提交 + 系统日志），把内容换成 base64→`byte[]`→`FileUtil.saveDataToFile`；工具层限 `docx/xlsx/pptx`；写入后 POI 回读自检并回执 size | 新建 + 简单修改各一例，产物通过 POI 回读与 x2t 校验 |
 | **P3（结构化读，中）** | `get_doc` 之外补"表格/工作表/幻灯片"视图 | 基于 POI 原生 API（不新增引擎） | 一份含表格 docx、一份 xlsx、一份 pptx 的可读输出 |
 | **P4（可选）** | 方案 3 接入 + txt/Markdown 链修复 | 修 `Docx2Txt`（现为空输出）、`txt2docx` 入口 NPE、`xlsx2csv` NPE；新加 Docx→Markdown 分支 | 老格式转换 3 例 + txt/MD 各 1 例 |
@@ -203,28 +206,112 @@ POI 4.0.0 + poi-scratchpad + poi-ooxml；PDFBox 2.0.12；x2t 部署于
 
 ---
 
-## 5. 需要你裁定的事项
+## 5. 需你裁定的事项（✅ 2026-09-23 已全部裁定）
 
-1. **是否采用"方案 1 主干 + 方案 3 补充、不用 x2t 子进程"**？若你认为"生产环境已经有 office-editor 和 x2t"（部署不是问题），
-   也可以把 x2t 放进 P4 作为"疑难格式兜底"，但我不建议让它进主干。
-2. **写入的文件类型范围**：只 `docx/xlsx/pptx`（推荐），还是必须支持 `.doc/.xls/.ppt`（技术上做不到，只能转存新格式）？
-3. **是否允许"改已有文件"**？我建议 P2 先只做"新建 + 简单修改"，否则保真度风险会变成用户可见的"文件被改坏"。
-4. **ODF/RTF/WPS 是否在本期范围**（现在完全没有；接方案 3 需要先做 P4 的转换链修复）。
-5. **P1 是否可以先做**？它最小、且能把当前"静默空结果"（G3 `wps/et/dps`）变成明确错误——这是我认为最值得先修的一条。
+1. **是否采用「方案 1 主干 + 方案 3 补充、不用 x2t 子进程」** → ✅ **采用**。
+2. **写入类型范围** → ✅ **只 `docx/xlsx/pptx`**。用户原话要点：旧版 Office 格式各厂家普遍只负责读取，
+   需要写入时一律用新版格式（性能更好、架构更简单）。
+3. **是否允许改已有文件** → ✅ 同意「**新建 + 简单修改**」，并追问「简单修改是什么意思？如何保证？」→ 定义与保证方式见 §7。
+4. **ODF/RTF/WPS** → ODF/RTF **本期不做**（FileConverter 尚未移植完，不做非常规格式）；
+   **WPS（.wps/.et/.dps）纳入**——用户指出「WPS 文件其实就是 Office 格式只是后缀不一样」，
+   这与代码事实一致：`FileUtil.convertWpsSuffixToOfficeSuffix` 已有 wps→doc/et→xls/dps→ppt 映射，
+   但 `OfficeExtract` 没有对应分支 → 之前是**静默空结果**。P1 已用**魔数优先**修掉（见 §8）。
+5. **P1 是否先做** → ✅ **同意先做**，已完成（见 §8）。
 
 ---
 
 ## 6. 未验证 / 风险
 
 1. **Word 本机无法验证**：本机 Word COM 调用会静默挂起（既有教训），所以"POI 写出的文件 Word 打开是否提示修复"
-   只能用代理校验（POI 回读 + C++ x2t 通过）。**建议 P2 验收标准写成"三方交叉校验通过"**，不承诺"Word 无提示"。
+   只能用代理校验（POI 回读 + C++ x2t 通过）。**因此 P2 验收标准写成"三方交叉校验通过"**，不承诺"Word 无提示"。
 2. **POI 写复杂文档的保真度未测**：本轮只测了含表格/页眉/页脚的真实通知单，未覆盖图表、SmartArt、OLE、复杂编号。
-3. **方案 3 的 ODF/RTF 完全未验证**：`RtfFile/`、`OdfFile/` 目录存在，但没有样例证据，工时不可估。
+3. **方案 3 的 ODF/RTF 完全未验证**：`RtfFile/`、`OdfFile/` 目录存在，但没有样例证据，工时不可估（本期按用户裁定不做）。
 4. **POI 4.0.0 偏老（2018）**：`XWPFWordExtractor` / `XSLFPowerPointExtractor` 在 POI 5 已被移除。
    若将来升级 POI，`OfficeExtract` 必须改写为 `XWPFDocument` 遍历式抽取。选型本身不受影响，但这是升级时的一个已知工单。
 5. **PDF 只测了文本型**：扫描件（图片型 PDF）无 OCR，本轮两个 PDF 都是文本型；2164 字符/717 KB 的低产率说明
    手册类 PDF 主体是截图，内容天然不可读（属预期，不是缺陷）。
 6. **不推荐方案 2 不代表它没用**：现有 `isOnlyOfficeUsed` 开关继续保留给 Office 编辑器的既有链路，本文不做改动建议。
+
+---
+
+## 7. 「简单修改」的定义与保证方式（回答裁定事项 3）
+
+### 7.1 定义：只动"文本节点"，不动"结构/关系/媒体"
+
+**允许（白名单，逐条可机械校验）**
+
+| 操作 | 说明 |
+|---|---|
+| `replace_text` | 替换某个段落 / 形状 / 单元格内的文本（run 级或段落级） |
+| `append_paragraph` | 在指定位置后追加段落（继承相邻段落样式） |
+| `append_table_row` / `set_cell_text` | 表格：追加行、改单元格文本 |
+| `append_slide` | pptx：追加一页（带文字） |
+| **新建** | 从零生成 `docx/xlsx/pptx`（无"保真"问题，因为无原件可比） |
+
+**不允许（黑名单）**
+
+- 新增/删除**结构性构件**：图表、图片、OLE、SmartArt、域、内容控件(SDT)、批注、修订、数学公式
+- 改**样式表/编号定义**（`styles.xml` / `numbering.xml`）、改**页眉页脚结构**、改**关系**(`_rels`)、改**媒体**
+- 移动/重排既有构件、整篇重写替换（那属于"新建"，不是"修改"）
+- 任何加密文档（`MSCRYPT`）不做修改（需先解密另存）
+
+### 7.2 如何保证（三层，缺一可）
+
+1. **接口面只能表达白名单操作**（治本）
+   工具不是"给我一段 XML/整篇内容去覆盖"，而是 `op ∈ 白名单` + **精确定位**（段落序号 / 单元格坐标 / 幻灯片序号）。
+   模型在参数层面就**没法表达**"删图表"这类动作——比事后校验更可靠。
+2. **写前预检（拒绝式）**
+   打开目标文件扫描"不支持的构件"：命中图表/OLE/SDT/域/修订/数学公式 → **直接拒绝**并说明原因
+   （例如"该文档含图表，属当前不支持范围；请改为新建文档或人工处理"）；另设段落数/体积上限。
+   同时给出**将要改动的范围**（部件级）供确认弹窗展示——现确认弹窗只显示工具名、不显示参数（既有缺口）。
+3. **写后不变量校验（最硬的一条）**
+   重新打开输出文件，逐条断言：
+   - **只有目标部件发生变化**（`word/document.xml` / `xl/worksheets/sheetN.xml` / `ppt/slides/slideN.xml` 之一），
+     其余部件**字节级不变**（`docProps` 时间戳类白名单除外）
+   - 部件集合不新增/不丢失；`_rels` 关系数不减少、target 不变
+   - 未命中操作的原文片段仍可检索到（抽样比对）
+   任一条不满足 → **放弃写入**并把原因回执给模型。**宁可不动，也不产生"半坏"的 Office 文件。**
+
+这三条里第 3 条可以完全自动化，也是 P2 的核心护栏（新守约：`TestOfficeWriteInvariants`）；
+因为本机无法用 Word 验证，P2 的验收口径就定为「部件级不变量 + POI 回读 + x2t 通过」三者均过。
+
+---
+
+## 8. P1 实施记录（2026-09-23 已完成并验证）
+
+裁定「P1 先做」后当日落地。**改动全在主仓库**，office 仓库未动。
+
+### 8.1 改了什么
+
+| 文件 | 改动 |
+|---|---|
+| `src/com/DocSystem/common/FileUtil.java` | ① `isText` 新增 `csv`（此前 csv 被 `isOffice` 认领却无抽取分支 → 误报"非文本"）② 新增 `detectOfficeActualFormat(filePath, suffix)`：**魔数优先、后缀兜底**（zip 包看 `word/`·`xl/`·`ppt/` 目录；OLE 看 `WordDocument`·`Workbook/Book`·`PowerPoint Document` 流），并新增两个私有探测助手 |
+| `src/com/DocSystem/common/OfficeExtract.java` | 新增 `extractText(filePath, fileName, tmpDir)`：按魔数选抽取器（7 种）、直接返回文本、读完删中间物。⚠️ 内部必须把 tmpDir 补尾分隔符——`FileUtil.saveDataToFile/readDocContentFromFile` 是 `path+name` **直接拼接**（不带尾斜杠会写到错误文件名上，且 `saveDataToFile` 仍返回 true） |
+| `src/com/DocSystem/controller/BaseController.java` | `checkAndGenerateOfficeContent` / `...Ex`（含解密后路径） / `addIndexForRDoc`（Lucene 索引）三处入口都先做 `detectOfficeActualFormat` 归一化 |
+| `src/com/DocSystem/agent/attachment/AgentAttachmentSupport.java` | ① Office/PDF 附件改为**抽取文本返回**（复用生产链路 `OfficeExtract.extractText`），>20MB 不抽；② `wps/et/dps/odt/ods/odp/rtf` 归"文档"类；③ `odt` 等不支持格式给**明确原因**而非"不是纯文本"；④ 文本附件**字符集先试 UTF-8**，解出替换字符才用 `FileUtil.getCharset` 复读（GBK 附件不再乱码）；⑤ 注入块文案随能力更新 |
+| `src/com/DocSystem/agent/tool/DocSysToolFactory.java` | `get_doc` / `attachment` 工具描述改为"支持哪些抽取格式"；`formatDocContent` 对 odt 等回"暂不支持文本提取（当前支持 …）"而非"没有文本表示" |
+
+**守约**：`TestAgentAttachmentSupport`（+26）与新增 `agent/tool/TestOfficeTextExtract`（31）；
+`TestToolOutputContract` 的旧文案断言改为新语义（并新增 odt 明确报错两条）。
+全量守约：**40 套 / 1575 断言 / 0 失败**（改造前 1381）。
+
+### 8.2 实测证据（dev Tomcat 8100，真 HTTP + 真 LLM）
+
+| 验证面 | 结果 |
+|---|---|
+| 仓库内读取（`getDocContent.do`，非 Ex 链路） | docx / **wps(装docx)** / xls / **et(装xls)** / csv(GBK) / 中文名 docx 均返回正文（含表格文本、中文不乱码）；odt → `isBinary` |
+| 抽取缓存落地 | `OfficeText/<hash>_<name>/officeText_<len>_<mtime>.txt` 生成（docx 45B / xls 18B） |
+| **Agent 链路**（`getDoc.do docType=1` → `checkAndGenerateOfficeContentEx`） | 对已登记文档返回 `docText` **4554 字符** |
+| **附件链路**（真 LLM 一轮） | 上传 `budget2026.docx` → 模型自主调 `attachment(action=read)` → 工具回**"已抽取为纯文本（只有文字：无版式排版、无表格结构、无图片）"**+正文 → 最终答案 `12345`（该数字**只存在于 docx 里**，用户消息未出现）；`turns=2, toolCalls=1` |
+
+### 8.3 已知限制 / 后续项
+
+- **Ex 链路的 wps/et/dps**：本只能用"已登记的 docx"证明 Ex 链路通（4554 字符），
+  wps/et/dps 的 E2E 走的是非 Ex 链路；两条链路的格式归一化是**同一段代码**（差异只在解密分支），但严格说 Ex 下的 wps 尚无端到端实例。
+- **附件抽取目前只有一次读取**：表格变成"空格拼接的纯文本"，无行列语义（P3 可用 POI 结构化 API 补）。
+- 历史遗留（本轮顺手发现，未处理）：`OfficeExtract` 的 `保存文档内容` 走 `saveDocContentToFile(..., encode=null)` →
+  中间文本文件用**平台默认字符集**写（中文 Windows 上是 GBK），读回靠 `FileUtil.getCharset` 自动探测。本轮未改动该链路。
+- `xlsx→bin` 等转换器侧的 txt/csv 链仍坏（见 §3.3），属 P4。
 
 ---
 
