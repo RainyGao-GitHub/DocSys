@@ -38,6 +38,7 @@ import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
+import com.DocSystem.common.OfficeDocWriter;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.constants;
@@ -7905,6 +7906,210 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	/**
+	 * Agent 新建 Office 文件（P2，只 docx/xlsx/pptx）。
+	 *
+	 * <p><b>为什么单独一个端点</b>：{@code agentWriteText.do} 有 `isTextFile(name)` 硬校验（文本写入），
+	 * 而 Office 是二进制；二进制走不了"content + charset"那条路，需要一个按字节落盘的入口。
+	 * 权限 / 锁 / 版本提交 / 远程推送 / 备份全部复用既有链路（{@code addDoc} + {@code updateRealDocData}）。</p>
+	 *
+	 * <p><b>本步范围</b>：只做<b>新建</b>。目标已存在 → 明确拒绝（{@code INVALID_PARAM}），
+	 * 不做任何静默覆盖；"修改已有文件"要走预检 + 部件级不变量校验（P2b），未开放前不给入口。</p>
+	 *
+	 * <p>参数 {@code spec} 是 JSON 字符串，结构见 {@link OfficeDocWriter}：
+	 * docx {@code {"paragraphs":[...]}}、xlsx {@code {"sheet":"Sheet1","rows":[[...]]}}、
+	 * pptx {@code {"slides":[{"title":"...","bullets":[...]}]}}。</p>
+	 */
+	private static final int AGENT_WRITE_OFFICE_MAX_SPEC_LEN = 2 * 1024 * 1024;
+
+	@RequestMapping("/agentWriteOffice.do")
+	public void agentWriteOffice(
+			Integer reposId, String path, String name, String spec, String commitMsg,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("************** agentWriteOffice [" + path + name + "] ****************");
+		Log.info("agentWriteOffice reposId:" + reposId + " path:" + path + " name:" + name
+				+ " specLen:" + (spec != null ? spec.length() : 0));
+
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
+
+		if(name == null || name.isEmpty())
+		{
+			docSysErrorLog("文件名不能为空！", ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+		String fileSuffix = FileUtil.getFileSuffix(name);
+		if(OfficeDocWriter.isSupportedExt(fileSuffix) == false)
+		{
+			docSysErrorLog("暂不支持该文件类型（当前可新建 " + OfficeDocWriter.supportedHint()
+					+ "；老格式 .doc/.xls/.ppt 请改用新格式）", ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(spec == null || spec.trim().isEmpty())
+		{
+			docSysErrorLog("spec 不能为空（内容描述 JSON，结构见工具说明）！", ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(spec.length() > AGENT_WRITE_OFFICE_MAX_SPEC_LEN)
+		{
+			docSysErrorLog("spec 超过 2MB 上限，请拆分生成", ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject specObj = null;
+		try
+		{
+			specObj = JSONObject.parseObject(spec);
+		}
+		catch(Exception e)
+		{
+			Log.info(e);
+			docSysErrorLog("spec 不是合法 JSON：" + e.getMessage(), ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, 0L, "");
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
+		boolean isNew = (dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0);
+		if(!isNew)
+		{
+			//已存在且有内容 → 拒绝（P2 步骤一只做新建，绝不静默覆盖）
+			//已存在但**大小为 0** → 视为"上一次调用刚建了条目、还没写进内容"（见下），继续写
+			Long existSize = dbDoc.getSize();
+			if(existSize != null && existSize.longValue() > 0)
+			{
+				docSysErrorLog("目标已存在：" + path + name + "（" + existSize + " 字节）。"
+						+ "当前仅支持**新建** Office 文件；修改已有 Office 文件尚未开放。", ErrorCode.INVALID_PARAM, rt);
+				writeJson(rt, response);
+				return;
+			}
+			if(dbDoc.getType() != 1)
+			{
+				docSysErrorLog("目标 " + path + name + " 是目录，不能写入文件内容", ErrorCode.INVALID_PARAM, rt);
+				writeJson(rt, response);
+				return;
+			}
+			//空文件条目 → 走"补写"分支（不重复 addDoc）
+			Log.info("agentWriteOffice() 目标已存在但为空（" + existSize + " 字节），按补写处理: " + path + name);
+		}
+
+		//生成文件字节（POI）
+		OfficeDocWriter.Result wr = OfficeDocWriter.create(fileSuffix, specObj);
+		if(wr.ok() == false)
+		{
+			docSysErrorLog(wr.message == null ? "生成 Office 文件失败" : wr.message,
+					wr.errorCode == null ? ErrorCode.INTERNAL : wr.errorCode, rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(wr.data.length > OfficeDocWriter.MAX_BYTES)
+		{
+			docSysErrorLog("生成内容超过 " + (OfficeDocWriter.MAX_BYTES / 1024 / 1024) + "MB 上限",
+					ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(OfficeDocWriter.looksValid(wr.data, fileSuffix) == false)
+		{
+			//生成物无法按该格式解析 → 视为内部错误（绝不落盘半成品）
+			docSysErrorLog("生成结果自检失败（不是有效的 " + fileSuffix + " 包）", ErrorCode.INTERNAL, rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		User login_user = reposAccess.getAccessUser();
+		String commitUser = login_user.getName();
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "Agent新建 [" + path + name + "]";
+		}
+
+		//先创建文件条目（底层接口, 不写响应）；已存在但为空的条目（上一次调用刚建好）直接复用，不重复 addDoc
+		if(isNew)
+		{
+			ActionContext context = buildBasicActionContext(getRequestIpAddress(request), login_user,
+					"agentWriteOffice", "agentWriteOffice", "Agent新建Office", null, repos, doc, null, null);
+			context.info = "Agent新建 [" + doc.getPath() + doc.getName() + "]";
+			context.commitMsg = commitMsg;
+			context.commitUser = commitUser;
+			int ret = addDoc(repos, doc, null, null, null, null, commitMsg, commitUser, login_user, rt, context);
+			if(ret == 0)
+			{
+				docSysErrorLog("创建文件条目失败: " + path + name, rt);
+				writeJson(rt, response);
+				addSystemLog(request, login_user, "agentWriteOffice", "agentWriteOffice", "Agent新建Office", null, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+				return;
+			}
+		}
+		else
+		{
+			doc.setType(dbDoc.getType());
+			doc.setSize(dbDoc.getSize());
+			doc.setLatestEditTime(dbDoc.getLatestEditTime());
+		}
+
+		//按字节写入（锁/版本提交/远程推送/备份 与文本写入同一条链路）
+		doc.setContent(null);
+		doc.setCharset(null);
+		doc.autoCharsetDetect = false;
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ok = updateRealDocData(repos, doc, wr.data, commitMsg, commitUser, login_user, rt, actionList,
+				request, "agentWriteOffice", "agentWriteOffice", "Agent新建Office", null);
+		if(ok)
+		{
+			deleteTmpRealDocContent(repos, doc, login_user);
+			executeCommonActionList(actionList, rt);
+			Doc updatedDoc = docSysGetDoc(repos, doc, false);
+			Map<String, Object> docInfo = new HashMap<String, Object>();
+			docInfo.put("reposId", reposId);
+			if(updatedDoc != null)
+			{
+				docInfo.put("docId", updatedDoc.getDocId());
+				docInfo.put("path", updatedDoc.getPath());
+				docInfo.put("name", updatedDoc.getName());
+				docInfo.put("type", updatedDoc.getType());
+				docInfo.put("size", updatedDoc.getSize());
+			}
+			else
+			{
+				docInfo.put("docId", doc.getDocId());
+				docInfo.put("path", doc.getPath());
+				docInfo.put("name", doc.getName());
+				docInfo.put("type", doc.getType());
+				docInfo.put("size", doc.getSize());
+			}
+			docInfo.put("ext", fileSuffix);
+			docInfo.put("spec", specObj);	//回执里带上 spec，便于模型核对"写了什么"
+			rt.setData(docInfo);
+			addSystemLog(request, login_user, "agentWriteOffice", "agentWriteOffice", "Agent新建Office", null, "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+		}
+		else
+		{
+			addSystemLog(request, login_user, "agentWriteOffice", "agentWriteOffice", "Agent新建Office", null, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+		}
+		writeJson(rt, response);
+	}
+
 	/**
      * 去除字符串中所包含的空格（包括:空格(全角，半角)、制表符、换页符等）
      * @param s

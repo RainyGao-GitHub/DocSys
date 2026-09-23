@@ -80,6 +80,7 @@ public class DocSysToolFactory {
         reg.register(updateRepos(client));
         reg.register(createFolder(client));
         reg.register(writeFile(client));
+        reg.register(writeOffice(client));
         reg.register(writeNote(client));
         reg.register(deleteDoc(client));
         reg.register(renameDoc(client));
@@ -753,6 +754,62 @@ public class DocSysToolFactory {
                                 "回执不包含正文；要核对内容请用 get_doc 读回。"));
                     } catch (Exception e) {
                         return ToolResult.error("write_file failed: " + e.getMessage());
+                    }
+                })
+                .parameters(schema)
+                .isWrite(true).needsConfirm(true)
+                .build();
+    }
+
+    /**
+     * W4d 新建 Office 文件（P2：/Doc/agentWriteOffice.do，服务端 POI 生成）。
+     *
+     * <p><b>为什么单独一个工具，而不是扩 write_file</b>：write_file 是「文本 → 文本」，正文直接进模型上下文、
+     * 走 content+charset 落盘；Office 是二进制，且内容要用**结构描述(spec)** 表达，两者参数面与错误面完全不同。</p>
+     *
+     * <p><b>只新建、不修改</b>：修改已有文件需要「预检不支持的构件 + 写后部件级不变量校验」，
+     * 尚未开放（服务端会对已存在目标直接拒绝）——工具描述里必须让模型知道，避免它反复试。</p>
+     */
+    public static ToolDefinition writeOffice(DocSysClient client) {
+        JSONObject props = props(
+                intProp("vid", "仓库ID（必填）"),
+                strProp("path", "目标目录的相对路径（必填，如 \"66666/\"；根目录传空串 \"\"）"),
+                strProp("name", "文件名（必填，含后缀）：只支持 .docx / .xlsx / .pptx（老格式 .doc/.xls/.ppt 不写）"),
+                strProp("spec", "内容描述（必填，JSON 字符串）：docx → {\"paragraphs\":[{\"text\":\"标题\",\"style\":\"Title\"},\"正文…\"]}；"
+                        + "xlsx → {\"sheet\":\"Sheet1\",\"rows\":[[\"名称\",\"数量\"],[\"苹果\",3]]}；"
+                        + "pptx → {\"slides\":[{\"title\":\"标题\",\"bullets\":[\"要点1\",\"要点2\"]}]}"),
+                strProp("commitMsg", "提交信息（可选）"));
+        JSONObject schema = objSchema(props, new String[]{"vid", "path", "name", "spec"});
+        return ToolDefinition.builder("write_office",
+                "新建 Office 文件（docx/xlsx/pptx）——用于「把内容生成一份 Word/Excel/PPT」这类需求。"
+                        + "path = 目标目录的相对路径（根目录传空串），name = 文件名（**必须带 .docx/.xlsx/.pptx**），"
+                        + "spec = 内容描述 JSON（见参数说明）。定位用 path+name，不要传 docId/pid。"
+                        + "⚠️ 只能**新建**：目标已存在会被拒绝（不会覆盖）；修改已有 Office 文件尚未开放。"
+                        + "⚠️ 老格式 .doc/.xls/.ppt 不支持写入（各厂家写入一律用新格式）。"
+                        + "要写纯文本/代码/CSV 用 write_file；要写文档备注用 write_note。",
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    if (vid == null) {
+                        return ToolResult.error("vid 必填（仓库ID）");
+                    }
+                    String name = args.getString("name");
+                    String spec = args.getString("spec");
+                    if (name == null || name.trim().isEmpty()) {
+                        return ToolResult.error("name 必填（文件名，含 .docx/.xlsx/.pptx 后缀）");
+                    }
+                    if (spec == null || spec.trim().isEmpty()) {
+                        return ToolResult.error("spec 必填（内容描述 JSON，见参数说明）");
+                    }
+                    String path = normalizeDocPath(args.getString("path"));
+                    try {
+                        Map<String, Object> resp = callWithLockRetry("write_office", () -> client.writeOfficeDoc(
+                                vid, path, name.trim(), spec, args.getString("commitMsg")));
+                        Object size = sizeOfData(resp, "size");
+                        return ToolResult.ok(writeReceipt(resp, "新建 Office 文件",
+                                docTargetText(vid, path, name.trim()) + (size == null ? "" : "（" + sizeText(size) + "）"),
+                                "回执不含正文；要核对内容请用 get_doc 读回（Office 会返回抽取的文本）。"));
+                    } catch (Exception e) {
+                        return ToolResult.error("write_office failed: " + e.getMessage());
                     }
                 })
                 .parameters(schema)

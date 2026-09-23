@@ -46,7 +46,10 @@ public class AuditLogService {
         // 而下边的子串启发式也盖不住它们 → 这些工具在页面上不弹确认框、也不写审计
         // （实测：一句“新建文件+写备注”全程没有任何确认弹窗）。
         "write_file", "write_note", "create_folder", "create_doc_share",
-        "update_repos", "delete_doc_share", "run_skill"
+        "update_repos", "delete_doc_share", "run_skill",
+        // P2（2026-09-23）：write_office 不在下面的 create_/add_ 子串启发式里（"write_"前缀不匹配）
+        // → 不显式登记就会“不弹确认、不写审计”
+        "write_office"
     ));
 
     /** Field names that contain sensitive data — redact these (per D-15) */

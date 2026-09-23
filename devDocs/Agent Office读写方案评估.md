@@ -315,6 +315,71 @@ POI 4.0.0 + poi-scratchpad + poi-ooxml；PDFBox 2.0.12；x2t 部署于
 
 ---
 
+## 9. P2 阶段一实施记录：**新建** docx/xlsx/pptx（2026-09-23 已完成并验证）
+
+裁定「P1 先做」→ P1 完成 → 继续 P2。P2 拆两步：**①新建**（本节）→ ②修改已有（§7 的三层护栏）。
+
+### 9.1 改了什么（全在主仓库）
+
+| 文件 | 改动 |
+|---|---|
+| `src/com/DocSystem/common/OfficeDocWriter.java`（新增） | POI 直接生成三种包：`create(ext, spec)` → `byte[]`；`looksValid(bytes, ext)`；`readBackText(bytes, ext)`（POI 回读，供写后自检）。上限：段落 2000 / 行 5000 / 列 100 / 表 20 / 幻灯片 200 / 文本 20 万字符 / 成品 10MB |
+| `src/com/DocSystem/controller/DocController.java` | 新增 `POST /Doc/agentWriteOffice.do`（reposId, path, name, spec, commitMsg）：鉴权 → 后缀白名单 → spec 解析/长度上限(2MB) → **存在性判定** → 建条目 → 写字节 → 回执 |
+| `src/com/DocSystem/controller/BaseController.java` | 把"写字节"从文本链路里抽出来：新增 `updateRealDocData(repos, doc, byte[], …)`（`data != null` 走字节、否则走原文本通道）与 `saveRealDocDataEx`（`encryptData` + `saveDataToFile`）；`updateRealDocContent` / `updateRealDocContent_FSM` 改为薄转发，**文本写入行为不变** |
+| `src/com/DocSystem/agent/client/DocSysClient.java` | `writeOfficeDoc(reposId, path, name, spec, commitMsg)` |
+| `src/com/DocSystem/agent/tool/DocSysToolFactory.java` | 新工具 `write_office`（`isWrite(true).needsConfirm(true)`）：描述里写明"**只新建**、老格式 `doc/xls/ppt` 不支持、纯文本请用 `write_file`、笔记用 `write_note`" |
+| `src/com/DocSystem/agent/permission/ToolRiskCatalog.java` | `write_office → NORMAL`（写操作仍需确认弹窗） |
+| `src/com/DocSystem/agent/controller/AuditLogService.java` | `write_office` 计入 `WRITE_OPERATIONS`（审计） |
+
+`spec` 形态（刻意保持"表达式窄"：模型表达不了"删图表"这类动作，见 §7.2 第 1 条）：
+
+```json
+docx: {"paragraphs":[ "纯文本段", {"text":"标题","style":"Title"}]}
+xlsx: {"sheet":"预算","rows":[["项目","金额"],["服务器",98765]]}
+pptx: {"slides":[{"title":"标题","bullets":["要点1","要点2"]}]}
+```
+
+**守约**：新增 `agent/tool/TestOfficeDocWriter`（40 断言：支持后缀矩阵含 `doc/xls/ppt` 拒绝、三格式 create+回读+`looksValid`、非法入参、上限、`looksValid` 对垃圾/跨格式必须为 false）；
+`TestWriteTools`、`TestAgentSearchWriteTools` 的工具清单同步（注册表 23）。全量守约：**41 套 / 1621 断言 / 0 失败**。
+
+### 9.2 实测证据
+
+**A. 端点级 E2E**（dev Tomcat 8100，真 HTTP，`%TEMP%\docsys_chk\office_p2_e2e2.ps1`）
+
+| 用例 | 结果 |
+|---|---|
+| 新建 `p2doc.docx` | ok，**2391 B** |
+| 新建 `p2book.xlsx` | ok，**3391 B** |
+| 新建 `p2deck.pptx` | ok，**25323 B** |
+| 同名再建（已有内容） | `INVALID_PARAM`：「目标已存在：p2doc.docx（2391 字节）。当前仅支持**新建**…」 |
+| `.doc` 老格式 | `INVALID_PARAM`：「暂不支持该文件类型（当前可新建 docx/xlsx/pptx；老格式 .doc/.xls/.ppt 请改用新格式）」 |
+| 空 `paragraphs` | `INVALID_PARAM`：「docx 需要 paragraphs（段落数组，非空）」 |
+| 读回（`getDoc.do docType=1`） | docx 62 字符（`关键数字：98765` 在正文）；xlsx 38 字符含表名/单元格；pptx 37 字符含标题与要点 |
+
+**B. Agent 全链路 E2E**（真 LLM，`deepseek-v4-flash`）：用户「在根目录新建一个 Word 文档 会议纪要.docx …」→ 模型先 `list_repos`（17 个仓库，反问哪个）→ 用户答 `vid=1` → 模型调 `write_office`（参数含完整 spec）→ **确认弹窗出现并批准** → 回执「已创建完成 ✅ 文件：会议纪要.docx（2.3KB）内容（读回核对无误）…」。
+
+**C. 产物独立校验**：`C:/DocSysReposes/1/data/rdata/会议纪要.docx` = 2372 B；解包 7 个部件
+（`[Content_Types].xml`、`_rels/.rels`、`docProps/app.xml`、`docProps/core.xml`、`word/document.xml`、`word/_rels/document.xml.rels`、`word/settings.xml`），
+**所有 XML 部件可被独立解析器解析（0 个坏部件）** → 包结构合法（非仅 POI 自证）。
+
+### 9.3 踩到的坑（已解决，后续同类改动直接复用）
+
+1. **新建后有 `DOC_LOCKED`**：`addDoc_FSM` 在成功路径上**保留** `EVENT.addDoc` 的 FORCE 锁（2h），紧随其后的写字节请求 `lockDoc` 失败 → 首次调用会以 `DOC_LOCKED` 结束（回执里带 `msgData:"isNewNode"`）。
+   **这不是本端点特有缺陷**：现有 `agentWriteText.do` 行为**完全相同**（首次 DOC_LOCKED、重试成功）——即这是 DocSys 既有的"新建+写内容"两步语义。
+   处理：① 工具层沿用 `callWithLockRetry`（遇锁自动重试）；② 端点把存在性判定改为**"有内容才拒绝"**——已存在但 **size==0** 的条目视为"上次只建了壳"，走**补写**分支（不重复 `addDoc`）。E2E 里三次新建都是"第 1 次 DOC_LOCKED → 第 2 次成功"，与文本端点一致。
+2. **`spec` 走 PowerShell 会被剥引号** → JSON 解析失败。E2E 一律用 `curl --data-urlencode "spec@<file>"`（文件承载 JSON），不要拼在命令行。
+3. `looksValid` 不能只看"能否识别格式"：`detectOfficeActualFormat` 有后缀兜底，垃圾字节也会被当成 docx。已改为 **PK\x03\x04 头 + 无兜底的 `FileUtil.detectOoxmlFormat`（本轮由 private 提升为 public）**双重判定。
+4. `x2t.exe` 独立命令行做交叉校验时**报 "Couldn't automatically recognize conversion direction from extensions"**（字符串路径 / ASCII 路径都试过）→ 该 exe 需要参数 XML 才能独立跑，本机不便用；**验收口径里的"x2t 通过"本轮由独立的包结构校验（zip 部件 + XML 解析）替代**，x2t 集成留到 P4（FileConverter 链路本就有 §3.3 的已知缺陷）。
+
+### 9.4 与 P2 阶段二（修改已有文件）的衔接
+
+阶段一已把"写字节 + 锁/版本/远程推送/备份/索引"整条链路打通并复用（`updateRealDocData`），
+阶段二只需在 `agentWriteOffice.do` 旁增一个 `agentEditOffice.do`：
+按 §7 的三层护栏做 `replace_text` / `append_paragraph` / `set_cell_text` / `append_table_row` / `append_slide`，
+写前预检（图表/OLE/SDT/域/修订/公式 → 拒绝）、写后部件级不变量比对（新增守约 `TestOfficeWriteInvariants`）。
+
+---
+
 ## 附录：本轮探针与产物
 
 | 探针（`%TEMP%\docsys_chk\`） | 作用 |

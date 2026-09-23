@@ -46,6 +46,7 @@ public final class ToolRiskCatalog {
         TABLE.put("create_repos", ToolRisk.NORMAL);
         TABLE.put("create_folder", ToolRisk.NORMAL);
         TABLE.put("write_file", ToolRisk.NORMAL);
+        TABLE.put("write_office", ToolRisk.NORMAL);
         TABLE.put("write_note", ToolRisk.NORMAL);
         TABLE.put("copy_doc", ToolRisk.NORMAL);
         TABLE.put("backup_repos", ToolRisk.NORMAL);

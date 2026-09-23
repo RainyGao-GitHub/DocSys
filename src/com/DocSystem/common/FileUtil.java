@@ -2012,7 +2012,7 @@ public class FileUtil {
 			//ZIP（PK\x03\x04）→ OOXML：用包内目录判断 Word/Excel/PowerPoint
 			if ((head[0] & 0xFF) == 0x50 && (head[1] & 0xFF) == 0x4B
 					&& (head[2] & 0xFF) == 0x03 && (head[3] & 0xFF) == 0x04) {
-				String byZip = detectOoxmlByPackage(filePath);
+				String byZip = detectOoxmlFormat(filePath);
 				return (byZip != null) ? byZip : mapped;
 			}
 			//OLE 复合文档（D0 CF 11 E0 A1 B1 1A E1）→ 看内部流名
@@ -2027,8 +2027,16 @@ public class FileUtil {
 		return mapped;
 	}
 
-	/** OOXML（zip 包）→ 按包内顶层目录判断：word/ → docx，xl/ → xlsx，ppt/ → pptx */
-	private static String detectOoxmlByPackage(String filePath) {
+	/**
+	 * OOXML（zip 包）→ 按包内顶层目录判断：word/ → docx，xl/ → xlsx，ppt/ → pptx。
+	 *
+	 * <p>与 {@link #detectOfficeActualFormat} 的区别：本方法**只看包内容，不做后缀兜底**——
+	 * 不是有效 OOXML 包（或既不是 Word 也不是 Excel/PowerPoint）时返回 {@code null}。
+	 * 写入侧自检用这个（“文件头是 PK”不等于“是个合法的 docx”）。</p>
+	 *
+	 * @return docx/xlsx/pptx；不是可识别的 OOXML 包返回 null
+	 */
+	public static String detectOoxmlFormat(String filePath) {
 		ZipFile zip = null;
 		try {
 			zip = new ZipFile(filePath);

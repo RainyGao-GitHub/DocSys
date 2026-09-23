@@ -9903,6 +9903,25 @@ public class BaseController  extends BaseFunction{
 			List<CommonAction> actionList, 
 			HttpServletRequest request, String event, String subEvent, String eventName, String queryId) 
 	{	
+		//现有行为不变：内容来自 doc.getContent() + charset（文本写入）
+		return updateRealDocData(repos, doc, null, commitMsg, commitUser, login_user, rt, actionList,
+				request, event, subEvent, eventName, queryId);
+	}
+
+	/**
+	 * 写入实体文档的**双通道**入口（P2 新增）：
+	 * <ul>
+	 *   <li>{@code data == null} → 文本通道：取 {@code doc.getContent()} + charset（既有行为， {@link #updateRealDocContent} 走这条）</li>
+	 *   <li>{@code data != null} → **二进制通道**：直接落盘这串字节（Office 文件；无 charset 概念）</li>
+	 * </ul>
+	 * 两条通道共用同一套锁 / 提交记录 / DB 更新 / 异步动作（版本库提交、远程推送、备份），
+	 * 避免为“写二进制”再复制一份写入流水（复制出的差异就是日后不一致的根）。
+	 */
+	protected boolean updateRealDocData(Repos repos, Doc doc, byte[] data,
+			String commitMsg, String commitUser, User login_user, ReturnAjax rt,
+			List<CommonAction> actionList,
+			HttpServletRequest request, String event, String subEvent, String eventName, String queryId)
+	{	
 		//BuildActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), login_user, event, subEvent, eventName, queryId, repos, doc, null, null);
 		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";
@@ -9923,7 +9942,7 @@ public class BaseController  extends BaseFunction{
 		
 		context.commitId = generateCommitId(repos, doc, docLock.createTime[lockType]);
 		
-		boolean ret = updateRealDocContent_FSM(repos, doc, context.commitMsg, context.commitUser, login_user, rt, actionList, context);
+		boolean ret = updateRealDocContent_FSM(repos, doc, context.commitMsg, context.commitUser, login_user, rt, actionList, context, data);
 		
 		//revert the lockStatus
 		unlockDoc(doc, lockType, login_user);
@@ -9934,12 +9953,15 @@ public class BaseController  extends BaseFunction{
 	private boolean updateRealDocContent_FSM(Repos repos, Doc doc,
 			String commitMsg, String commitUser, User login_user, ReturnAjax rt, 
 			List<CommonAction> asyncActionList,
-			 ActionContext context) 
+			 ActionContext context,
+			 byte[] data) 
 	{
 		//get RealDoc Full ParentPath
 		String reposRPath =  Path.getReposRealPath(repos);	
 		
-		if(saveRealDocContentEx(repos, doc, rt) == true)
+		//双通道落盘：data != null → 二进制（Office）；否则按 doc.getContent() + charset（文本，既有行为）
+		boolean saved = (data != null) ? saveRealDocDataEx(repos, doc, data, rt) : saveRealDocContentEx(repos, doc, rt);
+		if(saved == true)
 		{
 			insertCommit(repos, doc, context, null, null, HistoryType_RealDoc);
 			insertCommitEntry(repos, doc, context, "modify", null, login_user, HistoryType_RealDoc);
@@ -12369,6 +12391,22 @@ public class BaseController  extends BaseFunction{
 		
 		//数据加密
 		buff = encryptData(repos, buff);
+		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
+	}
+
+	/**
+	 * 二进制/加密实体文档保存（P2）：直接落盘给定字节，不经过 charset 转换。
+	 *
+	 * <p>与 {@link #saveRealDocContentEx} 的唯一区别：字节由调用方给（Office 文件是二进制，
+	 * 没有 charset 可言）。加密仓库同样过 {@code encryptData}。
+	 */
+	protected boolean saveRealDocDataEx(Repos repos, Doc doc, byte[] data, ReturnAjax rt) 
+	{	
+		if(data == null)
+		{
+			return false;
+		}
+		byte[] buff = encryptData(repos, data);
 		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
 

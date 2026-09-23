@@ -730,6 +730,25 @@ public class DocSysClient {
     }
 
     /**
+     * Agent 新建 Office 文件（P2：/Doc/agentWriteOffice.do）——**按字节落盘**，不走文本 + charset 那条路。
+     *
+     * <p>服务端只支持新建 `docx/xlsx/pptx`（用户 2026-09-23 裁定：老格式只读不写）；
+     * 目标已存在 → 明确拒绝（不静默覆盖）。生成引擎是服务端 POI（`OfficeDocWriter`）。</p>
+     *
+     * @param spec 内容描述 JSON（docx paragraphs / xlsx rows / pptx slides，见 {@code OfficeDocWriter}）
+     */
+    public Map<String, Object> writeOfficeDoc(Integer reposId, String path, String name,
+                                              String spec, String commitMsg) throws Exception {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("reposId", String.valueOf(reposId));
+        if (path != null) params.put("path", path);
+        params.put("name", name);
+        params.put("spec", spec);
+        if (commitMsg != null && !commitMsg.isEmpty()) params.put("commitMsg", commitMsg);
+        return postFormAndParse(baseUrl + "/Doc/agentWriteOffice.do", params);
+    }
+
+    /**
      * 更新文档内容（/Doc/updateDocContent.do）。
      * docType=1 → 更新实体文本文件内容；docType=null → 更新备注（虚拟内容）。
      */

@@ -75,7 +75,7 @@ public class TestAgentSearchWriteTools {
         check("create_doc removed", reg.find("create_doc") == null);
 
         // 写工具：isWrite + needsConfirm
-        String[] writeTools = {"create_folder", "write_file", "write_note"};
+        String[] writeTools = {"create_folder", "write_file", "write_office", "write_note"};
         for (String name : writeTools) {
             ToolDefinition def = reg.find(name);
             check("write tool registered: " + name, def != null);
