@@ -68,6 +68,9 @@ public class SkillParser {
                 skill.setAuthor(extractValue(line));
             } else if (line.startsWith("permissions:")) {
                 // Handle list
+            } else if (line.startsWith("risk:")) {
+                // P1：权限风险声明（safe/write/dangerous/absolute）→ 供 run_skill 的权限判定使用
+                skill.setRisk(extractValue(line));
             }
         }
     }

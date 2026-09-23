@@ -137,6 +137,10 @@ public class MainAgent {
     @Autowired(required = false)
     private com.DocSystem.agent.session.ContinuationStore continuationStore;
 
+    /** P1：会话级权限模式与规则（未装配时无权限模式，行为同改造前：所有写操作都问） */
+    @Autowired(required = false)
+    private com.DocSystem.agent.permission.PermissionStore permissionStore;
+
     /** T8.3 用户记忆存储（memory_set/get/list 工具）；未装配时不注册 memory 工具 */
     @Autowired(required = false)
     private com.DocSystem.agent.memory.UserMemoryService userMemoryService;
@@ -533,7 +537,7 @@ public class MainAgent {
                                         String historySessionId) {
         try {
             com.DocSystem.agent.orchestrator.ToolUseLoop loop =
-                    buildToolLoop(client, context, sessionInfo, confirmSink, resolvedLlm, false);
+                    buildToolLoop(client, context, sessionInfo, confirmSink, resolvedLlm, false, historySessionId);
             // T5.2b 会话记忆：续接会话时加载历史消息作为上下文
             java.util.List<java.util.Map<String, String>> priorHistory = loadSessionHistory(historySessionId);
             long loopStart = System.currentTimeMillis();
@@ -584,7 +588,7 @@ public class MainAgent {
                                                  com.DocSystem.agent.orchestrator.ToolUseLoop.StreamSink streamSink) {
         try {
             com.DocSystem.agent.orchestrator.ToolUseLoop loop =
-                    buildToolLoop(client, context, sessionInfo, confirmSink, resolvedLlm, true);
+                    buildToolLoop(client, context, sessionInfo, confirmSink, resolvedLlm, true, historySessionId);
             // T5.2b 会话记忆：续接会话时加载历史消息作为上下文
             java.util.List<java.util.Map<String, String>> priorHistory = loadSessionHistory(historySessionId);
             long loopStart = System.currentTimeMillis();
@@ -708,7 +712,8 @@ public class MainAgent {
     private com.DocSystem.agent.orchestrator.ToolUseLoop buildToolLoop(
             DocSysClient client, AgentContext context, Object sessionInfo,
             com.DocSystem.agent.tool.ConfirmEventSink confirmSink,
-            com.DocSystem.agent.llm.ResolvedLlmConfig resolvedLlm, boolean streaming) {
+            com.DocSystem.agent.llm.ResolvedLlmConfig resolvedLlm, boolean streaming,
+            String permissionSessionId) {
         com.DocSystem.agent.tool.ToolRegistry registry;
         com.DocSystem.agent.search.WebSearchService webSearch = buildWebSearchService();
         // T8.3：memory 工具的用户维度取自 sessionInfo.username（SessionInfo 上游已设置），
@@ -747,6 +752,18 @@ public class MainAgent {
                 toolLoopConfirmTimeoutSeconds);
         gate.setConfirmEventSink(confirmSink);
         registry.setConfirmGate(gate);
+        // P1：权限模式（会话级）→ 注入判定上下文；未装配 PermissionStore / 无会话 → ctx 保持 null（行为同改造前）
+        com.DocSystem.agent.permission.PermissionMode permMode = com.DocSystem.agent.permission.PermissionMode.DEFAULT;
+        if (permissionStore != null && permissionSessionId != null) {
+            permMode = permissionStore.getMode(permissionSessionId);
+            java.util.List<com.DocSystem.agent.permission.PermissionRule> permRules =
+                    permissionStore.getRules(permissionSessionId);
+            registry.setPermissionContext(new com.DocSystem.agent.permission.PermissionContext(
+                    permMode, permRules, skillId -> resolveSkillRisk(skillId)));
+            com.DocSystem.common.Log.info("[Permission] sessionId=" + permissionSessionId
+                    + " mode=" + permMode.id + " rules=" + permRules.size());
+        }
+        final com.DocSystem.agent.permission.PermissionMode activePermMode = permMode;
         // 执行监听器：写工具落审计 + 指标打点（T4.2/T4.3）
         registry.setExecutionListener((tool, args, result, durationMs) -> {
             if (agentMetrics != null) {
@@ -821,22 +838,55 @@ public class MainAgent {
             });
         }
         // T8.6：管理员 system prompt 配置生效（override 整体替换 / suffix 附加；每次请求读取 → 实时生效）
-        if (agentConfigService != null) {
-            loop.setSystemPromptDecorator(basePrompt -> {
+        // P1：计划模式追加"只调研 + 输出可执行计划"段落（该档写操作会被拒绝）
+        final String planPrompt = activePermMode == com.DocSystem.agent.permission.PermissionMode.PLAN
+                ? PLAN_MODE_PROMPT : null;
+        loop.setSystemPromptDecorator(basePrompt -> {
+            String prompt = basePrompt;
+            if (agentConfigService != null) {
                 String override = agentConfigService.getGlobal(
                         com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_OVERRIDE);
                 if (override != null && !override.trim().isEmpty()) {
-                    return override;
+                    prompt = override;
+                } else {
+                    String suffix = agentConfigService.getGlobal(
+                            com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_SUFFIX);
+                    if (suffix != null && !suffix.trim().isEmpty()) {
+                        prompt = prompt + "\n\n" + suffix.trim();
+                    }
                 }
-                String suffix = agentConfigService.getGlobal(
-                        com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_SUFFIX);
-                if (suffix != null && !suffix.trim().isEmpty()) {
-                    return basePrompt + "\n\n" + suffix.trim();
-                }
-                return basePrompt;
-            });
-        }
+            }
+            if (planPrompt != null) {
+                prompt = prompt + "\n\n" + planPrompt;
+            }
+            return prompt;
+        });
         return loop;
+    }
+
+    /** P1：计划模式的 system prompt 段落（写操作会被策略层拒绝，故先出计划等人批准） */
+    static final String PLAN_MODE_PROMPT =
+            "[计划模式] 本轮你处于计划模式：**不要执行任何写操作**（新建/写入/删除/移动/改名/分享等都会被系统拒绝）。"
+          + "可以自由使用只读工具（列仓库/列目录/读文件/搜索等）调研现状，然后输出一份**可执行计划**，"
+          + "计划需包含：步骤序号 + 每一步的目标对象（仓库/目录/文件）+ 具体操作（工具与关键参数）；"
+          + "预估影响（会改动多少个对象、是否可逆）；最后提示用户——确认无误后点击「批准并执行」即可开始执行。";
+
+    /**
+     * P1：技能风险解析 —— 优先用技能声明的 risk（{@code SKILL.md} 的 {@code risk:}），
+     * 其次内置只读白名单，都没有 → 绝对保护（fail-safe）。
+     */
+    private com.DocSystem.agent.permission.ToolRisk resolveSkillRisk(String skillId) {
+        String declared = null;
+        try {
+            com.DocSystem.agent.skill.EnhancedSkill s =
+                    com.DocSystem.agent.skill.EnhancedSkillManager.getInstance().getSkill(skillId);
+            if (s != null) {
+                declared = s.getRisk();
+            }
+        } catch (Exception e) {
+            log.debug("resolveSkillRisk 读取技能声明失败（按未声明处理）: {}", e.getMessage());
+        }
+        return com.DocSystem.agent.permission.SkillRiskRegistry.resolve(skillId, declared);
     }
 
     /**

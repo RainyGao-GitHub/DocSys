@@ -9,7 +9,7 @@
 
 - 计划（唯一口径来源）：`devDocs/Agent权限模式改造计划.md`
 - 用户原话（本次触发）："我看 copilot 和 claude code 都是可以选权限模式的，比如整理目录过程中由于调用移动目录工具，所以需要不断的确认……"
-- 状态：**最终方案已确认（用户 2026-09-23 "就按这个定"）；P1 开工中**
+- 状态：**P1 部分实现（判定层 + 接线 + 护栏 38/1475/0）；前端与 E2E 未做**
 
 ## 用户定稿决策（2026-09-23）
 
@@ -57,7 +57,14 @@
 6. ✅ **用户三次裁定（2026-09-23）已并入计划**：`delete_repos` = **绝对保护**（4 档全问 + 规则不可豁免），已写入计划 §0 优先级、§3.1 四档表、§3.2 风险类别（新增 `ABSOLUTE`）、§3.3 规则边界、§4 验收 V8、§5 P1/P3、§7 风险
 7. ⏳ **未开始编码**（用户明示：最终方案他再确认一遍后再开工）
 8. ✅ **最终方案已确认（2026-09-23）**：技能调用按 `SKILL.md` 的 `risk` 声明分级、未声明 = 绝对保护（fail-safe）；不解析调用内容；沙箱列 Non-goals；LLM judge 放 P4 可选。计划 §2/§3.2.1/§4（V9）/§5/§6/§7 已同步
-9. ▶ **P1 开工中**（当前进展依里程碑继续追加）
+9. ▶ **P1 部分完成（2026-09-23，已编译 + 护栏全绿）**：
+   - ✅ 新增 `agent/permission/`：`PermissionMode`（plan/manual/auto/allowAll，默认 manual）、`ToolRisk`（+`ABSOLUTE`）、`PermissionDecision`（ALLOW/ASK/DENY+reason）、`PermissionPolicy`（**纯函数**，求值序：绝对保护→计划档→规则→硬清单→模式默认）、`PermissionRule`（tool/dir(含子目录)/repo + JSON 往返）、`ToolRiskCatalog`、`SkillRiskRegistry`、`PermissionContext`、`PermissionStore`（会话级模式+规则，复用 `agent_sessions.metadata`，不新增表）
+   - ✅ `ToolRegistry.execute()`：`needsConfirm` 分支改为三分支（`DENY`→计划模式文案；`ASK`→确认门；`ALLOW`→跳过门并把 `[Permission] mode/tool/risk/decision/reason` 写 docsys.log）；**策略 null 时行为同改造前**（既有路径/测试不受影响）
+   - ✅ `MainAgent`：`buildToolLoop(..., sessionId)` 按会话读模式/规则注入 `PermissionContext`；计划模式 system prompt 段落（`PLAN_MODE_PROMPT`）；技能 risk 解析（`EnhancedSkillManager.getSkill(id).getRisk()` → `SkillRiskRegistry`，未声明 fail-safe）
+   - ✅ 技能 risk 声明：`EnhancedSkill.risk` 字段 + `SkillParser` 解析 frontmatter `risk:`（原 `permissions:` 仍是空壳，未动）
+   - ✅ 护栏：新增 `TestPermissionPolicy`（**66 项**：矩阵 4模式×4风险、绝对保护 4 档全 ASK 且规则不可豁免、计划档 DENY 优先于规则、规则覆盖硬清单、目录/仓库/工具匹配与路径规范化、技能 fail-safe、目录 fallback）；全量 **38 套 / 1475 项 / 0 失败**（基线 37/1409）
+   - ⚠️ **实现偏差（已在计划外说明）**：风险类别用**集中目录** `ToolRiskCatalog`（+`ToolDefinition.riskClass` 可覆盖）而不是逐个改 12 个工具的 builder 链——因为 12 处 `.isWrite(true).needsConfirm(true)` 完全相同、逐个改易漏；安全性由"**未登记 = fail-safe 绝对保护**"兜住，并留护栏强制全覆盖（待做）
+   - ⏳ **未完成（P1 剩余）**：模式切换 REST 端点（前端 chip 用）、前端模式 chip、前端计划闭环按钮（「批准并执行」/「批准但逐步确认」）、`TestWriteConfirmGateCoverage` 按模式重写 + "needsConfirm 工具必须已登记风险"覆盖断言、页面 E2E（V1~V9）
 
 ## 下一步
 
@@ -74,8 +81,8 @@
 
 ## 未提交改动
 
-- 计划 `devDocs/Agent权限模式改造计划.md` + 本卡（**技能调用口径定稿**）——待提交
-- 已提交：`d4f5a142c`（首版）、`49127d655`（改名+闭环）、`29ad82f4d`（绝对保护）
+- **P1 部分实现（代码）**：`src/com/DocSystem/agent/permission/`（9 个新文件：判定层 + 目录 + 技能 risk + 会话存储 + 护栏）、`tool/ToolDefinition.java`、`tool/ToolRegistry.java`、`orchestrator/MainAgent.java`、`skill/EnhancedSkill.java`、`skill/SkillParser.java`、本卡
+- 已提交（文档）：`d4f5a142c` / `49127d655` / `29ad82f4d` / `6d30dbf85`
 
 ## 技能调用口径（已定稿，实现要点）
 

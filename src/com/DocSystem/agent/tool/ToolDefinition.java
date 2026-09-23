@@ -43,6 +43,12 @@ public class ToolDefinition {
     /** 是否仅管理员可用 */
     public final boolean adminOnly;
 
+    /**
+     * 权限风险类别（P1）：null → 取 {@link com.DocSystem.agent.permission.ToolRiskCatalog} 的登记值；
+     * 两者都无 → 调用方按 fail-safe 当 {@code ABSOLUTE} 处理（宁可多问一次）。
+     */
+    public final com.DocSystem.agent.permission.ToolRisk riskClass;
+
     private ToolDefinition(Builder b) {
         this.name = b.name;
         this.description = b.description;
@@ -51,6 +57,7 @@ public class ToolDefinition {
         this.isWrite = b.isWrite;
         this.needsConfirm = b.needsConfirm;
         this.adminOnly = b.adminOnly;
+        this.riskClass = b.riskClass;
     }
 
     public static Builder builder(String name, String description, ToolExecutor executor) {
@@ -72,6 +79,7 @@ public class ToolDefinition {
         private boolean isWrite = false;
         private boolean needsConfirm = false;
         private boolean adminOnly = false;
+        private com.DocSystem.agent.permission.ToolRisk riskClass = null;
 
         public Builder(String name, String description, ToolExecutor executor) {
             this.name = name;
@@ -99,6 +107,12 @@ public class ToolDefinition {
             return this;
         }
 
+        /** 显式声明权限风险类别（P1；不声明则取集中目录登记值） */
+        public Builder riskClass(com.DocSystem.agent.permission.ToolRisk riskClass) {
+            this.riskClass = riskClass;
+            return this;
+        }
+
         public ToolDefinition build() {
             if (name == null || name.isEmpty()) {
                 throw new IllegalArgumentException("Tool name must not be empty");
@@ -117,6 +131,7 @@ public class ToolDefinition {
     @Override
     public String toString() {
         return "ToolDefinition{name=" + name + ", isWrite=" + isWrite
-                + ", needsConfirm=" + needsConfirm + ", adminOnly=" + adminOnly + "}";
+                + ", needsConfirm=" + needsConfirm + ", adminOnly=" + adminOnly
+                + ", riskClass=" + riskClass + "}";
     }
 }

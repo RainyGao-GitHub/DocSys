@@ -25,11 +25,19 @@ public class ToolRegistry {
 
     private static final Logger log = LoggerFactory.getLogger(ToolRegistry.class);
 
+    /** 计划模式下写工具被拒绝时的用户可见文案（模型据此改出计划） */
+    public static final String PLAN_MODE_DENY_MESSAGE =
+            "当前为计划模式：本次写操作未执行。请先只做调研，并输出一份可执行计划"
+            + "（步骤 / 目标对象 / 具体操作），等用户点击「批准并执行」后再动手。";
+
     /** 工具名 → 定义（有序 LinkedHashMap 保证提示词渲染顺序稳定） */
     private final Map<String, ToolDefinition> tools = new LinkedHashMap<>();
 
     /** 写操作确认门（needsConfirm 工具执行前调用；默认放行） */
     private volatile WriteConfirmGate confirmGate = WriteConfirmGate.NOOP;
+
+    /** 权限策略上下文（P1）：null = 未接入权限模式，行为与改造前完全一致（每次都问） */
+    private volatile com.DocSystem.agent.permission.PermissionContext permissionContext = null;
 
     /** 执行监听器（每次工具执行后调用；用于审计/指标，默认 no-op） */
     private volatile ToolExecutionListener executionListener = (tool, args, result, durationMs) -> {};
@@ -132,6 +140,21 @@ public class ToolRegistry {
         this.executionListener = listener != null ? listener : (tool, args, result, durationMs) -> {};
     }
 
+    /**
+     * 设置权限策略上下文（P1）。
+     *
+     * <p>null → **退化为改造前行为**（所有 needsConfirm 工具直接走确认门），
+     * 这样既有测试/非 SSE 路径无需任何改动即可保持原状。</p>
+     */
+    public void setPermissionContext(com.DocSystem.agent.permission.PermissionContext ctx) {
+        this.permissionContext = ctx;
+    }
+
+    /** 当前权限上下文（测试/诊断用） */
+    public com.DocSystem.agent.permission.PermissionContext getPermissionContext() {
+        return permissionContext;
+    }
+
     /** 当前执行监听器（测试/诊断用） */
     public ToolExecutionListener getExecutionListener() {
         return executionListener;
@@ -162,17 +185,35 @@ public class ToolRegistry {
             return ToolResult.error("Invalid arguments for tool '" + name + "': " + validationError);
         }
 
-        // 写操作确认门（needsConfirm 工具执行前需用户批准）
+        // 写操作权限判定（P1）：needsConfirm 工具先问策略 → DENY / ASK / ALLOW
         if (def.needsConfirm) {
-            try {
-                if (!confirmGate.confirm(def.name, resolvedArgs)) {
-                    log.warn("Tool '{}' rejected by user confirm gate", name);
-                    return ToolResult.error("操作被用户拒绝");
-                }
-            } catch (Exception e) {
-                log.error("Tool '{}' confirm gate threw exception", name, e);
-                return ToolResult.error("确认流程异常: " + e.getMessage());
+            com.DocSystem.agent.permission.PermissionContext ctx = this.permissionContext;
+            com.DocSystem.agent.permission.PermissionDecision decision;
+            if (ctx == null) {
+                // 未接入权限模式（旧路径/测试）→ 保持改造前行为：直接走确认门
+                decision = com.DocSystem.agent.permission.PermissionDecision.ask("legacy(no-policy)");
+            } else {
+                decision = ctx.decide(def, resolvedArgs);
+                com.DocSystem.common.Log.info("[Permission] mode=" + ctx.mode.id
+                        + " tool=" + name + " risk=" + ctx.riskOf(def, resolvedArgs).id
+                        + " decision=" + decision.verdict + " reason=" + decision.reason);
             }
+            if (decision.isDeny()) {
+                log.info("Tool '{}' denied by permission policy ({})", name, decision.reason);
+                return ToolResult.error(PLAN_MODE_DENY_MESSAGE);
+            }
+            if (decision.isAsk()) {
+                try {
+                    if (!confirmGate.confirm(def.name, resolvedArgs)) {
+                        log.warn("Tool '{}' rejected by user confirm gate", name);
+                        return ToolResult.error("操作被用户拒绝");
+                    }
+                } catch (Exception e) {
+                    log.error("Tool '{}' confirm gate threw exception", name, e);
+                    return ToolResult.error("确认流程异常: " + e.getMessage());
+                }
+            }
+            // ALLOW：跳过确认门（审计仍在下方 executionListener 里落库，附批准来源）
         }
 
         try {

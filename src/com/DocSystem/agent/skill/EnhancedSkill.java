@@ -27,6 +27,12 @@ public class EnhancedSkill implements Serializable {
     
     // Permissions required
     private List<String> permissions;
+
+    /**
+     * 权限风险声明（P1）：{@code SKILL.md} frontmatter 的 {@code risk:} ——
+     * safe / write / dangerous / absolute。未声明（null）→ 按 fail-safe 当绝对保护处理。
+     */
+    private String risk;
     
     // Execution instructions
     private String executionFlow;
@@ -161,6 +167,10 @@ public class EnhancedSkill implements Serializable {
     
     public Map<String, Object> getMetadata() { return metadata; }
     public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
+
+    /** 权限风险声明（P1，SKILL.md frontmatter 的 risk:）：safe/write/dangerous/absolute；null = 未声明 */
+    public String getRisk() { return risk; }
+    public void setRisk(String risk) { this.risk = risk; }
     
     /**
      * Get skill as SKILL.md format
