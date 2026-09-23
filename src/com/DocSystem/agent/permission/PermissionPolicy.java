@@ -11,7 +11,7 @@ import java.util.List;
  * <pre>
  * ① 绝对保护（ABSOLUTE）  → ASK   ← delete_repos 等；4 档全问，规则也不能豁免
  * ② 计划模式（PLAN）      → DENY  ← 写操作不执行（引导先出计划，批准后切档）
- * ③ 会话规则命中          → ALLOW ← 覆盖硬清单（含删除/权限变更）
+ * ③ 会话规则命中（*仅自动档*）→ ALLOW ← 覆盖硬清单（含删除/权限变更）
  * ④ 硬清单（DESTRUCTIVE / PERMISSION） → ASK ← 自动档仍问；仅"全部允许"不问
  * ⑤ 模式默认             → MANUAL: ASK ；AUTO / ALLOW_ALL: ALLOW
  * </pre>
@@ -49,8 +49,9 @@ public final class PermissionPolicy {
             return PermissionDecision.deny("plan");
         }
 
-        // ③ 会话规则命中：覆盖硬清单
-        if (rules != null) {
+        // ③ 会话规则命中：**仅自动档生效**（用户裁定：手动档保持“每次都要确认”的纯粹语义），
+        //    命中可覆盖硬清单（含删除/权限变更），但不能覆盖绝对保护
+        if (m == PermissionMode.AUTO && rules != null) {
             for (PermissionRule rule : rules) {
                 if (rule != null && rule.matches(toolName, args)) {
                     return PermissionDecision.allow("rule(" + rule.kind.id + ")");

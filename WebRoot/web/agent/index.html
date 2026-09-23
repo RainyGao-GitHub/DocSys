@@ -1905,6 +1905,44 @@
             font-size: 12px;
         }
         .plan-btn-secondary:hover { background: #f0f8ff; }
+
+        /* P2：确认弹窗的作用域授权区 + 工具卡片的批准来源标注 */
+        .confirm-scope {
+            margin: 10px 0 4px;
+            padding: 10px;
+            background: #f7fbff;
+            border: 1px solid #cfe6ff;
+            border-radius: 8px;
+        }
+        .confirm-scope-title { font-size: 12px; color: #35506b; margin-bottom: 6px; }
+        .confirm-scope select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #cfe6ff;
+            border-radius: 6px;
+            font-size: 12px;
+            background: #fff;
+        }
+        .confirm-scope-hint { font-size: 11px; color: #8a9bab; margin-top: 6px; }
+        .confirm-remember {
+            padding: 8px 14px;
+            background: #0277bd;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .confirm-remember:hover { background: #01579b; }
+        .tool-card-approval {
+            display: inline-block;
+            margin-right: 6px;
+            padding: 0 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            background: #eef6ff;
+            color: #1565c0;
+        }
     </style>
 </head>
 <body>
@@ -2096,8 +2134,15 @@
         <div class="confirm-dialog">
             <div class="confirm-title">⚠️ 需要确认操作 <span class="confirm-op" id="confirmOp"></span></div>
             <div class="confirm-msg" id="confirmMsg"></div>
+            <!-- P2：作用域授权（仅“自动”档显示）—— 批准并记住后同作用域不再询问 -->
+            <div class="confirm-scope" id="confirmScope" style="display:none;">
+                <div class="confirm-scope-title">以后这类操作：</div>
+                <select id="confirmScopeSelect"></select>
+                <div class="confirm-scope-hint" id="confirmScopeHint"></div>
+            </div>
             <div class="confirm-actions">
                 <button class="confirm-reject" id="confirmRejectBtn">拒绝</button>
+                <button class="confirm-remember" id="confirmRememberBtn" style="display:none;">批准并记住</button>
                 <button class="confirm-approve" id="confirmApproveBtn">批准执行</button>
             </div>
         </div>
@@ -2889,19 +2934,59 @@
     // ==================== T7.2 写操作确认弹窗 ====================
     var pendingConfirm = null;
 
-    function showConfirmModal(operation, token, message) {
-        pendingConfirm = { token: token };
+    /** P2：弹窗里可选的作用域（按当前工具参数可用性生成） */
+    function buildConfirmScopes(extra) {
+        extra = extra || {};
+        var list = [];
+        if (extra.operation) list.push({ id: 'tool', label: '都执行工具 ' + extra.operation + ' 时不再询问（本会话）' });
+        if (extra.vid !== undefined && extra.vid !== null && extra.path !== undefined && extra.path !== null) {
+            list.push({ id: 'dir', label: '仓库 ' + extra.vid + ' 的目录 "' + (extra.path || '(根目录)') + '" 及子目录内不再询问（本会话）' });
+        }
+        if (extra.vid !== undefined && extra.vid !== null) {
+            list.push({ id: 'repo', label: '仓库 ' + extra.vid + ' 内不再询问（本会话）' });
+        }
+        return list;
+    }
+
+    function showConfirmModal(operation, token, message, extra) {
+        pendingConfirm = { token: token, operation: operation, extra: extra || {} };
         document.getElementById('confirmOp').textContent = operation || '';
         document.getElementById('confirmMsg').textContent = message || '';
+
+        // P2：仅“自动”档提供作用域授权（规则只在自动档产生/生效）
+        var scopeBox = document.getElementById('confirmScope');
+        var scopeSel = document.getElementById('confirmScopeSelect');
+        var rememberBtn = document.getElementById('confirmRememberBtn');
+        var scopes = (currentPermMode() === 'auto') ? buildConfirmScopes(pendingConfirm.extra) : [];
+        if (scopeBox && scopeSel && rememberBtn) {
+            if (scopes.length > 0) {
+                var html = '';
+                scopes.forEach(function(s) { html += '<option value="' + s.id + '">' + s.label + '</option>'; });
+                scopeSel.innerHTML = html;
+                scopeBox.style.display = 'block';
+                rememberBtn.style.display = 'inline-block';
+                var hint = document.getElementById('confirmScopeHint');
+                if (hint) {
+                    hint.textContent = (pendingConfirm.extra.risk === 'absolute')
+                        ? '⚠️ 删仓库等绝对保护操作不受授权影响，每次都会询问'
+                        : '授权只在本会话生效；切到“手动”档则每次都会询问';
+                }
+            } else {
+                scopeBox.style.display = 'none';
+                rememberBtn.style.display = 'none';
+            }
+        }
         document.getElementById('confirmModal').classList.add('show');
     }
 
-    function resolveConfirm(action) {
+    /** 批准/拒绝；scope 非空时额外落一条会话规则（“批准并记住”） */
+    function resolveConfirm(action, scope) {
         if (!pendingConfirm) return;
         var token = pendingConfirm.token;
+        var operation = pendingConfirm.operation;
+        var extra = pendingConfirm.extra || {};
         pendingConfirm = null;
         document.getElementById('confirmModal').classList.remove('show');
-        // 发送批准/拒绝到后端 /confirm
         fetch(API_BASE + '/confirm', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2909,13 +2994,40 @@
         }).catch(function(e) {
             showMessage('确认请求发送失败: ' + e.message, 'error');
         });
+        if (action === 'approve' && scope) {
+            var body = 'scope=' + encodeURIComponent(scope)
+                     + '&tool=' + encodeURIComponent(operation || '')
+                     + '&vid=' + encodeURIComponent(extra.vid === undefined || extra.vid === null ? '' : extra.vid)
+                     + '&path=' + encodeURIComponent(extra.path || '')
+                     + '&sessionId=' + encodeURIComponent(state.sessionId || '');
+            fetch(API_BASE + '/permission/rule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            }).then(function(r) { return r.json(); }).then(function(ret) {
+                if (ret && ret.success) {
+                    state.permission.rules = (ret.data && ret.data.rules) ? ret.data.rules : state.permission.rules;
+                    renderPermChip();
+                    showMessage('已记住授权：' + ((ret.data && ret.data.added) || scope), 'success');
+                } else {
+                    showMessage('记住授权失败：' + ((ret && ret.message) || '未知错误'), 'error');
+                }
+            }).catch(function(e) {
+                showMessage('记住授权失败：' + e.message, 'error');
+            });
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         var approveBtn = document.getElementById('confirmApproveBtn');
         var rejectBtn = document.getElementById('confirmRejectBtn');
+        var rememberBtn = document.getElementById('confirmRememberBtn');
         if (approveBtn) approveBtn.addEventListener('click', function() { resolveConfirm('approve'); });
         if (rejectBtn) rejectBtn.addEventListener('click', function() { resolveConfirm('reject'); });
+        if (rememberBtn) rememberBtn.addEventListener('click', function() {
+            var sel = document.getElementById('confirmScopeSelect');
+            resolveConfirm('approve', sel ? sel.value : 'tool');
+        });
     });
 
     // ==================== 通用确认 / 提示弹窗（替代原生 confirm/alert） ====================
@@ -3157,7 +3269,9 @@
         html += '<span class="tool-card-status">' + statusLabel + '</span></div>';
         if (argsHtml) html += '<div class="tool-card-args">' + argsHtml + '</div>';
         if (tc.status !== 'running' && (tc.summary || tc.error)) {
-            html += '<div class="tool-card-result">' + escapeHtml(tc.status === 'failed' ? (tc.error || '执行失败') : tc.summary) + '</div>';
+            html += '<div class="tool-card-result">'
+                 + (tc.approval ? '<span class="tool-card-approval">' + escapeHtml(tc.approval) + '</span>' : '')
+                 + escapeHtml(tc.status === 'failed' ? (tc.error || '执行失败') : tc.summary) + '</div>';
         }
         html += '</div>';
         return html;
@@ -3917,6 +4031,7 @@
                                     msg.toolCalls[ti].status = event.success ? 'success' : 'failed';
                                     msg.toolCalls[ti].summary = event.summary || '';
                                     msg.toolCalls[ti].error = event.error || '';
+                                    msg.toolCalls[ti].approval = event.approval || '';   // P2：批准来源
                                     break;
                                 }
                             }
@@ -3940,7 +4055,13 @@
                             // 结束：一次性全量渲染（智能 markdown/mermaid）
                             renderMessages();
                         } else if (event.type === 'confirm') {
-                            showConfirmModal(event.operation, event.confirmToken, event.message);
+                            // P2：透传作用域授权所需信息（仅自动档弹窗会展示）
+                            showConfirmModal(event.operation, event.confirmToken, event.message, {
+                                operation: event.operation,
+                                vid: event.vid,
+                                path: event.path,
+                                risk: event.risk
+                            });
                         } else if (event.type === 'error') {
                             streamError = event.message;
                             if (handleAuthError(event.message)) { isSessionExpired = true; return; }

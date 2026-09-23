@@ -33,6 +33,7 @@ public class TestPermissionPolicy {
         testPlanMode();
         testRules();
         testRuleMatching();
+        testTraceLabel();
         testSkillRisk();
         testCatalog();
         testModeParsing();
@@ -136,6 +137,11 @@ public class TestPermissionPolicy {
                 decide(PermissionMode.AUTO, ToolRisk.DESTRUCTIVE, rules, "move_doc", args()).isAsk());
         PermissionDecision d = decide(PermissionMode.AUTO, ToolRisk.DESTRUCTIVE, rules, "delete_doc", args());
         check("规则命中原因标注 rule(tool)", "rule(tool)".equals(d.reason));
+        // P2：规则只在自动档生效（手动档保持“每次都要确认”的纯粹语义）
+        check("手动 + 规则命中 → 仍 ASK（规则不适用于手动档）",
+                decide(PermissionMode.MANUAL, ToolRisk.DESTRUCTIVE, rules, "delete_doc", args()).isAsk());
+        check("全部允许 + 规则无关（本来就 ALLOW）",
+                decide(PermissionMode.ALLOW_ALL, ToolRisk.NORMAL, rules, "write_file", args()).isAllow());
     }
 
     private static void testRuleMatching() {
@@ -224,6 +230,20 @@ public class TestPermissionPolicy {
                         .builder("delete_doc", "d", a -> com.DocSystem.agent.tool.ToolResult.ok("x"))
                         .isWrite(true).needsConfirm(true)
                         .riskClass(ToolRisk.NORMAL).build()) == ToolRisk.NORMAL);
+    }
+
+    // ---------- P2：批准来源标注 ----------
+
+    private static void testTraceLabel() {
+        check("ASK → 手动确认", "手动确认".equals(PermissionTrace.approvalLabel("ASK:hardlist(destructive)")));
+        check("ALLOW rule(dir) → 已授权规则(dir)",
+                "已授权规则（dir）".equals(PermissionTrace.approvalLabel("ALLOW:rule(dir)")));
+        check("ALLOW mode(auto) → 自动档放行",
+                "自动档放行".equals(PermissionTrace.approvalLabel("ALLOW:mode(auto)")));
+        check("ALLOW mode(allowAll) → 全部允许",
+                "全部允许".equals(PermissionTrace.approvalLabel("ALLOW:mode(allowAll)")));
+        check("DENY plan → 被拒绝", "被拒绝".equals(PermissionTrace.approvalLabel("DENY:plan")));
+        check("空痕迹 → null", PermissionTrace.approvalLabel(null) == null);
     }
 
     // ---------- 模式解析 ----------

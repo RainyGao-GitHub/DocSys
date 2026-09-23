@@ -429,11 +429,47 @@ public class AgentController {
             final StringBuilder reasoningAccum = new StringBuilder();
 
             // SSE 确认推送器：写工具需要确认时推 confirm 事件给前端
-            com.DocSystem.agent.tool.ConfirmEventSink sink = (toolName, token, msg) -> {
-                sendSse(emitter, "{\"type\":\"confirm\",\"confirmToken\":\"" + token +
-                        "\",\"operation\":\"" + toolName +
-                        "\",\"message\":" + escapeJson(msg) + "}");
-                log.info("SSE confirm pushed: tool={}, confirmToken={}", toolName, token);
+            // P2：带 args 的重载附带「作用域授权」所需的结构化信息（vid/path/风险），
+            // 前端据此在"自动"档给出"该工具/该目录/该仓库 + 批准并记住"
+            com.DocSystem.agent.tool.ConfirmEventSink sink = new com.DocSystem.agent.tool.ConfirmEventSink() {
+                @Override
+                public void onConfirmRequired(String toolName, String token, String msg) {
+                    sendConfirm(toolName, token, msg, null);
+                }
+
+                @Override
+                public void onConfirmRequired(String toolName, String token, String msg,
+                                              com.alibaba.fastjson.JSONObject args) {
+                    sendConfirm(toolName, token, msg, args);
+                }
+
+                private void sendConfirm(String toolName, String token, String msg,
+                                         com.alibaba.fastjson.JSONObject args) {
+                    String sid = null;
+                    Integer vid = null;
+                    String path = null;
+                    if (args != null) {
+                        sid = args.getString("sessionId");
+                        vid = args.getInteger("vid");
+                        path = args.getString("path");
+                    }
+                    // P2：风险类别取自本次判定痕迹（PermissionTrace 在 ToolRegistry 判定时写入）。
+                    // ⚠️ 不能用 ToolRegistry.getInstance().find() 反查——注册表是**每请求构建**的，
+                    // 单例里没有这些工具，反查得到 null 会一律按 fail-safe 判成 absolute（E2E 暴露）。
+                    String risk = riskFromTrace(com.DocSystem.agent.permission.PermissionTrace.last());
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("{\"type\":\"confirm\",\"confirmToken\":\"").append(token)
+                      .append("\",\"operation\":\"").append(toolName)
+                      .append("\",\"message\":").append(escapeJson(msg))
+                      .append(",\"scopes\":[\"tool\",\"dir\",\"repo\"]")
+                      .append(",\"risk\":").append(escapeJson(risk))
+                      .append(",\"vid\":").append(vid == null ? "null" : String.valueOf(vid))
+                      .append(",\"path\":").append(escapeJson(path))
+                      .append("}");
+                    sendSse(emitter, sb.toString());
+                    log.info("SSE confirm pushed: tool={}, confirmToken={}, vid={}, path={}, risk={}",
+                            toolName, token, vid, path, risk);
+                }
             };
 
             // 流式事件推送器：reasoning/text/tool_call/tool_result/retry
@@ -467,6 +503,9 @@ public class AgentController {
                             sendSse(emitter, "{\"type\":\"tool_result\",\"name\":" + escapeJson(call.name) +
                                     ",\"success\":" + result.success +
                                     ",\"summary\":" + escapeJson(summary) +
+                                    ",\"approval\":" + escapeJson(
+                                            com.DocSystem.agent.permission.PermissionTrace.approvalLabel(
+                                                    com.DocSystem.agent.permission.PermissionTrace.last())) +
                                     ",\"error\":" + (err != null ? escapeJson(err) : "null") + "}");
                         }
                         @Override
@@ -2092,8 +2131,8 @@ public class AgentController {
         }
     }
 
-    /** P1：清空本会话已授权规则（模式 chip 里"清空授权"用） */
-    @PostMapping("/permission/rules/clear")
+    /**
+     * P1：清空本会话已授权规则（模式 chip 里"清空授权"用） */    @PostMapping("/permission/rules/clear")
     public AgentResponse clearPermissionRules(
             @RequestParam(value = "sessionId", required = false) String sessionId,
             HttpServletRequest request) {
@@ -2109,8 +2148,76 @@ public class AgentController {
         }
     }
 
-    /** 权限模式的会话 id：优先前端传的对话会话 id，其次 HTTP 会话 id（两者都无 → null） */
-    private String resolvePermissionSessionId(String sessionId, HttpServletRequest request) {
+    /**
+     * P2：批准并记住 —— 把一次确认转成**会话内作用域规则**（仅在"自动"档产生）。
+     *
+     * <p>作用域：{@code tool}（该工具）/ {@code dir}（该目录，含子目录）/ {@code repo}（该仓库）。
+     * 存 {@code agent_sessions.metadata.permissionRules}，命中后同作用域内不再弹窗
+     * （**但不能豁免绝对保护**，如删仓库）。</p>
+     */
+    @PostMapping("/permission/rule")
+    public AgentResponse addPermissionRule(
+            @RequestParam("scope") String scope,
+            @RequestParam(value = "tool", required = false) String tool,
+            @RequestParam(value = "vid", required = false) Integer vid,
+            @RequestParam(value = "path", required = false) String path,
+            @RequestParam(value = "sessionId", required = false) String sessionId,
+            HttpServletRequest request) {
+        try {
+            if (permissionStore == null) {
+                return AgentResponse.error("权限模式不可用（服务未装配）");
+            }
+            com.DocSystem.agent.permission.PermissionRule.Kind kind =
+                    com.DocSystem.agent.permission.PermissionRule.Kind.fromId(scope);
+            if (kind == null) {
+                return AgentResponse.error("非法作用域: " + scope);
+            }
+            String sid = resolvePermissionSessionId(sessionId, request);
+            if (sid == null) {
+                return AgentResponse.error("缺少会话标识");
+            }
+            com.DocSystem.agent.permission.PermissionRule rule =
+                    new com.DocSystem.agent.permission.PermissionRule(kind, tool, vid, path);
+            java.util.List<com.DocSystem.agent.permission.PermissionRule> rules =
+                    permissionStore.addRule(sid, rule);
+            java.util.List<String> texts = new java.util.ArrayList<>();
+            for (com.DocSystem.agent.permission.PermissionRule r : rules) {
+                texts.add(r.describe());
+            }
+            Map<String, Object> data = new HashMap<>();
+            data.put("added", rule.describe());
+            data.put("count", rules.size());
+            data.put("rules", texts);
+            return AgentResponse.ok(data);
+        } catch (Exception e) {
+            log.warn("addPermissionRule failed: {}", e.getMessage());
+            return AgentResponse.error("保存授权规则失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * P2：从判定痕迹推导风险类别（供 confirm 事件里的作用域提示语用）。
+     *
+     * @param trace {@code ASK:hardlist(destructive)} / {@code ASK:absolute} / {@code ASK:mode(manual)} …
+     * @return normal / destructive / permission / absolute
+     */
+    static String riskFromTrace(String trace) {
+        if (trace == null || trace.isEmpty()) {
+            return "normal";
+        }
+        if (trace.contains("absolute")) {
+            return "absolute";
+        }
+        if (trace.contains("permission")) {
+            return "permission";
+        }
+        if (trace.contains("destructive")) {
+            return "destructive";
+        }
+        return "normal";
+    }
+
+    /** 权限模式的会话 id：优先前端传的对话会话 id，其次 HTTP 会话 id（两者都无 → null） */    private String resolvePermissionSessionId(String sessionId, HttpServletRequest request) {
         if (sessionId != null && !sessionId.trim().isEmpty()) {
             return sessionId.trim();
         }

@@ -198,6 +198,10 @@ public class ToolRegistry {
                         + " tool=" + name + " risk=" + ctx.riskOf(def, resolvedArgs).id
                         + " decision=" + decision.verdict + " reason=" + decision.reason);
             }
+            // P2：记录本次批准来源（供 SSE 的 tool_result 标注“手动/规则(目录)/自动档”），
+            // 同线程使用（工具在同请求线程执行）
+            com.DocSystem.agent.permission.PermissionTrace.set(
+                    ctx == null ? "manual" : decision.verdict + ":" + decision.reason);
             if (decision.isDeny()) {
                 log.info("Tool '{}' denied by permission policy ({})", name, decision.reason);
                 return ToolResult.error(PLAN_MODE_DENY_MESSAGE);

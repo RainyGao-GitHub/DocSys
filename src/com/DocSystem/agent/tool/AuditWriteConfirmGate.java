@@ -82,7 +82,7 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
             message = message + "\n参数：" + summary;
         }
         try {
-            confirmEventSink.onConfirmRequired(toolName, confirmToken, message);
+            confirmEventSink.onConfirmRequired(toolName, confirmToken, message, args);
         } catch (Exception e) {
             log.warn("Confirm event push failed for '{}' (token still in log): {}", toolName, e.getMessage());
         }
