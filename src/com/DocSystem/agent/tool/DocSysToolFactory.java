@@ -6,6 +6,7 @@ import com.DocSystem.agent.search.WebSearchResult;
 import com.DocSystem.agent.search.WebSearchService;
 import com.DocSystem.common.ErrorCode;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,7 @@ public class DocSysToolFactory {
         reg.register(createFolder(client));
         reg.register(writeFile(client));
         reg.register(writeOffice(client));
+        reg.register(editOffice(client));
         reg.register(writeNote(client));
         reg.register(deleteDoc(client));
         reg.register(renameDoc(client));
@@ -817,9 +819,113 @@ public class DocSysToolFactory {
                 .build();
     }
 
-    /** W4c 创建/更新文档备注（虚拟内容，不产生实体文件） */
-    public static ToolDefinition writeNote(DocSysClient client) {
+    /**
+     * P2 阶段二：修改已有 Office 文件（服务端 {@code /Doc/agentEditOffice.do}）。
+     *
+     * <p><b>接口面只暴露白名单操作</b>（这是"简单修改"能成立的根本原因）：模型在参数层面就
+     * <b>表达不了</b>"删图表 / 加图片 / 改样式表"这类动作。服务端还叠加两层——
+     * 写前预检（图表/OLE/内容控件/域/修订/公式/批注 → 直接拒绝）与写后部件级不变量 + 文本保真校验
+     * （不通过就放弃写入，原文件不动）。</p>
+     */
+    public static ToolDefinition editOffice(DocSysClient client) {
         JSONObject props = props(
+                intProp("vid", "仓库ID（必填）"),
+                strProp("path", "文件所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
+                strProp("name", "文件名（必填，含后缀）：只支持 .docx / .xlsx / .pptx"),
+                strProp("ops", "操作数组（必填，JSON 字符串，如 [{\"op\":\"append_paragraph\",\"text\":\"新增一段\"}]）。"
+                        + "白名单：docx → replace_text（{\"paragraph\":序号,\"text\":\"整段新文本\"} 或 "
+                        + "{\"paragraph\":序号,\"find\":\"旧串\",\"replace\":\"新串\"}）、"
+                        + "append_paragraph（{\"text\":\"...\",\"style\":\"可选样式名\"}，追加到正文末尾）；"
+                        + "xlsx → set_cell_text（{\"sheet\":0,\"row\":行,\"col\":列,\"value\":\"值\"}）、"
+                        + "append_table_row（{\"values\":[...]}，追加到工作表末尾）；"
+                        + "pptx → append_slide（{\"title\":\"标题\",\"bullets\":[\"要点\"]}，追加一页）。"
+                        + "序号/行/列**都从 0 开始**，一次可给多个操作按顺序执行"),
+                strProp("commitMsg", "提交信息（可选）"));
+        JSONObject schema = objSchema(props, new String[]{"vid", "path", "name", "ops"});
+        return ToolDefinition.builder("edit_office",
+                "修改已有 Office 文件的**文字内容**（docx/xlsx/pptx）——用于「把文档里的某段话改掉 / 追加一段 / 改某个单元格 / 加一页」。"
+                        + "定位用 path+name（不要传 docId/pid）。ops 见参数说明（白名单动作 + 0 起的序号/行列）。"
+                        + "⚠️ 只改文字：不支持新增/删除图片、图表、表格、公式、批注，也不改样式表；"
+                        + "文档里本来就有图表/OLE/内容控件/域/修订/公式/批注时会被**明确拒绝**（不会改坏）。"
+                        + "⚠️ 老格式 .doc/.xls/.ppt 只读，请先另存为新格式。"
+                        + "⚠️ 新建文件请用 write_office；纯文本用 write_file；备注用 write_note。"
+                        + "建议先用 get_doc 读一遍内容与段落顺序，再按序号定位。",
+                args -> {
+                    Integer vid = args.getInteger("vid");
+                    if (vid == null) {
+                        return ToolResult.error("vid 必填（仓库ID）");
+                    }
+                    String name = args.getString("name");
+                    if (name == null || name.trim().isEmpty()) {
+                        return ToolResult.error("name 必填（文件名，含 .docx/.xlsx/.pptx 后缀）");
+                    }
+                    String ops = args.getString("ops");
+                    if (ops == null || ops.trim().isEmpty()) {
+                        return ToolResult.error("ops 必填（操作数组 JSON 字符串，见参数说明）");
+                    }
+                    String spec;
+                    try {
+                        JSONArray arr = JSON.parseArray(ops);
+                        if (arr == null || arr.isEmpty()) {
+                            return ToolResult.error("ops 不能为空数组（至少一个操作）");
+                        }
+                        JSONObject specObj = new JSONObject();
+                        specObj.put("ops", arr);
+                        spec = specObj.toJSONString();
+                    } catch (Exception e) {
+                        return ToolResult.error("ops 必须是合法 JSON 数组，例如 [{\"op\":\"append_paragraph\",\"text\":\"x\"}]；解析失败：" + e.getMessage());
+                    }
+                    String path = normalizeDocPath(args.getString("path"));
+                    try {
+                        Map<String, Object> resp = callWithLockRetry("edit_office", () -> client.editOfficeDoc(
+                                vid, path, name.trim(), spec, args.getString("commitMsg")));
+                        return ToolResult.ok(editOfficeReceipt(resp, vid, path, name.trim()));
+                    } catch (Exception e) {
+                        return ToolResult.error("edit_office failed: " + e.getMessage());
+                    }
+                })
+                .parameters(schema)
+                .isWrite(true).needsConfirm(true)
+                .build();
+    }
+
+    /** `edit_office` 回执：目标 + 执行的操作 + 实际改动的部件（让"改了什么"可核对，且不含整篇正文） */
+    static String editOfficeReceipt(Map<String, Object> resp, Integer vid, String path, String name) {
+        if (!isOk(resp)) {
+            return failReceipt(resp);
+        }
+        Object size = sizeOfData(resp, "size");
+        Object origSize = sizeOfData(resp, "origSize");
+        Object ops = sizeOfData(resp, "ops");
+        Object text = sizeOfData(resp, "textAfter");
+        StringBuilder sb = new StringBuilder("✅ 已修改 Office 文件：")
+                .append(docTargetText(vid, path, name))
+                .append(size == null ? "" : "（" + sizeText(size) + "）");
+        if (ops instanceof List && !((List<?>) ops).isEmpty()) {
+            StringBuilder line = new StringBuilder();
+            for (Object o : (List<?>) ops) {
+                if (line.length() > 0) {
+                    line.append("、");
+                }
+                line.append(String.valueOf(o));
+            }
+            sb.append("\n已执行：").append(line).append("（共 ").append(((List<?>) ops).size()).append(" 个操作）");
+        }
+        if (origSize != null && size != null) {
+            sb.append("\n体积：").append(origSize).append(" → ").append(size).append(" 字节");
+        }
+        if (text != null) {
+            String t = String.valueOf(text);
+            if (!t.isEmpty()) {
+                sb.append("\n改后文本（截断）：").append(shortText(t.replace("\n", " ⏎ "), 600));
+            }
+        }
+        sb.append("\n已通过写后校验（未命中的内容逐条保持原样）。要复核可再调 get_doc 读回。");
+        return sb.toString();
+    }
+
+    /** W4c 创建/更新文档备注（虚拟内容，不产生实体文件） */
+    public static ToolDefinition writeNote(DocSysClient client) {        JSONObject props = props(
                 intProp("vid", "仓库ID（必填）"),
                 strProp("path", "文档所在目录的相对路径（必填，来自 list_docs 的 path 列；根目录传空串 \"\"）"),
                 strProp("name", "文档名（必填）"),

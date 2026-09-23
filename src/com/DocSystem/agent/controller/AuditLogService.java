@@ -49,7 +49,9 @@ public class AuditLogService {
         "update_repos", "delete_doc_share", "run_skill",
         // P2（2026-09-23）：write_office 不在下面的 create_/add_ 子串启发式里（"write_"前缀不匹配）
         // → 不显式登记就会“不弹确认、不写审计”
-        "write_office"
+        "write_office",
+        // P2 阶段二（2026-09-23）：改已有 Office 文件，同样必须显式登记
+        "edit_office"
     ));
 
     /** Field names that contain sensitive data — redact these (per D-15) */

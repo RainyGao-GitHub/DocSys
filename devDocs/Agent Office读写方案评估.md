@@ -380,6 +380,136 @@ pptx: {"slides":[{"title":"标题","bullets":["要点1","要点2"]}]}
 
 ---
 
+## 10. P2 阶段二实施记录：**修改**已有 docx/xlsx/pptx（2026-09-23 已完成并验证）
+
+§7 定义的三层保证全部落地，并逐条有了可机械复核的实现与实测。
+
+### 10.1 三层保证的落地口径
+
+**第 1 层：接口面只能表达白名单操作**（`OfficeDocEditor.DOCX_OPS/XLSX_OPS/PPTX_OPS`）
+
+| 格式 | 操作 | 定位 | 语义 |
+|---|---|---|---|
+| docx | `replace_text` | `paragraph`（0 起，正文段落） | 有 `text` → 整段替换（保留首个 run 的格式）；有 `find`+`replace` → 段内局部替换（全段必须**恰好命中 1 次**且**不跨 run**，否则拒绝） |
+| docx | `append_paragraph` | 正文末尾 | 追加段落（可选 `style` 样式名），`\n` 转 run 内换行 |
+| xlsx | `set_cell_text` | `sheet`/`row`/`col`（均 0 起） | 单元格写字符串/数字/布尔 |
+| xlsx | `append_table_row` | 工作表末尾 | 追加一行（`values` 数组） |
+| pptx | `append_slide` | 末尾 | 追加一页（`title` + `bullets`） |
+
+一次可为多个操作（`{"ops":[…]}`，上限 200 个）；模型在参数层面**表达不了**"删图表/加图片/改样式表"。
+
+**第 2 层：写前预检**（`OfficeDocEditor.precheck`，命中即拒绝且**不做任何改动**）
+
+- 部件级：`word/charts|embeddings|diagrams`、`xl/charts|drawings|embeddings|pivotTables`、`xl/calcChain.xml`、
+  `ppt/charts|embeddings|diagrams`、`word/comments.xml`
+- docx 正文/页眉页脚 XML：`<w:sdt`（内容控件）、`<w:fldSimple`/`<w:instrText`/`<w:fldChar`（域）、
+  `<w:ins`/`<w:del`/`<w:moveFrom`/`<w:moveTo`（修订）、`m:oMath`（公式）、`<w:object`/`<w:pict`（OLE/VML）、`<w:altChunk`
+- xlsx 工作表：`<f>`（公式）
+- **图片不在黑名单**（`<w:drawing`）：我们从不增删图片，改后另有"图片计数不变"兜底
+
+**第 3 层：写后校验**（`OfficeDocEditor.verify` + `verifyTextPreserved`，任一不过 → **放弃写入**，原文件不动）
+
+| 检查 | 内容 |
+|---|---|
+| 部件不丢 | 任一部件消失 → 失败 |
+| 部件不改（字节级） | 只有目标部件（+ 可解释的联动部件）允许变化；维护性变化（`docProps/*`、`xl/sharedStrings.xml`、`[Content_Types].xml`、`ppt/presentation.xml(+rels)`）白名单放行 |
+| 部件不增 | 新增只允许 `ppt/slides/slideN.xml(+rels)`、`xl/sharedStrings.xml` |
+| 结构构件计数不变 | docx：`w:drawing`/`w:pict`/`w:object`/`w:sdt`/`w:tbl`/`w:hyperlink`/`w:bookmarkStart`/`w:commentReference`；xlsx 每表：`f`/`mergeCell`/`drawing`/`hyperlink`/`dataValidation`/`conditionalFormatting`；pptx：幻灯片数恰好 +1 |
+| **文本保真（全量比对）** | 逐段落（docx）/逐单元格（xlsx）/逐页（pptx）比对：**未命中操作的位置文本必须与改前一致**；段落数=原+追加数；xlsx 行数 ≤ max(原行数, 触及最大行+1)+追加数 |
+
+> §7 里写的是"抽样比对"，实现时按护栏可机械判定的思路做成了**全量比对**（更硬）。
+
+**实测的部件差异集合**（决定了上面白名单，全部由护栏断言锁定）
+
+| 操作 | 变化部件 | 新增部件 |
+|---|---|---|
+| docx 任一 op | `word/document.xml` | 无 |
+| xlsx 任一 op | `xl/worksheets/sheetN.xml`、`xl/sharedStrings.xml` | 可能新增 `xl/sharedStrings.xml` |
+| pptx `append_slide` | `ppt/presentation.xml`、`ppt/_rels/presentation.xml.rels`、`[Content_Types].xml`、**既有幻灯片部件** | `ppt/slides/slideN.xml` + `_rels` |
+
+⚠️ **pptx 的既有幻灯片会被 POI 重写**（字节不同）。实测差异只有**命名空间属性顺序**（`xmlns:p` 与 `xmlns:a` 互换，
+长度完全相同）——这是 XMLBeans 序列化顺序，无语义：
+`<p:sld xmlns:p="…" xmlns:a="…">` → `<p:sld xmlns:a="…" xmlns:p="…"`。因此 pptx 的既有幻灯片退到
+**结构骨架等价**校验（元素名序列 + 每元素属性名排序后比对 + 全部文本节点），其余格式仍是字节级。
+骨架比较里的属性名必须**排序**——属性无顺序语义，不排序会把上述差异误判成"部件被改动"。
+
+### 10.2 改了什么（全在主仓库）
+
+| 文件 | 改动 |
+|---|---|
+| `src/com/DocSystem/common/OfficeDocEditor.java`（新增） | 三层保证引擎：`edit(ext, srcBytes, spec)` → `Result`（含 `changedParts`/`addedParts`/`structureOnlyParts`/`textAfter`）；`precheck`/`verify`/`verifyTextPreserved` 均 public（供护栏反向自测） |
+| `src/com/DocSystem/controller/DocController.java` | 新增 `POST /Doc/agentEditOffice.do`（reposId, path, name, spec, commitMsg）：鉴权 → 后缀白名单 → spec 解析/2MB → **必须已存在**（否则 `DOC_NOT_FOUND`）→ 读原始字节 → `edit` → 落盘 `updateRealDocData` → 回执（ops/changedParts/textAfter/origSize） |
+| `src/com/DocSystem/controller/BaseController.java` | 新增 `readRealDocData(repos, doc)`：实体文件读成**原始字节**；加密仓库走"复制到临时目录→解密→读"（与 `checkAndGenerateOfficeContentEx` 同口径，不动仓库内原文件） |
+| `src/com/DocSystem/agent/client/DocSysClient.java` | `editOfficeDoc(reposId, path, name, spec, commitMsg)` |
+| `src/com/DocSystem/agent/tool/DocSysToolFactory.java` | 新工具 `edit_office`（`isWrite(true).needsConfirm(true)`）：参数 `vid/path/name/ops/commitMsg`，`ops` 是 JSON 数组字符串（工具内解析后包成 `{"ops":[…]}`）；回执 `editOfficeReceipt`（目标 + 已执行操作 + 体积变化 + 改后文本截断，**不含整篇正文**） |
+| `src/com/DocSystem/agent/permission/ToolRiskCatalog.java` | `edit_office → NORMAL` |
+| `src/com/DocSystem/agent/controller/AuditLogService.java` | `edit_office` 计入 `WRITE_OPERATIONS` |
+
+**守约**：新增 `agent/tool/TestOfficeWriteInvariants`（**111 断言**）——白名单矩阵、三种格式的 5 个操作端到端
+（含"只有目标部件变化/无部件增删"的精确断言）、非法参数 14 项、**毒样本预检 12 项**（含"纯图片文档必须**不被**误拒"）、
+以及**反向自测**（伪造篡改证明校验器真能抓到：非目标部件改动 / 部件被删 / 未授权新增 / 未命中段落被改 / 段落数异常，
+并含"正确的 Touch 必须零问题"的控制组）。
+`TestWriteTools`/`TestAgentSearchWriteTools` 清单同步（注册表 23→24）。
+全量守约：**42 套 / 1738 断言 / 0 失败**（阶段一末为 41 套 / 1621）。
+
+### 10.3 实测证据
+
+**A. 端点级 E2E**（`%TEMP%\docsys_chk\office_p2b_e2e.ps1`，真 HTTP）
+
+| 用例 | 结果 |
+|---|---|
+| 改 docx（整段替换+追加段） | ok，2333→**2351 B**，`changed=["word/document.xml"]` |
+| 改 docx（段内 find/replace） | ok，2351→2354 B；读回 `第二段 替换成功` |
+| 改 xlsx（改单元格+追加行） | ok，3389→3416 B，`changed=["xl/sharedStrings.xml","xl/worksheets/sheet1.xml"]`；读回 `服务器 999` / `合计 300` |
+| 改 pptx（追加一页） | ok，25273→26309 B |
+| 未知 op `delete_table` | `INVALID_PARAM`：「docx 不支持 op=「delete_table」，只支持 replace_text/append_paragraph」 |
+| `paragraph=99` | `INVALID_PARAM`：「超出范围（本文档正文段落数 4，可用 0..3）」 |
+| `.doc` 老格式 | `INVALID_PARAM`：「暂不支持修改该文件类型…老格式只读」 |
+| 文件不存在 | `DOC_NOT_FOUND` |
+| 含**域**的 docx | `INVALID_PARAM`：「该文档含当前不支持修改的构件，已拒绝（未做任何改动）：域」+ 文件仍在磁盘且字节未变 |
+| 含**内容控件**的 docx | 同上（内容控件(SDT)） |
+| 含**修订**的 docx | 同上（修订） |
+| 含**公式**的 xlsx | 同上（公式（xl/worksheets/sheet1.xml）） |
+| 含**图表部件**的 pptx | 同上（图表/OLE/图示 部件 ppt/charts/chart1.xml） |
+
+**B. Agent 全链路 E2E（浏览器，真 LLM）** —— 一轮真会话里连续走完：
+
+1. `get_doc` 读回 docx 并**正确给出 0 起段落序号**（0 编辑测试标题 / 1 第一段 原始内容 / 2 第二段 保留我）
+2. `edit_office`(replace_text + append_paragraph) → 确认弹窗批准 → 回执 → 模型读回复核并给出前后对照表：
+   `paragraph 1` 改、`paragraph 3` 新增、其余"未动"；体积 2333→2351；"写后校验通过，未命中的段落逐条保持原样"
+3. `edit_office`(find/replace「保留我」→「替换成功」) → 读回 `第二段 替换成功`；2351→2354
+4. `write_office` 建 xlsx → `edit_office`(set_cell_text + append_table_row) → 读回 `服务器 999` / `合计 300`
+5. `write_office` 建 pptx → `edit_office`(append_slide) → 读回两页内容，模型结论"原有第 1 页保持原样"
+6. 改**含域**的 `browser_poison.docx` → 被拒：「该文档含当前不支持修改的构件——「域」（错误码 INVALID_PARAM）」，
+   模型自行读复核"正文仍为 24 字符…未变"，并给出"人工清除域后重试 / 改用新建 / 改别的文件"三条后续路径
+7. 要求"加粗+改字号+插入图片" → 模型**未调用工具**，逐条说明超出 `edit_office` 能力边界（只改文字，不改样式/不增删图片）
+8. 清理：`delete_doc` 四个测试文件 + `list_docs` 复核根目录已无它们
+
+E2E 痕迹已清理（仓库 1 根目录恢复原状；顺带清掉阶段一遗留的 `p2write.*`）。
+
+### 10.4 踩到的坑（后续同类改动直接复用）
+
+1. **PowerShell 5.1 读 UTF-8(无 BOM) 的 .ps1 会按 ANSI 解** → 脚本里的中文 JSON 字面量全变乱码，
+   服务端报 `spec 不是合法 JSON`（`\u001A` / "position at 9"）。**E2E 脚本一律 ASCII-only**，
+   中文请求体交给 Java 生成器（`OfficeP2bReq.java`）写 UTF-8 无 BOM 文件，再用 `curl --data-urlencode "spec@file"`。
+2. `Set-Content -Encoding UTF8` **会写 BOM** → 同样导致 spec 解析失败（要用 `[IO.File]::WriteAllText(..., UTF8Encoding($false))`）。
+3. .NET Framework 的 `ZipFile.CreateFromDirectory` 写出**反斜杠分隔**的条目名（`word\document.xml`）→ 不是合法 OOXML 包，
+   会被 `looksValid` 提前拦成"无效包"，测不到预检。毒样本改用 Java 重打包（`OfficeP2bPoison.java`）。
+4. **护栏改了 main 类必须重编译进 `WebRoot/WEB-INF/classes`**：只在临时目录编译会让 `run_guards.ps1` 跑**旧类**
+   （现象：同一套护栏手跑 111 全绿、脚本跑 97+2 FAIL）。
+5. `set_cell_text` 落在已有末行之后会**拉长工作表**（中间是空行）——合法扩张，但校验里必须"可解释"
+   （`maxTouchedRow+1`），否则会被自己的不变量判成"行数异常"。
+6. 追加行/被改单元格必须**登记到 `Touch`**（行键 `sheet!row`、格键 `sheet!row:col`），否则校验会把它们当成"未命中却被改动"。
+
+### 10.5 仍不在本期范围
+
+- **样式/版式**：加粗、字号、颜色、对齐、页眉页脚结构、样式表（`styles.xml`）一律不改（§7 黑名单）；
+- **增删结构性构件**：图片、图表、表格、公式、批注、页眉页脚——一律不做；
+- **.doc/.xls/.ppt**：修改只支持新格式（老格式只读，与阶段一同口径）；
+- **.docm/.xlsm 等宏格式**：读得到、写/改不在本期（预检会因宏部件的存在而拒绝，属"明确拒绝"而非静默出错）。
+
+---
+
 ## 附录：本轮探针与产物
 
 | 探针（`%TEMP%\docsys_chk\`） | 作用 |

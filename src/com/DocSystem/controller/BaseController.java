@@ -12410,6 +12410,37 @@ public class BaseController  extends BaseFunction{
 		return FileUtil.saveDataToFile(buff, doc.getLocalRootPath() + doc.getPath(), doc.getName());
 	}
 
+	/**
+	 * 二进制实体文档读取（P2）：把实体文件读成字节（加密仓库先解密）。
+	 *
+	 * <p>与 {@link #readRealDocContentEx} 的区别：那条路是"文本"（charset 转换）+ 就地解密，
+	 * 这里要的是<b>原始字节</b>（Office 包），所以解密走"复制到临时目录再解密"，
+	 * 与 {@code checkAndGenerateOfficeContentEx} 同口径，<b>不动仓库内的原文件</b>。</p>
+	 */
+	protected byte[] readRealDocData(Repos repos, Doc doc) 
+	{
+		String filePath = doc.getLocalRootPath() + doc.getPath() + doc.getName();
+		if(FileUtil.isFileExist(filePath) == false)
+		{
+			return null;
+		}
+		if(repos.encryptType == null || repos.encryptType == 0)
+		{
+			return FileUtil.readBufferFromFile(filePath);
+		}
+		String tmpDir = Path.getReposTmpPathForOfficeText(repos, doc) + "edit/";
+		FileUtil.clearDir(tmpDir);
+		FileUtil.createDir(tmpDir);
+		if(FileUtil.copyFile(filePath, tmpDir + doc.getName(), true) == false)
+		{
+			return null;
+		}
+		decryptFile(repos, tmpDir, doc.getName());
+		byte[] data = FileUtil.readBufferFromFile(tmpDir + doc.getName());
+		FileUtil.clearDir(tmpDir);
+		return data;
+	}
+
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
 		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());

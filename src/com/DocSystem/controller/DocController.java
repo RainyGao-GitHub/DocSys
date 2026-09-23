@@ -38,6 +38,7 @@ import com.DocSystem.common.FolderUploadAction;
 import com.DocSystem.common.HitDoc;
 import com.DocSystem.common.IPUtil;
 import com.DocSystem.common.Log;
+import com.DocSystem.common.OfficeDocEditor;
 import com.DocSystem.common.OfficeDocWriter;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.VersionIgnoreConfig;
@@ -8106,6 +8107,167 @@ public class DocController extends BaseController{
 		else
 		{
 			addSystemLog(request, login_user, "agentWriteOffice", "agentWriteOffice", "Agent新建Office", null, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+		}
+		writeJson(rt, response);
+	}
+
+	/**
+	 * Agent 修改已有 Office 文件（P2 阶段二，只 docx/xlsx/pptx）。
+	 *
+	 * <p><b>为什么单独一个端点</b>：与 {@code agentWriteOffice.do} 同因（二进制 + spec），
+	 * 但语义相反 —— 这里是<b>改已有文件</b>，所以必须过 {@link OfficeDocEditor} 的三层保证：</p>
+	 * <ol>
+	 *   <li>白名单操作（replace_text / append_paragraph / set_cell_text / append_table_row / append_slide）；</li>
+	 *   <li>写前预检：含 图表/OLE/内容控件/域/修订/公式/批注 → 拒绝，且<b>不做任何改动</b>；</li>
+	 *   <li>写后部件级不变量 + 文本保真校验：不通过就<b>放弃写入</b>（原文件保持不动）。</li>
+	 * </ol>
+	 * 落盘仍走既有写链路（{@code updateRealDocData}：锁 / 版本提交 / 远程推送 / 备份 / 索引）。
+	 *
+	 * <p>参数 {@code spec} = {@code {"ops":[...]}}，结构见 {@link OfficeDocEditor}。</p>
+	 */
+	@RequestMapping("/agentEditOffice.do")
+	public void agentEditOffice(
+			Integer reposId, String path, String name, String spec, String commitMsg,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("************** agentEditOffice [" + path + name + "] ****************");
+		Log.info("agentEditOffice reposId:" + reposId + " path:" + path + " name:" + name
+				+ " specLen:" + (spec != null ? spec.length() : 0));
+
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
+
+		if(name == null || name.isEmpty())
+		{
+			docSysErrorLog("文件名不能为空！", ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+		String fileSuffix = FileUtil.getFileSuffix(name);
+		if(OfficeDocEditor.supportedOps(fileSuffix).length == 0)
+		{
+			docSysErrorLog("暂不支持修改该文件类型（当前可修改 " + OfficeDocWriter.supportedHint()
+					+ "；老格式 .doc/.xls/.ppt 只读）", ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(spec == null || spec.trim().isEmpty())
+		{
+			docSysErrorLog("spec 不能为空（{\"ops\":[...]}）！", ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(spec.length() > AGENT_WRITE_OFFICE_MAX_SPEC_LEN)
+		{
+			docSysErrorLog("spec 超过 2MB 上限，请拆分修改", ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject specObj = null;
+		try
+		{
+			specObj = JSONObject.parseObject(spec);
+		}
+		catch(Exception e)
+		{
+			Log.info(e);
+			docSysErrorLog("spec 不是合法 JSON：" + e.getMessage(), ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		//目标必须已存在（本端点只改已有文件；新建请用 agentWriteOffice.do）
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, 1, true, localRootPath, localVRootPath, 0L, "");
+		Doc dbDoc = docSysGetDoc(repos, doc, false);
+		if(dbDoc == null || dbDoc.getType() == null || dbDoc.getType() == 0)
+		{
+			docSysErrorLog("文件不存在：" + path + name + "（本接口只修改已有文件）", ErrorCode.DOC_NOT_FOUND, rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(dbDoc.getType() != 1)
+		{
+			docSysErrorLog("目标 " + path + name + " 是目录，不能修改文件内容", ErrorCode.INVALID_PARAM, rt);
+			writeJson(rt, response);
+			return;
+		}
+		doc.setType(dbDoc.getType());
+		doc.setSize(dbDoc.getSize());
+		doc.setLatestEditTime(dbDoc.getLatestEditTime());
+
+		//读原始字节（加密仓库先解密到临时目录）
+		byte[] srcData = readRealDocData(repos, doc);
+		if(srcData == null || srcData.length == 0)
+		{
+			docSysErrorLog("读取原文件失败：" + path + name, ErrorCode.INTERNAL, rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		//三层保证的编辑（预检 + 白名单 + 写后不变量；失败时不产出任何字节）
+		OfficeDocEditor.Result er = OfficeDocEditor.edit(fileSuffix, srcData, specObj);
+		if(er.ok() == false)
+		{
+			docSysErrorLog(er.message == null ? "修改 Office 文件失败" : er.message,
+					er.errorCode == null ? ErrorCode.INTERNAL : er.errorCode, rt);
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "agentEditOffice", "agentEditOffice", "Agent修改Office", null, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		User login_user = reposAccess.getAccessUser();
+		String commitUser = login_user.getName();
+		if(commitMsg == null || commitMsg.isEmpty())
+		{
+			commitMsg = "Agent修改 [" + path + name + "]";
+		}
+
+		doc.setContent(null);
+		doc.setCharset(null);
+		doc.autoCharsetDetect = false;
+		List<CommonAction> actionList = new ArrayList<CommonAction>();
+		boolean ok = updateRealDocData(repos, doc, er.data, commitMsg, commitUser, login_user, rt, actionList,
+				request, "agentEditOffice", "agentEditOffice", "Agent修改Office", null);
+		if(ok)
+		{
+			deleteTmpRealDocContent(repos, doc, login_user);
+			executeCommonActionList(actionList, rt);
+			Doc updatedDoc = docSysGetDoc(repos, doc, false);
+			Map<String, Object> docInfo = new HashMap<String, Object>();
+			docInfo.put("reposId", reposId);
+			docInfo.put("docId", updatedDoc != null ? updatedDoc.getDocId() : doc.getDocId());
+			docInfo.put("path", updatedDoc != null ? updatedDoc.getPath() : doc.getPath());
+			docInfo.put("name", updatedDoc != null ? updatedDoc.getName() : doc.getName());
+			docInfo.put("type", updatedDoc != null ? updatedDoc.getType() : doc.getType());
+			docInfo.put("size", updatedDoc != null ? updatedDoc.getSize() : doc.getSize());
+			docInfo.put("ext", fileSuffix);
+			docInfo.put("ops", er.ops);
+			docInfo.put("changedParts", er.changedParts);
+			docInfo.put("addedParts", er.addedParts);
+			docInfo.put("structureOnlyParts", er.structureOnlyParts);
+			docInfo.put("textAfter", er.textAfter);
+			docInfo.put("origSize", srcData.length);
+			rt.setData(docInfo);
+			addSystemLog(request, login_user, "agentEditOffice", "agentEditOffice", "Agent修改Office", null, "成功", repos, doc, null, buildSystemLogDetailContent(rt));
+		}
+		else
+		{
+			addSystemLog(request, login_user, "agentEditOffice", "agentEditOffice", "Agent修改Office", null, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
 		}
 		writeJson(rt, response);
 	}

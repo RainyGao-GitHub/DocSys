@@ -749,6 +749,26 @@ public class DocSysClient {
     }
 
     /**
+     * Agent 修改已有 Office 文件（P2 阶段二：/Doc/agentEditOffice.do）。
+     *
+     * <p>服务端只开放白名单文字级操作（docx replace_text/append_paragraph、xlsx set_cell_text/append_table_row、
+     * pptx append_slide），并在写前预检（含图表/OLE/域/修订/公式/批注 → 拒绝）、写后做部件级不变量
+     * + 文本保真校验（不通过就放弃写入，原文件不动）。</p>
+     *
+     * @param spec {@code {"ops":[...]}}，结构见 {@code OfficeDocEditor}
+     */
+    public Map<String, Object> editOfficeDoc(Integer reposId, String path, String name,
+                                             String spec, String commitMsg) throws Exception {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("reposId", String.valueOf(reposId));
+        if (path != null) params.put("path", path);
+        params.put("name", name);
+        params.put("spec", spec);
+        if (commitMsg != null && !commitMsg.isEmpty()) params.put("commitMsg", commitMsg);
+        return postFormAndParse(baseUrl + "/Doc/agentEditOffice.do", params);
+    }
+
+    /**
      * 更新文档内容（/Doc/updateDocContent.do）。
      * docType=1 → 更新实体文本文件内容；docType=null → 更新备注（虚拟内容）。
      */
