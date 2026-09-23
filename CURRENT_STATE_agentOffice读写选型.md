@@ -75,5 +75,6 @@
 
 ## 未提交改动
 
-- P2 阶段一：`OfficeDocWriter.java`(新) / `DocController.java` / `BaseController.java` / `DocSysClient.java` / `DocSysToolFactory.java` / `ToolRiskCatalog.java` / `AuditLogService.java` / `TestOfficeDocWriter.java`(新) / `TestWriteTools.java` / `TestAgentSearchWriteTools.java` / `devDocs/…评估.md`(§9) / 本工作卡
-  （均在主仓库；office 与 office/test 两仓库本轮未动）
+- 无。P2 阶段一已提交：**`fdd0fa59b`**（主仓库 13 文件，+1002/-23；含 §9 文档与本工作卡）
+  ⚠️ `office/test` 仓库有一处**与本任务无关**的既存脏文件（`测试文件/EditorBinWithChanges_…_table.docx/…/output/output.docx`，
+  mtime 2026-09-20，非本轮产生）——未动、未提交。
