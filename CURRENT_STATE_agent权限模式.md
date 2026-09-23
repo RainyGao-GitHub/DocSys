@@ -9,7 +9,7 @@
 
 - 计划（唯一口径来源）：`devDocs/Agent权限模式改造计划.md`
 - 用户原话（本次触发）："我看 copilot 和 claude code 都是可以选权限模式的，比如整理目录过程中由于调用移动目录工具，所以需要不断的确认……"
-- 状态：**P1 主体完成（后端判定层 + 端点 + 前端 chip/计划闭环 + 护栏 38/1490/0）；仅缺 LLM 实跑页面 E2E**
+- 状态：**P1 完成（验收 V1/V2/V3/V4/V7/V9/V10 实测或护栏通过；V8 由护栏覆盖）—— 可开 P2**
 
 ## 用户定稿决策（2026-09-23）
 
@@ -71,6 +71,15 @@
    - 🐞 **E2E 暴露并已修**：切换模式后旧的 `loadPermission` 响应会把档位盖回去 → `localChangedAt` 时间戳丢弃过期响应
    - 护栏：`TestWriteConfirmGateCoverage` +15 项（风险登记全覆盖 + 模式判定真的作用在确认门上）；全量 **38 套 / 1490 项 / 0 失败**
    - 页面实测：端点返回 4 档 + `absoluteGuarded=["delete_repos"]`，POST 切换后服务端模式生效；JS 语法 0 错误
+11. ✅ **P1 页面 LLM 实跑验收（2026-09-23 15:24~15:26）**：
+   - **V1 计划档**：发“在 vid=1 根目录建文件夹 permTest” → 只调只读工具（list_docs/search_files）、**无 create_folder**、回答为“待批准的执行计划（本轮未做任何写操作）”，页面出现「批准并执行」/「批准但逐步确认」✓
+   - **V2 计划闭环**：点「批准并执行」→ chip 变“自动模式” + 自动发“按计划执行” → `create_folder:success` 且 **0 弹窗**，回答“计划执行完毕”✓
+   - **V4 自动档**：常规写（create_folder）→ `decision=ALLOW reason=mode(auto)` 0 弹窗；删除（delete_doc）→ `decision=ASK reason=hardlist(destructive)` 弹确认（文案含 vid/name）✓
+   - **V7 全部允许档**：“建 permTest2 然后删掉” → 两步都 ALLOW（reason=mode(allowAll)）、**0 弹窗**✓；已测完即把模式改回手动
+   - 日志主线：`[Permission][MODE]`（模式切换）+ `[Permission] mode=.. tool=.. risk=.. decision=.. reason=..`（每次写工具判定）
+   - **V8 绝对保护**：为避免真删仓库，未做线上删除；由护栏 `TestPermissionPolicy`/`TestWriteConfirmGateCoverage` 覆盖（4 档全 ASK + 规则不可豁免）
+   - **V9 技能 risk 分级**：由护栏覆盖（safe 跟随模式 / dangerous 硬清单 / 未声明 fail-safe 绝对保护）
+   - 测试产物已清理：`permTest`（手动批准后删除）、`permTest2`（全部允许档下建+删）
 
 ## 下一步
 
@@ -90,14 +99,17 @@
 - 无（P1 代码/前端/端点/护栏已随 `03f3df4a6`、`93df21fea` 提交；本卡随下一次提交收尾）
 - 已提交：`d4f5a142c` / `49127d655` / `29ad82f4d` / `6d30dbf85`（文档）+ `03f3df4a6` / `93df21fea`（P1 代码）
 
-## 下一步（P1 收尾）
+## 下一步
 
-1. 重启 dev Tomcat（已重启）+ 页面 LLM 实跑：
-   - **计划档**：发“在 vid=1 根目录建个文件夹”→ 应无写入、回答带计划、页脚出现「批准并执行」；点它 → 切自动并执行
-   - **自动档**：发“建一个文件夹 + 写入一个文件”→ 应 0 弹窗；再发“删除刚建的文件”→ 应弹确认
-   - **全部允许档**：删文件不弹；（删仓库需慎重，可只查日志 [Permission] 行验证 decision=ASK reason=absolute）
-2. 验收打点：V1/V2/V3/V4/V8/V9 → 更新本卡 → 提交
-3. 之后开 P2（自动档作用域授权 + confirm 带 scopes + 卡片标注批准方式）
+**P1 已完成。下一步开 P2（自动档作用域授权）**：
+
+1. `confirm` 事件带 `scopes`（该工具/该目录/该仓库）+ 弹窗加作用域选择与“批准并记住”按钮
+2. 命中规则写入会话 metadata；工具卡片标注批准来源（手动/规则(目录)/自动档/全部允许）
+3. 模式 chip 下拉已可显示“已授权 N 条”+ 清空（端点已就绪，待接弹窗授权入参）
+4. 护栏：`TestPermissionRules`（命中/子目录/跨目录/清空/规则不得豁免绝对保护）
+5. 验收 V5（作用域内不再问）/ V6（规则只到本会话）
+
+**P3（后续）**：管理员开关 `agent_permission_allow_all_enabled` + 统计 + 技能 risk 的 UI
 
 ## 技能调用口径（已定稿，实现要点）
 
