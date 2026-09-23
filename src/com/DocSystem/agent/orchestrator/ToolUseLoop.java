@@ -4,6 +4,7 @@ import com.DocSystem.agent.llm.LLMService;
 import com.DocSystem.agent.llm.LlmTurnResult;
 import com.DocSystem.agent.llm.ResolvedLlmConfig;
 import com.DocSystem.agent.llm.StreamChunk;
+import com.DocSystem.agent.tool.AgentProductLink;
 import com.DocSystem.agent.tool.ToolSchemaBuilder;
 import com.DocSystem.agent.tool.ToolCall;
 import com.DocSystem.agent.tool.ToolCallParser;
@@ -213,6 +214,14 @@ public class ToolUseLoop {
     /** T10：连续相同工具调用计数 */
     private int consecutiveIdentical = 0;
 
+    /**
+     * 方案 B（2026-09-23）：本轮**写入产物**（白名单工具 write_office/edit_office/write_file 成功执行时登记）。
+     * 最终回答末尾追加 {@link AgentProductLink#appendFooter} 标记，前端渲染成「图标 + 文件名」可点击链接
+     * （在 project 页内且同仓库 → 调父页 openDoc；否则新窗口）。每次 run 重置。
+     */
+    private final java.util.List<AgentProductLink.Product> products =
+            new ArrayList<AgentProductLink.Product>();
+
     /** T10：按开关与配置计算本轮 tools 参数（开关关闭或 toolChoice=none → null） */
     private static com.alibaba.fastjson.JSONArray effectiveTools(ToolRegistry registry, boolean isAdmin,
                                                                   boolean[] enabled, String toolChoice) {
@@ -410,6 +419,7 @@ public class ToolUseLoop {
         // 重复调用检测状态（每次 run 重置；本实例每请求单独构建，无并发复用）
         lastCallKey = null;
         consecutiveIdentical = 0;
+        products.clear();
 
         // 选择单轮执行器：有 sink 且流式通道可用 → 流式；否则非流式
         final TurnRunner turnRunner;
@@ -492,8 +502,8 @@ public class ToolUseLoop {
                 }
 
                 if (parsed.isEmpty()) {
-                    // 无工具调用 → 最终回答
-                    return ToolUseResult.success(responseText, toStringMaps(messages), turns, toolCalls);
+                    // 无工具调用 → 最终回答（方案 B：末尾带本轮写入产物标记）
+                    return ToolUseResult.success(withProductFooter(responseText), toStringMaps(messages), turns, toolCalls);
                 }
 
                 // 文本通道有工具调用 → 执行并回灌
@@ -526,7 +536,7 @@ public class ToolUseLoop {
             if (!wrapText.isEmpty()) {
                 com.DocSystem.common.Log.info("[ToolUseLoop][WRAPUP] maxTurns=" + maxTurns
                         + " toolCalls=" + toolCalls + " answerLen=" + wrapText.length());
-                return ToolUseResult.partial(wrapText, toStringMaps(messages), turns, toolCalls);
+                return ToolUseResult.partial(withProductFooter(wrapText), toStringMaps(messages), turns, toolCalls);
             }
             log.warn("ToolUseLoop budget wrap-up produced no text, falling back to error");
         } catch (Exception e) {
@@ -536,6 +546,15 @@ public class ToolUseLoop {
         return ToolUseResult.error(
                 "处理超时：AI 连续调用工具过多仍未给出回答（已中断）。请缩小请求范围或重试。",
                 toStringMaps(messages), turns, toolCalls, true);
+    }
+
+    /**
+     * 方案 B：把本轮写入产物以标记形式追加到回答末尾（无产物 → 原样返回）。
+     * 只在**返回值**上追加，不进 transcript（回灌模型的消息列表）：
+     * 这样 {@link #runInternal} 里构建的 messages 仍是模型原文，重试/续接均不受影响。
+     */
+    private String withProductFooter(String answer) {
+        return AgentProductLink.appendFooter(answer, products);
     }
 
     /**
@@ -615,6 +634,13 @@ public class ToolUseLoop {
         }
         if (sink != null) {
             sink.onToolResult(call, result);
+        }
+        // 方案 B：登记写入产物（仅白名单工具 + 成功执行），供最终回答末尾追加可点击链接
+        if (result != null && result.success) {
+            AgentProductLink.Product product = AgentProductLink.fromResult(call.name, call.arguments, result.data);
+            if (product != null) {
+                AgentProductLink.add(products, product);
+            }
         }
         messages.add(nativeChannel
                 ? toolResultMsgNative(callId, result)

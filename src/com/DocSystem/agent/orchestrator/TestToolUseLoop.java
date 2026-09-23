@@ -40,6 +40,7 @@ public class TestToolUseLoop {
         testConsecutiveIdenticalToolCall();
         testTranscriptTrimming();
         testHistoryInjection();
+        testProductFooter();
         System.out.println("\n======== TestToolUseLoop: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -47,12 +48,17 @@ public class TestToolUseLoop {
     }
 
     private static void check(String name, boolean cond) {
+        check(name, cond, null);
+    }
+
+    /** 带 detail 的断言（失败时打印实际值：修断言前先看清事实，别靠猜） */
+    private static void check(String name, boolean cond, String detail) {
         if (cond) {
             pass++;
             System.out.println("[PASS] " + name);
         } else {
             fail++;
-            System.out.println("[FAIL] " + name);
+            System.out.println("[FAIL] " + name + (detail == null || detail.isEmpty() ? "" : "  -> " + detail));
         }
     }
 
@@ -63,6 +69,14 @@ public class TestToolUseLoop {
         reg.register(ToolDefinition.builder("list_repos", "列出仓库", args -> ToolResult.ok("[仓库1, 仓库2]")).build());
         reg.register(ToolDefinition.builder("get_repos", "获取仓库", args -> ToolResult.ok("仓库" + args.getString("vid") + "详情")).build());
         reg.register(ToolDefinition.builder("boom", "抛异常工具", args -> ToolResult.error("执行失败: disk full")).build());
+        // 方案 B：写入类工具（产物登记靠 workspace 参数 + ToolResult.data）
+        reg.register(ToolDefinition.builder("write_file", "写文件",
+                args -> ToolResult.ok("✅ 已写入文件",
+                        com.DocSystem.agent.tool.AgentProductLink.of(args.getInteger("vid"),
+                                args.getString("path"), args.getString("name"), Long.valueOf(999L), "new")))
+                .isWrite(true).build());
+        reg.register(ToolDefinition.builder("rename_doc", "重命名",
+                args -> ToolResult.ok("✅ 已重命名")).isWrite(true).build());
         if (includeAdmin) {
             reg.register(ToolDefinition.builder("doc_sys_init", "系统初始化", args -> ToolResult.ok("init")).adminOnly(true).build());
         }
@@ -94,6 +108,58 @@ public class TestToolUseLoop {
 
     // ---------- 测试用例 ----------
 
+    /**
+     * 方案 B（产物链接）：写入类工具成功后，最终回答末尾带产物标记；
+     * 非白名单工具（rename_doc）不登记；无写入的一轮不产生空标记。
+     */
+    private static void testProductFooter() {
+        List<String> script = new ArrayList<>();
+        script.add("<tool_call>{\"name\":\"write_file\",\"arguments\":{\"vid\":1,\"path\":\"66666\",\"name\":\"a.txt\",\"content\":\"x\"}}</tool_call>");
+        script.add("文件已写好。");
+        ToolUseLoop loop = new ToolUseLoop(scripted(script), buildRegistry(false), false);
+        ToolUseResult r = loop.run("写一个文件");
+        check("product footer: success", r.success);
+        check("product footer: appended", r.message != null
+                && r.message.contains(com.DocSystem.agent.tool.AgentProductLink.MARK_START));
+        List<com.DocSystem.agent.tool.AgentProductLink.Product> parsed =
+                com.DocSystem.agent.tool.AgentProductLink.parse(r.message);
+        check("product footer: one product", parsed.size() == 1, String.valueOf(parsed.size()));
+        if (parsed.size() == 1) {
+            check("product footer: name", "a.txt".equals(parsed.get(0).name), parsed.get(0).name);
+            check("product footer: normalized path", "66666/".equals(parsed.get(0).path), parsed.get(0).path);
+            check("product footer: docId from tool data", parsed.get(0).docId != null
+                    && parsed.get(0).docId.longValue() == 999L);
+        }
+        check("product footer: answer text preserved", r.message.trim().startsWith("文件已写好。"));
+        check("product footer: stripped text is model answer",
+                "文件已写好。".equals(com.DocSystem.agent.tool.AgentProductLink.strip(r.message)));
+        // transcript（回灌模型的消息列表）不得含产物标记
+        boolean transcriptClean = true;
+        for (Map<String, String> m : r.transcript) {
+            if (m.get("content") != null
+                    && m.get("content").contains(com.DocSystem.agent.tool.AgentProductLink.MARK_START)) {
+                transcriptClean = false;
+                break;
+            }
+        }
+        check("product footer: not leaked into transcript", transcriptClean);
+
+        // 非白名单写入工具（rename_doc）：不登记
+        List<String> script2 = new ArrayList<>();
+        script2.add("<tool_call>{\"name\":\"rename_doc\",\"arguments\":{\"vid\":1,\"path\":\"\",\"name\":\"a.txt\",\"dstName\":\"b.txt\"}}</tool_call>");
+        script2.add("已重命名。");
+        ToolUseResult r2 = new ToolUseLoop(scripted(script2), buildRegistry(false), false).run("重命名");
+        check("product footer: rename_doc NOT registered", r2.message != null
+                && !r2.message.contains(com.DocSystem.agent.tool.AgentProductLink.MARK_START));
+
+        // 无写入的一轮：不产生标记
+        List<String> script3 = new ArrayList<>();
+        script3.add("<tool_call>{\"name\":\"list_repos\",\"arguments\":{}}</tool_call>");
+        script3.add("共 2 个仓库。");
+        ToolUseResult r3 = new ToolUseLoop(scripted(script3), buildRegistry(false), false).run("列仓库");
+        check("product footer: no marker without writes", r3.message != null
+                && !r3.message.contains(com.DocSystem.agent.tool.AgentProductLink.MARK_START));
+    }
     private static void testMultiTurnChain() {
         // turn1: list_repos → turn2: get_repos → turn3: final answer
         List<String> script = new ArrayList<>();

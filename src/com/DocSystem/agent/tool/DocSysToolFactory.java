@@ -753,7 +753,9 @@ public class DocSysToolFactory {
                         Object size = sizeOfData(resp, "size");
                         return ToolResult.ok(writeReceipt(resp, "写入文件",
                                 docTargetText(vid, path, name) + (size == null ? "" : "（" + sizeText(size) + "）"),
-                                "回执不包含正文；要核对内容请用 get_doc 读回。"));
+                                "回执不包含正文；要核对内容请用 get_doc 读回。"),
+                                // 方案 B：带上产物（回答末尾会渲染成可点击链接）
+                                AgentProductLink.of(vid, path, name, AgentProductLink.docIdOf(resp.get("data")), "new"));
                     } catch (Exception e) {
                         return ToolResult.error("write_file failed: " + e.getMessage());
                     }
@@ -809,7 +811,10 @@ public class DocSysToolFactory {
                         Object size = sizeOfData(resp, "size");
                         return ToolResult.ok(writeReceipt(resp, "新建 Office 文件",
                                 docTargetText(vid, path, name.trim()) + (size == null ? "" : "（" + sizeText(size) + "）"),
-                                "回执不含正文；要核对内容请用 get_doc 读回（Office 会返回抽取的文本）。"));
+                                "回执不含正文；要核对内容请用 get_doc 读回（Office 会返回抽取的文本）。"),
+                                // 方案 B：带上产物（回答末尾会渲染成可点击链接）
+                                AgentProductLink.of(vid, path, name.trim(),
+                                        AgentProductLink.docIdOf(resp.get("data")), "new"));
                     } catch (Exception e) {
                         return ToolResult.error("write_office failed: " + e.getMessage());
                     }
@@ -879,7 +884,10 @@ public class DocSysToolFactory {
                     try {
                         Map<String, Object> resp = callWithLockRetry("edit_office", () -> client.editOfficeDoc(
                                 vid, path, name.trim(), spec, args.getString("commitMsg")));
-                        return ToolResult.ok(editOfficeReceipt(resp, vid, path, name.trim()));
+                        // 方案 B：带上产物（回答末尾会渲染成可点击链接）
+                        return ToolResult.ok(editOfficeReceipt(resp, vid, path, name.trim()),
+                                AgentProductLink.of(vid, path, name.trim(),
+                                        AgentProductLink.docIdOf(resp.get("data")), "modified"));
                     } catch (Exception e) {
                         return ToolResult.error("edit_office failed: " + e.getMessage());
                     }

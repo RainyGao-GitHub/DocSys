@@ -8,6 +8,8 @@
     <!-- Markdown + Mermaid (local copies for offline/intranet use) -->
     <script src="/DocSystem/web/static/agent/marked/marked.min.js"></script>
     <script src="/DocSystem/web/static/agent/mermaid/mermaid.min.js"></script>
+    <!-- 方案 B：产物链接要用与 project 页同一套 base64(path/name) 编码（js/base64.js 提供 base64_encode） -->
+    <script src="/DocSystem/web/js/base64.js"></script>
     <style>
         /* Mermaid diagram container */
         .mermaid-render { text-align: center; margin: 12px 0; }
@@ -1671,6 +1673,18 @@
         .input-container.note-mode { border-color: #8fbaf0; }
         .input-container.note-mode:focus-within { border-color: #4a8fe7; box-shadow: 0 0 0 3px rgba(74,143,231,0.12); }
 
+        /* 方案 B：本轮写入产物链接（图标 + 文件名，点击在当前页/新窗口打开）*/
+        .ds-products { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+        .ds-products-label { font-size: 12px; color: #8a94a6; }
+        .ds-product {
+            display: inline-flex; align-items: center; gap: 5px; max-width: 100%;
+            padding: 3px 10px 3px 7px; border-radius: 13px;
+            background: #f5f8ff; border: 1px solid #d8e0f0; color: #2b56c4;
+            font-size: 12px; text-decoration: none; cursor: pointer;
+        }
+        .ds-product:hover { background: #e8f0ff; border-color: #b9cdf5; }
+        .ds-product-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+
         /* P1.5：关注对象目录树弹窗 */
         #focusDialog .dialog { width: 620px; max-width: 94vw; max-height: 84vh; display: flex; flex-direction: column; }
         .focus-dialog-toolbar { display: flex; gap: 8px; align-items: center; padding: 0 16px 10px; }
@@ -3271,6 +3285,93 @@
             .replace(/([{}\[\]])/g, '<span class="ai-json-bracket">$1</span>');
     }
 
+    // ==================== 方案 B：本轮写入产物链接（2026-09-23） ====================
+    /* 服务端在本轮回答末尾追加一行机器标记：
+       [[ds-products]]{"items":[{"vid":1,"path":"","name":"a.docx","docId":123,"action":"new"}]}[[/ds-products]]
+       前端把它渲染成「图标 + 文件名」的链接：Agent 在 project 页内且文件属于当前仓库 → 当前页打开
+       （调父页 DocSys.js 的 openDoc）；否则新窗口打开 project.html。标记从展示文本里剥掉；
+       坏标记/旧会话没标记 → 当普通文本处理，不影响回答渲染。*/
+    var DS_PRODUCT_RE = /\[\[ds-products\]\]([\s\S]*?)\[\[\/ds-products\]\]/g;
+
+    /** 从消息正文里抽产物列表；返回剥离标记后的正文（产物为空时 text 原样）*/
+    function extractProducts(content) {
+        var items = [];
+        if (!content) return { text: content || '', items: items };
+        var text = String(content).replace(DS_PRODUCT_RE, function(m, json) {
+            try {
+                var root = JSON.parse(json);
+                var arr = (root && root.items) || [];
+                for (var i = 0; i < arr.length; i++) {
+                    var it = arr[i];
+                    if (it && it.name) {
+                        items.push({
+                            vid: it.vid,
+                            path: it.path || '',
+                            name: it.name,
+                            docId: it.docId || null,
+                            action: it.action || 'new'
+                        });
+                    }
+                }
+            } catch (e) { /* 坏标记：忽略（最多不显示链接）*/ }
+            return '';
+        });
+        text = text.replace(/\n[ \t]*\n[ \t]*$/, '\n').replace(/[ \t]+$/, '');
+        return { text: text, items: items };
+    }
+
+    /** 产物链接行（无产物 → 空串）：图标复用「@ 关注对象」那套按后缀映射的文件图标 */
+    function renderProductLinks(items) {
+        if (!items || !items.length) return '';
+        var html = '<div class="ds-products"><span class="ds-products-label">本轮产物</span>';
+        for (var i = 0; i < items.length; i++) {
+            var it = items[i];
+            var tip = (it.action === 'modified' ? '已修改：' : '已新建：') + it.name + '（点击打开）';
+            html += '<a class="ds-product" href="javascript:void(0)" title="' + escapeHtml(tip) + '"'
+                 + ' data-vid="' + escapeHtml(String(it.vid == null ? '' : it.vid)) + '"'
+                 + ' data-path="' + escapeHtml(it.path) + '"'
+                 + ' data-name="' + escapeHtml(it.name) + '"'
+                 + ' data-docid="' + escapeHtml(String(it.docId == null ? '' : it.docId)) + '">'
+                 + '<img class="fi" src="' + ICON_BASE + focusFileIconName(it.name) + '" alt="">'
+                 + '<span class="ds-product-name">' + escapeHtml(it.name) + '</span></a>';
+        }
+        return html + '</div>';
+    }
+
+    /** 点击产物链接：同仓库且在 project 页内 → 当前页；否则新窗口 */
+    function openProduct(item) {
+        if (!item || !item.name) return;
+        if (openProductInParent(item)) return;
+        var b64 = function(s) { return (typeof base64_encode === 'function') ? base64_encode(s || '') : ''; };
+        var href = '/DocSystem/web/project.html?vid=' + encodeURIComponent(item.vid == null ? '' : item.vid)
+                 + '&doc=' + encodeURIComponent(item.docId == null ? 0 : item.docId)
+                 + '&path=' + encodeURIComponent(b64(item.path))
+                 + '&name=' + encodeURIComponent(b64(item.name));
+        window.open(href);
+    }
+
+    /** 同页打开：同源父窗口必须有 DocSys.js 的 openDoc，且父页当前仓库就是文件所在仓库 */
+    function openProductInParent(item) {
+        try {
+            var p = window.parent;
+            if (!p || p === window) return false;
+            if (typeof p.openDoc !== 'function') return false;
+            var parentVid = (p.gReposInfo && p.gReposInfo.id != null) ? String(p.gReposInfo.id) : null;
+            if (!parentVid || String(item.vid) !== parentVid) return false;
+            p.openDoc({
+                vid: item.vid,
+                docId: item.docId || undefined,
+                path: item.path || '',
+                name: item.name,
+                type: 1
+            }, false, 'openInArtDialog', 'open', p.gShareId);
+            return true;
+        } catch (e) {
+            console.warn('openProductInParent failed, fallback to new window', e);
+            return false;
+        }
+    }
+
     /** T7.2.2 工具进度卡片渲染 */
     function renderToolCard(tc) {
         if (!tc) return '';
@@ -3331,6 +3432,9 @@
             } else {
                 // T7.2.1 真流式：正文 = content（最终） || liveText（生成中的当前轮）
                 var bodyText = (msg.content != null && msg.content.length > 0) ? msg.content : (msg.liveText || '');
+                // 方案 B：正文里可能带「本轮写入产物」机器标记 → 剥出来单独渲染成链接行
+                var extracted = extractProducts(bodyText);
+                bodyText = extracted.text;
                 if (msg.isGenerating && (!bodyText || bodyText.length === 0)) {
                     // 尚无内容：显示"正在思考"
                     html += '<div class="message-body"><span class="generating-indicator">AI 正在思考</span><span class="typing-cursor"></span></div>';
@@ -3340,6 +3444,7 @@
                 } else {
                     // 已完成：一次性智能渲染（JSON/MD/Mermaid/SVG/HTML）
                     html += '<div class="message-body">' + renderContent(bodyText, msg.role) + '</div>';
+                    if (msg.role === 'assistant') html += renderProductLinks(extracted.items);
                 }
             }
             if (msg.isRelogin) {
@@ -5438,6 +5543,18 @@
         if (planBtn) {
             e.preventDefault();
             approvePlan(planBtn, planBtn.getAttribute('data-plan-approve'));
+            return;
+        }
+        // 方案 B：本轮产物链接（图标 + 文件名）→ 当前页 / 新窗口打开
+        var productEl = (t && t.closest) ? t.closest('.ds-product') : null;
+        if (productEl) {
+            e.preventDefault();
+            openProduct({
+                vid: productEl.getAttribute('data-vid'),
+                path: productEl.getAttribute('data-path') || '',
+                name: productEl.getAttribute('data-name') || '',
+                docId: productEl.getAttribute('data-docid') || null
+            });
             return;
         }
         var btn = (t && t.closest) ? t.closest('.continue-btn') : null;

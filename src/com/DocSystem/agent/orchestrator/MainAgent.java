@@ -700,7 +700,9 @@ public class MainAgent {
         try {
             String progress = com.DocSystem.agent.orchestrator.TranscriptCompactor.summarize(
                     tr.transcript, 1500);
-            continuationStore.savePending(sessionId, tr.message, progress, tr.turns, tr.toolCalls);
+            // 方案 B：续接上下文也不带产物标记（那是给前端渲染用的）
+            continuationStore.savePending(sessionId, com.DocSystem.agent.tool.AgentProductLink.strip(tr.message),
+                    progress, tr.turns, tr.toolCalls);
         } catch (Exception e) {
             log.warn("记录未完成标记失败（不影响本轮交付）: {}", e.getMessage());
         }
@@ -958,7 +960,10 @@ public class MainAgent {
                 }
                 java.util.Map<String, String> msg = new java.util.HashMap<>();
                 msg.put("role", role);
-                msg.put("content", m.getContent() != null ? m.getContent() : "");
+                // 方案 B：历史里的写入产物标记只给前端渲染链接用，回灌模型前剥掉
+                // （否则模型会在后续轮次看到一段机器标记）
+                msg.put("content", com.DocSystem.agent.tool.AgentProductLink.strip(
+                        m.getContent() != null ? m.getContent() : ""));
                 result.add(msg);
             }
             return result.isEmpty() ? null : result;
