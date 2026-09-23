@@ -756,6 +756,18 @@ public class MainAgent {
         com.DocSystem.agent.permission.PermissionMode permMode = com.DocSystem.agent.permission.PermissionMode.DEFAULT;
         if (permissionStore != null && permissionSessionId != null) {
             permMode = permissionStore.getMode(permissionSessionId);
+            // P3：全局配置 —— 禁用"全部允许"档时降级为自动档；追加的绝对保护工具登记到风险目录
+            boolean allowAllEnabled = true;
+            if (agentConfigService != null) {
+                allowAllEnabled = com.DocSystem.agent.permission.PermissionConfig.parseBoolean(
+                        agentConfigService.getGlobal(com.DocSystem.agent.config.AgentConfigService
+                                .KEY_AGENT_PERMISSION_ALLOW_ALL_ENABLED), true);
+                com.DocSystem.agent.permission.ToolRiskCatalog.setExtraGuarded(
+                        com.DocSystem.agent.permission.PermissionConfig.parseToolList(
+                                agentConfigService.getGlobal(com.DocSystem.agent.config.AgentConfigService
+                                        .KEY_AGENT_ABSOLUTE_GUARDED_EXTRA)));
+            }
+            permMode = com.DocSystem.agent.permission.PermissionConfig.applyAllowAllGate(permMode, allowAllEnabled);
             java.util.List<com.DocSystem.agent.permission.PermissionRule> permRules =
                     permissionStore.getRules(permissionSessionId);
             registry.setPermissionContext(new com.DocSystem.agent.permission.PermissionContext(

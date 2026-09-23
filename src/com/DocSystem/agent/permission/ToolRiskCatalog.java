@@ -24,6 +24,9 @@ public final class ToolRiskCatalog {
     /** 用户明确要求"永远例外"的工具（硬编码，不随配置移除） */
     public static final Set<String> ABSOLUTE_GUARDED = Collections.singleton("delete_repos");
 
+    /** P3：管理员**追加**的绝对保护工具（不包含内置项；为空 → 无追加） */
+    private static volatile Set<String> extraGuarded = Collections.emptySet();
+
     private static final Map<String, ToolRisk> TABLE = new HashMap<>();
 
     static {
@@ -74,11 +77,40 @@ public final class ToolRiskCatalog {
         if (def == null) {
             return ToolRisk.ABSOLUTE;
         }
+        // P3：管理员追加的绝对保护优先（仅对确实需要确认的写工具生效）
+        if (def.needsConfirm && isExtraGuarded(def.name)) {
+            return ToolRisk.ABSOLUTE;
+        }
         if (def.riskClass != null) {
             return def.riskClass;
         }
         ToolRisk r = registered(def.name);
         return r != null ? r : ToolRisk.ABSOLUTE;
+    }
+
+    /** P3：设置管理员追加的绝对保护工具（null/空 → 清空） */
+    public static void setExtraGuarded(java.util.Collection<String> names) {
+        if (names == null || names.isEmpty()) {
+            extraGuarded = Collections.emptySet();
+            return;
+        }
+        Set<String> s = new java.util.HashSet<>();
+        for (String n : names) {
+            if (n != null && !n.trim().isEmpty()) {
+                s.add(n.trim());
+            }
+        }
+        extraGuarded = Collections.unmodifiableSet(s);
+    }
+
+    /** 当前追加的绝对保护项 */
+    public static Set<String> extraGuarded() {
+        return extraGuarded;
+    }
+
+    /** 是否被追加为绝对保护（不含内置项） */
+    public static boolean isExtraGuarded(String toolName) {
+        return toolName != null && extraGuarded.contains(toolName);
     }
 
     /** 是否已登记（护栏：needsConfirm 工具必须已登记） */

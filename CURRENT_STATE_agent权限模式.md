@@ -9,7 +9,7 @@
 
 - 计划（唯一口径来源）：`devDocs/Agent权限模式改造计划.md`
 - 用户原话（本次触发）："我看 copilot 和 claude code 都是可以选权限模式的，比如整理目录过程中由于调用移动目录工具，所以需要不断的确认……"
-- 状态：**P2 完成（作用域授权 + 确认弹窗作用域选择 + 批准来源标注，护栏 39/1513/0，V5/V6 页面实测通过）**
+- 状态：**P3 主体完成（全局开关 + 轮数预算 + 绝对保护可追加 + 提示词接入设置弹窗；服务端强制已实测；菜单置灰项待复验）**
 
 ## 用户定稿决策（2026-09-23）
 
@@ -101,12 +101,28 @@
 
 ## 下一步
 
-**P2 已完成。下一步开 P3（治理与统计）**：
+**P3 剩余**：
 
-1. 管理员全局开关 `agent_permission_allow_all_enabled`（false → UI 不提供"全部允许"档 + 服务端降级为 auto）
-2. 统计/审计：按模式的写操作分布、自动批准次数、规则命中次数
-3. 技能 risk 的 UI（技能列表/详情显示 risk 与"未声明按绝对保护处理"）+ 管理员声明编辑
-4. 绝对保护清单可配置（`delete_repos` 始终在内不可移除）
+1. 模式菜单“全部允许”置灰项复验（本次 E2E 实测服务端已正确拒绝，但页面探针读到 disabled=false，疑浏览器缓存旧页面 → 用 `?_v=` 强制刷新复验）
+2. 技能 risk 的 UI（技能列表/详情显示 risk 与"未声明按绝对保护处理"；管理员声明入口）
+3. 统计/审计：按模式的写操作分布、自动批准次数、规则命中次数
+4. 待补：P2 观测项——“批准并记住”那次 delete_doc 结果为 failed（疑确认轮询与授权 POST 时序/120s 超时）
+
+## P3 实施记录（2026-09-23）
+
+- 全局配置（`agent_config`，仅管理员可改）：
+  - `agent_permission_allow_all_enabled`（默认 true）：关闭 → **服务端把 allowAll 降级为 auto**（`PermissionConfig.applyAllowAllGate`）+ **拒绝切换接口**
+  - `agent_absolute_guarded_extra`（逗号分隔）：**追加**绝对保护工具（`delete_repos` 为内置不可移除）
+  - 顺带把既有但无 UI 的 `agent_max_turns`、`system_prompt_override`、`system_prompt_suffix` 一起接入设置弹窗
+- 新端点：`GET/POST /agent/config/admin-permission`（GET 对非管理员只返回 isAdmin=false + allowAllEnabled；POST 仅管理员，键白名单 + 值校验）
+- 前端：设置弹窗新增"管理员：权限与全局配置"分区（4 项 + 内置绝对保护只读展示）；模式 chip 下拉在开关关闭时把"全部允许"置灰并标"（管理员已禁用）"
+- 护栏：`TestPermissionPolicy` 85 项（+11：开关降级/布尔与列表解析/非法工具名/追加绝对保护生效与可清空）；全量 **39 套 / 1524 项 / 0 失败**
+- E2E（V7）：写入 `agent_permission_allow_all_enabled=false` 后
+  - `POST /agent/permission/mode mode=allowAll` → **success=false "管理员已禁用「全部允许」档"** ✓
+  - `GET /agent/permission` → `allowAllEnabled:false` ✓
+  - 设置弹窗管理员分区正常（开关=禁用、轮数预算=25、内置绝对保护 delete_repos）✓
+  - ⚠️ 菜单置灰探针读到 `disabled=false`（服务端已拒绝；疑浏览器缓存旧 index.html）—— 待复验
+  - 验证后已把该配置键删除（恢复默认允许）
 
 ## P2 实施记录（2026-09-23）
 

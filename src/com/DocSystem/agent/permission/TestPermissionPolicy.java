@@ -37,6 +37,7 @@ public class TestPermissionPolicy {
         testSkillRisk();
         testCatalog();
         testModeParsing();
+        testGlobalConfig();
         System.out.println("\n======== TestPermissionPolicy: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -244,6 +245,45 @@ public class TestPermissionPolicy {
                 "全部允许".equals(PermissionTrace.approvalLabel("ALLOW:mode(allowAll)")));
         check("DENY plan → 被拒绝", "被拒绝".equals(PermissionTrace.approvalLabel("DENY:plan")));
         check("空痕迹 → null", PermissionTrace.approvalLabel(null) == null);
+    }
+
+    // ---------- P3：全局配置 ----------
+
+    private static void testGlobalConfig() {
+        check("禁用全部允许 → 该档降级为自动",
+                PermissionConfig.applyAllowAllGate(PermissionMode.ALLOW_ALL, false) == PermissionMode.AUTO);
+        check("允许全部允许 → 档位不变",
+                PermissionConfig.applyAllowAllGate(PermissionMode.ALLOW_ALL, true) == PermissionMode.ALLOW_ALL);
+        check("其它档不受开关影响",
+                PermissionConfig.applyAllowAllGate(PermissionMode.MANUAL, false) == PermissionMode.MANUAL
+                        && PermissionConfig.applyAllowAllGate(PermissionMode.PLAN, false) == PermissionMode.PLAN);
+        check("布尔解析（空/非法 → 默认）",
+                PermissionConfig.parseBoolean(null, true) && !PermissionConfig.parseBoolean("", false)
+                        && !PermissionConfig.parseBoolean("false", true)
+                        && PermissionConfig.parseBoolean("on", false)
+                        && PermissionConfig.parseBoolean("x", true));
+        check("工具名列表解析（逗号/空格/去重）",
+                PermissionConfig.parseToolList(" a, b  a \n c ").size() == 3);
+        check("非法工具名检出",
+                PermissionConfig.invalidToolNames(PermissionConfig.parseToolList("move_doc,bad-name!")).size() == 1);
+
+        // 追加绝对保护：delete_repos 仍是内置项；追加 move_doc 后它也变绝对保护
+        com.DocSystem.agent.tool.ToolDefinition moveDef = com.DocSystem.agent.tool.ToolDefinition
+                .builder("move_doc", "d", a -> com.DocSystem.agent.tool.ToolResult.ok("x"))
+                .isWrite(true).needsConfirm(true).build();
+        check("追加前：move_doc = 破坏性", ToolRiskCatalog.resolve(moveDef) == ToolRisk.DESTRUCTIVE);
+        ToolRiskCatalog.setExtraGuarded(PermissionConfig.parseToolList("move_doc"));
+        check("追加后：move_doc = 绝对保护", ToolRiskCatalog.resolve(moveDef) == ToolRisk.ABSOLUTE);
+        check("追加不影响内置项",
+                ToolRiskCatalog.resolve(com.DocSystem.agent.tool.ToolDefinition
+                        .builder("delete_repos", "d", a -> com.DocSystem.agent.tool.ToolResult.ok("x"))
+                        .isWrite(true).needsConfirm(true).build()) == ToolRisk.ABSOLUTE);
+        check("追加项在自动档也 ASK（含规则命中）",
+                PermissionPolicy.decide(PermissionMode.AUTO, ToolRisk.ABSOLUTE,
+                        java.util.Arrays.asList(new PermissionRule(PermissionRule.Kind.TOOL, "move_doc", null, null)),
+                        "move_doc", args("vid", 1, "path", "a")).isAsk());
+        ToolRiskCatalog.setExtraGuarded(null);
+        check("清空追加后：move_doc 回到破坏性", ToolRiskCatalog.resolve(moveDef) == ToolRisk.DESTRUCTIVE);
     }
 
     // ---------- 模式解析 ----------

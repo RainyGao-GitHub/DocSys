@@ -2089,6 +2089,7 @@ public class AgentController {
             data.put("rules", ruleTexts);
             data.put("absoluteGuarded",
                     new java.util.ArrayList<>(com.DocSystem.agent.permission.ToolRiskCatalog.ABSOLUTE_GUARDED));
+            data.put("allowAllEnabled", allowAllEnabled());
             return AgentResponse.ok(data);
         } catch (Exception e) {
             log.warn("getPermission failed: {}", e.getMessage());
@@ -2112,6 +2113,10 @@ public class AgentController {
                     com.DocSystem.agent.permission.PermissionMode.fromId(mode);
             if (target == null) {
                 return AgentResponse.error("非法权限模式: " + mode);
+            }
+            // P3：管理员全局禁用了"全部允许"档 → 服务端拒绝（不能只靠 UI 置灰）
+            if (target == com.DocSystem.agent.permission.PermissionMode.ALLOW_ALL && !allowAllEnabled()) {
+                return AgentResponse.error("管理员已禁用「全部允许」档");
             }
             if (permissionStore == null) {
                 return AgentResponse.error("权限模式不可用（服务未装配）");
@@ -2145,6 +2150,145 @@ public class AgentController {
             return AgentResponse.ok(Collections.singletonMap("cleared", "true"));
         } catch (Exception e) {
             return AgentResponse.error("清空授权失败: " + e.getMessage());
+        }
+    }
+
+    /** P3：是否允许"全部允许"档（全局配置，未配置 → true） */
+    private boolean allowAllEnabled() {
+        if (agentConfigService == null) {
+            return true;
+        }
+        try {
+            return com.DocSystem.agent.permission.PermissionConfig.parseBoolean(
+                    agentConfigService.getGlobal(
+                            com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_PERMISSION_ALLOW_ALL_ENABLED),
+                    true);
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    /**
+     * P3：读取管理员全局配置（设置弹窗"管理员"分区用）。
+     *
+     * <p>非管理员也能拿到 {@code isAdmin=false} 与 {@code allowAllEnabled}（模式 chip 需据此置灰），
+     * 但**不返回**提示词等敏感内容。</p>
+     */
+    @GetMapping("/config/admin-permission")
+    public AgentResponse getAdminPermissionConfig(HttpServletRequest servletRequest) {
+        Map<String, Object> data = new HashMap<>();
+        boolean allowAll = allowAllEnabled();
+        data.put("allowAllEnabled", allowAll);
+        User user = currentUser(servletRequest);
+        boolean admin = user != null && isSystemAdmin(user);
+        data.put("isAdmin", admin);
+        if (!admin) {
+            return AgentResponse.ok(data);
+        }
+        int maxTurns = 25;
+        String override = "";
+        String suffix = "";
+        java.util.List<String> extra = java.util.Collections.emptyList();
+        if (agentConfigService != null) {
+            try {
+                String mt = agentConfigService.getGlobal(
+                        com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_MAX_TURNS);
+                if (mt != null && !mt.trim().isEmpty()) {
+                    maxTurns = Integer.parseInt(mt.trim());
+                }
+                String ov = agentConfigService.getGlobal(
+                        com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_OVERRIDE);
+                override = ov != null ? ov : "";
+                String sf = agentConfigService.getGlobal(
+                        com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_SUFFIX);
+                suffix = sf != null ? sf : "";
+                extra = com.DocSystem.agent.permission.PermissionConfig.parseToolList(
+                        agentConfigService.getGlobal(
+                                com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_ABSOLUTE_GUARDED_EXTRA));
+            } catch (Exception e) {
+                log.warn("读取管理员权限配置失败: {}", e.getMessage());
+            }
+        }
+        data.put("maxTurns", maxTurns);
+        data.put("systemPromptOverride", override);
+        data.put("systemPromptSuffix", suffix);
+        data.put("absoluteGuarded",
+                new java.util.ArrayList<>(com.DocSystem.agent.permission.ToolRiskCatalog.ABSOLUTE_GUARDED));
+        data.put("absoluteGuardedExtra", extra);
+        return AgentResponse.ok(data);
+    }
+
+    /**
+     * P3：保存管理员全局配置（仅管理员；白名单键，逐项校验）。
+     *
+     * <p>可传：{@code allowAllEnabled}（true/false）、{@code maxTurns}（5~50，越界钳制）、
+     * {@code systemPromptOverride} / {@code systemPromptSuffix}（提示词）、
+     * {@code absoluteGuardedExtra}（逗号分隔工具名，仅限字母数字下划线）。</p>
+     */
+    @PostMapping("/config/admin-permission")
+    public AgentResponse saveAdminPermissionConfig(
+            @RequestParam(value = "allowAllEnabled", required = false) String allowAllEnabled,
+            @RequestParam(value = "maxTurns", required = false) String maxTurns,
+            @RequestParam(value = "systemPromptOverride", required = false) String systemPromptOverride,
+            @RequestParam(value = "systemPromptSuffix", required = false) String systemPromptSuffix,
+            @RequestParam(value = "absoluteGuardedExtra", required = false) String absoluteGuardedExtra,
+            HttpServletRequest servletRequest) {
+        User user = currentUser(servletRequest);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
+        if (!isSystemAdmin(user)) {
+            return AgentResponse.error("仅管理员可修改全局权限配置");
+        }
+        if (agentConfigService == null) {
+            return AgentResponse.error("配置服务不可用");
+        }
+        try {
+            if (allowAllEnabled != null) {
+                agentConfigService.setGlobal(
+                        com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_PERMISSION_ALLOW_ALL_ENABLED,
+                        com.DocSystem.agent.permission.PermissionConfig.parseBoolean(allowAllEnabled, true)
+                                ? "true" : "false");
+            }
+            if (maxTurns != null && !maxTurns.trim().isEmpty()) {
+                int n;
+                try {
+                    n = Integer.parseInt(maxTurns.trim());
+                } catch (NumberFormatException nfe) {
+                    return AgentResponse.error("轮数预算必须是整数");
+                }
+                n = Math.max(com.DocSystem.agent.orchestrator.ToolUseLoop.MIN_TURNS,
+                        Math.min(com.DocSystem.agent.orchestrator.ToolUseLoop.MAX_TURNS_LIMIT, n));
+                agentConfigService.setGlobal(
+                        com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_MAX_TURNS, String.valueOf(n));
+            }
+            if (systemPromptOverride != null) {
+                agentConfigService.setGlobal(
+                        com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_OVERRIDE,
+                        systemPromptOverride.trim());
+            }
+            if (systemPromptSuffix != null) {
+                agentConfigService.setGlobal(
+                        com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_SUFFIX,
+                        systemPromptSuffix.trim());
+            }
+            if (absoluteGuardedExtra != null) {
+                java.util.List<String> names = com.DocSystem.agent.permission.PermissionConfig
+                        .parseToolList(absoluteGuardedExtra);
+                java.util.List<String> bad = com.DocSystem.agent.permission.PermissionConfig
+                        .invalidToolNames(names);
+                if (!bad.isEmpty()) {
+                    return AgentResponse.error("工具名不合法: " + bad);
+                }
+                agentConfigService.setGlobal(
+                        com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_ABSOLUTE_GUARDED_EXTRA,
+                        String.join(",", names));
+            }
+            com.DocSystem.common.Log.info("[Permission][ADMIN] 全局权限配置已更新 by " + user.getName());
+            return getAdminPermissionConfig(servletRequest);
+        } catch (Exception e) {
+            log.warn("saveAdminPermissionConfig failed: {}", e.getMessage());
+            return AgentResponse.error("保存失败: " + e.getMessage());
         }
     }
 
