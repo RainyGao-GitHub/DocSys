@@ -2258,13 +2258,6 @@
                     <div id="adminPermSection" style="display:none; margin-top:16px; border-top:1px solid #eee; padding-top:12px;">
                         <h4 style="margin-bottom: 12px; color: #555; font-size: 13px;">管理员：权限与全局配置</h4>
                         <div class="form-row">
-                            <label>允许「全部允许」档</label>
-                            <select id="adminAllowAll">
-                                <option value="true">允许</option>
-                                <option value="false">禁用（该档降级为自动）</option>
-                            </select>
-                        </div>
-                        <div class="form-row">
                             <label>轮数预算 (5~50)</label>
                             <input type="number" id="adminMaxTurns" min="5" max="50" style="width:90px;">
                         </div>
@@ -3407,15 +3400,11 @@
         var menu = document.getElementById('permMenu');
         if (!menu) return;
         var id = currentPermMode();
-        var allowAllEnabled = state.permission.allowAllEnabled !== false;
         var html = '';
         PERM_MODES.forEach(function(m) {
-            var disabled = (m.id === 'allowAll' && !allowAllEnabled);
             html += '<button type="button" class="perm-item' + (m.id === id ? ' active' : '')
-                 + '" data-perm-mode="' + m.id + '"' + (disabled ? ' disabled style="opacity:.45;cursor:not-allowed;"' : '')
-                 + '>' + m.label
-                 + '<span class="perm-desc">' + m.desc
-                 + (disabled ? '（管理员已禁用）' : '') + '</span></button>';
+                 + '" data-perm-mode="' + m.id + '">' + m.label
+                 + '<span class="perm-desc">' + m.desc + '</span></button>';
         });
         var n = (state.permission && state.permission.rules) ? state.permission.rules.length : 0;
         html += '<div class="perm-menu-foot"><span>本会话已授权 ' + n + ' 条'
@@ -3456,7 +3445,6 @@
             if (ret && ret.success === true && ret.data) {
                 state.permission.mode = ret.data.mode || 'manual';
                 state.permission.rules = ret.data.rules || [];
-                state.permission.allowAllEnabled = (ret.data.allowAllEnabled !== false);   // P3：管理员开关
             }
         } catch (e) {
             // 读不到就保留本地值（不阻断对话）
@@ -3471,16 +3459,12 @@
             var ret = await res.json();
             if (!ret || !ret.success || !ret.data) return;
             var d = ret.data;
-            state.permission.allowAllEnabled = (d.allowAllEnabled !== false);
-            renderPermMenu();
             var section = document.getElementById('adminPermSection');
             if (!d.isAdmin) {
                 if (section) section.style.display = 'none';
                 return;
             }
             if (section) section.style.display = 'block';
-            var aa = document.getElementById('adminAllowAll');
-            if (aa) aa.value = (d.allowAllEnabled !== false) ? 'true' : 'false';
             var mt = document.getElementById('adminMaxTurns');
             if (mt) mt.value = d.maxTurns || 25;
             var eg = document.getElementById('adminExtraGuarded');
@@ -3495,11 +3479,9 @@
 
     /** P3：保存管理员全局配置 */
     async function saveAdminPermissionConfig() {
-        var aa = document.getElementById('adminAllowAll');
         var mt = document.getElementById('adminMaxTurns');
         var eg = document.getElementById('adminExtraGuarded');
-        var body = 'allowAllEnabled=' + encodeURIComponent(aa ? aa.value : 'true')
-                 + '&maxTurns=' + encodeURIComponent(mt ? mt.value : '25')
+        var body = 'maxTurns=' + encodeURIComponent(mt ? mt.value : '25')
                  + '&absoluteGuardedExtra=' + encodeURIComponent(eg ? eg.value : '');
         try {
             var res = await fetch(API_BASE + '/config/admin-permission', {

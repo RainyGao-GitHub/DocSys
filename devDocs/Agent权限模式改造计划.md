@@ -73,7 +73,7 @@
 | 计划 | `plan` | 只读工具照跑（调研/列目录/读文件）；**写工具直接拒绝**，并在提示词里要求模型**先输出一份可执行计划**；用户点「批准并执行」→ 自动切到 `auto` 档 + 把该计划作为上下文注入后继续执行 | Claude/Gemini 的 `plan`（**带闭环**） |
 | 手动（**新会话默认**） | `manual` | 所有 `needsConfirm` 工具逐个弹确认（= 现状，回归基线）；**不提供“记住授权”** | `default` / Manual |
 | 自动 | `auto` | 常规写操作（`NORMAL`）默认放行；**硬清单（删除/权限变更）仍弹确认**；弹窗可选作用域授权，授权后同作用域内**包括危险项**都不再问 | `acceptEdits` + 作用域授权 |
-| 全部允许 | `allowAll` | **除绝对保护外全部放行**（含删除/权限变更）；前端常驻醒目横幅 + 可一键切回；开启时二次确认（文案写明“除删除仓库外全部不问”）；管理员可全局禁用 | `bypassPermissions` / Allow all / `yolo` |
+| 全部允许 | `allowAll` | **除绝对保护外全部放行**（含删除/权限变更）；前端常驻醒目横幅 + 可一键切回；开启时二次确认（文案写明“除删除仓库外全部不问”） | `bypassPermissions` / Allow all / `yolo` |
 
 **计划模式的闭环（P1 一并做，否则该档是个死胡同）**
 
@@ -126,7 +126,7 @@
 |---|---|
 | 当前模式（会话级） | `agent_sessions.metadata.permissionMode`（值 `plan`/`manual`/`auto`/`allowAll`；复用 P3 通用键；随请求带 `permissionMode` 时服务端以请求为准并回写） |
 | 会话规则 | `agent_sessions.metadata.permissionRules`（JSON 数组：`{kind: tool|dir|repo, tool, vid, path}`） |
-| 管理员全局开关 | `agent_config.agent_permission_allow_all_enabled`（默认 `true`；`false` → UI 不提供“全部允许”档 + 服务端把 `allowAll` 降级为 `auto` 并提示） |
+| 追加绝对保护 | `agent_config.agent_absolute_guarded_extra`（逗号分隔工具名；`delete_repos` 为内置项不可移除） |
 | 前端当前值 | 会话内即时展示（并写 `localStorage` 仅作 UI 记忆；**新会话回到手动**） |
 
 ### 3.5 审计与可见性
@@ -150,7 +150,7 @@
 | V4 | **自动档**：连续 ≥5 次 `write_file`/`create_folder` 0 弹窗；**`delete_doc`/`create_doc_share` 仍弹**；审计有记录且标注"自动档" | 页面 E2E（计数弹窗次数）+ 审计查询 |
 | V5 | **自动档作用域规则**：弹窗选"此目录内不再询问" → 同目录 `write_file`/`move_doc`/`delete_doc` 各 ≥3 次**均不再弹**；换目录仍弹 | 页面 E2E + `[Permission] decision=ALLOW reason=rule(dir)` 日志 |
 | V6 | **规则只到本会话**：新会话/清空规则后重新弹；服务端不持久化跨会话规则 | 护栏（规则存储断言）+ 页面 E2E |
-| V7 | **管理员禁用"全部允许"**：UI 不提供该档；服务端收到 `allowAll` 降级为 `auto` 并有提示 | 护栏 + 页面 E2E（配置 `agent_permission_allow_all_enabled=false`） |
+| ~~V7~~ | ~~**管理员禁用"全部允许"**：UI 不提供该档；服务端收到 `allowAll` 降级为 `auto` 并有提示~~ **已取消**（2026-09-23 用户裁定：用途不大，直接移除；见下） | — |
 | V8 | **绝对保护**：`delete_repos` 在 **4 个档位下都弹确认**（含"全部允许"档）；且在自动档已授权含该仓库的作用域规则时**仍弹** | 护栏（判定矩阵全覆盖）+ 页面 E2E |
 | V9 | **技能 risk 分级**：声明 `safe` 的内置技能在自动档**不弹**；未声明 risk 的技能在**4 档都弹**（fail-safe）；声明 `dangerous` 的技能在自动档仍弹 | 护栏（策略层用假技能声明表）+ 页面 E2E |
 | V10 | **回归**：全量护栏不低于当前基线 **37 套 / 1409 项**；`TestWriteConfirmGateCoverage` 按模式重写后仍全绿 | `run_guards.ps1` 输出 |
@@ -164,7 +164,7 @@
 - `ToolRegistry.execute()`：`needsConfirm` 分支改为"先问策略"——`DENY → 直接返回错误`；`ASK → 走 confirmGate`；`ALLOW → 跳过 gate（但记审计）`。策略为 null 时保持现状（向后兼容测试）。
 - `MainAgent`：构建 registry 时注入策略（模式取自会话 metadata / 请求参数），并把模式与规则一起传给门（规则 P2 才用）。
 - **计划模式闭环**：`plan` 档下写工具 DENY 文案 + system prompt 计划段落（只调研 + 输出可执行计划）+ 前端「批准并执行」（切 `auto` 并注入计划后继续）/「批准但逐步确认」（切 `manual`）。
-- 前端：顶部模式 chip（4 档，`allowAll` 在管理员禁用时置灰）+ `allowAll`/`plan` 醒目色 + 请求带 `permissionMode`。
+- 前端：顶部模式 chip（4 档）+ `allowAll`/`plan` 醒目色 + 请求带 `permissionMode`。
 - 护栏：新增 `TestPermissionPolicy`（判定矩阵：4 模式 × 4 风险 × 规则命中/未命中，含"绝对保护在 4 档全 ASK"、"规则不能豁免绝对保护"、"自动档硬清单仍 ASK"、"全部允许档非绝对保护全 ALLOW"、"计划档写工具 DENY"）；技能 risk 解析与 fail-safe（`TestSkillRisk`）；改写 `TestWriteConfirmGateCoverage`。
 - 验证：V1 / V2 / V3 / V4 / V7 / V8 / V9 / V10 + 页面 E2E。
 
@@ -178,7 +178,8 @@
 
 ### P3（推荐）：治理与统计
 
-- 管理员全局开关 `agent_permission_allow_all_enabled`（UI + 服务端强制降级）。
+- ~~管理员全局开关 `agent_permission_allow_all_enabled`（UI + 服务端强制降级）~~ —— **已实现后又移除**（2026-09-23 用户裁定：该档本身已带"除绝对保护外全部放行 + 二次确认"，再叠一层管理员开关用途不大）。
+- 轮数预算（`agent_max_turns`）接入设置弹窗（管理员）。
 - 绝对保护清单可配置（`agent_config` 里的追加名单；**`delete_repos` 始终在内且不可移除**）。
 - 技能 risk 的 UI：技能列表/详情显示 `risk` 与"未声明（按绝对保护处理）"提示；管理员可改声明（写回 `SKILL.md` frontmatter）。
 - 审计/统计：按模式的写操作分布、自动批准次数、规则命中次数。

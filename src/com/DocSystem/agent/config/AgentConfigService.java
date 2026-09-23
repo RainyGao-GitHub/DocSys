@@ -40,10 +40,6 @@ public class AgentConfigService {
      */
     public static final String KEY_AGENT_MAX_TURNS = "agent_max_turns";
 
-    /** P3：是否允许"全部允许"档（true/空 = 允许）；关闭 → 服务端降级为 auto + 拒绝切换（见 PermissionConfig） */
-    public static final String KEY_AGENT_PERMISSION_ALLOW_ALL_ENABLED =
-            com.DocSystem.agent.permission.PermissionConfig.KEY_ALLOW_ALL_ENABLED;
-
     /** P3：追加的绝对保护工具名（逗号分隔；delete_repos 为内置项不可移除） */
     public static final String KEY_AGENT_ABSOLUTE_GUARDED_EXTRA =
             com.DocSystem.agent.permission.PermissionConfig.KEY_ABSOLUTE_GUARDED_EXTRA;

@@ -250,18 +250,6 @@ public class TestPermissionPolicy {
     // ---------- P3：全局配置 ----------
 
     private static void testGlobalConfig() {
-        check("禁用全部允许 → 该档降级为自动",
-                PermissionConfig.applyAllowAllGate(PermissionMode.ALLOW_ALL, false) == PermissionMode.AUTO);
-        check("允许全部允许 → 档位不变",
-                PermissionConfig.applyAllowAllGate(PermissionMode.ALLOW_ALL, true) == PermissionMode.ALLOW_ALL);
-        check("其它档不受开关影响",
-                PermissionConfig.applyAllowAllGate(PermissionMode.MANUAL, false) == PermissionMode.MANUAL
-                        && PermissionConfig.applyAllowAllGate(PermissionMode.PLAN, false) == PermissionMode.PLAN);
-        check("布尔解析（空/非法 → 默认）",
-                PermissionConfig.parseBoolean(null, true) && !PermissionConfig.parseBoolean("", false)
-                        && !PermissionConfig.parseBoolean("false", true)
-                        && PermissionConfig.parseBoolean("on", false)
-                        && PermissionConfig.parseBoolean("x", true));
         check("工具名列表解析（逗号/空格/去重）",
                 PermissionConfig.parseToolList(" a, b  a \n c ").size() == 3);
         check("非法工具名检出",

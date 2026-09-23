@@ -9,7 +9,7 @@
 
 - 计划（唯一口径来源）：`devDocs/Agent权限模式改造计划.md`
 - 用户原话（本次触发）："我看 copilot 和 claude code 都是可以选权限模式的，比如整理目录过程中由于调用移动目录工具，所以需要不断的确认……"
-- 状态：**P3 主体完成（全局开关 + 轮数预算 + 绝对保护可追加 + 提示词接入设置弹窗；服务端强制已实测；菜单置灰项待复验）**
+- 状态：**P3 主体完成（轮数预算 + 绝对保护可追加 + 设置弹窗管理员分区；全局"禁用全部允许档"开关与提示词双入口均已按裁定移除）**；剩：技能 risk UI、统计/审计
 
 ## 用户定稿决策（2026-09-23）
 
@@ -103,10 +103,9 @@
 
 **P3 剩余**：
 
-1. 模式菜单“全部允许”置灰项复验（本次 E2E 实测服务端已正确拒绝，但页面探针读到 disabled=false，疑浏览器缓存旧页面 → 用 `?_v=` 强制刷新复验）
-2. 技能 risk 的 UI（技能列表/详情显示 risk 与"未声明按绝对保护处理"；管理员声明入口）
-3. 统计/审计：按模式的写操作分布、自动批准次数、规则命中次数
-4. 待补：P2 观测项——“批准并记住”那次 delete_doc 结果为 failed（疑确认轮询与授权 POST 时序/120s 超时）
+1. 技能 risk 的 UI（技能列表/详情显示 risk 与"未声明按绝对保护处理"；管理员声明入口）
+2. 统计/审计：按模式的写操作分布、自动批准次数、规则命中次数
+3. 待补：P2 观测项——“批准并记住”那次 delete_doc 结果为 failed（疑确认轮询与授权 POST 时序/120s 超时）
 
 ## 坑 / 纠正
 
@@ -115,24 +114,26 @@
 ## P3 实施记录（2026-09-23）
 
 - 全局配置（`agent_config`，仅管理员可改）：
-  - `agent_permission_allow_all_enabled`（默认 true）：关闭 → **服务端把 allowAll 降级为 auto**（`PermissionConfig.applyAllowAllGate`）+ **拒绝切换接口**
+  - ~~`agent_permission_allow_all_enabled`（关闭 → 服务端把 allowAll 降级为 auto + 拒绝切换）~~ **已删除**（用户裁定"用途不大，直接去掉"；V7 相应取消，`PermissionConfig.applyAllowAllGate`/`parseBoolean` 与 `AgentConfigService.KEY_AGENT_PERMISSION_ALLOW_ALL_ENABLED` 一并移除；DB 残留键已清）
   - `agent_absolute_guarded_extra`（逗号分隔）：**追加**绝对保护工具（`delete_repos` 为内置不可移除）
   - 顺带把既有但无 UI 的 `agent_max_turns`（轮数预算）接入设置弹窗
   - ⚠️ **提示词去重（A 方案）**：`system_prompt_override/suffix` 编辑入口**只在管理后台「提示词管理」**（T8.6）；设置弹窗只留一行只读提示 + 跳转链接；`/agent/config/admin-permission` 不再返回这两个字段，若仍传入则**显式报错**（防旧缓存页面静默丢弃提示词编辑后仍提示"保存成功"）
-- 新端点：`GET/POST /agent/config/admin-permission`（GET 对非管理员只返回 isAdmin=false + allowAllEnabled；POST 仅管理员，键白名单 + 值校验）
-- 前端：设置弹窗新增"管理员：权限与全局配置"分区（4 项 + 内置绝对保护只读展示）；模式 chip 下拉在开关关闭时把"全部允许"置灰并标"（管理员已禁用）"
-- 护栏：`TestPermissionPolicy` 85 项（+11：开关降级/布尔与列表解析/非法工具名/追加绝对保护生效与可清空）；全量 **39 套 / 1524 项 / 0 失败**
-- E2E（V7）：写入 `agent_permission_allow_all_enabled=false` 后
-  - `POST /agent/permission/mode mode=allowAll` → **success=false "管理员已禁用「全部允许」档"** ✓
-  - `GET /agent/permission` → `allowAllEnabled:false` ✓
-  - 设置弹窗管理员分区正常（开关=禁用、轮数预算=25、内置绝对保护 delete_repos）✓
-  - ⚠️ 菜单置灰探针读到 `disabled=false`（服务端已拒绝；疑浏览器缓存旧 index.html）—— 待复验
-  - 验证后已把该配置键删除（恢复默认允许）
+- 新端点：`GET/POST /agent/config/admin-permission`（GET 对非管理员只返回 isAdmin=false；POST 仅管理员，键白名单 + 值校验）
+- 前端：设置弹窗新增"管理员：权限与全局配置"分区（轮数预算 + 追加绝对保护 + 内置绝对保护只读展示 + 提示词跳转提示）；模式 chip 下拉四档常驻（不再有置灰逻辑）
+- 护栏：`TestPermissionPolicy` **81 项**（含追加绝对保护生效/可清空、工具名解析与校验）；全量 **39 套 / 1520 项 / 0 失败**
+- E2E（V7 **已废弃**）：全局开关已移除，此条不再适用（原先的置灰探针异常随功能删除而失效，不再追查）
 - E2E（V8 提示词去重，2026-09-23，重启后实测）：
   - `#adminPermSection` 无 `#adminPromptOverride`/`#adminPromptSuffix`，只有只读提示 + `管理后台 → 提示词管理` 链接 `/DocSystem/manager/main.html` ✓
   - `GET /agent/config/admin-permission` → 不含 `systemPromptOverride/Suffix` ✓
   - `POST ...&systemPromptOverride=hacked` → **success=false "提示词不在此处配置，请在管理后台「提示词管理」中修改"** ✓
   - `POST allowAllEnabled=true&maxTurns=25&absoluteGuardedExtra=` → success=true（正常路径未受影响）✓
+- E2E（V7-移除后复验，2026-09-23，重启后实测）：
+  - 模式菜单 4 档全部可用（`disabled` 均为 false，无"管理员已禁用"文案）✓
+  - 设置弹窗无 `#adminAllowAll`；只剩轮数预算 / 追加绝对保护 / 提示词跳转 / 内置保护展示 ✓
+  - `GET /agent/permission` 字段 = mode/label/description/modes/rules/absoluteGuarded（无 `allowAllEnabled`）✓
+  - `GET /agent/config/admin-permission` 字段 = isAdmin/maxTurns/absoluteGuarded/absoluteGuardedExtra（无 `allowAllEnabled`）✓
+  - `POST /agent/permission/mode mode=allowAll` → success=true（开关不再拦截）✓（已切回 manual）
+  - DB 残留键 `agent_permission_allow_all_enabled=true` 已删；真实删仓库未线上验证（护栏覆盖）
 
 ## P2 实施记录（2026-09-23）
 

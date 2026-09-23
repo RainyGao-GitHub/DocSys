@@ -2089,7 +2089,6 @@ public class AgentController {
             data.put("rules", ruleTexts);
             data.put("absoluteGuarded",
                     new java.util.ArrayList<>(com.DocSystem.agent.permission.ToolRiskCatalog.ABSOLUTE_GUARDED));
-            data.put("allowAllEnabled", allowAllEnabled());
             return AgentResponse.ok(data);
         } catch (Exception e) {
             log.warn("getPermission failed: {}", e.getMessage());
@@ -2113,10 +2112,6 @@ public class AgentController {
                     com.DocSystem.agent.permission.PermissionMode.fromId(mode);
             if (target == null) {
                 return AgentResponse.error("非法权限模式: " + mode);
-            }
-            // P3：管理员全局禁用了"全部允许"档 → 服务端拒绝（不能只靠 UI 置灰）
-            if (target == com.DocSystem.agent.permission.PermissionMode.ALLOW_ALL && !allowAllEnabled()) {
-                return AgentResponse.error("管理员已禁用「全部允许」档");
             }
             if (permissionStore == null) {
                 return AgentResponse.error("权限模式不可用（服务未装配）");
@@ -2153,25 +2148,10 @@ public class AgentController {
         }
     }
 
-    /** P3：是否允许"全部允许"档（全局配置，未配置 → true） */
-    private boolean allowAllEnabled() {
-        if (agentConfigService == null) {
-            return true;
-        }
-        try {
-            return com.DocSystem.agent.permission.PermissionConfig.parseBoolean(
-                    agentConfigService.getGlobal(
-                            com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_PERMISSION_ALLOW_ALL_ENABLED),
-                    true);
-        } catch (Exception e) {
-            return true;
-        }
-    }
-
     /**
      * P3：读取管理员全局配置（设置弹窗"管理员"分区用）。
      *
-     * <p>非管理员也能拿到 {@code isAdmin=false} 与 {@code allowAllEnabled}（模式 chip 需据此置灰）。</p>
+     * <p>非管理员只拿到 {@code isAdmin=false}（其余字段不下发）。</p>
      *
      * <p><b>不含提示词</b>：{@code system_prompt_override}/{@code system_prompt_suffix} 的
      * 唯一编辑入口是管理后台「提示词管理」页（{@code WebRoot/manager/tmpl/promptConfig.html}，
@@ -2180,8 +2160,6 @@ public class AgentController {
     @GetMapping("/config/admin-permission")
     public AgentResponse getAdminPermissionConfig(HttpServletRequest servletRequest) {
         Map<String, Object> data = new HashMap<>();
-        boolean allowAll = allowAllEnabled();
-        data.put("allowAllEnabled", allowAll);
         User user = currentUser(servletRequest);
         boolean admin = user != null && isSystemAdmin(user);
         data.put("isAdmin", admin);
@@ -2214,15 +2192,14 @@ public class AgentController {
     /**
      * P3：保存管理员全局配置（仅管理员；白名单键，逐项校验）。
      *
-     * <p>可传：{@code allowAllEnabled}（true/false）、{@code maxTurns}（5~50，越界钳制）、
-     * {@code absoluteGuardedExtra}（逗号分隔工具名，仅限字母数字下划线）。
+     * <p>可传：{@code maxTurns}（5~50，越界钳制）、{@code absoluteGuardedExtra}（逗号分隔工具名，
+     * 仅限字母数字下划线）。
      * <b>提示词不在此处</b>（见 {@link #getAdminPermissionConfig}）：若仍传
      * {@code systemPromptOverride}/{@code systemPromptSuffix} 则**显式报错**——避免旧缓存页面
      * 把提示词编辑静默丢弃后仍提示"保存成功"。</p>
      */
     @PostMapping("/config/admin-permission")
     public AgentResponse saveAdminPermissionConfig(
-            @RequestParam(value = "allowAllEnabled", required = false) String allowAllEnabled,
             @RequestParam(value = "maxTurns", required = false) String maxTurns,
             @RequestParam(value = "absoluteGuardedExtra", required = false) String absoluteGuardedExtra,
             @RequestParam(value = "systemPromptOverride", required = false) String systemPromptOverride,
@@ -2242,12 +2219,6 @@ public class AgentController {
             return AgentResponse.error("配置服务不可用");
         }
         try {
-            if (allowAllEnabled != null) {
-                agentConfigService.setGlobal(
-                        com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_PERMISSION_ALLOW_ALL_ENABLED,
-                        com.DocSystem.agent.permission.PermissionConfig.parseBoolean(allowAllEnabled, true)
-                                ? "true" : "false");
-            }
             if (maxTurns != null && !maxTurns.trim().isEmpty()) {
                 int n;
                 try {
