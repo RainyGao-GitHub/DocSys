@@ -52,6 +52,15 @@
 **取谁不取谁**：取"模式 + 规则"两层结构与 4 档形态（Claude 的 default/acceptEdits/plan/bypass 语义 + Copilot 的"作用域授权"），
 **不取** Assisted（LLM 判定）、不取 dontAsk、不取企业级持久化规则（本任务作用域只到会话，见 §3）。
 
+**技能/命令类调用的业界处理（已核对，2026-09）**：两家**都不解析调用内容**：
+
+| 产品 | 做法 |
+|---|---|
+| VS Code | 自动批准按**工具/能力**粒度（非内容）；企业策略可强制某些工具永远人工批准（`execute/runInTerminal`、`web/fetch`）；终端 regex 白名单官方自标 best-effort（alias/引号拼接/复合命令有已知局限）并建议"担心 prompt injection 就用沙箱"；**沙箱内 MCP 工具调用直接自动批准**（用隔离替代判定）；**Assisted permissions = LLM judge 逐次判定**；`PreToolUse` hooks 可返回 allow/deny/ask |
+| Claude Code | 技能在 `SKILL.md` frontmatter 声明 **`allowed-tools`**（如 `allowed-tools: Read, Grep, Bash(git:*)`）——技能级**静态声明**，技能内部工具调用再走权限层；命令白名单是前缀匹配（`Bash(npm run test:*)`）；`permission_mode: auto` = **模型分类器逐次判定**；官方生态把"`allowed-tools` 变宽"当作**安装时要审的权限提升** |
+
+→ 可用路线只有三条：**按身份声明 / 沙箱隔离 / 模型判定**。我们的选择：**按技能声明的 risk 分级（主）+ 未声明 fail-safe（绝对保护）+ 可选 LLM judge（P4）**。
+
 **命名对齐**（用户 2026-09-23 二次裁定）："只读"→**计划**（含闭环，对齐 `plan`）、原"智能"→**自动**（对齐 `acceptEdits` 的"常规自动通过"语义）、
 原"自动"→**全部允许**（对齐 `bypassPermissions` / Allow all）。原命名的问题：叫"自动"却对硬清单每次都问、叫"智能"反而更自由，用户会选错档。
 
@@ -80,10 +89,26 @@
 
 | 类别 | 语义 | 初始归类（实现时逐工具核对语义后可微调） |
 |---|---|---|
-| **`ABSOLUTE`（绝对保护）** | **永远 ASK**：任何档位（含“全部允许”）都要确认；**会话规则也不能豁免**（用户 2026-09-23 裁定：删仓库风险过大） | `delete_repos`；（待用户点头的边界：`run_skill` 可执行任意逻辑、也能间接删仓库，建议一并纳入） |
+| **`ABSOLUTE`（绝对保护）** | **永远 ASK**：任何档位（含“全部允许”）都要确认；**会话规则也不能豁免** | `delete_repos`（硬编码，**不可移除**）；`run_skill` **当被调技能未声明 risk 或声明为 `absolute` 时** |
 | `DESTRUCTIVE` | 自动档仍 ASK；“全部允许”档放行；规则可豁免 | `delete_doc`、`move_doc`、`rename_doc`、`update_repos`（若含物理路径变更） |
 | `PERMISSION` | 同 `DESTRUCTIVE`（权限/共享变更） | `create_doc_share`、`update_repos`（成员/权限/配置变更） |
 | `NORMAL` | 自动/全部允许档直接放行 | `create_repos`、`create_folder`、`write_file`、`write_note`、`copy_doc`、`backup_repos` |
+
+#### 3.2.1 `run_skill` 的风险判定（用户 2026-09-23 四次裁定）
+
+**不解析调用内容**（不可靠：`ExternalSkillExecutor` 直接跑技能的 `__main__.py` 或 `cmd.exe /c` 执行 SKILL.md 的 CLI 块 = 任意代码/任意 shell，静态分析注定被绕过），
+而是**按技能声明的 risk 分级**（这是"判断内容"里唯一可靠的部分：判断的是**调哪个技能**）：
+
+| 技能声明 `risk` | 判定 |
+|---|---|
+| `safe`（内置只读类：status / whoami / help…） | 跟随模式（自动・全部允许档不问）← **直接消掉现有最烦的那类技能弹窗** |
+| `write` | 按 `NORMAL` / `DESTRUCTIVE` 规则 |
+| `dangerous`（第三方 / 外部 Python / CLI 技能） | 硬清单（自动档仍问） |
+| `absolute` **或未声明** | **绝对保护**（4 档全问，fail-safe） |
+
+- 声明位置：`SKILL.md` YAML frontmatter 新增 `risk:`；**顺带修现存空壳**——`SkillParser.parseFrontmatter` 目前对 `permissions:` 只写了 `// Handle list`（没解析），`EnhancedSkill.permissions` 字段是死的。
+- **纵向收口（P1 实现时验证）**：技能内部若经工具注册表执行动作，那些调用天然受同一策略约束（技能声明再宽松，内部 `delete_repos` 仍被绝对保护挡住）；需核对 `DocSysSkillExecutor`（内置 Java）路径，`ExternalSkillExecutor` 无法收口。
+- 声明来源可控：技能由管理员安装 → 安装/导入时要求声明，未声明默认 `absolute`；技能列表 UI + `help` 显示 risk（P3）。
 
 - 只读工具（`isWrite=false`）不参与判定。
 - `memory_set` 现状 `needsConfirm=false`（低风险自我记忆）→ 保持不参与。
@@ -127,7 +152,8 @@
 | V6 | **规则只到本会话**：新会话/清空规则后重新弹；服务端不持久化跨会话规则 | 护栏（规则存储断言）+ 页面 E2E |
 | V7 | **管理员禁用"全部允许"**：UI 不提供该档；服务端收到 `allowAll` 降级为 `auto` 并有提示 | 护栏 + 页面 E2E（配置 `agent_permission_allow_all_enabled=false`） |
 | V8 | **绝对保护**：`delete_repos` 在 **4 个档位下都弹确认**（含"全部允许"档）；且在自动档已授权含该仓库的作用域规则时**仍弹** | 护栏（判定矩阵全覆盖）+ 页面 E2E |
-| V9 | **回归**：全量护栏不低于当前基线 **37 套 / 1409 项**；`TestWriteConfirmGateCoverage` 按模式重写后仍全绿 | `run_guards.ps1` 输出 |
+| V9 | **技能 risk 分级**：声明 `safe` 的内置技能在自动档**不弹**；未声明 risk 的技能在**4 档都弹**（fail-safe）；声明 `dangerous` 的技能在自动档仍弹 | 护栏（策略层用假技能声明表）+ 页面 E2E |
+| V10 | **回归**：全量护栏不低于当前基线 **37 套 / 1409 项**；`TestWriteConfirmGateCoverage` 按模式重写后仍全绿 | `run_guards.ps1` 输出 |
 
 ## 5. 分期
 
@@ -139,8 +165,8 @@
 - `MainAgent`：构建 registry 时注入策略（模式取自会话 metadata / 请求参数），并把模式与规则一起传给门（规则 P2 才用）。
 - **计划模式闭环**：`plan` 档下写工具 DENY 文案 + system prompt 计划段落（只调研 + 输出可执行计划）+ 前端「批准并执行」（切 `auto` 并注入计划后继续）/「批准但逐步确认」（切 `manual`）。
 - 前端：顶部模式 chip（4 档，`allowAll` 在管理员禁用时置灰）+ `allowAll`/`plan` 醒目色 + 请求带 `permissionMode`。
-- 护栏：新增 `TestPermissionPolicy`（判定矩阵：4 模式 × 4 风险 × 规则命中/未命中，含"绝对保护在 4 档全 ASK"、"规则不能豁免绝对保护"、"自动档硬清单仍 ASK"、"全部允许档非绝对保护全 ALLOW"、"计划档写工具 DENY"）；改写 `TestWriteConfirmGateCoverage`。
-- 验证：V1 / V2 / V3 / V4 / V7 / V8 / V9 + 页面 E2E。
+- 护栏：新增 `TestPermissionPolicy`（判定矩阵：4 模式 × 4 风险 × 规则命中/未命中，含"绝对保护在 4 档全 ASK"、"规则不能豁免绝对保护"、"自动档硬清单仍 ASK"、"全部允许档非绝对保护全 ALLOW"、"计划档写工具 DENY"）；技能 risk 解析与 fail-safe（`TestSkillRisk`）；改写 `TestWriteConfirmGateCoverage`。
+- 验证：V1 / V2 / V3 / V4 / V7 / V8 / V9 / V10 + 页面 E2E。
 
 ### P2（必做，消除确认疲劳）：自动档 + 作用域授权
 
@@ -154,24 +180,27 @@
 
 - 管理员全局开关 `agent_permission_allow_all_enabled`（UI + 服务端强制降级）。
 - 绝对保护清单可配置（`agent_config` 里的追加名单；**`delete_repos` 始终在内且不可移除**）。
+- 技能 risk 的 UI：技能列表/详情显示 `risk` 与"未声明（按绝对保护处理）"提示；管理员可改声明（写回 `SKILL.md` frontmatter）。
 - 审计/统计：按模式的写操作分布、自动批准次数、规则命中次数。
 - 文档：`devDocs/` 使用说明 + 记忆文件更新。
 
 ## 6. 不做什么（Non-goals）
 
-1. **不做** Assisted（LLM 判定是否危险）那类模式——成本与不确定性都不划算。
+1. **不做** Assisted（LLM 判定是否危险）那类模式（本轮）——成本与不确定性都不划算；仅 P4 可选，且只作减噪、不替代绝对保护。
 2. **不做** `dontAsk`（未预先授权一律拒绝）。
 3. **不做**跨会话/全局/工作区级持久化规则（用户裁定：作用域只做会话级）。
 4. **不做**计划模式下的"计划在线编辑/多轮打磨"（闭环只做：出计划 → 批准（或批准并逐步确认）→ 执行）。
-5. **不改** SSE 既有事件语义（只加字段）；**不动**旧编排封口策略（R3-4/R3-5）。
-6. **不改**工具自身语义与参数（本次只加"是否放行"的判定层）。
+5. **不做**对技能调用**内容**的静态分析/关键字黑名单（不可靠且可绕过，见 §3.2.1）。
+6. **不做**技能沙箱（容器/受限账号）——成本高，待后续专项评估。
+7. **不改** SSE 既有事件语义（只加字段）；**不动**旧编排封口策略（R3-4/R3-5）。
+8. **不改**工具自身语义与参数（本次只加"是否放行"的判定层）。
 
 ## 7. 风险与回滚
 
 | 风险 | 说明 | 应对 |
 |---|---|---|
 | 全部允许档误删 | 用户开"全部允许"后批量删除（该档对硬清单不问） | **`delete_repos` 已被绝对保护挡掉**；其余删除属用户已知风险；开启时二次确认（文案写明"除删除仓库外全部不问"）+ 审计全量 + 常驻横幅 + 一键切回 + 管理员可禁用 |
-| `run_skill` 绕过保护 | 技能可执行任意逻辑（间接删仓库） | 待用户点头：建议**纳入绝对保护**（全部允许档下技能调用仍问）；若不纳入，至少在开启全部允许的二次确认里写明"含技能执行" |
+| `run_skill` 绕过保护 | 技能可执行任意逻辑（间接删仓库） | **已定稿（§3.2.1）**：不解析内容，按技能声明的 `risk` 分级；**未声明 = 绝对保护**；内置只读技能声明 `safe`；第三方技能由管理员安装时声明；技能内部走注册表的调用天然受同一策略约束（P1 验证收口路径） |
 | 自动档被误以为"什么都不问" | 用户选"自动"后仍被删除操作打断 | chip 下拉里写清每档语义（自动＝常规自动、危险仍确认）；硬清单命中时弹窗文案说明"该操作属危险类别" |
 | 规则过宽 | "该仓库内不再询问"覆盖删除 | 作用域授权是显式选择（按钮文案写清"含删除等危险操作"）；chip 里可一键清空 |
 | 会话 metadata 膨胀 | 规则条目过多 | 规则条数上限（如 50 条）+ 同类合并；只在自动档产生 |
