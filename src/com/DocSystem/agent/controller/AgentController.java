@@ -2171,8 +2171,11 @@ public class AgentController {
     /**
      * P3：读取管理员全局配置（设置弹窗"管理员"分区用）。
      *
-     * <p>非管理员也能拿到 {@code isAdmin=false} 与 {@code allowAllEnabled}（模式 chip 需据此置灰），
-     * 但**不返回**提示词等敏感内容。</p>
+     * <p>非管理员也能拿到 {@code isAdmin=false} 与 {@code allowAllEnabled}（模式 chip 需据此置灰）。</p>
+     *
+     * <p><b>不含提示词</b>：{@code system_prompt_override}/{@code system_prompt_suffix} 的
+     * 唯一编辑入口是管理后台「提示词管理」页（{@code WebRoot/manager/tmpl/promptConfig.html}，
+     * 走 {@code GET/POST /agent/config/system-prompt}），此处不重复提供，避免双入口口径分叉。</p>
      */
     @GetMapping("/config/admin-permission")
     public AgentResponse getAdminPermissionConfig(HttpServletRequest servletRequest) {
@@ -2186,8 +2189,6 @@ public class AgentController {
             return AgentResponse.ok(data);
         }
         int maxTurns = 25;
-        String override = "";
-        String suffix = "";
         java.util.List<String> extra = java.util.Collections.emptyList();
         if (agentConfigService != null) {
             try {
@@ -2196,12 +2197,6 @@ public class AgentController {
                 if (mt != null && !mt.trim().isEmpty()) {
                     maxTurns = Integer.parseInt(mt.trim());
                 }
-                String ov = agentConfigService.getGlobal(
-                        com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_OVERRIDE);
-                override = ov != null ? ov : "";
-                String sf = agentConfigService.getGlobal(
-                        com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_SUFFIX);
-                suffix = sf != null ? sf : "";
                 extra = com.DocSystem.agent.permission.PermissionConfig.parseToolList(
                         agentConfigService.getGlobal(
                                 com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_ABSOLUTE_GUARDED_EXTRA));
@@ -2210,8 +2205,6 @@ public class AgentController {
             }
         }
         data.put("maxTurns", maxTurns);
-        data.put("systemPromptOverride", override);
-        data.put("systemPromptSuffix", suffix);
         data.put("absoluteGuarded",
                 new java.util.ArrayList<>(com.DocSystem.agent.permission.ToolRiskCatalog.ABSOLUTE_GUARDED));
         data.put("absoluteGuardedExtra", extra);
@@ -2222,17 +2215,22 @@ public class AgentController {
      * P3：保存管理员全局配置（仅管理员；白名单键，逐项校验）。
      *
      * <p>可传：{@code allowAllEnabled}（true/false）、{@code maxTurns}（5~50，越界钳制）、
-     * {@code systemPromptOverride} / {@code systemPromptSuffix}（提示词）、
-     * {@code absoluteGuardedExtra}（逗号分隔工具名，仅限字母数字下划线）。</p>
+     * {@code absoluteGuardedExtra}（逗号分隔工具名，仅限字母数字下划线）。
+     * <b>提示词不在此处</b>（见 {@link #getAdminPermissionConfig}）：若仍传
+     * {@code systemPromptOverride}/{@code systemPromptSuffix} 则**显式报错**——避免旧缓存页面
+     * 把提示词编辑静默丢弃后仍提示"保存成功"。</p>
      */
     @PostMapping("/config/admin-permission")
     public AgentResponse saveAdminPermissionConfig(
             @RequestParam(value = "allowAllEnabled", required = false) String allowAllEnabled,
             @RequestParam(value = "maxTurns", required = false) String maxTurns,
+            @RequestParam(value = "absoluteGuardedExtra", required = false) String absoluteGuardedExtra,
             @RequestParam(value = "systemPromptOverride", required = false) String systemPromptOverride,
             @RequestParam(value = "systemPromptSuffix", required = false) String systemPromptSuffix,
-            @RequestParam(value = "absoluteGuardedExtra", required = false) String absoluteGuardedExtra,
             HttpServletRequest servletRequest) {
+        if (systemPromptOverride != null || systemPromptSuffix != null) {
+            return AgentResponse.error("提示词不在此处配置，请在管理后台「提示词管理」中修改");
+        }
         User user = currentUser(servletRequest);
         if (user == null) {
             return AgentResponse.error("NOT_LOGGED_IN");
@@ -2261,16 +2259,6 @@ public class AgentController {
                         Math.min(com.DocSystem.agent.orchestrator.ToolUseLoop.MAX_TURNS_LIMIT, n));
                 agentConfigService.setGlobal(
                         com.DocSystem.agent.config.AgentConfigService.KEY_AGENT_MAX_TURNS, String.valueOf(n));
-            }
-            if (systemPromptOverride != null) {
-                agentConfigService.setGlobal(
-                        com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_OVERRIDE,
-                        systemPromptOverride.trim());
-            }
-            if (systemPromptSuffix != null) {
-                agentConfigService.setGlobal(
-                        com.DocSystem.agent.config.AgentConfigService.KEY_SYSTEM_PROMPT_SUFFIX,
-                        systemPromptSuffix.trim());
             }
             if (absoluteGuardedExtra != null) {
                 java.util.List<String> names = com.DocSystem.agent.permission.PermissionConfig

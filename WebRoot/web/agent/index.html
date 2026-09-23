@@ -2272,11 +2272,9 @@
                             <label>追加绝对保护</label>
                             <input type="text" id="adminExtraGuarded" placeholder="逗号分隔工具名，如 move_doc" style="flex:1;">
                         </div>
-                        <div class="form-row" style="flex-direction:column; align-items:stretch; gap:6px;">
-                            <label>系统提示词覆盖（留空 = 用默认）</label>
-                            <textarea id="adminPromptOverride" rows="3" style="width:100%;"></textarea>
-                            <label>系统提示词追加</label>
-                            <textarea id="adminPromptSuffix" rows="3" style="width:100%;"></textarea>
+                        <div style="font-size:12px;color:#888;margin:6px 0;">
+                            系统提示词（覆盖 / 追加）请在
+                            <a href="/DocSystem/manager/main.html" target="_blank">管理后台 → 提示词管理</a> 中配置（此处不重复提供入口）。
                         </div>
                         <div style="font-size:12px;color:#888;margin:6px 0;" id="adminAbsoluteGuarded"></div>
                         <button class="btn btn-primary" id="adminSaveBtn" style="width:100%;">保存管理员配置</button>
@@ -3487,10 +3485,7 @@
             if (mt) mt.value = d.maxTurns || 25;
             var eg = document.getElementById('adminExtraGuarded');
             if (eg) eg.value = (d.absoluteGuardedExtra || []).join(',');
-            var ov = document.getElementById('adminPromptOverride');
-            if (ov) ov.value = d.systemPromptOverride || '';
-            var sf = document.getElementById('adminPromptSuffix');
-            if (sf) sf.value = d.systemPromptSuffix || '';
+            // 提示词不在此处编辑：管理后台「提示词管理」页（T8.6）是唯一条目，此处只给跳转提示
             var ag = document.getElementById('adminAbsoluteGuarded');
             if (ag) ag.textContent = '内置绝对保护（不可移除）：' + ((d.absoluteGuarded || []).join('、') || '无');
         } catch (e) {
@@ -3503,13 +3498,9 @@
         var aa = document.getElementById('adminAllowAll');
         var mt = document.getElementById('adminMaxTurns');
         var eg = document.getElementById('adminExtraGuarded');
-        var ov = document.getElementById('adminPromptOverride');
-        var sf = document.getElementById('adminPromptSuffix');
         var body = 'allowAllEnabled=' + encodeURIComponent(aa ? aa.value : 'true')
                  + '&maxTurns=' + encodeURIComponent(mt ? mt.value : '25')
-                 + '&absoluteGuardedExtra=' + encodeURIComponent(eg ? eg.value : '')
-                 + '&systemPromptOverride=' + encodeURIComponent(ov ? ov.value : '')
-                 + '&systemPromptSuffix=' + encodeURIComponent(sf ? sf.value : '');
+                 + '&absoluteGuardedExtra=' + encodeURIComponent(eg ? eg.value : '');
         try {
             var res = await fetch(API_BASE + '/config/admin-permission', {
                 method: 'POST',

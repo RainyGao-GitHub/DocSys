@@ -108,12 +108,17 @@
 3. 统计/审计：按模式的写操作分布、自动批准次数、规则命中次数
 4. 待补：P2 观测项——“批准并记住”那次 delete_doc 结果为 failed（疑确认轮询与授权 POST 时序/120s 超时）
 
+## 坑 / 纠正
+
+- **提示词配置勿重复做**（2026-09-23 纠正）：管理后台早就有「提示词管理」页（T8.6，`WebRoot/manager/tmpl/promptConfig.html` + `main.js` 的 `showPromptConfig/savePromptConfig`，侧边栏 `data-eb-params=prompt`，端点 `GET/POST /agent/config/system-prompt`，含默认提示词预览）。P3 曾把这两个键又接进 Agent 设置弹窗，属**双入口**；已按 A 方案去重（保留管理后台那处）。**教训：动 `agent_config` 任何键前，先 `grep WebRoot/manager` 看后台是否已有入口。**
+
 ## P3 实施记录（2026-09-23）
 
 - 全局配置（`agent_config`，仅管理员可改）：
   - `agent_permission_allow_all_enabled`（默认 true）：关闭 → **服务端把 allowAll 降级为 auto**（`PermissionConfig.applyAllowAllGate`）+ **拒绝切换接口**
   - `agent_absolute_guarded_extra`（逗号分隔）：**追加**绝对保护工具（`delete_repos` 为内置不可移除）
-  - 顺带把既有但无 UI 的 `agent_max_turns`、`system_prompt_override`、`system_prompt_suffix` 一起接入设置弹窗
+  - 顺带把既有但无 UI 的 `agent_max_turns`（轮数预算）接入设置弹窗
+  - ⚠️ **提示词去重（A 方案）**：`system_prompt_override/suffix` 编辑入口**只在管理后台「提示词管理」**（T8.6）；设置弹窗只留一行只读提示 + 跳转链接；`/agent/config/admin-permission` 不再返回这两个字段，若仍传入则**显式报错**（防旧缓存页面静默丢弃提示词编辑后仍提示"保存成功"）
 - 新端点：`GET/POST /agent/config/admin-permission`（GET 对非管理员只返回 isAdmin=false + allowAllEnabled；POST 仅管理员，键白名单 + 值校验）
 - 前端：设置弹窗新增"管理员：权限与全局配置"分区（4 项 + 内置绝对保护只读展示）；模式 chip 下拉在开关关闭时把"全部允许"置灰并标"（管理员已禁用）"
 - 护栏：`TestPermissionPolicy` 85 项（+11：开关降级/布尔与列表解析/非法工具名/追加绝对保护生效与可清空）；全量 **39 套 / 1524 项 / 0 失败**
@@ -123,6 +128,11 @@
   - 设置弹窗管理员分区正常（开关=禁用、轮数预算=25、内置绝对保护 delete_repos）✓
   - ⚠️ 菜单置灰探针读到 `disabled=false`（服务端已拒绝；疑浏览器缓存旧 index.html）—— 待复验
   - 验证后已把该配置键删除（恢复默认允许）
+- E2E（V8 提示词去重，2026-09-23，重启后实测）：
+  - `#adminPermSection` 无 `#adminPromptOverride`/`#adminPromptSuffix`，只有只读提示 + `管理后台 → 提示词管理` 链接 `/DocSystem/manager/main.html` ✓
+  - `GET /agent/config/admin-permission` → 不含 `systemPromptOverride/Suffix` ✓
+  - `POST ...&systemPromptOverride=hacked` → **success=false "提示词不在此处配置，请在管理后台「提示词管理」中修改"** ✓
+  - `POST allowAllEnabled=true&maxTurns=25&absoluteGuardedExtra=` → success=true（正常路径未受影响）✓
 
 ## P2 实施记录（2026-09-23）
 
