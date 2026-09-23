@@ -656,11 +656,12 @@ Agent 侧 `initFocusFromContext()` 改为：**优先** `window.parent.getAgentCo
 
 1. **挪位置**：`清空` 移出 `.fd-btns` 按钮组，单独放到页脚**最左**；`.fd-count`（已选 N / 10）居中间弹性位（`margin-right: auto`）把两组拉开（实测间距 ≈ 344 px）。
 2. **降调 + 禁用**：`.fd-btn-quiet` 无边框淡灰，仅 hover 变红；`renderFocusDialog()` 里 `clearBtn.disabled = importMode || (state.focus||[]).length === 0`（没有可清的对象时按钮是灰的，且"有东西可清"这件事可见）。
-3. **二次确认**：`clearFocusDialog()` 改 async，弹 `uiDialog`（title「清空已选对象」、ok「清空」danger 红、cancel「再想想」），只有点为「清空」才真正 `state.focus = []` + `applyFocusSlot()` + `renderFocusDialog()`。
+3. **二次确认**：`clearFocusDialog()` 改 async，弹 `uiDialog`（title「清空已选对象」、正文只有一句「确定清空已选的 N 个关注对象？」、ok「清空」danger 红、cancel「再想想」），只有点为「清空」才真正 `state.focus = []` + `applyFocusSlot()` + `renderFocusDialog()`。
 
-> 兜底恢复路径（本来就有）：弹窗内选择是**暂存**的，`cancelFocusDialog()` 会用打开弹窗时的快照 `d.snapshot` 整体还原 —— 所以「确定清空」之后只要还没点「确定」提交，点弹窗的「取消」仍可整批找回。确认框文案里已写明这点。
+> 文案刻意只问一句（用户 2026-09-24 反馈「弹窗里的说明太啰嗦，真清空了也不是大问题」）——真正需要防的是**误点**，不是清空本身；
+> 而弹窗内选择是**暂存**的，`cancelFocusDialog()` 会用打开弹窗时的快照 `d.snapshot` 整体还原，所以连「确定清空」之后、只要还没点「确定」提交，点弹窗「取消」仍可整批找回（这层兜底不写在 UI 上，避免啰嗦）。
 
-**实测**（8100，浏览器）：选 3 个 → 弹窗页脚顺序 清空 | 已选 3/10 | … | 取消 | 确定 ✓；点清空 → 确认框出现在弹窗**上层**（`z-index` 11000 > 1000）✓；点「再想想」→ 仍是「已选 3 / 10」，chip 3 个 ✓；点「清空」→ 计数 0、按钮转 disabled、chip 清空 ✓；再点弹窗「取消」→ 3 个 chip 全部还原 ✓。
+**实测**（8100，浏览器）：选 3 个 → 弹窗页脚顺序 清空 | 已选 3/10 | … | 取消 | 确定 ✓；点清空 → 确认框一句问话，出现在弹窗**上层**（`z-index` 11000 > 1000）✓；点「再想想」→ 仍是「已选 3 / 10」，chip 3 个 ✓；点「清空」→ 计数 0、按钮转 disabled、chip 清空 ✓；再点弹窗「取消」→ 3 个 chip 全部还原 ✓。
 
 **护栏**：`TestFocusContextFrontendLint` 扩到 **33** 断言 —— 锁住「清空不在 `.fd-btns` 组内」「清空排在计数之前」「quiet/disabled 样式存在」「`clearFocusDialog` 必须先 `uiDialog` 且 `if (!ok) return;`」「取消快照还原」这些写法，防止后续改动把防护改回去。全量护栏：**44 suites / 1869 断言 / 0 fail**。
 

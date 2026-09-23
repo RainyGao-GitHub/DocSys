@@ -66,9 +66,10 @@
    实测：Ctrl 选 3 → 3 chip；Shift 选 6 → 6 chip；选 11 → 10 chip + 忽略提示；未选 → 单 chip「测试仓库2」（整库）✓
 7. ✅ **「清空」防误操作（2026-09-24）**：清空移出 `.fd-btns` 放页脚最左（间距 ≈344px）+ `.fd-btn-quiet` 降调
    + 计数 `margin-right:auto` 居中 + `disabled`（无可清对象时）+ `uiDialog` 二次确认（danger 红，`if(!ok) return;`）
+   —— 确认文案**只问一句**「确定清空已选的 N 个关注对象？」（用户当场要求：说明太啰嗦，清空了也不是大事，要防的是误点）
    实测：确认框在弹窗**上层**（11000 > 1000）；「再想想」→ 仍 3 个；「清空」→ 计数 0 / 按钮 disabled / chip 空；
    之后再点弹窗「取消」→ 3 个 chip 全部还原（快照兜底路径真实可用）✓
-   截图：`src/com/DocSystem/websocket/office/test/tmp/focusdialog/01~03_*.png`
+   截图：`src/com/DocSystem/websocket/office/test/tmp/focusdialog/01~04_*.png`
 8. ✅ **守约**：新增 `agent/focus/TestFocusContextFrontendLint.java`（**33** 断言，锁 project.js 多选接口 + 弹窗防护写法）
    → **全量 44 套 / 1869 断言 / 0 失败**
 
@@ -106,3 +107,4 @@
   - `fdd0fa59b` P2a 新建 Office / `048291071` P2b 修改 Office / `e4a2e0e13` 工作卡
   - `a128a752d` 产物链接（服务端 + 前端 + 护栏 + 方案文档）
   - `221308bd5`（本批）多选 @ 修 + 「清空」防误操作 + 前端护栏 + `devDocs/Agent关注对象与操作设计方案.md` §15 + 本卡
+  - 其后的「确认文案改一句」小修在提交里一并记录

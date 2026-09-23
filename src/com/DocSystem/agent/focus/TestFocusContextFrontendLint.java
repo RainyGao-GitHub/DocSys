@@ -113,8 +113,10 @@ public class TestFocusContextFrontendLint {
         check("clear only clears after confirm",
                 clearFnBlock(html).contains("if (!ok) return;"),
                 "确认框返回 false 时不得清空");
-        check("confirmation wording mentions the count",
-                clearFnBlock(html).contains("确定清空已选的 ' + n + ' 个关注对象？"));
+        check("confirmation wording is one short line mentioning the count",
+                clearFnBlock(html).contains("message: '确定清空已选的 ' + n + ' 个关注对象？'")
+                        && !clearFnBlock(html).contains("若只是误点"),
+                "只问一句，不要额外解释文案（用户 2026-09-24 要求）");
         check("cancel still rolls back the dialog snapshot",
                 html.contains("state.focus = d.snapshot.map(function (it) { return JSON.parse(JSON.stringify(it)); });"));
     }
