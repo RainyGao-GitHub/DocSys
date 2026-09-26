@@ -1,0 +1,35 @@
+本目录是「工作卡」档案库，非根目录 = 工作卡模式关闭，不影响任何普通会话。
+
+何时启用（需同时满足，任一不满足就不启用）：
+1. 任务预计跨多轮 / 跨会话，压缩后仍需无损续接
+2. 有多个子项，每项都要独立验证（编译 / 测试 / realDiff / 字节差等具体值）
+3. 存在方案取舍或用户裁定点，结论需长期沉淀
+4. 期间会有多次提交，commit 需与任务绑定
+
+怎么启用：
+把对应的 CURRENT_STATE_xxxx.md 移到工程根目录（或在根目录新建，模板见 会话恢复协议.md）。
+根目录一出现 CURRENT_STATE_*.md，Agent 就会去读 会话恢复协议.md（会话恢复步骤 / 里程碑驱动的更新时机 / 如实性要求 / 卡片模板），并按卡续接。
+目的是避免复杂任务的执行过度依赖 Agent 自身的上下文，以及状态不能及时更新的问题。
+
+怎么停止：
+任务收尾后把卡移入 已完成/，根目录清空 → 模式自动关闭。
+
+目录分工：
+- *.md            常驻档案卡（不启用时只是档案，Agent 不应读、不应续接）
+- 已完成/          已收尾卡
+- 会话恢复协议.md   完整协议，仅在工作卡模式启用时才读
+
+已收尾档案（在 已完成/ 内，需要时按文件名查，不参与当前会话）：
+- CURRENT_STATE_agent产物链接.md
+- CURRENT_STATE_agentOffice读写选型.md
+- CURRENT_STATE_agent任务续接与轮数上限.md
+- CURRENT_STATE_agent权限模式.md
+- CURRENT_STATE_agent搜索写入优化.md
+- CURRENT_STATE_agent技能与工具清理.md
+- CURRENT_STATE_fixture验证.md
+- CURRENT_STATE_id分配.md
+- CURRENT_STATE-apply_changes代码移植.md
+
+常驻档案卡（未收尾但暂停 / 未启用，同样不参与当前会话）：
+- CURRENT_STATE_agent工具技能规模化.md（P0 调研+方案已完成并提交 6fbb9e7fd，实施等用户裁定）
+- CURRENT_STATE_freetype移植.md
