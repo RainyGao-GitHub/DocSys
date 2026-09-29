@@ -278,9 +278,8 @@ public class SmsConfigStore {
 		}
 
 		String endpoint = config.getEffectiveEndpoint();
-		if (endpoint != null && endpoint.toLowerCase().startsWith("http://")) {
-			warnings.add("接入地址使用 http，建议改用 https 以免密钥/验证码被窃听");
-		}
+		//注意：**不对 http:// 接入地址做提醒**（用户 2026-09-29 明确不要这个提示）——
+		//内网自建网关常用 http，管理员不需要被反复提醒；真要用 https 由部署方自行决定
 		if (config.getProviderType() == SmsProviderType.YUNPIAN && endpoint != null && endpoint.contains("/v1/")) {
 			warnings.add("云片仍在使用 v1 接口，建议切换到 v2（tpl_single_send）");
 		}
