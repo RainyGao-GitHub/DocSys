@@ -1,5 +1,6 @@
 package com.DocSystem.commonService.sms;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,27 +54,7 @@ public class SmsSender {
 			prepared.setError("未指定短信场景");
 			return prepared;
 		}
-		if (isBlank(phone)) {
-			prepared.setError("手机号不能为空");
-			return prepared;
-		}
-		if (!RegularUtil.IsMobliePhone(phone)) {
-			prepared.setError("手机号格式不正确");
-			return prepared;
-		}
-		if (!config.isEnabled()) {
-			prepared.setError("短信服务未启用（" + SmsConfigStore.KEY_ENABLED + "=false）");
-			return prepared;
-		}
-
-		SmsProviderType type = config.getProviderType();
-		if (type == null) {
-			prepared.setError("未配置短信运营商（" + SmsConfigStore.KEY_PROVIDER + "）");
-			return prepared;
-		}
-		SmsProvider provider = providers.get(type);
-		if (provider == null) {
-			prepared.setError("该运营商暂未接入：" + type.getDisplayName());
+		if (checkCommon(prepared, config, phone) == false) {
 			return prepared;
 		}
 
@@ -83,18 +64,81 @@ public class SmsSender {
 			return prepared;
 		}
 
-		Map<String, String> effectiveVars = new LinkedHashMap<String, String>();
-		List<String> names = template.getEffectiveVars();
-		for (String name : names) {
-			String value = (vars == null) ? null : vars.get(name);
-			if (isBlank(value)) {
-				prepared.setError("缺少模板变量：" + name);
-				return prepared;
-			}
-			effectiveVars.put(name, value);
+		return buildRequest(prepared, config, template, template.getEffectiveVars(), phone, vars);
+	}
+
+	/**
+	 * 用**指定模板 ID** 构造请求（不走场景映射，**不打网络**）。
+	 *
+	 * <p>存在意义：历史调用方自带模板（如销售订单通知模板 1495318），它既不在四个已登记场景里，
+	 * 也不该被硬塞进某个场景的模板配置；但发送本身必须走同一条链路（同一套编码口径/重试策略/脱敏日志）。
+	 *
+	 * <p>变量名即 {@code vars} 的键（**不套用场景默认变量名**）—— 调用方给什么就发什么。
+	 */
+	public SmsPrepared prepareWithTemplate(String tplId, String phone, Map<String, String> vars) {
+		SmsPrepared prepared = new SmsPrepared();
+		SmsConfig config = configStore.load();
+		prepared.setConfig(config);
+
+		if (checkCommon(prepared, config, phone) == false) {
+			return prepared;
+		}
+		if (isBlank(tplId)) {
+			prepared.setError("未指定模板 ID");
+			return prepared;
 		}
 
-		SmsRequest request = provider.buildRequest(config, template, phone, effectiveVars);
+		SmsTemplateConfig template = new SmsTemplateConfig();
+		template.setTplId(tplId.trim());
+		List<String> names = varNamesOf(vars);
+		template.setVars(names);
+		return buildRequest(prepared, config, template, names, phone, vars);
+	}
+
+	/** 发送前的公共校验：手机号 → 开关 → 运营商已接入（错误文案与顺序保持既有约定） */
+	private boolean checkCommon(SmsPrepared prepared, SmsConfig config, String phone) {
+		if (isBlank(phone)) {
+			prepared.setError("手机号不能为空");
+			return false;
+		}
+		if (!RegularUtil.IsMobliePhone(phone)) {
+			prepared.setError("手机号格式不正确");
+			return false;
+		}
+		if (!config.isEnabled()) {
+			prepared.setError("短信服务未启用（" + SmsConfigStore.KEY_ENABLED + "=false）");
+			return false;
+		}
+
+		SmsProviderType type = config.getProviderType();
+		if (type == null) {
+			prepared.setError("未配置短信运营商（" + SmsConfigStore.KEY_PROVIDER + "）");
+			return false;
+		}
+		if (providers.get(type) == null) {
+			prepared.setError("该运营商暂未接入：" + type.getDisplayName());
+			return false;
+		}
+		return true;
+	}
+
+	/** 校验模板变量并交给对应 Provider 造请求 */
+	private SmsPrepared buildRequest(SmsPrepared prepared, SmsConfig config, SmsTemplateConfig template,
+			List<String> varNames, String phone, Map<String, String> vars) {
+		Map<String, String> effectiveVars = new LinkedHashMap<String, String>();
+		if (varNames != null) {
+			for (String name : varNames) {
+				String value = (vars == null) ? null : vars.get(name);
+				if (isBlank(value)) {
+					prepared.setError("缺少模板变量：" + name);
+					return prepared;
+				}
+				effectiveVars.put(name, value);
+			}
+		}
+
+		SmsProviderType type = config.getProviderType();
+		SmsRequest request = providers.get(type).buildRequest(config, template, phone, effectiveVars);
 		if (request == null || isBlank(request.getUrl())) {
 			prepared.setError("接入地址为空（" + type.getDisplayName() + "）");
 			return prepared;
@@ -106,6 +150,15 @@ public class SmsSender {
 		return prepared;
 	}
 
+	/** 变量名列表（保持调用方给的顺序；null → 空列表） */
+	private static List<String> varNamesOf(Map<String, String> vars) {
+		List<String> names = new ArrayList<String>();
+		if (vars != null) {
+			names.addAll(vars.keySet());
+		}
+		return names;
+	}
+
 	/**
 	 * 发送短信。
 	 *
@@ -114,9 +167,21 @@ public class SmsSender {
 	 * @param vars  模板变量（如 {"code":"123456"}）
 	 */
 	public SmsSendResult send(SmsScene scene, String phone, Map<String, String> vars) {
-		SmsPrepared prepared = prepare(scene, phone, vars);
+		return execute(scene == null ? null : scene.getCode(), phone, prepare(scene, phone, vars));
+	}
+
+	/**
+	 * 用**指定模板 ID** 发送（历史调用方兼容路径，见 {@link #prepareWithTemplate}）。
+	 *
+	 * <p>与 {@link #send} 只差模板来源：这里由调用方给模板 ID 与变量名，适合「自带模板」的老链路。
+	 */
+	public SmsSendResult sendWithTemplate(String tplId, String phone, Map<String, String> vars) {
+		return execute("tpl:" + tplId, phone, prepareWithTemplate(tplId, phone, vars));
+	}
+
+	private SmsSendResult execute(String sceneCode, String phone, SmsPrepared prepared) {
 		if (!prepared.isReady()) {
-			Log.info("SmsSender.send() 场景:" + (scene == null ? "null" : scene.getCode())
+			Log.info("SmsSender.send() 场景:" + sceneCode
 					+ " 手机:" + maskPhone(phone) + " 未就绪: " + prepared.getError());
 			return SmsSendResult.failure(null, prepared.getError());
 		}
@@ -140,7 +205,7 @@ public class SmsSender {
 		}
 		result.setElapsedMs(elapsed);
 
-		logResult(scene, phone, result);
+		logResult(sceneCode, phone, result);
 		return result;
 	}
 
@@ -153,9 +218,9 @@ public class SmsSender {
 		providers.put(provider.getType(), provider);
 	}
 
-	private void logResult(SmsScene scene, String phone, SmsSendResult result) {
+	private void logResult(String sceneCode, String phone, SmsSendResult result) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("SmsSender.send() 场景:").append(scene == null ? "null" : scene.getCode());
+		sb.append("SmsSender.send() 场景:").append(sceneCode);
 		sb.append(" 手机:").append(maskPhone(phone));
 		sb.append(" 运营商:").append(result.getProvider());
 		sb.append(" 结果:").append(result.isSuccess() ? "成功" : "失败");

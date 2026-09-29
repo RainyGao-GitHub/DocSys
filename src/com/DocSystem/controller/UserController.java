@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,16 +33,14 @@ import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.entity.SystemAllowedNetworkConfig;
 import com.DocSystem.commonService.EmailService;
-import com.DocSystem.commonService.SmsService;
+import com.DocSystem.commonService.sms.SmsScene;
+import com.DocSystem.commonService.sms.SmsSendResult;
 
 @Controller
 @RequestMapping("/User")
 public class UserController extends BaseController {
 	@Autowired
 	private UserServiceImpl userService;
-	
-	@Autowired
-	private SmsService smsService;
 	
 	@Autowired
 	private EmailService emailService;
@@ -526,23 +525,25 @@ public class UserController extends BaseController {
 		}		
 	}
 
+	/**
+	 * 按**场景**发送验证码短信（注册 / 找回密码）。
+	 *
+	 * <p>改造前三个 case 都传同一个模板 ID（`getSmsTplid()`）；现在按场景取模板。
+	 * 存量系统首次迁移时已把老模板 ID 写进四个场景（{@code SmsConfigStore.buildScenesWithSameTemplate}），
+	 * 因此**未重新配置的站点行为不变**；管理员可在后台为注册/找回密码分别配模板。
+	 */
 	private void sendVerifyCodeSMS(ReturnAjax rt, String phone, Integer type, String code) {
-		String smsSendUri = getSmsSendUri();
-		String smsApikey = getSmsApikey();
-		String smsTplid = getSmsTplid();
-		
-		switch(type.intValue())
-		{
-		case 0:
-			smsService.sendSms(rt,phone, smsSendUri, smsApikey, smsTplid, code, null, null); //注册短信模板id
-			break;
-		case 1:
-			smsService.sendSms(rt,phone, smsSendUri, smsApikey, smsTplid, code, null, null); //忘记密码短信模板id
-			break;
-		default:
-			smsService.sendSms(rt,phone, smsSendUri, smsApikey, smsTplid, code, null, null); //注册短信模板id
-		}
+		SmsScene scene = (type != null && type.intValue() == 1) ? SmsScene.RESET_PWD : SmsScene.REGISTER;
 
+		LinkedHashMap<String, String> vars = new LinkedHashMap<String, String>();
+		vars.put("code", code);
+
+		SmsSendResult result = smsSender.send(scene, phone, vars);
+		if (result.isSuccess() == false) {
+			// 对外文案保持不变；失败原因已由 SmsSender 脱敏记入 docsys.log，
+			// 管理员在「系统设置 → 短信服务 → 发送测试短信」可看到运营商原文（P5）
+			rt.setError("发送短信失败！");
+		}
 	}
 
 	//生成验证码: sessionVarName 保存验证码的session变量名

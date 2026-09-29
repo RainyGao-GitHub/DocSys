@@ -41,8 +41,7 @@ public class GenericHttpSmsProvider implements SmsProvider {
 		if (custom != null) {
 			request.addFormParam(custom.getParamName("phone"), phone);
 			request.addFormParam(custom.getParamName("tplId"), template.getTplId());
-			request.addFormParam(custom.getParamName("tplVars"),
-					YunpianSmsProvider.buildTplValue(template.getEffectiveVars(), vars));
+			request.addFormParam(custom.getParamName("tplVars"), YunpianSmsProvider.buildTplValue(vars));
 			if (custom.getParams() != null) {
 				for (Map.Entry<String, String> param : custom.getParams().entrySet()) {
 					request.addFormParam(param.getKey(), param.getValue());

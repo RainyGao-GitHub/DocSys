@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -108,8 +109,10 @@ import com.DocSystem.common.RunResult;
 import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.commonService.EmailService;
-import com.DocSystem.commonService.JavaSmsApi;
 import com.DocSystem.commonService.SmsService;
+import com.DocSystem.commonService.sms.SmsScene;
+import com.DocSystem.commonService.sms.SmsSendResult;
+import com.DocSystem.commonService.sms.SmsSender;
 import com.DocSystem.common.UniqueAction;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.CommitAction.CommitAction;
@@ -163,6 +166,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
+import com.DocSystem.service.sms.SmsConfigStore;
 import com.DocSystem.websocket.entity.DocPullContext;
 import com.DocSystem.websocket.entity.DocPushContext;
 import com.DocSystem.websocket.entity.DocSearchContext;
@@ -185,12 +189,19 @@ import util.LuceneUtil.LuceneUtil2;
 import util.SvnUtil.SVNUtil;
 
 public class BaseController  extends BaseFunction{
+	/** 手机绑定验证短信的模板变量值（沿用历史字面量，勿随意改：线上模板内容是配套的） */
+	private static final String VERIFY_TEL_VAR_VALUE = "Verify";
+
 	@Autowired
 	protected ReposServiceImpl reposService;
 	@Autowired
 	protected UserServiceImpl userService;
 	@Autowired
 	protected SmsService smsService;
+	@Autowired
+	protected SmsSender smsSender;
+	@Autowired
+	protected SmsConfigStore smsConfigStore;
 	@Autowired
 	protected EmailService emailService;
 	
@@ -3487,40 +3498,44 @@ public class BaseController  extends BaseFunction{
 		return emailService.sendEmail(rt, email , content, subject);
 	}
 
+	/**
+	 * 发送手机绑定验证短信（场景 {@link SmsScene#PHONE_VERIFY}）。
+	 *
+	 * <p>语义**保持现状不变**：验证短信的模板变量固定为字面量 {@value #VERIFY_TEL_VAR_VALUE}
+	 * （历史行为，方案文档 P9 已记录为待改项，本期不动）。
+	 */
 	protected boolean verifyTelephone(String tel) {
-		ReturnAjax rt = new ReturnAjax();
-		String smsSendUri = getSmsSendUri();
-		String smsApikey = getSmsApikey();
-		String smdTplid = getSmsTplid();
-		
-		return smsService.sendSms(rt, tel, smsSendUri, smsApikey, smdTplid, "Verify", null, null);
+		LinkedHashMap<String, String> vars = new LinkedHashMap<String, String>();
+		vars.put("code", VERIFY_TEL_VAR_VALUE);
+
+		SmsSendResult result = smsSender.send(SmsScene.PHONE_VERIFY, tel, vars);
+		if (result.isSuccess() == false) {
+			Log.info("verifyTelephone() 手机:" + SmsSender.maskPhone(tel)
+					+ " 发送失败:" + result.getFailureReason());
+			return false;
+		}
+		return true;
 	}
-		
+
+	/**
+	 * 兼容旧调用方：返回当前运营商的**生效接入地址**。
+	 *
+	 * <p>❗发送链路**不再需要**调用方传地址/密钥/模板 —— {@link SmsSender} 会自己从
+	 * {@link SmsConfigStore} 取配置。这三个 getter 只为保留旧方法名而存在
+	 * （站点定制代码可能引用，见方案文档 §4.5），新代码请直接用 {@code smsSender}。
+	 */
     public String getSmsSendUri() {
-    	String value = ReadProperties.read("docSysConfig.properties", "smsServer");
-    	if(value == null || value.isEmpty())
-    	{
-    		value = JavaSmsApi.URI_TPL_SEND_SMS;
-    	}
-    	return value;
+    	return smsConfigStore.getEffectiveSendUri();
     }
-    
+
+    /** 兼容旧调用方：当前运营商的主密钥（云片 apikey / 阿里云 AccessKeyId / 腾讯云 SecretId / 自定义 params.apikey） */
     public String getSmsApikey() {
-    	String value = ReadProperties.read("docSysConfig.properties", "smsApikey");
-    	if(value == null || value.isEmpty())
-    	{
-    		value = JavaSmsApi.apikey;
-    	}
-    	return value;
+    	return smsConfigStore.getEffectivePrimaryCredential();
     }
-  
+
+	/** 兼容旧调用方：注册场景的模板 ID */
 	protected String getSmsTplid() {
-		String value = ReadProperties.read("docSysConfig.properties", "smsTplid");
-    	if(value == null || value.isEmpty())
-    	{
-    		value = "1341175";
-    	}
-    	return value;
+		return smsConfigStore.getEffectiveTemplateId(SmsScene.REGISTER);
 	}
 	
 	protected boolean revertRealDocHistory(

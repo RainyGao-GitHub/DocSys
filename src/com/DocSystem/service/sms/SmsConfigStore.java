@@ -412,6 +412,53 @@ public class SmsConfigStore {
 		return isBlank(value) ? FALLBACK_ENDPOINT : value.trim();
 	}
 
+	/**
+	 * 当前运营商的**生效接入地址**（自定义 HTTP 取 {@code url}，其余取配置端点，空则回落默认端点）。
+	 *
+	 * <p>仅供旧调用方读取（{@code BaseController.getSmsSendUri()}）—— 发送链路用不到：
+	 * {@code SmsSender} 自己会从本 Store 取配置。
+	 */
+	public String getEffectiveSendUri() {
+		String value = load().getEffectiveEndpoint();
+		return isBlank(value) ? FALLBACK_ENDPOINT : value.trim();
+	}
+
+	/**
+	 * 当前运营商的**主密钥**（兼容旧调用方读取，见 {@link #getEffectiveSendUri()}）。
+	 * 云片 = apikey、阿里云 = accessKeyId、腾讯云 = secretId、自定义 = {@code params.apikey}。
+	 *
+	 * <p>只有云片保留硬编码兜底 —— 与改造前 {@code getSmsApikey()} 的行为一致（决策 7）。
+	 */
+	public String getEffectivePrimaryCredential() {
+		SmsConfig config = load();
+		SmsProviderType type = config.getProviderType();
+		if (type == null) {
+			return FALLBACK_APIKEY;
+		}
+
+		String value = null;
+		switch (type) {
+		case YUNPIAN:
+			value = config.getProviderField("apikey");
+			break;
+		case ALIYUN:
+			value = config.getProviderField("accessKeyId");
+			break;
+		case TENCENT:
+			value = config.getProviderField("secretId");
+			break;
+		case CUSTOM:
+			SmsCustomConfig custom = config.getCustom();
+			value = (custom == null || custom.getParams() == null) ? null : custom.getParams().get("apikey");
+			break;
+		}
+
+		if (isBlank(value)) {
+			return (type == SmsProviderType.YUNPIAN) ? FALLBACK_APIKEY : null;
+		}
+		return value.trim();
+	}
+
 	/** 读取存量 properties（ini 优先，其次 classpath 镜像） */
 	public String readLegacyValue(String key) {
 		String value = null;

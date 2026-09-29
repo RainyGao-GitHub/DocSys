@@ -119,7 +119,6 @@ public class JavaSmsApi {
      * @throws IOException
      */
     public static String tplSendSms(String url, String apikey, String tpl_id, String tpl_value, String mobile) throws IOException {
-    	System.out.println("tplSendSms() uri:" + url + " apikey:" + apikey + " tpl_id:" + tpl_id);
     	Map<String, String> params = new HashMap<String, String>();
         params.put("apikey", apikey);
         params.put("tpl_id", tpl_id);

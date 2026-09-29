@@ -1,6 +1,5 @@
 package com.DocSystem.commonService.sms.impl;
 
-import java.util.List;
 import java.util.Map;
 
 import com.DocSystem.commonService.sms.SmsConfig;
@@ -39,7 +38,7 @@ public class YunpianSmsProvider implements SmsProvider {
 		request.addFormParam("apikey", config.getProviderField("apikey"));
 		request.addFormParam("mobile", phone);
 		request.addFormParam("tpl_id", template.getTplId());
-		request.addFormParam("tpl_value", buildTplValue(template.getEffectiveVars(), vars));
+		request.addFormParam("tpl_value", buildTplValue(vars));
 		return request;
 	}
 
@@ -69,17 +68,21 @@ public class YunpianSmsProvider implements SmsProvider {
 
 	/**
 	 * 模板变量串：{@code #name#=value} 用 {@code &} 连接（值由 HTTP 层统一编码一次）。
+	 *
+	 * <p>变量名与顺序**取自变量表**（场景解析/调用方给的结果），不由模板对象再兑底默认变量名 ——
+	 * 否则调用方一个变量都没给时，会凭空渲染出 {@code #code#=} 发到网关。
+	 * 变量表须为有序 Map（{@link java.util.LinkedHashMap}）：腾讯云按序填充也靠这个顺序。
 	 */
-	public static String buildTplValue(List<String> names, Map<String, String> vars) {
+	public static String buildTplValue(Map<String, String> vars) {
 		StringBuilder sb = new StringBuilder();
-		if (names == null) {
+		if (vars == null) {
 			return "";
 		}
-		for (String name : names) {
+		for (Map.Entry<String, String> var : vars.entrySet()) {
 			if (sb.length() > 0) {
 				sb.append("&");
 			}
-			sb.append("#").append(name).append("#=").append(vars == null ? "" : vars.get(name));
+			sb.append("#").append(var.getKey()).append("#=").append(var.getValue() == null ? "" : var.getValue());
 		}
 		return sb.toString();
 	}
