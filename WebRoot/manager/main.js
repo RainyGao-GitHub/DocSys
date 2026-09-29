@@ -757,7 +757,6 @@ function buildSystemSmsConfigView(data){
 		providerTypes : providerTypes,
 		providerDefaults : {},
 		providerName : "",
-		hasConfig : data.hasConfig == true,
 		warnings : data.warnings || [],
 		customParamsText : data.customParamsText || "",
 		sceneTplId : {},

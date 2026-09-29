@@ -362,7 +362,6 @@ public class ManageController extends BaseController{
 		data.put("providerTypes", buildSmsProviderTypes());
 		data.put("warnings", smsConfigStore.getWarnings(config));
 		data.put("errors", smsConfigStore.validate(config));
-		data.put("hasConfig", smsConfigStore.hasSmsConfig());
 		// 固定参数在页面上是「k=v 多行文本」，这里给一份服务端格式化结果，避免前后端两套格式化逻辑
 		data.put("customParamsText",
 				SmsConfigForm.formatParamPairs((config.getCustom() == null) ? null : config.getCustom().getParams()));

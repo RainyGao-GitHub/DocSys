@@ -13,9 +13,6 @@
 
             <div class="widget-content">
               <div class="form-horizontal" id="systemSmsConfigForm" style="margin-top: 20px;">
-                {{if value.hasConfig == false}}
-                <div class="alert alert-warning" style="margin: 0 15px 10px 15px;">尚未保存过短信配置：当前发送使用 <code>docSysConfig.properties</code> 的旧值或内置默认值（硬编码兜底）。建议在此保存一次，之后配置一律以数据库为准。</div>
-                {{/if}}
                 {{if value.warnings.length > 0}}
                 <div class="alert alert-info" style="margin: 0 15px 10px 15px;">
                   {{each value.warnings as warning i}}<div>{{warning}}</div>{{/each}}

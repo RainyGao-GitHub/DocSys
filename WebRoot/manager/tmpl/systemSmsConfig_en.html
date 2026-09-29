@@ -13,9 +13,6 @@
 
             <div class="widget-content">
               <div class="form-horizontal" id="systemSmsConfigForm" style="margin-top: 20px;">
-                {{if value.hasConfig == false}}
-                <div class="alert alert-warning" style="margin: 0 15px 10px 15px;">No SMS settings saved yet: sending currently uses the old values in <code>docSysConfig.properties</code> or the built-in defaults (hard-coded fallback). Please save once here; after that the database is the only source of truth.</div>
-                {{/if}}
                 {{if value.warnings.length > 0}}
                 <div class="alert alert-info" style="margin: 0 15px 10px 15px;">
                   {{each value.warnings as warning i}}<div>{{warning}}</div>{{/each}}
