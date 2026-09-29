@@ -38,6 +38,9 @@ public interface SystemSettingService {
 	 */
 	boolean exists(String name);
 
+	/** 取备注（不存在 / 读表异常 → null）；用于写值时保留原有备注 */
+	String getRemark(String name);
+
 	/** 分页查询（search 为关键字纯文本，方法内部拼通配符；page 从 1 开始） */
 	List<SystemSetting> getAll(String search, int page, int limit);
 

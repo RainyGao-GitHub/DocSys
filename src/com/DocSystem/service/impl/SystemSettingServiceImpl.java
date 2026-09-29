@@ -123,6 +123,21 @@ public class SystemSettingServiceImpl implements SystemSettingService {
 	}
 
 	@Override
+	public String getRemark(String name) {
+		if (name == null || name.trim().isEmpty()) {
+			return null;
+		}
+		try {
+			SystemSetting setting = systemSettingMapper.selectByName(name.trim());
+			return (setting == null) ? null : setting.getRemark();
+		} catch (Exception e) {
+			Log.info("SystemSettingService.getRemark() 查询失败 name:" + name);
+			Log.info(e);
+			return null;
+		}
+	}
+
+	@Override
 	public List<SystemSetting> getAll(String search, int page, int limit) {
 		int safeLimit = normalizeLimit(limit);
 		int safeOffset = (normalizePage(page) - 1) * safeLimit;

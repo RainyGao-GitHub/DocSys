@@ -14928,20 +14928,34 @@ public class BaseController  extends BaseFunction{
 	 * 委托给 SystemSettingInitializer 幂等建表（MariaDB/SQLite 双方言），
 	 * 并用当前 WebApplicationContext 取 bean（静态调用路径下拿不到实例，同 triggerAgentInit）。
 	 * 全程 try/catch 兜底：建表失败不得影响 DocSys 启动（配置读取会自动走兜底链）。
+	 *
+	 * <p>建表后紧接着做短信配置的**首次种子迁移**（幂等：仅当表内还没有任何 sms.* 行时，
+	 * 把 docSysConfig.properties 的旧值搬进表；之后一切读写只认表）。
 	 */
 	private void triggerSystemSettingInit() {
+		org.springframework.web.context.WebApplicationContext wac =
+			org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext();
+		if(wac == null) {
+			Log.info("triggerSystemSettingInit() WebApplicationContext 不可用，跳过系统参数表初始化");
+			return;
+		}
+
 		try {
-			org.springframework.web.context.WebApplicationContext wac =
-				org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext();
-			if(wac == null) {
-				Log.info("triggerSystemSettingInit() WebApplicationContext 不可用，跳过系统参数表初始化");
-				return;
-			}
 			com.DocSystem.service.SystemSettingInitializer initializer =
 				wac.getBean(com.DocSystem.service.SystemSettingInitializer.class);
 			initializer.init();
 		} catch (Exception e) {
 			Log.info("triggerSystemSettingInit() 系统参数表初始化失败（不影响 DocSys）: " + e.getMessage());
+			Log.info(e);
+			return;
+		}
+
+		try {
+			com.DocSystem.service.sms.SmsConfigStore smsConfigStore =
+				wac.getBean(com.DocSystem.service.sms.SmsConfigStore.class);
+			smsConfigStore.ensureSeeded();
+		} catch (Exception e) {
+			Log.info("triggerSystemSettingInit() 短信配置种子迁移失败（不影响 DocSys）: " + e.getMessage());
 			Log.info(e);
 		}
 	}

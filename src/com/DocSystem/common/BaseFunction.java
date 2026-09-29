@@ -2680,6 +2680,15 @@ public class BaseFunction{
 
         return "http://dw.gofreeteam.com";
     }
+
+    /**
+     * 外部配置目录 docSys.ini（权威配置源所在目录）。
+     * 供非 BaseFunction 子类读取；例如 SmsConfigStore 迁移老配置时要读
+     * docSys.ini/docSysConfig.properties（优先）与 classpath 镜像（回落）。
+     */
+    public static String getDocSysIniPath() {
+    	return docSysIniPath;
+    }
     
 	private static void initOfficeLicenseInfo() {
 		//Default licenseInfo
