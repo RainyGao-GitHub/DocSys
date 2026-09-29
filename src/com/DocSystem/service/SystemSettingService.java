@@ -32,6 +32,12 @@ public interface SystemSettingService {
 	/** 以配置名前缀统计条数（prefix 需自带通配符，如 "sms.%"）；异常 → 0 */
 	int countByPrefix(String prefix);
 
+	/**
+	 * 判断配置名是否已存在（直查数据库，不走缓存）。
+	 * 注意：与「配置值是否非空」不等价 —— 值可能为空串。
+	 */
+	boolean exists(String name);
+
 	/** 分页查询（search 为关键字纯文本，方法内部拼通配符；page 从 1 开始） */
 	List<SystemSetting> getAll(String search, int page, int limit);
 

@@ -29,6 +29,17 @@ public class SystemSetting {
 	/** 更新时间 */
 	private String updateTime;
 
+	/** 列表展示序号（非数据库字段，仅用于管理页分页编号） */
+	private Integer index;
+
+	public Integer getIndex() {
+		return index;
+	}
+
+	public void setIndex(Integer index) {
+		this.index = index;
+	}
+
 	public Long getId() {
 		return id;
 	}

@@ -1,0 +1,34 @@
+<div class="form-horizontal">
+  <!-- Name -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="name">配置名称</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemSettingName" name="systemSettingName">
+      <span class="help-block" id="systemSettingNameHelp">点分命名空间，如 sms.provider；只能包含字母、数字、点(.)、下划线(_)、中划线(-)；<b>键名创建后不可修改</b>（代码按名引用）</span>
+    </div>
+  </div>
+  <!-- Value -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="value">配置值</label>
+    <div class="col-lg-9">
+      <textarea class="form-control" id="systemSettingValue" name="systemSettingValue" rows="8"></textarea>
+      <span class="help-block">字符串即可；标记为 JSON 的配置项（如 sms.scenes / sms.yunpian）必须填写合法 JSON 对象</span>
+    </div>
+  </div>
+  <!-- Remark -->
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="remark">备注</label>
+    <div class="col-lg-9">
+      <textarea class="form-control" id="systemSettingRemark" name="systemSettingRemark" rows="3"></textarea>
+      <span class="help-block">记录用途、来源等说明（不超过 1024 字符）</span>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="form-group">
+    <div class="col-lg-offset-9 col-lg-2">
+      <button type="submit" class="btn btn-success" id="btn_saveSystemSetting" onclick="saveSystemSetting()">保存</button>
+    </div>
+  </div>
+</div>
+<script type="text/javascript" src="systemSettingEdit.js"></script>

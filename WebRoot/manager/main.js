@@ -270,6 +270,7 @@ function showContentPage(curPath) {
         case "system":
         case "systemEmailConfig":
         case "systemSmsConfig":
+        case "systemSetting":
         case "systemDbConfig":
         case "systemUpgrade":
         case "systemLicenses":
@@ -371,6 +372,9 @@ function showSystemPage(curPath)
         break;
     case "systemSmsConfig":
     	showSystemSmsConfig();
+        break;
+    case "systemSetting":
+    	showSystemSetting();
         break;
     case "systemDbConfig":
     	showSystemDbConfig();
@@ -720,6 +724,300 @@ function updateSystemSmsConfig(server, apikey, tplid){
     		$("#systemSmsTplid").val(systemSmsConfig.tplid);
         }
     });
+}
+
+//系统参数（system_setting 表）—— 与邮件/短信/数据库页是同一份数据，这里是通用键值视图
+var gSystemSettingList = [];
+var gSystemSettingSearchWord = "";
+var gEditingSystemSettingName = "";
+
+function showSystemSetting(){
+	gSystemSettingSearchWord = "";
+	showSystemSettingList(0);
+}
+
+function searchSystemSetting(){
+	gSystemSettingSearchWord = $("#search-systemSetting").val();
+	showSystemSettingList(0);
+}
+
+function showSystemSettingList(pageIndex){
+	var pageSize = gPageSize;
+	pageIndex = pageIndex ? pageIndex : 0;
+	gPageIndex = pageIndex;
+
+	$.ajax({
+        url : "/DocSystem/SysConfig/getAll.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	searchWord : gSystemSettingSearchWord,
+        	pageIndex : pageIndex,
+        	pageSize : pageSize
+        },
+        success : function (ret) {
+            if( "ok" == ret.status )
+            {
+            	var list = ret.data;
+            	for(var i=0; i<list.length; i++)
+            	{
+            		list[i].displayValue = buildSystemSettingDisplayValue(list[i].value);
+            	}
+            	gSystemSettingList = list;
+            	$Func.render($("#container"),"systemSetting" + langExt,{"list":list}, function(){
+					// 渲染分页
+					var total = ret.dataEx;
+					$("#systemSettingList-pagination").pagination({
+						currentPage: pageIndex + 1,
+						totalPage: Math.ceil(total/pageSize),
+						isShow:true,
+						count:5,
+						homePageText: _Lang('首页'),
+						endPageText: _Lang('尾页'),
+						prevPageText: _Lang('上一页'),
+						nextPageText: _Lang('下一页'),
+						callback: function(newPageIndex) {
+							showSystemSettingList(newPageIndex - 1);
+						}
+					});
+            	});
+            }
+            else
+            {
+            	showErrorMessage(_Lang("获取系统参数失败", ":", ret.msgInfo));
+            }
+        },
+        error : function () {
+        	showErrorMessage(_Lang("获取系统参数失败", ":", "服务器异常"));
+        }
+    });
+}
+
+//配置值可能很长（JSON），列表里做截断展示
+function buildSystemSettingDisplayValue(value){
+	if(value == null || value.length <= 200){
+		return value;
+	}
+	return value.substring(0, 200) + " ...(" + value.length + ")";
+}
+
+function showAddSystemSettingPanel(){
+	qiao.bs.dialog({
+		id: 'systemSettingEdit',
+		url: 'systemSettingEdit' + langExt + '.html',
+		title: _Lang('新增系统参数'),
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		big: true,
+		callback: function(){
+			gEditingSystemSettingName = "";
+			$("#systemSettingName").val("").attr("readonly", false);
+			$("#systemSettingValue").val("");
+			$("#systemSettingRemark").val("");
+			$("#systemSettingName").focus();
+		}
+	}, null);
+}
+
+function showEditSystemSettingPanel(name){
+	var setting = null;
+	for(var i=0; i<gSystemSettingList.length; i++){
+		if(gSystemSettingList[i].name == name){
+			setting = gSystemSettingList[i];
+			break;
+		}
+	}
+	if(setting == null){
+		showErrorMessage(_Lang("配置不存在，请刷新后重试"));
+		return;
+	}
+
+	qiao.bs.dialog({
+		id: 'systemSettingEdit',
+		url: 'systemSettingEdit' + langExt + '.html',
+		title: _Lang('编辑系统参数'),
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		big: true,
+		callback: function(){
+			gEditingSystemSettingName = setting.name;
+			$("#systemSettingName").val(setting.name).attr("readonly", true);
+			$("#systemSettingValue").val(setting.value);
+			$("#systemSettingRemark").val(setting.remark == null ? "" : setting.remark);
+		}
+	}, null);
+}
+
+function deleteSystemSettingConfirm(name)
+{
+	qiao.bs.confirm({
+    		id: "deleteSystemSettingConfirmDialog",
+	        title: _Lang("删除系统参数"),
+	        msg: _Lang("是否删除配置") + " [" + name + "] ？",
+	        okbtn: _Lang("确认"),
+	        qubtn: _Lang("取消"),
+    	},function () {
+	    	deleteSystemSetting(name);
+	    	return true;   //close dialog
+    	},function()
+    	{
+    		return true;	//close dialog
+    	}
+    );
+}
+
+function deleteSystemSetting(name){
+	$.ajax({
+        url : "/DocSystem/SysConfig/delete.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	name : name
+        },
+        success : function (ret) {
+            if( "ok" == ret.status )
+            {
+            	showErrorMessage(_Lang("删除成功"));
+            	showSystemSettingList(gPageIndex);
+            }
+            else
+            {
+            	showErrorMessage(_Lang("删除失败", ":", ret.msgInfo));
+            }
+        },
+        error : function () {
+        	showErrorMessage(_Lang("删除失败", ":", "服务器异常"));
+        }
+    });
+}
+
+//导出：按当前搜索条件分页取全量，前端生成 JSON 文件下载
+function exportSystemSetting(){
+	fetchAllSystemSettings(function(list){
+		var content = JSON.stringify({systemSettings : list}, null, 2);
+		var blob = new Blob([content], {type : "application/json;charset=utf-8"});
+		var url = URL.createObjectURL(blob);
+		var a = document.createElement("a");
+		var now = new Date();
+		a.href = url;
+		a.download = "systemSetting_" + now.getFullYear() + padNumber2(now.getMonth()+1) + padNumber2(now.getDate())
+			+ padNumber2(now.getHours()) + padNumber2(now.getMinutes()) + padNumber2(now.getSeconds()) + ".json";
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+		showErrorMessage(_Lang("导出成功", ":", list.length + " 条"));
+	});
+}
+
+function padNumber2(n){
+	return (n < 10 ? "0" : "") + n;
+}
+
+//分页拉取全量（服务端单页上限 200，最多 10 页）
+function fetchAllSystemSettings(cb){
+	var all = [];
+	var pageSize = 200;
+	var pageIndex = 0;
+	var maxPage = 10;
+	var failed = false;
+
+	function fetchNext(){
+		$.ajax({
+	        url : "/DocSystem/SysConfig/getAll.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	searchWord : gSystemSettingSearchWord,
+	        	pageIndex : pageIndex,
+	        	pageSize : pageSize
+	        },
+	        success : function (ret) {
+	            if( "ok" != ret.status ){
+	            	showErrorMessage(_Lang("导出失败", ":", ret.msgInfo));
+	            	failed = true;
+	            	return;
+	            }
+	            var rows = ret.data || [];
+	            for(var i=0; i<rows.length; i++){
+	            	all.push(rows[i]);
+	            }
+	            pageIndex++;
+	            if(rows.length >= pageSize && pageIndex < maxPage && all.length < ret.dataEx){
+	            	fetchNext();
+	            }else{
+	            	cb(all);
+	            }
+	        },
+	        error : function () {
+	        	if(!failed){
+	        		showErrorMessage(_Lang("导出失败", ":", "服务器异常"));
+	        	}
+	        }
+	    });
+	}
+
+	fetchNext();
+}
+
+function importSystemSetting(){
+	$("#importSystemSettingFile").val("");
+	$("#importSystemSettingFile").click();
+}
+
+function importSystemSettingFileChanged(input){
+	var file = input.files[0];
+	if(!file){
+		return;
+	}
+
+	var reader = new FileReader();
+	reader.onload = function(){
+		var payload = null;
+		try{
+			payload = JSON.parse(String(reader.result || ""));
+		}catch(e){
+			showErrorMessage(_Lang("导入失败", ":", "文件不是合法 JSON"));
+			return;
+		}
+
+		var list = (payload && payload.systemSettings) ? payload.systemSettings : payload;
+		if(!(list instanceof Array)){
+			showErrorMessage(_Lang("导入失败", ":", "需要 {systemSettings:[...]} 或 JSON 数组"));
+			return;
+		}
+
+		$.ajax({
+	        url : "/DocSystem/SysConfig/import.do",
+	        type : "post",
+	        dataType : "json",
+	        data : {
+	        	settings : JSON.stringify(list)
+	        },
+	        success : function (ret) {
+	            if( "ok" == ret.status )
+	            {
+	            	var d = ret.data;
+	            	var msg = _Lang("导入完成") + "：" + _Lang("成功") + " " + d.success + " / " + d.total
+	            		+ "，" + _Lang("失败") + " " + d.failed;
+	            	if(d.errors && d.errors.length > 0){
+	            		alert(msg + "\n" + d.errors.join("\n"));
+	            	}else{
+	            		showErrorMessage(msg);
+	            	}
+	            	showSystemSettingList(0);
+	            }
+	            else
+	            {
+	            	showErrorMessage(_Lang("导入失败", ":", ret.msgInfo));
+	            }
+	        },
+	        error : function () {
+	        	showErrorMessage(_Lang("导入失败", ":", "服务器异常"));
+	        }
+	    });
+	};
+	reader.readAsText(file, "UTF-8");
 }
 
 //系统迁移

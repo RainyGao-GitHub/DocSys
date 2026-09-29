@@ -108,6 +108,21 @@ public class SystemSettingServiceImpl implements SystemSettingService {
 	}
 
 	@Override
+	public boolean exists(String name) {
+		if (name == null || name.trim().isEmpty()) {
+			return false;
+		}
+		try {
+			return systemSettingMapper.selectByName(name.trim()) != null;
+		} catch (Exception e) {
+			Log.info("SystemSettingService.exists() 查询失败 name:" + name);
+			Log.info(e);
+			// 查询异常时保守返回 true，避免把已有配置误当成新建而覆盖
+			return true;
+		}
+	}
+
+	@Override
 	public List<SystemSetting> getAll(String search, int page, int limit) {
 		int safeLimit = normalizeLimit(limit);
 		int safeOffset = (normalizePage(page) - 1) * safeLimit;

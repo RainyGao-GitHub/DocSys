@@ -651,6 +651,24 @@ function lang(str)
 		"更新短信服务配置成功" : "SMS Service Settings was updated",
 		"更新短信服务配置失败" : "Failed to update SMS Service Settings",	
 		
+		//System Settings (system_setting table)
+		"系统参数" : "System Settings",
+		"新增配置" : "New Setting",
+		"新增系统参数" : "New System Setting",
+		"编辑系统参数" : "Edit System Setting",
+		"删除系统参数" : "Delete System Setting",
+		"是否删除配置" : "Delete setting",
+		"获取系统参数失败" : "Failed to get system settings",
+		"配置名称不能为空" : "Setting name is required",
+		"配置值不能为空" : "Setting value is required",
+		"配置不存在，请刷新后重试" : "Setting not found, please refresh and retry",
+		"导出成功" : "Exported",
+		"导出失败" : "Failed to export",
+		"导入完成" : "Import finished",
+		"导入失败" : "Failed to import",
+		"文件不是合法 JSON" : "File is not valid JSON",
+		"需要 {systemSettings:[...]} 或 JSON 数组" : "Expected {systemSettings:[...]} or a JSON array",
+		
 		//Migration
 		"请选择需要迁移的仓库！" : "No any repository was selected to migrate",
 		"系统迁移" : "System Migrate",
