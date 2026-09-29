@@ -1,0 +1,204 @@
+package com.DocSystem.commonService.sms;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Map;
+
+import com.DocSystem.common.Log;
+
+/**
+ * 短信 HTTP 客户端（无状态工具类）。
+ *
+ * <p>职责：编码（表单/JSON）、超时、**只对网络异常与 5xx 重试**、取回状态码与响应体。
+ * 业务失败（如模板不匹配）不重试，避免重复计费。
+ *
+ * <p>不引入任何 HTTP 库：JDK {@code HttpURLConnection} + TLS1.2 足够。
+ */
+public class SmsHttpClient {
+
+	public static final String ENCODING = "UTF-8";
+
+	/** 重试次数上限（防止配置写错导致长时间卡住） */
+	private static final int MAX_RETRY = 3;
+
+	private static final int MIN_TIMEOUT_MS = 1000;
+	private static final int MAX_TIMEOUT_MS = 60000;
+	private static final int DEFAULT_TIMEOUT_MS = 10000;
+
+	/**
+	 * 执行请求。仅在「网络异常」或「HTTP 5xx」时重试。
+	 *
+	 * @param timeoutMs 连接/读取超时（越界时归一到 1000~60000，默认 10000）
+	 * @param retry     重试次数（0~3）
+	 */
+	public static SmsHttpResponse execute(SmsRequest request, int timeoutMs, int retry) {
+		if (request == null || request.getUrl() == null || request.getUrl().trim().isEmpty()) {
+			return SmsHttpResponse.networkError("请求地址为空", 0);
+		}
+
+		int attempts = 1 + Math.max(0, Math.min(retry, MAX_RETRY));
+		SmsHttpResponse response = null;
+		for (int i = 0; i < attempts; i++) {
+			response = doExecute(request, timeoutMs);
+			if (i + 1 >= attempts || !isRetryable(response)) {
+				break;
+			}
+			Log.warn("SmsHttpClient 第 " + (i + 1) + " 次重试原因：" + describe(response));
+		}
+		return response;
+	}
+
+	/** 表单编码（键与值各编码一次） */
+	public static String encodeForm(Map<String, String> params) {
+		if (params == null || params.isEmpty()) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, String> entry : params.entrySet()) {
+			if (sb.length() > 0) {
+				sb.append("&");
+			}
+			sb.append(urlEncode(entry.getKey())).append("=").append(urlEncode(entry.getValue()));
+		}
+		return sb.toString();
+	}
+
+	/** GET 请求拼查询串 */
+	public static String buildUrlWithQuery(String url, Map<String, String> params) {
+		String query = encodeForm(params);
+		if (query.isEmpty()) {
+			return url;
+		}
+		return url + (url.contains("?") ? "&" : "?") + query;
+	}
+
+	// ===================== 内部实现 =====================
+
+	private static boolean isRetryable(SmsHttpResponse response) {
+		if (response == null) {
+			return false;
+		}
+		if (response.isNetworkError()) {
+			return true;
+		}
+		return response.getStatus() >= 500;
+	}
+
+	private static String describe(SmsHttpResponse response) {
+		if (response == null) {
+			return "null";
+		}
+		return response.isNetworkError() ? response.getErrorMessage() : ("HTTP " + response.getStatus());
+	}
+
+	private static SmsHttpResponse doExecute(SmsRequest request, int timeoutMs) {
+		long start = System.currentTimeMillis();
+		HttpURLConnection conn = null;
+		try {
+			boolean get = "GET".equalsIgnoreCase(request.getMethod());
+			String url = request.getUrl().trim();
+			if (get) {
+				url = buildUrlWithQuery(url, request.getFormParams());
+			}
+
+			conn = (HttpURLConnection) new URL(url).openConnection();
+			conn.setRequestMethod(get ? "GET" : "POST");
+			int timeout = normalizeTimeout(timeoutMs);
+			conn.setConnectTimeout(timeout);
+			conn.setReadTimeout(timeout);
+			conn.setInstanceFollowRedirects(false);
+
+			if (request.getHeaders() != null) {
+				for (Map.Entry<String, String> header : request.getHeaders().entrySet()) {
+					conn.setRequestProperty(header.getKey(), header.getValue());
+				}
+			}
+
+			if (!get) {
+				byte[] payload;
+				String contentType;
+				if (request.isFormPost()) {
+					payload = encodeForm(request.getFormParams()).getBytes(ENCODING);
+					contentType = "application/x-www-form-urlencoded;charset=" + ENCODING;
+				} else {
+					String json = (request.getJsonBody() == null) ? "" : request.getJsonBody();
+					payload = json.getBytes(ENCODING);
+					contentType = "application/json;charset=" + ENCODING;
+				}
+				conn.setRequestProperty("Content-Type", contentType);
+				// 不要手工设置 Content-Length：与 JDK 的分块写入冲突（本项目历史踩坑）；
+				// 需要固定长度时用 setFixedLengthStreamingMode，由 JDK 自己处理长度。
+				conn.setFixedLengthStreamingMode(payload.length);
+				conn.setDoOutput(true);
+				OutputStream out = conn.getOutputStream();
+				out.write(payload);
+				out.flush();
+				out.close();
+			}
+
+			int status = conn.getResponseCode();
+			SmsHttpResponse response = new SmsHttpResponse();
+			response.setStatus(status);
+			response.setBody(readBody(conn, status));
+			response.setElapsedMs(System.currentTimeMillis() - start);
+			return response;
+		} catch (Exception e) {
+			return SmsHttpResponse.networkError(e.getClass().getSimpleName() + ": " + e.getMessage(),
+					System.currentTimeMillis() - start);
+		} finally {
+			if (conn != null) {
+				conn.disconnect();
+			}
+		}
+	}
+
+	private static String readBody(HttpURLConnection conn, int status) {
+		InputStream in = null;
+		try {
+			in = (status >= 200 && status < 400) ? conn.getInputStream() : conn.getErrorStream();
+			if (in == null) {
+				return "";
+			}
+			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+			byte[] chunk = new byte[4096];
+			int read;
+			while ((read = in.read(chunk)) > 0) {
+				buffer.write(chunk, 0, read);
+			}
+			return new String(buffer.toByteArray(), ENCODING);
+		} catch (Exception e) {
+			Log.debug("SmsHttpClient 读取响应失败: " + e.getMessage());
+			return "";
+		} finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+		}
+	}
+
+	private static int normalizeTimeout(int timeoutMs) {
+		if (timeoutMs < MIN_TIMEOUT_MS || timeoutMs > MAX_TIMEOUT_MS) {
+			return DEFAULT_TIMEOUT_MS;
+		}
+		return timeoutMs;
+	}
+
+	private static String urlEncode(String value) {
+		if (value == null) {
+			return "";
+		}
+		try {
+			return URLEncoder.encode(value, ENCODING);
+		} catch (Exception e) {
+			return value;
+		}
+	}
+}
