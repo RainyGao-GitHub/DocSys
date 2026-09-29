@@ -198,9 +198,20 @@ $(document).on("click",".has_sub",function(){
       }
   });
   
+//菜单项都是 <a href="#">，必须阻止默认跳转：空锦点会让浏览器把文档滚回顶部
+//（表现为"点靠下的子菜单后侧边栏跳回最上方、看起来焦点跑回父级"，2026-09-29 用户反馈）
+function stopMenuAnchorDefault(e) {
+	if ( e && e.preventDefault ) {
+		e.preventDefault();
+	} else {
+		window.event.returnValue = false;
+	}
+}
+
 //click event handler  for data-eb-event="content.refresh"
 $(document).on("click","[data-eb-event]", function (e) {
 	console.log("[data-eb-event] onclick()");
+	stopMenuAnchorDefault(e); //阻止 <a href="#"> 的默认跳转（否则会滚到文档顶部）
 	stopBubble(e); //阻止冒泡
 
     var event = $(this).attr("data-eb-event");
@@ -277,9 +288,11 @@ function showContentPage(curPath) {
         case "systemMigrate":
         	title = _Lang("系统管理");
         	//高亮：父级保持蓝色（表示在系统管理这个分组里），被点开的那一项另有一种选中样式
-        	//（curPath==="system" 时两条选择器指向同一元素，重复 addClass 无副作用）
+        	//（父级蓝色 + 子项白底蓝字，两种样式并存表示「在哪个分组 + 在哪一页」）
             $("#nav li[data-eb-params=system]>a").addClass("open");
-            $("#nav li[data-eb-params=" + curPath + "]>a").addClass("open");
+            //点父级时它默认进入「系统设置」（showSystemPage 里 "system" → showSystemUpgrade），子项也按该项标出
+            var systemOpenPath = (curPath === "system") ? "systemUpgrade" : curPath;
+            $("#nav li[data-eb-params=" + systemOpenPath + "]>a").addClass("open");
             $("ul.sublist").show();	        	
             showSystemPage(curPath);
         	break;
