@@ -19060,7 +19060,7 @@ public class BaseController  extends BaseFunction{
 		}
 		
 		//附加表（system_setting / Agent 表）：与 objType 表一起导出（通用实现见 DBExtraTabBackup）
-		sqlStr += buildExtraTablesInsertSql(type, url, user, pwd, encode);
+		sqlStr += buildExtraTablesInsertSql(type, url, user, pwd);
 		
 		boolean ret = FileUtil.saveDocContentToFile(sqlStr, path, name, encode);
 		Log.debug("backupDB() End with ret:" + ret);
@@ -19091,7 +19091,7 @@ public class BaseController  extends BaseFunction{
 	 *
 	 * <p>表不存在（旧库 / 该功能未建表）或读取失败 → 记日志跳过该表，绝不影响原有表的导出。
 	 */
-	private static String buildExtraTablesInsertSql(String type, String url, String user, String pwd, String encode) {
+	private static String buildExtraTablesInsertSql(String type, String url, String user, String pwd) {
 		String sqlStr = "";
 		Connection conn = null;
 		try {
@@ -19102,7 +19102,7 @@ public class BaseController  extends BaseFunction{
 				Log.info("buildExtraTablesInsertSql() 数据库连接失败，附加表未导出");
 				return sqlStr;
 			}
-			sqlStr += DBExtraTabBackup.buildInsertSqlForTables(conn, buildExtraDBTabList(), encode);
+			sqlStr += DBExtraTabBackup.buildInsertSqlForTables(conn, buildExtraDBTabList());
 		} catch (Exception e) {
 			Log.info("buildExtraTablesInsertSql() 附加表导出失败（不影响其它表）: " + e.getMessage());
 			Log.info(e);

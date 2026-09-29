@@ -41,20 +41,27 @@ public class DBExtraTabBackup {
 	// ===================== 导出：SQL =====================
 
 	/** 生成一批表的 INSERT 语句（表不存在则跳过该表，返回空串） */
-	public static String buildInsertSqlForTables(Connection conn, List<String> tabList, String encode) {
+	public static String buildInsertSqlForTables(Connection conn, List<String> tabList) {
 		String sqlStr = "";
 		if (conn == null || tabList == null) {
 			return sqlStr;
 		}
 		boolean mysqlDialect = !isSQLiteConnection(conn);
 		for (String tabName : tabList) {
-			sqlStr += buildTableInsertSql(conn, tabName, mysqlDialect, encode);
+			sqlStr += buildTableInsertSql(conn, tabName, mysqlDialect);
 		}
 		return sqlStr;
 	}
 
-	/** 生成单表的 INSERT 语句（列名/列数取自 ResultSetMetaData，值按方言转义） */
-	public static String buildTableInsertSql(Connection conn, String tabName, boolean mysqlDialect, String encode) {
+	/**
+	 * 生成单表的 INSERT 语句（列名/列数取自 ResultSetMetaData，值按方言转义）。
+	 *
+	 * <p>❗值**原样**写入 SQL 文本，不在这里做任何字符集转换 —— 落盘编码由
+	 * {@code FileUtil.saveDocContentToFile(..., encode)} 负责。
+	 * 早期实现里套了 BaseController 的 {@code enocdeString}（{@code new String(str.getBytes(), encode)}），
+	 * 在默认编码为 GBK 的 JVM（Tomcat 就是）上会把中文双重编码成乱码。
+	 */
+	public static String buildTableInsertSql(Connection conn, String tabName, boolean mysqlDialect) {
 		String sqlStr = "";
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -78,7 +85,7 @@ public class DBExtraTabBackup {
 					if (value == null) {
 						values += "NULL";
 					} else {
-						values += "'" + encodeString(escapeSqlValue(value.toString(), mysqlDialect), encode) + "'";
+						values += "'" + escapeSqlValue(value.toString(), mysqlDialect) + "'";
 					}
 				}
 				sqlStr += "insert into " + tabName + " (" + columns + ") values (" + values + ");\r\n";
@@ -247,17 +254,6 @@ public class DBExtraTabBackup {
 	}
 
 	/** 与 BaseController.enocdeString 同语义：按目标编码重写字符串（encode 为 null 时原样返回） */
-	private static String encodeString(String str, String encode) {
-		if (encode != null) {
-			try {
-				return new String(str.getBytes(), encode);
-			} catch (Exception e) {
-				Log.info(e);
-			}
-		}
-		return str;
-	}
-
 	private static void closeStatement(Statement stmt, ResultSet rs) {
 		try {
 			if (rs != null) {
