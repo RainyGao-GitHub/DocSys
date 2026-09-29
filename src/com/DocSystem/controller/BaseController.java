@@ -22,7 +22,9 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -87,6 +89,7 @@ import util.FileUtil.FileUtils2;
 import com.DocSystem.common.ActionContext;
 import com.DocSystem.common.Base64Util;
 import com.DocSystem.common.BaseFunction;
+import com.DocSystem.common.DBExtraTabBackup;
 import com.DocSystem.common.DocChange;
 import com.DocSystem.common.DocChangeType;
 import com.DocSystem.common.EVENT;
@@ -14629,6 +14632,14 @@ public class BaseController  extends BaseFunction{
 			"skill_ratings",
 			"similar_users_cache",
 	};
+	//配置类附加表：同样**不并入** DBTabNameMap（原因同上），但必须和仓库等表一样
+	//纳入自动备份 / 导出 / 导入（见 devDocs/系统参数表备份与导入导出方案.md）。
+	//system_setting 存的是系统参数（sms.* / mail.* / 后续迁移进来的配置），
+	//AgentDBTabNameMap 里的表存 LLM 配置/技能/会话等 —— 都是丢了就找不回来的数据。
+	//与 objType 表不同：这里一律**按表名**处理，不涉及 ObjMemberListMap。
+	protected final static String [] ExtraDBTabNameMap = {
+			"system_setting",
+	};
 	static JSONArray[] ObjMemberListMap = {null,null,null,null,null,null,null,null,null,null,null};
 	
 	//入口页将根据该标志来确定跳转到install还是index.html
@@ -14944,7 +14955,7 @@ public class BaseController  extends BaseFunction{
 	 * 并用当前 WebApplicationContext 取 bean（静态调用路径下拿不到实例，同 triggerAgentInit）。
 	 * 全程 try/catch 兜底：建表失败不得影响 DocSys 启动（配置读取会自动走兜底链）。
 	 *
-	 * <p>建表后紧接着做短信配置的**首次种子迁移**（幂等：仅当表内还没有任何 sms.* 行时，
+	 * <p>建表后紧接着做短信/邮件配置的**首次种子迁移**（幂等：仅当表内还没有任何 sms.* / mail.* 行时，
 	 * 把 docSysConfig.properties 的旧值搬进表；之后一切读写只认表）。
 	 */
 	private void triggerSystemSettingInit() {
@@ -14971,6 +14982,15 @@ public class BaseController  extends BaseFunction{
 			smsConfigStore.ensureSeeded();
 		} catch (Exception e) {
 			Log.info("triggerSystemSettingInit() 短信配置种子迁移失败（不影响 DocSys）: " + e.getMessage());
+			Log.info(e);
+		}
+
+		try {
+			com.DocSystem.service.mail.MailConfigStore mailConfigStore =
+				wac.getBean(com.DocSystem.service.mail.MailConfigStore.class);
+			mailConfigStore.ensureSeeded();
+		} catch (Exception e) {
+			Log.info("triggerSystemSettingInit() 邮件配置种子迁移失败（不影响 DocSys）: " + e.getMessage());
 			Log.info(e);
 		}
 	}
@@ -19038,9 +19058,66 @@ public class BaseController  extends BaseFunction{
 				sqlStr += convertListToInertSqls(objId, list, null); //统一进行编码转换写入
 			}
 		}
+		
+		//附加表（system_setting / Agent 表）：与 objType 表一起导出（通用实现见 DBExtraTabBackup）
+		sqlStr += buildExtraTablesInsertSql(type, url, user, pwd, encode);
+		
 		boolean ret = FileUtil.saveDocContentToFile(sqlStr, path, name, encode);
 		Log.debug("backupDB() End with ret:" + ret);
 		return ret;
+	}
+	
+	// ================= 附加表（按表名，与 objType 无关）的备份/导入 =================
+	
+	/** 附加表清单 = ExtraDBTabNameMap（system_setting）+ AgentDBTabNameMap */
+	protected static List<String> buildExtraDBTabList() {
+		List<String> tabList = new ArrayList<String>();
+		for(int i=0; i< ExtraDBTabNameMap.length; i++)
+		{
+			tabList.add(ExtraDBTabNameMap[i]);
+		}
+		for(int i=0; i< AgentDBTabNameMap.length; i++)
+		{
+			tabList.add(AgentDBTabNameMap[i]);
+		}
+		return tabList;
+	}
+	
+	/**
+	 * 生成附加表的 INSERT 语句（附加到 docsystem_data.sql 末尾）。
+	 *
+	 * <p>这些表不在 DBTabNameMap 里（下标与 objType 强绑定，不能动），所以走
+	 * 「按表名 + JDBC 元数据」的通用导出（见 {@link DBExtraTabBackup}），不依赖实体类。
+	 *
+	 * <p>表不存在（旧库 / 该功能未建表）或读取失败 → 记日志跳过该表，绝不影响原有表的导出。
+	 */
+	private static String buildExtraTablesInsertSql(String type, String url, String user, String pwd, String encode) {
+		String sqlStr = "";
+		Connection conn = null;
+		try {
+			Class.forName(getJdbcDriverName(type));
+			conn = getDBConnection(type, url, user, pwd);
+			if(conn == null)
+			{
+				Log.info("buildExtraTablesInsertSql() 数据库连接失败，附加表未导出");
+				return sqlStr;
+			}
+			sqlStr += DBExtraTabBackup.buildInsertSqlForTables(conn, buildExtraDBTabList(), encode);
+		} catch (Exception e) {
+			Log.info("buildExtraTablesInsertSql() 附加表导出失败（不影响其它表）: " + e.getMessage());
+			Log.info(e);
+		} finally {
+			closeDBConnection(conn);
+		}
+		return sqlStr;
+	}
+	
+	private static void closeDBConnection(Connection conn) {
+		try {
+			if(conn != null) conn.close();
+		} catch (Exception e) {
+			Log.info(e);
+		}
 	}
 	
 	private static String convertListToInertSqls(int objId, List<Object> list, String encode) {
@@ -19083,10 +19160,39 @@ public class BaseController  extends BaseFunction{
 			String name = getNameByObjType(objType);
 			jsonStr += name + ":" + tmpJsonStr + ",\r\n";		
 		}
+		
+		//附加表（system_setting / Agent 表）：按表名通用导出，与 SQL 备份保持一致
+		jsonStr += buildExtraTablesJson(type, url, user, pwd);
+		
 		jsonStr += "}";
 		return FileUtil.saveDocContentToFile(jsonStr, filePath, fileName, "UTF-8");
 	}
-
+	
+	/**
+	 * 生成附加表的 JSON 片段（键 = 表名，值 = 行对象数组），附加到 docsystem_data.json。
+	 * 失败/表不存在一律跳过并用空串返回，绝不影响原有表（通用实现见 {@link DBExtraTabBackup}）。
+	 */
+	private static String buildExtraTablesJson(String type, String url, String user, String pwd) {
+		String jsonStr = "";
+		Connection conn = null;
+		try {
+			Class.forName(getJdbcDriverName(type));
+			conn = getDBConnection(type, url, user, pwd);
+			if(conn == null)
+			{
+				Log.info("buildExtraTablesJson() 数据库连接失败，附加表未导出");
+				return jsonStr;
+			}
+			jsonStr += DBExtraTabBackup.buildJsonFragmentForTables(conn, buildExtraDBTabList());
+		} catch (Exception e) {
+			Log.info("buildExtraTablesJson() 附加表导出失败（不影响其它表）: " + e.getMessage());
+			Log.info(e);
+		} finally {
+			closeDBConnection(conn);
+		}
+		return jsonStr;
+	}
+	
 	protected static boolean importDatabase(List<Integer> importTabList, String importType, String filePath, String fileName, String type, String url, String user, String pwd)
 	{
 		Log.debug("importDatabase() importType:" + importType);
@@ -19136,7 +19242,41 @@ public class BaseController  extends BaseFunction{
 	        importJsonObjListToDataBase(objType, list, type, url, user, pwd);
 	    	Log.debug("importObjectListFromJsonFile() import OK");
 		}
+		
+		//附加表（system_setting / Agent 表）：与上面 objType 表同样的导入语义（方案决策 D2 ——
+		//参考原有逻辑，逐行 INSERT；某行冲突/失败只跳过并记日志，不影响其它行）
+		importExtraTablesFromJson(jobj, type, url, user, pwd);
 		return true;
+	}
+	
+	/**
+	 * 导入附加表（按表名，不依赖 objType）。
+	 *
+	 * <p>与 objType 表导入保持一致：**逐行 INSERT**，单行失败（例如目标库已有同名 system_setting 键、
+	 * 主键冲突）只记日志跳过，继续后面的行 —— 等价于 {@code executeSqlScript} 的 stopOnError=false 行为。
+	 * 灾后恢复到空库时会全量导入 ✓。
+	 */
+	protected static void importExtraTablesFromJson(JSONObject jobj, String type, String url, String user, String pwd) {
+		if(jobj == null)
+		{
+			return;
+		}
+		Connection conn = null;
+		try {
+			Class.forName(getJdbcDriverName(type));
+			conn = getDBConnection(type, url, user, pwd);
+			if(conn == null)
+			{
+				Log.info("importExtraTablesFromJson() 数据库连接失败，附加表未导入");
+				return;
+			}
+			DBExtraTabBackup.importFromJson(conn, buildExtraDBTabList(), jobj);
+		} catch (Exception e) {
+			Log.info("importExtraTablesFromJson() 附加表导入失败（不影响已导入的表）: " + e.getMessage());
+			Log.info(e);
+		} finally {
+			closeDBConnection(conn);
+		}
 	}
 	
 	private static void importJsonObjListToDataBase(int objType, JSONArray list, String type, String url, String user, String pwd) {
