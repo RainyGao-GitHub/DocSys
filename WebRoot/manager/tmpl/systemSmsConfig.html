@@ -81,6 +81,7 @@
                     <label class="control-label col-lg-3">区域 RegionId</label>
                     <div class="col-lg-9">
                       <input type="text" class="form-control" id="systemSmsAliyunRegionId" name="aliyunRegionId" value="{{value.config.aliyun.regionId}}" disabled="disabled" placeholder="cn-hangzhou">
+                      <span class="help-block">SendSms 接口不需要区域参数，此处仅作记录（不随请求发送）。</span>
                     </div>
                   </div>
                   <div class="form-group">
@@ -218,8 +219,8 @@
                       <div class="col-lg-3" style="line-height:34px;">重试次数</div>
                       <div class="col-lg-3"><input type="text" class="form-control" id="systemSmsRetry" name="retry" value="{{value.config.options.retry}}" disabled="disabled"></div>
                     </div>
-                    <input type="hidden" id="systemSmsCodeLength" name="codeLength" value="{{value.config.options.codeLength}}">
-                    <input type="hidden" id="systemSmsCodeTtlMinutes" name="codeTtlMinutes" value="{{value.config.options.codeTtlMinutes}}">
+                      <input type="hidden" id="systemSmsCodeLength" name="codeLength" value="{{value.config.options.codeLength}}" disabled="disabled">
+                      <input type="hidden" id="systemSmsCodeTtlMinutes" name="codeTtlMinutes" value="{{value.config.options.codeTtlMinutes}}" disabled="disabled">
                     <span class="help-block">超时 1000~60000 ms；重试只对网络异常 / 5xx 生效（业务失败不重试，避免重复计费），上限 3 次。验证码位数与有效期目前由代码与短信模板文案决定，暂未随此处配置生效（此处仅原样保留 DB 中的取值）。</span>
                   </div>
                 </div>

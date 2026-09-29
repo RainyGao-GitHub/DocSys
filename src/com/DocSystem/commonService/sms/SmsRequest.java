@@ -20,7 +20,16 @@ public class SmsRequest {
 	/** 表单参数（application/x-www-form-urlencoded） */
 	private Map<String, String> formParams = new LinkedHashMap<String, String>();
 
-	/** JSON 请求体（与 formParams 互斥；阿里云/腾讯云用） */
+	/**
+	 * true = 表单参数拼到 URL 查询串、请求体为空（POST /?k=v）。
+	 *
+	 * <p>阿里云 RPC 风格就需要这种形状，而且**不能**随手加 Content-Type：
+	 * 阿里云 V3 签名要求「凡发出的 host / content-type / x-acs-* 头都必须参与签名」，
+	 * 多一个未签名的 Content-Type 会让网关算出的签名对不上。
+	 */
+	private boolean queryInUrl;
+
+	/** JSON 请求体（与 formParams 互斥；腾讯云用） */
 	private String jsonBody;
 
 	private Map<String, String> headers = new LinkedHashMap<String, String>();
@@ -71,6 +80,15 @@ public class SmsRequest {
 		this.jsonBody = jsonBody;
 	}
 
+	/** 参数是否拼进 URL 查询串（true 时请求体为空） */
+	public boolean isQueryInUrl() {
+		return queryInUrl;
+	}
+
+	public void setQueryInUrl(boolean queryInUrl) {
+		this.queryInUrl = queryInUrl;
+	}
+
 	public Map<String, String> getHeaders() {
 		return headers;
 	}
@@ -85,8 +103,8 @@ public class SmsRequest {
 		}
 	}
 
-	/** 是否为「表单 POST」 */
+	/** 是否为「表单 POST」（请求体为表单编码；参数进 URL 或无 Body 时不是） */
 	public boolean isFormPost() {
-		return "POST".equalsIgnoreCase(method) && (jsonBody == null || jsonBody.isEmpty());
+		return "POST".equalsIgnoreCase(method) && !queryInUrl && (jsonBody == null || jsonBody.isEmpty());
 	}
 }

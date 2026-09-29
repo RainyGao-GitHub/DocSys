@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.DocSystem.common.Log;
+import com.DocSystem.commonService.sms.impl.AliyunSmsProvider;
 import com.DocSystem.commonService.sms.impl.GenericHttpSmsProvider;
 import com.DocSystem.commonService.sms.impl.YunpianSmsProvider;
 import com.DocSystem.service.sms.SmsConfigStore;
@@ -38,6 +39,7 @@ public class SmsSender {
 
 	public SmsSender() {
 		register(new YunpianSmsProvider());
+		register(new AliyunSmsProvider());
 		register(new GenericHttpSmsProvider());
 	}
 

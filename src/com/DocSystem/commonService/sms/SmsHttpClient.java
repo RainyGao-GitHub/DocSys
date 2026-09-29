@@ -101,7 +101,7 @@ public class SmsHttpClient {
 		try {
 			boolean get = "GET".equalsIgnoreCase(request.getMethod());
 			String url = request.getUrl().trim();
-			if (get) {
+			if (get || request.isQueryInUrl()) {
 				url = buildUrlWithQuery(url, request.getFormParams());
 			}
 
@@ -118,7 +118,7 @@ public class SmsHttpClient {
 				}
 			}
 
-			if (!get) {
+			if (!get && !request.isQueryInUrl()) {
 				byte[] payload;
 				String contentType;
 				if (request.isFormPost()) {

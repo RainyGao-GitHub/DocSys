@@ -81,6 +81,7 @@
                     <label class="control-label col-lg-3">RegionId</label>
                     <div class="col-lg-9">
                       <input type="text" class="form-control" id="systemSmsAliyunRegionId" name="aliyunRegionId" value="{{value.config.aliyun.regionId}}" disabled="disabled" placeholder="cn-hangzhou">
+                      <span class="help-block">The SendSms API does not take a region; kept for reference only (never sent).</span>
                     </div>
                   </div>
                   <div class="form-group">
@@ -218,8 +219,8 @@
                       <div class="col-lg-3" style="line-height:34px;">Retry</div>
                       <div class="col-lg-3"><input type="text" class="form-control" id="systemSmsRetry" name="retry" value="{{value.config.options.retry}}" disabled="disabled"></div>
                     </div>
-                    <input type="hidden" id="systemSmsCodeLength" name="codeLength" value="{{value.config.options.codeLength}}">
-                    <input type="hidden" id="systemSmsCodeTtlMinutes" name="codeTtlMinutes" value="{{value.config.options.codeTtlMinutes}}">
+                      <input type="hidden" id="systemSmsCodeLength" name="codeLength" value="{{value.config.options.codeLength}}" disabled="disabled">
+                      <input type="hidden" id="systemSmsCodeTtlMinutes" name="codeTtlMinutes" value="{{value.config.options.codeTtlMinutes}}" disabled="disabled">
                     <span class="help-block">Timeout 1000~60000 ms; retry applies to network errors / 5xx only (business failures are never retried to avoid double billing), max 3. Code length and TTL are currently decided by code and by the provider-side template text, so they are kept as-is (not effective yet).</span>
                   </div>
                 </div>
