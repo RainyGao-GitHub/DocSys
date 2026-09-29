@@ -14886,6 +14886,9 @@ public class BaseController  extends BaseFunction{
 
 			//DocSysAgent: 数据库已就绪，触发 Agent 初始化（建表 + LLM 同步）
 			triggerAgentInit();
+
+			//系统参数: 数据库已就绪，确保 system_setting 表存在（幂等；失败不影响 DocSys）
+			triggerSystemSettingInit();
 		}
 
 		FileUtil.saveDocContentToFile(ret, docSysIniPath,  "docSysIniState", "UTF-8");
@@ -14914,6 +14917,31 @@ public class BaseController  extends BaseFunction{
 			agentInit.initAfterDocSysReady();
 		} catch (Exception e) {
 			Log.info("triggerAgentInit() Agent 初始化失败（不影响 DocSys）: " + e.getMessage());
+			Log.info(e);
+		}
+	}
+
+	/**
+	 * 系统参数表（system_setting）初始化钩子。
+	 *
+	 * <p>与 triggerAgentInit() 同一时机与套路：在 docSysInit 确认数据库就绪的成功路径中调用，
+	 * 委托给 SystemSettingInitializer 幂等建表（MariaDB/SQLite 双方言），
+	 * 并用当前 WebApplicationContext 取 bean（静态调用路径下拿不到实例，同 triggerAgentInit）。
+	 * 全程 try/catch 兜底：建表失败不得影响 DocSys 启动（配置读取会自动走兜底链）。
+	 */
+	private void triggerSystemSettingInit() {
+		try {
+			org.springframework.web.context.WebApplicationContext wac =
+				org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext();
+			if(wac == null) {
+				Log.info("triggerSystemSettingInit() WebApplicationContext 不可用，跳过系统参数表初始化");
+				return;
+			}
+			com.DocSystem.service.SystemSettingInitializer initializer =
+				wac.getBean(com.DocSystem.service.SystemSettingInitializer.class);
+			initializer.init();
+		} catch (Exception e) {
+			Log.info("triggerSystemSettingInit() 系统参数表初始化失败（不影响 DocSys）: " + e.getMessage());
 			Log.info(e);
 		}
 	}

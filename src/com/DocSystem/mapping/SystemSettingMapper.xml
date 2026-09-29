@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.DocSystem.dao.SystemSettingMapper">
+
+    <resultMap id="BaseResultMap" type="com.DocSystem.entity.SystemSetting">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="value" property="value" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="VARCHAR"/>
+        <result column="update_time" property="updateTime" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        `id`, `name`, `value`, `remark`, `create_time`, `update_time`
+    </sql>
+
+    <sql id="Search_Condition">
+        <where>
+            <if test="search != null and search != ''">
+                (`name` LIKE #{search} OR `value` LIKE #{search} OR `remark` LIKE #{search})
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectByName" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM system_setting
+        WHERE `name` = #{name}
+        LIMIT 1
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM system_setting
+        <include refid="Search_Condition"/>
+        ORDER BY `name` ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="selectCount" resultType="int">
+        SELECT COUNT(*) FROM system_setting
+        <include refid="Search_Condition"/>
+    </select>
+
+    <select id="countByPrefix" resultType="int">
+        SELECT COUNT(*) FROM system_setting WHERE `name` LIKE #{prefix}
+    </select>
+
+    <insert id="insert" parameterType="com.DocSystem.entity.SystemSetting" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO system_setting (`name`, `value`, `remark`, `create_time`, `update_time`)
+        VALUES (#{name}, #{value}, #{remark}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateByName" parameterType="com.DocSystem.entity.SystemSetting">
+        UPDATE system_setting
+        SET `value` = #{value}, `remark` = #{remark}, `update_time` = #{updateTime}
+        WHERE `name` = #{name}
+    </update>
+
+    <delete id="deleteByName">
+        DELETE FROM system_setting WHERE `name` = #{name}
+    </delete>
+
+</mapper>
