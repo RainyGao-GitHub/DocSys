@@ -650,6 +650,23 @@ function lang(str)
 		"获取短信服务配置信息失败" : "Failed to get SMS Service Settings",
 		"更新短信服务配置成功" : "SMS Service Settings was updated",
 		"更新短信服务配置失败" : "Failed to update SMS Service Settings",	
+		//SMS Service (multi provider, M6)
+		"未配置" : "Not configured",
+		"云片" : "Yunpian",
+		"阿里云短信" : "Aliyun SMS",
+		"腾讯云短信" : "Tencent Cloud SMS",
+		"自定义 HTTP" : "Custom HTTP",
+		"运营商" : "Provider",
+		"返回码" : "Provider Code",
+		"返回信息" : "Provider Message",
+		"耗时" : "Elapsed",
+		"验证码" : "Verification Code",
+		"发送成功" : "Sent",
+		"运营商原始响应" : "Raw provider response",
+		"发送测试短信" : "Send Test SMS",
+		"发送测试短信失败" : "Failed to send the test SMS",
+		"请填写接收测试短信的手机号" : "Please enter the mobile number that receives the test SMS",
+		"测试短信已发出，请核对手机" : "Test SMS was sent, please check your phone",
 		
 		//System Settings (system_setting table)
 		"系统参数" : "System Settings",

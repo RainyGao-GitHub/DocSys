@@ -614,49 +614,95 @@ function updateSystemEmailConfig(host, email, pwd){
     });
 }
 
-//系统短信服务设置
-var systemSmsConfig = {
-		server: "",
-		apikey: "",
-		tplid: "",
+//系统短信服务设置（system_setting 表的 sms.* 行；老 properties 仅作首次启用时的默认数据）
+var gSystemSmsConfigData = null;	//服务端返回的原始配置（取消编辑时用于回填）
+var gSystemSmsProviderList = ["yunpian", "aliyun", "tencent", "custom"];	//字段块与运营商一一对应
+
+//按当前运营商显示对应字段块（参照系统数据库页的 doSelectDbType 写法）
+function doSelectSmsProvider(){
+	for(var i=0; i<gSystemSmsProviderList.length; i++){
+		$("#systemSmsBlock" + gSystemSmsProviderList[i].charAt(0).toUpperCase() + gSystemSmsProviderList[i].substring(1)).hide();
+	}
+
+	var provider = $("#systemSmsProvider").val();
+	if(provider == null || provider == ""){
+		return;
+	}
+	$("#systemSmsBlock" + provider.charAt(0).toUpperCase() + provider.substring(1)).show();
 }
+
+//表单只读/可编辑切换
+function setSystemSmsFormEnabled(enabled){
+	$("#systemSmsConfigForm").find("input,select,textarea").attr("disabled", !enabled);
+}
+
+//收集表单值；只读（disabled）字段跳过 —— 服务端发现没有任何表单字段时会改用已保存的配置
+function collectSystemSmsFormData(){
+	var data = [];
+	$("#systemSmsConfigForm").find("input,select,textarea").each(function(){
+		if($(this).prop("disabled")){
+			return;
+		}
+		var name = $(this).attr("name");
+		if(name == null || name == ""){
+			return;
+		}
+		if($(this).attr("type") == "checkbox"){
+			if($(this).prop("checked")){
+				data.push({name : name, value : $(this).val()});
+			}
+			return;
+		}
+		data.push({name : name, value : $(this).val()});
+	});
+	return data;
+}
+
 function enableSystemSmsSet(){
 	$("#btnEnableSystemSmsSet").hide();
 	$("#btnCancelSystemSmsSet").show();
 	$("#btnSaveSystemSmsSet").show();
-	$("#systemSmsServer").val(systemSmsConfig.server);
-	$("#systemSmsApikey").val(systemSmsConfig.apikey);
-	$("#systemSmsTplid").val(systemSmsConfig.tplid);
-	$("#systemSmsServer").attr('disabled',false);
-	$("#systemSmsApikey").attr('disabled',false);
-	$("#systemSmsTplid").attr('disabled',false);
+	setSystemSmsFormEnabled(true);
 }
 
 function cancelSystemSmsSet(){
 	$("#btnEnableSystemSmsSet").show();
 	$("#btnCancelSystemSmsSet").hide();
 	$("#btnSaveSystemSmsSet").hide();
-	//revert the value
-	$("#systemSmsServer").attr('disabled',true);
-	$("#systemSmsApikey").attr('disabled',true);
-	$("#systemSmsTplid").attr('disabled',true);
-	$("#systemSmsServer").val(systemSmsConfig.server);
-	$("#systemSmsApikey").val(systemSmsConfig.apikey);
-	$("#systemSmsTplid").val(systemSmsConfig.tplid);
+	renderSystemSmsConfigView();	//重新渲染以丢弃未保存的修改
 }
 
 function saveSystemSmsSet(){
-	$("#btnEnableSystemSmsSet").show();
-	$("#btnCancelSystemSmsSet").hide();
-	$("#btnSaveSystemSmsSet").hide();
-	//revert the value
-	$("#systemSmsServer").attr('disabled',true);
-	$("#systemSmsApikey").attr('disabled',true);
-	$("#systemSmsTplid").attr('disabled',true);
-	var host = $("#systemSmsServer").val();
-	var user = $("#systemSmsApikey").val();
-	var pwd = $("#systemSmsTplid").val();
-	updateSystemSmsConfig(host, user, pwd);
+	//必须在切只读前收集，否则 disabled 字段会被跳过
+	var data = collectSystemSmsFormData();
+
+	var $btn = $("#btnSaveSystemSmsSet");
+	$btn.attr("disabled", true);
+
+	$.ajax({
+		url : "/DocSystem/Manage/setSystemSmsConfig.do",
+		type : "post",
+		dataType : "json",
+		data : data,
+		success : function (ret) {
+			$btn.attr("disabled", false);
+			if( "ok" == ret.status )
+			{
+				showSystemSmsConfig();	//重新加载（自动回到只读态）
+				showErrorMessage(_Lang("更新短信服务配置成功"));
+			}
+			else
+			{
+				//保持编辑态，便于管理员按提示修正
+				console.log(ret.msgInfo);
+				showErrorMessage(_Lang("更新短信服务配置失败", ":", ret.msgInfo));
+			}
+		},
+		error : function () {
+			$btn.attr("disabled", false);
+			showErrorMessage(_Lang("更新短信服务配置失败", ":", "服务器异常"));
+		}
+	});
 }
 
 function showSystemSmsConfig(){
@@ -668,13 +714,11 @@ function showSystemSmsConfig(){
         success : function (ret) {
             if( "ok" == ret.status )
             {
-            	//console.log("getSystemSmsConfig ret", ret);
-				var config = ret.data; 	
-				systemSmsConfig.server = config.server;
-            	systemSmsConfig.apikey = config.apikey;
-            	systemSmsConfig.tplid = config.tplid;
-            	console.log("getSystemSmsConfig systemSmsConfig",systemSmsConfig);
-            	$Func.render($("#container"),"systemSmsConfig" + langExt,{"value":systemSmsConfig});
+            	gSystemSmsConfigData = ret.data;
+            	$("#btnEnableSystemSmsSet").show();
+            	$("#btnCancelSystemSmsSet").hide();
+            	$("#btnSaveSystemSmsSet").hide();
+            	renderSystemSmsConfigView();
             }
             else 
             {
@@ -688,42 +732,74 @@ function showSystemSmsConfig(){
     });
 }
 
-function updateSystemSmsConfig(server, apikey, tplid){
-	$.ajax({
-        url : "/DocSystem/Manage/setSystemSmsConfig.do",
-        type : "post",
-        dataType : "json",
-        data : {
-        	server: server,
-        	apikey: apikey,
-        	tplid: tplid,
-        },
-        success : function (ret) {
-            if( "ok" == ret.status )
-            {	        		
-        		systemSmsConfig.server = server;
-            	systemSmsConfig.apikey = apikey;
-        		systemSmsConfig.tplid = tplid;
-        		showErrorMessage(_Lang("更新短信服务配置成功"));
-            }
-            else 
-            {
-                console.log(ret.msgInfo);
-                showErrorMessage(_Lang("更新短信服务配置失败", ":", ret.msgInfo));
-        		//restore the setting
-        		$("#systemSmsServer").val(systemSmsConfig.server);
-        		$("#systemSmsApikey").val(systemSmsConfig.apikey);
-        		$("#systemSmsTplid").val(systemSmsConfig.tplid);
-	        }
-        },
-        error : function () {
-        	showErrorMessage(_Lang("更新短信服务配置失败", ":", "服务器异常"));
-    		//restore the setting
-        	$("#systemSmsServer").val(systemSmsConfig.server);
-    		$("#systemSmsApikey").val(systemSmsConfig.apikey);
-    		$("#systemSmsTplid").val(systemSmsConfig.tplid);
-        }
-    });
+function renderSystemSmsConfigView(){
+	if(gSystemSmsConfigData == null){
+		return;
+	}
+	$Func.render($("#container"), "systemSmsConfig" + langExt, {"value" : buildSystemSmsConfigView(gSystemSmsConfigData)}, function(){
+		doSelectSmsProvider();	//渲染后按当前运营商显示对应字段块
+	});
+}
+
+//服务端配置 → 页面视图（补默认值，避免模板里访问 null 的属性；场景模板的 vars 数组转成逗号文本）
+function buildSystemSmsConfigView(data){
+	var config = data.config || {};
+	config.yunpian = config.yunpian || {};
+	config.aliyun = config.aliyun || {};
+	config.tencent = config.tencent || {};
+	config.custom = config.custom || {};
+	config.custom.paramNames = config.custom.paramNames || {};
+	config.options = config.options || {};
+
+	var providerTypes = data.providerTypes || [];
+	var view = {
+		config : config,
+		providerTypes : providerTypes,
+		providerDefaults : {},
+		providerName : "",
+		hasConfig : data.hasConfig == true,
+		warnings : data.warnings || [],
+		customParamsText : data.customParamsText || "",
+		sceneTplId : {},
+		sceneVars : {}
+	};
+
+	for(var i=0; i<providerTypes.length; i++){
+		//运营商显示名来自服务端枚举（中文），英文页靠 _Lang 翻译
+		providerTypes[i].displayName = _Lang(providerTypes[i].displayName);
+		view.providerDefaults[providerTypes[i].code] = providerTypes[i].defaultEndpoint || "";
+		if(providerTypes[i].code == config.provider){
+			view.providerName = providerTypes[i].displayName;
+		}
+	}
+	if(view.providerName == ""){
+		view.providerName = _Lang("未配置");
+	}
+
+	var scenes = config.scenes || {};
+	var sceneCodes = ["register", "resetPwd", "phoneVerify", "test"];
+	for(var j=0; j<sceneCodes.length; j++){
+		var tpl = scenes[sceneCodes[j]] || {};
+		view.sceneTplId[sceneCodes[j]] = tpl.tplId || "";
+		view.sceneVars[sceneCodes[j]] = (tpl.vars && tpl.vars.length > 0) ? tpl.vars.join(",") : "";
+	}
+
+	return view;
+}
+
+function showSystemSmsTestSendPanel(){
+	qiao.bs.dialog({
+		id: 'systemSmsTestSend',
+		url: 'systemSmsTestSend' + langExt + '.html',
+		title: _Lang('发送测试短信'),
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		callback: function(){
+			$("#systemSmsTestPhone").val("");
+			$("#systemSmsTestResult").empty();
+			$("#systemSmsTestPhone").focus();
+		}
+	}, null);
 }
 
 //系统参数（system_setting 表）—— 与邮件/短信/数据库页是同一份数据，这里是通用键值视图

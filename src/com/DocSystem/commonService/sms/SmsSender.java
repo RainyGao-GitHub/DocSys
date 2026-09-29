@@ -46,8 +46,18 @@ public class SmsSender {
 	 * 供发送前诊断、后台「发送测试短信」预检、以及单元验证使用。
 	 */
 	public SmsPrepared prepare(SmsScene scene, String phone, Map<String, String> vars) {
+		return prepare(null, scene, phone, vars);
+	}
+
+	/**
+	 * 用**给定配置**校验并构造请求（**不打网络**）。
+	 *
+	 * <p>供后台「发送测试短信」在**保存前**用页面上的未保存值试发；{@code config} 为 null
+	 * 时仍从 {@link SmsConfigStore} 取（与 {@link #prepare(SmsScene, String, Map)} 等价）。
+	 */
+	public SmsPrepared prepare(SmsConfig config, SmsScene scene, String phone, Map<String, String> vars) {
 		SmsPrepared prepared = new SmsPrepared();
-		SmsConfig config = configStore.load();
+		config = resolveConfig(config);
 		prepared.setConfig(config);
 
 		if (scene == null) {
@@ -76,8 +86,13 @@ public class SmsSender {
 	 * <p>变量名即 {@code vars} 的键（**不套用场景默认变量名**）—— 调用方给什么就发什么。
 	 */
 	public SmsPrepared prepareWithTemplate(String tplId, String phone, Map<String, String> vars) {
+		return prepareWithTemplate(null, tplId, phone, vars);
+	}
+
+	/** 用**给定配置** + 指定模板 ID 构造请求（见 {@link #prepareWithTemplate(String, String, Map)}） */
+	public SmsPrepared prepareWithTemplate(SmsConfig config, String tplId, String phone, Map<String, String> vars) {
 		SmsPrepared prepared = new SmsPrepared();
-		SmsConfig config = configStore.load();
+		config = resolveConfig(config);
 		prepared.setConfig(config);
 
 		if (checkCommon(prepared, config, phone) == false) {
@@ -93,6 +108,11 @@ public class SmsSender {
 		List<String> names = varNamesOf(vars);
 		template.setVars(names);
 		return buildRequest(prepared, config, template, names, phone, vars);
+	}
+
+	/** 配置为 null → 取当前生效配置（表 → properties → 硬编码兜底） */
+	private SmsConfig resolveConfig(SmsConfig config) {
+		return (config == null) ? configStore.load() : config;
 	}
 
 	/** 发送前的公共校验：手机号 → 开关 → 运营商已接入（错误文案与顺序保持既有约定） */
@@ -167,7 +187,15 @@ public class SmsSender {
 	 * @param vars  模板变量（如 {"code":"123456"}）
 	 */
 	public SmsSendResult send(SmsScene scene, String phone, Map<String, String> vars) {
-		return execute(scene == null ? null : scene.getCode(), phone, prepare(scene, phone, vars));
+		return execute(scene == null ? null : scene.getCode(), phone, prepare((SmsConfig) null, scene, phone, vars));
+	}
+
+	/**
+	 * 用**给定配置**发送（见 {@link #prepare(SmsConfig, SmsScene, String, Map)}）。
+	 * 后台「发送测试短信」用页面未保存值走这条。
+	 */
+	public SmsSendResult send(SmsConfig config, SmsScene scene, String phone, Map<String, String> vars) {
+		return execute(scene == null ? null : scene.getCode(), phone, prepare(config, scene, phone, vars));
 	}
 
 	/**
@@ -176,7 +204,7 @@ public class SmsSender {
 	 * <p>与 {@link #send} 只差模板来源：这里由调用方给模板 ID 与变量名，适合「自带模板」的老链路。
 	 */
 	public SmsSendResult sendWithTemplate(String tplId, String phone, Map<String, String> vars) {
-		return execute("tpl:" + tplId, phone, prepareWithTemplate(tplId, phone, vars));
+		return execute("tpl:" + tplId, phone, prepareWithTemplate((SmsConfig) null, tplId, phone, vars));
 	}
 
 	private SmsSendResult execute(String sceneCode, String phone, SmsPrepared prepared) {

@@ -1,0 +1,21 @@
+<div class="form-horizontal">
+  <div class="form-group">
+    <label class="control-label col-lg-3" for="systemSmsTestPhone">手机号</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemSmsTestPhone" name="systemSmsTestPhone" maxlength="20" placeholder="接收测试短信的手机号">
+      <span class="help-block">使用「测试」场景的模板发送，模板变量 code 为本次随机验证码。</span>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-lg-offset-3 col-lg-9">
+      <button type="button" class="btn btn-warning" id="btnSendSystemSmsTest" onclick="sendSystemSmsTest()">发送</button>
+      <span class="help-block" id="systemSmsTestHint">编辑状态下用页面当前值发送；只读状态下用已保存的配置发送。</span>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-lg-12" id="systemSmsTestResult"></div>
+  </div>
+</div>
+<script type="text/javascript" src="systemSmsTestSend.js"></script>

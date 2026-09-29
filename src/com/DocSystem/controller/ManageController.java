@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -65,7 +66,14 @@ import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.common.entity.LongTermTask;
+import com.DocSystem.commonService.sms.SmsConfig;
+import com.DocSystem.commonService.sms.SmsConfigForm;
+import com.DocSystem.commonService.sms.SmsProviderType;
+import com.DocSystem.commonService.sms.SmsScene;
+import com.DocSystem.commonService.sms.SmsSendResult;
+import com.DocSystem.commonService.sms.SmsSender;
 import com.DocSystem.controller.BaseController;
+import com.DocSystem.service.sms.SmsConfigStore;
 
 @Controller
 @RequestMapping("/Manage")
@@ -75,6 +83,12 @@ public class ManageController extends BaseController{
 
 	@Autowired
 	private ReposServiceImpl reposService;
+
+	/** 发送测试短信时，回显的运营商原始响应上限（避免超大响应把页面撑爆） */
+	private static final int MAX_SMS_RAW_LEN = 1000;
+
+	/** 保存短信配置时，错误提示最多列几条（其余折叠为条数） */
+	private static final int MAX_SMS_ERROR_ITEMS = 3;
 
 	
 	/********** 系统初始化 ***************/
@@ -320,6 +334,13 @@ public class ManageController extends BaseController{
 		return docSysIniDir.mkdirs();
 	}
 	
+	/**
+	 * 获取短信服务配置。
+	 *
+	 * <p>【M6 改造】不再读 {@code docSysConfig.properties}（它现在只是「首次启用时的默认数据」），
+	 * 而是返回 {@code system_setting} 表装配出的结构化配置 + 运营商元数据 + 提醒项，
+	 * 供后台页面直接渲染（运营商下拉与必填标记都从元数据来，加新运营商无需改页面）。
+	 */
 	@RequestMapping("/getSystemSmsConfig.do")
 	public void getSystemSmsConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -333,41 +354,34 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
-		String server = ReadProperties.read("docSysConfig.properties", "smsServer");
-		if(server == null)
-		{
-			server = "";
-		}
-		
-		String apikey = ReadProperties.read("docSysConfig.properties", "smsApikey");
-		if(apikey == null)
-		{
-			apikey = "";
-		}
-		
-		String tplid = ReadProperties.read("docSysConfig.properties", "smsTplid");
-		if(tplid == null)
-		{
-			tplid = "";
-		}
-		
-		JSONObject config = new JSONObject();
-		config.put("server", server);
-		config.put("apikey", apikey);
-		config.put("tplid", tplid);
-		
-		rt.setData(config);
+
+		SmsConfig config = smsConfigStore.load();
+
+		JSONObject data = new JSONObject();
+		data.put("config", config);
+		data.put("providerTypes", buildSmsProviderTypes());
+		data.put("warnings", smsConfigStore.getWarnings(config));
+		data.put("errors", smsConfigStore.validate(config));
+		data.put("hasConfig", smsConfigStore.hasSmsConfig());
+		// 固定参数在页面上是「k=v 多行文本」，这里给一份服务端格式化结果，避免前后端两套格式化逻辑
+		data.put("customParamsText",
+				SmsConfigForm.formatParamPairs((config.getCustom() == null) ? null : config.getCustom().getParams()));
+
+		rt.setData(data);
 		writeJson(rt, response);
 	}
-	
-	/********** 设置系统短信配置 ***************/
+
+	/**
+	 * 保存短信服务配置。
+	 *
+	 * <p>【M6 改造】只写 {@code system_setting} 表（**不再回写 properties**，方案决策 9）；
+	 * 仍兼容旧前端的 {@code server/apikey/tplid} 三参数（按首次迁移同款规则解析，方案 §4.2 #7）。
+	 */
 	@RequestMapping("/setSystemSmsConfig.do")
 	public void setSystemSmsConfig(String authCode,String server, String apikey, String tplid, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** setSystemSmsConfig.do ***********************");
-		
-		Log.debug("setSystemSmsConfig() server:" + server + " apikey:" + apikey + " tplid:" + tplid);
+
 		ReturnAjax rt = new ReturnAjax();
 		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
 		if(accessUser == null)
@@ -375,56 +389,214 @@ public class ManageController extends BaseController{
 			writeJson(rt, response);			
 			return;
 		}
-		
-		if(server == null && apikey == null && tplid == null)
+
+		SmsConfig config = buildSmsConfigFromRequest(request);
+		if(config == null)
 		{
 			docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
 			return;
 		}
-		
-		//checkAndAdd docSys.ini Dir
-		if(checkAndAddDocSysIniDir())
+
+		String error = validateSmsConfig(config);
+		if(error != null)
 		{
-			docSysErrorLog("系统初始化目录创建失败！", rt);
-			writeJson(rt, response);			
-			return;
-		}
-		
-		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
-		String tmpDocSystemConfigPath = docSysIniPath;
-		String configFileName = "docSysConfig.properties";
-		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
-		{
-			//Failed to copy 
-			Log.debug("setSystemSmsConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
-			docSysErrorLog("创建临时配置文件失败！", rt);
+			rt.setError(error);
+			addSystemLog(request, accessUser, "setSystemSmsConfig", "setSystemSmsConfig", "修改短信服务配置", null,
+					"失败", null, null, null, "provider:" + config.getProvider() + " reason:" + error);
 			writeJson(rt, response);
 			return;
 		}
 
-		if(server != null)
+		if(smsConfigStore.save(config))
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "smsServer", server);
+			Log.info("setSystemSmsConfig() 保存成功 provider:" + config.getProvider() + " enabled:" + config.isEnabled());
+			addSystemLog(request, accessUser, "setSystemSmsConfig", "setSystemSmsConfig", "修改短信服务配置", null,
+					"成功", null, null, null, "provider:" + config.getProvider() + " enabled:" + config.isEnabled());
 		}
-		if(apikey != null)
+		else
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "smsApikey", apikey);
+			rt.setError("保存失败，请检查系统日志");
+			addSystemLog(request, accessUser, "setSystemSmsConfig", "setSystemSmsConfig", "修改短信服务配置", null,
+					"失败", null, null, null, "provider:" + config.getProvider());
 		}
-		if(tplid != null)
+
+		writeJson(rt, response);
+	}
+
+	/**
+	 * 发送测试短信（方案 §2.5）。
+	 *
+	 * <p>请求里带了短信表单字段时，用**页面上的未保存值**发送（可先试后存）；一个字段都没带
+	 * 时用已保存的配置。测试使用 {@code test} 场景的模板，模板变量 {@code code} 为随机验证码，
+	 * 并随响应返回，方便与收到的短信核对。
+	 */
+	@RequestMapping("/testSystemSmsConfig.do")
+	public void testSystemSmsConfig(String phone, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** testSystemSmsConfig.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "smsTplid", tplid);
+			writeJson(rt, response);			
+			return;
 		}
-		
-		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+
+		if(phone == null || phone.trim().isEmpty())
 		{
-			Log.debug("setSystemSmsConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
-			docSysErrorLog("写入配置文件失败！", rt);
+			rt.setError("请填写接收测试短信的手机号");
 			writeJson(rt, response);
 			return;
 		}
-		
+
+		SmsConfig config = buildSmsConfigFromRequest(request);
+		if(config == null)
+		{
+			config = smsConfigStore.load();	// 未带表单字段 → 用已保存配置
+		}
+
+		String error = validateSmsConfig(config);
+		if(error != null)
+		{
+			rt.setError(error);
+			writeJson(rt, response);
+			return;
+		}
+
+		String code = generateSmsTestCode();
+		Map<String, String> vars = new HashMap<String, String>();
+		vars.put("code", code);
+
+		SmsSendResult result = smsSender.send(config, SmsScene.TEST, phone.trim(), vars);
+		if(result.isSuccess())
+		{
+			JSONObject data = new JSONObject();
+			data.put("provider", result.getProvider());
+			data.put("providerCode", result.getProviderCode());
+			data.put("providerMsg", result.getProviderMsg());
+			data.put("elapsedMs", result.getElapsedMs());
+			data.put("code", code);
+			data.put("raw", truncate(result.getRaw(), MAX_SMS_RAW_LEN));
+			rt.setData(data);
+
+			addSystemLog(request, accessUser, "testSystemSmsConfig", "testSystemSmsConfig", "发送测试短信", null,
+					"成功", null, null, null, "provider:" + result.getProvider()
+					+ " phone:" + SmsSender.maskPhone(phone.trim()) + " elapsedMs:" + result.getElapsedMs());
+		}
+		else
+		{
+			// 运营商原文透传给管理员，便于自助排查（方案 P5）
+			rt.setError(result.getFailureReason());
+			addSystemLog(request, accessUser, "testSystemSmsConfig", "testSystemSmsConfig", "发送测试短信", null,
+					"失败", null, null, null, "phone:" + SmsSender.maskPhone(phone.trim())
+					+ " reason:" + result.getFailureReason());
+		}
+
 		writeJson(rt, response);
+	}
+
+	/** 运营商元数据（页面用其渲染下拉与必填标记；新增运营商只需加枚举项） */
+	private JSONArray buildSmsProviderTypes()
+	{
+		JSONArray types = new JSONArray();
+		for(SmsProviderType type : SmsProviderType.values())
+		{
+			JSONObject item = new JSONObject();
+			item.put("code", type.getCode());
+			item.put("displayName", type.getDisplayName());
+			item.put("defaultEndpoint", type.getDefaultEndpoint());
+			item.put("signNameRequired", type.isSignNameRequired());
+			JSONArray fields = new JSONArray();
+			for(String field : type.getRequiredFields())
+			{
+				fields.add(field);
+			}
+			item.put("requiredFields", fields);
+			types.add(item);
+		}
+		return types;
+	}
+
+	/**
+	 * 请求参数 → {@link SmsConfig}：结构化表单字段优先；只带旧三参数时按首次迁移同款规则解析；
+	 * 两者都没有（即请求里根本没有短信参数）→ 返回 null 由调用方决定。
+	 */
+	private SmsConfig buildSmsConfigFromRequest(HttpServletRequest request)
+	{
+		Map<String, String> params = new HashMap<String, String>();
+		Enumeration<?> names = request.getParameterNames();
+		while(names.hasMoreElements())
+		{
+			String name = String.valueOf(names.nextElement());
+			params.put(name, request.getParameter(name));
+		}
+
+		if(SmsConfigForm.hasFormFields(params))
+		{
+			return SmsConfigForm.bind(params);
+		}
+
+		String server = params.get("server");
+		String apikey = params.get("apikey");
+		String tplid = params.get("tplid");
+		if(server != null || apikey != null || tplid != null)
+		{
+			Log.info("buildSmsConfigFromRequest() 使用旧参数（server/apikey/tplid）兼容解析");
+			return smsConfigStore.assemble(SmsConfigStore.buildSeedEntries(server, apikey, tplid));
+		}
+
+		return null;
+	}
+
+	/** 校验：阻断性错误拼接成一句（最多 3 条，其余用省略号） */
+	private String validateSmsConfig(SmsConfig config)
+	{
+		List<String> errors = smsConfigStore.validate(config);
+		if(errors == null || errors.isEmpty())
+		{
+			return null;
+		}
+
+		StringBuilder sb = new StringBuilder();
+		int index = 0;
+		for(String error : errors)
+		{
+			if(index >= MAX_SMS_ERROR_ITEMS)
+			{
+				sb.append("…共 ").append(errors.size()).append(" 项");
+				break;
+			}
+			if(sb.length() > 0)
+			{
+				sb.append("；");
+			}
+			sb.append(error);
+			index++;
+		}
+		return sb.toString();
+	}
+
+	/** 测试短信的验证码（6 位数字，随响应返回便于核对） */
+	private String generateSmsTestCode()
+	{
+		int code = (int)(Math.random() * 1000000);
+		String text = String.valueOf(code);
+		while(text.length() < 6)
+		{
+			text = "0" + text;
+		}
+		return text;
+	}
+
+	private String truncate(String value, int maxLen)
+	{
+		if(value == null || value.length() <= maxLen)
+		{
+			return value;
+		}
+		return value.substring(0, maxLen) + "...(" + value.length() + ")";
 	}
 	
 	@RequestMapping("/getSystemDbConfig.do")
