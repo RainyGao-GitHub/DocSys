@@ -20,16 +20,16 @@
 
             <div class="widget-content">
 
-              <table class="table table-striped table-bordered table-hover" id="systemSetting_list">
+              <table class="table table-striped table-bordered table-hover" id="systemSetting_list" style="table-layout:fixed;">
                 <thead>
                 <tr>
-                  <th style="width:50px;">#</th>
-                  <th style="width:220px;">配置名称</th>
+                  <th style="width:40px;">#</th>
+                  <th style="width:14%;">配置名称</th>
                   <th>配置值</th>
-                  <th style="width:200px;">备注</th>
-                  <th style="width:150px;">创建时间</th>
-                  <th style="width:150px;">更新时间</th>
-                  <th style="width:150px;">操作</th>
+                  <th style="width:9%;">备注</th>
+                  <th style="width:88px;">创建时间</th>
+                  <th style="width:88px;">更新时间</th>
+                  <th style="width:84px;">操作</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -37,9 +37,9 @@
                 {{each list as value i}}
                   <tr index="{{i}}">
                     <td>{{value.index}}</td>
-                    <td>{{value.name}}</td>
-                    <td style="max-width:600px;word-break:break-all;">{{value.displayValue}}</td>
-                    <td>{{value.remark}}</td>
+                    <td style="word-break:break-all;">{{value.name}}</td>
+                    <td style="word-break:break-all;">{{value.displayValue}}</td>
+                    <td style="word-break:break-all;">{{value.remark}}</td>
                     <td>{{value.createTime}}</td>
                     <td>{{value.updateTime}}</td>
                     <td class="edit">

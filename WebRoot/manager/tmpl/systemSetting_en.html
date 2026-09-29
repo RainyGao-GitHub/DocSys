@@ -20,16 +20,16 @@
 
             <div class="widget-content">
 
-              <table class="table table-striped table-bordered table-hover" id="systemSetting_list">
+              <table class="table table-striped table-bordered table-hover" id="systemSetting_list" style="table-layout:fixed;">
                 <thead>
                 <tr>
-                  <th style="width:50px;">#</th>
-                  <th style="width:220px;">Name</th>
+                  <th style="width:40px;">#</th>
+                  <th style="width:14%;">Name</th>
                   <th>Value</th>
-                  <th style="width:200px;">Remark</th>
-                  <th style="width:150px;">Create Time</th>
-                  <th style="width:150px;">Update Time</th>
-                  <th style="width:150px;">Operation</th>
+                  <th style="width:9%;">Remark</th>
+                  <th style="width:88px;">Create Time</th>
+                  <th style="width:88px;">Update Time</th>
+                  <th style="width:84px;">Operation</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -37,9 +37,9 @@
                 {{each list as value i}}
                   <tr index="{{i}}">
                     <td>{{value.index}}</td>
-                    <td>{{value.name}}</td>
-                    <td style="max-width:600px;word-break:break-all;">{{value.displayValue}}</td>
-                    <td>{{value.remark}}</td>
+                    <td style="word-break:break-all;">{{value.name}}</td>
+                    <td style="word-break:break-all;">{{value.displayValue}}</td>
+                    <td style="word-break:break-all;">{{value.remark}}</td>
                     <td>{{value.createTime}}</td>
                     <td>{{value.updateTime}}</td>
                     <td class="edit">
