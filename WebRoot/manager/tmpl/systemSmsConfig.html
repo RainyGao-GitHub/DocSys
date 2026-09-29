@@ -12,7 +12,7 @@
             </div>
 
             <div class="widget-content">
-              <div class="form-horizontal" id="systemSmsConfigForm" style="margin-top: 20px;">
+              <div id="systemSmsConfigForm" style="margin-top: 20px;">
                 {{if value.warnings.length > 0}}
                 <div class="alert alert-info" style="margin: 0 15px 10px 15px;">
                   {{each value.warnings as warning i}}<div>{{warning}}</div>{{/each}}
@@ -20,8 +20,8 @@
                 {{/if}}
 
                 <div class="form-group">
-                  <label class="control-label col-lg-3">短信服务</label>
-                  <div class="col-lg-9">
+                  <label class="control-label" style="display:block;">短信服务</label>
+                  <div>
                     <label class="checkbox-inline">
                       <input type="checkbox" id="systemSmsEnabled" name="enabled" value="true" disabled="disabled" {{if value.config.enabled}}checked="checked"{{/if}}> 启用短信服务
                     </label>
@@ -30,9 +30,9 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="control-label col-lg-3">运营商</label>
-                  <div class="col-lg-9">
-                    <select class="form-control" id="systemSmsProvider" name="provider" onchange="doSelectSmsProvider();" disabled="disabled">
+                  <label class="control-label" style="display:block;">运营商</label>
+                  <div>
+                    <select class="form-control" id="systemSmsProvider" name="provider" onchange="doSelectSmsProvider();" disabled="disabled" style="width:220px;">
                       {{each value.providerTypes as type i}}
                       <option value="{{type.code}}" {{if value.config.provider == type.code}}selected="selected"{{/if}}>{{type.displayName}}</option>
                       {{/each}}
@@ -41,24 +41,24 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="control-label col-lg-3">短信签名</label>
-                  <div class="col-lg-9">
-                    <input type="text" class="form-control" id="systemSmsSignName" name="signName" value="{{value.config.signName}}" disabled="disabled">
+                  <label class="control-label" style="display:block;">短信签名</label>
+                  <div>
+                    <input type="text" class="form-control" id="systemSmsSignName" name="signName" value="{{value.config.signName}}" disabled="disabled" style="width:280px;">
                     <span class="help-block">阿里云 / 腾讯云必填（如【自由团队】里的“自由团队”）；云片写在模板内容里，无需填写。</span>
                   </div>
                 </div>
 
                 <div id="systemSmsBlockYunpian" style="display:none;">
                   <div class="form-group">
-                    <label class="control-label col-lg-3">授权码 apikey</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsYunpianApikey" name="yunpianApikey" value="{{value.config.yunpian.apikey}}" disabled="disabled">
+                    <label class="control-label" style="display:block;">授权码 apikey</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsYunpianApikey" name="yunpianApikey" value="{{value.config.yunpian.apikey}}" disabled="disabled" style="width:440px;">
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">接口地址</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsYunpianEndpoint" name="yunpianEndpoint" value="{{value.config.yunpian.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.yunpian}}">
+                    <label class="control-label" style="display:block;">接口地址</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsYunpianEndpoint" name="yunpianEndpoint" value="{{value.config.yunpian.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.yunpian}}" style="width:440px;">
                       <span class="help-block">留空则使用默认地址：<code>{{value.providerDefaults.yunpian}}</code></span>
                     </div>
                   </div>
@@ -66,28 +66,28 @@
 
                 <div id="systemSmsBlockAliyun" style="display:none;">
                   <div class="form-group">
-                    <label class="control-label col-lg-3">AccessKeyId</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsAliyunAccessKeyId" name="aliyunAccessKeyId" value="{{value.config.aliyun.accessKeyId}}" disabled="disabled">
+                    <label class="control-label" style="display:block;">AccessKeyId</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsAliyunAccessKeyId" name="aliyunAccessKeyId" value="{{value.config.aliyun.accessKeyId}}" disabled="disabled" style="width:440px;">
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">AccessKeySecret</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsAliyunAccessKeySecret" name="aliyunAccessKeySecret" value="{{value.config.aliyun.accessKeySecret}}" disabled="disabled">
+                    <label class="control-label" style="display:block;">AccessKeySecret</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsAliyunAccessKeySecret" name="aliyunAccessKeySecret" value="{{value.config.aliyun.accessKeySecret}}" disabled="disabled" style="width:440px;">
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">区域 RegionId</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsAliyunRegionId" name="aliyunRegionId" value="{{value.config.aliyun.regionId}}" disabled="disabled" placeholder="cn-hangzhou">
+                    <label class="control-label" style="display:block;">区域 RegionId</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsAliyunRegionId" name="aliyunRegionId" value="{{value.config.aliyun.regionId}}" disabled="disabled" placeholder="cn-hangzhou" style="width:220px;">
                       <span class="help-block">SendSms 接口不需要区域参数，此处仅作记录（不随请求发送）。</span>
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">接入地址</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsAliyunEndpoint" name="aliyunEndpoint" value="{{value.config.aliyun.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.aliyun}}">
+                    <label class="control-label" style="display:block;">接入地址</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsAliyunEndpoint" name="aliyunEndpoint" value="{{value.config.aliyun.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.aliyun}}" style="width:440px;">
                       <span class="help-block">留空则使用默认地址：<code>{{value.providerDefaults.aliyun}}</code></span>
                     </div>
                   </div>
@@ -95,33 +95,33 @@
 
                 <div id="systemSmsBlockTencent" style="display:none;">
                   <div class="form-group">
-                    <label class="control-label col-lg-3">SecretId</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsTencentSecretId" name="tencentSecretId" value="{{value.config.tencent.secretId}}" disabled="disabled">
+                    <label class="control-label" style="display:block;">SecretId</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsTencentSecretId" name="tencentSecretId" value="{{value.config.tencent.secretId}}" disabled="disabled" style="width:440px;">
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">SecretKey</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsTencentSecretKey" name="tencentSecretKey" value="{{value.config.tencent.secretKey}}" disabled="disabled">
+                    <label class="control-label" style="display:block;">SecretKey</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsTencentSecretKey" name="tencentSecretKey" value="{{value.config.tencent.secretKey}}" disabled="disabled" style="width:440px;">
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">SdkAppId</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsTencentSdkAppId" name="tencentSdkAppId" value="{{value.config.tencent.sdkAppId}}" disabled="disabled" placeholder="1400000000">
+                    <label class="control-label" style="display:block;">SdkAppId</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsTencentSdkAppId" name="tencentSdkAppId" value="{{value.config.tencent.sdkAppId}}" disabled="disabled" placeholder="1400000000" style="width:220px;">
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">区域 Region</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsTencentRegion" name="tencentRegion" value="{{value.config.tencent.region}}" disabled="disabled" placeholder="ap-guangzhou">
+                    <label class="control-label" style="display:block;">区域 Region</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsTencentRegion" name="tencentRegion" value="{{value.config.tencent.region}}" disabled="disabled" placeholder="ap-guangzhou" style="width:220px;">
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">接入地址</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsTencentEndpoint" name="tencentEndpoint" value="{{value.config.tencent.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.tencent}}">
+                    <label class="control-label" style="display:block;">接入地址</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsTencentEndpoint" name="tencentEndpoint" value="{{value.config.tencent.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.tencent}}" style="width:440px;">
                       <span class="help-block">留空则使用默认地址：<code>{{value.providerDefaults.tencent}}</code></span>
                     </div>
                   </div>
@@ -129,44 +129,44 @@
 
                 <div id="systemSmsBlockCustom" style="display:none;">
                   <div class="form-group">
-                    <label class="control-label col-lg-3">接入地址 URL</label>
-                    <div class="col-lg-9">
-                      <input type="text" class="form-control" id="systemSmsCustomUrl" name="customUrl" value="{{value.config.custom.url}}" disabled="disabled" placeholder="http://your-gateway/send">
+                    <label class="control-label" style="display:block;">接入地址 URL</label>
+                    <div>
+                      <input type="text" class="form-control" id="systemSmsCustomUrl" name="customUrl" value="{{value.config.custom.url}}" disabled="disabled" placeholder="http://your-gateway/send" style="width:440px;">
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">请求方式</label>
-                    <div class="col-lg-9">
-                      <select class="form-control" id="systemSmsCustomMethod" name="customMethod" disabled="disabled">
+                    <label class="control-label" style="display:block;">请求方式</label>
+                    <div>
+                      <select class="form-control" id="systemSmsCustomMethod" name="customMethod" disabled="disabled" style="width:220px;">
                         <option value="POST" {{if value.config.custom.method == "POST"}}selected="selected"{{/if}}>POST</option>
                         <option value="GET" {{if value.config.custom.method == "GET"}}selected="selected"{{/if}}>GET</option>
                       </select>
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">参数名映射</label>
-                    <div class="col-lg-9">
-                      <div class="row">
-                        <div class="col-lg-4"><input type="text" class="form-control" id="systemSmsCustomParamPhone" name="customParamPhone" value="{{value.config.custom.paramNames.phone}}" disabled="disabled" placeholder="mobile"></div>
-                        <div class="col-lg-4"><input type="text" class="form-control" id="systemSmsCustomParamTplId" name="customParamTplId" value="{{value.config.custom.paramNames.tplId}}" disabled="disabled" placeholder="tpl_id"></div>
-                        <div class="col-lg-4"><input type="text" class="form-control" id="systemSmsCustomParamTplVars" name="customParamTplVars" value="{{value.config.custom.paramNames.tplVars}}" disabled="disabled" placeholder="tpl_value"></div>
+                    <label class="control-label" style="display:block;">参数名映射</label>
+                    <div>
+                      <div style="white-space:nowrap;">
+                        <input type="text" class="form-control" id="systemSmsCustomParamPhone" name="customParamPhone" value="{{value.config.custom.paramNames.phone}}" disabled="disabled" placeholder="mobile" style="width:200px;display:inline-block;">
+                        <input type="text" class="form-control" id="systemSmsCustomParamTplId" name="customParamTplId" value="{{value.config.custom.paramNames.tplId}}" disabled="disabled" placeholder="tpl_id" style="width:200px;display:inline-block;margin-left:8px;">
+                        <input type="text" class="form-control" id="systemSmsCustomParamTplVars" name="customParamTplVars" value="{{value.config.custom.paramNames.tplVars}}" disabled="disabled" placeholder="tpl_value" style="width:200px;display:inline-block;margin-left:8px;">
                       </div>
                       <span class="help-block">依次为「手机号 / 模板 ID / 模板变量串」在网关侧的参数名；留空使用默认值。</span>
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">固定参数</label>
-                    <div class="col-lg-9">
-                      <textarea class="form-control" id="systemSmsCustomParams" name="customParams" rows="3" disabled="disabled" placeholder="apikey=xxxxxxxx">{{value.customParamsText}}</textarea>
+                    <label class="control-label" style="display:block;">固定参数</label>
+                    <div>
+                      <textarea class="form-control" id="systemSmsCustomParams" name="customParams" rows="3" disabled="disabled" placeholder="apikey=xxxxxxxx" style="width:440px;">{{value.customParamsText}}</textarea>
                       <span class="help-block">每次请求都带的参数，每行一个 <code>k=v</code>（存量 smsApikey 迁移过来时会落在 apikey）。</span>
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="control-label col-lg-3">成功判定字段</label>
-                    <div class="col-lg-9">
-                      <div class="row">
-                        <div class="col-lg-6"><input type="text" class="form-control" id="systemSmsCustomSuccessField" name="customSuccessField" value="{{value.config.custom.successField}}" disabled="disabled" placeholder="code"></div>
-                        <div class="col-lg-6"><input type="text" class="form-control" id="systemSmsCustomSuccessValue" name="customSuccessValue" value="{{value.config.custom.successValue}}" disabled="disabled" placeholder="0"></div>
+                    <label class="control-label" style="display:block;">成功判定字段</label>
+                    <div>
+                      <div style="white-space:nowrap;">
+                        <input type="text" class="form-control" id="systemSmsCustomSuccessField" name="customSuccessField" value="{{value.config.custom.successField}}" disabled="disabled" placeholder="code" style="width:200px;display:inline-block;">
+                        <input type="text" class="form-control" id="systemSmsCustomSuccessValue" name="customSuccessValue" value="{{value.config.custom.successValue}}" disabled="disabled" placeholder="0" style="width:200px;display:inline-block;margin-left:8px;">
                       </div>
                       <span class="help-block">响应 JSON 里该字段等于该值即视为成功（如 <code>code=0</code>）；固定参数示例中的值需与网关一致。</span>
                     </div>
@@ -174,50 +174,50 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="control-label col-lg-3">场景模板 · 注册</label>
-                  <div class="col-lg-9">
-                    <div class="row">
-                      <div class="col-lg-5"><input type="text" class="form-control" id="systemSmsTplIdRegister" name="tplIdRegister" value="{{value.sceneTplId.register}}" disabled="disabled" placeholder="注册模板 ID"></div>
-                      <div class="col-lg-7"><input type="text" class="form-control" id="systemSmsVarsRegister" name="varsRegister" value="{{value.sceneVars.register}}" disabled="disabled" placeholder="变量名，逗号分隔（默认 code）"></div>
+                  <label class="control-label" style="display:block;">场景模板 · 注册</label>
+                  <div>
+                    <div style="white-space:nowrap;">
+                      <input type="text" class="form-control" id="systemSmsTplIdRegister" name="tplIdRegister" value="{{value.sceneTplId.register}}" disabled="disabled" placeholder="注册模板 ID" style="width:200px;display:inline-block;">
+                      <input type="text" class="form-control" id="systemSmsVarsRegister" name="varsRegister" value="{{value.sceneVars.register}}" disabled="disabled" placeholder="变量名，逗号分隔（默认 code）" style="width:280px;display:inline-block;margin-left:8px;">
                     </div>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label class="control-label col-lg-3">场景模板 · 找回密码</label>
-                  <div class="col-lg-9">
-                    <div class="row">
-                      <div class="col-lg-5"><input type="text" class="form-control" id="systemSmsTplIdResetPwd" name="tplIdResetPwd" value="{{value.sceneTplId.resetPwd}}" disabled="disabled" placeholder="找回密码模板 ID"></div>
-                      <div class="col-lg-7"><input type="text" class="form-control" id="systemSmsVarsResetPwd" name="varsResetPwd" value="{{value.sceneVars.resetPwd}}" disabled="disabled" placeholder="变量名，逗号分隔（默认 code）"></div>
+                  <label class="control-label" style="display:block;">场景模板 · 找回密码</label>
+                  <div>
+                    <div style="white-space:nowrap;">
+                      <input type="text" class="form-control" id="systemSmsTplIdResetPwd" name="tplIdResetPwd" value="{{value.sceneTplId.resetPwd}}" disabled="disabled" placeholder="找回密码模板 ID" style="width:200px;display:inline-block;">
+                      <input type="text" class="form-control" id="systemSmsVarsResetPwd" name="varsResetPwd" value="{{value.sceneVars.resetPwd}}" disabled="disabled" placeholder="变量名，逗号分隔（默认 code）" style="width:280px;display:inline-block;margin-left:8px;">
                     </div>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label class="control-label col-lg-3">场景模板 · 手机验证</label>
-                  <div class="col-lg-9">
-                    <div class="row">
-                      <div class="col-lg-5"><input type="text" class="form-control" id="systemSmsTplIdPhoneVerify" name="tplIdPhoneVerify" value="{{value.sceneTplId.phoneVerify}}" disabled="disabled" placeholder="手机验证模板 ID"></div>
-                      <div class="col-lg-7"><input type="text" class="form-control" id="systemSmsVarsPhoneVerify" name="varsPhoneVerify" value="{{value.sceneVars.phoneVerify}}" disabled="disabled" placeholder="变量名，逗号分隔（默认 code）"></div>
+                  <label class="control-label" style="display:block;">场景模板 · 手机验证</label>
+                  <div>
+                    <div style="white-space:nowrap;">
+                      <input type="text" class="form-control" id="systemSmsTplIdPhoneVerify" name="tplIdPhoneVerify" value="{{value.sceneTplId.phoneVerify}}" disabled="disabled" placeholder="手机验证模板 ID" style="width:200px;display:inline-block;">
+                      <input type="text" class="form-control" id="systemSmsVarsPhoneVerify" name="varsPhoneVerify" value="{{value.sceneVars.phoneVerify}}" disabled="disabled" placeholder="变量名，逗号分隔（默认 code）" style="width:280px;display:inline-block;margin-left:8px;">
                     </div>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label class="control-label col-lg-3">场景模板 · 测试</label>
-                  <div class="col-lg-9">
-                    <div class="row">
-                      <div class="col-lg-5"><input type="text" class="form-control" id="systemSmsTplIdTest" name="tplIdTest" value="{{value.sceneTplId.test}}" disabled="disabled" placeholder="测试模板 ID"></div>
-                      <div class="col-lg-7"><input type="text" class="form-control" id="systemSmsVarsTest" name="varsTest" value="{{value.sceneVars.test}}" disabled="disabled" placeholder="变量名，逗号分隔（默认 code）"></div>
+                  <label class="control-label" style="display:block;">场景模板 · 测试</label>
+                  <div>
+                    <div style="white-space:nowrap;">
+                      <input type="text" class="form-control" id="systemSmsTplIdTest" name="tplIdTest" value="{{value.sceneTplId.test}}" disabled="disabled" placeholder="测试模板 ID" style="width:200px;display:inline-block;">
+                      <input type="text" class="form-control" id="systemSmsVarsTest" name="varsTest" value="{{value.sceneVars.test}}" disabled="disabled" placeholder="变量名，逗号分隔（默认 code）" style="width:280px;display:inline-block;margin-left:8px;">
                     </div>
                     <span class="help-block">「发送测试短信」使用本行模板；四行都留空表示该场景不配置（发送时会明确报错）。</span>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label class="control-label col-lg-3">超时时间(毫秒)</label>
-                  <div class="col-lg-9">
-                    <div class="row">
-                      <div class="col-lg-3"><input type="text" class="form-control" id="systemSmsTimeoutMs" name="timeoutMs" value="{{value.config.options.timeoutMs}}" disabled="disabled"></div>
-                      <div class="col-lg-3" style="line-height:34px;">重试次数</div>
-                      <div class="col-lg-3"><input type="text" class="form-control" id="systemSmsRetry" name="retry" value="{{value.config.options.retry}}" disabled="disabled"></div>
+                  <label class="control-label" style="display:block;">超时时间(毫秒)</label>
+                  <div>
+                    <div style="white-space:nowrap;">
+                      <input type="text" class="form-control" id="systemSmsTimeoutMs" name="timeoutMs" value="{{value.config.options.timeoutMs}}" disabled="disabled" style="width:100px;display:inline-block;">
+                      <span style="display:inline-block;margin:0 12px;">重试次数</span>
+                      <input type="text" class="form-control" id="systemSmsRetry" name="retry" value="{{value.config.options.retry}}" disabled="disabled" style="width:100px;display:inline-block;">
                     </div>
                       <input type="hidden" id="systemSmsCodeLength" name="codeLength" value="{{value.config.options.codeLength}}" disabled="disabled">
                       <input type="hidden" id="systemSmsCodeTtlMinutes" name="codeTtlMinutes" value="{{value.config.options.codeTtlMinutes}}" disabled="disabled">
@@ -226,15 +226,14 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="control-label col-lg-3"></label>
-                  <div class="col-lg-9">
+                  <div>
                     <button id="btnTestSystemSmsSet" onclick="showSystemSmsTestSendPanel()" class="btn btn-lg btn-warning examine_ban">发送测试短信</button>
                     <span class="help-block">编辑状态下用页面上的当前值试发；只读状态下用已保存的配置试发。</span>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <div class="col-lg-12">
+                  <div>
                     <span class="help-block">短信配置已存入数据库（<code>system_setting</code> 表的 <code>sms.*</code> 行）；<code>docSysConfig.properties</code> 里的旧值仅作首次启用时的默认数据，保存后修改它不再生效。</span>
                   </div>
                 </div>
