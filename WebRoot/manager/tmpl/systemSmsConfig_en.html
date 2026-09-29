@@ -14,229 +14,228 @@
             <div class="widget-content">
               <div id="systemSmsConfigForm" style="margin-top: 20px;">
                 {{if value.warnings.length > 0}}
-                <div class="alert alert-info" style="margin: 0 15px 10px 15px;">
+                <div class="alert alert-info" style="margin: 0 0 10px 0;">
                   {{each value.warnings as warning i}}<div>{{warning}}</div>{{/each}}
                 </div>
                 {{/if}}
 
-                <div class="form-group">
-                  <label class="control-label" style="display:block;">SMS Service</label>
-                  <div>
-                    <label class="checkbox-inline">
-                      <input type="checkbox" id="systemSmsEnabled" name="enabled" value="true" disabled="disabled" {{if value.config.enabled}}checked="checked"{{/if}}> Enable SMS service
-                    </label>
-                    <span class="help-block">Current provider: <b>{{value.providerName}}</b>. When disabled, no SMS is sent for register / password reset / phone verification.</span>
-                  </div>
-                </div>
+                <!-- Parameter name and value in separate columns (same table style as the System Settings page); provider blocks are separate tbody elements so they can be shown/hidden as a whole -->
+                <table class="table table-striped table-bordered table-hover" id="systemSmsConfigTable">
+                  <thead>
+                  <tr>
+                    <th style="width:220px;">Parameter</th>
+                    <th>Value</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td>SMS Service</td>
+                    <td>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="systemSmsEnabled" name="enabled" value="true" disabled="disabled" {{if value.config.enabled}}checked="checked"{{/if}}> Enable SMS service
+                      </label>
+                      <span class="help-block">Current provider: <b>{{value.providerName}}</b>. When disabled, no SMS is sent for register / password reset / phone verification.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Provider</td>
+                    <td>
+                      <select class="form-control" id="systemSmsProvider" name="provider" onchange="doSelectSmsProvider();" disabled="disabled" style="width:220px;">
+                        {{each value.providerTypes as type i}}
+                        <option value="{{type.code}}" {{if value.config.provider == type.code}}selected="selected"{{/if}}>{{type.displayName}}</option>
+                        {{/each}}
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Sign Name</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemSmsSignName" name="signName" value="{{value.config.signName}}" disabled="disabled" style="width:280px;">
+                      <span class="help-block">Required for Aliyun / Tencent Cloud (e.g. "MyCompany" in 【MyCompany】); Yunpian puts the signature inside the template, leave it empty.</span>
+                    </td>
+                  </tr>
+                  </tbody>
 
-                <div class="form-group">
-                  <label class="control-label" style="display:block;">Provider</label>
-                  <div>
-                    <select class="form-control" id="systemSmsProvider" name="provider" onchange="doSelectSmsProvider();" disabled="disabled" style="width:220px;">
-                      {{each value.providerTypes as type i}}
-                      <option value="{{type.code}}" {{if value.config.provider == type.code}}selected="selected"{{/if}}>{{type.displayName}}</option>
-                      {{/each}}
-                    </select>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label class="control-label" style="display:block;">Sign Name</label>
-                  <div>
-                    <input type="text" class="form-control" id="systemSmsSignName" name="signName" value="{{value.config.signName}}" disabled="disabled" style="width:280px;">
-                    <span class="help-block">Required for Aliyun / Tencent Cloud (e.g. "MyCompany" in 【MyCompany】); Yunpian puts the signature inside the template, leave it empty.</span>
-                  </div>
-                </div>
-
-                <div id="systemSmsBlockYunpian" style="display:none;">
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">API Key</label>
-                    <div>
-                      <input type="text" class="form-control" id="systemSmsYunpianApikey" name="yunpianApikey" value="{{value.config.yunpian.apikey}}" disabled="disabled" style="width:440px;">
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">Endpoint</label>
-                    <div>
+                  <tbody id="systemSmsBlockYunpian" style="display:none;">
+                  <tr>
+                    <td>API Key</td>
+                    <td><input type="text" class="form-control" id="systemSmsYunpianApikey" name="yunpianApikey" value="{{value.config.yunpian.apikey}}" disabled="disabled" style="width:440px;"></td>
+                  </tr>
+                  <tr>
+                    <td>Endpoint</td>
+                    <td>
                       <input type="text" class="form-control" id="systemSmsYunpianEndpoint" name="yunpianEndpoint" value="{{value.config.yunpian.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.yunpian}}" style="width:440px;">
                       <span class="help-block">Empty means the default endpoint: <code>{{value.providerDefaults.yunpian}}</code></span>
-                    </div>
-                  </div>
-                </div>
+                    </td>
+                  </tr>
+                  </tbody>
 
-                <div id="systemSmsBlockAliyun" style="display:none;">
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">AccessKeyId</label>
-                    <div>
-                      <input type="text" class="form-control" id="systemSmsAliyunAccessKeyId" name="aliyunAccessKeyId" value="{{value.config.aliyun.accessKeyId}}" disabled="disabled" style="width:440px;">
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">AccessKeySecret</label>
-                    <div>
-                      <input type="text" class="form-control" id="systemSmsAliyunAccessKeySecret" name="aliyunAccessKeySecret" value="{{value.config.aliyun.accessKeySecret}}" disabled="disabled" style="width:440px;">
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">RegionId</label>
-                    <div>
+                  <tbody id="systemSmsBlockAliyun" style="display:none;">
+                  <tr>
+                    <td>AccessKeyId</td>
+                    <td><input type="text" class="form-control" id="systemSmsAliyunAccessKeyId" name="aliyunAccessKeyId" value="{{value.config.aliyun.accessKeyId}}" disabled="disabled" style="width:440px;"></td>
+                  </tr>
+                  <tr>
+                    <td>AccessKeySecret</td>
+                    <td><input type="text" class="form-control" id="systemSmsAliyunAccessKeySecret" name="aliyunAccessKeySecret" value="{{value.config.aliyun.accessKeySecret}}" disabled="disabled" style="width:440px;"></td>
+                  </tr>
+                  <tr>
+                    <td>RegionId</td>
+                    <td>
                       <input type="text" class="form-control" id="systemSmsAliyunRegionId" name="aliyunRegionId" value="{{value.config.aliyun.regionId}}" disabled="disabled" placeholder="cn-hangzhou" style="width:220px;">
                       <span class="help-block">The SendSms API does not take a region; kept for reference only (never sent).</span>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">Endpoint</label>
-                    <div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Endpoint</td>
+                    <td>
                       <input type="text" class="form-control" id="systemSmsAliyunEndpoint" name="aliyunEndpoint" value="{{value.config.aliyun.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.aliyun}}" style="width:440px;">
                       <span class="help-block">Empty means the default endpoint: <code>{{value.providerDefaults.aliyun}}</code></span>
-                    </div>
-                  </div>
-                </div>
+                    </td>
+                  </tr>
+                  </tbody>
 
-                <div id="systemSmsBlockTencent" style="display:none;">
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">SecretId</label>
-                    <div>
-                      <input type="text" class="form-control" id="systemSmsTencentSecretId" name="tencentSecretId" value="{{value.config.tencent.secretId}}" disabled="disabled" style="width:440px;">
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">SecretKey</label>
-                    <div>
-                      <input type="text" class="form-control" id="systemSmsTencentSecretKey" name="tencentSecretKey" value="{{value.config.tencent.secretKey}}" disabled="disabled" style="width:440px;">
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">SdkAppId</label>
-                    <div>
-                      <input type="text" class="form-control" id="systemSmsTencentSdkAppId" name="tencentSdkAppId" value="{{value.config.tencent.sdkAppId}}" disabled="disabled" placeholder="1400000000" style="width:220px;">
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">Region</label>
-                    <div>
-                      <input type="text" class="form-control" id="systemSmsTencentRegion" name="tencentRegion" value="{{value.config.tencent.region}}" disabled="disabled" placeholder="ap-guangzhou" style="width:220px;">
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">Endpoint</label>
-                    <div>
+                  <tbody id="systemSmsBlockTencent" style="display:none;">
+                  <tr>
+                    <td>SecretId</td>
+                    <td><input type="text" class="form-control" id="systemSmsTencentSecretId" name="tencentSecretId" value="{{value.config.tencent.secretId}}" disabled="disabled" style="width:440px;"></td>
+                  </tr>
+                  <tr>
+                    <td>SecretKey</td>
+                    <td><input type="text" class="form-control" id="systemSmsTencentSecretKey" name="tencentSecretKey" value="{{value.config.tencent.secretKey}}" disabled="disabled" style="width:440px;"></td>
+                  </tr>
+                  <tr>
+                    <td>SdkAppId</td>
+                    <td><input type="text" class="form-control" id="systemSmsTencentSdkAppId" name="tencentSdkAppId" value="{{value.config.tencent.sdkAppId}}" disabled="disabled" placeholder="1400000000" style="width:220px;"></td>
+                  </tr>
+                  <tr>
+                    <td>Region</td>
+                    <td><input type="text" class="form-control" id="systemSmsTencentRegion" name="tencentRegion" value="{{value.config.tencent.region}}" disabled="disabled" placeholder="ap-guangzhou" style="width:220px;"></td>
+                  </tr>
+                  <tr>
+                    <td>Endpoint</td>
+                    <td>
                       <input type="text" class="form-control" id="systemSmsTencentEndpoint" name="tencentEndpoint" value="{{value.config.tencent.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.tencent}}" style="width:440px;">
                       <span class="help-block">Empty means the default endpoint: <code>{{value.providerDefaults.tencent}}</code></span>
-                    </div>
-                  </div>
-                </div>
+                    </td>
+                  </tr>
+                  </tbody>
 
-                <div id="systemSmsBlockCustom" style="display:none;">
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">Gateway URL</label>
-                    <div>
-                      <input type="text" class="form-control" id="systemSmsCustomUrl" name="customUrl" value="{{value.config.custom.url}}" disabled="disabled" placeholder="http://your-gateway/send" style="width:440px;">
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">Method</label>
-                    <div>
+                  <tbody id="systemSmsBlockCustom" style="display:none;">
+                  <tr>
+                    <td>Gateway URL</td>
+                    <td><input type="text" class="form-control" id="systemSmsCustomUrl" name="customUrl" value="{{value.config.custom.url}}" disabled="disabled" placeholder="http://your-gateway/send" style="width:440px;"></td>
+                  </tr>
+                  <tr>
+                    <td>Method</td>
+                    <td>
                       <select class="form-control" id="systemSmsCustomMethod" name="customMethod" disabled="disabled" style="width:220px;">
                         <option value="POST" {{if value.config.custom.method == "POST"}}selected="selected"{{/if}}>POST</option>
                         <option value="GET" {{if value.config.custom.method == "GET"}}selected="selected"{{/if}}>GET</option>
                       </select>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">Param Names</label>
-                    <div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Param Names</td>
+                    <td>
                       <div style="white-space:nowrap;">
-                        <input type="text" class="form-control" id="systemSmsCustomParamPhone" name="customParamPhone" value="{{value.config.custom.paramNames.phone}}" disabled="disabled" placeholder="mobile" style="width:200px;display:inline-block;">
-                        <input type="text" class="form-control" id="systemSmsCustomParamTplId" name="customParamTplId" value="{{value.config.custom.paramNames.tplId}}" disabled="disabled" placeholder="tpl_id" style="width:200px;display:inline-block;margin-left:8px;">
-                        <input type="text" class="form-control" id="systemSmsCustomParamTplVars" name="customParamTplVars" value="{{value.config.custom.paramNames.tplVars}}" disabled="disabled" placeholder="tpl_value" style="width:200px;display:inline-block;margin-left:8px;">
+                        <span style="color:#737373;">Mobile</span>
+                        <input type="text" class="form-control" id="systemSmsCustomParamPhone" name="customParamPhone" value="{{value.config.custom.paramNames.phone}}" disabled="disabled" placeholder="mobile" style="width:180px;display:inline-block;margin-left:5px;">
+                        <span style="color:#737373;margin-left:12px;">Template</span>
+                        <input type="text" class="form-control" id="systemSmsCustomParamTplId" name="customParamTplId" value="{{value.config.custom.paramNames.tplId}}" disabled="disabled" placeholder="tpl_id" style="width:180px;display:inline-block;margin-left:5px;">
+                        <span style="color:#737373;margin-left:12px;">Variables</span>
+                        <input type="text" class="form-control" id="systemSmsCustomParamTplVars" name="customParamTplVars" value="{{value.config.custom.paramNames.tplVars}}" disabled="disabled" placeholder="tpl_value" style="width:180px;display:inline-block;margin-left:5px;">
                       </div>
                       <span class="help-block">Gateway-side parameter names for "mobile / template id / template variables"; empty means the default.</span>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">Fixed Params</label>
-                    <div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Fixed Params</td>
+                    <td>
                       <textarea class="form-control" id="systemSmsCustomParams" name="customParams" rows="3" disabled="disabled" placeholder="apikey=xxxxxxxx" style="width:440px;">{{value.customParamsText}}</textarea>
                       <span class="help-block">Sent with every request, one <code>k=v</code> per line (the legacy smsApikey lands in <code>apikey</code> when migrated).</span>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="control-label" style="display:block;">Success Field</label>
-                    <div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Success Field</td>
+                    <td>
                       <div style="white-space:nowrap;">
-                        <input type="text" class="form-control" id="systemSmsCustomSuccessField" name="customSuccessField" value="{{value.config.custom.successField}}" disabled="disabled" placeholder="code" style="width:200px;display:inline-block;">
-                        <input type="text" class="form-control" id="systemSmsCustomSuccessValue" name="customSuccessValue" value="{{value.config.custom.successValue}}" disabled="disabled" placeholder="0" style="width:200px;display:inline-block;margin-left:8px;">
+                        <span style="color:#737373;">Field</span>
+                        <input type="text" class="form-control" id="systemSmsCustomSuccessField" name="customSuccessField" value="{{value.config.custom.successField}}" disabled="disabled" placeholder="code" style="width:180px;display:inline-block;margin-left:5px;">
+                        <span style="color:#737373;margin-left:12px;">Equals</span>
+                        <input type="text" class="form-control" id="systemSmsCustomSuccessValue" name="customSuccessValue" value="{{value.config.custom.successValue}}" disabled="disabled" placeholder="0" style="width:180px;display:inline-block;margin-left:5px;">
                       </div>
                       <span class="help-block">The response is treated as success when this JSON field equals this value (e.g. <code>code=0</code>).</span>
-                    </div>
-                  </div>
-                </div>
+                    </td>
+                  </tr>
+                  </tbody>
 
-                <div class="form-group">
-                  <label class="control-label" style="display:block;">Template · Register</label>
-                  <div>
-                    <div style="white-space:nowrap;">
-                      <input type="text" class="form-control" id="systemSmsTplIdRegister" name="tplIdRegister" value="{{value.sceneTplId.register}}" disabled="disabled" placeholder="Register template id" style="width:200px;display:inline-block;">
-                      <input type="text" class="form-control" id="systemSmsVarsRegister" name="varsRegister" value="{{value.sceneVars.register}}" disabled="disabled" placeholder="Variables, comma separated (default: code)" style="width:280px;display:inline-block;margin-left:8px;">
-                    </div>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="control-label" style="display:block;">Template · Reset Password</label>
-                  <div>
-                    <div style="white-space:nowrap;">
-                      <input type="text" class="form-control" id="systemSmsTplIdResetPwd" name="tplIdResetPwd" value="{{value.sceneTplId.resetPwd}}" disabled="disabled" placeholder="Reset password template id" style="width:200px;display:inline-block;">
-                      <input type="text" class="form-control" id="systemSmsVarsResetPwd" name="varsResetPwd" value="{{value.sceneVars.resetPwd}}" disabled="disabled" placeholder="Variables, comma separated (default: code)" style="width:280px;display:inline-block;margin-left:8px;">
-                    </div>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="control-label" style="display:block;">Template · Phone Verify</label>
-                  <div>
-                    <div style="white-space:nowrap;">
-                      <input type="text" class="form-control" id="systemSmsTplIdPhoneVerify" name="tplIdPhoneVerify" value="{{value.sceneTplId.phoneVerify}}" disabled="disabled" placeholder="Phone verify template id" style="width:200px;display:inline-block;">
-                      <input type="text" class="form-control" id="systemSmsVarsPhoneVerify" name="varsPhoneVerify" value="{{value.sceneVars.phoneVerify}}" disabled="disabled" placeholder="Variables, comma separated (default: code)" style="width:280px;display:inline-block;margin-left:8px;">
-                    </div>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="control-label" style="display:block;">Template · Test</label>
-                  <div>
-                    <div style="white-space:nowrap;">
-                      <input type="text" class="form-control" id="systemSmsTplIdTest" name="tplIdTest" value="{{value.sceneTplId.test}}" disabled="disabled" placeholder="Test template id" style="width:200px;display:inline-block;">
-                      <input type="text" class="form-control" id="systemSmsVarsTest" name="varsTest" value="{{value.sceneVars.test}}" disabled="disabled" placeholder="Variables, comma separated (default: code)" style="width:280px;display:inline-block;margin-left:8px;">
-                    </div>
-                    <span class="help-block">"Send Test SMS" uses this row; leaving all four rows empty means that scene is not configured (sending will report it explicitly).</span>
-                  </div>
-                </div>
+                  <tr>
+                    <td>Template · Register</td>
+                    <td>
+                      <div style="white-space:nowrap;">
+                        <span style="color:#737373;">Template ID</span>
+                        <input type="text" class="form-control" id="systemSmsTplIdRegister" name="tplIdRegister" value="{{value.sceneTplId.register}}" disabled="disabled" placeholder="Register template id" style="width:180px;display:inline-block;margin-left:5px;">
+                        <span style="color:#737373;margin-left:12px;">Variables</span>
+                        <input type="text" class="form-control" id="systemSmsVarsRegister" name="varsRegister" value="{{value.sceneVars.register}}" disabled="disabled" placeholder="Variables, comma separated (default: code)" style="width:240px;display:inline-block;margin-left:5px;">
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Template · Reset Password</td>
+                    <td>
+                      <div style="white-space:nowrap;">
+                        <span style="color:#737373;">Template ID</span>
+                        <input type="text" class="form-control" id="systemSmsTplIdResetPwd" name="tplIdResetPwd" value="{{value.sceneTplId.resetPwd}}" disabled="disabled" placeholder="Reset password template id" style="width:180px;display:inline-block;margin-left:5px;">
+                        <span style="color:#737373;margin-left:12px;">Variables</span>
+                        <input type="text" class="form-control" id="systemSmsVarsResetPwd" name="varsResetPwd" value="{{value.sceneVars.resetPwd}}" disabled="disabled" placeholder="Variables, comma separated (default: code)" style="width:240px;display:inline-block;margin-left:5px;">
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Template · Phone Verify</td>
+                    <td>
+                      <div style="white-space:nowrap;">
+                        <span style="color:#737373;">Template ID</span>
+                        <input type="text" class="form-control" id="systemSmsTplIdPhoneVerify" name="tplIdPhoneVerify" value="{{value.sceneTplId.phoneVerify}}" disabled="disabled" placeholder="Phone verify template id" style="width:180px;display:inline-block;margin-left:5px;">
+                        <span style="color:#737373;margin-left:12px;">Variables</span>
+                        <input type="text" class="form-control" id="systemSmsVarsPhoneVerify" name="varsPhoneVerify" value="{{value.sceneVars.phoneVerify}}" disabled="disabled" placeholder="Variables, comma separated (default: code)" style="width:240px;display:inline-block;margin-left:5px;">
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Template · Test</td>
+                    <td>
+                      <div style="white-space:nowrap;">
+                        <span style="color:#737373;">Template ID</span>
+                        <input type="text" class="form-control" id="systemSmsTplIdTest" name="tplIdTest" value="{{value.sceneTplId.test}}" disabled="disabled" placeholder="Test template id" style="width:180px;display:inline-block;margin-left:5px;">
+                        <span style="color:#737373;margin-left:12px;">Variables</span>
+                        <input type="text" class="form-control" id="systemSmsVarsTest" name="varsTest" value="{{value.sceneVars.test}}" disabled="disabled" placeholder="Variables, comma separated (default: code)" style="width:240px;display:inline-block;margin-left:5px;">
+                      </div>
+                      <span class="help-block">"Send Test SMS" uses this row; leaving all four rows empty means that scene is not configured (sending will report it explicitly).</span>
+                    </td>
+                  </tr>
 
-                <div class="form-group">
-                  <label class="control-label" style="display:block;">Timeout (ms) / Retry</label>
-                  <div>
-                    <div style="white-space:nowrap;">
-                      <input type="text" class="form-control" id="systemSmsTimeoutMs" name="timeoutMs" value="{{value.config.options.timeoutMs}}" disabled="disabled" style="width:100px;display:inline-block;">
-                      <span style="display:inline-block;margin:0 12px;">Retry</span>
-                      <input type="text" class="form-control" id="systemSmsRetry" name="retry" value="{{value.config.options.retry}}" disabled="disabled" style="width:100px;display:inline-block;">
-                    </div>
-                      <input type="hidden" id="systemSmsCodeLength" name="codeLength" value="{{value.config.options.codeLength}}" disabled="disabled">
-                      <input type="hidden" id="systemSmsCodeTtlMinutes" name="codeTtlMinutes" value="{{value.config.options.codeTtlMinutes}}" disabled="disabled">
-                    <span class="help-block">Timeout 1000~60000 ms; retry applies to network errors / 5xx only (business failures are never retried to avoid double billing), max 3. Code length and TTL are currently decided by code and by the provider-side template text, so they are kept as-is (not effective yet).</span>
-                  </div>
-                </div>
+                  <tr>
+                    <td>Timeout (ms)</td>
+                    <td><input type="text" class="form-control" id="systemSmsTimeoutMs" name="timeoutMs" value="{{value.config.options.timeoutMs}}" disabled="disabled" style="width:100px;"></td>
+                  </tr>
+                  <tr>
+                    <td>Retry</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemSmsRetry" name="retry" value="{{value.config.options.retry}}" disabled="disabled" style="width:100px;">
+                      <span class="help-block">Timeout 1000~60000 ms; retry applies to network errors / 5xx only (business failures are never retried to avoid double billing), max 3. Code length and TTL are currently decided by code and by the provider-side template text, so they are kept as-is (not effective yet).</span>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
 
-                <div class="form-group">
-                  <div>
-                    <button id="btnTestSystemSmsSet" onclick="showSystemSmsTestSendPanel()" class="btn btn-lg btn-warning examine_ban">Send Test SMS</button>
-                    <span class="help-block">While editing, the current (unsaved) form values are used; in read-only mode the saved configuration is used.</span>
-                  </div>
-                </div>
+                <input type="hidden" id="systemSmsCodeLength" name="codeLength" value="{{value.config.options.codeLength}}" disabled="disabled">
+                <input type="hidden" id="systemSmsCodeTtlMinutes" name="codeTtlMinutes" value="{{value.config.options.codeTtlMinutes}}" disabled="disabled">
 
-                <div class="form-group">
-                  <div>
-                    <span class="help-block">SMS settings are stored in the database (<code>sms.*</code> rows of the <code>system_setting</code> table). The old values in <code>docSysConfig.properties</code> are only seed data for the first setup and have no effect after saving here.</span>
-                  </div>
-                </div>
+                <button id="btnTestSystemSmsSet" onclick="showSystemSmsTestSendPanel()" class="btn btn-lg btn-warning examine_ban">Send Test SMS</button>
+                <span class="help-block">While editing, the current (unsaved) form values are used; in read-only mode the saved configuration is used.</span>
+                <span class="help-block">SMS settings are stored in the database (<code>sms.*</code> rows of the <code>system_setting</code> table). The old values in <code>docSysConfig.properties</code> are only seed data for the first setup and have no effect after saving here.</span>
               </div>
               <div class="widget-foot">
                 <div class="clearfix"></div>
