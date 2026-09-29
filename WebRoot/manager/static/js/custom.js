@@ -242,8 +242,11 @@ $(document).ready(function(){
   $(".totop").hide();
 
   $(function(){
-    $(window).scroll(function(){
-      if ($(this).scrollTop()>300)
+    //内容区在桌面布局下是自己的滚动容器（见 style.css 的后台布局块），窄屏仍是文档滚动，
+    //所以两边都监听；滚动目标也两边都设，保证两种布局下「回到顶部」都可用
+    function updateTotopVisibility(){
+      var y = Math.max($(".mainbar").scrollTop(), $(window).scrollTop());
+      if (y > 300)
       {
         $('.totop').slideDown();
       } 
@@ -251,10 +254,14 @@ $(document).ready(function(){
       {
         $('.totop').slideUp();
       }
-    });
+    }
+
+    $(window).scroll(updateTotopVisibility);
+    $(".mainbar").scroll(updateTotopVisibility);
 
     $('.totop a').click(function (e) {
       e.preventDefault();
+      $('.mainbar').animate({scrollTop: 0}, 500);
       $('body,html').animate({scrollTop: 0}, 500);
     });
 

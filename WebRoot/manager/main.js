@@ -246,6 +246,9 @@ function showContentPage(curPath) {
     var subtitle = _Lang("载入中...");
 	
     $("#container").html(_Lang("载入中..."));
+    //内容区在桌面布局下自己就是滚动容器（见 style.css 的后台布局块），切页时回到顶部；
+    //侧边栏是独立的滚动列，不会受影响（不再靠 <a href="#"> 的默认跳转来实现）
+    $(".mainbar").scrollTop(0);
 
     $("#nav li>a").removeClass("open");
     $("ul.sublist").hide();

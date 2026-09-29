@@ -1811,3 +1811,49 @@ footer .copy{
 	color: white;
 }
 
+/* ===================== 后台布局：侧边栏与内容区各自滚动（2026-09-29）=====================
+   背景：这两列原本共用文档滚动，而 .sidebar 高 0（#nav 是 position:absolute，菜单脱离文档流），
+   所以“内容区回到顶部”必然把侧边栏也带回顶部（参见 main.js 里去掉 <a href="#"> 默认跳转那次修复）。
+   这里让两列各自成为视口高度的滚动容器、文档本身不再滚动：
+     - 切页时只需把内容区滚回顶部，侧边栏位置完全不受影响；
+     - 侧边栏因此获得自己的滚动条，能滚到最下面的菜单项。
+   窄屏（<=767px）走 .sidebar-dropdown 那套（保持文档滚动），故本块只作用于 >=768px。 */
+@media (min-width: 768px){
+	html, body{
+		height: 100%;
+		overflow: hidden;
+	}
+	body{
+		display: flex;
+		flex-direction: column;
+	}
+	header{
+		flex: 0 0 auto;
+	}
+	.content{
+		flex: 1 1 auto;
+		display: flex;
+		min-height: 0;
+	}
+	.sidebar{
+		float: none;
+		flex: 0 0 230px;
+		width: 230px;
+		height: auto;
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+	.sidebar #nav{
+		position: static;
+	}
+	.mainbar{
+		flex: 1 1 auto;
+		height: auto;
+		min-height: 0;
+		margin-left: 0;
+		overflow-y: auto;
+	}
+	footer{
+		flex: 0 0 auto;
+	}
+}
