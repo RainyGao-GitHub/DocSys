@@ -818,6 +818,15 @@ header .header-data .hdata em{
   border-bottom: 1px solid #ddd;
 }
 
+/* 子菜单当前所在页：高亮由 main.js 的 showContentPage 加到被点开的那一项上 */
+.sidebar #nav li ul li a.open {
+  background: #fff;
+  color: #167cac;
+  font-weight: bold;
+  border-left: 3px solid #0993d3;
+  padding-left: 27px;   /* 抵消新增的 3px 左边框，保持文字与其他项对齐 */
+}
+
 /* Main */
 
 .mainbar{

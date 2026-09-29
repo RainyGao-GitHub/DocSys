@@ -276,7 +276,9 @@ function showContentPage(curPath) {
         case "systemLicenses":
         case "systemMigrate":
         	title = _Lang("系统管理");
-            $("#nav li[data-eb-params=system]>a").addClass("open");
+        	//高亮跟着被点开的那一项走（curPath==="system" 时定位到的就是父级「系统管理」本身）；
+        	//子菜单仍保持展开，不再把高亮固定加在父级上
+            $("#nav li[data-eb-params=" + curPath + "]>a").addClass("open");
             $("ul.sublist").show();	        	
             showSystemPage(curPath);
         	break;
