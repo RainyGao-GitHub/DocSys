@@ -1,6 +1,6 @@
 # CURRENT_STATE_日志在线查看（工作卡）
 
-建立于 2026-09-30。**状态：进行中（①⑤已由用户提交：`548b6da49`/`d6b7eff85`/`f8727cd03`/`11b1a83f9`；④ 新增顶级「智能体设置」菜单，已实现+验证，**待用户确认提交**）。**
+建立于 2026-09-30。**状态：进行中（①⑤均已提交：`548b6da49`/`d6b7eff85`/`f8727cd03`/`11b1a83f9`/`b95a0a19c`；⑥ 带子项菜单的手风琴 + 箭头图标优化，已实现+验证，**待用户确认提交**）。**
 
 > 本卡是**当前任务**的唯一口径处：必读上下文 / 参考计划与上下文 / 当前进展 / 生效约束（含是否需要先提交）。
 
@@ -206,6 +206,37 @@
   定位方式：浏览器里 `template.compile(模板文本)` 抓真实报错 + 看生成的 JS，一眼看到 `</ul>` 后面直接跟了 `if(type == 2){`。
   教训：**改完 `.html` 模板要立刻做一次「编译自检」**（`template.compile` + 渲染一次），别等页面“什么都不显示”才发现。
 
+## 子项⑥ 带子项的菜单优化（2026-09-30 第六里程碑）
+
+用户反馈：① 父级菜单只能有一个处于展开状态；② 处于展开状态的向右箭头应变为向下箭头。
+
+### 根因（不是「没做」，而是「做错了」）
+`showContentPage` 的分组分支里用的是 `$("ul.sublist").show();` —— **把页面上所有子菜单都展开**（系统管理 + 智能体设置，加移动版共 4 个），
+所以看起来“两个父级同时展开”。箭头则一直是模板里写死的 `icon-chevron-right`，没有任何地方改过
+（`font-awesome.css` 里 `icon-chevron-down`（`\f078`）是现成的）。
+
+### 实施（`WebRoot/manager/main.js`）
+- 新增 `showOnlySublist(parentPath)`：先 `$("ul.sublist").hide()`，再只显示该父级的子菜单（桌面 + 移动两套导航都算），并同步箭头；
+- 两个分组分支（系统管理 / 智能体设置）由 `$("ul.sublist").show()` 改为 `showOnlySublist("system"/"agent")`；
+- `showContentPage` 开头 `$("ul.sublist").hide()` 后补一次 `updateSublistArrow()`（非分组页时箭头也要回到向右）；
+- `li.has_sublist` 的点击处理由“toggle 自己”改为**手风琴**：收起其它父级 + 展开自己 + 同步箭头；
+- 新增 `updateSublistArrow()`：遍历 `li.has_sublist`，按自己子菜单的 `display` 在 `icon-chevron-right` / `icon-chevron-down` 之间切换。
+
+### 验证（dev 8100，真实点击 `a.click()`）
+
+| 操作 | 桌面 系统管理 | 桌面 智能体设置 | 移动 系统管理 | 移动 智能体设置 | 实际可见子菜单数 |
+|---|---|---|---|---|---|
+| 初始（用户管理） | none/右 | none/右 | none/右 | none/右 | 0 |
+| 点「系统管理」父级 | **block/下** | none/右 | **block/下** | none/右 | 1 |
+| 点「智能体设置」父级 | none/右 | **block/下** | none/右 | **block/下** | 1 |
+| 点移动版「系统管理」父级 | **block/下** | none/右 | **block/下** | none/右 | 1 |
+| 点「仓库管理」（非分组页） | none/右 | none/右 | none/右 | none/右 | 0 |
+
+- ⚠️ **踩坑记录 6（改完第一版验证时发现）**：`updateSublistArrow()` 最初用 `$li.children("ul.sublist").is(":visible")` 判展开，
+  但桌面/移动两套导航只有一套真正可见，另一套的父容器是 `display:none` → 它的子菜单永远算“不可见” → **移动版箭头一直是向右**
+  （桌面端测不出来，因为移动版整块是隐藏的）。改为看元素自身的 `css("display") !== "none"` 后两套都正确。
+  教训：这种“桌面 + 移动双导航”结构，判定状态要看元素自身样式，不要用 `:visible`。
+
 ## 预估改动清单（实施时）
 
 - 新增：`WebRoot/manager/logViewer.html`、`logViewer_en.html`、`logViewer.js`、`src/com/DocSystem/common/LogFileUtil.java`
@@ -263,9 +294,9 @@
 
 ## 下一步
 
-1. **等用户确认后提交子项⑤**（不要自动 commit）——本批改动只在**主仓库** `D:\Dev\DocSys`（`devInt`）：`WebRoot/manager/main.js`、`WebRoot/manager/tmpl/sidebar{,_en}.html`、`WebRoot/web/lang/en.js`。
+1. **等用户确认后提交子项⑥**（不要自动 commit）——本批只改 `WebRoot/manager/main.js`（+ 本卡与 `CLAUDE.md`）。
 2. 待用户裁定：「下载」按钮 500 是否处理；`updateSystemInfo()` 死代码是否删。
-3. 收尾：子项⑤提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
+3. 收尾：子项⑥提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
 4. 可选后续（用户未要求）：各子页加 help-block 说明文案 / 行号 / 轮转历史文件列表 / 关键字服务端搜索。
 
 ## 生效约束
@@ -287,12 +318,11 @@
 - E2E 口径：`POST /DocSystem/User/login.do`（`Admin`/`pwd=QWRtaW4=`，pwd 为 base64 明文）；探针产物写 `%TEMP%\docsys_chk\`。
 - **不要自动 commit**：改完 + 验证 → 汇报 → 等用户确认。
 
-## 未提交改动（子项⑤，均在主仓库；基线 `11b1a83f9`）
+## 未提交改动（子项⑥；基线 `b95a0a19c`）
 
 - ` M WebRoot/manager/main.js`
-- ` M WebRoot/manager/tmpl/sidebar.html` / `sidebar_en.html`
-- ` M WebRoot/web/lang/en.js`
+- ` M CLAUDE.md`、` M DevAgentControl/CURRENT_STATE_日志在线查看.md`（本卡）
 
-- 子项①⑤已由用户提交：`548b6da49`（在线查看）、`d6b7eff85`（调试日志从系统设置剥离）、`f8727cd03`（调试日志布局调整）、`11b1a83f9`（系统管理布局调整：5 个参数块拆子页）。
-- 子项⑤为**纯前端改动（模板 + main.js + 语言包）→ 不需要编译、不需要重启**。
+- 子项①⑤已由用户提交：`548b6da49`（在线查看）、`d6b7eff85`（调试日志从系统设置剥离）、`f8727cd03`（调试日志布局调整）、`11b1a83f9`（系统管理布局调整：5 个参数块拆子页）、`b95a0a19c`（新增顶级菜单「智能体设置」）。
+- 子项⑥为**纯前端改动（只改 main.js）→ 不需要编译、不需要重启**。
 - 模板/侧边栏有浏览器缓存：验证/上线后需刷新页面（本次验证均先 `Network.clearBrowserCache`）。

@@ -196,14 +196,39 @@ $(document).on("click",".has_sub",function(){
       }
   });
 
-  //展开子目录
+  //展开子菜单：同时只允许一个父级处于展开状态（手风琴）
+  //点父级会同时触发 showContentPage 进入该分组（最终状态以那边为准），
+  //这里先把其它分组收起来，避免出现两个父级同时展开
   $(document).on("click","li.has_sublist",function(){
 	  console.log("li.has_sublist onclick()");
 	  var $this = $(this);
-      if( ! $this.children("a").hasClass("open") ){
-          $this.children("ul.sublist").toggle();
-      }
+	  $this.siblings("li.has_sublist").children("ul.sublist").hide();
+	  $this.children("ul.sublist").show();
+	  updateSublistArrow();
   });
+
+//只展开指定父级（data-eb-params=parentPath，桌面+移动两个导航都算）的子菜单，其余全部收起
+function showOnlySublist(parentPath){
+	$("ul.sublist").hide();
+	$("li[data-eb-params=" + parentPath + "]>ul.sublist").show();
+	updateSublistArrow();
+}
+
+//展开状态与箭头图标保持一致：展开 → 向下箭头（icon-chevron-down），收起 → 向右箭头（icon-chevron-right）
+function updateSublistArrow(){
+	$("li.has_sublist").each(function(){
+		var $li = $(this);
+		//注意：不能用 :visible 判断——移动端/桌面端两套导航只有一套真正可见，
+		//另一个的父容器是 display:none，会让它的子菜单永远算「不可见」
+		var expanded = $li.children("ul.sublist").css("display") !== "none";
+		var $arrow = $li.children("a").find("i.icon-chevron-right, i.icon-chevron-down");
+		if($arrow.length > 0)
+		{
+			$arrow.toggleClass("icon-chevron-right", !expanded);
+			$arrow.toggleClass("icon-chevron-down", expanded);
+		}
+	});
+}
   
 //菜单项都是 <a href="#">，必须阻止默认跳转：空锦点会让浏览器把文档滚回顶部
 //（表现为"点靠下的子菜单后侧边栏跳回最上方、看起来焦点跑回父级"，2026-09-29 用户反馈）
@@ -259,6 +284,7 @@ function showContentPage(curPath) {
 
     $("#nav li>a").removeClass("open");
     $("ul.sublist").hide();
+    updateSublistArrow();
 
     switch ( curPath ){
         case "user":
@@ -308,7 +334,7 @@ function showContentPage(curPath) {
             //点父级时它默认进入「系统设置」（showSystemPage 里 "system" → showSystemUpgrade），子项也按该项标出
             var systemOpenPath = (curPath === "system") ? "systemUpgrade" : curPath;
             $("#nav li[data-eb-params=" + systemOpenPath + "]>a").addClass("open");
-            $("ul.sublist").show();	        	
+            showOnlySublist("system");	        	
             showSystemPage(curPath);
         	break;
         case "license":
@@ -332,7 +358,7 @@ function showContentPage(curPath) {
             //点父级时默认进入「AI接入设置」（非超级管理员看不到它，则进「提示词管理」）
             var agentOpenPath = (curPath === "agent") ? (($("#nav li[data-eb-params=systemLlm]").length > 0) ? "systemLlm" : "prompt") : curPath;
             $("#nav li[data-eb-params=" + agentOpenPath + "]>a").addClass("open");
-            $("ul.sublist").show();
+            showOnlySublist("agent");
             showAgentPage(curPath);
         	break;
     }
