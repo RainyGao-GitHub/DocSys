@@ -50,7 +50,8 @@ function sendSystemMailTest(){
 				renderSystemMailTestResult(ret.data, null);
 				showErrorMessage(_Lang("测试邮件已发出，请核对收件箱"));
 			}else{
-				renderSystemMailTestResult(null, ret.msgInfo);
+				//失败时也要把 data（含返回码与异常链）传给渲染，否则管理员只看到一句无从下手的话
+				renderSystemMailTestResult(ret.data, ret.msgInfo);
 				showErrorMessage(_Lang("发送测试邮件失败", ":", ret.msgInfo));
 			}
 		},
@@ -62,13 +63,14 @@ function sendSystemMailTest(){
 	});
 }
 
-//渲染发送结果：成功回显发信方式/返回码/返回信息/耗时 + SMTP 原始响应；失败回显原因
+//渲染发送结果：成功回显发信方式/返回码/返回信息/耗时 + 原始响应；失败回显原因 + 异常链
 function renderSystemMailTestResult(data, errorMsg){
 	var $box = $("#systemMailTestResult");
 	$box.empty();
 
 	if(errorMsg != null && errorMsg != ""){
 		$box.append($("<div class='alert alert-danger'></div>").text(errorMsg));
+		appendSystemMailRaw($box, data);	//失败时也把返回码与异常链 show 出来，否则只剩一句无从下手的话
 		return;
 	}
 	if(data == null){
@@ -82,11 +84,20 @@ function renderSystemMailTestResult(data, errorMsg){
 	appendSystemMailTestLine($box, _Lang("返回信息"), data.providerMsg);
 	appendSystemMailTestLine($box, _Lang("耗时"), data.elapsedMs + " ms");
 
-	if(data.raw){
-		$box.append($("<div class='help-block'></div>").text(_Lang("SMTP 原始响应") + "："));
-		$box.append($("<pre style='max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-all;'></pre>")
-			.text(data.raw));
+	appendSystemMailRaw($box, data);
+}
+
+//原始响应 / 异常链（成功与失败都展示；失败时它往往就是真正的原因）
+function appendSystemMailRaw($box, data){
+	if(data == null || !data.raw){
+		return;
 	}
+	if(data.providerCode){
+		appendSystemMailTestLine($box, _Lang("返回码"), data.providerCode);
+	}
+	$box.append($("<div class='help-block'></div>").text(_Lang("SMTP 原始响应") + "："));
+	$box.append($("<pre style='max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-all;'></pre>")
+		.text(data.raw));
 }
 
 function appendSystemMailTestLine($box, label, value){

@@ -10,6 +10,13 @@ import com.alibaba.fastjson.annotation.JSONField;
  */
 public class MailSmtpConfig {
 
+	/**
+	 * 默认 TLS 协议。**不能用 JDK 的“全部协议”**：JavaMail 是把这串字面量交给
+	 * {@code SSLSocket.setEnabledProtocols()}，所以写进不支持的协议名（如 JDK 8 上的 {@code TLSv1.3}）
+	 * 会直接抛 {@code IllegalArgumentException}。TLSv1.2 是 JDK 8 与所有现代服务器的最大公约数。
+	 */
+	public static final String DEFAULT_SSL_PROTOCOLS = "TLSv1.2";
+
 	/** SMTP 服务器地址，如 smtp.qiye.aliyun.com / smtp.163.com */
 	private String host = "";
 
@@ -30,6 +37,16 @@ public class MailSmtpConfig {
 
 	/** 是否信任任意服务器证书（自签名证书的内网服务器才需要，默认关闭） */
 	private boolean sslTrust = false;
+
+	/**
+	 * TLS 协议版本（空格分隔，如 {@code TLSv1.2} 或 {@code TLSv1.3 TLSv1.2}）；空 → {@link #DEFAULT_SSL_PROTOCOLS}。
+	 *
+	 * <p>为什么必须显式给：JavaMail 1.4.x 在 STARTTLS/SSL 下默认发 **TLSv1（TLS 1.0）** 握手，
+	 * 并只带一批老的 CBC 套件；现代 SMTP 服务器（实测网易企业邮前端）会直接回
+	 * {@code fatal alert: internal_error}，客户端只能看到 “Could not convert socket to TLS”。
+	 * 不指定版本时这个属性不会被设置，于是回到那个老默认值。
+	 */
+	private String sslProtocols = DEFAULT_SSL_PROTOCOLS;
 
 	public String getHost() {
 		return host;
@@ -85,6 +102,21 @@ public class MailSmtpConfig {
 
 	public void setSslTrust(boolean sslTrust) {
 		this.sslTrust = sslTrust;
+	}
+
+	public String getSslProtocols() {
+		return sslProtocols;
+	}
+
+	public void setSslProtocols(String sslProtocols) {
+		this.sslProtocols = sslProtocols;
+	}
+
+	/** 生效的 TLS 协议列表（空白 → 默认 TLSv1.2） */
+	@JSONField(serialize = false, deserialize = false)
+	public String getEffectiveSslProtocols() {
+		String value = (sslProtocols == null) ? "" : sslProtocols.trim();
+		return value.isEmpty() ? DEFAULT_SSL_PROTOCOLS : value;
 	}
 
 	/**

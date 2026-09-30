@@ -117,6 +117,17 @@
                       <span class="help-block">勾选后等同 <code>mail.smtp.ssl.trust=*</code>；公网邮箱请勿勾选。</span>
                     </td>
                   </tr>
+                  <tr>
+                    <td>TLS 协议版本</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailSmtpSslProtocols" name="smtpSslProtocols" value="{{value.config.smtp.sslProtocols}}" disabled="disabled" placeholder="TLSv1.2" style="width:220px;">
+                      <span class="help-block">多个用空格分隔。
+                        <b>建议保持 TLSv1.2</b>：JavaMail 不给这个值时会发 TLSv1（TLS 1.0）握手，
+                        现代邮件服务器（如网易企业邮）会直接拒绝，现象是「Could not convert socket to TLS」。
+                        不要写 JDK 不支持的协议（如 JDK 8 上的 TLSv1.3），否则会直接报参数错误。
+                      </span>
+                    </td>
+                  </tr>
                   </tbody>
 
                   <tbody id="systemMailBlockAliyun" style="display:none;">

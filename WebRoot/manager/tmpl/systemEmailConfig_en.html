@@ -116,8 +116,18 @@
                       </label>
                       <span class="help-block">Equivalent to <code>mail.smtp.ssl.trust=*</code>. Do not enable it for public mail servers.</span>
                     </td>
-                  </tr>
-                  </tbody>
+                  </tr>                  <tr>
+                    <td>TLS protocols</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailSmtpSslProtocols" name="smtpSslProtocols" value="{{value.config.smtp.sslProtocols}}" disabled="disabled" placeholder="TLSv1.2" style="width:220px;">
+                      <span class="help-block">Space separated.
+                        <b>Keep TLSv1.2</b>: without this value JavaMail starts a TLSv1 (TLS 1.0) handshake and
+                        modern mail servers (e.g. NetEase enterprise mail) reject it, which surfaces as
+                        "Could not convert socket to TLS". Do not list a protocol your JDK does not support
+                        (such as TLSv1.3 on JDK 8) or the setting fails with an argument error.
+                      </span>
+                    </td>
+                  </tr>                  </tbody>
 
                   <tbody id="systemMailBlockAliyun" style="display:none;">
                   <tr>

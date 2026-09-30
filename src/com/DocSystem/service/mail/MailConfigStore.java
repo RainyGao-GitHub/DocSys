@@ -349,6 +349,10 @@ public class MailConfigStore {
 			if (smtp.isSslTrust()) {
 				warnings.add("已开启「信任任意服务器证书」，存在中间人风险，仅建议自签名证书的内网服务器使用");
 			}
+			String protocols = smtp.getEffectiveSslProtocols();
+			if (smtp.getEncryptionType() != MailEncryption.NONE && isLegacyProtocols(protocols)) {
+				warnings.add("TLS 协议版本只含已不安全的 " + protocols + "，建议改为 TLSv1.2");
+			}
 			if (isBlank(config.getFrom())) {
 				warnings.add("未填写发件人邮箱（" + KEY_FROM + "），将使用 SMTP 登录账号作为发件人");
 			}
@@ -560,6 +564,24 @@ public class MailConfigStore {
 			Log.info("MailConfigStore 解析 " + clazz.getSimpleName() + " 失败: " + e.getMessage());
 			return defaultValue;
 		}
+	}
+
+	/** 协议列表是否只剩 TLSv1 / SSLv3（已不安全） */
+	private static boolean isLegacyProtocols(String protocols) {
+		boolean hasLegacy = false;
+		boolean hasModern = false;
+		for (String token : nullToEmpty(protocols).split("[,\\s]+")) {
+			String value = token.trim();
+			if (value.isEmpty()) {
+				continue;
+			}
+			if ("TLSv1.2".equalsIgnoreCase(value) || "TLSv1.3".equalsIgnoreCase(value)) {
+				hasModern = true;
+			} else if ("TLSv1".equalsIgnoreCase(value) || "SSLv3".equalsIgnoreCase(value)) {
+				hasLegacy = true;
+			}
+		}
+		return hasLegacy && !hasModern;
 	}
 
 	private static boolean parseBoolean(String value) {

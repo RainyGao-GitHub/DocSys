@@ -96,6 +96,15 @@ public class SmtpMailProvider implements MailProvider {
 			props.put(prefix + "ssl.enable", "true");
 		}
 
+		if (encryption != MailEncryption.NONE) {
+			//必须显式给协议版本：不给就落到 JavaMail 1.4.x 的"TLSv1 + 老套件"默认握手，
+			//现代 SMTP 服务器（实测网易企业邮）会回 fatal alert internal_error，
+			//表现成一句无从下手的 "Could not convert socket to TLS"。
+			//两个前缀都设，避免 SSL/STARTTLS 因协议名不同而漏掉。
+			props.put("mail.smtp.ssl.protocols", smtp.getEffectiveSslProtocols());
+			props.put("mail.smtps.ssl.protocols", smtp.getEffectiveSslProtocols());
+		}
+
 		if (smtp.isSslTrust()) {
 			//自签证书的内网服务器：信任任意证书（smtp / smtps 两个前缀都设，避免协议前缀差异）
 			props.put("mail.smtp.ssl.trust", "*");

@@ -480,6 +480,17 @@ public class ManageController extends BaseController{
 		}
 		else
 		{
+			// 失败时也把返回码与**完整异常链**一起回传：
+			// 否则只有一句 “Could not convert socket to TLS”，而真正原因（如 SSLException: Received fatal alert: internal_error）
+			// 被 JavaMail 包在异常链里，管理员无从下手。
+			JSONObject data = new JSONObject();
+			data.put("provider", result.getProvider());
+			data.put("providerCode", result.getProviderCode());
+			data.put("providerMsg", result.getProviderMsg());
+			data.put("elapsedMs", result.getElapsedMs());
+			data.put("raw", truncate(result.getRaw(), MAX_MAIL_RAW_LEN));
+			rt.setData(data);
+
 			// SMTP 原文透传给管理员，便于自助排查（同短信策略）
 			rt.setError(result.getFailureReason());
 			addSystemLog(request, accessUser, "testSystemMailConfig", "testSystemMailConfig", "发送测试邮件", null,

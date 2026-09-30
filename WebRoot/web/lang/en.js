@@ -924,6 +924,11 @@ var warningRules =
 		build : function(m){ return "Content type is not UTF-8 (currently " + m[1] + "), non-ASCII characters may be garbled."; }
 	},
 	{
+		//TLS 协议版本只含已不安全的 TLSv1，建议改为 TLSv1.2
+		pattern : /^TLS 协议版本只含已不安全的 (.+?)，建议改为 TLSv1\.2$/,
+		build : function(m){ return "TLS protocols only contain the deprecated " + m[1] + "; use TLSv1.2 instead."; }
+	},
+	{
 		//阿里云/腾讯云接入地址未填，将使用默认 dm.aliyuncs.com
 		pattern : /^(阿里云|腾讯云)接入地址未填，将使用默认 (\S+)$/,
 		build : function(m){

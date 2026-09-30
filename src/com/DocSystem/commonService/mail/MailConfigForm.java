@@ -39,6 +39,7 @@ public final class MailConfigForm {
 	public static final String P_SMTP_PASSWORD = "smtpPassword";
 	public static final String P_SMTP_AUTH = "smtpAuth";
 	public static final String P_SMTP_SSL_TRUST = "smtpSslTrust";
+	public static final String P_SMTP_SSL_PROTOCOLS = "smtpSslProtocols";
 
 	public static final String P_CONTENT_TYPE = "contentType";
 	public static final String P_CONNECT_TIMEOUT_MS = "connectTimeoutMs";
@@ -78,7 +79,7 @@ public final class MailConfigForm {
 	private static final String[] FORM_FIELDS = {
 			P_ENABLED, P_PROVIDER, P_FROM, P_FROM_NAME,
 			P_SMTP_HOST, P_SMTP_PORT, P_SMTP_ENCRYPTION, P_SMTP_ACCOUNT, P_SMTP_PASSWORD,
-			P_SMTP_AUTH, P_SMTP_SSL_TRUST,
+			P_SMTP_AUTH, P_SMTP_SSL_TRUST, P_SMTP_SSL_PROTOCOLS,
 			P_CONTENT_TYPE, P_CONNECT_TIMEOUT_MS, P_READ_TIMEOUT_MS,
 			P_ALIYUN_ACCESS_KEY_ID, P_ALIYUN_ACCESS_KEY_SECRET, P_ALIYUN_ACCOUNT_NAME,
 			P_ALIYUN_REGION_ID, P_ALIYUN_ENDPOINT,
@@ -130,6 +131,7 @@ public final class MailConfigForm {
 		smtp.setPassword(form.get(P_SMTP_PASSWORD) == null ? "" : form.get(P_SMTP_PASSWORD).trim());
 		smtp.setAuth(parseBoolean(form.get(P_SMTP_AUTH)));
 		smtp.setSslTrust(parseBoolean(form.get(P_SMTP_SSL_TRUST)));
+		smtp.setSslProtocols(nullToEmpty(form.get(P_SMTP_SSL_PROTOCOLS)));
 		config.setSmtp(smtp);
 
 		MailAliyunConfig aliyun = new MailAliyunConfig();
