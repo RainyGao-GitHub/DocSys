@@ -1,6 +1,6 @@
 # CURRENT_STATE_文件分享通知异步化（工作卡）
 
-建立于 2026-09-30。**状态：进行中（用户已裁定实施；改用 `new Thread`，不顺带做 P1/P2）。**
+建立于 2026-09-30。**状态：已收尾（修复已实施 + E2E 验证通过 + 用户已提交：websocket 仓库 `edb88511`、主仓库 `bcca467c4`）。**
 
 > 本卡是**当前任务**的唯一口径处：必读上下文 / 参考计划与上下文 / 当前进展 / 生效约束（含是否需要先提交）。
 > 缺陷全量取证另见记忆 `/memories/repo/file-share-hang.md`。
@@ -52,9 +52,9 @@
 
 ## 下一步
 
-1. **等用户确认后提交**（不要自动 commit）：
-   - 独立仓库：`git -C src/com/DocSystem/websocket add BussinessController.java`（**不要用 `add -A`**：该仓库未跟踪 `office/`，`-A` 会把整棵 office 树暂存进来）
-   - 主仓库 `D:\Dev\DocSys`（`devInt`）：`git add -A`（当前仅 `CLAUDE.md` + 本卡两项改动）
+1. ✅ **已提交（2026-09-30，用户执行）**：
+   - 独立仓库 `src/com/DocSystem/websocket`（`master`）：commit **`edb88511`**「【BugFix】文件分享弹窗卡死」（`BussinessController.java`）
+   - 主仓库 `D:\Dev\DocSys`（`devInt`）：commit **`bcca467c4`**「【BugFix】文件分享前端卡死问题修复」（本卡 + `CLAUDE.md`）
 2. 本次**不做**（用户 2026-09-30 已裁定）：P1 `docShareSendMail.do` 同步发信、P2 `qiao.bs.dialog` 失败不替换内容。
 3. 待裁定（本次新发现）：是否优化 `IPUtil.getIpAddress()`（拖慢所有调用它的接口）。
 4. 收尾：提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步更新 `CLAUDE.md` 指针。
@@ -80,3 +80,8 @@
   - 新增 `DevAgentControl/CURRENT_STATE_文件分享通知异步化.md`（本卡，CRLF）—— **未提交**
   - 修改 `CLAUDE.md`（会话恢复指针 → 本卡；`agent工具技能规模化` 降为挂起；保持 LF）—— **未提交**
 - 编译产物（不入库）：`WebRoot/WEB-INF/classes/com/DocSystem/websocket/BussinessController.class` + `BussinessController$1.class`
+
+## 提交记录
+
+- **2026-09-30**：websocket 仓库 `edb88511`（`BussinessController.java`，通知邮件异步化）；
+  主仓库 `bcca467c4`（本卡 + `CLAUDE.md` 指针）。两仓库均无未提交改动（websocket 里 `office/` 仍为未跟踪状态，属预期）。

@@ -5708,6 +5708,16 @@ public class BaseFunction{
 		return addSystemLog(requestIP, user, event, subEvent, action, queryId, result, repos, doc, newDoc, content);
     }
 	
+	/**************** 使用统计（用户在线时长）相关 ****************/
+	/** 会话空闲阈值：相邻两条活动日志超过该间隔即视为两个会话 */
+	protected static final long USAGE_IDLE_GAP_MS = 30 * 60 * 1000L;
+	/** 单个会话的最长时长（与登录时 session.setMaxInactiveInterval(24*60*60) 对齐） */
+	protected static final long USAGE_SESSION_MAX_MS = 24 * 60 * 60 * 1000L;
+	/** 前端活动上报的服务端节流间隔：必须小于 USAGE_IDLE_GAP_MS，否则会话会被误切成多段 */
+	protected static final long USAGE_ACTIVITY_REPORT_INTERVAL_MS = 20 * 60 * 1000L;
+	/** session 属性名：上次活动上报时间 */
+	protected static final String SESSION_ATTR_LAST_ACTIVITY_REPORT = "lastActivityReportTime";
+
 	protected static boolean addSystemLog(ActionContext context, User accessUser, String result, String content)
     {
 		return addSystemLog(context.requestIP, accessUser, context.event, context.subEvent, context.eventName, context.queryId, result,  context.repos, context.doc, context.newDoc, content);

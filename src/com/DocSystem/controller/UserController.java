@@ -206,6 +206,34 @@ public class UserController extends BaseController {
 	}
 	
 	
+	//页面活动上报：供管理后台「使用统计」推断在线时长
+	//（同一会话内按 USAGE_ACTIVITY_REPORT_INTERVAL_MS 节流，避免日志膨胀；不需要时把前端定时调用去掉即可）
+	@RequestMapping(value="activityReport.do")
+	public void activityReport(HttpServletRequest request,HttpSession session,HttpServletResponse response){
+		ReturnAjax rt = new ReturnAjax();
+
+		User loginUser = (User) session.getAttribute("login_user");
+		if(loginUser == null)
+		{
+			//未登录（如分享链接访问）不上报
+			writeJson(rt, response);
+			return;
+		}
+
+		long curTime = new Date().getTime();
+		Object lastReportTime = session.getAttribute(SESSION_ATTR_LAST_ACTIVITY_REPORT);
+		if(lastReportTime != null && (curTime - ((Long)lastReportTime).longValue()) < USAGE_ACTIVITY_REPORT_INTERVAL_MS)
+		{
+			//节流：不写日志
+			writeJson(rt, response);
+			return;
+		}
+
+		session.setAttribute(SESSION_ATTR_LAST_ACTIVITY_REPORT, Long.valueOf(curTime));
+		addSystemLog(request, loginUser, "activity", "activity", "活动", null, "成功", null, null, null, null);
+		writeJson(rt, response);
+	}
+
 	//用户是否已注册检查接口
 	@RequestMapping(value="checkUserRegistered")
 	public void checkUserRegistered(String userName, HttpServletResponse response)

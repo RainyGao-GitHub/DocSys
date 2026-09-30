@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -8582,29 +8583,64 @@ public class DocController extends BaseController{
 			return;
 		}
 
-		List<SystemLog> allLogs = querySystemLogsByTimeRange(startTime, endTime);
+		//多取「会话上限」一天：把窗口前发生的登录也取回来，用于接续跨窗口的会话
+		List<SystemLog> allLogs = querySystemLogsByTimeRange(startTime - USAGE_SESSION_MAX_MS, endTime);
 		Log.info("queryUserUsageStats total logs fetched: " + (allLogs != null ? allLogs.size() : 0));
 
 		Map<String, UserUsageStats> statsMap = new HashMap<String, UserUsageStats>();
+
+		//以系统用户表为基底：从未登录/从未活动的用户也要出现在统计里（不再整条丢弃）
+		List<User> allUsers = userService.geAllUsers();
+		if(allUsers != null)
+		{
+			for(User user : allUsers)
+			{
+				if(user == null || user.getName() == null || user.getName().isEmpty())
+				{
+					continue;
+				}
+				if(isUsageExcludedUser(user.getName()))
+				{
+					continue;
+				}
+				getOrCreateUsageStats(statsMap, user.getName());
+			}
+		}
 
 		if(allLogs != null)
 		{
 			for(SystemLog log : allLogs)
 			{
-				String userName = log.userName;
-				if(userName == null || userName.isEmpty())
+				if(log == null || log.time == null)
 				{
 					continue;
 				}
 
-				UserUsageStats stats = statsMap.get(userName);
-				if(stats == null)
+				String userName = log.userName;
+				String statsKey = null;
+				if(userName == null || userName.isEmpty() || "未知用户".equals(userName))
 				{
-					stats = new UserUsageStats();
-					stats.userName = userName;
-					stats.loginEvents = new ArrayList<Long>();
-					stats.logoutEvents = new ArrayList<Long>();
-					statsMap.put(userName, stats);
+					statsKey = USAGE_OTHER_USER;	//未登录来源（如分享链接访问）
+				}
+				else if(isUsageExcludedUser(userName))
+				{
+					continue;						//系统/伪账号（系统任务、协同编辑）：不是用户使用行为
+				}
+				else if(statsMap.containsKey(userName))
+				{
+					statsKey = userName;
+				}
+				else
+				{
+					statsKey = USAGE_OTHER_USER;	//用户已被删除（历史日志）→ 归并
+				}
+
+				UserUsageStats stats = getOrCreateUsageStats(statsMap, statsKey);
+				stats.eventTimes.add(log.time);		//会话推断用（含窗口前一天的登录）
+
+				if(log.time < startTime)
+				{
+					continue;						//计数只统计窗口内
 				}
 
 				String event = log.event;
@@ -8613,15 +8649,11 @@ public class DocController extends BaseController{
 				if("login".equals(event) && "成功".equals(result))
 				{
 					stats.loginCount++;
-					if(log.time != null) {
-						stats.loginEvents.add(log.time);
-					}
+					stats.loginTimes.add(log.time);
 				}
 				else if("logout".equals(event))
 				{
-					if(log.time != null) {
-						stats.logoutEvents.add(log.time);
-					}
+					stats.logoutTimes.add(log.time);
 				}
 				else if("uploadDoc".equals(event))
 				{
@@ -8638,37 +8670,25 @@ public class DocController extends BaseController{
 			}
 		}
 
-		//计算每个用户的登录时长 (FIFO匹配 login->logout)
+		//计算使用时长：按会话推断（登录起点 + 活动延续 + 登出闭合），不再要求必须点「退出」
+		long curTime = new Date().getTime();
+		long queryEnd = (endTime < curTime) ? endTime : curTime;	//未来的时间不能计入时长
 		for(UserUsageStats stats : statsMap.values())
 		{
-			Collections.sort(stats.loginEvents);
-			Collections.sort(stats.logoutEvents);
-
-			int logoutIdx = 0;
-			long totalDuration = 0;
-			for(Long loginTime : stats.loginEvents)
-			{
-				while(logoutIdx < stats.logoutEvents.size()
-						&& stats.logoutEvents.get(logoutIdx) <= loginTime)
-				{
-					logoutIdx++;
-				}
-				if(logoutIdx < stats.logoutEvents.size())
-				{
-					totalDuration += (stats.logoutEvents.get(logoutIdx) - loginTime);
-					logoutIdx++;
-				}
-			}
-			stats.loginDuration = totalDuration;
-			stats.loginEvents = null;
-			stats.logoutEvents = null;
+			stats.loginDuration = calcUsageDuration(stats, startTime, queryEnd);
+			stats.eventTimes = null;
+			stats.loginTimes = null;
+			stats.logoutTimes = null;
 		}
 
-		//过滤：排除无登录记录的用户（包含系统内置用户）
 		List<UserUsageStats> resultList = new ArrayList<UserUsageStats>();
 		for(UserUsageStats stats : statsMap.values())
 		{
-			if(stats.loginCount == 0)
+			//「未登录来源」在窗口内没有任何活动就不出行，避免空行噪声
+			if(USAGE_OTHER_USER.equals(stats.userName)
+					&& stats.loginCount == 0 && stats.uploadCount == 0
+					&& stats.downloadCount == 0 && stats.editCount == 0
+					&& stats.loginDuration <= 0)
 			{
 				continue;
 			}
@@ -8676,6 +8696,12 @@ public class DocController extends BaseController{
 		}
 		Collections.sort(resultList, new Comparator<UserUsageStats>() {
 			public int compare(UserUsageStats a, UserUsageStats b) {
+				boolean aOther = USAGE_OTHER_USER.equals(a.userName);
+				boolean bOther = USAGE_OTHER_USER.equals(b.userName);
+				if(aOther != bOther)
+				{
+					return aOther ? 1 : -1;	//「未登录来源」固定排在最后
+				}
 				return a.userName.compareTo(b.userName);
 			}
 		});
@@ -8685,6 +8711,132 @@ public class DocController extends BaseController{
 		writeJson(rt, response);
 	}
 
+	/** 取得（或创建）某统计主体的条目 */
+	private UserUsageStats getOrCreateUsageStats(Map<String, UserUsageStats> statsMap, String userName)
+	{
+		UserUsageStats stats = statsMap.get(userName);
+		if(stats == null)
+		{
+			stats = new UserUsageStats();
+			stats.userName = userName;
+			stats.eventTimes = new ArrayList<Long>();
+			stats.loginTimes = new ArrayList<Long>();
+			stats.logoutTimes = new ArrayList<Long>();
+			statsMap.put(userName, stats);
+		}
+		return stats;
+	}
+
+	/** 系统/伪账号：不是真实用户（系统任务日志、协同编辑），不进入使用统计 */
+	private static boolean isUsageExcludedUser(String userName)
+	{
+		return USAGE_EXCLUDED_USER_NAMES.contains(userName);
+	}
+
+	/**
+	 * 按「会话」推断使用时长（修复"用户不登出就统计不出时间"）：
+	 *
+	 * 1) 成功登录开启一个会话；
+	 * 2) 会话内的活动日志（上传/下载/编辑/页面活动上报等）距上一条不超过 USAGE_IDLE_GAP_MS 即视为同一会话；
+	 * 3) 遇到登出立即闭合会话；间隔超过阈值则闭合旧会话，并由当前活动另起一个隐式会话；
+	 * 4) 单个会话不超过 USAGE_SESSION_MAX_MS，并裁剪到 [startTime, queryEnd] 内；
+	 * 5) 只有登录、之后既无活动也无登出 → 时长为 0。
+	 */
+	private long calcUsageDuration(UserUsageStats stats, long startTime, long queryEnd)
+	{
+		if(stats.eventTimes == null || stats.eventTimes.isEmpty())
+		{
+			return 0;
+		}
+
+		Collections.sort(stats.eventTimes);
+		Set<Long> loginTimes = new HashSet<Long>(stats.loginTimes);
+		Set<Long> logoutTimes = new HashSet<Long>(stats.logoutTimes);
+
+		long totalDuration = 0;
+		Long sessionStart = null;
+		Long lastEventTime = null;
+		for(Long eventTime : stats.eventTimes)
+		{
+			if(loginTimes.contains(eventTime))
+			{
+				//重复登录：先结算上一个会话，再以本次登录开启新会话
+				if(sessionStart != null)
+				{
+					totalDuration += calcSessionDuration(sessionStart, lastEventTime, startTime, queryEnd);
+				}
+				sessionStart = eventTime;
+				lastEventTime = eventTime;
+				continue;
+			}
+
+			if(sessionStart == null)
+			{
+				//没有登录信号的活动：由该活动开启一个隐式会话
+				sessionStart = eventTime;
+				lastEventTime = eventTime;
+				continue;
+			}
+
+			if(eventTime - lastEventTime > USAGE_IDLE_GAP_MS)
+			{
+				//空闲超过阈值：旧会话到此为止，当前活动另起会话
+				totalDuration += calcSessionDuration(sessionStart, lastEventTime, startTime, queryEnd);
+				sessionStart = eventTime;
+				lastEventTime = eventTime;
+				continue;
+			}
+
+			lastEventTime = eventTime;
+
+			if(logoutTimes.contains(eventTime))
+			{
+				totalDuration += calcSessionDuration(sessionStart, lastEventTime, startTime, queryEnd);
+				sessionStart = null;
+				lastEventTime = null;
+			}
+		}
+
+		if(sessionStart != null)
+		{
+			totalDuration += calcSessionDuration(sessionStart, lastEventTime, startTime, queryEnd);
+		}
+		return totalDuration;
+	}
+
+	/** 单个会话的时长：封顶到 USAGE_SESSION_MAX_MS，并裁剪到 [startTime, queryEnd] */
+	private long calcSessionDuration(Long sessionStart, Long sessionEnd, long startTime, long queryEnd)
+	{
+		if(sessionStart == null || sessionEnd == null)
+		{
+			return 0;
+		}
+
+		long start = (sessionStart > startTime) ? sessionStart : startTime;
+		long end = sessionEnd;
+		long sessionMaxEnd = sessionStart + USAGE_SESSION_MAX_MS;
+		if(end > sessionMaxEnd)
+		{
+			end = sessionMaxEnd;
+		}
+		if(end > queryEnd)
+		{
+			end = queryEnd;
+		}
+
+		if(end <= start)
+		{
+			return 0;
+		}
+		return end - start;
+	}
+
+	/** 系统/伪账号：不是真实用户，不进入使用统计 */
+	private static final Set<String> USAGE_EXCLUDED_USER_NAMES =
+			new HashSet<String>(Arrays.asList("System", "CoEditUser"));
+	/** 无法归属到具体用户的活动的汇总行（空 userName / 未知用户 / 已删除用户） */
+	private static final String USAGE_OTHER_USER = "(未登录来源)";
+
 	public static class UserUsageStats {
 		public String userName;
 		public int loginCount;
@@ -8692,8 +8844,12 @@ public class DocController extends BaseController{
 		public int uploadCount;
 		public int downloadCount;
 		public int editCount;
-		public transient List<Long> loginEvents;
-		public transient List<Long> logoutEvents;
+		/** 会话推断用：取回的全部活动时间点（含窗口前一天） */
+		public transient List<Long> eventTimes;
+		/** 会话推断用：窗口内的成功登录时间点 */
+		public transient List<Long> loginTimes;
+		/** 会话推断用：窗口内的登出时间点 */
+		public transient List<Long> logoutTimes;
 	}
 
 	/*

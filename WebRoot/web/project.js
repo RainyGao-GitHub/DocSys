@@ -4381,6 +4381,13 @@ $(document).ready(function()
 	//FileUpload Init
 	DocUploadInit();
 	
+	//使用统计：页面活动上报（不需要时可去掉这一行，见 js/UsageActivityReporter.js）
+	//用 typeof 守卫：浏览器可能缓存了旧版 HTML（里面没有该脚本），直接调用会抛 ReferenceError 打断页面初始化
+	if(typeof UsageActivityReporterInit == "function")
+	{
+		UsageActivityReporterInit();
+	}
+	
 	if(gShareId)
 	{
 		getDocShare(SysInit);
