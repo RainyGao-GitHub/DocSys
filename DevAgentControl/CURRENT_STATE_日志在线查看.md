@@ -1,6 +1,6 @@
 # CURRENT_STATE_日志在线查看（工作卡）
 
-建立于 2026-09-30。**状态：进行中（①`548b6da49`、②`d6b7eff85`、③`f8727cd03` 均已由用户提交；④ 将 LDAP/安全网络/AI/集群/Office 五个参数块拆为独立子页，已实现+验证，**待用户确认提交**）。**
+建立于 2026-09-30。**状态：进行中（①⑤已由用户提交：`548b6da49`/`d6b7eff85`/`f8727cd03`/`11b1a83f9`；④ 新增顶级「智能体设置」菜单，已实现+验证，**待用户确认提交**）。**
 
 > 本卡是**当前任务**的唯一口径处：必读上下文 / 参考计划与上下文 / 当前进展 / 生效约束（含是否需要先提交）。
 
@@ -176,6 +176,36 @@
   → 点「编辑」会 `ReferenceError`（按钮 id 也对不上，编辑/保存/取消都不切换）。已统一为 `SystemOfficeEditor`，复测通过。
   首轮 E2E 的信号是 `editVisible:false`（其余断言全过）——“断言按钮 id 存在”比“断言按钮可见”弱，后续 E2E 优先加一条 onclink 解析体检。
 
+## 子项⑤ 新增顶级菜单「智能体设置」（2026-09-30 第五里程碑）
+
+用户反馈：`AI接入设置` 与 `提示词管理` 应该都归到「智能体设置」下，**父级与「系统管理」平级**。
+
+### 结构与可见性
+- 顶级「智能体设置」→ 子项 `AI接入设置`、`提示词管理`；位置在原「提示词管理」处（使用统计之后、系统管理之前）。
+- 英文：`Agent Settings` / `AI Access` / `Prompt Config`。
+- **可见性保持不变**（未改任何权限范围）：父级 = `type > 0 && (docSysType > 0 || type == 2)`；
+  AI 子项 = `type == 2`（超管，与后端 `getSystemInfo.do` 的 `superAdminAccessCheck` 一致）；
+  提示词子项 = `docSysType > 0`（与后端 `/agent/config/system-prompt` 的 `type >= 1` + 原菜单条件一致）。
+- 点父级：有「AI接入设置」就进它，否则进「提示词管理」（按**已渲染菜单**判断，不引入用户类型全局量）。
+
+### 实施
+- `tmpl/sidebar{,_en}.html`：桌面 `#nav` + 移动 `#navMobile` 各新增「智能体设置」父级块；「提示词管理」从顶级挪入、`AI接入设置` 从「系统管理」子项挪入。
+- `main.js`：`case "systemLlm"` 从「系统管理」分组与 `showSystemPage` 移除；新增 `case "agent"/"systemLlm"/"prompt"` 分组（title=智能体设置、父级+子项高亮、展开子菜单）+ `showAgentPage()`。
+- `WebRoot/web/lang/en.js`：补 `"智能体设置" : "Agent Settings"` 与 `"提示词管理" : "Prompt Config"`
+  （后者是**既有缺口**：英文界面下提示词管理的页头一直显示中文）。
+
+### 验证（dev 8100）
+- **模板编译自检**（中/英，三种角色数据）：`{type:2,docSysType:1}` → 父级 2 处（桌面+移动）、子项 4 处；
+  `{type:1,docSysType:1}` → 只见「提示词管理」；`{type:2,docSysType:0}` → 只见「AI接入设置」⇒ 与改动前一致。
+- 真实页面（admin）：顶级 = 用户管理/用户组管理/仓库管理/日志管理/使用统计/**智能体设置**/系统管理/证书管理/订单管理；
+  系统管理子项 12 项（已无 AI接入设置）；智能体设置子项 = AI接入设置/提示词管理（桌面与移动一致）。
+- 点父级进「AI接入设置」（pagehead 智能体设置、父级与子项均高亮）；「提示词管理」正常（`#promptSuffix` 在）；「系统管理」不受影响（无 `#llmConfig`）。
+- 英文页：顶级含 `Agent Settings`，子项 `AI Access`/`Prompt Config`，页头 `Agent Settings`。
+- ⚠️ **踩坑记录 5（自己改出的真 bug，验证时立刻发现）**：`sidebar.html` 桌面段插入的新块漏了 `</li>` 与两个 `{{/if}}`
+  → artTemplate 编译出**语法错误** → `$Func.render($("#sidebar"))` 抛异常 → **整个侧边栏空白**（`#nav` 无任何节点，页面上没有任何可见报错）。
+  定位方式：浏览器里 `template.compile(模板文本)` 抓真实报错 + 看生成的 JS，一眼看到 `</ul>` 后面直接跟了 `if(type == 2){`。
+  教训：**改完 `.html` 模板要立刻做一次「编译自检」**（`template.compile` + 渲染一次），别等页面“什么都不显示”才发现。
+
 ## 预估改动清单（实施时）
 
 - 新增：`WebRoot/manager/logViewer.html`、`logViewer_en.html`、`logViewer.js`、`src/com/DocSystem/common/LogFileUtil.java`
@@ -233,9 +263,9 @@
 
 ## 下一步
 
-1. **等用户确认后提交子项④**（不要自动 commit）——本批改动只在**主仓库** `D:\Dev\DocSys`（`devInt`）的 `WebRoot/manager/` 下。
-2. 待用户裁定：遗留 `cancelSystemInfoSet()` 的 `.attr("selected")` 失效是否修（现已改为 `setSystemPageEditMode` 白名单式，不再涉及）；「下载」500 是否处理；`updateSystemInfo()` 死代码是否删。
-3. 收尾：子项④提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
+1. **等用户确认后提交子项⑤**（不要自动 commit）——本批改动只在**主仓库** `D:\Dev\DocSys`（`devInt`）：`WebRoot/manager/main.js`、`WebRoot/manager/tmpl/sidebar{,_en}.html`、`WebRoot/web/lang/en.js`。
+2. 待用户裁定：「下载」按钮 500 是否处理；`updateSystemInfo()` 死代码是否删。
+3. 收尾：子项⑤提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
 4. 可选后续（用户未要求）：各子页加 help-block 说明文案 / 行号 / 轮转历史文件列表 / 关键字服务端搜索。
 
 ## 生效约束
@@ -246,21 +276,23 @@
 - **新增子页的标准写法**（照抄现有 6 个）：模板 `tmpl/systemXxx{,_en}.html`（两列参数表 + 操作按钮在表下，按钮 id = `btn{Enable,Save,Cancel}XxxSet`），
   `main.js` 里 `var SYSTEM_XXX_FIELDS = [...]` + `show/enable/cancel/save`（enable/cancel 用 `setSystemPageEditMode("Xxx", SYSTEM_XXX_FIELDS, bool)`，save 用 `postSystemInfo(data, showXxx)`），
   再在 `showContentPage`/`showSystemPage` 各加一个 `case`，最后在 `sidebar{,_en}.html` 的 `#nav` 与 `#navMobile` 各加一项。
+- **新增顶级菜单分组的标准写法**：照抄「系统管理」或「智能体设置」——`sidebar{,_en}.html` 里 `#nav` + `#navMobile` 各一个 `<li ... class="has_sublist">` + `<ul class="sublist">`；
+  `main.js` 的 `showContentPage` 里给该组的每个 `case` 统一设 title + 父级/子项高亮 + `$("ul.sublist").show()`，再交给一个 `showXxxPage(curPath)` 分发。
+- **改完 .html 模板必须做「编译自检」**：浏览器里 `template.compile(模板文本)` + 用样例数据渲染一次。
+  模板语法错（如 `{{if}}` 不配平）会让 `$Func.render` 静默抛异常 → 页面就“什么都不显示”，没有任何可见报错。
+  同理改完 JS 后可用一条“按钮接线体检”（遍历 `[onclick]` 看函数名是否在 `window` 上）提前发现按钮/函数名不一致。
 - **模板会走浏览器缓存**：验证模板改动必须带 cache-buster（`?t=…`）+ `Network.clearBrowserCache`，否则会读到旧模板（本次一度误判为“侧边栏没生效”）。
 - 编译：Spring 控制器**必须** `-parameters -g`；`.class` 只进 `WebRoot/WEB-INF/classes`，源码树不得出现 `.class`。
 - 改 Java 后必须重启 dev Tomcat（`docsys_restart.bat`；启动 2~10 分钟；重启后 session 失效，需重新登录）。
 - E2E 口径：`POST /DocSystem/User/login.do`（`Admin`/`pwd=QWRtaW4=`，pwd 为 base64 明文）；探针产物写 `%TEMP%\docsys_chk\`。
 - **不要自动 commit**：改完 + 验证 → 汇报 → 等用户确认。
 
-## 未提交改动（子项④，均在主仓库；基线 `f8727cd03`）
+## 未提交改动（子项⑤，均在主仓库；基线 `11b1a83f9`）
 
 - ` M WebRoot/manager/main.js`
 - ` M WebRoot/manager/tmpl/sidebar.html` / `sidebar_en.html`
-- ` M WebRoot/manager/tmpl/systemUpgrade.html` / `systemUpgrade_en.html`
-- `?? WebRoot/manager/tmpl/system{Ldap,Network,Llm,Cluster,OfficeEditor}.html`（5 个）
-- `?? WebRoot/manager/tmpl/system{Ldap,Network,Llm,Cluster,OfficeEditor}_en.html`（5 个）
+- ` M WebRoot/web/lang/en.js`
 
-- 子项①②③已由用户提交：`548b6da49`（在线查看）、`d6b7eff85`（调试日志从系统设置剥离）、`f8727cd03`（调试日志布局调整）。
-- 子项④为**纯前端改动（模板 + main.js）→ 不需要编译、不需要重启**（本次未重启 dev Tomcat）。
-- 测试期间 `WebRoot/WEB-INF/classes/docSysConfig.properties`（gitignore 的运行时副本）被 `setSystemInfo.do` 重写过，但逐键键值与测试前完全一致。
+- 子项①⑤已由用户提交：`548b6da49`（在线查看）、`d6b7eff85`（调试日志从系统设置剥离）、`f8727cd03`（调试日志布局调整）、`11b1a83f9`（系统管理布局调整：5 个参数块拆子页）。
+- 子项⑤为**纯前端改动（模板 + main.js + 语言包）→ 不需要编译、不需要重启**。
 - 模板/侧边栏有浏览器缓存：验证/上线后需刷新页面（本次验证均先 `Network.clearBrowserCache`）。

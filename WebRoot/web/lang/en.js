@@ -584,6 +584,8 @@ function lang(str)
 		"系统日志管理" : "SystemLog Management",
 		"日志管理" : "SystemLog Management",
 		"系统管理" : "System Management",
+		"智能体设置" : "Agent Settings",
+		"提示词管理" : "Prompt Config",
 		"证书管理" : "License Management",
 		"订单管理" : "Order Management",
 		"重启服务" : "Restart Server",

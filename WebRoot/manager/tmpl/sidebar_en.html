@@ -18,8 +18,22 @@
 		<li data-eb-event="content.refresh" data-eb-params="userUsageStats">
 	    	<a href="#"><i class="icon-bar-chart"></i>Usage Statistics</a>
 	    </li>
-	    <li data-eb-event="content.refresh" data-eb-params="prompt">
-	    	<a href="#"><i class="icon-bar-chart"></i>Prompt Config</a>
+	    {{/if}}
+	    {{/if}}
+	    {{if type > 0}}
+	    {{if docSysType > 0 || type == 2}}
+	    <li data-eb-event="content.refresh" data-eb-params="agent" class="has_sublist">
+	        <a href="#" class=''>
+	            <i class="icon-list-alt"></i> Agent Settings  <span class="pull-right"><i class="icon-chevron-right"></i></span>
+	        </a> 
+	        <ul id="sidebarAgentSublist" class="sublist" style="display:none">
+	            {{if type == 2}}
+	            <li data-eb-event="content.refresh" data-eb-params="systemLlm"><a href="#" >AI Access</a> </li>
+	            {{/if}}
+	            {{if docSysType > 0}}
+	            <li data-eb-event="content.refresh" data-eb-params="prompt"><a href="#" >Prompt Config</a> </li>
+	            {{/if}}
+	        </ul>
 	    </li>
 	    {{/if}}
 	    {{/if}}
@@ -39,7 +53,6 @@
 	            <li data-eb-event="content.refresh" data-eb-params="systemMigrate"><a href="#" >Migrate System</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemLdap"><a href="#" >LDAP</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemNetwork"><a href="#" >Allowed Network</a> </li>
-	            <li data-eb-event="content.refresh" data-eb-params="systemLlm"><a href="#" >AI Access</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemCluster"><a href="#" >Cluster Deploy</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemOfficeEditor"><a href="#" >Office Editor</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemDebugLog"><a href="#" >Debug Log</a> </li>
@@ -81,8 +94,22 @@
 <li data-eb-event="content.refresh" data-eb-params="userUsageStats">
 	    	<a href="#"><i class="icon-bar-chart"></i>Usage Statistics</a>
 	    </li>
-	    <li data-eb-event="content.refresh" data-eb-params="prompt">
-	    	<a href="#"><i class="icon-bar-chart"></i>Prompt Config</a>
+	    {{/if}}
+	    {{/if}}
+	    {{if type > 0}}
+	    {{if docSysType > 0 || type == 2}}
+	    <li data-eb-event="content.refresh" data-eb-params="agent" class="has_sublist">
+	        <a href="#" class=''>
+	            <i class="icon-list-alt"></i> Agent Settings  <span class="pull-right"><i class="icon-chevron-right"></i></span>
+	        </a> 
+	        <ul id="sidebarAgentSublist" class="sublist" style="display:none">
+	            {{if type == 2}}
+	            <li data-eb-event="content.refresh" data-eb-params="systemLlm"><a href="#" >AI Access</a> </li>
+	            {{/if}}
+	            {{if docSysType > 0}}
+	            <li data-eb-event="content.refresh" data-eb-params="prompt"><a href="#" >Prompt Config</a> </li>
+	            {{/if}}
+	        </ul>
 	    </li>
 	    {{/if}}
 	    {{/if}}
@@ -100,7 +127,6 @@
 	        <li data-eb-event="content.refresh" data-eb-params="systemMigrate"><a href="#" >Migrate System</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemLdap"><a href="#" >LDAP</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemNetwork"><a href="#" >Allowed Network</a> </li>
-	        <li data-eb-event="content.refresh" data-eb-params="systemLlm"><a href="#" >AI Access</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemCluster"><a href="#" >Cluster Deploy</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemOfficeEditor"><a href="#" >Office Editor</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemDebugLog"><a href="#" >Debug Log</a> </li>

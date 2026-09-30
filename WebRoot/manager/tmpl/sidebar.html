@@ -18,8 +18,22 @@
 		<li data-eb-event="content.refresh" data-eb-params="userUsageStats">
 	    	<a href="#"><i class="icon-bar-chart"></i>使用统计</a>
 	    </li>
-	    <li data-eb-event="content.refresh" data-eb-params="prompt">
-	    	<a href="#"><i class="icon-bar-chart"></i>提示词管理</a>
+	    {{/if}}
+	    {{/if}}
+	    {{if type > 0}}
+	    {{if docSysType > 0 || type == 2}}
+	    <li data-eb-event="content.refresh" data-eb-params="agent" class="has_sublist">
+	        <a href="#" class=''>
+	            <i class="icon-list-alt"></i> 智能体设置  <span class="pull-right"><i class="icon-chevron-right"></i></span>
+	        </a> 
+	        <ul id="sidebarAgentSublist" class="sublist" style="display:none">
+	            {{if type == 2}}
+	            <li data-eb-event="content.refresh" data-eb-params="systemLlm"><a href="#" >AI接入设置</a> </li>
+	            {{/if}}
+	            {{if docSysType > 0}}
+	            <li data-eb-event="content.refresh" data-eb-params="prompt"><a href="#" >提示词管理</a> </li>
+	            {{/if}}
+	        </ul>
 	    </li>
 	    {{/if}}
 	    {{/if}}
@@ -39,7 +53,6 @@
 	            <li data-eb-event="content.refresh" data-eb-params="systemMigrate"><a href="#" >系统迁移</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemLdap"><a href="#" >LDAP设置</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemNetwork"><a href="#" >安全网络设置</a> </li>
-	            <li data-eb-event="content.refresh" data-eb-params="systemLlm"><a href="#" >AI接入设置</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemCluster"><a href="#" >集群部署设置</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemOfficeEditor"><a href="#" >Office编辑器</a> </li>
 	            <li data-eb-event="content.refresh" data-eb-params="systemDebugLog"><a href="#" >调试日志</a> </li>
@@ -81,11 +94,25 @@
 <li data-eb-event="content.refresh" data-eb-params="userUsageStats">
 	    	<a href="#"><i class="icon-bar-chart"></i>使用统计</a>
 	    </li>
-	    <li data-eb-event="content.refresh" data-eb-params="prompt">
-	    	<a href="#"><i class="icon-bar-chart"></i>提示词管理</a>
+	    {{/if}}
+	    {{/if}}
+	    {{if type > 0}}
+	    {{if docSysType > 0 || type == 2}}
+	    <li data-eb-event="content.refresh" data-eb-params="agent" class="has_sublist">
+	        <a href="#" class=''>
+	            <i class="icon-list-alt"></i> 智能体设置  <span class="pull-right"><i class="icon-chevron-right"></i></span>
+	        </a> 
+	        <ul id="sidebarAgentSublist" class="sublist" style="display:none">
+	            {{if type == 2}}
+	            <li data-eb-event="content.refresh" data-eb-params="systemLlm"><a href="#" >AI接入设置</a> </li>
+	            {{/if}}
+	            {{if docSysType > 0}}
+	            <li data-eb-event="content.refresh" data-eb-params="prompt"><a href="#" >提示词管理</a> </li>
+	            {{/if}}
+	        </ul>
 	    </li>
-    {{/if}}
-    {{/if}}
+	    {{/if}}
+	    {{/if}}
 
     {{if type == 2}}
     <li data-eb-event="content.refresh" data-eb-params="system" class="has_sublist">
@@ -102,7 +129,6 @@
 	        <li data-eb-event="content.refresh" data-eb-params="systemMigrate"><a href="#" >系统迁移</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemLdap"><a href="#" >LDAP设置</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemNetwork"><a href="#" >安全网络设置</a> </li>
-	        <li data-eb-event="content.refresh" data-eb-params="systemLlm"><a href="#" >AI接入设置</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemCluster"><a href="#" >集群部署设置</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemOfficeEditor"><a href="#" >Office编辑器</a> </li>
 	        <li data-eb-event="content.refresh" data-eb-params="systemDebugLog"><a href="#" >调试日志</a> </li>

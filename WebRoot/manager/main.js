@@ -299,7 +299,6 @@ function showContentPage(curPath) {
         case "systemDebugLog":
         case "systemLdap":
         case "systemNetwork":
-        case "systemLlm":
         case "systemCluster":
         case "systemOfficeEditor":
         	title = _Lang("系统管理");
@@ -324,17 +323,49 @@ function showContentPage(curPath) {
             orderSearchWord = "";
             showOrderList();
             break;
+        case "agent":
+        case "systemLlm":
         case "prompt":
-            title = _Lang("提示词管理");
-            $("#nav li[data-eb-params=prompt]>a").addClass("open");
-            showPromptConfig();
-            break;
+        	title = _Lang("智能体设置");
+        	//高亮：父级保持蓝色（表示在智能体设置这个分组里），被点开的那一项另有一种选中样式
+            $("#nav li[data-eb-params=agent]>a").addClass("open");
+            //点父级时默认进入「AI接入设置」（非超级管理员看不到它，则进「提示词管理」）
+            var agentOpenPath = (curPath === "agent") ? (($("#nav li[data-eb-params=systemLlm]").length > 0) ? "systemLlm" : "prompt") : curPath;
+            $("#nav li[data-eb-params=" + agentOpenPath + "]>a").addClass("open");
+            $("ul.sublist").show();
+            showAgentPage(curPath);
+        	break;
     }
     
     $Func.render($("#pagehead"),"pagehead" + langExt,{
         title : title,
         subtitle : title
     });
+}
+
+//智能体设置（父级）：AI接入设置 + 提示词管理
+function showAgentPage(curPath)
+{
+	switch(curPath)
+   	{
+   	case "agent":
+   		//点父级：有「AI接入设置」就进它（超级管理员），否则进「提示词管理」
+   		if($("#nav li[data-eb-params=systemLlm]").length > 0)
+   		{
+   			showSystemLlm();
+   		}
+   		else
+   		{
+   			showPromptConfig();
+   		}
+        break;
+    case "systemLlm":
+    	showSystemLlm();
+    	break;
+    case "prompt":
+    	showPromptConfig();
+    	break;
+   	}
 }
 
 //提示词管理（T8.6）
@@ -422,9 +453,6 @@ function showSystemPage(curPath)
     	break;
     case "systemNetwork":
     	showSystemNetwork();
-    	break;
-    case "systemLlm":
-    	showSystemLlm();
     	break;
     case "systemCluster":
     	showSystemCluster();
