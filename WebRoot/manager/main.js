@@ -296,6 +296,7 @@ function showContentPage(curPath) {
         case "systemUpgrade":
         case "systemLicenses":
         case "systemMigrate":
+        case "systemDebugLog":
         	title = _Lang("系统管理");
         	//高亮：父级保持蓝色（表示在系统管理这个分组里），被点开的那一项另有一种选中样式
         	//（父级蓝色 + 子项白底蓝字，两种样式并存表示「在哪个分组 + 在哪一页」）
@@ -408,6 +409,9 @@ function showSystemPage(curPath)
     case "systemMigrate":
         	showSystemMigrate();
         	break;
+    case "systemDebugLog":
+    	showSystemDebugLog();
+    	break;
        	}
     }
  
@@ -1783,7 +1787,6 @@ function enableSystemInfoSet(){
 	$("#allowedNetworkConfig").val(systemInfo.allowedNetworkConfig);
 	$("#llmConfig").val(systemInfo.llmConfig);
 	$("#maxThreadCount option[value='"+systemInfo.maxThreadCount+"']").attr("selected","selected");
-	$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
 
 	$("#tomcatPath").attr('disabled',false);
 	$("#javaHome").attr('disabled',false);
@@ -1798,14 +1801,8 @@ function enableSystemInfoSet(){
 	$("#allowedNetworkConfig").attr('disabled',false);
 	$("#llmConfig").attr('disabled',false);
 	$("#maxThreadCount").attr('disabled',false);		
-	$("#logLevel").attr('disabled',false);		
-	$("#outputToFileEn").attr('disabled',false);
 	$("#redisEn").attr('disabled',false);
 	$("#isOnlyOfficeUsed").attr('disabled',false);
-	if(systemInfo.outputToFileEn == 1)
-	{
-		$("#logFile").attr('disabled',false);
-	}
 	if(systemInfo.redisEn == 1)
 	{
 		$("#redisUrl").attr('disabled',false);
@@ -1833,9 +1830,6 @@ function cancelSystemInfoSet(){
 	$("#allowedNetworkConfig").attr('disabled',true);
 	$("#llmConfig").attr('disabled',true);
 	$("#maxThreadCount").attr('disabled',true);
-	$("#logLevel").attr('disabled',true);
-	$("#outputToFileEn").attr('disabled',true);
-	$("#logFile").attr('disabled',true);
 	$("#redisEn").attr('disabled',true);
 	$("#redisUrl").attr('disabled',true);
 	$("#clusterServerUrl").attr('disabled',true);
@@ -1854,19 +1848,9 @@ function cancelSystemInfoSet(){
 	$("#allowedNetworkConfig").val(systemInfo.allowedNetworkConfig);
 	$("#llmConfig").val(systemInfo.llmConfig);
 	$("#maxThreadCount option[value='"+systemInfo.maxThreadCount+"']").attr("selected","selected");
-	$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
-	$("#logFile").val(systemInfo.logFile);
 	$("#redisUrl").val(systemInfo.redisUrl);
 	$("#clusterServerUrl").val(systemInfo.clusterServerUrl);
 	
-	if(systemInfo.outputToFileEn == 1)
-	{
-		$("#outputToFileEn").prop("checked", true);
-	}
-	else
-	{
-		$("#outputToFileEn").prop("checked", false);			
-	}
 	if(systemInfo.redisEn == 1)
 	{
 		$("#redisEn").prop("checked", true);
@@ -1929,13 +1913,11 @@ function saveSystemInfoSet(){
 	var allowedNetworkConfig = $("#allowedNetworkConfig").val();
 	var llmConfig = $("#llmConfig").val();
 	var maxThreadCount = $("#maxThreadCount").val();
-	var logLevel = $("#logLevel").val();
-	var logFile = "";
-	var outputToFileEn = $("#outputToFileEn").is(':checked')? 1: 0;
-	if(outputToFileEn == 1)
-	{
-		logFile =  $("#logFile").val();
-	}
+	//调试日志的「日志级别/输出到指定文件」已移到「系统管理 → 调试日志」页维护，
+	//这里回传当前值：setSystemInfo.do 里 logFile 传 null 会清空日志文件配置（其余字段传 null 表示「不改」）
+	var logLevel = systemInfo.logLevel;
+	var outputToFileEn = systemInfo.outputToFileEn;
+	var logFile = systemInfo.logFile;
 	var redisEn = $("#redisEn").is(':checked')? 1: 0;
 	var redisUrl = "";
 	var clusterServerUrl = "";
@@ -2058,16 +2040,6 @@ function updateSystemInfo(tomcatPath,
         		$("#allowedNetworkConfig").val(systemInfo.allowedNetworkConfig);
         		$("#llmConfig").val(systemInfo.llmConfig);
         		$("#maxThreadCount").val(systemInfo.maxThreadCount);
-        		$("#logLevel").val(systemInfo.logLevel);
-        		$("#logFile").val(systemInfo.logFile);
-        		if(systemInfo.ouputToFileEn == 1)
-        		{
-        			$("#outputToFileEn").prop("checked", true);
-        		}
-        		else
-        		{
-        			$("#outputToFileEn").prop("checked",false);			
-        		}	
         		if(systemInfo.redisEn == 1)
         		{
         			$("#redisEn").prop("checked", true);
@@ -2104,16 +2076,6 @@ function updateSystemInfo(tomcatPath,
     		$("#allowedNetworkConfig").val(systemInfo.allowedNetworkConfig);
     		$("#llmConfig").val(systemInfo.llmConfig);
     		$("#maxThreadCount").val(systemInfo.maxThreadCount);
-    		$("#logLevel").val(systemInfo.logLevel);
-    		$("#logFile").val(systemInfo.logFile);
-    		if(systemInfo.ouputToFileEn == 1)
-    		{
-    			$("#outputToFileEn").prop("checked", true);
-    		}
-    		else
-    		{
-    			$("#outputToFileEn").prop("checked",false);			
-    		}	
     		if(systemInfo.redisEn == 1)
     		{
     			$("#redisEn").prop("checked", true);
@@ -2176,6 +2138,141 @@ function showSystemUpgrade(){
         },
         error : function () {
         	showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
+        }
+    });
+}
+
+//调试日志（系统管理 → 调试日志）：日志级别/输出到指定文件的配置 + 日志文件的运维操作（在线查看/下载/清除）
+function showSystemDebugLog(){
+	$.ajax({
+        url : "/DocSystem/Manage/getSystemInfo.do",
+        type : "post",
+        dataType : "json",
+        data : {},
+        success : function (ret) {
+            console.log("showSystemDebugLog() ret", ret);
+        	if( "ok" == ret.status )
+            {
+            	var config = ret.data;
+            	systemInfo = config;	//selectOutputToFileEn() 需要 tomcatPath 来补默认日志路径
+        		if(systemInfo.logLevel == undefined)
+            	{
+            		systemInfo.logLevel = 1;	//defulat info
+            	}
+            	if(systemInfo.logFile == undefined)
+            	{
+            		systemInfo.logFile = "";
+            	}
+    			systemInfo.outputToFileEn = 0;
+        		if(systemInfo.logFile && systemInfo.logFile != "")
+        		{
+        			systemInfo.outputToFileEn = 1;
+        		}
+            	$Func.render($("#container"),"systemDebugLog" + langExt,{"value":systemInfo});
+            }
+            else
+            {
+            	showErrorMessage(_Lang("获取系统信息失败", " : ", ret.msgInfo));
+            	console.log(ret.msgInfo);
+            }
+        },
+        error : function () {
+        	showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
+        }
+    });
+}
+
+function enableSystemDebugLogSet(){
+	console.log("enableSystemDebugLogSet systemInfo:", systemInfo);
+
+	$("#btnEnableSystemDebugLogSet").hide();
+	$("#btnCancelSystemDebugLogSet").show();
+	$("#btnSaveSystemDebugLogSet").show();
+	$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
+	$("#logLevel").attr('disabled',false);
+	$("#outputToFileEn").attr('disabled',false);
+	if(systemInfo.outputToFileEn == 1)
+	{
+		$("#logFile").attr('disabled',false);
+	}
+}
+
+function cancelSystemDebugLogSet(){
+	console.log("cancelSystemDebugLogSet systemInfo:", systemInfo);
+
+	$("#btnEnableSystemDebugLogSet").show();
+	$("#btnCancelSystemDebugLogSet").hide();
+	$("#btnSaveSystemDebugLogSet").hide();
+	$("#logLevel").attr('disabled',true);
+	$("#outputToFileEn").attr('disabled',true);
+	$("#logFile").attr('disabled',true);
+	//revert the value
+	//注意：必须用 val() 回滚。attr("selected","selected") 只在 select 未被赋值/交互过时有效，
+	//用户或脚本改过选项后 select 处于"dirty"状态，改 selected 属性不会再改变当前选中项。
+	$("#logLevel").val(systemInfo.logLevel);
+	$("#logFile").val(systemInfo.logFile);
+	if(systemInfo.outputToFileEn == 1)
+	{
+		$("#outputToFileEn").prop("checked", true);
+	}
+	else
+	{
+		$("#outputToFileEn").prop("checked", false);			
+	}
+}
+
+//只提交日志相关的两个字段：setSystemInfo.do 里其余字段传 null 表示「不改」，
+//但 logFile 例外（传 null 会清空日志文件配置），所以 logFile 必须始终提交
+//（关闭「输出到指定文件」时提交空串，由后端转成 null 清除）
+function saveSystemDebugLogSet(){
+	console.log("saveSystemDebugLogSet systemInfo:", systemInfo);
+
+	$("#btnEnableSystemDebugLogSet").show();
+	$("#btnCancelSystemDebugLogSet").hide();
+	$("#btnSaveSystemDebugLogSet").hide();
+	$("#logLevel").attr('disabled',true);
+	$("#outputToFileEn").attr('disabled',true);
+	$("#logFile").attr('disabled',true);
+
+	var logLevel = $("#logLevel").val();
+	var outputToFileEn = $("#outputToFileEn").is(':checked')? 1: 0;
+	var logFile = "";
+	if(outputToFileEn == 1)
+	{
+		logFile = $("#logFile").val();
+		if(logFile == undefined)
+		{
+			logFile = "";
+		}
+	}
+
+	$.ajax({
+        url : "/DocSystem/Manage/setSystemInfo.do",
+        type : "post",
+        dataType : "json",
+        data : {
+        	logLevel: logLevel,
+        	logFile: logFile
+        },
+        success : function (ret) {
+        	console.log("saveSystemDebugLogSet ret:",ret);
+            if( "ok" == ret.status )
+            {
+            	systemInfo.logLevel = logLevel;
+            	systemInfo.logFile = logFile;
+            	systemInfo.outputToFileEn = outputToFileEn;
+            	showErrorMessage(_Lang("更新成功！"));
+            }
+            else
+            {
+                console.log(ret.msgInfo);
+                showErrorMessage(_Lang("更新失败", ":", ret.msgInfo));
+            }
+            showSystemDebugLog();	//重新拉取配置，界面回到不可编辑的当前值
+        },
+        error : function () {
+        	showErrorMessage(_Lang("更新失败", ":", "服务器异常"));
+        	showSystemDebugLog();
         }
     });
 }

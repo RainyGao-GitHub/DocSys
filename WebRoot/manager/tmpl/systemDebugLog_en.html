@@ -1,0 +1,52 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">Debug Log</div>
+              <div class="widget-icons pull-right">
+                <button id="btnEnableSystemDebugLogSet" onclick="enableSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
+                <button id="btnSaveSystemDebugLogSet" onclick="saveSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">Save</button>
+                <button id="btnCancelSystemDebugLogSet" onclick="cancelSystemDebugLogSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+              <!-- Moved here from the "System Setting" page (whole row): parameter/value table style, same as the "Email Service" / "SMS Service" pages -->
+              <table class="table table-striped table-bordered table-hover" id="systemDebugLogTable">
+                <thead>
+                <tr>
+                  <th style="width:220px;">Parameter</th>
+                  <th>Value</th>
+                  <th style="width:300px;">Operation</th>
+                </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Debug Log</td>
+                    <td>
+			            	<select class="form-control" id="logLevel" style="width: 100%" disabled="disabled">
+			            		<option value="0" {{if value.logLevel == 0}} selected="selected" {{/if}}>debug</option>
+			            		<option value="1" {{if value.logLevel == 1}} selected="selected" {{/if}}>info</option>
+			            		<option value="2" {{if value.logLevel == 2}} selected="selected" {{/if}}>warn</option>
+			            		<option value="3" {{if value.logLevel == 3}} selected="selected" {{/if}}>error</option>
+			            	</select>
+			            	<div><span style="margin-right:5px"><input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}}  onclick="selectOutputToFileEn()" disabled="disabled"/></span>Output to file</div>
+                    	<input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="You can specify a dedicated file path for debug log" disabled="disabled">
+                    </td>
+                    <td class="edit">
+                      	<button onclick="viewLogFile()" data-id="" class="btn btn-lg btn-primary examine_ban">View</button>
+                      	<button onclick="downloadLogFile()" data-id="" class="btn btn-lg btn-warning examine_ban">Download</button>
+                    	<button onclick="cleanLogFile()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>Clean</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="widget-foot">
+                <div class="clearfix"></div>
+              </div>
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+</div>

@@ -1,6 +1,6 @@
 # CURRENT_STATE_日志在线查看（工作卡）
 
-建立于 2026-09-30。**状态：进行中（设计完成，方案待用户裁定 → 未获裁定前不要开工改代码）。**
+建立于 2026-09-30。**状态：进行中（①「在线查看」已由用户提交 `548b6da49`；②「调试日志」升为「系统管理」子项已实现+验证，待用户确认提交）。**
 
 > 本卡是**当前任务**的唯一口径处：必读上下文 / 参考计划与上下文 / 当前进展 / 生效约束（含是否需要先提交）。
 
@@ -75,6 +75,44 @@
 - **新页面** `WebRoot/manager/logViewer.html` / `logViewer_en.html` / `logViewer.js`（工具条+状态栏+`<pre>`，内容一律转义插入）。
 - **入口** `tmpl/systemUpgrade{,_en}.html` 操作列加「在线查看」+ `main.js` `viewLogFile()`（`window.open` 新标签）。
 
+## 子项② 调试日志升为「系统管理」子项（2026-09-30 第二里程碑）
+
+### 用户裁定
+1. 原「系统设置」页那一行：**A 整行搬走** ✓
+2. 子项名：**「调试日志」/ `Debug Log`**（沿用现有措辞）✓
+3. 位置：**末尾**（「系统迁移」之后）✓
+4. 移动版侧边栏缺的「系统参数」：**补** ✓
+5. 页头额外说明（docsys.log / catalina）：**不要**（已标明是调试日志）✓
+
+### 实施
+- `tmpl/sidebar{,_en}.html`：`#nav` + `#navMobile` 各加「调试日志」子项；`#navMobile` 补「系统参数」。
+- 新增 `tmpl/systemDebugLog.html` / `systemDebugLog_en.html`（原「系统设置」页那一行原样搬来：级别 / 输出到指定文件 / 路径 + 在线查看·下载·清除）。
+- `tmpl/systemUpgrade{,_en}.html`：删除该行。
+- `main.js`：新增 `case "systemDebugLog"`（`showContentPage` + `showSystemPage` 两处）+ `showSystemDebugLog` / `enableSystemDebugLogSet` / `cancelSystemDebugLogSet` / `saveSystemDebugLogSet`；
+  并清理「系统设置」页对已搬走字段的残留引用（`enable/cancel/saveSystemInfoSet`、`updateSystemInfo` 错误回滚块）。
+
+### 关键约束（务必记住）
+`setSystemInfo.do` 里 **只有 `logFile` 是「传 null = 清空配置」**，其余字段传 null 一律表示「不改」。因此：
+- 新页保存**只提交 `logLevel` + `logFile`**（两个都必须传），不能复用 `saveSystemInfoSet()`（它从 DOM 全量取值，缺字段会被当成 `undefined` 提交）。
+- 「系统设置」页保存时必须**回传当前 `logFile`**（`var logFile = systemInfo.logFile`），否则会把日志文件配置清空。
+
+### 验证（dev，8100，admin）
+- 侧边栏模板：中/英各 2 处（桌面+移动）；渲染后两个子菜单顺序一致 `…系统参数/数据库设置/系统迁移/调试日志`（末位 idx=7/8）。
+- 新页：`#systemDebugLogTable` 渲染、子项高亮、级别=info、路径空、三个按钮「在线查看/下载/清除」。
+- 系统设置页：`#logLevel`/`#logFile`/`#outputToFileEn` 已不在 DOM，无「调试日志」行，其余字段（`#maxThreadCount`/`#redisEn`/`#tomcatPath`）正常。
+- **回归（核心）**：新页打开「输出到指定文件」+ 设路径 + 级别改 error → 保存生效（`logFile=…/logs/docsys.log`、`logLevel=3`）；
+  再去「系统设置」页「编辑→保存」→ `logFile`/`logLevel` **仍为刚设置的值**（未被清空）→ PASS；最后新页还原（关闭输出 + 级别回 info）→ 配置回到 `logFile=null`/`logLevel=1`。
+- 取消：改级别 + 改路径后点「取消」→ 下拉与输入框都回到当前配置、字段重新禁用、后端配置未变。
+- 英文：`systemDebugLog_en.html` 3.2KB（Debug Log / View / Download / Clean / logLevel / outputToFileEn 齐全），`logViewer_en.html`、`main_en.html` 均 200。
+- 按钮命中：三个按钮 `elementFromPoint` 中心点均命中按钮本身（真人可点）；Playwright `page.click` 因元素“不稳定”超时属工具侧现象，非产品问题。
+- ⚠️ **踩坑记录 3（自己改出的真 bug，E2E 抓到）**：新页「取消」用 `$("#logLevel option[...]").attr("selected","selected")` 回滚**无效**——
+  select 被 `.val()`/用户交互置为 dirty 后，改 `selected` 属性不再改变当前选中项（复测：取消后仍是 3，应为 1）。改为 `.val(systemInfo.logLevel)` 后复测通过。
+  同类写法在遗留的 `cancelSystemInfoSet()`（`#maxThreadCount`/`#logLevel`）里**同样失效**（实测：1 → 改成 8 → 取消后仍是 8），属**既有缺陷**，未擅自改动，待用户裁定是否一并修。
+- ⚠️ **发现（既有缺陷，非本次引入）**：「下载」按钮在这套 dev 环境会 500。`downloadLogFile.do` 返回
+  `/DocSystem/Doc/downloadDoc.do?...&targetPath=Qzov&targetName=<base64 绝对路径>`，`downloadDoc.do` 把两者拼成 `C:/D:\…` → “文件不存在”。
+  与 `HEAD~1` 的实现一致（原实现也是 `Path.seperatePathAndName(logFilePath, temp)`），即**改动前就存在**；debug / catalina 源都会命中。
+  未擅自改动，待用户裁定。
+
 ## 预估改动清单（实施时）
 
 - 新增：`WebRoot/manager/logViewer.html`、`logViewer_en.html`、`logViewer.js`、`src/com/DocSystem/common/LogFileUtil.java`
@@ -132,24 +170,34 @@
 
 ## 下一步
 
-1. **等用户确认后提交**（不要自动 commit）—— 全部改动都在**主仓库** `D:\Dev\DocSys`（`devInt`）。
-2. 收尾：提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
-3. 可选后续（用户未要求）：行号 / 轮转历史文件列表 / 关键字服务端搜索（返回匹配行±上下文）/ 日志级导出。
+1. **等用户确认后提交子项②**（不要自动 commit）——全部改动都在**主仓库** `D:\Dev\DocSys`（`devInt`）。
+2. 待用户裁定：遗留 `cancelSystemInfoSet()` 的 `.attr("selected")` 失效是否一并修；「下载」500 是否处理。
+3. 收尾：提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
+4. 可选后续（用户未要求）：行号 / 轮转历史文件列表 / 关键字服务端搜索（返回匹配行±上下文）/ 日志级导出。
 
 ## 生效约束
 
-- **用户尚未裁定方案 → 不要自行开工改代码**。
+- 子项②已获用户裁定并实施完成 → 落地前仍需用户确认提交，**不要自动 commit**。
+- **日志路径配置有个坑**：`setSystemInfo.do` 中 `logFile` 传 null = 清空（其余字段 null = 不改）。任何调用该接口的地方都必须显式回传 `logFile`。
+- **模板会走浏览器缓存**：验证模板改动必须带 cache-buster（`?t=…`）+ `Network.clearBrowserCache`，否则会读到旧模板（本次一度误判为“侧边栏没生效”）。
 - 编译：Spring 控制器**必须** `-parameters -g`；`.class` 只进 `WebRoot/WEB-INF/classes`，源码树不得出现 `.class`。
 - 改 Java 后必须重启 dev Tomcat（`docsys_restart.bat`；启动 2~10 分钟；重启后 session 失效，需重新登录）。
 - E2E 口径：`POST /DocSystem/User/login.do`（`Admin`/`pwd=QWRtaW4=`，pwd 为 base64 明文）；探针产物写 `%TEMP%\docsys_chk\`。
 - **不要自动 commit**：改完 + 验证 → 汇报 → 等用户确认。
 
-## 未提交改动
+## 未提交改动（子项②，均在主仓库）
 
-- **新增**：`src/com/DocSystem/common/LogFileUtil.java`、
-  `WebRoot/manager/logViewer.html`、`logViewer_en.html`、`logViewer.js`
-- **修改**：`src/com/DocSystem/controller/ManageController.java`、
-  `WebRoot/manager/tmpl/systemUpgrade.html`、`systemUpgrade_en.html`、`WebRoot/manager/main.js`
-- 卡片/规则：本卡（新增）、`CLAUDE.md`（指针切到本任务）
-- 编译产物（不入库）：`WebRoot/WEB-INF/classes/com/DocSystem/common/LogFileUtil.class`、
-  `.../controller/ManageController.class`
+`git status --short`（`D:\Dev\DocSys`）当前：
+
+- ` M WebRoot/manager/main.js`
+- ` M WebRoot/manager/tmpl/sidebar.html`
+- ` M WebRoot/manager/tmpl/sidebar_en.html`
+- ` M WebRoot/manager/tmpl/systemUpgrade.html`
+- ` M WebRoot/manager/tmpl/systemUpgrade_en.html`
+- `?? WebRoot/manager/tmpl/systemDebugLog.html`
+- `?? WebRoot/manager/tmpl/systemDebugLog_en.html`
+
+- 子项①（`LogFileUtil.java` / `ManageController.java` / `logViewer.*` / `CLAUDE.md` / 卡）已由用户提交 `548b6da49`，不在上表内。
+- 子项②为**纯前端**：无 Java 改动 → **不需要编译、不需要重启**（本次未重启 dev Tomcat）。
+- 测试期间动过 dev 配置（`WebRoot/WEB-INF/classes/docSysConfig.properties`，gitignore 的运行时副本）并已还原：`logLevel=1`、无 `logFile` 键；
+  该文件被 `setSystemInfo.do` 重写（键序/格式规范化），逻辑值与原状态一致。
