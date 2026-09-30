@@ -645,8 +645,10 @@ function lang(str)
 		"获取邮件服务配置信息失败" : "Failed to get Email Service Settings",
 		"更新邮件服务配置成功" : " Email Service Settings was updated",
 		"更新邮件服务配置失败" : "Failed to update Email Service Settings",
-		//Email Service (multi provider, M4)
+		//Email Service (multi provider, M4/M5)
 		"SMTP 邮件服务器" : "SMTP Mail Server",
+		"阿里云邮件推送" : "Aliyun DirectMail",
+		"腾讯云 SES" : "Tencent Cloud SES",
 		"不加密（明文）" : "None (plain)",
 		"SSL/TLS（隐式 SSL）" : "SSL/TLS (implicit SSL)",
 		"发信方式" : "Provider",
@@ -662,6 +664,11 @@ function lang(str)
 		"当前为明文发送（不加密），账号密码与邮件内容可被窃听，建议启用 STARTTLS 或 SSL/TLS" : "Sending in plain text (no encryption): credentials and content can be eavesdropped. Enable STARTTLS or SSL/TLS.",
 		"已开启「信任任意服务器证书」，存在中间人风险，仅建议自签名证书的内网服务器使用" : "\"Trust any server certificate\" is enabled (man-in-the-middle risk); use it only for intranet servers with self-signed certificates.",
 		"未填写发件人邮箱（mail.from），将使用 SMTP 登录账号作为发件人" : "From address is empty (mail.from), the SMTP account will be used as the sender.",
+		"阿里云邮件推送（SingleSendMail）不支持附件；带附件的邮件会被直接报错，请改用 SMTP 或腾讯云 SES" : "Aliyun DirectMail (SingleSendMail) does not support attachments; mails with attachments fail with an explicit error. Use SMTP or Tencent Cloud SES instead.",
+		"腾讯云当前为模板模式：邮件正文由控制台模板决定，本地只传短变量（官方限制 ≤800 字节且不能是 HTML）" : "Tencent Cloud is in template mode: the body comes from the console template and only short variables are passed (official limit: 800 bytes, no HTML).",
+		"腾讯云当前为自定义内容模式（Simple）：该字段官方已标为废弃，新账号需先开通「自定义内容」权限，否则会被拒（返回码 1011）" : "Tencent Cloud uses the custom-content mode (Simple), which the vendor marks as deprecated: new accounts must enable the custom-content permission first, otherwise the API rejects the call (code 1011).",
+		"自定义网关未配置成功判定字段，将以 HTTP 2xx 作为发送成功（部分网关 200 也可能表示业务失败）" : "No success-check field configured for the custom gateway, so HTTP 2xx counts as success (some gateways return 200 for business failures).",
+		"自定义 HTTP 网关不支持附件；带附件的邮件会被直接报错" : "The custom HTTP gateway does not support attachments; mails with attachments fail with an explicit error.",
 		
 		//SMS Service
 		"获取短信服务配置信息失败" : "Failed to get SMS Service Settings",
@@ -915,5 +922,13 @@ var warningRules =
 		//正文编码不是 UTF-8（当前 text/html;charset=gb2312），中文可能显示异常
 		pattern : /^正文编码不是 UTF-8（当前 (.+?)），中文可能显示异常$/,
 		build : function(m){ return "Content type is not UTF-8 (currently " + m[1] + "), non-ASCII characters may be garbled."; }
+	},
+	{
+		//阿里云/腾讯云接入地址未填，将使用默认 dm.aliyuncs.com
+		pattern : /^(阿里云|腾讯云)接入地址未填，将使用默认 (\S+)$/,
+		build : function(m){
+			var name = (m[1] == "腾讯云") ? "Tencent Cloud SES" : "Aliyun DirectMail";
+			return name + " endpoint is empty; the default " + m[2] + " will be used.";
+		}
 	}
 ];

@@ -119,6 +119,160 @@
                   </tr>
                   </tbody>
 
+                  <tbody id="systemMailBlockAliyun" style="display:none;">
+                  <tr>
+                    <td>AccessKeyId</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunAccessKeyId" name="aliyunAccessKeyId" value="{{value.config.aliyun.accessKeyId}}" disabled="disabled" style="width:440px;">
+                      <span class="help-block">Create it in Alibaba Cloud Console &rarr; Access Control &rarr; AccessKey. A RAM sub-account limited to DirectMail is recommended.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>AccessKeySecret</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunAccessKeySecret" name="aliyunAccessKeySecret" value="{{value.config.aliyun.accessKeySecret}}" disabled="disabled" style="width:440px;">
+                      <span class="help-block">Used together with the AccessKeyId; never written to logs.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Sender address</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunAccountName" name="aliyunAccountName" value="{{value.config.aliyun.accountName}}" disabled="disabled" placeholder="noreply@mail.your-domain.com" style="width:440px;">
+                      <span class="help-block">An address created and verified under DirectMail "Sender addresses". It also becomes the From address of the mail.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Region</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunRegionId" name="aliyunRegionId" value="{{value.config.aliyun.regionId}}" disabled="disabled" placeholder="cn-hangzhou" style="width:220px;">
+                      <span class="help-block">Recorded only: the send API itself takes no region parameter.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Endpoint</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunEndpoint" name="aliyunEndpoint" value="{{value.config.aliyun.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.aliyun}}" style="width:440px;">
+                      <span class="help-block">Leave empty to use <code>{{value.providerDefaults.aliyun}}</code>. Note: this API <b>does not support attachments</b> — mails with attachments fail with an explicit error; use SMTP or Tencent SES instead.</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
+                  <tbody id="systemMailBlockTencent" style="display:none;">
+                  <tr>
+                    <td>SecretId</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentSecretId" name="tencentSecretId" value="{{value.config.tencent.secretId}}" disabled="disabled" style="width:440px;">
+                      <span class="help-block">Tencent Cloud Console &rarr; Access Management &rarr; API Keys.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>SecretKey</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentSecretKey" name="tencentSecretKey" value="{{value.config.tencent.secretKey}}" disabled="disabled" style="width:440px;">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Region</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentRegion" name="tencentRegion" value="{{value.config.tencent.region}}" disabled="disabled" placeholder="ap-guangzhou" style="width:220px;">
+                      <span class="help-block">Required; this API only supports <code>ap-guangzhou</code> and <code>ap-hongkong</code>.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Sender address</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentFromEmailAddress" name="tencentFromEmailAddress" value="{{value.config.tencent.fromEmailAddress}}" disabled="disabled" placeholder="noreply@mail.your-domain.com" style="width:440px;">
+                      <span class="help-block">Created under "Sender addresses" in the console; the sending domain must pass SPF/DKIM verification first. Leave empty to fall back to "From address" above.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Endpoint</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentEndpoint" name="tencentEndpoint" value="{{value.config.tencent.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.tencent}}" style="width:440px;">
+                      <span class="help-block">Leave empty to use <code>{{value.providerDefaults.tencent}}</code>.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Content mode</td>
+                    <td>
+                      <select class="form-control" id="systemMailTencentContentMode" name="tencentContentMode" disabled="disabled" style="width:440px;">
+                        <option value="custom" {{if value.config.tencent.contentMode != "template"}}selected="selected"{{/if}}>Custom content (the whole HTML is generated by this system)</option>
+                        <option value="template" {{if value.config.tencent.contentMode == "template"}}selected="selected"{{/if}}>Template (the body comes from a console template)</option>
+                      </select>
+                      <span class="help-block">Tencent marks "custom content" as deprecated: <b>new accounts must enable that permission first</b>, otherwise the API rejects the call (code 1011). In template mode the body comes from the console template and this system only passes short variables (official limit: 800 bytes, no HTML).</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Template ID</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentTemplateId" name="tencentTemplateId" value="{{value.config.tencent.templateId}}" disabled="disabled" placeholder="12345" style="width:180px;">
+                      <span class="help-block">Template mode only: the numeric ID of an approved console template.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Variable names</td>
+                    <td>
+                      Subject: <input type="text" class="form-control" id="systemMailTencentTemplateSubjectKey" name="tencentTemplateSubjectKey" value="{{value.config.tencent.templateSubjectKey}}" disabled="disabled" placeholder="subject" style="width:150px;display:inline-block;margin-left:5px;">
+                      Body: <input type="text" class="form-control" id="systemMailTencentTemplateContentKey" name="tencentTemplateContentKey" value="{{value.config.tencent.templateContentKey}}" disabled="disabled" placeholder="content" style="width:150px;display:inline-block;margin-left:5px;">
+                      <span class="help-block">Refer to your template for the placeholder syntax; empty means <code>subject</code> / <code>content</code>.</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
+                  <tbody id="systemMailBlockHttp" style="display:none;">
+                  <tr>
+                    <td>Gateway URL</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailHttpUrl" name="httpUrl" value="{{value.config.http.url}}" disabled="disabled" placeholder="http://your-gateway/send" style="width:440px;">
+                      <span class="help-block">Must start with <code>http://</code> or <code>https://</code>.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>HTTP method</td>
+                    <td>
+                      <select class="form-control" id="systemMailHttpMethod" name="httpMethod" disabled="disabled" style="width:220px;">
+                        <option value="POST" {{if value.config.http.method != "GET"}}selected="selected"{{/if}}>POST</option>
+                        <option value="GET" {{if value.config.http.method == "GET"}}selected="selected"{{/if}}>GET</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Body format</td>
+                    <td>
+                      <select class="form-control" id="systemMailHttpContentType" name="httpContentType" disabled="disabled" style="width:300px;">
+                        <option value="json" {{if value.config.http.contentType != "form"}}selected="selected"{{/if}}>JSON (application/json)</option>
+                        <option value="form" {{if value.config.http.contentType == "form"}}selected="selected"{{/if}}>Form (x-www-form-urlencoded)</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Parameter names</td>
+                    <td>
+                      To: <input type="text" class="form-control" id="systemMailHttpParamTo" name="httpParamTo" value="{{value.config.http.paramNames.to}}" disabled="disabled" placeholder="to" style="width:150px;display:inline-block;margin-left:5px;">
+                      Subject: <input type="text" class="form-control" id="systemMailHttpParamSubject" name="httpParamSubject" value="{{value.config.http.paramNames.subject}}" disabled="disabled" placeholder="subject" style="width:150px;display:inline-block;margin-left:5px;">
+                      <br>
+                      Body: <input type="text" class="form-control" id="systemMailHttpParamContent" name="httpParamContent" value="{{value.config.http.paramNames.content}}" disabled="disabled" placeholder="content" style="width:150px;display:inline-block;margin-left:5px;">
+                      From: <input type="text" class="form-control" id="systemMailHttpParamFrom" name="httpParamFrom" value="{{value.config.http.paramNames.from}}" disabled="disabled" placeholder="from" style="width:150px;display:inline-block;margin-left:5px;">
+                      <span class="help-block">Empty means the default name shown in the placeholder; change it to match your gateway.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Fixed parameters</td>
+                    <td>
+                      <textarea class="form-control" id="systemMailHttpParams" name="httpParams" rows="3" disabled="disabled" placeholder="apikey=xxxxxxxx" style="width:440px;">{{value.httpParamsText}}</textarea>
+                      <span class="help-block">One <code>name=value</code> per line; sent with every request (e.g. a gateway apikey).</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Success check</td>
+                    <td>
+                      Field: <input type="text" class="form-control" id="systemMailHttpSuccessField" name="httpSuccessField" value="{{value.config.http.successField}}" disabled="disabled" placeholder="code" style="width:180px;display:inline-block;margin-left:5px;">
+                      Expected: <input type="text" class="form-control" id="systemMailHttpSuccessValue" name="httpSuccessValue" value="{{value.config.http.successValue}}" disabled="disabled" placeholder="0" style="width:180px;display:inline-block;margin-left:5px;">
+                      <span class="help-block">The send counts as successful only when that JSON field equals the expected value; <b>leave it empty to rely on HTTP 2xx only</b> (some gateways return 200 for business failures).</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
                   <tr>
                     <td>Content type</td>
                     <td>

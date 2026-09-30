@@ -26,6 +26,17 @@ public class MailTencentConfig {
 	/** 产品名（参与签名的 CredentialScope，必须与域名一致） */
 	public static final String SERVICE = "ses";
 
+	/** 自定义内容模式：走 {@code Simple}，HTML/纯文本全文随请求发送（需账号已开通「自定义内容」权限） */
+	public static final String MODE_CUSTOM = "custom";
+
+	/**
+	 * 模板模式：走 {@code Template}，**正文由控制台模板决定**，本地只传短变量。
+	 *
+	 * <p>注意模板变量的官方限制：值不能是 HTML 等复杂类型，整个 {@code TemplateData} JSON
+	 * 不超过 800 字节。所以模板模式适合「通知类」短正文，不能承载 DocSys 的整页 HTML。
+	 */
+	public static final String MODE_TEMPLATE = "template";
+
 	private String secretId = "";
 	private String secretKey = "";
 
@@ -37,6 +48,24 @@ public class MailTencentConfig {
 
 	/** 接入地址；空 → {@link #DEFAULT_ENDPOINT} */
 	private String endpoint = "";
+
+	/**
+	 * 内容模式（{@link #MODE_CUSTOM} / {@link #MODE_TEMPLATE}）。
+	 *
+	 * <p>为什么要有这个开关：腾讯云 SES 的 {@code Simple}（自定义内容）字段官方已标为**废弃**，
+	 * 「如您未申请过特殊配置，则不存在该字段」；新账号不额外申请权限直接用 {@code Simple} 会被
+	 * 拒（返回码 1011「无发送自定义内容权限，必须使用模板」）。所以两种模式都得留。
+	 */
+	private String contentMode = MODE_CUSTOM;
+
+	/** 模板 ID（{@code contentMode=template} 时必填；先在控制台建模板并通过审核） */
+	private String templateId = "";
+
+	/** 模板模式下的变量名：邮件主题（默认 {@code subject}） */
+	private String templateSubjectKey = "subject";
+
+	/** 模板模式下的变量名：邮件正文（默认 {@code content}） */
+	private String templateContentKey = "content";
 
 	public String getSecretId() {
 		return secretId;
@@ -78,19 +107,110 @@ public class MailTencentConfig {
 		this.endpoint = endpoint;
 	}
 
-	/** 生效的接入地址（空 → 默认值，同时去掉可能被粘进来的协议前缀） */
+	public String getContentMode() {
+		return contentMode;
+	}
+
+	public void setContentMode(String contentMode) {
+		this.contentMode = contentMode;
+	}
+
+	public String getTemplateId() {
+		return templateId;
+	}
+
+	public void setTemplateId(String templateId) {
+		this.templateId = templateId;
+	}
+
+	public String getTemplateSubjectKey() {
+		return templateSubjectKey;
+	}
+
+	public void setTemplateSubjectKey(String templateSubjectKey) {
+		this.templateSubjectKey = templateSubjectKey;
+	}
+
+	public String getTemplateContentKey() {
+		return templateContentKey;
+	}
+
+	public void setTemplateContentKey(String templateContentKey) {
+		this.templateContentKey = templateContentKey;
+	}
+
+	/**
+	 * 生效的接入地址：空 → {@link #DEFAULT_ENDPOINT}；去掉末尾斜杠与路径。
+	 *
+	 * <p>保留调用方写的 {@code http://} 前缀：生产一律 https，但本机联调与自建接入需要 http。
+	 */
 	@JSONField(serialize = false, deserialize = false)
 	public String getEffectiveEndpoint() {
 		String value = (endpoint == null) ? "" : endpoint.trim();
 		if (value.isEmpty()) {
 			return DEFAULT_ENDPOINT;
 		}
-		return value.replace("https://", "").replace("http://", "").replaceAll("/+$", "");
+		return value.replaceAll("/+$", "");
+	}
+
+	/** 生效的协议：显式写 {@code http://} 时用 http，其余一律 https */
+	@JSONField(serialize = false, deserialize = false)
+	public String getEffectiveScheme() {
+		return getEffectiveEndpoint().toLowerCase().startsWith("http://") ? "http" : "https";
+	}
+
+	/** 生效的签名 host（去掉协议前缀与路径，保留端口；签名 host 必须与实际发出的 Host 头一致） */
+	@JSONField(serialize = false, deserialize = false)
+	public String getEffectiveHost() {
+		String value = getEffectiveEndpoint();
+		int scheme = value.indexOf("://");
+		if (scheme >= 0) {
+			value = value.substring(scheme + 3);
+		}
+		int slash = value.indexOf('/');
+		if (slash >= 0) {
+			value = value.substring(0, slash);
+		}
+		return value;
 	}
 
 	/** 生效的发信地址（空 → 回落到全局的 {@code mail.from}，由 Provider 决定） */
 	@JSONField(serialize = false, deserialize = false)
 	public String getEffectiveFromEmailAddress() {
 		return (fromEmailAddress == null) ? "" : fromEmailAddress.trim();
+	}
+
+	/** 是否模板模式（无法识别的内容模式一律按自定义内容处理，避免把配置笔误变成静默不发） */
+	@JSONField(serialize = false, deserialize = false)
+	public boolean isTemplateMode() {
+		return MODE_TEMPLATE.equalsIgnoreCase((contentMode == null) ? "" : contentMode.trim());
+	}
+
+	/** 模板 ID 的数字形式；空或非数字 → 0（调用方按「未配置」处理） */
+	@JSONField(serialize = false, deserialize = false)
+	public long getEffectiveTemplateId() {
+		String value = (templateId == null) ? "" : templateId.trim();
+		if (value.isEmpty()) {
+			return 0L;
+		}
+		try {
+			return Long.parseLong(value);
+		} catch (NumberFormatException e) {
+			return 0L;
+		}
+	}
+
+	/** 生效的模板变量名：主题（空 → subject） */
+	@JSONField(serialize = false, deserialize = false)
+	public String getEffectiveSubjectKey() {
+		String value = (templateSubjectKey == null) ? "" : templateSubjectKey.trim();
+		return value.isEmpty() ? "subject" : value;
+	}
+
+	/** 生效的模板变量名：正文（空 → content） */
+	@JSONField(serialize = false, deserialize = false)
+	public String getEffectiveContentKey() {
+		String value = (templateContentKey == null) ? "" : templateContentKey.trim();
+		return value.isEmpty() ? "content" : value;
 	}
 }

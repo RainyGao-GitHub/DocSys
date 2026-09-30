@@ -28,6 +28,15 @@ public class MailConfig {
 	/** SMTP 服务器配置 */
 	private MailSmtpConfig smtp = new MailSmtpConfig();
 
+	/** 阿里云邮件推送配置（provider=aliyun 时生效） */
+	private MailAliyunConfig aliyun = new MailAliyunConfig();
+
+	/** 腾讯云 SES 配置（provider=tencent 时生效） */
+	private MailTencentConfig tencent = new MailTencentConfig();
+
+	/** 自定义 HTTP 网关配置（provider=http 时生效） */
+	private MailHttpConfig http = new MailHttpConfig();
+
 	/** 通用发送选项 */
 	private MailOptions options = new MailOptions();
 
@@ -71,6 +80,30 @@ public class MailConfig {
 		this.smtp = smtp;
 	}
 
+	public MailAliyunConfig getAliyun() {
+		return aliyun;
+	}
+
+	public void setAliyun(MailAliyunConfig aliyun) {
+		this.aliyun = aliyun;
+	}
+
+	public MailTencentConfig getTencent() {
+		return tencent;
+	}
+
+	public void setTencent(MailTencentConfig tencent) {
+		this.tencent = tencent;
+	}
+
+	public MailHttpConfig getHttp() {
+		return http;
+	}
+
+	public void setHttp(MailHttpConfig http) {
+		this.http = http;
+	}
+
 	public MailOptions getOptions() {
 		return options;
 	}
@@ -91,8 +124,11 @@ public class MailConfig {
 	 * 当前供应商是否「配齐了」：
 	 * <ul>
 	 *   <li>SMTP：host + account + password 都不为空</li>
-	 *   <li>其他（暂未实现）：一律 false</li>
+	 *   <li>阿里云：accessKeyId + accessKeySecret + accountName（发信地址即 AccountName）</li>
+	 *   <li>腾讯云：secretId + secretKey + region + 发信地址（模板模式还要模板 ID）</li>
+	 *   <li>自定义 HTTP：url</li>
 	 * </ul>
+	 * 这里只回答「够不够发」；具体缺哪个字段由 MailSender 给出更具体的提示。
 	 */
 	@JSONField(serialize = false, deserialize = false)
 	public boolean isProviderConfigured() {
@@ -103,6 +139,23 @@ public class MailConfig {
 		if (type == MailProviderType.SMTP) {
 			MailSmtpConfig cfg = smtp == null ? new MailSmtpConfig() : smtp;
 			return !isBlank(cfg.getHost()) && !isBlank(cfg.getAccount()) && !isBlank(cfg.getPassword());
+		}
+		if (type == MailProviderType.ALIYUN) {
+			MailAliyunConfig cfg = (aliyun == null) ? new MailAliyunConfig() : aliyun;
+			return !isBlank(cfg.getAccessKeyId()) && !isBlank(cfg.getAccessKeySecret())
+					&& !isBlank(cfg.getAccountName());
+		}
+		if (type == MailProviderType.TENCENT) {
+			MailTencentConfig cfg = (tencent == null) ? new MailTencentConfig() : tencent;
+			if (isBlank(cfg.getSecretId()) || isBlank(cfg.getSecretKey()) || isBlank(cfg.getRegion())
+					|| isBlank(getEffectiveFrom())) {
+				return false;
+			}
+			return !cfg.isTemplateMode() || cfg.getEffectiveTemplateId() > 0;
+		}
+		if (type == MailProviderType.HTTP) {
+			MailHttpConfig cfg = (http == null) ? new MailHttpConfig() : http;
+			return !isBlank(cfg.getUrl());
 		}
 		return false;
 	}

@@ -6,9 +6,8 @@ package com.DocSystem.commonService.mail;
  * <p>与短信的 {@code SmsProviderType} 同一套路：枚举即「下拉选项 + 必填字段」的元数据来源，
  * 页面不需要硬编码供应商列表。
  *
- * <p>本轮（方案文档 D1）只做 {@link #SMTP}；其余三家的字段已按 API 形态预留，
- * {@link #isImplemented()} 为 false 时**不进管理页下拉**（避免管理员选了用不了），
- * 等 M5 落地对应 Provider 后把标记打开即可。
+ * <p>{@link #isImplemented()} 为 false 时**不进管理页下拉**（避免管理员选了用不了）；
+ * 四家在 M5 已全部落地。
  */
 public enum MailProviderType {
 
@@ -16,17 +15,17 @@ public enum MailProviderType {
 	SMTP("smtp", "SMTP 邮件服务器", true,
 			new String[] { "host", "port", "encryption", "account", "password" }),
 
-	/** 阿里云邮件推送 DirectMail（HTTP API + 签名；M5） */
-	ALIYUN("aliyun", "阿里云邮件推送", false,
+	/** 阿里云邮件推送 DirectMail（HTTP API + V3 签名） */
+	ALIYUN("aliyun", "阿里云邮件推送", true,
 			new String[] { "accessKeyId", "accessKeySecret", "accountName" }),
 
-	/** 腾讯云邮件推送 SES（HTTP API + TC3 签名；M5） */
-	TENCENT("tencent", "腾讯云 SES", false,
+	/** 腾讯云邮件推送 SES（HTTP API + TC3 签名） */
+	TENCENT("tencent", "腾讯云 SES", true,
 			new String[] { "secretId", "secretKey", "region", "fromEmailAddress" }),
 
-	/** 自定义 HTTP 邮件网关（M5） */
-	HTTP("http", "自定义 HTTP", false,
-			new String[] { "url", "method" });
+	/** 自定义 HTTP 邮件网关 */
+	HTTP("http", "自定义 HTTP", true,
+			new String[] { "url" });
 
 	private final String code;
 	private final String displayName;

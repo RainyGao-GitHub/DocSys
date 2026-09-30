@@ -73,13 +73,38 @@ public class MailAliyunConfig {
 		this.endpoint = endpoint;
 	}
 
-	/** 生效的接入地址（空 → 默认值，同时去掉可能被粘进来的协议前缀） */
+	/**
+	 * 生效的接入地址：空 → {@link #DEFAULT_ENDPOINT}；去掉末尾斜杠与路径。
+	 *
+	 * <p>保留调用方写的 {@code http://} 前缀：生产一律 https，但本机联调与自建接入需要 http。
+	 */
 	@JSONField(serialize = false, deserialize = false)
 	public String getEffectiveEndpoint() {
 		String value = (endpoint == null) ? "" : endpoint.trim();
 		if (value.isEmpty()) {
 			return DEFAULT_ENDPOINT;
 		}
-		return value.replace("https://", "").replace("http://", "").replaceAll("/+$", "");
+		return value.replaceAll("/+$", "");
+	}
+
+	/** 生效的协议：显式写 {@code http://} 时用 http，其余一律 https */
+	@JSONField(serialize = false, deserialize = false)
+	public String getEffectiveScheme() {
+		return getEffectiveEndpoint().toLowerCase().startsWith("http://") ? "http" : "https";
+	}
+
+	/** 生效的签名 host（去掉协议前缀与路径，保留端口） */
+	@JSONField(serialize = false, deserialize = false)
+	public String getEffectiveHost() {
+		String value = getEffectiveEndpoint();
+		int scheme = value.indexOf("://");
+		if (scheme >= 0) {
+			value = value.substring(scheme + 3);
+		}
+		int slash = value.indexOf('/');
+		if (slash >= 0) {
+			value = value.substring(0, slash);
+		}
+		return value;
 	}
 }

@@ -9,7 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.DocSystem.common.Log;
+import com.DocSystem.commonService.mail.impl.AliyunDirectMailProvider;
+import com.DocSystem.commonService.mail.impl.HttpApiMailProvider;
 import com.DocSystem.commonService.mail.impl.SmtpMailProvider;
+import com.DocSystem.commonService.mail.impl.TencentSesMailProvider;
 import com.DocSystem.service.mail.MailConfigStore;
 
 /**
@@ -40,6 +43,9 @@ public class MailSender {
 
 	public MailSender() {
 		register(new SmtpMailProvider());
+		register(new AliyunDirectMailProvider());
+		register(new TencentSesMailProvider());
+		register(new HttpApiMailProvider());
 	}
 
 	/** 用当前生效配置构造发送上下文（**不打网络**） */
@@ -150,6 +156,63 @@ public class MailSender {
 			}
 			return true;
 		}
+
+		if (type == MailProviderType.ALIYUN) {
+			MailAliyunConfig aliyun = (config.getAliyun() == null) ? new MailAliyunConfig() : config.getAliyun();
+			if (isBlank(aliyun.getAccessKeyId())) {
+				prepared.setError("阿里云 AccessKeyId 未配置（" + MailConfigStore.KEY_ALIYUN + ".accessKeyId）");
+				return false;
+			}
+			if (isBlank(aliyun.getAccessKeySecret())) {
+				prepared.setError("阿里云 AccessKeySecret 未配置");
+				return false;
+			}
+			if (isBlank(aliyun.getAccountName())) {
+				prepared.setError("阿里云发信地址未配置（" + MailConfigStore.KEY_ALIYUN + ".accountName）");
+				return false;
+			}
+			return true;
+		}
+
+		if (type == MailProviderType.TENCENT) {
+			MailTencentConfig tencent = (config.getTencent() == null) ? new MailTencentConfig() : config.getTencent();
+			if (isBlank(tencent.getSecretId())) {
+				prepared.setError("腾讯云 SecretId 未配置（" + MailConfigStore.KEY_TENCENT + ".secretId）");
+				return false;
+			}
+			if (isBlank(tencent.getSecretKey())) {
+				prepared.setError("腾讯云 SecretKey 未配置");
+				return false;
+			}
+			if (isBlank(tencent.getRegion())) {
+				prepared.setError("腾讯云地域 Region 未配置（只支持 ap-guangzhou / ap-hongkong）");
+				return false;
+			}
+			if (isBlank(config.getEffectiveFrom())) {
+				prepared.setError("腾讯云发信地址未配置（" + MailConfigStore.KEY_TENCENT + ".fromEmailAddress 或 "
+						+ MailConfigStore.KEY_FROM + "）");
+				return false;
+			}
+			if (tencent.isTemplateMode() && tencent.getEffectiveTemplateId() <= 0) {
+				prepared.setError("腾讯云选择了模板模式，但模板 ID 未配置或不是数字：" + tencent.getTemplateId());
+				return false;
+			}
+			return true;
+		}
+
+		if (type == MailProviderType.HTTP) {
+			MailHttpConfig http = (config.getHttp() == null) ? new MailHttpConfig() : config.getHttp();
+			if (isBlank(http.getUrl())) {
+				prepared.setError("自定义网关地址未配置（" + MailConfigStore.KEY_HTTP + ".url）");
+				return false;
+			}
+			if (!http.getUrl().trim().startsWith("http://") && !http.getUrl().trim().startsWith("https://")) {
+				prepared.setError("自定义网关地址需以 http:// 或 https:// 开头：" + http.getUrl().trim());
+				return false;
+			}
+			return true;
+		}
+
 		prepared.setError("该发信方式暂未接入：" + type.getDisplayName());
 		return false;
 	}

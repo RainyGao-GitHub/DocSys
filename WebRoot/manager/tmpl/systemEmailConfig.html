@@ -119,6 +119,160 @@
                   </tr>
                   </tbody>
 
+                  <tbody id="systemMailBlockAliyun" style="display:none;">
+                  <tr>
+                    <td>AccessKeyId</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunAccessKeyId" name="aliyunAccessKeyId" value="{{value.config.aliyun.accessKeyId}}" disabled="disabled" style="width:440px;">
+                      <span class="help-block">阿里云控制台 → 访问控制 → AccessKey 创建；建议用 RAM 子账号并只授予「邮件推送」权限。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>AccessKeySecret</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunAccessKeySecret" name="aliyunAccessKeySecret" value="{{value.config.aliyun.accessKeySecret}}" disabled="disabled" style="width:440px;">
+                      <span class="help-block">只与 AccessKeyId 成对使用；不会回显到日志里。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>发信地址</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunAccountName" name="aliyunAccountName" value="{{value.config.aliyun.accountName}}" disabled="disabled" placeholder="noreply@mail.your-domain.com" style="width:440px;">
+                      <span class="help-block">邮件推送控制台「发信地址」里创建并完成验证的地址；它同时就是邮件里的发件人。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>地域</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunRegionId" name="aliyunRegionId" value="{{value.config.aliyun.regionId}}" disabled="disabled" placeholder="cn-hangzhou" style="width:220px;">
+                      <span class="help-block">仅作记录：发信接口本身不带地域参数。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>接入地址</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailAliyunEndpoint" name="aliyunEndpoint" value="{{value.config.aliyun.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.aliyun}}" style="width:440px;">
+                      <span class="help-block">留空用默认 <code>{{value.providerDefaults.aliyun}}</code>。⚠️ 该接口<b>不支持附件</b>：带附件的邮件会被直接报错，请改用 SMTP 或腾讯云 SES。</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
+                  <tbody id="systemMailBlockTencent" style="display:none;">
+                  <tr>
+                    <td>SecretId</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentSecretId" name="tencentSecretId" value="{{value.config.tencent.secretId}}" disabled="disabled" style="width:440px;">
+                      <span class="help-block">腾讯云控制台 → 访问管理 → API 密钥。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>SecretKey</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentSecretKey" name="tencentSecretKey" value="{{value.config.tencent.secretKey}}" disabled="disabled" style="width:440px;">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>地域</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentRegion" name="tencentRegion" value="{{value.config.tencent.region}}" disabled="disabled" placeholder="ap-guangzhou" style="width:220px;">
+                      <span class="help-block">必填；该接口只支持 <code>ap-guangzhou</code> 与 <code>ap-hongkong</code>。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>发信地址</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentFromEmailAddress" name="tencentFromEmailAddress" value="{{value.config.tencent.fromEmailAddress}}" disabled="disabled" placeholder="noreply@mail.your-domain.com" style="width:440px;">
+                      <span class="help-block">控制台「发信地址」里创建；发信域名需先完成 SPF/DKIM 验证。留空则用上面的「发件人邮箱」。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>接入地址</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentEndpoint" name="tencentEndpoint" value="{{value.config.tencent.endpoint}}" disabled="disabled" placeholder="{{value.providerDefaults.tencent}}" style="width:440px;">
+                      <span class="help-block">留空用默认 <code>{{value.providerDefaults.tencent}}</code>。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>内容模式</td>
+                    <td>
+                      <select class="form-control" id="systemMailTencentContentMode" name="tencentContentMode" disabled="disabled" style="width:440px;">
+                        <option value="custom" {{if value.config.tencent.contentMode != "template"}}selected="selected"{{/if}}>自定义内容（整封 HTML 由本系统生成）</option>
+                        <option value="template" {{if value.config.tencent.contentMode == "template"}}selected="selected"{{/if}}>模板发送（正文由控制台模板决定）</option>
+                      </select>
+                      <span class="help-block">腾讯云已把「自定义内容」标为废弃：<b>新账号需先开通该权限</b>才能用第一种，否则会被拒（返回码 1011）。模板模式的正文来自控制台模板，本系统只传短变量（官方限制 ≤800 字节且不能是 HTML）。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>模板 ID</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailTencentTemplateId" name="tencentTemplateId" value="{{value.config.tencent.templateId}}" disabled="disabled" placeholder="12345" style="width:180px;">
+                      <span class="help-block">仅模板模式需要：控制台建好模板并通过审核后的数字 ID。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>模板变量名</td>
+                    <td>
+                      主题变量：<input type="text" class="form-control" id="systemMailTencentTemplateSubjectKey" name="tencentTemplateSubjectKey" value="{{value.config.tencent.templateSubjectKey}}" disabled="disabled" placeholder="subject" style="width:150px;display:inline-block;margin-left:5px;">
+                      正文变量：<input type="text" class="form-control" id="systemMailTencentTemplateContentKey" name="tencentTemplateContentKey" value="{{value.config.tencent.templateContentKey}}" disabled="disabled" placeholder="content" style="width:150px;display:inline-block;margin-left:5px;">
+                      <span class="help-block">控制台模板里引用这两个变量的写法以模板自身的说明为准；留空则用 <code>subject</code> / <code>content</code>。</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
+                  <tbody id="systemMailBlockHttp" style="display:none;">
+                  <tr>
+                    <td>网关地址</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailHttpUrl" name="httpUrl" value="{{value.config.http.url}}" disabled="disabled" placeholder="http://your-gateway/send" style="width:440px;">
+                      <span class="help-block">需以 <code>http://</code> 或 <code>https://</code> 开头。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>请求方法</td>
+                    <td>
+                      <select class="form-control" id="systemMailHttpMethod" name="httpMethod" disabled="disabled" style="width:220px;">
+                        <option value="POST" {{if value.config.http.method != "GET"}}selected="selected"{{/if}}>POST</option>
+                        <option value="GET" {{if value.config.http.method == "GET"}}selected="selected"{{/if}}>GET</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>请求体格式</td>
+                    <td>
+                      <select class="form-control" id="systemMailHttpContentType" name="httpContentType" disabled="disabled" style="width:300px;">
+                        <option value="json" {{if value.config.http.contentType != "form"}}selected="selected"{{/if}}>JSON（application/json）</option>
+                        <option value="form" {{if value.config.http.contentType == "form"}}selected="selected"{{/if}}>表单（x-www-form-urlencoded）</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>参数名映射</td>
+                    <td>
+                      收件人：<input type="text" class="form-control" id="systemMailHttpParamTo" name="httpParamTo" value="{{value.config.http.paramNames.to}}" disabled="disabled" placeholder="to" style="width:150px;display:inline-block;margin-left:5px;">
+                      主题：<input type="text" class="form-control" id="systemMailHttpParamSubject" name="httpParamSubject" value="{{value.config.http.paramNames.subject}}" disabled="disabled" placeholder="subject" style="width:150px;display:inline-block;margin-left:5px;">
+                      <br>
+                      正文：<input type="text" class="form-control" id="systemMailHttpParamContent" name="httpParamContent" value="{{value.config.http.paramNames.content}}" disabled="disabled" placeholder="content" style="width:150px;display:inline-block;margin-left:5px;">
+                      发件人：<input type="text" class="form-control" id="systemMailHttpParamFrom" name="httpParamFrom" value="{{value.config.http.paramNames.from}}" disabled="disabled" placeholder="from" style="width:150px;display:inline-block;margin-left:5px;">
+                      <span class="help-block">留空则用括号里的默认参数名，按网关要求改。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>固定参数</td>
+                    <td>
+                      <textarea class="form-control" id="systemMailHttpParams" name="httpParams" rows="3" disabled="disabled" placeholder="apikey=xxxxxxxx" style="width:440px;">{{value.httpParamsText}}</textarea>
+                      <span class="help-block">每行一个 <code>参数名=值</code>，每次请求都会带上（如网关的 apikey）。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>成功判定</td>
+                    <td>
+                      响应字段：<input type="text" class="form-control" id="systemMailHttpSuccessField" name="httpSuccessField" value="{{value.config.http.successField}}" disabled="disabled" placeholder="code" style="width:180px;display:inline-block;margin-left:5px;">
+                      期待值：<input type="text" class="form-control" id="systemMailHttpSuccessValue" name="httpSuccessValue" value="{{value.config.http.successValue}}" disabled="disabled" placeholder="0" style="width:180px;display:inline-block;margin-left:5px;">
+                      <span class="help-block">响应 JSON 里该字段等于期待值才算发送成功；<b>留空则只按 HTTP 2xx 判定</b>（部分网关 200 也可能是业务失败）。</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
                   <tr>
                     <td>正文类型</td>
                     <td>

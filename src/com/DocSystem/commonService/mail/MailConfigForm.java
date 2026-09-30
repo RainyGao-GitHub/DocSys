@@ -44,12 +44,50 @@ public final class MailConfigForm {
 	public static final String P_CONNECT_TIMEOUT_MS = "connectTimeoutMs";
 	public static final String P_READ_TIMEOUT_MS = "readTimeoutMs";
 
+	// 阿里云邮件推送（字段名与短信页的 aliuyun* 同名风格保持一致）
+	public static final String P_ALIYUN_ACCESS_KEY_ID = "aliyunAccessKeyId";
+	public static final String P_ALIYUN_ACCESS_KEY_SECRET = "aliyunAccessKeySecret";
+	public static final String P_ALIYUN_ACCOUNT_NAME = "aliyunAccountName";
+	public static final String P_ALIYUN_REGION_ID = "aliyunRegionId";
+	public static final String P_ALIYUN_ENDPOINT = "aliyunEndpoint";
+
+	// 腾讯云 SES
+	public static final String P_TENCENT_SECRET_ID = "tencentSecretId";
+	public static final String P_TENCENT_SECRET_KEY = "tencentSecretKey";
+	public static final String P_TENCENT_REGION = "tencentRegion";
+	public static final String P_TENCENT_FROM_EMAIL_ADDRESS = "tencentFromEmailAddress";
+	public static final String P_TENCENT_ENDPOINT = "tencentEndpoint";
+	public static final String P_TENCENT_CONTENT_MODE = "tencentContentMode";
+	public static final String P_TENCENT_TEMPLATE_ID = "tencentTemplateId";
+	public static final String P_TENCENT_TEMPLATE_SUBJECT_KEY = "tencentTemplateSubjectKey";
+	public static final String P_TENCENT_TEMPLATE_CONTENT_KEY = "tencentTemplateContentKey";
+
+	// 自定义 HTTP 网关
+	public static final String P_HTTP_URL = "httpUrl";
+	public static final String P_HTTP_METHOD = "httpMethod";
+	public static final String P_HTTP_CONTENT_TYPE = "httpContentType";
+	public static final String P_HTTP_PARAM_TO = "httpParamTo";
+	public static final String P_HTTP_PARAM_SUBJECT = "httpParamSubject";
+	public static final String P_HTTP_PARAM_CONTENT = "httpParamContent";
+	public static final String P_HTTP_PARAM_FROM = "httpParamFrom";
+	public static final String P_HTTP_PARAMS = "httpParams";
+	public static final String P_HTTP_SUCCESS_FIELD = "httpSuccessField";
+	public static final String P_HTTP_SUCCESS_VALUE = "httpSuccessValue";
+
 	/** 本表单认识的全部字段（用于判断「请求里到底有没有带邮件表单」） */
 	private static final String[] FORM_FIELDS = {
 			P_ENABLED, P_PROVIDER, P_FROM, P_FROM_NAME,
 			P_SMTP_HOST, P_SMTP_PORT, P_SMTP_ENCRYPTION, P_SMTP_ACCOUNT, P_SMTP_PASSWORD,
 			P_SMTP_AUTH, P_SMTP_SSL_TRUST,
-			P_CONTENT_TYPE, P_CONNECT_TIMEOUT_MS, P_READ_TIMEOUT_MS
+			P_CONTENT_TYPE, P_CONNECT_TIMEOUT_MS, P_READ_TIMEOUT_MS,
+			P_ALIYUN_ACCESS_KEY_ID, P_ALIYUN_ACCESS_KEY_SECRET, P_ALIYUN_ACCOUNT_NAME,
+			P_ALIYUN_REGION_ID, P_ALIYUN_ENDPOINT,
+			P_TENCENT_SECRET_ID, P_TENCENT_SECRET_KEY, P_TENCENT_REGION, P_TENCENT_FROM_EMAIL_ADDRESS,
+			P_TENCENT_ENDPOINT, P_TENCENT_CONTENT_MODE, P_TENCENT_TEMPLATE_ID,
+			P_TENCENT_TEMPLATE_SUBJECT_KEY, P_TENCENT_TEMPLATE_CONTENT_KEY,
+			P_HTTP_URL, P_HTTP_METHOD, P_HTTP_CONTENT_TYPE, P_HTTP_PARAM_TO, P_HTTP_PARAM_SUBJECT,
+			P_HTTP_PARAM_CONTENT, P_HTTP_PARAM_FROM, P_HTTP_PARAMS, P_HTTP_SUCCESS_FIELD,
+			P_HTTP_SUCCESS_VALUE
 	};
 
 	/** 请求里是否带了本表单的字段（一个都没有 → 调用方应改用已保存配置或走旧参数兼容） */
@@ -94,13 +132,101 @@ public final class MailConfigForm {
 		smtp.setSslTrust(parseBoolean(form.get(P_SMTP_SSL_TRUST)));
 		config.setSmtp(smtp);
 
+		MailAliyunConfig aliyun = new MailAliyunConfig();
+		aliyun.setAccessKeyId(nullToEmpty(form.get(P_ALIYUN_ACCESS_KEY_ID)));
+		aliyun.setAccessKeySecret(form.get(P_ALIYUN_ACCESS_KEY_SECRET) == null ? "" : form.get(P_ALIYUN_ACCESS_KEY_SECRET).trim());
+		aliyun.setAccountName(nullToEmpty(form.get(P_ALIYUN_ACCOUNT_NAME)));
+		aliyun.setRegionId(nullToEmpty(form.get(P_ALIYUN_REGION_ID)));
+		aliyun.setEndpoint(nullToEmpty(form.get(P_ALIYUN_ENDPOINT)));
+		config.setAliyun(aliyun);
+
+		MailTencentConfig tencent = new MailTencentConfig();
+		tencent.setSecretId(nullToEmpty(form.get(P_TENCENT_SECRET_ID)));
+		tencent.setSecretKey(form.get(P_TENCENT_SECRET_KEY) == null ? "" : form.get(P_TENCENT_SECRET_KEY).trim());
+		tencent.setRegion(nullToEmpty(form.get(P_TENCENT_REGION)));
+		tencent.setFromEmailAddress(nullToEmpty(form.get(P_TENCENT_FROM_EMAIL_ADDRESS)));
+		tencent.setEndpoint(nullToEmpty(form.get(P_TENCENT_ENDPOINT)));
+		tencent.setContentMode(normalizeTencentContentMode(form.get(P_TENCENT_CONTENT_MODE)));
+		tencent.setTemplateId(nullToEmpty(form.get(P_TENCENT_TEMPLATE_ID)));
+		tencent.setTemplateSubjectKey(nullToEmpty(form.get(P_TENCENT_TEMPLATE_SUBJECT_KEY)));
+		tencent.setTemplateContentKey(nullToEmpty(form.get(P_TENCENT_TEMPLATE_CONTENT_KEY)));
+		config.setTencent(tencent);
+
+		MailHttpConfig http = new MailHttpConfig();
+		http.setUrl(nullToEmpty(form.get(P_HTTP_URL)));
+		http.setMethod(nullToEmpty(form.get(P_HTTP_METHOD)));
+		http.setContentType(normalizeHttpContentType(form.get(P_HTTP_CONTENT_TYPE)));
+		putIfNotEmpty(http.getParamNames(), "to", form.get(P_HTTP_PARAM_TO));
+		putIfNotEmpty(http.getParamNames(), "subject", form.get(P_HTTP_PARAM_SUBJECT));
+		putIfNotEmpty(http.getParamNames(), "content", form.get(P_HTTP_PARAM_CONTENT));
+		putIfNotEmpty(http.getParamNames(), "from", form.get(P_HTTP_PARAM_FROM));
+		http.setParams(parseParamPairs(form.get(P_HTTP_PARAMS)));
+		http.setSuccessField(nullToEmpty(form.get(P_HTTP_SUCCESS_FIELD)));
+		http.setSuccessValue(nullToEmpty(form.get(P_HTTP_SUCCESS_VALUE)));
+		config.setHttp(http);
+
 		return config;
+	}
+
+	/** 固定参数文本（换行或 {@code &} 分隔的 {@code k=v}）→ 有序 Map（忽略空行） */
+	public static Map<String, String> parseParamPairs(String text) {
+		Map<String, String> params = new LinkedHashMap<String, String>();
+		if (text == null) {
+			return params;
+		}
+		for (String line : text.split("[\\r\\n&]+")) {
+			String pair = line.trim();
+			if (pair.isEmpty()) {
+				continue;
+			}
+			int index = pair.indexOf('=');
+			if (index <= 0) {
+				// 没写 "=" 的行按「参数名 + 空值」看待，比静默丢弃更容易被发现
+				params.put(pair, "");
+				continue;
+			}
+			params.put(pair.substring(0, index).trim(), pair.substring(index + 1).trim());
+		}
+		return params;
+	}
+
+	/** 有序 Map → 固定参数文本（每行 {@code k=v}），用于回显到页面 textarea */
+	public static String formatParamPairs(Map<String, String> params) {
+		if (params == null || params.isEmpty()) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, String> param : params.entrySet()) {
+			if (sb.length() > 0) {
+				sb.append("\n");
+			}
+			sb.append(param.getKey()).append("=").append(param.getValue());
+		}
+		return sb.toString();
 	}
 
 	// ===================== 内部工具 =====================
 
 	private static String normalizeEncryption(String value) {
 		return MailEncryption.fromCode(value).getCode();
+	}
+
+	/** 内容模式：只认 custom / template，其余一律 custom（避免配置笔误变成静默不发） */
+	private static String normalizeTencentContentMode(String value) {
+		String mode = (value == null) ? "" : value.trim().toLowerCase();
+		return MailTencentConfig.MODE_TEMPLATE.equals(mode)
+				? MailTencentConfig.MODE_TEMPLATE : MailTencentConfig.MODE_CUSTOM;
+	}
+
+	/** 请求体格式：只认 json / form，其余一律 json */
+	private static String normalizeHttpContentType(String value) {
+		return "form".equalsIgnoreCase((value == null) ? "" : value.trim()) ? "form" : "json";
+	}
+
+	private static void putIfNotEmpty(Map<String, String> map, String key, String value) {
+		if (!isBlank(value)) {
+			map.put(key, value.trim());
+		}
 	}
 
 	private static boolean parseBoolean(String value) {

@@ -13,11 +13,14 @@ import org.springframework.stereotype.Component;
 
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.Log;
+import com.DocSystem.commonService.mail.MailAliyunConfig;
 import com.DocSystem.commonService.mail.MailConfig;
 import com.DocSystem.commonService.mail.MailEncryption;
+import com.DocSystem.commonService.mail.MailHttpConfig;
 import com.DocSystem.commonService.mail.MailOptions;
 import com.DocSystem.commonService.mail.MailProviderType;
 import com.DocSystem.commonService.mail.MailSmtpConfig;
+import com.DocSystem.commonService.mail.MailTencentConfig;
 import com.DocSystem.service.SystemSettingService;
 import com.alibaba.fastjson.JSON;
 import util.ReadProperties;
@@ -53,9 +56,19 @@ public class MailConfigStore {
 	public static final String KEY_SMTP = "mail.smtp";
 	public static final String KEY_OPTIONS = "mail.options";
 
+	/** 阿里云邮件推送（一段 JSON） */
+	public static final String KEY_ALIYUN = "mail.aliyun";
+
+	/** 腾讯云 SES（一段 JSON） */
+	public static final String KEY_TENCENT = "mail.tencent";
+
+	/** 自定义 HTTP 网关（一段 JSON） */
+	public static final String KEY_HTTP = "mail.http";
+
 	/** 全部邮件配置 key（保存时逐个写；读取时逐个取） */
 	public static final String[] ALL_KEYS = {
-			KEY_ENABLED, KEY_PROVIDER, KEY_FROM, KEY_FROM_NAME, KEY_SMTP, KEY_OPTIONS
+			KEY_ENABLED, KEY_PROVIDER, KEY_FROM, KEY_FROM_NAME, KEY_SMTP, KEY_ALIYUN, KEY_TENCENT, KEY_HTTP,
+			KEY_OPTIONS
 	};
 
 	/** 判定「表中是否已有邮件配置」的前缀 */
@@ -207,6 +220,9 @@ public class MailConfigStore {
 		config.setFromName(trimToNull(rows.get(KEY_FROM_NAME)));
 
 		config.setSmtp(parseJson(rows.get(KEY_SMTP), MailSmtpConfig.class, config.getSmtp()));
+		config.setAliyun(parseJson(rows.get(KEY_ALIYUN), MailAliyunConfig.class, config.getAliyun()));
+		config.setTencent(parseJson(rows.get(KEY_TENCENT), MailTencentConfig.class, config.getTencent()));
+		config.setHttp(parseJson(rows.get(KEY_HTTP), MailHttpConfig.class, config.getHttp()));
 		config.setOptions(parseJson(rows.get(KEY_OPTIONS), MailOptions.class, config.getOptions()));
 
 		return config;
@@ -242,6 +258,42 @@ public class MailConfigStore {
 			// 465 是隐式 SSL 端口，配成 STARTTLS 必然握手失败 —— 直接挡住，省得用户反复试
 			if (smtp.getEncryptionType() == MailEncryption.STARTTLS && smtp.getPort() == 465) {
 				errors.add("465 端口是隐式 SSL，加密方式请选「SSL/TLS」（STARTTLS 通常用 587）");
+			}
+		} else if (type == MailProviderType.ALIYUN) {
+			MailAliyunConfig aliyun = (config.getAliyun() == null) ? new MailAliyunConfig() : config.getAliyun();
+			if (isBlank(aliyun.getAccessKeyId())) {
+				errors.add("缺少必填项：阿里云 AccessKeyId（" + KEY_ALIYUN + ".accessKeyId）");
+			}
+			if (isBlank(aliyun.getAccessKeySecret())) {
+				errors.add("缺少必填项：阿里云 AccessKeySecret");
+			}
+			if (isBlank(aliyun.getAccountName())) {
+				errors.add("缺少必填项：阿里云发信地址（" + KEY_ALIYUN + ".accountName，需先在控制台创建并验证）");
+			}
+		} else if (type == MailProviderType.TENCENT) {
+			MailTencentConfig tencent = (config.getTencent() == null) ? new MailTencentConfig() : config.getTencent();
+			if (isBlank(tencent.getSecretId())) {
+				errors.add("缺少必填项：腾讯云 SecretId（" + KEY_TENCENT + ".secretId）");
+			}
+			if (isBlank(tencent.getSecretKey())) {
+				errors.add("缺少必填项：腾讯云 SecretKey");
+			}
+			if (isBlank(tencent.getRegion())) {
+				errors.add("缺少必填项：腾讯云地域 Region（该接口只支持 ap-guangzhou / ap-hongkong）");
+			}
+			if (isBlank(config.getEffectiveFrom())) {
+				errors.add("缺少必填项：腾讯云发信地址（" + KEY_TENCENT + ".fromEmailAddress 或 " + KEY_FROM + "）");
+			}
+			if (tencent.isTemplateMode() && tencent.getEffectiveTemplateId() <= 0) {
+				errors.add("腾讯云选择了模板模式，但模板 ID 未配置或不是数字：" + tencent.getTemplateId());
+			}
+		} else if (type == MailProviderType.HTTP) {
+			MailHttpConfig http = (config.getHttp() == null) ? new MailHttpConfig() : config.getHttp();
+			String url = trimToNull(http.getUrl());
+			if (url == null) {
+				errors.add("缺少必填项：自定义网关地址（" + KEY_HTTP + ".url）");
+			} else if (!url.startsWith("http://") && !url.startsWith("https://")) {
+				errors.add("自定义网关地址需以 http:// 或 https:// 开头：" + url);
 			}
 		}
 
@@ -300,6 +352,28 @@ public class MailConfigStore {
 			if (isBlank(config.getFrom())) {
 				warnings.add("未填写发件人邮箱（" + KEY_FROM + "），将使用 SMTP 登录账号作为发件人");
 			}
+		} else if (type == MailProviderType.ALIYUN) {
+			MailAliyunConfig aliyun = (config.getAliyun() == null) ? new MailAliyunConfig() : config.getAliyun();
+			warnings.add("阿里云邮件推送（SingleSendMail）不支持附件；带附件的邮件会被直接报错，请改用 SMTP 或腾讯云 SES");
+			if (isBlank(aliyun.getEndpoint())) {
+				warnings.add("阿里云接入地址未填，将使用默认 " + MailAliyunConfig.DEFAULT_ENDPOINT);
+			}
+		} else if (type == MailProviderType.TENCENT) {
+			MailTencentConfig tencent = (config.getTencent() == null) ? new MailTencentConfig() : config.getTencent();
+			if (tencent.isTemplateMode()) {
+				warnings.add("腾讯云当前为模板模式：邮件正文由控制台模板决定，本地只传短变量（官方限制 ≤800 字节且不能是 HTML）");
+			} else {
+				warnings.add("腾讯云当前为自定义内容模式（Simple）：该字段官方已标为废弃，新账号需先开通「自定义内容」权限，否则会被拒（返回码 1011）");
+			}
+			if (isBlank(tencent.getEndpoint())) {
+				warnings.add("腾讯云接入地址未填，将使用默认 " + MailTencentConfig.DEFAULT_ENDPOINT);
+			}
+		} else if (type == MailProviderType.HTTP) {
+			MailHttpConfig http = (config.getHttp() == null) ? new MailHttpConfig() : config.getHttp();
+			if (isBlank(http.getSuccessField())) {
+				warnings.add("自定义网关未配置成功判定字段，将以 HTTP 2xx 作为发送成功（部分网关 200 也可能表示业务失败）");
+			}
+			warnings.add("自定义 HTTP 网关不支持附件；带附件的邮件会被直接报错");
 		}
 
 		String contentType = config.getEffectiveContentType();
@@ -388,6 +462,11 @@ public class MailConfigStore {
 		values.put(KEY_FROM, nullToEmpty(config.getFrom()));
 		values.put(KEY_FROM_NAME, nullToEmpty(config.getFromName()));
 		values.put(KEY_SMTP, JSON.toJSONString(config.getSmtp() == null ? new MailSmtpConfig() : config.getSmtp()));
+		values.put(KEY_ALIYUN,
+				JSON.toJSONString(config.getAliyun() == null ? new MailAliyunConfig() : config.getAliyun()));
+		values.put(KEY_TENCENT,
+				JSON.toJSONString(config.getTencent() == null ? new MailTencentConfig() : config.getTencent()));
+		values.put(KEY_HTTP, JSON.toJSONString(config.getHttp() == null ? new MailHttpConfig() : config.getHttp()));
 		values.put(KEY_OPTIONS, JSON.toJSONString(config.getOptions() == null ? new MailOptions() : config.getOptions()));
 
 		boolean allOk = true;

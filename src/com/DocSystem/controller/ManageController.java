@@ -67,6 +67,7 @@ import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.common.entity.LongTermTask;
 import com.DocSystem.commonService.mail.MailConfig;
+import com.DocSystem.commonService.mail.MailAliyunConfig;
 import com.DocSystem.commonService.mail.MailConfigForm;
 import com.DocSystem.commonService.mail.MailEncryption;
 import com.DocSystem.commonService.mail.MailMessage;
@@ -74,6 +75,7 @@ import com.DocSystem.commonService.mail.MailProviderType;
 import com.DocSystem.commonService.mail.MailSendResult;
 import com.DocSystem.commonService.mail.MailSender;
 import com.DocSystem.commonService.mail.MailSmtpConfig;
+import com.DocSystem.commonService.mail.MailTencentConfig;
 import com.DocSystem.commonService.sms.SmsConfig;
 import com.DocSystem.commonService.sms.SmsConfigForm;
 import com.DocSystem.commonService.sms.SmsProviderType;
@@ -348,7 +350,10 @@ public class ManageController extends BaseController{
 		JSONObject data = new JSONObject();
 		data.put("config", config);
 		data.put("providerTypes", buildMailProviderTypes());
+		data.put("providerDefaults", buildMailProviderDefaults());
 		data.put("encryptionTypes", buildMailEncryptionTypes());
+		data.put("httpParamsText", MailConfigForm.formatParamPairs(
+				config.getHttp() == null ? null : config.getHttp().getParams()));
 		data.put("warnings", mailConfigStore.getWarnings(config));
 		data.put("errors", mailConfigStore.validate(config));
 		rt.setData(data);
@@ -507,6 +512,15 @@ public class ManageController extends BaseController{
 			types.add(item);
 		}
 		return types;
+	}
+
+	/** 各供应商的默认接入地址（页面 placeholder；不写值也能用） */
+	private JSONObject buildMailProviderDefaults()
+	{
+		JSONObject defaults = new JSONObject();
+		defaults.put(MailProviderType.ALIYUN.getCode(), MailAliyunConfig.DEFAULT_ENDPOINT);
+		defaults.put(MailProviderType.TENCENT.getCode(), MailTencentConfig.DEFAULT_ENDPOINT);
+		return defaults;
 	}
 
 	/** 加密方式元数据（页面下拉 + 「建议端口」提示） */

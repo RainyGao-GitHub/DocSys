@@ -523,7 +523,7 @@ function startCleanLogFile()
 
 //系统邮件服务设置（system_setting 表的 mail.* 行；老 properties 仅作首次启用时的默认数据）
 var gSystemMailConfigData = null;	//服务端返回的原始配置（取消编辑时用于回填）
-var gSystemMailProviderList = ["smtp"];	//字段块与发信方式一一对应（后续接入 aliyun/tencent/http 时在此与模板里同步补块）
+var gSystemMailProviderList = ["smtp", "aliyun", "tencent", "http"];	//字段块与发信方式一一对应（枚举码 = 块 ID 后缀）
 
 //按当前发信方式显示对应字段块（参照系统数据库页的 doSelectDbType / 短信页的 doSelectSmsProvider 写法）
 function doSelectMailProvider(){
@@ -652,6 +652,10 @@ function renderSystemMailConfigView(){
 function buildSystemMailConfigView(data){
 	var config = data.config || {};
 	config.smtp = config.smtp || {};
+	config.aliyun = config.aliyun || {};
+	config.tencent = config.tencent || {};
+	config.http = config.http || {};
+	config.http.paramNames = config.http.paramNames || {};
 	config.options = config.options || {};
 
 	var providerTypes = data.providerTypes || [];
@@ -660,6 +664,8 @@ function buildSystemMailConfigView(data){
 		config : config,
 		providerTypes : providerTypes,
 		encryptionTypes : encryptionTypes,
+		providerDefaults : data.providerDefaults || {},
+		httpParamsText : data.httpParamsText || "",
 		providerName : "",
 		warnings : translateWarnings(data.warnings)
 	};

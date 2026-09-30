@@ -78,6 +78,19 @@ public class SmsHttpClient {
 
 	// ===================== 内部实现 =====================
 
+	/** 调用方是否已显式给出 Content-Type（键名大小写无关） */
+	private static boolean hasContentType(SmsRequest request) {
+		if (request.getHeaders() == null) {
+			return false;
+		}
+		for (String key : request.getHeaders().keySet()) {
+			if (key != null && "Content-Type".equalsIgnoreCase(key.trim())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static boolean isRetryable(SmsHttpResponse response) {
 		if (response == null) {
 			return false;
@@ -120,16 +133,19 @@ public class SmsHttpClient {
 
 			if (!get && !request.isQueryInUrl()) {
 				byte[] payload;
-				String contentType;
 				if (request.isFormPost()) {
 					payload = encodeForm(request.getFormParams()).getBytes(ENCODING);
-					contentType = "application/x-www-form-urlencoded;charset=" + ENCODING;
 				} else {
 					String json = (request.getJsonBody() == null) ? "" : request.getJsonBody();
 					payload = json.getBytes(ENCODING);
-					contentType = "application/json;charset=" + ENCODING;
 				}
-				conn.setRequestProperty("Content-Type", contentType);
+				// 调用方已显式指定 Content-Type 时**不再覆盖**：腾讯云 TC3 签名要求 content-type 头
+				// 与签名时的取值逐字节一致（application/json; charset=utf-8），而这里的默认值没有那个空格。
+				if (!hasContentType(request)) {
+					conn.setRequestProperty("Content-Type", request.isFormPost()
+							? ("application/x-www-form-urlencoded;charset=" + ENCODING)
+							: ("application/json;charset=" + ENCODING));
+				}
 				// 不要手工设置 Content-Length：与 JDK 的分块写入冲突（本项目历史踩坑）；
 				// 需要固定长度时用 setFixedLengthStreamingMode，由 JDK 自己处理长度。
 				conn.setFixedLengthStreamingMode(payload.length);
