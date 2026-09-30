@@ -196,16 +196,46 @@ $(document).on("click",".has_sub",function(){
       }
   });
 
-  //展开子菜单：同时只允许一个父级处于展开状态（手风琴）
-  //点父级会同时触发 showContentPage 进入该分组（最终状态以那边为准），
-  //这里先把其它分组收起来，避免出现两个父级同时展开
+  //说明：实测点父级时本处理器会**先于** [data-eb-event] 执行（jQuery 事件队列顺序），
+  //而父级自身的展开/收起已经在 showContentPage 里统一处理（含「再点一次收起」），
+  //所以父级带 data-eb-event 时这里必须直接返回，否则会把子菜单 toggle 掉、再被 showContentPage 展开，导致「收不起来」。
+  //保留下面这段是作为兵底：万一以后有不带 data-eb-event 的父级，行为仍然正确。
   $(document).on("click","li.has_sublist",function(){
-	  console.log("li.has_sublist onclick()");
 	  var $this = $(this);
+	  if($this.attr("data-eb-event"))
+	  {
+		  return;
+	  }
+	  var expanded = $this.children("ul.sublist").css("display") !== "none";
 	  $this.siblings("li.has_sublist").children("ul.sublist").hide();
-	  $this.children("ul.sublist").show();
+	  $this.children("ul.sublist").toggle(!expanded);
 	  updateSublistArrow();
   });
+
+//点「已展开的父级」= 再点一次 → 收起它的子菜单（**内容区保持不变**）。
+//返回 true 表示本次点击已按「收起」处理，调用方直接返回即可。
+//必须由调用方在清空内容区之前判断，否则当前页面会被清成「载入中...」。
+function collapseParentMenu(curPath){
+	if(curPath !== "system" && curPath !== "agent")
+	{
+		return false;	//只对带子项的父级生效
+	}
+	if($("#nav li[data-eb-params=" + curPath + "]>ul.sublist").css("display") === "none")
+	{
+		return false;	//当前是收起的 → 走正常流程（展开 + 进默认页）
+	}
+	//记住当前内容页对应的子项，收起后仍保持它的高亮
+	var currentChild = $("#nav ul.sublist li>a.open").parent().attr("data-eb-params");
+	$("#nav li>a").removeClass("open");
+	$("#nav li[data-eb-params=" + curPath + "]>a").addClass("open");
+	if(currentChild)
+	{
+		$("#nav li[data-eb-params=" + currentChild + "]>a").addClass("open");
+	}
+	$("ul.sublist").hide();
+	updateSublistArrow();
+	return true;
+}
 
 //只展开指定父级（data-eb-params=parentPath，桌面+移动两个导航都算）的子菜单，其余全部收起
 function showOnlySublist(parentPath){
@@ -274,6 +304,14 @@ function stopBubble(e) {
 //显示对应菜单
 function showContentPage(curPath) {
     console.log("showContentPage() " + curPath);
+
+    //点「已展开的父级」= 再点一次收起子菜单：只收菜单，内容区不变
+    //（必须在下面清空 #container 之前判断并返回，否则当前页面会被清成「载入中...」）
+    if(collapseParentMenu(curPath))
+    {
+    	return;
+    }
+
 	var title = _Lang("载入中...");
     var subtitle = _Lang("载入中...");
 	

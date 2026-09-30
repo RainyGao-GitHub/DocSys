@@ -818,13 +818,12 @@ header .header-data .hdata em{
   border-bottom: 1px solid #ddd;
 }
 
-/* 子菜单当前所在页：高亮由 main.js 的 showContentPage 加到被点开的那一项上 */
+/* 子菜单当前所在页：与子项的悬浮态同一套「背景高亮」，
+   颜色用比父级菜单(#0993d3)浅一点的蓝，不再用白底 + 左边框那套（会和悬浮态观感不统一） */
 .sidebar #nav li ul li a.open {
-  background: #fff;
+  background: #d6ecf9;
   color: #167cac;
   font-weight: bold;
-  border-left: 3px solid #0993d3;
-  padding-left: 27px;   /* 抵消新增的 3px 左边框，保持文字与其他项对齐 */
 }
 
 /* Main */
