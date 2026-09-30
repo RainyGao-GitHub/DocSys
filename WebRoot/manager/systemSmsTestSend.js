@@ -50,7 +50,7 @@ function sendSystemSmsTest(){
 				renderSystemSmsTestResult(ret.data, null);
 				showErrorMessage(_Lang("测试短信已发出，请核对手机"));
 			}else{
-				renderSystemSmsTestResult(null, ret.msgInfo);
+				renderSystemSmsTestResult(ret.data, ret.msgInfo);
 				showErrorMessage(_Lang("发送测试短信失败", ":", ret.msgInfo));
 			}
 		},
@@ -62,13 +62,14 @@ function sendSystemSmsTest(){
 	});
 }
 
-//渲染发送结果：成功回显运营商/返回码/返回信息/耗时/验证码 + 运营商原始响应；失败回显原因
+//渲染发送结果：成功回显运营商/返回码/返回信息/耗时/验证码 + 运营商原始响应；失败回显原因 + 原始响应
 function renderSystemSmsTestResult(data, errorMsg){
 	var $box = $("#systemSmsTestResult");
 	$box.empty();
 
 	if(errorMsg != null && errorMsg != ""){
 		$box.append($("<div class='alert alert-danger'></div>").text(errorMsg));
+		appendSystemSmsRaw($box, data);	//失败时也要看到返回码与原始响应，否则只剩一句无从下手的话
 		return;
 	}
 	if(data == null){
@@ -85,11 +86,23 @@ function renderSystemSmsTestResult(data, errorMsg){
 		appendSystemSmsTestLine($box, _Lang("验证码"), data.code);
 	}
 
-	if(data.raw){
-		$box.append($("<div class='help-block'></div>").text(_Lang("运营商原始响应") + "："));
-		$box.append($("<pre style='max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-all;'></pre>")
-			.text(data.raw));
+	appendSystemSmsRaw($box, data);
+}
+
+//运营商原始响应（成功与失败都展示；失败时它往往就是真正的原因）
+function appendSystemSmsRaw($box, data){
+	if(data == null || !data.raw){
+		return;
 	}
+	if(data.providerCode != null && data.providerCode != ""){
+		appendSystemSmsTestLine($box, _Lang("返回码"), data.providerCode);
+	}
+	if(data.providerMsg != null && data.providerMsg != ""){
+		appendSystemSmsTestLine($box, _Lang("返回信息"), data.providerMsg);
+	}
+	$box.append($("<div class='help-block'></div>").text(_Lang("运营商原始响应") + "："));
+	$box.append($("<pre style='max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-all;'></pre>")
+		.text(data.raw));
 }
 
 function appendSystemSmsTestLine($box, label, value){

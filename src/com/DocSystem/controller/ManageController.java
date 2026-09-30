@@ -790,6 +790,16 @@ public class ManageController extends BaseController{
 		}
 		else
 		{
+			// 失败时也把返回码与**运营商原始响应**一起回传：
+			// 否则只剩一句 “响应不是 JSON（HTTP 400）”，而云片真正的错误（如 code 7 模板不可用）在原始响应里。
+			JSONObject data = new JSONObject();
+			data.put("provider", result.getProvider());
+			data.put("providerCode", result.getProviderCode());
+			data.put("providerMsg", result.getProviderMsg());
+			data.put("elapsedMs", result.getElapsedMs());
+			data.put("raw", truncate(result.getRaw(), MAX_SMS_RAW_LEN));
+			rt.setData(data);
+
 			// 运营商原文透传给管理员，便于自助排查（方案 P5）
 			rt.setError(result.getFailureReason());
 			addSystemLog(request, accessUser, "testSystemSmsConfig", "testSystemSmsConfig", "发送测试短信", null,

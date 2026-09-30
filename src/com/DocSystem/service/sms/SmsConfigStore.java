@@ -233,6 +233,15 @@ public class SmsConfigStore {
 				SmsTemplateConfig tpl = entry.getValue();
 				if (tpl == null || isBlank(tpl.getTplId())) {
 					errors.add("场景 " + entry.getKey() + " 的模板 ID 不能为空");
+					continue;
+				}
+				//切运营商后残留旧模板 ID 是最常见的“配了发不出去”：云片要数字，阿里云要 SMS_ 前缀。
+				//云片网关遇到非数字 tpl_id 会回**空 body 的 400**，后台只能看到“响应不是 JSON”，
+				//所以这里前置拦住并说清楚。
+				if (config.getProviderType() == SmsProviderType.YUNPIAN
+						&& !tpl.getTplId().trim().matches("\\d+")) {
+					errors.add("场景 " + entry.getKey() + " 的模板 ID 必须是数字（当前 “" + tpl.getTplId().trim()
+							+ "” 看起来是阿里云的模板编码）");
 				}
 			}
 		}

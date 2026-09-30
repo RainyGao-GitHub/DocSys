@@ -59,6 +59,12 @@ public class YunpianSmsProvider implements SmsProvider {
 		Object code = (json == null) ? null : json.get("code");
 		String codeText = (code == null) ? null : String.valueOf(code);
 		String msg = (json == null) ? null : json.getString("msg");
+		//云片的 detail 比 msg 具体得多（例：msg="模板不可用"，detail="模板 1341175 可能在审核中或者审核不通过"），
+		//排障就靠它，所以拼进失败原因送回后台
+		String detail = (json == null) ? null : json.getString("detail");
+		if (detail != null && !detail.trim().isEmpty() && !detail.trim().equals(msg)) {
+			msg = ((msg == null || msg.trim().isEmpty()) ? "" : msg + "：") + detail.trim();
+		}
 
 		if ("0".equals(codeText)) {
 			return SmsSendResult.success(provider, codeText, msg, body);
