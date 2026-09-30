@@ -661,7 +661,7 @@ function buildSystemMailConfigView(data){
 		providerTypes : providerTypes,
 		encryptionTypes : encryptionTypes,
 		providerName : "",
-		warnings : data.warnings || []
+		warnings : translateWarnings(data.warnings)
 	};
 
 	for(var i=0; i<providerTypes.length; i++){
@@ -824,6 +824,23 @@ function renderSystemSmsConfigView(){
 	});
 }
 
+//服务端告警文案的中英翻译（语言包里真体实现：ch.js 原样返回，en.js 查表 + 规则）
+//宿主页面可能没加载语言包（或版本较旧）时原样返回，不能因此报错
+function translateWarnings(list){
+	var out = [];
+	if(list == null){
+		return out;
+	}
+	for(var i=0; i<list.length; i++){
+		if(typeof _LangWarning == "function"){
+			out.push(_LangWarning(list[i]));
+		}else{
+			out.push(list[i]);
+		}
+	}
+	return out;
+}
+
 //服务端配置 → 页面视图（补默认值，避免模板里访问 null 的属性；场景模板的 vars 数组转成逗号文本）
 function buildSystemSmsConfigView(data){
 	var config = data.config || {};
@@ -840,7 +857,7 @@ function buildSystemSmsConfigView(data){
 		providerTypes : providerTypes,
 		providerDefaults : {},
 		providerName : "",
-		warnings : data.warnings || [],
+		warnings : translateWarnings(data.warnings),
 		customParamsText : data.customParamsText || "",
 		sceneTplId : {},
 		sceneVars : {}

@@ -22,3 +22,8 @@ function _LangStats(totalNum, successNum)
 	}
 	return "共 "+ totalNum +" 个，失败 " + (totalNum - successNum) + " 个";
 }
+//服务端返回的告警文案（MailConfigStore/SmsConfigStore 的 getWarnings()）本就是中文，中文页原样显示
+function _LangWarning(text)
+{
+	return text;
+}

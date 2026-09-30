@@ -655,6 +655,13 @@ function lang(str)
 		"发送测试邮件失败" : "Failed to send the test email",
 		"请填写接收测试邮件的邮箱地址" : "Please enter the email address that receives the test message",
 		"测试邮件已发出，请核对收件箱" : "Test email was sent, please check the inbox",
+		//Email Service warnings (server side MailConfigStore.getWarnings())
+		"邮件服务当前未启用（mail.enabled=false）" : "Email service is currently disabled (mail.enabled=false)",
+		"尚未配置邮件发信方式（mail.provider）" : "No email provider configured yet (mail.provider)",
+		"25 端口在云主机上通常被封禁，建议改用 587（STARTTLS）或 465（SSL/TLS）" : "Port 25 is usually blocked on cloud hosts. Use 587 (STARTTLS) or 465 (SSL/TLS) instead.",
+		"当前为明文发送（不加密），账号密码与邮件内容可被窃听，建议启用 STARTTLS 或 SSL/TLS" : "Sending in plain text (no encryption): credentials and content can be eavesdropped. Enable STARTTLS or SSL/TLS.",
+		"已开启「信任任意服务器证书」，存在中间人风险，仅建议自签名证书的内网服务器使用" : "\"Trust any server certificate\" is enabled (man-in-the-middle risk); use it only for intranet servers with self-signed certificates.",
+		"未填写发件人邮箱（mail.from），将使用 SMTP 登录账号作为发件人" : "From address is empty (mail.from), the SMTP account will be used as the sender.",
 		
 		//SMS Service
 		"获取短信服务配置信息失败" : "Failed to get SMS Service Settings",
@@ -677,6 +684,12 @@ function lang(str)
 		"发送测试短信失败" : "Failed to send the test SMS",
 		"请填写接收测试短信的手机号" : "Please enter the mobile number that receives the test SMS",
 		"测试短信已发出，请核对手机" : "Test SMS was sent, please check your phone",
+		//SMS Service warnings (server side SmsConfigStore.getWarnings())
+		"短信服务当前未启用（sms.enabled=false）" : "SMS service is currently disabled (sms.enabled=false)",
+		"未配置「注册」场景的模板" : "No template configured for the Register scenario",
+		"未配置「找回密码」场景的模板" : "No template configured for the Reset Password scenario",
+		"云片仍在使用 v1 接口，建议切换到 v2（tpl_single_send）" : "Yunpian is still using the v1 API; switching to v2 (tpl_single_send) is recommended.",
+		"云片签名写在模板内容里，请确认模板已带【签名】" : "For Yunpian the signature is part of the template content; make sure the template contains [signature].",
 		
 		//System Settings (system_setting table)
 		"系统参数" : "System Settings",
@@ -860,3 +873,47 @@ function lang(str)
 	
 	return newStr;
 }
+
+/*
+ * 服务端告警文案的翻译（MailConfigStore/SmsConfigStore 的 getWarnings() 返回中文）。
+ * 先走 lang() 的精确匹配；带动态取值的告警（端口号/正文类型）由 warningRules 规则处理；
+ * 两者都未命中时**保持原文**，方便按原文检索与反馈。
+ */
+function _LangWarning(text)
+{
+	if(text == null || text == "")
+	{
+		return text;
+	}
+
+	var exact = lang(text);
+	if(exact != text)
+	{
+		return exact;
+	}
+
+	for(var i=0; i<warningRules.length; i++)
+	{
+		var matched = text.match(warningRules[i].pattern);
+		if(matched)
+		{
+			return warningRules[i].build(matched);
+		}
+	}
+
+	return text;
+}
+
+var warningRules =
+[
+	{
+		//SSL/TLS 通常使用 465 端口，当前端口为 25，请与服务商文档核对
+		pattern : /^SSL\/TLS 通常使用 465 端口，当前端口为 (\d+)，请与服务商文档核对$/,
+		build : function(m){ return "SSL/TLS usually uses port 465 but the configured port is " + m[1] + ". Please check the provider documentation."; }
+	},
+	{
+		//正文编码不是 UTF-8（当前 text/html;charset=gb2312），中文可能显示异常
+		pattern : /^正文编码不是 UTF-8（当前 (.+?)），中文可能显示异常$/,
+		build : function(m){ return "Content type is not UTF-8 (currently " + m[1] + "), non-ASCII characters may be garbled."; }
+	}
+];
