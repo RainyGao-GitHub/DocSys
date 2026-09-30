@@ -5,36 +5,147 @@
               <div class="pull-left">邮件服务</div>
               <div class="widget-icons pull-right">
                 <button id="btnEnableSystemEmailSet" onclick="enableSystemEmailSet()" class="btn btn-lg btn-success examine_ban">编辑</button>
-                <button id="btnSaveSystemEmailSet" onclick="saveSystemEmailSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">保存</button>                
+                <button id="btnSaveSystemEmailSet" onclick="saveSystemEmailSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">保存</button>                
                 <button id="btnCancelSystemEmailSet" onclick="cancelSystemEmailSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
               </div>
               <div class="clearfix"></div>
             </div>
 
             <div class="widget-content">
-                  <div class="form-horizontal" style="margin-top: 20px;">
-                    <!-- Host -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">服务器</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="systemEmailHost" name="systemEmailHost" value="{{value.host}}" disabled="disabled" >
-                      </div>
-                    </div>
-                    <!-- Email -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">邮箱</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="systemEmailUser" name="systemEmailUser" value="{{value.email}}" disabled="disabled" >
-                      </div>
-                    </div>
-                    <!-- info -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="info">密码</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="systemEmailPwd" name="systemEmailPwd" value="{{value.pwd}}" disabled="disabled" >
-                      </div>
-                    </div>
-                  </div>
+              <div id="systemMailConfigForm" style="margin-top: 20px;">
+                {{if value.warnings.length > 0}}
+                <div class="alert alert-info" style="margin: 0 0 10px 0;">
+                  {{each value.warnings as warning i}}<div>{{warning}}</div>{{/each}}
+                </div>
+                {{/if}}
+
+                <!-- 参数名与配置值分列展示（与「短信服务」「系统设置」页同一套表格样式）；发信方式的字段块用独立 tbody，便于整体显隐 -->
+                <table class="table table-striped table-bordered table-hover" id="systemMailConfigTable">
+                  <thead>
+                  <tr>
+                    <th style="width:220px;">参数</th>
+                    <th>配置值</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td>邮件服务</td>
+                    <td>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="systemMailEnabled" name="enabled" value="true" disabled="disabled" {{if value.config.enabled}}checked="checked"{{/if}}> 启用邮件服务
+                      </label>
+                      <span class="help-block">当前发信方式：<b>{{value.providerName}}</b>；关闭后注册验证码、找回密码、文件分享通知等邮件都不会发送。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>发信方式</td>
+                    <td>
+                      <select class="form-control" id="systemMailProvider" name="provider" onchange="doSelectMailProvider();" disabled="disabled" style="width:220px;">
+                        {{each value.providerTypes as type i}}
+                        <option value="{{type.code}}" {{if value.config.provider == type.code}}selected="selected"{{/if}}>{{type.displayName}}</option>
+                        {{/each}}
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>发件人邮箱</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailFrom" name="from" value="{{value.config.from}}" disabled="disabled" placeholder="noreply@your-domain.com" style="width:320px;">
+                      <span class="help-block">收件人看到的发件地址；留空则使用下面的 SMTP 登录账号。多数邮箱要求它与登录账号一致。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>发件人显示名</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailFromName" name="fromName" value="{{value.config.fromName}}" disabled="disabled" placeholder="例如：MxsDoc 通知" style="width:320px;">
+                      <span class="help-block">可选；留空则只显示邮箱地址。</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
+                  <tbody id="systemMailBlockSmtp" style="display:none;">
+                  <tr>
+                    <td>SMTP 服务器</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailSmtpHost" name="smtpHost" value="{{value.config.smtp.host}}" disabled="disabled" placeholder="smtp.example.com" style="width:320px;">
+                      <span class="help-block">企业/自建邮箱填服务商给的 smtp 地址（如 <code>smtp.qiye.aliyun.com</code>、<code>smtp.163.com</code>）。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>端口</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailSmtpPort" name="smtpPort" value="{{value.config.smtp.port}}" disabled="disabled" style="width:100px;">
+                      <span class="help-block">与加密方式配套：不加密 <code>25</code>、STARTTLS <code>587</code>、SSL/TLS <code>465</code>；填 0 或留空按所选加密方式的默认端口。<b>云主机通常封禁出站 25 端口</b>，那时必须改用 587/465。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>加密方式</td>
+                    <td>
+                      <select class="form-control" id="systemMailSmtpEncryption" name="smtpEncryption" disabled="disabled" style="width:300px;">
+                        {{each value.encryptionTypes as type i}}
+                        <option value="{{type.code}}" {{if value.config.smtp.encryption == type.code}}selected="selected"{{/if}}>{{type.displayName}}（默认端口 {{type.suggestedPort}}）</option>
+                        {{/each}}
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>登录账号</td>
+                    <td><input type="text" class="form-control" id="systemMailSmtpAccount" name="smtpAccount" value="{{value.config.smtp.account}}" disabled="disabled" placeholder="通常是完整邮箱地址" style="width:320px;"></td>
+                  </tr>
+                  <tr>
+                    <td>登录密码/授权码</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailSmtpPassword" name="smtpPassword" value="{{value.config.smtp.password}}" disabled="disabled" style="width:320px;">
+                      <span class="help-block">163、QQ、企业邮箱等必须填<b>授权码</b>（在邮箱后台开启 SMTP 服务后生成），不是登录密码。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>需要认证</td>
+                    <td>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="systemMailSmtpAuth" name="smtpAuth" value="true" disabled="disabled" {{if value.config.smtp.auth}}checked="checked"{{/if}}> 登录时需要认证
+                      </label>
+                      <span class="help-block">绝大多数服务商都要求开启；只有内网中继才可能关闭。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>信任任意证书</td>
+                    <td>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="systemMailSmtpSslTrust" name="smtpSslTrust" value="true" disabled="disabled" {{if value.config.smtp.sslTrust}}checked="checked"{{/if}}> 不校验证书（自签名证书的内网服务器才勾选）
+                      </label>
+                      <span class="help-block">勾选后等同 <code>mail.smtp.ssl.trust=*</code>；公网邮箱请勿勾选。</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
+                  <tr>
+                    <td>正文类型</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailContentType" name="contentType" value="{{value.config.options.contentType}}" disabled="disabled" style="width:300px;">
+                      <span class="help-block">建议保持 <code>text/html;charset=UTF-8</code>；老配置里的 gb2312 已在首次迁移时改成 UTF-8（否则中文会乱码）。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>连接超时(毫秒)</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailConnectTimeoutMs" name="connectTimeoutMs" value="{{value.config.options.connectTimeoutMs}}" disabled="disabled" style="width:100px;">
+                      <span class="help-block">与服务器建立连接的最长等待（1000~60000）。</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>读取超时(毫秒)</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailReadTimeoutMs" name="readTimeoutMs" value="{{value.config.options.readTimeoutMs}}" disabled="disabled" style="width:100px;">
+                      <span class="help-block">等待服务器投递结果的最长等待（1000~300000）。调小可让「端口被封」这类问题更快报错，而不是一直转圈。</span>
+                    </td>
+                  </tr>
+                </table>
+
+                <button id="btnTestSystemMailSet" onclick="showSystemMailTestSendPanel()" class="btn btn-lg btn-warning examine_ban">发送测试邮件</button>
+                <span class="help-block">编辑状态下用页面上的当前值试发（可先试后存）；只读状态下用已保存的配置试发。</span>
+                <span class="help-block">邮件配置已存入数据库（<code>system_setting</code> 表的 <code>mail.*</code> 行）；<code>docSysConfig.properties</code> 里的旧值仅作首次启用时的默认数据，保存后修改它不再生效。</span>
+              </div>
               <div class="widget-foot">
                 <div class="clearfix"></div>
               </div>

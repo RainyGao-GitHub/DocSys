@@ -5,36 +5,147 @@
               <div class="pull-left">Email Service</div>
               <div class="widget-icons pull-right">
                 <button id="btnEnableSystemEmailSet" onclick="enableSystemEmailSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
-                <button id="btnSaveSystemEmailSet" onclick="saveSystemEmailSet()" class="btn btn-lg btn-success examine_ban"  style="display:none;">Save</button>                
+                <button id="btnSaveSystemEmailSet" onclick="saveSystemEmailSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">Save</button>                
                 <button id="btnCancelSystemEmailSet" onclick="cancelSystemEmailSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
               </div>
               <div class="clearfix"></div>
             </div>
 
             <div class="widget-content">
-                  <div class="form-horizontal" style="margin-top: 20px;">
-                    <!-- Host -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">Server</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="systemEmailHost" name="systemEmailHost" value="{{value.host}}" disabled="disabled" >
-                      </div>
-                    </div>
-                    <!-- Email -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">Email</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="systemEmailUser" name="systemEmailUser" value="{{value.email}}" disabled="disabled" >
-                      </div>
-                    </div>
-                    <!-- info -->
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="info">Password</label>
-                      <div class="col-lg-9">
-                        <input type="text" class="form-control" id="systemEmailPwd" name="systemEmailPwd" value="{{value.pwd}}" disabled="disabled" >
-                      </div>
-                    </div>
-                  </div>
+              <div id="systemMailConfigForm" style="margin-top: 20px;">
+                {{if value.warnings.length > 0}}
+                <div class="alert alert-info" style="margin: 0 0 10px 0;">
+                  {{each value.warnings as warning i}}<div>{{warning}}</div>{{/each}}
+                </div>
+                {{/if}}
+
+                <!-- Name/value table, same style as the SMS Service and System Settings pages; each provider block is its own tbody so it can be shown/hidden as a whole -->
+                <table class="table table-striped table-bordered table-hover" id="systemMailConfigTable">
+                  <thead>
+                  <tr>
+                    <th style="width:220px;">Parameter</th>
+                    <th>Value</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td>Email Service</td>
+                    <td>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="systemMailEnabled" name="enabled" value="true" disabled="disabled" {{if value.config.enabled}}checked="checked"{{/if}}> Enable email service
+                      </label>
+                      <span class="help-block">Current provider: <b>{{value.providerName}}</b>. When disabled, registration codes, password reset and share notifications are not sent.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Provider</td>
+                    <td>
+                      <select class="form-control" id="systemMailProvider" name="provider" onchange="doSelectMailProvider();" disabled="disabled" style="width:220px;">
+                        {{each value.providerTypes as type i}}
+                        <option value="{{type.code}}" {{if value.config.provider == type.code}}selected="selected"{{/if}}>{{type.displayName}}</option>
+                        {{/each}}
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>From address</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailFrom" name="from" value="{{value.config.from}}" disabled="disabled" placeholder="noreply@your-domain.com" style="width:320px;">
+                      <span class="help-block">The address recipients see. Leave empty to use the SMTP account below (most providers require them to match).</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Sender name</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailFromName" name="fromName" value="{{value.config.fromName}}" disabled="disabled" placeholder="e.g. MxsDoc Notification" style="width:320px;">
+                      <span class="help-block">Optional display name; when empty only the address is shown.</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
+                  <tbody id="systemMailBlockSmtp" style="display:none;">
+                  <tr>
+                    <td>SMTP server</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailSmtpHost" name="smtpHost" value="{{value.config.smtp.host}}" disabled="disabled" placeholder="smtp.example.com" style="width:320px;">
+                      <span class="help-block">Use the smtp host given by your mail provider (e.g. <code>smtp.qiye.aliyun.com</code>, <code>smtp.163.com</code>).</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Port</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailSmtpPort" name="smtpPort" value="{{value.config.smtp.port}}" disabled="disabled" style="width:100px;">
+                      <span class="help-block">Must match the encryption: none <code>25</code>, STARTTLS <code>587</code>, SSL/TLS <code>465</code>. 0 or empty means the default port of the selected encryption. <b>Cloud hosts usually block outbound port 25</b>, so 587/465 is required there.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Encryption</td>
+                    <td>
+                      <select class="form-control" id="systemMailSmtpEncryption" name="smtpEncryption" disabled="disabled" style="width:300px;">
+                        {{each value.encryptionTypes as type i}}
+                        <option value="{{type.code}}" {{if value.config.smtp.encryption == type.code}}selected="selected"{{/if}}>{{type.displayName}} (default port {{type.suggestedPort}})</option>
+                        {{/each}}
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Account</td>
+                    <td><input type="text" class="form-control" id="systemMailSmtpAccount" name="smtpAccount" value="{{value.config.smtp.account}}" disabled="disabled" placeholder="usually the full email address" style="width:320px;"></td>
+                  </tr>
+                  <tr>
+                    <td>Password / auth code</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailSmtpPassword" name="smtpPassword" value="{{value.config.smtp.password}}" disabled="disabled" style="width:320px;">
+                      <span class="help-block">163, QQ and most corporate mailboxes require an <b>auth code</b> (generated after enabling SMTP in the mailbox settings), not the login password.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Authentication</td>
+                    <td>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="systemMailSmtpAuth" name="smtpAuth" value="true" disabled="disabled" {{if value.config.smtp.auth}}checked="checked"{{/if}}> Require authentication
+                      </label>
+                      <span class="help-block">Required by almost every provider; only internal relays may turn it off.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Trust any certificate</td>
+                    <td>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="systemMailSmtpSslTrust" name="smtpSslTrust" value="true" disabled="disabled" {{if value.config.smtp.sslTrust}}checked="checked"{{/if}}> Skip certificate validation (self-signed certificates only)
+                      </label>
+                      <span class="help-block">Equivalent to <code>mail.smtp.ssl.trust=*</code>. Do not enable it for public mail servers.</span>
+                    </td>
+                  </tr>
+                  </tbody>
+
+                  <tr>
+                    <td>Content type</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailContentType" name="contentType" value="{{value.config.options.contentType}}" disabled="disabled" style="width:300px;">
+                      <span class="help-block">Keep <code>text/html;charset=UTF-8</code>. The legacy gb2312 value was converted to UTF-8 during the one-time migration (otherwise non-ASCII text breaks).</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Connect timeout (ms)</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailConnectTimeoutMs" name="connectTimeoutMs" value="{{value.config.options.connectTimeoutMs}}" disabled="disabled" style="width:100px;">
+                      <span class="help-block">Maximum time to establish the connection (1000~60000).</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Read timeout (ms)</td>
+                    <td>
+                      <input type="text" class="form-control" id="systemMailReadTimeoutMs" name="readTimeoutMs" value="{{value.config.options.readTimeoutMs}}" disabled="disabled" style="width:100px;">
+                      <span class="help-block">Maximum time to wait for the server response (1000~300000). A smaller value makes "port blocked" fail fast instead of hanging.</span>
+                    </td>
+                  </tr>
+                </table>
+
+                <button id="btnTestSystemMailSet" onclick="showSystemMailTestSendPanel()" class="btn btn-lg btn-warning examine_ban">Send test email</button>
+                <span class="help-block">While editing, the values currently on the page are used (try before saving); in read-only mode the saved configuration is used.</span>
+                <span class="help-block">The mail configuration is stored in the database (<code>mail.*</code> rows of <code>system_setting</code>). The old values in <code>docSysConfig.properties</code> are only the defaults for the first-time migration - editing them has no effect afterwards.</span>
+              </div>
               <div class="widget-foot">
                 <div class="clearfix"></div>
               </div>

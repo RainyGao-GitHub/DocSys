@@ -521,67 +521,111 @@ function startCleanLogFile()
     });
 }
 
-//系统邮件服务设置
-var systemEmailConfig = {
-		host: "",
-		email: "",
-		pwd: "",
+//系统邮件服务设置（system_setting 表的 mail.* 行；老 properties 仅作首次启用时的默认数据）
+var gSystemMailConfigData = null;	//服务端返回的原始配置（取消编辑时用于回填）
+var gSystemMailProviderList = ["smtp"];	//字段块与发信方式一一对应（后续接入 aliyun/tencent/http 时在此与模板里同步补块）
+
+//按当前发信方式显示对应字段块（参照系统数据库页的 doSelectDbType / 短信页的 doSelectSmsProvider 写法）
+function doSelectMailProvider(){
+	for(var i=0; i<gSystemMailProviderList.length; i++){
+		$("#systemMailBlock" + gSystemMailProviderList[i].charAt(0).toUpperCase() + gSystemMailProviderList[i].substring(1)).hide();
+	}
+
+	var provider = $("#systemMailProvider").val();
+	if(provider == null || provider == ""){
+		return;
+	}
+	$("#systemMailBlock" + provider.charAt(0).toUpperCase() + provider.substring(1)).show();
 }
+
+//表单只读/可编辑切换
+function setSystemMailFormEnabled(enabled){
+	$("#systemMailConfigForm").find("input,select,textarea").attr("disabled", !enabled);
+}
+
+//收集表单值；只读（disabled）字段跳过 —— 服务端发现没有任何表单字段时会改用已保存的配置
+function collectSystemMailFormData(){
+	var data = [];
+	$("#systemMailConfigForm").find("input,select,textarea").each(function(){
+		if($(this).prop("disabled")){
+			return;
+		}
+		var name = $(this).attr("name");
+		if(name == null || name == ""){
+			return;
+		}
+		if($(this).attr("type") == "checkbox"){
+			if($(this).prop("checked")){
+				data.push({name : name, value : $(this).val()});
+			}
+			return;
+		}
+		data.push({name : name, value : $(this).val()});
+	});
+	return data;
+}
+
 function enableSystemEmailSet(){
 	$("#btnEnableSystemEmailSet").hide();
 	$("#btnCancelSystemEmailSet").show();
 	$("#btnSaveSystemEmailSet").show();
-	$("#systemEmailHost").val(systemEmailConfig.host);
-	$("#systemEmailUser").val(systemEmailConfig.email);
-	$("#systemEmailPwd").val(systemEmailConfig.pwd);
-	$("#systemEmailHost").attr('disabled',false);
-	$("#systemEmailUser").attr('disabled',false);
-	$("#systemEmailPwd").attr('disabled',false);
+	setSystemMailFormEnabled(true);
 }
 
 function cancelSystemEmailSet(){
 	$("#btnEnableSystemEmailSet").show();
 	$("#btnCancelSystemEmailSet").hide();
 	$("#btnSaveSystemEmailSet").hide();
-	//revert the value
-	$("#systemEmailHost").attr('disabled',true);
-	$("#systemEmailUser").attr('disabled',true);
-	$("#systemEmailPwd").attr('disabled',true);
-	$("#systemEmailHost").val(systemEmailConfig.host);
-	$("#systemEmailUser").val(systemEmailConfig.email);
-	$("#systemEmailPwd").val(systemEmailConfig.pwd);
+	renderSystemMailConfigView();	//重新渲染以丢弃未保存的修改
 }
 
 function saveSystemEmailSet(){
-	$("#btnEnableSystemEmailSet").show();
-	$("#btnCancelSystemEmailSet").hide();
-	$("#btnSaveSystemEmailSet").hide();
-	//revert the value
-	$("#systemEmailHost").attr('disabled',true);
-	$("#systemEmailUser").attr('disabled',true);
-	$("#systemEmailPwd").attr('disabled',true);
-	var host = $("#systemEmailHost").val();
-	var user = $("#systemEmailUser").val();
-	var pwd = $("#systemEmailPwd").val();
-	updateSystemEmailConfig(host, user, pwd);
+	//必须在切只读前收集，否则 disabled 字段会被跳过
+	var data = collectSystemMailFormData();
+
+	var $btn = $("#btnSaveSystemEmailSet");
+	$btn.attr("disabled", true);
+
+	$.ajax({
+		url : "/DocSystem/Manage/setSystemMailConfig.do",
+		type : "post",
+		dataType : "json",
+		data : data,
+		success : function (ret) {
+			$btn.attr("disabled", false);
+			if( "ok" == ret.status )
+			{
+				showSystemEmailConfig();	//重新加载（自动回到只读态）
+				showErrorMessage(_Lang("更新邮件服务配置成功"));
+			}
+			else
+			{
+				//保持编辑态，便于管理员按提示修正
+				console.log(ret.msgInfo);
+				showErrorMessage(_Lang("更新邮件服务配置失败", ":", ret.msgInfo));
+			}
+		},
+		error : function () {
+			$btn.attr("disabled", false);
+			showErrorMessage(_Lang("更新邮件服务配置失败", ":", "服务器异常"));
+		}
+	});
 }
 
 function showSystemEmailConfig(){
 	$.ajax({
-        url : "/DocSystem/Manage/getSystemEmailConfig.do",
+        url : "/DocSystem/Manage/getSystemMailConfig.do",
         type : "post",
         dataType : "json",
         data : {},
         success : function (ret) {
             if( "ok" == ret.status )
             {
-            	//console.log("getSystemEmailConfig ret", ret);
-				var config = ret.data; 	
-				systemEmailConfig.host = config.host;
-            	systemEmailConfig.email = config.email;
-            	systemEmailConfig.pwd = config.pwd;
-            	console.log("getSystemEmailConfig systemEmailConfig",systemEmailConfig);
-            	$Func.render($("#container"),"systemEmailConfig" + langExt,{"value":systemEmailConfig});
+            	gSystemMailConfigData = ret.data;
+            	$("#btnEnableSystemEmailSet").show();
+            	$("#btnCancelSystemEmailSet").hide();
+            	$("#btnSaveSystemEmailSet").hide();
+            	renderSystemMailConfigView();
             }
             else 
             {
@@ -595,43 +639,63 @@ function showSystemEmailConfig(){
     });
 }
 
-function updateSystemEmailConfig(host, email, pwd){
-	$.ajax({
-        url : "/DocSystem/Manage/setSystemEmailConfig.do",
-        type : "post",
-        dataType : "json",
-        data : {
-        	host: host,
-        	email: email,
-        	pwd: pwd,
-        },
-        success : function (ret) {
-            if( "ok" == ret.status )
-            {	        		
-        		systemEmailConfig.host = host;
-            	systemEmailConfig.email = email;
-        		systemEmailConfig.pwd = pwd;
-        		showErrorMessage(_Lang("更新邮件服务配置成功"));
-            }
-            else 
-            {
-                console.log(ret.msgInfo);
-                showErrorMessage(_Lang("更新邮件服务配置失败", ":", ret.msgInfo));
-        		//restore the setting
-        		$("#systemEmailHost").val(systemEmailConfig.host);
-        		$("#systemEmailUser").val(systemEmailConfig.email);
-        		$("#systemEmailPwd").val(systemEmailConfig.pwd);
-	        }
-        },
-        error : function () {
-        	showErrorMessage(_Lang("更新邮件服务配置失败", ":", "服务器异常"));
-    		//restore the setting
-        	$("#systemEmailHost").val(systemEmailConfig.host);
-    		$("#systemEmailUser").val(systemEmailConfig.email);
-    		$("#systemEmailPwd").val(systemEmailConfig.pwd);
-        }
-    });
+function renderSystemMailConfigView(){
+	if(gSystemMailConfigData == null){
+		return;
+	}
+	$Func.render($("#container"), "systemEmailConfig" + langExt, {"value" : buildSystemMailConfigView(gSystemMailConfigData)}, function(){
+		doSelectMailProvider();	//渲染后按当前发信方式显示对应字段块
+	});
 }
+
+//服务端配置 → 页面视图（补默认值，避免模板里访问 null 的属性）
+function buildSystemMailConfigView(data){
+	var config = data.config || {};
+	config.smtp = config.smtp || {};
+	config.options = config.options || {};
+
+	var providerTypes = data.providerTypes || [];
+	var encryptionTypes = data.encryptionTypes || [];
+	var view = {
+		config : config,
+		providerTypes : providerTypes,
+		encryptionTypes : encryptionTypes,
+		providerName : "",
+		warnings : data.warnings || []
+	};
+
+	for(var i=0; i<providerTypes.length; i++){
+		//显示名来自服务端枚举（中文），英文页靠 _Lang 翻译
+		providerTypes[i].displayName = _Lang(providerTypes[i].displayName);
+		if(providerTypes[i].code == config.provider){
+			view.providerName = providerTypes[i].displayName;
+		}
+	}
+	for(var j=0; j<encryptionTypes.length; j++){
+		encryptionTypes[j].displayName = _Lang(encryptionTypes[j].displayName);
+	}
+	if(view.providerName == ""){
+		view.providerName = _Lang("未配置");
+	}
+
+	return view;
+}
+
+function showSystemMailTestSendPanel(){
+	qiao.bs.dialog({
+		id: 'systemMailTestSend',
+		url: 'systemMailTestSend' + langExt + '.html',
+		title: _Lang('发送测试邮件'),
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		callback: function(){
+			$("#systemMailTestToEmail").val("");
+			$("#systemMailTestResult").empty();
+			$("#systemMailTestToEmail").focus();
+		}
+	}, null);
+}
+
 
 //系统短信服务设置（system_setting 表的 sms.* 行；老 properties 仅作首次启用时的默认数据）
 var gSystemSmsConfigData = null;	//服务端返回的原始配置（取消编辑时用于回填）

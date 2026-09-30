@@ -645,6 +645,16 @@ function lang(str)
 		"获取邮件服务配置信息失败" : "Failed to get Email Service Settings",
 		"更新邮件服务配置成功" : " Email Service Settings was updated",
 		"更新邮件服务配置失败" : "Failed to update Email Service Settings",
+		//Email Service (multi provider, M4)
+		"SMTP 邮件服务器" : "SMTP Mail Server",
+		"不加密（明文）" : "None (plain)",
+		"SSL/TLS（隐式 SSL）" : "SSL/TLS (implicit SSL)",
+		"发信方式" : "Provider",
+		"SMTP 原始响应" : "Raw SMTP response",
+		"发送测试邮件" : "Send Test Email",
+		"发送测试邮件失败" : "Failed to send the test email",
+		"请填写接收测试邮件的邮箱地址" : "Please enter the email address that receives the test message",
+		"测试邮件已发出，请核对收件箱" : "Test email was sent, please check the inbox",
 		
 		//SMS Service
 		"获取短信服务配置信息失败" : "Failed to get SMS Service Settings",
