@@ -66,6 +66,14 @@ import com.DocSystem.common.entity.SystemLog;
 import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.common.entity.LongTermTask;
+import com.DocSystem.commonService.mail.MailConfig;
+import com.DocSystem.commonService.mail.MailConfigForm;
+import com.DocSystem.commonService.mail.MailEncryption;
+import com.DocSystem.commonService.mail.MailMessage;
+import com.DocSystem.commonService.mail.MailProviderType;
+import com.DocSystem.commonService.mail.MailSendResult;
+import com.DocSystem.commonService.mail.MailSender;
+import com.DocSystem.commonService.mail.MailSmtpConfig;
 import com.DocSystem.commonService.sms.SmsConfig;
 import com.DocSystem.commonService.sms.SmsConfigForm;
 import com.DocSystem.commonService.sms.SmsProviderType;
@@ -89,6 +97,12 @@ public class ManageController extends BaseController{
 
 	/** 保存短信配置时，错误提示最多列几条（其余折叠为条数） */
 	private static final int MAX_SMS_ERROR_ITEMS = 3;
+
+	/** 发送测试邮件时，回显的 SMTP 原始响应上限 */
+	private static final int MAX_MAIL_RAW_LEN = 1000;
+
+	/** 保存邮件配置时，错误提示最多列几条（其余折叠为条数） */
+	private static final int MAX_MAIL_ERROR_ITEMS = 3;
 
 	
 	/********** 系统初始化 ***************/
@@ -217,7 +231,14 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	/********** 获取系统邮件配置 ***************/
+	/**
+	 * 获取系统邮件配置（**旧接口，保留形状**）。
+	 *
+	 * <p>【M3 改造】数据来源由 {@code docSysConfig.properties} 改为 {@code system_setting} 表，
+	 * 但响应仍是老页面认识的三字段 {@code host/email/pwd}，所以改造期间老页面照用不误。
+	 * 新页面请用 {@link #getSystemMailConfig(String, HttpSession, HttpServletRequest, HttpServletResponse)}
+	 * （返回结构化配置 + 供应商元数据 + 提醒项）。
+	 */
 	@RequestMapping("/getSystemEmailConfig.do")
 	public void getSystemEmailConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -232,32 +253,24 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		MailConfig config = mailConfigStore.load();
+		MailSmtpConfig smtp = (config.getSmtp() == null) ? new MailSmtpConfig() : config.getSmtp();
 		
-		String host = ReadProperties.read("docSysConfig.properties", "mail.smtp.host");
-		if(host == null)
-		{
-			host = "";
-		}
-		String email = ReadProperties.read("docSysConfig.properties", "fromuser");
-		if(email == null)
-		{
-			email = "";
-		}
-		String pwd = ReadProperties.read("docSysConfig.properties", "frompwd");
-		if(pwd == null)
-		{
-			pwd = "";
-		}
-		
-		JSONObject config = new JSONObject();
-		config.put("host", host);
-		config.put("email", email);
-		config.put("pwd", pwd);
-		rt.setData(config);
+		JSONObject data = new JSONObject();
+		data.put("host", nullToEmpty(smtp.getHost()));
+		data.put("email", nullToEmpty(config.getEffectiveFrom()));
+		data.put("pwd", nullToEmpty(smtp.getPassword()));
+		rt.setData(data);
 		writeJson(rt, response);
 	}
 	
-	/********** 设置系统邮件配置 ***************/
+	/**
+	 * 设置系统邮件配置（**旧接口，保留参数**）。
+	 *
+	 * <p>【M3 改造】只写 {@code system_setting} 表（不再回写 properties，方案决策 10）；
+	 * 老页面只提交 {@code host/email/pwd}，按「**只改用户真的改了的字段**」合并到已保存配置，
+	 * 其余（端口/加密方式/发件人显示名/超时…）保持不变。
+	 */
 	@RequestMapping("/setSystemEmailConfig.do")
 	public void setSystemEmailConfig(String authCode,String host, String email, String pwd, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -272,55 +285,321 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(email == null && pwd == null)
+		if(host == null && email == null && pwd == null)
 		{
 			docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
 			return;
 		}
 		
-		//checkAndAdd docSys.ini Dir
-		if(checkAndAddDocSysIniDir())
+		MailConfig config = mailConfigStore.load();
+		if(host != null)
 		{
-			docSysErrorLog("系统初始化目录创建失败！", rt);
+			config.getSmtp().setHost(host.trim());
+		}
+		if(email != null)
+		{
+			config.getSmtp().setAccount(email.trim());
+			config.setFrom(email.trim());
+		}
+		if(pwd != null)
+		{
+			config.getSmtp().setPassword(pwd);
+		}
+		
+		if(mailConfigStore.save(config))
+		{
+			Log.info("setSystemEmailConfig() 保存成功 host:" + config.getSmtp().getHost());
+			addSystemLog(request, accessUser, "setSystemEmailConfig", "setSystemEmailConfig", "修改系统邮件配置", null,
+					"成功", null, null, null, "host:" + config.getSmtp().getHost() + " account:" + MailSender.maskEmail(config.getSmtp().getAccount()));
+		}
+		else
+		{
+			rt.setError("保存失败，请检查系统日志");
+			addSystemLog(request, accessUser, "setSystemEmailConfig", "setSystemEmailConfig", "修改系统邮件配置", null,
+					"失败", null, null, null, "host:" + config.getSmtp().getHost());
+		}
+		
+		writeJson(rt, response);
+	}
+
+	/**
+	 * 获取邮件服务配置（**新接口**，与短信 {@code getSystemSmsConfig.do} 同形状）。
+	 *
+	 * <p>返回 {@code {config, providerTypes, encryptionTypes, warnings, errors}}：
+	 * 表格页面直接渲染，供应商下拉与必填标记都来自枚举元数据（加新供应商无需改页面）。
+	 */
+	@RequestMapping("/getSystemMailConfig.do")
+	public void getSystemMailConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getSystemMailConfig.do ***********************");
+
+		Log.debug("getSystemMailConfig()");
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
+		{
 			writeJson(rt, response);			
 			return;
 		}
-		
-		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
-		String tmpDocSystemConfigPath = docSysIniPath;
-		String configFileName = "docSysConfig.properties";
-		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
+
+		MailConfig config = mailConfigStore.load();
+
+		JSONObject data = new JSONObject();
+		data.put("config", config);
+		data.put("providerTypes", buildMailProviderTypes());
+		data.put("encryptionTypes", buildMailEncryptionTypes());
+		data.put("warnings", mailConfigStore.getWarnings(config));
+		data.put("errors", mailConfigStore.validate(config));
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
+	/**
+	 * 保存邮件服务配置（**新接口**）。
+	 *
+	 * <p>结构化表单字段优先；只带旧三参数时按「首次迁移同款规则」解析（方案 §2.4）。
+	 * 校验不过直接返回错误（保持编辑态），不写库。
+	 */
+	@RequestMapping("/setSystemMailConfig.do")
+	public void setSystemMailConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** setSystemMailConfig.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
-			//Failed to copy 
-			Log.debug("setSystemEmailConfig() Failed to copy " + docSystemConfigPath + configFileName + " to " + tmpDocSystemConfigPath + configFileName);
-			docSysErrorLog("创建临时配置文件失败！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		MailConfig config = buildMailConfigFromRequest(request);
+		if(config == null)
+		{
+			docSysErrorLog("没有参数改动，请重新设置！", rt);
+			writeJson(rt, response);			
+			return;
+		}
+
+		String error = validateMailConfig(config);
+		if(error != null)
+		{
+			rt.setError(error);
+			addSystemLog(request, accessUser, "setSystemMailConfig", "setSystemMailConfig", "修改邮件服务配置", null,
+					"失败", null, null, null, "provider:" + config.getProvider() + " reason:" + error);
 			writeJson(rt, response);
 			return;
 		}
 
-		if(host != null)
+		if(mailConfigStore.save(config))
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "mail.smtp.host", host);
+			Log.info("setSystemMailConfig() 保存成功 provider:" + config.getProvider() + " enabled:" + config.isEnabled());
+			addSystemLog(request, accessUser, "setSystemMailConfig", "setSystemMailConfig", "修改邮件服务配置", null,
+					"成功", null, null, null, "provider:" + config.getProvider() + " enabled:" + config.isEnabled()
+					+ " host:" + config.getSmtp().getHost() + " encryption:" + config.getSmtp().getEncryption());
 		}
-		if(email != null)
+		else
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "fromuser", email);
+			rt.setError("保存失败，请检查系统日志");
+			addSystemLog(request, accessUser, "setSystemMailConfig", "setSystemMailConfig", "修改邮件服务配置", null,
+					"失败", null, null, null, "provider:" + config.getProvider());
 		}
-		if(pwd != null)
+
+		writeJson(rt, response);
+	}
+
+	/**
+	 * 发送测试邮件（方案 §2.4 的试发弹窗后端）。
+	 *
+	 * <p>请求里带了邮件表单字段时，用**页面上的未保存值**发送（可先试后存）；
+	 * 一个字段都没带时用已保存的配置。失败原因（含 SMTP 返回码/被拒地址）原样回传，
+	 * 便于管理员自助定位 —— 这正是老实现最缺的一环（原来只有一句「发送系统邮件失败！」）。
+	 */
+	@RequestMapping("/testSystemMailConfig.do")
+	public void testSystemMailConfig(String toEmail, String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** testSystemMailConfig.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
 		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "frompwd", pwd);
+			writeJson(rt, response);			
+			return;
 		}
-		
-		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+
+		if(toEmail == null || toEmail.trim().isEmpty())
 		{
-			Log.debug("setSystemEmailConfig() Failed to copy " + tmpDocSystemConfigPath + configFileName + " to " + docSystemConfigPath + configFileName);
-			docSysErrorLog("写入配置文件失败！", rt);
+			rt.setError("请填写接收测试邮件的邮箱地址");
 			writeJson(rt, response);
 			return;
 		}
-		
+
+		MailConfig config = buildMailConfigFromRequest(request);
+		if(config == null)
+		{
+			config = mailConfigStore.load();	// 未带表单字段 → 用已保存配置
+		}
+
+		String error = validateMailConfig(config);
+		if(error != null)
+		{
+			rt.setError(error);
+			writeJson(rt, response);
+			return;
+		}
+
+		String subject = "MxsDoc 邮件服务测试";
+		String content = "如果您收到了这封邮件，说明邮件服务配置可用。"
+				+ "（发送时间：" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "）";
+		MailMessage message = new MailMessage();
+		message.addTo(toEmail.trim());
+		message.setSubject(subject);
+		message.setContent(content);
+
+		MailSendResult result = mailSender.send(config, message);
+		if(result.isSuccess())
+		{
+			JSONObject data = new JSONObject();
+			data.put("provider", result.getProvider());
+			data.put("providerCode", result.getProviderCode());
+			data.put("providerMsg", result.getProviderMsg());
+			data.put("elapsedMs", result.getElapsedMs());
+			data.put("raw", truncate(result.getRaw(), MAX_MAIL_RAW_LEN));
+			rt.setData(data);
+
+			addSystemLog(request, accessUser, "testSystemMailConfig", "testSystemMailConfig", "发送测试邮件", null,
+					"成功", null, null, null, "provider:" + result.getProvider()
+					+ " to:" + MailSender.maskEmail(toEmail.trim()) + " elapsedMs:" + result.getElapsedMs());
+		}
+		else
+		{
+			// SMTP 原文透传给管理员，便于自助排查（同短信策略）
+			rt.setError(result.getFailureReason());
+			addSystemLog(request, accessUser, "testSystemMailConfig", "testSystemMailConfig", "发送测试邮件", null,
+					"失败", null, null, null, "to:" + MailSender.maskEmail(toEmail.trim())
+					+ " reason:" + result.getFailureReason());
+		}
+
 		writeJson(rt, response);
+	}
+
+	/** 供应商元数据（页面用其渲染下拉与必填标记；**只列已实现**的，避免管理员选了用不了） */
+	private JSONArray buildMailProviderTypes()
+	{
+		JSONArray types = new JSONArray();
+		for(MailProviderType type : MailProviderType.values())
+		{
+			if(type.isImplemented() == false)
+			{
+				continue;
+			}
+			JSONObject item = new JSONObject();
+			item.put("code", type.getCode());
+			item.put("displayName", type.getDisplayName());
+			JSONArray fields = new JSONArray();
+			for(String field : type.getRequiredFields())
+			{
+				fields.add(field);
+			}
+			item.put("requiredFields", fields);
+			types.add(item);
+		}
+		return types;
+	}
+
+	/** 加密方式元数据（页面下拉 + 「建议端口」提示） */
+	private JSONArray buildMailEncryptionTypes()
+	{
+		JSONArray types = new JSONArray();
+		for(MailEncryption encryption : MailEncryption.values())
+		{
+			JSONObject item = new JSONObject();
+			item.put("code", encryption.getCode());
+			item.put("displayName", encryption.getDisplayName());
+			item.put("suggestedPort", encryption.getSuggestedPort());
+			types.add(item);
+		}
+		return types;
+	}
+
+	/**
+	 * 请求参数 → {@link MailConfig}：结构化表单字段优先；只带旧三参数时按「只改改了的字段」合并；
+	 * 两者都没有（即请求里根本没有邮件参数）→ 返回 null 由调用方决定。
+	 */
+	private MailConfig buildMailConfigFromRequest(HttpServletRequest request)
+	{
+		Map<String, String> params = new HashMap<String, String>();
+		Enumeration<?> names = request.getParameterNames();
+		while(names.hasMoreElements())
+		{
+			String name = String.valueOf(names.nextElement());
+			params.put(name, request.getParameter(name));
+		}
+
+		if(MailConfigForm.hasFormFields(params))
+		{
+			return MailConfigForm.bind(params);
+		}
+
+		String host = params.get("host");
+		String email = params.get("email");
+		String pwd = params.get("pwd");
+		if(host != null || email != null || pwd != null)
+		{
+			Log.info("buildMailConfigFromRequest() 使用旧参数（host/email/pwd）兼容解析");
+			MailConfig config = mailConfigStore.load();
+			if(host != null)
+			{
+				config.getSmtp().setHost(host.trim());
+			}
+			if(email != null)
+			{
+				config.getSmtp().setAccount(email.trim());
+				config.setFrom(email.trim());
+			}
+			if(pwd != null)
+			{
+				config.getSmtp().setPassword(pwd);
+			}
+			return config;
+		}
+
+		return null;
+	}
+
+	/** 校验：阻断性错误拼接成一句（最多 3 条，其余用省略号） */
+	private String validateMailConfig(MailConfig config)
+	{
+		List<String> errors = mailConfigStore.validate(config);
+		if(errors == null || errors.isEmpty())
+		{
+			return null;
+		}
+
+		StringBuilder sb = new StringBuilder();
+		int index = 0;
+		for(String error : errors)
+		{
+			if(index >= MAX_MAIL_ERROR_ITEMS)
+			{
+				sb.append("…共 ").append(errors.size()).append(" 项");
+				break;
+			}
+			if(sb.length() > 0)
+			{
+				sb.append("；");
+			}
+			sb.append(error);
+			index++;
+		}
+		return sb.toString();
+	}
+
+	private String nullToEmpty(String value)
+	{
+		return (value == null) ? "" : value;
 	}
 
 	

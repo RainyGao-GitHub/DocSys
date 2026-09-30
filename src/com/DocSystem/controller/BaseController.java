@@ -112,6 +112,7 @@ import com.DocSystem.common.RunResult;
 import com.DocSystem.common.ScanOption;
 import com.DocSystem.common.SyncLock;
 import com.DocSystem.commonService.EmailService;
+import com.DocSystem.commonService.mail.MailSender;
 import com.DocSystem.commonService.SmsService;
 import com.DocSystem.commonService.sms.SmsScene;
 import com.DocSystem.commonService.sms.SmsSendResult;
@@ -169,6 +170,7 @@ import com.DocSystem.entity.User;
 import com.DocSystem.entity.UserGroup;
 import com.DocSystem.service.impl.ReposServiceImpl;
 import com.DocSystem.service.impl.UserServiceImpl;
+import com.DocSystem.service.mail.MailConfigStore;
 import com.DocSystem.service.sms.SmsConfigStore;
 import com.DocSystem.websocket.entity.DocPullContext;
 import com.DocSystem.websocket.entity.DocPushContext;
@@ -205,6 +207,10 @@ public class BaseController  extends BaseFunction{
 	protected SmsSender smsSender;
 	@Autowired
 	protected SmsConfigStore smsConfigStore;
+	@Autowired
+	protected MailSender mailSender;
+	@Autowired
+	protected MailConfigStore mailConfigStore;
 	@Autowired
 	protected EmailService emailService;
 	
