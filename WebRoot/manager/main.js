@@ -297,6 +297,11 @@ function showContentPage(curPath) {
         case "systemLicenses":
         case "systemMigrate":
         case "systemDebugLog":
+        case "systemLdap":
+        case "systemNetwork":
+        case "systemLlm":
+        case "systemCluster":
+        case "systemOfficeEditor":
         	title = _Lang("系统管理");
         	//高亮：父级保持蓝色（表示在系统管理这个分组里），被点开的那一项另有一种选中样式
         	//（父级蓝色 + 子项白底蓝字，两种样式并存表示「在哪个分组 + 在哪一页」）
@@ -411,6 +416,21 @@ function showSystemPage(curPath)
         	break;
     case "systemDebugLog":
     	showSystemDebugLog();
+    	break;
+    case "systemLdap":
+    	showSystemLdap();
+    	break;
+    case "systemNetwork":
+    	showSystemNetwork();
+    	break;
+    case "systemLlm":
+    	showSystemLlm();
+    	break;
+    case "systemCluster":
+    	showSystemCluster();
+    	break;
+    case "systemOfficeEditor":
+    	showSystemOfficeEditor();
     	break;
        	}
     }
@@ -1768,188 +1788,136 @@ var systemInfo = {
 		officeDisabled: 0, //default 0			
 }
 
+/****************  系统管理各子页公共逻辑  ******************/
+
+//「系统设置」页保留的字段（其余配置已拆到各自的子页面维护）
+var SYSTEM_INFO_FIELDS = ["tomcatPath", "javaHome", "defaultReposStorePath", "indexDBStorePath", "agentSkillStorePath", "salesDataStorePath", "systemLogStorePath", "maxThreadCount"];
+
+//子页共用的取数 + 渲染：templateName 为 tmpl 下的模板名（不含 _en）
+function showSystemInfoPage(templateName, normalize){
+	$.ajax({
+        url : "/DocSystem/Manage/getSystemInfo.do",
+        type : "post",
+        dataType : "json",
+        data : {},
+        success : function (ret) {
+            console.log("showSystemInfoPage(" + templateName + ") ret", ret);
+        	if( "ok" == ret.status )
+            {
+            	systemInfo = ret.data;	//联动逻辑（如 selectRedisEn）需要配置里的值
+            	if(normalize)
+            	{
+            		normalize();
+            	}
+            	$Func.render($("#container"),templateName + langExt,{"value":systemInfo});
+            }
+            else
+            {
+            	showErrorMessage(_Lang("获取系统信息失败", " : ", ret.msgInfo));
+            	console.log(ret.msgInfo);
+            }
+        },
+        error : function () {
+        	showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
+        }
+    });
+}
+
+//子页的编辑态切换：prefix 为页面按钮 id 的后缀（如 SystemLdap → btnEnableSystemLdapSet / btnSaveSystemLdapSet / btnCancelSystemLdapSet）
+function setSystemPageEditMode(prefix, fieldIds, editing){
+	$("#btnEnable" + prefix + "Set").toggle(!editing);
+	$("#btnSave" + prefix + "Set").toggle(editing);
+	$("#btnCancel" + prefix + "Set").toggle(editing);
+	for(var i = 0; fieldIds && i < fieldIds.length; i++)
+	{
+		$("#" + fieldIds[i]).prop('disabled', !editing);
+	}
+}
+
+//保存系统参数：只提交 fields 里显式给出的字段。
+//必须按页白名单构造请求体：jQuery 会把 undefined 序列化成空串（实测 1.10.2：$.param({a:undefined}) == "a="），
+//而 setSystemInfo.do 对每个参数都是「传 null 才不改」→ 空串会被当成「把该配置改成空」，
+//从而把别的页面负责的配置清掉。
+function postSystemInfo(fields, onDone){
+	console.log("postSystemInfo fields:", fields);
+	$.ajax({
+        url : "/DocSystem/Manage/setSystemInfo.do",
+        type : "post",
+        dataType : "json",
+        data : fields,
+        success : function (ret) {
+        	console.log("postSystemInfo ret:", ret);
+            if( "ok" == ret.status )
+            {
+            	showErrorMessage(_Lang("更新成功！"));
+            }
+            else
+            {
+                console.log(ret.msgInfo);
+                showErrorMessage(_Lang("更新失败", ":", ret.msgInfo));
+            }
+            if(onDone)
+            {
+            	onDone();
+            }
+        },
+        error : function () {
+        	showErrorMessage(_Lang("更新失败", ":", "服务器异常"));
+            if(onDone)
+            {
+            	onDone();
+            }
+        }
+    });
+}
+
 function enableSystemInfoSet(){
 	console.log("enableSystemInfoSet systemInfo:", systemInfo);
-
-	$("#btnEnableSystemInfoSet").hide();
-	$("#btnCancelSystemInfoSet").show();
-	$("#btnSaveSystemInfoSet").show();
-	$("#tomcatPath").val(systemInfo.tomcatPath);
-	$("#javaHome").val(systemInfo.javaHome);
-	$("#openOfficePath").val(systemInfo.openOfficePath);
-	$("#officeEditorApi").val(systemInfo.officeEditorApi);
-	$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
-	$("#systemLogStorePath").val(systemInfo.systemLogStorePath);
-	$("#indexDBStorePath").val(systemInfo.indexDBStorePath);
-	$("#agentSkillStorePath").val(systemInfo.agentSkillStorePath);
-	$("#salesDataStorePath").val(systemInfo.salesDataStorePath);
-	$("#ldapConfig").val(systemInfo.ldapConfig);
-	$("#allowedNetworkConfig").val(systemInfo.allowedNetworkConfig);
-	$("#llmConfig").val(systemInfo.llmConfig);
-	$("#maxThreadCount option[value='"+systemInfo.maxThreadCount+"']").attr("selected","selected");
-
-	$("#tomcatPath").attr('disabled',false);
-	$("#javaHome").attr('disabled',false);
-	$("#openOfficePath").attr('disabled',false);
-	$("#officeEditorApi").attr('disabled',false);
-	$("#defaultReposStorePath").attr('disabled',false);
-	$("#systemLogStorePath").attr('disabled',false);
-	$("#indexDBStorePath").attr('disabled',false);
-	$("#agentSkillStorePath").attr('disabled',false);
-	$("#salesDataStorePath").attr('disabled',false);
-	$("#ldapConfig").attr('disabled',false);
-	$("#allowedNetworkConfig").attr('disabled',false);
-	$("#llmConfig").attr('disabled',false);
-	$("#maxThreadCount").attr('disabled',false);		
-	$("#redisEn").attr('disabled',false);
-	$("#isOnlyOfficeUsed").attr('disabled',false);
-	if(systemInfo.redisEn == 1)
-	{
-		$("#redisUrl").attr('disabled',false);
-		$("#clusterServerUrl").attr('disabled',false);
-	}
+	setSystemPageEditMode("SystemInfo", SYSTEM_INFO_FIELDS, true);
 }
 
 function cancelSystemInfoSet(){
 	console.log("cancelSystemInfoSet systemInfo:", systemInfo);
 
-	$("#btnEnableSystemInfoSet").show();
-	$("#btnCancelSystemInfoSet").hide();
-	$("#btnSaveSystemInfoSet").hide();
 	//revert the value
-	$("#tomcatPath").attr('disabled',true);
-	$("#javaHome").attr('disabled',true);
-	$("#openOfficePath").attr('disabled',true);
-	$("#officeEditorApi").attr('disabled',true);
-	$("#defaultReposStorePath").attr('disabled',true);
-	$("#systemLogStorePath").attr('disabled',true);
-	$("#indexDBStorePath").attr('disabled',true);
-	$("#agentSkillStorePath").attr('disabled',true);
-	$("#salesDataStorePath").attr('disabled',true);
-	$("#ldapConfig").attr('disabled',true);
-	$("#allowedNetworkConfig").attr('disabled',true);
-	$("#llmConfig").attr('disabled',true);
-	$("#maxThreadCount").attr('disabled',true);
-	$("#redisEn").attr('disabled',true);
-	$("#redisUrl").attr('disabled',true);
-	$("#clusterServerUrl").attr('disabled',true);
-	$("#isOnlyOfficeUsed").attr('disabled',true);
-	
-	$("#tomcatPath").val(systemInfo.tomcatPath);
-	$("#javaHome").val(systemInfo.javaHome);
-	$("#openOfficePath").val(systemInfo.openOfficePath);
-	$("#officeEditorApi").val(systemInfo.officeEditorApi);
-	$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
-	$("#systemLogStorePath").val(systemInfo.systemLogStorePath);
-	$("#indexDBStorePath").val(systemInfo.indexDBStorePath);
-	$("#agentSkillStorePath").val(systemInfo.agentSkillStorePath);
-	$("#salesDataStorePath").val(systemInfo.salesDataStorePath);
-	$("#ldapConfig").val(systemInfo.ldapConfig);
-	$("#allowedNetworkConfig").val(systemInfo.allowedNetworkConfig);
-	$("#llmConfig").val(systemInfo.llmConfig);
-	$("#maxThreadCount option[value='"+systemInfo.maxThreadCount+"']").attr("selected","selected");
-	$("#redisUrl").val(systemInfo.redisUrl);
-	$("#clusterServerUrl").val(systemInfo.clusterServerUrl);
-	
-	if(systemInfo.redisEn == 1)
-	{
-		$("#redisEn").prop("checked", true);
-	}
-	else
-	{
-		$("#redisEn").prop("checked", false);			
-	}
-	if(systemInfo.isOnlyOfficeUsed == 1)
-	{
-		$("#isOnlyOfficeUsed").prop("checked", true);
-	}
-	else
-	{
-		$("#isOnlyOfficeUsed").prop("checked", false);			
-	}
+	$("#tomcatPath").val(systemInfo.tomcatPath || "");
+	$("#javaHome").val(systemInfo.javaHome || "");
+	$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath || "");
+	$("#systemLogStorePath").val(systemInfo.systemLogStorePath || "");
+	$("#indexDBStorePath").val(systemInfo.indexDBStorePath || "");
+	$("#agentSkillStorePath").val(systemInfo.agentSkillStorePath || "");
+	$("#salesDataStorePath").val(systemInfo.salesDataStorePath || "");
+	$("#maxThreadCount").val(systemInfo.maxThreadCount);
+	setSystemPageEditMode("SystemInfo", SYSTEM_INFO_FIELDS, false);
 }
 
 function saveSystemInfoSet(){
 	console.log("saveSystemInfoSet systemInfo:", systemInfo);
 
-	$("#btnEnableSystemInfoSet").show();
-	$("#btnCancelSystemInfoSet").hide();
-	$("#btnSaveSystemInfoSet").hide();
-	//revert the value
-	$("#tomcatPath").attr('disabled',true);
-	$("#javaHome").attr('disabled',true);
-	$("#openOfficePath").attr('disabled',true);
-	$("#officeEditorApi").attr('disabled',true);
-	$("#defaultReposStorePath").attr('disabled',true);
-	$("#systemLogStorePath").attr('disabled',true);
-	$("#indexDBStorePath").attr('disabled',true);
-	$("#agentSkillStorePath").attr('disabled',true);
-	$("#salesDataStorePath").attr('disabled',true);
-			
-	$("#ldapConfig").attr('disabled',true);
-	$("#allowedNetworkConfig").attr('disabled',true);
-	$("#llmConfig").attr('disabled',true);
+	setSystemPageEditMode("SystemInfo", SYSTEM_INFO_FIELDS, false);
 
-	$("#maxThreadCount").attr('disabled',true);
-	
-	$("#logLevel").attr('disabled',true);
-	$("#outputToFileEn").attr('disabled',true);
-	$("#logFile").attr('disabled',true);
-	$("#redisEn").attr('disabled',true);
-	$("#redisUrl").attr('disabled',true);
-	$("#clusterServerUrl").attr('disabled',true);
-	$("#isOnlyOfficeUsed").attr('disabled',true);
-	
-	var tomcatPath = $("#tomcatPath").val();
-	var javaHome = $("#javaHome").val();
-	var openOfficePath = $("#openOfficePath").val();
-	var officeEditorApi = $("#officeEditorApi").val();
-	var defaultReposStorePath = $("#defaultReposStorePath").val();
-	var systemLogStorePath = $("#systemLogStorePath").val();
-	var indexDBStorePath = $("#indexDBStorePath").val();
-	var agentSkillStorePath = $("#agentSkillStorePath").val();
-	var salesDataStorePath = $("#salesDataStorePath").val();
-	var ldapConfig = $("#ldapConfig").val();
-	var allowedNetworkConfig = $("#allowedNetworkConfig").val();
-	var llmConfig = $("#llmConfig").val();
-	var maxThreadCount = $("#maxThreadCount").val();
-	//调试日志的「日志级别/输出到指定文件」已移到「系统管理 → 调试日志」页维护，
-	//这里回传当前值：setSystemInfo.do 里 logFile 传 null 会清空日志文件配置（其余字段传 null 表示「不改」）
-	var logLevel = systemInfo.logLevel;
-	var outputToFileEn = systemInfo.outputToFileEn;
-	var logFile = systemInfo.logFile;
-	var redisEn = $("#redisEn").is(':checked')? 1: 0;
-	var redisUrl = "";
-	var clusterServerUrl = "";
-	if(redisEn == 1)
+	//只提交「系统设置」页仍保留的字段（其余配置已拆到各自的子页维护，详见 postSystemInfo 注释）
+	var data = {
+		tomcatPath: $("#tomcatPath").val() || "",
+		javaHome: $("#javaHome").val() || "",
+		defaultReposStorePath: $("#defaultReposStorePath").val() || "",
+		systemLogStorePath: $("#systemLogStorePath").val() || "",
+		indexDBStorePath: $("#indexDBStorePath").val() || "",
+		agentSkillStorePath: $("#agentSkillStorePath").val() || "",
+		maxThreadCount: $("#maxThreadCount").val()
+	};
+	if($("#salesDataStorePath").length > 0)
 	{
-		redisUrl =  $("#redisUrl").val();
-		clusterServerUrl =  $("#clusterServerUrl").val();
+		//销售数据存储位置只在销售服务器上渲染
+		data.salesDataStorePath = $("#salesDataStorePath").val() || "";
 	}
-	var isOnlyOfficeUsed = $("#isOnlyOfficeUsed").is(':checked')? 1: 0;
-	
-	updateSystemInfo(tomcatPath, 
-			javaHome, 
-			openOfficePath, 
-			officeEditorApi, 
-			defaultReposStorePath,
-			systemLogStorePath, 
-			indexDBStorePath,
-			agentSkillStorePath,
-			salesDataStorePath,
-			ldapConfig, 
-			allowedNetworkConfig, 
-			llmConfig, 
-			logLevel,
-			outputToFileEn,
-			logFile,
-			maxThreadCount,
-			redisEn,
-			redisUrl,
-			clusterServerUrl,
-			isOnlyOfficeUsed);
+
+	postSystemInfo(data, showSystemUpgrade);
 }
 
+//注意：本函数已无调用方——「系统设置」页改为按页白名单提交（见 postSystemInfo）。
+//保留仅作历史参考，不要在新代码里调用：它会把页面上不存在的字段以空串提交，
+//而 setSystemInfo.do 对字符串参数是「空串=改成空」，可能清掉别的页面负责的配置。
 function updateSystemInfo(tomcatPath, 
 		javaHome, 
 		openOfficePath, 
@@ -2275,6 +2243,149 @@ function saveSystemDebugLogSet(){
         	showSystemDebugLog();
         }
     });
+}
+
+/****************  系统管理子页：LDAP设置 / 安全网络设置 / AI接入设置 / 集群部署设置 / Office编辑器  ******************/
+
+//LDAP设置
+var SYSTEM_LDAP_FIELDS = ["ldapConfig"];
+
+function showSystemLdap(){
+	showSystemInfoPage("systemLdap", function(){
+		systemInfo.ldapConfig = systemInfo.ldapConfig || "";
+	});
+}
+
+function enableSystemLdapSet(){
+	console.log("enableSystemLdapSet systemInfo:", systemInfo);
+	setSystemPageEditMode("SystemLdap", SYSTEM_LDAP_FIELDS, true);
+}
+
+function cancelSystemLdapSet(){
+	$("#ldapConfig").val(systemInfo.ldapConfig);
+	setSystemPageEditMode("SystemLdap", SYSTEM_LDAP_FIELDS, false);
+}
+
+function saveSystemLdapSet(){
+	setSystemPageEditMode("SystemLdap", SYSTEM_LDAP_FIELDS, false);
+	postSystemInfo({ ldapConfig: $("#ldapConfig").val() || "" }, showSystemLdap);
+}
+
+//安全网络设置
+var SYSTEM_NETWORK_FIELDS = ["allowedNetworkConfig"];
+
+function showSystemNetwork(){
+	showSystemInfoPage("systemNetwork", function(){
+		systemInfo.allowedNetworkConfig = systemInfo.allowedNetworkConfig || "";
+	});
+}
+
+function enableSystemNetworkSet(){
+	console.log("enableSystemNetworkSet systemInfo:", systemInfo);
+	setSystemPageEditMode("SystemNetwork", SYSTEM_NETWORK_FIELDS, true);
+}
+
+function cancelSystemNetworkSet(){
+	$("#allowedNetworkConfig").val(systemInfo.allowedNetworkConfig);
+	setSystemPageEditMode("SystemNetwork", SYSTEM_NETWORK_FIELDS, false);
+}
+
+function saveSystemNetworkSet(){
+	setSystemPageEditMode("SystemNetwork", SYSTEM_NETWORK_FIELDS, false);
+	postSystemInfo({ allowedNetworkConfig: $("#allowedNetworkConfig").val() || "" }, showSystemNetwork);
+}
+
+//AI接入设置
+var SYSTEM_LLM_FIELDS = ["llmConfig"];
+
+function showSystemLlm(){
+	showSystemInfoPage("systemLlm", function(){
+		systemInfo.llmConfig = systemInfo.llmConfig || "";
+	});
+}
+
+function enableSystemLlmSet(){
+	console.log("enableSystemLlmSet systemInfo:", systemInfo);
+	setSystemPageEditMode("SystemLlm", SYSTEM_LLM_FIELDS, true);
+}
+
+function cancelSystemLlmSet(){
+	$("#llmConfig").val(systemInfo.llmConfig);
+	setSystemPageEditMode("SystemLlm", SYSTEM_LLM_FIELDS, false);
+}
+
+function saveSystemLlmSet(){
+	setSystemPageEditMode("SystemLlm", SYSTEM_LLM_FIELDS, false);
+	postSystemInfo({ llmConfig: $("#llmConfig").val() || "" }, showSystemLlm);
+}
+
+//集群部署设置（未启用集群时不保留两个地址，与原来「系统设置」页的行为一致）
+var SYSTEM_CLUSTER_FIELDS = ["redisEn", "redisUrl", "clusterServerUrl"];
+
+function showSystemCluster(){
+	showSystemInfoPage("systemCluster", function(){
+		if(systemInfo.redisEn == undefined)
+		{
+			systemInfo.redisEn = 0;
+		}
+		systemInfo.redisUrl = systemInfo.redisUrl || "";
+		systemInfo.clusterServerUrl = systemInfo.clusterServerUrl || "";
+		systemInfo.clusterInfo = systemInfo.clusterInfo || "";
+	});
+}
+
+function enableSystemClusterSet(){
+	console.log("enableSystemClusterSet systemInfo:", systemInfo);
+	setSystemPageEditMode("SystemCluster", SYSTEM_CLUSTER_FIELDS, true);
+	selectRedisEn();	//未勾选「启用」时两个地址仍保持禁用
+}
+
+function cancelSystemClusterSet(){
+	$("#redisEn").prop("checked", systemInfo.redisEn == 1);
+	$("#redisUrl").val(systemInfo.redisUrl);
+	$("#clusterServerUrl").val(systemInfo.clusterServerUrl);
+	setSystemPageEditMode("SystemCluster", SYSTEM_CLUSTER_FIELDS, false);
+}
+
+function saveSystemClusterSet(){
+	var redisEn = $("#redisEn").is(':checked')? 1: 0;
+	var redisUrl = "";
+	var clusterServerUrl = "";
+	if(redisEn == 1)
+	{
+		redisUrl = $("#redisUrl").val() || "";
+		clusterServerUrl = $("#clusterServerUrl").val() || "";
+	}
+	setSystemPageEditMode("SystemCluster", SYSTEM_CLUSTER_FIELDS, false);
+	postSystemInfo({ redisEn: redisEn, redisUrl: redisUrl, clusterServerUrl: clusterServerUrl }, showSystemCluster);
+}
+
+//Office编辑器（officeEditorApi / openOfficePath 是残留配置，系统已不再使用，不再提交）
+var SYSTEM_OFFICE_FIELDS = ["isOnlyOfficeUsed"];
+
+function showSystemOfficeEditor(){
+	showSystemInfoPage("systemOfficeEditor", function(){
+		if(systemInfo.isOnlyOfficeUsed == undefined)
+		{
+			systemInfo.isOnlyOfficeUsed = 0;
+		}
+	});
+}
+
+function enableSystemOfficeEditorSet(){
+	console.log("enableSystemOfficeEditorSet systemInfo:", systemInfo);
+	setSystemPageEditMode("SystemOfficeEditor", SYSTEM_OFFICE_FIELDS, true);
+}
+
+function cancelSystemOfficeEditorSet(){
+	$("#isOnlyOfficeUsed").prop("checked", systemInfo.isOnlyOfficeUsed == 1);
+	setSystemPageEditMode("SystemOfficeEditor", SYSTEM_OFFICE_FIELDS, false);
+}
+
+function saveSystemOfficeEditorSet(){
+	var isOnlyOfficeUsed = $("#isOnlyOfficeUsed").is(':checked')? 1: 0;
+	setSystemPageEditMode("SystemOfficeEditor", SYSTEM_OFFICE_FIELDS, false);
+	postSystemInfo({ isOnlyOfficeUsed: isOnlyOfficeUsed }, showSystemOfficeEditor);
 }
 
 function restartTomcat(){

@@ -51,18 +51,6 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>OfficeEditor</td>
-	                    <td>
-			            	<div><span style="margin-right:5px"><input type="checkbox" id="isOnlyOfficeUsed" {{if value.isOnlyOfficeUsed == 1}} checked="checked" {{/if}}  onclick="selectIsOnlyOfficeUsed()" disabled="disabled"/></span>OnlyOffice</div>
-	                    </td>
-	                    <td class="edit">
-	                      	<button onclick="addOfficeFonts()" data-id="" class="btn btn-lg btn-warning examine_ban">Install Fonts...</button>	                      	
-	                      	<button onclick="generateOfficeFontsConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">Reset Fonts</button>
-	                      	<button id="btnDisableOffice" onclick="disableOffice()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.officeDisabled == 1}} style="display:none" {{/if}}>Disable</button>
-	                      	<button id="btnEnableOffice" onclick="enableOffice()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.officeDisabled == 0}} style="display:none" {{/if}}>Enable</button>
-	                    </td>
-	                  </tr>
-	                  <tr>
 	                    <td>Repository's Default Path</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="defaultReposStorePath" name="defaultReposStorePath" value="{{value.defaultReposStorePath}}" disabled="disabled">
@@ -97,32 +85,6 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>LDAP Settings</td>
-	                    <td>
-							<input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx">
-	                    </td>
-	                    <td class="edit">
-	                      	<button onclick="ldapTest()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
-	                    </td>
-	                  </tr>
-	                  <tr>
-	                    <td>Allowed Network Settings</td>
-	                    <td>
-							<input type="text" class="form-control" id="allowedNetworkConfig" name="allowedNetworkConfig" value="{{value.allowedNetworkConfig}}" disabled="disabled" placeholder="192.168.0.*; 192.168.1.1-10; 192.168.2-16.*;">
-	                    </td>
-	                    <td class="edit">
-	                    </td>
-	                  </tr>
-	                  <tr>
-	                    <td>AI Settings</td>
-	                    <td>
-							<input type="text" class="form-control" id="llmConfig" name="llmConfig" value="{{value.llmConfig}}" disabled="disabled" placeholder="https://api.deepseek.com/v1/chat/completions; apikey=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;">
-	                    </td>
-	                    <td class="edit">
-	                      	<button onclick="llmTest()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
-	                    </td>
-	                  </tr>
-	                  <tr>
 	                    <td>Max Upload Thread</td>
 	                    <td>
 			            	<select class="form-control" id="maxThreadCount" style="width: 100%" disabled="disabled">   
@@ -144,19 +106,6 @@
 			            	</select>
 			            </td>
 			            <td class="edit">
-	                    </td>
-	                  </tr>
-	                  <tr>
-	                    <td>Cluster Deployment</td>
-	                    <td>
-			            	<div><span style="margin-right:5px"><input type="checkbox" id="redisEn" {{if value.redisEn == 1}} checked="checked" {{/if}}  onclick="selectRedisEn()" disabled="disabled"/></span>Enable</div>
-	                    	<input type="text" class="form-control" id="redisUrl" value="{{value.redisUrl}}" placeholder="redis server url, For example : redis://localhost:6379" disabled="disabled">			            		                    
-	                    	<input type="text" class="form-control" id="clusterServerUrl" value="{{value.clusterServerUrl}}" placeholder="cluster server url, For Example : http://localhost:8100" disabled="disabled">			            		                    
-							<textarea class="form-control" id="clusterInfo" disabled="disabled">{{value.clusterInfo}}</textarea>
-			            </td>
-	                    <td class="edit">
-	                      	<button onclick="testCluster()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
-	                      	<button onclick="resetClusterConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">Reset</button>
 	                    </td>
 	                  </tr>
 	                  {{if value.isSalesServer == 1}}

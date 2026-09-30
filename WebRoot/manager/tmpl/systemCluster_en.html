@@ -1,0 +1,64 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">Cluster Deploy</div>
+              <div class="widget-icons pull-right">
+                <button id="btnEnableSystemClusterSet" onclick="enableSystemClusterSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
+                <button id="btnSaveSystemClusterSet" onclick="saveSystemClusterSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">Save</button>
+                <button id="btnCancelSystemClusterSet" onclick="cancelSystemClusterSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+              <div id="systemClusterForm" style="margin-top: 20px;">
+                <!-- Parameter/value table style, same as the "Email Service" / "Debug Log" pages: one row per parameter, page actions below the table -->
+                <table class="table table-striped table-bordered table-hover" id="systemClusterTable">
+                  <thead>
+                  <tr>
+                    <th style="width:220px;">Parameter</th>
+                    <th>Value</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td>Cluster Deployment</td>
+                    <td>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="redisEn" {{if value.redisEn == 1}} checked="checked" {{/if}} onclick="selectRedisEn()" disabled="disabled"> Enable
+                      </label>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Redis Server Url</td>
+                    <td>
+                      <input type="text" class="form-control" id="redisUrl" value="{{value.redisUrl}}" placeholder="redis server url, For example : redis://localhost:6379" disabled="disabled" style="width:520px;">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Cluster Server Url</td>
+                    <td>
+                      <input type="text" class="form-control" id="clusterServerUrl" value="{{value.clusterServerUrl}}" placeholder="cluster server url, For Example : http://localhost:8100" disabled="disabled" style="width:520px;">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Cluster Status</td>
+                    <td>
+                      <textarea class="form-control" id="clusterInfo" rows="3" disabled="disabled" style="width:520px;">{{value.clusterInfo}}</textarea>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+
+                <button onclick="testCluster()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
+                <button onclick="resetClusterConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">Reset</button>
+              </div>
+              <div class="widget-foot">
+                <div class="clearfix"></div>
+              </div>
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+</div>

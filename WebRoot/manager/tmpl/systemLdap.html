@@ -1,0 +1,43 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">LDAP设置</div>
+              <div class="widget-icons pull-right">
+                <button id="btnEnableSystemLdapSet" onclick="enableSystemLdapSet()" class="btn btn-lg btn-success examine_ban">编辑</button>
+                <button id="btnSaveSystemLdapSet" onclick="saveSystemLdapSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">保存</button>
+                <button id="btnCancelSystemLdapSet" onclick="cancelSystemLdapSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+              <div id="systemLdapForm" style="margin-top: 20px;">
+                <!-- 参数名与配置值分列展示（与「邮件服务」「调试日志」页同一套表格样式）：每个参数独占一行，页级操作按钮放在表格下方 -->
+                <table class="table table-striped table-bordered table-hover" id="systemLdapTable">
+                  <thead>
+                  <tr>
+                    <th style="width:220px;">参数</th>
+                    <th>配置值</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td>LDAP设置</td>
+                    <td>
+                      <input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx" style="width:520px;">
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+
+                <button onclick="ldapTest()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
+              </div>
+              <div class="widget-foot">
+                <div class="clearfix"></div>
+              </div>
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+</div>

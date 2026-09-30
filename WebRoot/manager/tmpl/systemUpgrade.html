@@ -51,18 +51,6 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>OfficeEditor</td>
-	                    <td>
-			            	<div><span style="margin-right:5px"><input type="checkbox" id="isOnlyOfficeUsed" {{if value.isOnlyOfficeUsed == 1}} checked="checked" {{/if}}  onclick="selectIsOnlyOfficeUsed()" disabled="disabled"/></span>OnlyOffice</div>
-	                    </td>
-	                    <td class="edit">
-	                      	<button onclick="addOfficeFonts()" data-id="" class="btn btn-lg btn-warning examine_ban">添加字体...</button>	                      	
-	                      	<button onclick="generateOfficeFontsConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">重置字体库</button>
-	                      	<button id="btnDisableOffice" onclick="disableOffice()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.officeDisabled == 1}} style="display:none" {{/if}}>禁用</button>
-	                      	<button id="btnEnableOffice" onclick="enableOffice()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.officeDisabled == 0}} style="display:none" {{/if}}>启用</button>
-	                    </td>
-	                  </tr>
-	                  <tr>
 	                    <td>仓库默认存储位置</td>
 	                    <td>
 	                    	<input type="text" class="form-control" id="defaultReposStorePath" name="defaultReposStorePath" value="{{value.defaultReposStorePath}}" disabled="disabled">
@@ -105,32 +93,6 @@
 	                    </td>
 	                  </tr>
 	                  <tr>
-	                    <td>LDAP设置</td>
-	                    <td>
-							<input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx">
-	                    </td>
-	                    <td class="edit">
-	                      	<button onclick="ldapTest()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
-	                    </td>
-	                  </tr>
-	                  <tr>
-	                    <td>安全网络设置</td>
-	                    <td>
-							<input type="text" class="form-control" id="allowedNetworkConfig" name="allowedNetworkConfig" value="{{value.allowedNetworkConfig}}" disabled="disabled" placeholder="192.168.0.*; 192.168.1.1-10; 192.168.2-16.*;">
-	                    </td>
-	                    <td class="edit">
-	                    </td>
-	                  </tr>
-	                  <tr>
-	                    <td>AI接入设置</td>
-	                    <td>
-							<input type="text" class="form-control" id="llmConfig" name="llmConfig" value="{{value.llmConfig}}" disabled="disabled" placeholder="https://api.deepseek.com; apikey=sk-xxx; modelName=deepseek-chat; name=deepseek; ">
-	                    </td>
-	                    <td class="edit">
-	                      	<button onclick="llmTest()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
-	                    </td>
-	                  </tr>
-	                  <tr>
 	                    <td>最大上传线程数</td>
 	                    <td>
 			            	<select class="form-control" id="maxThreadCount" style="width: 100%" disabled="disabled">   
@@ -152,19 +114,6 @@
 			            	</select>
 			            </td>
 			            <td class="edit">
-	                    </td>
-	                  </tr>
-	                  <tr>
-	                    <td>集群部署</td>
-	                    <td>
-			            	<div><span style="margin-right:5px"><input type="checkbox" id="redisEn" {{if value.redisEn == 1}} checked="checked" {{/if}}  onclick="selectRedisEn()" disabled="disabled"/></span>启用</div>
-	                    	<input type="text" class="form-control" id="redisUrl" value="{{value.redisUrl}}" placeholder="请填写redis服务器地址,例如：redis://localhost:6379" disabled="disabled">			            		                    
-	                    	<input type="text" class="form-control" id="clusterServerUrl" value="{{value.clusterServerUrl}}" placeholder="请填写集群服务器地址,例如：http://localhost:8100" disabled="disabled">			            		                    
-							<textarea class="form-control" id="clusterInfo" disabled="disabled">{{value.clusterInfo}}</textarea>
-			            </td>
-	                    <td class="edit">
-	                      	<button onclick="testCluster()" data-id="" class="btn btn-lg btn-warning examine_ban">测试</button>
-	                      	<button onclick="resetClusterConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">重置</button>
 	                    </td>
 	                  </tr>
 	                  {{if value.isSalesServer == 1}}

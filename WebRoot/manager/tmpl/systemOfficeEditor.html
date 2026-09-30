@@ -1,0 +1,48 @@
+<div class="row">
+        <div class="col-md-12">
+          <div class="widget">
+            <div class="widget-head">
+              <div class="pull-left">Office编辑器</div>
+              <div class="widget-icons pull-right">
+                <button id="btnEnableSystemOfficeEditorSet" onclick="enableSystemOfficeEditorSet()" class="btn btn-lg btn-success examine_ban">编辑</button>
+                <button id="btnSaveSystemOfficeEditorSet" onclick="saveSystemOfficeEditorSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">保存</button>
+                <button id="btnCancelSystemOfficeEditorSet" onclick="cancelSystemOfficeEditorSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+            <div class="widget-content">
+              <div id="systemOfficeForm" style="margin-top: 20px;">
+                <!-- 参数名与配置值分列展示（与「邮件服务」「调试日志」页同一套表格样式）：每个参数独占一行，页级操作按钮放在表格下方 -->
+                <table class="table table-striped table-bordered table-hover" id="systemOfficeTable">
+                  <thead>
+                  <tr>
+                    <th style="width:220px;">参数</th>
+                    <th>配置值</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td>Office编辑器</td>
+                    <td>
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="isOnlyOfficeUsed" {{if value.isOnlyOfficeUsed == 1}} checked="checked" {{/if}} onclick="selectIsOnlyOfficeUsed()" disabled="disabled"> OnlyOffice
+                      </label>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+
+                <button onclick="addOfficeFonts()" data-id="" class="btn btn-lg btn-warning examine_ban">添加字体...</button>
+                <button onclick="generateOfficeFontsConfirm()" data-id="" class="btn btn-lg btn-success examine_ban">重置字体库</button>
+                <button id="btnDisableOffice" onclick="disableOffice()" data-id="" class="btn btn-lg btn-danger examine_ban" {{if value.officeDisabled == 1}} style="display:none" {{/if}}>禁用</button>
+                <button id="btnEnableOffice" onclick="enableOffice()" data-id="" class="btn btn-lg btn-success examine_ban" {{if value.officeDisabled == 0}} style="display:none" {{/if}}>启用</button>
+              </div>
+              <div class="widget-foot">
+                <div class="clearfix"></div>
+              </div>
+            </div>
+            <!-- Matter ends -->
+          </div>
+        </div>
+</div>

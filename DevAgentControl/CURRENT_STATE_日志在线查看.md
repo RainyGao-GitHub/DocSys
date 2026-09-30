@@ -1,6 +1,6 @@
 # CURRENT_STATE_日志在线查看（工作卡）
 
-建立于 2026-09-30。**状态：进行中（①「在线查看」`548b6da49`、②「调试日志」升为「系统管理」子项 `d6b7eff85` 均已由用户提交；③ 页面布局重排已实现+验证，**待用户确认提交**）。**
+建立于 2026-09-30。**状态：进行中（①`548b6da49`、②`d6b7eff85`、③`f8727cd03` 均已由用户提交；④ 将 LDAP/安全网络/AI/集群/Office 五个参数块拆为独立子页，已实现+验证，**待用户确认提交**）。**
 
 > 本卡是**当前任务**的唯一口径处：必读上下文 / 参考计划与上下文 / 当前进展 / 生效约束（含是否需要先提交）。
 
@@ -130,6 +130,52 @@
 - 踩坑：该模板 `<td>` 内部的缩进是「tab + 空格」混排，手工抄写容易多/少一个 tab 导致替换失败 → 先用
   `Get-Content ... -replace "`t",'<TAB>'` 把空白可视化后再构造替换串。
 
+## 子项④ 5 个参数块拆为独立子页（2026-09-30 第四里程碑）
+
+### 用户裁定
+1. Office 编辑器页：`officeEditorApi` / `openOfficePath` 是**残留配置、系统已不再使用 → 直接去掉**（不建输入框）✓
+2. 集群页：`clusterInfo`（只读）+「测试/重置」**都搬** ✓
+3. 命名与顺序：放在「调试日志」之前：`LDAP设置 / 安全网络设置 / AI接入设置 / 集群部署设置 / Office编辑器`
+   （英文 `LDAP / Allowed Network / AI Access / Cluster Deploy / Office Editor`）✓
+4. 安全网络设置不加说明/二次确认，保持现有逻辑 ✓
+
+### 最关键的发现（决定实现方式）
+`saveSystemInfoSet()` 原来**从 DOM 全量取 19 个字段**再提交，实测请求体里连页面上**不存在**的字段也在：
+`…&openOfficePath=&officeEditorApi=&logLevel=&logFile=…`
+（jQuery 1.10.2 把 undefined 序列化成空串，实测 `$.param({a:undefined})` == `"a="`；项目无 `StringTrimmerEditor`，空串到后端仍是 `""`）。
+而 `setSystemInfo.do` 对每个参数都是 `if(x != null)` 才写 → **空串不是 null**，会被当成「把该配置改成空」。
+⇒ 只要把行搬走而不改提交方式，保存「系统设置」就会把 LDAP/网络/AI/集群/Office 的配置清空。
+⇒ 所以本次必须把提交改成**按页白名单**（后端零改动）。
+> 存疑点（如实记录）：配置文件里也查不到 `officeEditorApi=`/`openOfficePath=`/`logFile=`/`logLevel=` 这些键，与「空串会被写入」的推理不一致。
+> 本次不再提交这些字段，存疑点已无关紧要；但未彻底查清。
+
+### 实施
+- 新增 10 个模板：`tmpl/system{Ldap,Network,Llm,Cluster,OfficeEditor}{,_en}.html`（两列「参数/配置值」+ 每参数一行 + 操作按钮在表下）。
+- `tmpl/sidebar{,_en}.html`：桌面 + 移动各加 5 个子项（插在「调试日志」之前，共 13 个子项）。
+- `tmpl/systemUpgrade{,_en}.html`：删除 OfficeEditor / LDAP / 安全网络 / AI / 集群部署 5 个块（表 16 行 → 11 行）。
+- `main.js`：
+  - 新增公共逻辑 `showSystemInfoPage()` / `setSystemPageEditMode()` / `postSystemInfo()`（白名单提交 + 统一成功/失败提示与刷新）；
+  - 新增 5 个页面的 `show/enable/cancel/save`（每页只提交自己的字段）+ `showContentPage`/`showSystemPage` 路由；
+  - `saveSystemInfoSet()` 重写为白名单（只提交 tomcatPath/javaHome/5 个存储路径/maxThreadCount；`salesDataStorePath` 仅当页面上存在时提交）；
+  - `enableSystemInfoSet()`/`cancelSystemInfoSet()` 改为复用 `setSystemPageEditMode()`（两个函数从 ~130 行缩到 ~10 行）；
+  - `updateSystemInfo()` 已无调用方，**未删除**（100+ 行老函数，删它会让本次 diff 变大），已在函数头加注释说明「不要调用」。
+- **后端：零改动**。
+
+### 验证（dev 8100，admin）
+- 侧边栏中/英各 5 处（桌面+移动），顺序：…系统迁移 / LDAP设置 / 安全网络设置 / AI接入设置 / 集群部署设置 / Office编辑器 / 调试日志（共 13）。
+- 5 个页面渲染正确、子项高亮、控件默认只读；各页**只出现自己的字段**（如 LDAP 页没有 `#tomcatPath`）。
+- 「系统设置」页行标签 = 当前版本/服务器/JavaHome/仓库默认存储位置/系统数据存储位置/Agent技能存储位置/销售数据存储位置/系统日志存储位置/最大上传线程数/系统密钥/证书密钥；
+  `#ldapConfig`/`#allowedNetworkConfig`/`#llmConfig`/`#redisEn`/`#isOnlyOfficeUsed`/`#officeEditorApi`/`#openOfficePath` 均已不在 DOM。
+- **核心验收：配置文件逐键比对**。跑完「5 个新页 编辑→保存」+「系统设置 编辑→保存」共 6 次保存后，
+  `WebRoot/WEB-INF/classes/docSysConfig.properties` 的非注释键值**完全一致**（23 个键，含 `llmConfig`/`redisEn=0`/`isOnlyOfficeUsed=1`/各存储路径）；
+  哈希变化仅因 `Properties.store` 重写时间戳注释。⇒ 拆分没有清掉任何他人的配置。
+- 集群页「取消」回滚：编辑态下 `#redisEn` 可点（两个地址仍禁用）→ 勾选「启用」后地址解禁并预填 `redis://localhost:6379` → 取消后恢复未勾选+禁用+保存按钮隐藏。
+- **按钮接线全量体检**：7 个页面里所有 `[onclick]` 的函数名都能在 `window` 上找到（各页 3~14 个按钮，bad=0）。
+- 英文：5 个 `_en` 模板 200 + 侧边栏英文各 2 处（桌面+移动）。
+- ⚠️ **踩坑记录 4（E2E 抓到）**：`systemOfficeEditor{,_en}.html` 里按钮 id/函数名写成了 `SystemOffice`，而 `main.js` 用 `SystemOfficeEditor`
+  → 点「编辑」会 `ReferenceError`（按钮 id 也对不上，编辑/保存/取消都不切换）。已统一为 `SystemOfficeEditor`，复测通过。
+  首轮 E2E 的信号是 `editVisible:false`（其余断言全过）——“断言按钮 id 存在”比“断言按钮可见”弱，后续 E2E 优先加一条 onclink 解析体检。
+
 ## 预估改动清单（实施时）
 
 - 新增：`WebRoot/manager/logViewer.html`、`logViewer_en.html`、`logViewer.js`、`src/com/DocSystem/common/LogFileUtil.java`
@@ -187,28 +233,34 @@
 
 ## 下一步
 
-1. **等用户确认后提交子项③**（不要自动 commit）——本批改动只在**主仓库** `D:\Dev\DocSys`（`devInt`）的 `WebRoot/manager/tmpl/` 下。
-2. 待用户裁定：遗留 `cancelSystemInfoSet()` 的 `.attr("selected")` 失效是否一并修；「下载」500 是否处理。
-3. 收尾：子项③提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
-4. 可选后续（用户未要求）：行号 / 轮转历史文件列表 / 关键字服务端搜索（返回匹配行±上下文）/ 日志级导出。
+1. **等用户确认后提交子项④**（不要自动 commit）——本批改动只在**主仓库** `D:\Dev\DocSys`（`devInt`）的 `WebRoot/manager/` 下。
+2. 待用户裁定：遗留 `cancelSystemInfoSet()` 的 `.attr("selected")` 失效是否修（现已改为 `setSystemPageEditMode` 白名单式，不再涉及）；「下载」500 是否处理；`updateSystemInfo()` 死代码是否删。
+3. 收尾：子项④提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
+4. 可选后续（用户未要求）：各子页加 help-block 说明文案 / 行号 / 轮转历史文件列表 / 关键字服务端搜索。
 
 ## 生效约束
 
 - 子项②已获用户裁定并实施完成 → 落地前仍需用户确认提交，**不要自动 commit**。
-- **日志路径配置有个坑**：`setSystemInfo.do` 中 `logFile` 传 null = 清空（其余字段 null = 不改）。任何调用该接口的地方都必须显式回传 `logFile`。
+- **日志路径配置有个坑**：`setSystemInfo.do` 中 `logFile` 传 null = 清空，其余字段 null = 不改——但 **jQuery 把 undefined 序列化成空串（不是 null）**，空串会被当成「改成空」。
+  任何调用该接口的地方都必须**按白名单只提交自己负责的字段**（`postSystemInfo()`）。
+- **新增子页的标准写法**（照抄现有 6 个）：模板 `tmpl/systemXxx{,_en}.html`（两列参数表 + 操作按钮在表下，按钮 id = `btn{Enable,Save,Cancel}XxxSet`），
+  `main.js` 里 `var SYSTEM_XXX_FIELDS = [...]` + `show/enable/cancel/save`（enable/cancel 用 `setSystemPageEditMode("Xxx", SYSTEM_XXX_FIELDS, bool)`，save 用 `postSystemInfo(data, showXxx)`），
+  再在 `showContentPage`/`showSystemPage` 各加一个 `case`，最后在 `sidebar{,_en}.html` 的 `#nav` 与 `#navMobile` 各加一项。
 - **模板会走浏览器缓存**：验证模板改动必须带 cache-buster（`?t=…`）+ `Network.clearBrowserCache`，否则会读到旧模板（本次一度误判为“侧边栏没生效”）。
 - 编译：Spring 控制器**必须** `-parameters -g`；`.class` 只进 `WebRoot/WEB-INF/classes`，源码树不得出现 `.class`。
 - 改 Java 后必须重启 dev Tomcat（`docsys_restart.bat`；启动 2~10 分钟；重启后 session 失效，需重新登录）。
 - E2E 口径：`POST /DocSystem/User/login.do`（`Admin`/`pwd=QWRtaW4=`，pwd 为 base64 明文）；探针产物写 `%TEMP%\docsys_chk\`。
 - **不要自动 commit**：改完 + 验证 → 汇报 → 等用户确认。
 
-## 未提交改动
+## 未提交改动（子项④，均在主仓库；基线 `f8727cd03`）
 
-`git status --short`（`D:\Dev\DocSys`）当前（基线 = `d6b7eff85`）：
+- ` M WebRoot/manager/main.js`
+- ` M WebRoot/manager/tmpl/sidebar.html` / `sidebar_en.html`
+- ` M WebRoot/manager/tmpl/systemUpgrade.html` / `systemUpgrade_en.html`
+- `?? WebRoot/manager/tmpl/system{Ldap,Network,Llm,Cluster,OfficeEditor}.html`（5 个）
+- `?? WebRoot/manager/tmpl/system{Ldap,Network,Llm,Cluster,OfficeEditor}_en.html`（5 个）
 
-- ` M WebRoot/manager/tmpl/systemDebugLog.html`
-- ` M WebRoot/manager/tmpl/systemDebugLog_en.html`
-
-- 子项①②已由用户提交：①`548b6da49`（在线查看）、②`d6b7eff85`（调试日志从系统设置剥离）。
-- 子项③为**纯模板改动** → 不需要编译、不需要重启（本次未重启 dev Tomcat）。
-- 模板有浏览器缓存：验证/上线后需刷新页面才看到新布局。
+- 子项①②③已由用户提交：`548b6da49`（在线查看）、`d6b7eff85`（调试日志从系统设置剥离）、`f8727cd03`（调试日志布局调整）。
+- 子项④为**纯前端改动（模板 + main.js）→ 不需要编译、不需要重启**（本次未重启 dev Tomcat）。
+- 测试期间 `WebRoot/WEB-INF/classes/docSysConfig.properties`（gitignore 的运行时副本）被 `setSystemInfo.do` 重写过，但逐键键值与测试前完全一致。
+- 模板/侧边栏有浏览器缓存：验证/上线后需刷新页面（本次验证均先 `Network.clearBrowserCache`）。
