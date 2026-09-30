@@ -1,6 +1,6 @@
 # CURRENT_STATE_用户使用统计修复（工作卡）
 
-建立于 2026-09-30。**状态：进行中（用户已裁定：P0+P1+P2 全做 → 可开工；改完 + 验证后等用户确认再提交）。**
+建立于 2026-09-30。**状态：已收尾（P0+P1+P2 已实施 + E2E 验证通过 + 用户已提交主仓库 `677952484`「【优化】用户使用时间统计」）。**
 
 > 本卡是**当前任务**的唯一口径处：必读上下文 / 参考计划与上下文 / 当前进展 / 生效约束（含是否需要先提交）。
 
@@ -123,9 +123,8 @@
 
 ## 下一步
 
-1. **等用户确认后提交**（不要自动 commit）—— 全部改动都在**主仓库** `D:\Dev\DocSys`（`devInt`），无独立仓库改动：
-   `git add -A` → commit（当前工作区只含本任务改动 + 上一步的工作卡指针）。
-2. 收尾：提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
+1. ✅ **已提交（2026-09-30，用户执行）**：主仓库 `D:\Dev\DocSys`（`devInt`）commit **`677952484`**「【优化】用户使用时间统计」（本次全部改动，含本卡与 `CLAUDE.md`）。
+2. ✅ 收尾：本卡已移入 `DevAgentControl/已完成/`，`CLAUDE.md` 指针已切到新任务（日志在线查看）。
 3. 可选后续（用户未要求）：P3（列排序 / 导出 CSV / 页面说明）；或把“包含无活动用户”做成开关。
 4. 上线注意事项：`event=activity` 会出现在「日志管理」页，每个活跃用户每 20 分钟 ≤ 1 条；
    若客户嫌日志多，把 `WebRoot/web/js/UsageActivityReporter.js` 的 `USAGE_ACTIVITY_REPORT_ENABLED` 置 false
@@ -133,7 +132,7 @@
 
 ## 生效约束
 
-- **用户尚未裁定方案 → 不要自行开工改代码**。
+- ✅ 本任务**已收尾**（不要再按此卡开工；新任务见 `CURRENT_STATE_日志在线查看.md`）。
 - 代码改动归属：`DocController.java` / `BaseFunction.java` / `UserController.java` / `WebRoot/manager/**` 全在**主仓库** `D:\Dev\DocSys`（`devInt`）。
 - 编译：Spring 控制器**必须** `-parameters -g`，输出 `-d WebRoot/WEB-INF/classes`；源码树不得出现 `.class`。
 - 改 Java 后必须重启 dev Tomcat（`docsys_restart.bat`；启动 2~10 分钟，判据 = catalina `Server startup in` + 8100 Listen + 探一个 `.do`）；
@@ -141,9 +140,10 @@
 - E2E 口径：`POST /DocSystem/User/login.do`（`Admin`/`pwd=QWRtaW4=`，pwd 是 base64 明文）；探针产物写 `%TEMP%\docsys_chk\`。
 - **不要自动 commit**：改完 + 验证 → 汇报 → 等用户确认。
 
-## 未提交改动
+## 提交记录
 
-- **主仓库** `D:\Dev\DocSys`（`devInt`）—— 全部未提交：
+- **2026-09-30**：主仓库 `677952484`「【优化】用户使用时间统计」（10 改 + 2 新增：DocController / UserController / BaseFunction /
+  `UsageActivityReporter.js` / 4 个 HTML 引入 / 2 个 JS 初始化 / 本卡 + `CLAUDE.md`）。工作区已清空。
   - `src/com/DocSystem/controller/DocController.java`（统计重写：用户维度 + 会话推断时长）
   - `src/com/DocSystem/controller/UserController.java`（新增 `activityReport.do`）
   - `src/com/DocSystem/common/BaseFunction.java`（使用统计常量）

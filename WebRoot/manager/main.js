@@ -458,6 +458,11 @@ function selectIsOnlyOfficeUsed()
 	// 仅用于切换复选框状态，无额外联动逻辑
 }
 
+function viewLogFile(){
+	//调试日志在线查看：用独立的新标签页打开（看日志需要更大的视觉空间）
+	window.open("/DocSystem/manager/logViewer" + langExt + ".html", "_blank");
+}
+
 function downloadLogFile(){
 	$.ajax({
         url : "/DocSystem/Manage/downloadLogFile.do",

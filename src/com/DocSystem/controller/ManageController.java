@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
+import com.DocSystem.common.LogFileUtil;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
@@ -3704,7 +3706,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping(value="downloadLogFile")
-	public void downloadLogFile(HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception{
+	public void downloadLogFile(String key, HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception{
 
 		Log.infoHead("****************** downloadLogFile.do ***********************");
 
@@ -3725,14 +3727,9 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		String logFilePath = Log.logFile;
-		if(logFilePath == null || logFilePath.isEmpty())
-		{
-			logFilePath = defaultLogFilePath;
-		}
-		
-		File file = new File(logFilePath);
-		if(file.exists() == false)
+		//key 为空 = 原来的「调试日志」；其它取值只能命中白名单，不接受任意路径
+		File file = resolveLogFile(key);
+		if(file == null || file.exists() == false)
 		{
 			docSysErrorLog("日志文件不存在！", rt);
 			writeJson(rt, response);			
@@ -3741,9 +3738,9 @@ public class ManageController extends BaseController{
 		}
 		
 		String[] temp = new String[2]; 
-		if(Path.seperatePathAndName(logFilePath, temp) < 0)
+		if(Path.seperatePathAndName(file.getAbsolutePath(), temp) < 0)
 		{
-			docSysErrorLog("日志文件路径错误:" + logFilePath, rt);
+			docSysErrorLog("日志文件路径错误:" + file.getAbsolutePath(), rt);
 			writeJson(rt, response);			
 			addSystemLog(request, login_user, "downloadLogFile", "downloadLogFile", "下载调试日志", null, "失败", null, null, null, buildSystemLogDetailContent(rt));							
 			return;										
@@ -3809,6 +3806,193 @@ public class ManageController extends BaseController{
 		
         writeJson(rt, response);		
 		addSystemLog(request, login_user, "cleanLogFile", "cleanLogFile", "清除调试日志", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
+	}
+
+	/****************  调试日志在线查看  ******************/
+	private static final String LOG_KEY_DEBUG = "debug";
+	private static final String LOG_KEY_CONSOLE = "console";
+	private static final String LOG_KEY_CATALINA_PREFIX = "catalina:";
+	private static final String CATALINA_LOG_NAME_PREFIX = "catalina.";
+	private static final String CATALINA_LOG_NAME_SUFFIX = ".log";
+	private static final int CATALINA_LOG_LIST_MAX = 10;
+
+	/** 日志源条目（白名单）：前端只能按 key 取，不能传路径 */
+	private static class LogSource {
+		public String key;
+		public String label;
+		public File file;
+	}
+
+	/** Tomcat 日志目录：<catalina.base|home>/logs */
+	private static File getTomcatLogDir() {
+		String base = System.getProperty("catalina.base");
+		if(base == null || base.isEmpty()) {
+			base = System.getProperty("catalina.home");
+		}
+		if(base == null || base.isEmpty()) {
+			return null;
+		}
+		File dir = new File(base, "logs");
+		return dir.isDirectory() ? dir : null;
+	}
+
+	/**
+	 * 允许在线查看的日志源白名单：
+	 * <ul>
+	 *   <li>{@code debug} —— 调试日志，路径口径与「下载」完全一致（{@code Log.logFile} 回落 {@code defaultLogFilePath}）；</li>
+	 *   <li>{@code console} —— {@code <catalina.home>/logs/docsys_console.log}（启动脚本的控制台重定向）；</li>
+	 *   <li>{@code catalina:yyyy-MM-dd} —— {@code <catalina.home>/logs/catalina.<日期>.log}（只列文件名严格匹配的，最多 {@value #CATALINA_LOG_LIST_MAX} 个）。</li>
+	 * </ul>
+	 * 因为解析只走这张表，所以不存在"前端传路径读取任意文件"的风险。
+	 */
+	protected List<LogSource> getLogSourceList() {
+		List<LogSource> list = new ArrayList<LogSource>();
+
+		String debugLogPath = Log.logFile;
+		if(debugLogPath == null || debugLogPath.isEmpty()) {
+			debugLogPath = defaultLogFilePath;
+		}
+		if(debugLogPath != null && !debugLogPath.isEmpty()) {
+			LogSource s = new LogSource();
+			s.key = LOG_KEY_DEBUG;
+			s.file = new File(debugLogPath);
+			s.label = s.file.getName();
+			list.add(s);
+		}
+
+		File logDir = getTomcatLogDir();
+		if(logDir != null) {
+			LogSource console = new LogSource();
+			console.key = LOG_KEY_CONSOLE;
+			console.file = new File(logDir, "docsys_console.log");
+			console.label = console.file.getName();
+			list.add(console);
+
+			File[] files = logDir.listFiles();
+			if(files != null) {
+				List<String> catalinaNames = new ArrayList<String>();
+				for(File f : files) {
+					String name = f.getName();
+					if(name.startsWith(CATALINA_LOG_NAME_PREFIX) && name.endsWith(CATALINA_LOG_NAME_SUFFIX) && f.length() > 0) {
+						catalinaNames.add(name);
+					}
+				}
+				Collections.sort(catalinaNames);		//文件名带日期，字典序即时间序
+				Collections.reverse(catalinaNames);		//最新的在前
+				for(int i = 0; i < catalinaNames.size() && i < CATALINA_LOG_LIST_MAX; i++) {
+					String name = catalinaNames.get(i);
+					LogSource s = new LogSource();
+					s.key = LOG_KEY_CATALINA_PREFIX
+							+ name.substring(CATALINA_LOG_NAME_PREFIX.length(), name.length() - CATALINA_LOG_NAME_SUFFIX.length());
+					s.file = new File(logDir, name);
+					s.label = name;
+					list.add(s);
+				}
+			}
+		}
+		return list;
+	}
+
+	/** 按 key 在白名单里找日志源；key 为空视作「调试日志」 */
+	private LogSource findLogSource(String key) {
+		if(key == null || key.isEmpty()) {
+			key = LOG_KEY_DEBUG;
+		}
+		for(LogSource s : getLogSourceList()) {
+			if(s.key.equals(key)) {
+				return s;
+			}
+		}
+		return null;
+	}
+
+	/** 解析日志文件：key 命中白名单用白名单文件；找不到返回 null */
+	private File resolveLogFile(String key) {
+		LogSource s = findLogSource(key);
+		return (s == null) ? null : s.file;
+	}
+
+	//日志源列表（在线查看页面左上角下拉）
+	@RequestMapping("/getLogSources.do")
+	public void getLogSources(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
+		Log.infoHead("*********** getLogSources *******************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null) {
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(login_user.getType() < 1) {
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
+		for(LogSource s : getLogSourceList()) {
+			boolean exists = (s.file != null && s.file.isFile());
+			Map<String, Object> item = new HashMap<String, Object>();
+			item.put("key", s.key);
+			item.put("label", s.label);
+			item.put("exists", Boolean.valueOf(exists));
+			item.put("size", Long.valueOf(exists ? s.file.length() : 0));
+			item.put("lastModified", Long.valueOf(exists ? s.file.lastModified() : 0));
+			data.add(item);
+		}
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
+	//日志内容（按字节窗口读取，窗口两端对齐到整行；key 必须命中白名单）
+	//注意：该接口会被页面「自动刷新」每几秒调一次，因此**不写系统日志、不写调试日志**，否则会自我污染正在查看的日志
+	@RequestMapping("/getLogContent.do")
+	public void getLogContent(String key, Long offset, Long endOffset, Integer maxBytes, String encoding,
+			HttpSession session, HttpServletRequest request, HttpServletResponse response) {
+		ReturnAjax rt = new ReturnAjax();
+
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null) {
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(login_user.getType() < 1) {
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		LogSource source = findLogSource(key);
+		if(source == null || source.file == null || source.file.isFile() == false) {
+			docSysErrorLog("日志文件不存在或不允许查看！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		try {
+			long off = (offset == null) ? -1L : offset.longValue();
+			LogFileUtil.LogWindow win = LogFileUtil.read(source.file, off, endOffset,
+					maxBytes, LogFileUtil.charsetOf(encoding));
+
+			Map<String, Object> data = new HashMap<String, Object>();
+			data.put("key", source.key);
+			data.put("filePath", source.file.getAbsolutePath());
+			data.put("fileSize", Long.valueOf(source.file.length()));
+			data.put("lastModified", Long.valueOf(source.file.lastModified()));
+			data.put("startOffset", Long.valueOf(win.startOffset));
+			data.put("endOffset", Long.valueOf(win.endOffset));
+			data.put("hasMoreBefore", Boolean.valueOf(win.hasMoreBefore));
+			data.put("longLine", Boolean.valueOf(win.longLine));
+			data.put("content", win.content);
+			rt.setData(data);
+		} catch (Exception e) {
+			docSysErrorLog("读取日志失败！", rt);
+			errorLog("getLogContent() 异常");
+			errorLog(e);
+		}
+		writeJson(rt, response);
 	}
 
 	//系统日志列表查询（支持时间范围、搜索、分页）

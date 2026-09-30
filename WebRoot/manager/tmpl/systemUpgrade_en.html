@@ -171,8 +171,7 @@
 			            	<div><span style="margin-right:5px"><input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}}  onclick="selectOutputToFileEn()" disabled="disabled"/></span>Output to file</div>
 	                    	<input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="You can specify a dedicated file path for debug log" disabled="disabled">			            		                    
 			            </td>
-	                    <td class="edit">
-	                      	<button onclick="downloadLogFile()" data-id="" class="btn btn-lg btn-warning examine_ban">Download</button>
+	                    <td class="edit">	                      	<button onclick="viewLogFile()" data-id="" class="btn btn-lg btn-primary examine_ban">View</button>	                      	<button onclick="downloadLogFile()" data-id="" class="btn btn-lg btn-warning examine_ban">Download</button>
 	                    	<button onclick="cleanLogFile()" data-id="" class="btn btn-lg btn-danger examine_ban"><i class="icon-remove"></i>Clean</button>
 	                    </td>
 	                  </tr>

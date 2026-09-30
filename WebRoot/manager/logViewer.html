@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>调试日志在线查看 - MxsDoc</title>
+<style>
+	html, body { height: 100%; margin: 0; display: flex; flex-direction: column; background: #1e1e1e; color: #ddd; font-family: Consolas, "Courier New", monospace; }
+	#toolbar { flex: 0 0 auto; padding: 6px 10px; background: #2d2d30; border-bottom: 1px solid #3f3f46; font-size: 13px; white-space: nowrap; overflow-x: auto; }
+	#toolbar label { margin-left: 10px; color: #bbb; }
+	#toolbar select, #toolbar input[type=text] { background: #3c3c3c; color: #eee; border: 1px solid #555; border-radius: 3px; padding: 3px 6px; font-family: inherit; }
+	#toolbar button { background: #0e639c; color: #fff; border: none; border-radius: 3px; padding: 4px 10px; margin-left: 6px; cursor: pointer; font-family: inherit; }
+	#toolbar button:hover { background: #1177bb; }
+	#statusBar { flex: 0 0 auto; padding: 4px 10px; background: #252526; color: #9a9a9a; font-size: 12px; border-bottom: 1px solid #3f3f46; white-space: nowrap; overflow-x: auto; }
+	#tip { flex: 0 0 auto; display: none; padding: 5px 10px; background: #5a4b00; color: #ffd94a; font-size: 12px; }
+	#logWrap { flex: 1 1 auto; min-height: 0; overflow: auto; }
+	#logContent { margin: 0; padding: 6px 10px; white-space: pre; font-size: 12.5px; line-height: 1.45; color: #d4d4d4; }
+	#logContent mark { background: #ffd94a; color: #000; }
+</style>
+</head>
+<body>
+<div id="toolbar">
+	<label>日志源</label><select id="logSource"></select>
+	<label><input type="checkbox" id="autoRefresh" checked> 自动刷新(3s)</label>
+	<label>编码</label><select id="logEncoding"><option value="UTF-8">UTF-8</option><option value="GBK">GBK</option></select>
+	<button id="btnReload">重新加载</button>
+	<button id="btnJumpEnd">跳到末尾</button>
+	<button id="btnJumpStart">跳到开头</button>
+	<button id="btnLoadBefore">向上翻页</button>
+	<button id="btnDownload">下载</button>
+	<label>过滤</label><input type="text" id="logFilter" placeholder="仅过滤已加载内容" style="width: 160px;">
+	<span id="filterInfo" style="color: #9a9a9a;"></span>
+</div>
+<div id="statusBar"></div>
+<div id="tip"></div>
+<div id="logWrap"><pre id="logContent"></pre></div>
+<script type="text/javascript" src="./static/js/jquery.js"></script>
+<script type="text/javascript">
+	//语言后缀："" = 中文，" _en" = English（logViewer.js 按它取文案）
+	var langExt = "";
+</script>
+<script type="text/javascript" src="logViewer.js"></script>
+<script type="text/javascript">
+	$(document).ready(function () { lvInit(); });
+</script>
+</body>
+</html>

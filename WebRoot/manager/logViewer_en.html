@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Debug Log Viewer - MxsDoc</title>
+<style>
+	html, body { height: 100%; margin: 0; display: flex; flex-direction: column; background: #1e1e1e; color: #ddd; font-family: Consolas, "Courier New", monospace; }
+	#toolbar { flex: 0 0 auto; padding: 6px 10px; background: #2d2d30; border-bottom: 1px solid #3f3f46; font-size: 13px; white-space: nowrap; overflow-x: auto; }
+	#toolbar label { margin-left: 10px; color: #bbb; }
+	#toolbar select, #toolbar input[type=text] { background: #3c3c3c; color: #eee; border: 1px solid #555; border-radius: 3px; padding: 3px 6px; font-family: inherit; }
+	#toolbar button { background: #0e639c; color: #fff; border: none; border-radius: 3px; padding: 4px 10px; margin-left: 6px; cursor: pointer; font-family: inherit; }
+	#toolbar button:hover { background: #1177bb; }
+	#statusBar { flex: 0 0 auto; padding: 4px 10px; background: #252526; color: #9a9a9a; font-size: 12px; border-bottom: 1px solid #3f3f46; white-space: nowrap; overflow-x: auto; }
+	#tip { flex: 0 0 auto; display: none; padding: 5px 10px; background: #5a4b00; color: #ffd94a; font-size: 12px; }
+	#logWrap { flex: 1 1 auto; min-height: 0; overflow: auto; }
+	#logContent { margin: 0; padding: 6px 10px; white-space: pre; font-size: 12.5px; line-height: 1.45; color: #d4d4d4; }
+	#logContent mark { background: #ffd94a; color: #000; }
+</style>
+</head>
+<body>
+<div id="toolbar">
+	<label>Source</label><select id="logSource"></select>
+	<label><input type="checkbox" id="autoRefresh" checked> Auto refresh (3s)</label>
+	<label>Encoding</label><select id="logEncoding"><option value="UTF-8">UTF-8</option><option value="GBK">GBK</option></select>
+	<button id="btnReload">Reload</button>
+	<button id="btnJumpEnd">Tail</button>
+	<button id="btnJumpStart">Head</button>
+	<button id="btnLoadBefore">Load older</button>
+	<button id="btnDownload">Download</button>
+	<label>Filter</label><input type="text" id="logFilter" placeholder="filter loaded lines" style="width: 160px;">
+	<span id="filterInfo" style="color: #9a9a9a;"></span>
+</div>
+<div id="statusBar"></div>
+<div id="tip"></div>
+<div id="logWrap"><pre id="logContent"></pre></div>
+<script type="text/javascript" src="./static/js/jquery.js"></script>
+<script type="text/javascript">
+	//Language suffix: "" = Chinese, " _en" = English (logViewer.js picks text by it)
+	var langExt = "_en";
+</script>
+<script type="text/javascript" src="logViewer.js"></script>
+<script type="text/javascript">
+	$(document).ready(function () { lvInit(); });
+</script>
+</body>
+</html>
