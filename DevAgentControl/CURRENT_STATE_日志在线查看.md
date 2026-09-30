@@ -1,6 +1,6 @@
 # CURRENT_STATE_日志在线查看（工作卡）
 
-建立于 2026-09-30。**状态：进行中（①「在线查看」已由用户提交 `548b6da49`；②「调试日志」升为「系统管理」子项已实现+验证，待用户确认提交）。**
+建立于 2026-09-30。**状态：进行中（①「在线查看」`548b6da49`、②「调试日志」升为「系统管理」子项 `d6b7eff85` 均已由用户提交；③ 页面布局重排已实现+验证，**待用户确认提交**）。**
 
 > 本卡是**当前任务**的唯一口径处：必读上下文 / 参考计划与上下文 / 当前进展 / 生效约束（含是否需要先提交）。
 
@@ -113,6 +113,23 @@
   与 `HEAD~1` 的实现一致（原实现也是 `Path.seperatePathAndName(logFilePath, temp)`），即**改动前就存在**；debug / catalina 源都会命中。
   未擅自改动，待用户裁定。
 
+## 子项③ 布局重排：按「邮件服务」的样式拆行（2026-09-30 第三里程碑）
+
+用户反馈：「调试日志既然已经独立出来了，参数就没必要挤在一行里，参考一下邮件服务的布局」。
+
+- 参考页 `tmpl/systemEmailConfig.html` 的布局：`参数(220px) / 配置值` **两列**表，**每个参数一行**；
+  控件带显式宽度（`form-control` + `style="width:220px/320px/440px"`），勾选框用 `<label class="checkbox-inline">`；
+  整表包在 `<div id="xxxForm" style="margin-top: 20px;">` 里，**页级操作按钮放表格下方**（如「发送测试邮件」）。
+- 改造 `tmpl/systemDebugLog.html` / `_en.html`：
+  - 表头由 `参数/配置值/操作` 三列 → `参数/配置值` 两列；
+  - 原「调试日志」一行拆为三行：`日志级别`（select 220px）/ `日志输出`（checkbox「输出到指定文件」）/ `日志文件路径`（input 520px）；
+  - `在线查看 / 下载 / 清除` 三按钮移到表格下方（与「发送测试邮件」同位）；
+  - 控件 id 不变（`logLevel` / `outputToFileEn` / `logFile`）→ **JS 零改动**。
+- 验证（dev 8100）：表头 2 列；3 行参数分别为 220px select、`checkbox-inline`、520px input；按钮 3 个在表下且 `elementFromPoint` 均命中按钮；
+  无 `td.edit` 残留；页面无横向溢出；编辑→勾选「输出到指定文件」才解禁路径输入；取消能回滚（level=1、取消勾选、全部禁用）；截图留档目视确认与「邮件服务」同一观感。
+- 踩坑：该模板 `<td>` 内部的缩进是「tab + 空格」混排，手工抄写容易多/少一个 tab 导致替换失败 → 先用
+  `Get-Content ... -replace "`t",'<TAB>'` 把空白可视化后再构造替换串。
+
 ## 预估改动清单（实施时）
 
 - 新增：`WebRoot/manager/logViewer.html`、`logViewer_en.html`、`logViewer.js`、`src/com/DocSystem/common/LogFileUtil.java`
@@ -170,9 +187,9 @@
 
 ## 下一步
 
-1. **等用户确认后提交子项②**（不要自动 commit）——全部改动都在**主仓库** `D:\Dev\DocSys`（`devInt`）。
+1. **等用户确认后提交子项③**（不要自动 commit）——本批改动只在**主仓库** `D:\Dev\DocSys`（`devInt`）的 `WebRoot/manager/tmpl/` 下。
 2. 待用户裁定：遗留 `cancelSystemInfoSet()` 的 `.attr("selected")` 失效是否一并修；「下载」500 是否处理。
-3. 收尾：提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
+3. 收尾：子项③提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
 4. 可选后续（用户未要求）：行号 / 轮转历史文件列表 / 关键字服务端搜索（返回匹配行±上下文）/ 日志级导出。
 
 ## 生效约束
@@ -185,19 +202,13 @@
 - E2E 口径：`POST /DocSystem/User/login.do`（`Admin`/`pwd=QWRtaW4=`，pwd 为 base64 明文）；探针产物写 `%TEMP%\docsys_chk\`。
 - **不要自动 commit**：改完 + 验证 → 汇报 → 等用户确认。
 
-## 未提交改动（子项②，均在主仓库）
+## 未提交改动
 
-`git status --short`（`D:\Dev\DocSys`）当前：
+`git status --short`（`D:\Dev\DocSys`）当前（基线 = `d6b7eff85`）：
 
-- ` M WebRoot/manager/main.js`
-- ` M WebRoot/manager/tmpl/sidebar.html`
-- ` M WebRoot/manager/tmpl/sidebar_en.html`
-- ` M WebRoot/manager/tmpl/systemUpgrade.html`
-- ` M WebRoot/manager/tmpl/systemUpgrade_en.html`
-- `?? WebRoot/manager/tmpl/systemDebugLog.html`
-- `?? WebRoot/manager/tmpl/systemDebugLog_en.html`
+- ` M WebRoot/manager/tmpl/systemDebugLog.html`
+- ` M WebRoot/manager/tmpl/systemDebugLog_en.html`
 
-- 子项①（`LogFileUtil.java` / `ManageController.java` / `logViewer.*` / `CLAUDE.md` / 卡）已由用户提交 `548b6da49`，不在上表内。
-- 子项②为**纯前端**：无 Java 改动 → **不需要编译、不需要重启**（本次未重启 dev Tomcat）。
-- 测试期间动过 dev 配置（`WebRoot/WEB-INF/classes/docSysConfig.properties`，gitignore 的运行时副本）并已还原：`logLevel=1`、无 `logFile` 键；
-  该文件被 `setSystemInfo.do` 重写（键序/格式规范化），逻辑值与原状态一致。
+- 子项①②已由用户提交：①`548b6da49`（在线查看）、②`d6b7eff85`（调试日志从系统设置剥离）。
+- 子项③为**纯模板改动** → 不需要编译、不需要重启（本次未重启 dev Tomcat）。
+- 模板有浏览器缓存：验证/上线后需刷新页面才看到新布局。
