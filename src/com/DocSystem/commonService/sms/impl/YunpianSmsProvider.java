@@ -5,7 +5,7 @@ import java.util.Map;
 import com.DocSystem.commonService.sms.SmsConfig;
 import com.DocSystem.commonService.sms.SmsProvider;
 import com.DocSystem.commonService.sms.SmsProviderType;
-import com.DocSystem.commonService.sms.SmsRequest;
+import com.DocSystem.commonService.http.HttpRequest;
 import com.DocSystem.commonService.sms.SmsSendResult;
 import com.DocSystem.commonService.sms.SmsTemplateConfig;
 import com.alibaba.fastjson.JSON;
@@ -19,7 +19,7 @@ import com.alibaba.fastjson.JSONObject;
  *
  * <p>关于编码：云片文档的 Java 示例把变量名与变量值都先 {@code URLEncoder} 再交给表单层，
  * 结果是双重编码；本实现与其不同 —— {@link #buildTplValue} 只产出**逻辑值**，
- * URL 编码交给 {@link com.DocSystem.commonService.sms.SmsHttpClient} 统一做一次，
+ * URL 编码交给 {@link com.DocSystem.commonService.http.SimpleHttpClient} 统一做一次，
  * 与服务端期望的 {@code #code#=123456} 一致（也与本项目原有实现的行为一致）。
  *
  * <p>成功判定：响应 JSON 的 {@code code} 为 0。
@@ -32,9 +32,9 @@ public class YunpianSmsProvider implements SmsProvider {
 	}
 
 	@Override
-	public SmsRequest buildRequest(SmsConfig config, SmsTemplateConfig template, String phone,
+	public HttpRequest buildRequest(SmsConfig config, SmsTemplateConfig template, String phone,
 			Map<String, String> vars) {
-		SmsRequest request = new SmsRequest(config.getEffectiveEndpoint(), "POST");
+		HttpRequest request = new HttpRequest(config.getEffectiveEndpoint(), "POST");
 		request.addFormParam("apikey", config.getProviderField("apikey"));
 		request.addFormParam("mobile", phone);
 		request.addFormParam("tpl_id", template.getTplId());

@@ -6,7 +6,7 @@ import com.DocSystem.commonService.sms.SmsConfig;
 import com.DocSystem.commonService.sms.SmsCustomConfig;
 import com.DocSystem.commonService.sms.SmsProvider;
 import com.DocSystem.commonService.sms.SmsProviderType;
-import com.DocSystem.commonService.sms.SmsRequest;
+import com.DocSystem.commonService.http.HttpRequest;
 import com.DocSystem.commonService.sms.SmsSendResult;
 import com.DocSystem.commonService.sms.SmsTemplateConfig;
 import com.alibaba.fastjson.JSON;
@@ -32,12 +32,12 @@ public class GenericHttpSmsProvider implements SmsProvider {
 	}
 
 	@Override
-	public SmsRequest buildRequest(SmsConfig config, SmsTemplateConfig template, String phone,
+	public HttpRequest buildRequest(SmsConfig config, SmsTemplateConfig template, String phone,
 			Map<String, String> vars) {
 		SmsCustomConfig custom = config.getCustom();
 		String method = (custom == null || isBlank(custom.getMethod())) ? "POST" : custom.getMethod().trim();
 
-		SmsRequest request = new SmsRequest(config.getEffectiveEndpoint(), method.toUpperCase());
+		HttpRequest request = new HttpRequest(config.getEffectiveEndpoint(), method.toUpperCase());
 		if (custom != null) {
 			request.addFormParam(custom.getParamName("phone"), phone);
 			request.addFormParam(custom.getParamName("tplId"), template.getTplId());

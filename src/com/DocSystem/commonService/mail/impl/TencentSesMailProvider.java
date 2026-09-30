@@ -15,9 +15,9 @@ import com.DocSystem.commonService.mail.MailProvider;
 import com.DocSystem.commonService.mail.MailProviderType;
 import com.DocSystem.commonService.mail.MailSendResult;
 import com.DocSystem.commonService.mail.MailTencentConfig;
-import com.DocSystem.commonService.sms.SmsHttpClient;
-import com.DocSystem.commonService.sms.SmsHttpResponse;
-import com.DocSystem.commonService.sms.SmsRequest;
+import com.DocSystem.commonService.http.HttpRequest;
+import com.DocSystem.commonService.http.HttpResponse;
+import com.DocSystem.commonService.http.SimpleHttpClient;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -51,7 +51,7 @@ import com.alibaba.fastjson.JSONObject;
  * </ul>
  *
  * <p>签名算法见 {@link Tc3Signer}（已用官方示例中间值 + Python 独立实现交叉核对）。
- * **不重试**（{@link SmsHttpClient#execute} 的 retry 传 0），与方案决策 D7 一致。
+ * **不重试**（{@link SimpleHttpClient#execute} 的 retry 传 0），与方案决策 D7 一致。
  */
 public class TencentSesMailProvider implements MailProvider {
 
@@ -85,8 +85,8 @@ public class TencentSesMailProvider implements MailProvider {
 		MailSendResult lastSuccess = null;
 		int sentCount = 0;
 		for (String recipient : recipients) {
-			SmsRequest request = buildRequest(config, message, recipient);
-			SmsHttpResponse response = SmsHttpClient.execute(request, timeoutMs, 0);
+			HttpRequest request = buildRequest(config, message, recipient);
+			HttpResponse response = SimpleHttpClient.execute(request, timeoutMs, 0);
 			MailSendResult result = response.isNetworkError()
 					? MailSendResult.failure(provider, "NetworkError", response.getErrorMessage(), null)
 					: parseResponse(response.getStatus(), response.getBody());
@@ -114,11 +114,11 @@ public class TencentSesMailProvider implements MailProvider {
 	 * 构造请求（**不打网络**）。请求体字符串**同时**用于签名与实际发送 ——
 	 * 这是 TC3 的硬要求（签名覆盖 payload 的 SHA256），两处必须逐字节一致。
 	 */
-	public static SmsRequest buildRequest(MailConfig config, MailMessage message) {
+	public static HttpRequest buildRequest(MailConfig config, MailMessage message) {
 		return buildRequest(config, message, firstRecipient(message));
 	}
 
-	public static SmsRequest buildRequest(MailConfig config, MailMessage message, String recipient) {
+	public static HttpRequest buildRequest(MailConfig config, MailMessage message, String recipient) {
 		MailTencentConfig tencent = config.getTencent();
 		String host = tencent.getEffectiveHost();
 		String payload = buildPayload(config, message, recipient);
@@ -130,7 +130,7 @@ public class TencentSesMailProvider implements MailProvider {
 				unnull(tencent.getSecretId()), unnull(tencent.getSecretKey()),
 				payload, timestampSec);
 
-		SmsRequest request = new SmsRequest(tencent.getEffectiveScheme() + "://" + host + "/", "POST");
+		HttpRequest request = new HttpRequest(tencent.getEffectiveScheme() + "://" + host + "/", "POST");
 		request.setJsonBody(payload);
 		for (Map.Entry<String, String> header : signed.getHeaders().entrySet()) {
 			request.addHeader(header.getKey(), header.getValue());

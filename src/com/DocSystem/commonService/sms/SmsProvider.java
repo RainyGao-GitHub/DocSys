@@ -1,11 +1,13 @@
 package com.DocSystem.commonService.sms;
 
+import com.DocSystem.commonService.http.HttpRequest;
+
 /**
  * 短信运营商适配接口。
  *
  * <p>两个方法都是**可以脱离网络单独验证**的：
  * {@link #buildRequest} 产出请求描述，{@link #parseResponse} 判定响应是否成功；
- * 真正的 HTTP 收发由 {@link SmsHttpClient} 统一负责（超时、重试、编码）。
+ * 真正的 HTTP 收发由 {@link com.DocSystem.commonService.http.SimpleHttpClient} 统一负责（超时、重试、编码）。
  */
 public interface SmsProvider {
 
@@ -19,7 +21,7 @@ public interface SmsProvider {
 	 * @param phone    手机号
 	 * @param vars     变量名 → 值（已按 template 的 vars 校验齐全）
 	 */
-	SmsRequest buildRequest(SmsConfig config, SmsTemplateConfig template, String phone,
+	HttpRequest buildRequest(SmsConfig config, SmsTemplateConfig template, String phone,
 			java.util.Map<String, String> vars);
 
 	/**

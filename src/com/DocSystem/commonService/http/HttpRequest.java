@@ -1,16 +1,19 @@
-package com.DocSystem.commonService.sms;
+package com.DocSystem.commonService.http;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 一次短信发送的 HTTP 请求描述（与具体运营商无关）。
+ * 一次 HTTP 请求的描述（与具体运营商/邮件服务商无关）。
  *
- * <p>由 {@link SmsProvider#buildRequest} 构造，交给 {@link SmsHttpClient} 执行。
+ * <p>由各 Provider 的 {@code buildRequest} 构造，交给 {@link SimpleHttpClient} 执行。
  * 这里存的是**逻辑参数值**（如 tpl_value = {@code #code#=123456}），
  * URL 编码统一在 HTTP 层做一次 —— 便于单测直接断言请求内容，也避免双重编码。
+ *
+ * <p>历史：本类原先叫 {@code sms/SmsRequest}（短信侧先用）；邮件侧接入阿里云/腾讯云后
+ * 把它上提到 {@code commonService.http}，因为两边发 HTTP 的形状完全一致。
  */
-public class SmsRequest {
+public class HttpRequest {
 
 	private String url;
 
@@ -34,10 +37,10 @@ public class SmsRequest {
 
 	private Map<String, String> headers = new LinkedHashMap<String, String>();
 
-	public SmsRequest() {
+	public HttpRequest() {
 	}
 
-	public SmsRequest(String url, String method) {
+	public HttpRequest(String url, String method) {
 		this.url = url;
 		this.method = method;
 	}

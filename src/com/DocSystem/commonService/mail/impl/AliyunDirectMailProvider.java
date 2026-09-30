@@ -15,9 +15,9 @@ import com.DocSystem.commonService.mail.MailOptions;
 import com.DocSystem.commonService.mail.MailProvider;
 import com.DocSystem.commonService.mail.MailProviderType;
 import com.DocSystem.commonService.mail.MailSendResult;
-import com.DocSystem.commonService.sms.SmsHttpClient;
-import com.DocSystem.commonService.sms.SmsHttpResponse;
-import com.DocSystem.commonService.sms.SmsRequest;
+import com.DocSystem.commonService.http.HttpRequest;
+import com.DocSystem.commonService.http.HttpResponse;
+import com.DocSystem.commonService.http.SimpleHttpClient;
 import com.DocSystem.commonService.sms.impl.Acs3Signer;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -39,7 +39,7 @@ import com.alibaba.fastjson.JSONObject;
  *
  * <p>要点（都来自官方接口文档）：
  * <ul>
- *   <li>参数在 **query** 里、Body 为空 —— 走 {@code SmsRequest.setQueryInUrl(true)}，
+ *   <li>参数在 **query** 里、Body 为空 —— 走 {@code HttpRequest.setQueryInUrl(true)}，
  *       且**不能**带未参与签名的 Content-Type（否则网关算出的签名对不上）；</li>
  *   <li>{@code AddressType=1} 表示用控制台里创建并验证过的发信地址（{@code AccountName}）；</li>
  *   <li>{@code ReplyToAddress} 是字符串 {@code "true"}/{@code "false"}，不是布尔；</li>
@@ -53,7 +53,7 @@ import com.alibaba.fastjson.JSONObject;
  *
  * <p>签名算法与短信侧共用 {@link Acs3Signer}（同一套 ACS3-HMAC-SHA256）。
  *
- * <p>**不重试**：{@link SmsHttpClient#execute} 的 retry 传 0，与方案决策 D7（邮件不自动重试，
+ * <p>**不重试**：{@link SimpleHttpClient#execute} 的 retry 传 0，与方案决策 D7（邮件不自动重试，
  * 避免重复打扰收件人）一致。
  */
 public class AliyunDirectMailProvider implements MailProvider {
@@ -83,10 +83,10 @@ public class AliyunDirectMailProvider implements MailProvider {
 		}
 
 		MailAliyunConfig aliyun = config.getAliyun();
-		SmsRequest request = buildRequest(config, message);
+		HttpRequest request = buildRequest(config, message);
 
 		int timeoutMs = timeoutOf(config.getOptions());
-		SmsHttpResponse response = SmsHttpClient.execute(request, timeoutMs, 0);
+		HttpResponse response = SimpleHttpClient.execute(request, timeoutMs, 0);
 		if (response.isNetworkError()) {
 			return MailSendResult.failure(provider, "NetworkError", response.getErrorMessage(), null);
 		}
@@ -99,7 +99,7 @@ public class AliyunDirectMailProvider implements MailProvider {
 	 * 构造请求（**不打网络**）。测试探针直接断言这里产出的 URL / 参数 / 头，
 	 * 因此逻辑与真实发送完全同源。
 	 */
-	public static SmsRequest buildRequest(MailConfig config, MailMessage message) {
+	public static HttpRequest buildRequest(MailConfig config, MailMessage message) {
 		MailAliyunConfig aliyun = config.getAliyun();
 		String host = aliyun.getEffectiveHost();
 		String url = aliyun.getEffectiveScheme() + "://" + host + "/";
@@ -131,7 +131,7 @@ public class AliyunDirectMailProvider implements MailProvider {
 		Acs3Signer.Signed signed = Acs3Signer.sign("POST", host, "/", query, acsHeaders,
 				unnull(aliyun.getAccessKeyId()), unnull(aliyun.getAccessKeySecret()), body);
 
-		SmsRequest request = new SmsRequest(url, "POST");
+		HttpRequest request = new HttpRequest(url, "POST");
 		request.setQueryInUrl(true);
 		for (Map.Entry<String, String> param : query.entrySet()) {
 			request.addFormParam(param.getKey(), param.getValue());

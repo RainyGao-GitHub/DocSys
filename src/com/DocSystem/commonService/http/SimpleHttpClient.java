@@ -1,4 +1,4 @@
-package com.DocSystem.commonService.sms;
+package com.DocSystem.commonService.http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -11,14 +11,18 @@ import java.util.Map;
 import com.DocSystem.common.Log;
 
 /**
- * 短信 HTTP 客户端（无状态工具类）。
+ * 供应商适配层的 HTTP 客户端（无状态工具类）。
  *
  * <p>职责：编码（表单/JSON）、超时、**只对网络异常与 5xx 重试**、取回状态码与响应体。
- * 业务失败（如模板不匹配）不重试，避免重复计费。
+ * 业务失败（如模板不匹配）不重试，避免重复计费/重复发信。
  *
  * <p>不引入任何 HTTP 库：JDK {@code HttpURLConnection} + TLS1.2 足够。
+ *
+ * <p>历史：本类原先叫 {@code sms/SmsHttpClient}（短信侧先用）。邮件侧接阿里云/腾讯云时
+ * 也需要同一套逻辑（含 {@code queryInUrl} 的 RPC 形状与 JSON POST），所以上提到中立包，
+ * 短信与邮件两侧共用同一份实现。
  */
-public class SmsHttpClient {
+public class SimpleHttpClient {
 
 	public static final String ENCODING = "UTF-8";
 
@@ -35,19 +39,19 @@ public class SmsHttpClient {
 	 * @param timeoutMs 连接/读取超时（越界时归一到 1000~60000，默认 10000）
 	 * @param retry     重试次数（0~3）
 	 */
-	public static SmsHttpResponse execute(SmsRequest request, int timeoutMs, int retry) {
+	public static HttpResponse execute(HttpRequest request, int timeoutMs, int retry) {
 		if (request == null || request.getUrl() == null || request.getUrl().trim().isEmpty()) {
-			return SmsHttpResponse.networkError("请求地址为空", 0);
+			return HttpResponse.networkError("请求地址为空", 0);
 		}
 
 		int attempts = 1 + Math.max(0, Math.min(retry, MAX_RETRY));
-		SmsHttpResponse response = null;
+		HttpResponse response = null;
 		for (int i = 0; i < attempts; i++) {
 			response = doExecute(request, timeoutMs);
 			if (i + 1 >= attempts || !isRetryable(response)) {
 				break;
 			}
-			Log.warn("SmsHttpClient 第 " + (i + 1) + " 次重试原因：" + describe(response));
+			Log.warn("SimpleHttpClient 第 " + (i + 1) + " 次重试原因：" + describe(response));
 		}
 		return response;
 	}
@@ -79,7 +83,7 @@ public class SmsHttpClient {
 	// ===================== 内部实现 =====================
 
 	/** 调用方是否已显式给出 Content-Type（键名大小写无关） */
-	private static boolean hasContentType(SmsRequest request) {
+	private static boolean hasContentType(HttpRequest request) {
 		if (request.getHeaders() == null) {
 			return false;
 		}
@@ -91,7 +95,7 @@ public class SmsHttpClient {
 		return false;
 	}
 
-	private static boolean isRetryable(SmsHttpResponse response) {
+	private static boolean isRetryable(HttpResponse response) {
 		if (response == null) {
 			return false;
 		}
@@ -101,14 +105,14 @@ public class SmsHttpClient {
 		return response.getStatus() >= 500;
 	}
 
-	private static String describe(SmsHttpResponse response) {
+	private static String describe(HttpResponse response) {
 		if (response == null) {
 			return "null";
 		}
 		return response.isNetworkError() ? response.getErrorMessage() : ("HTTP " + response.getStatus());
 	}
 
-	private static SmsHttpResponse doExecute(SmsRequest request, int timeoutMs) {
+	private static HttpResponse doExecute(HttpRequest request, int timeoutMs) {
 		long start = System.currentTimeMillis();
 		HttpURLConnection conn = null;
 		try {
@@ -157,13 +161,13 @@ public class SmsHttpClient {
 			}
 
 			int status = conn.getResponseCode();
-			SmsHttpResponse response = new SmsHttpResponse();
+			HttpResponse response = new HttpResponse();
 			response.setStatus(status);
 			response.setBody(readBody(conn, status));
 			response.setElapsedMs(System.currentTimeMillis() - start);
 			return response;
 		} catch (Exception e) {
-			return SmsHttpResponse.networkError(e.getClass().getSimpleName() + ": " + e.getMessage(),
+			return HttpResponse.networkError(e.getClass().getSimpleName() + ": " + e.getMessage(),
 					System.currentTimeMillis() - start);
 		} finally {
 			if (conn != null) {
@@ -187,7 +191,7 @@ public class SmsHttpClient {
 			}
 			return new String(buffer.toByteArray(), ENCODING);
 		} catch (Exception e) {
-			Log.debug("SmsHttpClient 读取响应失败: " + e.getMessage());
+			Log.debug("SimpleHttpClient 读取响应失败: " + e.getMessage());
 			return "";
 		} finally {
 			if (in != null) {

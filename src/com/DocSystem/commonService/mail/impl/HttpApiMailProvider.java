@@ -11,9 +11,9 @@ import com.DocSystem.commonService.mail.MailOptions;
 import com.DocSystem.commonService.mail.MailProvider;
 import com.DocSystem.commonService.mail.MailProviderType;
 import com.DocSystem.commonService.mail.MailSendResult;
-import com.DocSystem.commonService.sms.SmsHttpClient;
-import com.DocSystem.commonService.sms.SmsHttpResponse;
-import com.DocSystem.commonService.sms.SmsRequest;
+import com.DocSystem.commonService.http.HttpRequest;
+import com.DocSystem.commonService.http.HttpResponse;
+import com.DocSystem.commonService.http.SimpleHttpClient;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
@@ -54,8 +54,8 @@ public class HttpApiMailProvider implements MailProvider {
 			return MailSendResult.failure(provider, earlyError);
 		}
 
-		SmsRequest request = buildRequest(config, message);
-		SmsHttpResponse response = SmsHttpClient.execute(request, timeoutOf(config.getOptions()), 0);
+		HttpRequest request = buildRequest(config, message);
+		HttpResponse response = SimpleHttpClient.execute(request, timeoutOf(config.getOptions()), 0);
 		if (response.isNetworkError()) {
 			return MailSendResult.failure(provider, "NetworkError", response.getErrorMessage(), null);
 		}
@@ -65,12 +65,12 @@ public class HttpApiMailProvider implements MailProvider {
 	// ===================== 请求构造（纯函数，可脱网断言） =====================
 
 	/** 构造请求（**不打网络**） */
-	public static SmsRequest buildRequest(MailConfig config, MailMessage message) {
+	public static HttpRequest buildRequest(MailConfig config, MailMessage message) {
 		MailHttpConfig http = config.getHttp();
 		Map<String, String> params = buildParams(config, message);
 
 		boolean form = http.isFormPost();
-		SmsRequest request = new SmsRequest(http.getUrl(), http.getEffectiveMethod());
+		HttpRequest request = new HttpRequest(http.getUrl(), http.getEffectiveMethod());
 		if (form) {
 			for (Map.Entry<String, String> param : params.entrySet()) {
 				request.addFormParam(param.getKey(), param.getValue());

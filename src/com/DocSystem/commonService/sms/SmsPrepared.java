@@ -1,5 +1,6 @@
 package com.DocSystem.commonService.sms;
 
+import com.DocSystem.commonService.http.HttpRequest;
 import com.alibaba.fastjson.annotation.JSONField;
 
 /**
@@ -19,7 +20,7 @@ public class SmsPrepared {
 
 	private SmsConfig config;
 
-	private SmsRequest request;
+	private HttpRequest request;
 
 	public boolean isReady() {
 		return ready;
@@ -54,11 +55,11 @@ public class SmsPrepared {
 		this.config = config;
 	}
 
-	public SmsRequest getRequest() {
+	public HttpRequest getRequest() {
 		return request;
 	}
 
-	public void setRequest(SmsRequest request) {
+	public void setRequest(HttpRequest request) {
 		this.request = request;
 	}
 }

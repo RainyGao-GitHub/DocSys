@@ -20344,21 +20344,6 @@ public class BaseController  extends BaseFunction{
 		return user;
 	}
 	
-	public static String getEmailProps(Object obj,String pName){
-		Properties props = new Properties();
-		String basePath = obj.getClass().getClassLoader().getResource("/").getPath();
-		File config = new File(basePath+"emailConfig.properties");
-		try {
-			InputStream in = new FileInputStream(config);
-			props.load(in);
-			String pValue = (String) props.get(pName);
-			return pValue;
-		} catch (Exception e) {
-			Log.debug("获取emailConfig.properties失败");
-			return null;
-		}	
-	}
-	
 	Doc getDocByName(String name, Long parentId, Integer reposId)
 	{
 		Doc qdoc = new Doc();

@@ -11,7 +11,7 @@ import com.DocSystem.commonService.sms.SmsAliyunConfig;
 import com.DocSystem.commonService.sms.SmsConfig;
 import com.DocSystem.commonService.sms.SmsProvider;
 import com.DocSystem.commonService.sms.SmsProviderType;
-import com.DocSystem.commonService.sms.SmsRequest;
+import com.DocSystem.commonService.http.HttpRequest;
 import com.DocSystem.commonService.sms.SmsSendResult;
 import com.DocSystem.commonService.sms.SmsTemplateConfig;
 import com.alibaba.fastjson.JSON;
@@ -34,7 +34,7 @@ import com.alibaba.fastjson.JSONObject;
  *
  * <p>要点：
  * <ul>
- *   <li>参数在 **query** 里、Body 为空 —— 所以走 {@link SmsRequest#setQueryInUrl(boolean)}，
+ *   <li>参数在 **query** 里、Body 为空 —— 所以走 {@link HttpRequest#setQueryInUrl(boolean)}，
  *       且不能带未参与签名的 Content-Type；</li>
  *   <li>模板变量用 {@code TemplateParam} 传 **JSON 字符串**（按变量名，顺序无关）；</li>
  *   <li>**不发送 {@code RegionId}**：SendSms 未定义该参数，官方自签名请求示例也没有它；</li>
@@ -57,7 +57,7 @@ public class AliyunSmsProvider implements SmsProvider {
 	}
 
 	@Override
-	public SmsRequest buildRequest(SmsConfig config, SmsTemplateConfig template, String phone,
+	public HttpRequest buildRequest(SmsConfig config, SmsTemplateConfig template, String phone,
 			Map<String, String> vars) {
 		SmsAliyunConfig aliyun = (config == null) ? null : config.getAliyun();
 		String accessKeyId = (aliyun == null) ? null : aliyun.getAccessKeyId();
@@ -85,7 +85,7 @@ public class AliyunSmsProvider implements SmsProvider {
 		Acs3Signer.Signed signed = Acs3Signer.sign("POST", host, "/", query, acsHeaders,
 				unnull(accessKeyId), unnull(accessKeySecret), body);
 
-		SmsRequest request = new SmsRequest(url, "POST");
+		HttpRequest request = new HttpRequest(url, "POST");
 		request.setQueryInUrl(true);
 		for (Map.Entry<String, String> param : query.entrySet()) {
 			request.addFormParam(param.getKey(), param.getValue());

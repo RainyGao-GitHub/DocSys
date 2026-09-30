@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.DocSystem.common.Log;
+import com.DocSystem.commonService.http.HttpRequest;
+import com.DocSystem.commonService.http.HttpResponse;
+import com.DocSystem.commonService.http.SimpleHttpClient;
 import com.DocSystem.commonService.sms.impl.AliyunSmsProvider;
 import com.DocSystem.commonService.sms.impl.GenericHttpSmsProvider;
 import com.DocSystem.commonService.sms.impl.YunpianSmsProvider;
@@ -19,7 +22,7 @@ import util.RegularUtil;
  * 短信发送统一入口。
  *
  * <p>流程：取配置（{@link SmsConfigStore}）→ 校验开关/运营商/模板/变量（{@link #prepare}）
- * → 交给对应 {@link SmsProvider} 造请求 → {@link SmsHttpClient} 发送 → 解析结果。
+ * → 交给对应 {@link SmsProvider} 造请求 → {@link com.DocSystem.commonService.http.SimpleHttpClient} 发送 → 解析结果。
  *
  * <p>日志一律**脱敏**：只记场景、手机号掩码、运营商、返回码与耗时；
  * 不记 apikey/secret，也不整段打印响应体（响应体经 {@link SmsSendResult#getRaw()} 返回给
@@ -160,7 +163,7 @@ public class SmsSender {
 		}
 
 		SmsProviderType type = config.getProviderType();
-		SmsRequest request = providers.get(type).buildRequest(config, template, phone, effectiveVars);
+		HttpRequest request = providers.get(type).buildRequest(config, template, phone, effectiveVars);
 		if (request == null || isBlank(request.getUrl())) {
 			prepared.setError("接入地址为空（" + type.getDisplayName() + "）");
 			return prepared;
@@ -221,7 +224,7 @@ public class SmsSender {
 		SmsOptions options = prepared.getConfig().getOptions();
 
 		long start = System.currentTimeMillis();
-		SmsHttpResponse response = SmsHttpClient.execute(prepared.getRequest(),
+		HttpResponse response = SimpleHttpClient.execute(prepared.getRequest(),
 				(options == null) ? 10000 : options.getTimeoutMs(),
 				(options == null) ? 0 : options.getRetry());
 		long elapsed = System.currentTimeMillis() - start;

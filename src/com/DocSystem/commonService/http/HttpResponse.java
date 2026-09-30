@@ -1,9 +1,11 @@
-package com.DocSystem.commonService.sms;
+package com.DocSystem.commonService.http;
 
 /**
  * HTTP 层返回：状态码 + 响应体 + 耗时 / 网络错误信息。
+ *
+ * <p>历史：本类原先叫 {@code sms/SmsHttpResponse}，随 HTTP 层上提到中立包。
  */
-public class SmsHttpResponse {
+public class HttpResponse {
 
 	private int status;
 
@@ -16,11 +18,11 @@ public class SmsHttpResponse {
 
 	private String errorMessage;
 
-	public SmsHttpResponse() {
+	public HttpResponse() {
 	}
 
-	public static SmsHttpResponse networkError(String message, long elapsedMs) {
-		SmsHttpResponse response = new SmsHttpResponse();
+	public static HttpResponse networkError(String message, long elapsedMs) {
+		HttpResponse response = new HttpResponse();
 		response.networkError = true;
 		response.errorMessage = message;
 		response.elapsedMs = elapsedMs;
