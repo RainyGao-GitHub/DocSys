@@ -2223,7 +2223,7 @@ function showSystemDebugLog(){
         		{
         			systemInfo.outputToFileEn = 1;
         		}
-            	$Func.render($("#container"),"systemDebugLog" + langExt,{"value":systemInfo});
+            	$Func.render($("#container"),"systemDebugLog" + langExt,{"value":systemInfo}, bindSystemDebugLogDirtyCheck);
             }
             else
             {
@@ -2235,6 +2235,45 @@ function showSystemDebugLog(){
         	showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
         }
     });
+}
+
+//该页没有「编辑」按键：用「表单当前值 vs 进页时拉取到的值」判定有没有改动，
+//没改动就把「保存/取消」置灰——用户一眼能看出参数是否被改过（值改回原样也会重新置灰）
+function isSystemDebugLogDirty(){
+	var outputToFileEn = $("#outputToFileEn").is(':checked')? 1: 0;
+	var logLevel = systemInfo.logLevel == undefined? 1: systemInfo.logLevel;
+	if(String($("#logLevel").val()) != String(logLevel))
+	{
+		return true;
+	}
+	if(outputToFileEn != systemInfo.outputToFileEn)
+	{
+		return true;
+	}
+	//「日志文件路径」只在勾选「输出到指定文件」时参与比较（未勾选时后端会把它清空）
+	if(outputToFileEn == 1 && $("#logFile").val() != systemInfo.logFile)
+	{
+		return true;
+	}
+	return false;
+}
+
+function updateSystemDebugLogButtons(){
+	var dirty = isSystemDebugLogDirty();
+	$("#btnSaveSystemDebugLogSet").prop("disabled", !dirty);
+	$("#btnCancelSystemDebugLogSet").prop("disabled", !dirty);
+}
+
+//渲染后绑定：三个字段任一变化都重新判定
+//（render 会替换整块 DOM，所以每次渲染后都要重新绑定）
+function bindSystemDebugLogDirtyCheck(){
+	updateSystemDebugLogButtons();
+	$("#logLevel").on("change", updateSystemDebugLogButtons);
+	$("#logFile").on("input", updateSystemDebugLogButtons);
+	$("#outputToFileEn").on("click", function(){
+		selectOutputToFileEn();	//勾选/取消勾选时同步「日志文件路径」的可用性
+		updateSystemDebugLogButtons();
+	});
 }
 
 function cancelSystemDebugLogSet(){
@@ -2254,6 +2293,7 @@ function cancelSystemDebugLogSet(){
 		$("#outputToFileEn").prop("checked", false);			
 	}
 	$("#logFile").prop("disabled", systemInfo.outputToFileEn != 1);
+	updateSystemDebugLogButtons();	//值已回到进页状态 → 「保存/取消」重新置灰
 }
 
 //只提交日志相关的两个字段：setSystemInfo.do 里其余字段传 null 表示「不改」，
@@ -2262,7 +2302,11 @@ function cancelSystemDebugLogSet(){
 function saveSystemDebugLogSet(){
 	console.log("saveSystemDebugLogSet systemInfo:", systemInfo);
 
-	//该页没有「编辑」按键，字段始终可改，这里不再切换按钮/不再禁用字段
+	//该页没有「编辑」按键，字段始终可改；保存时先把「保存/取消」置灰避免重复提交，
+	//保存完会重新拉取配置（showSystemDebugLog）并按新的进页值重新判定
+	$("#btnSaveSystemDebugLogSet").prop("disabled", true);
+	$("#btnCancelSystemDebugLogSet").prop("disabled", true);
+
 	var logLevel = $("#logLevel").val();
 	var outputToFileEn = $("#outputToFileEn").is(':checked')? 1: 0;
 	var logFile = "";

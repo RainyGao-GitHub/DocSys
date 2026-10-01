@@ -319,11 +319,12 @@
   复测：“跳到开头”后等 8 秒行数 2832 → **2832 不变**；“回到末尾”后 2987 → **2988**（正常追加）。
 - ⚠️ **已知现状（非本次引入）**：后台模板用 `$.get('tmpl/xx.html')` 无 cache-busting，
   浏览器会缓存旧模板 → 升级后需**刷新页面**才能看到新按钮（所有模板改动同理）。
-- ✅ **子项⑧（2026-10-01）**：10 个页面 UI 打磨**已实施 + 已 E2E 验证**（详见「子项⑧」小节），**未提交**（基线 `a7012b16f`）。
+- ✅ **子项⑧（2026-10-01）**：10 个页面 UI 打磨**已实施 + 已 E2E 验证**，已提交 `1ccaa57ee`（【优化】管理后台UI优化）；
+  追加的「调试日志 保存/取消 按改动启用」也已实施 + 已验证，**未提交**（基线 `1ccaa57ee`）。
 
 ## 下一步
 
-1. **等用户确认后提交本批**（不要自动 commit）——20 个文件：`WebRoot/manager/main.js`、`WebRoot/manager/static/style/style.css`、9 页 × 中/英 模板（子项⑧）。
+1. **等用户确认后提交本批**（不要自动 commit）——只改了 3 个代码文件：`WebRoot/manager/main.js`、`WebRoot/manager/tmpl/systemDebugLog.html`、`WebRoot/manager/tmpl/systemDebugLog_en.html`（⑧ 追加的按钮门控）。
 2. 待用户裁定：移动版导航（`#navMobile`）选中项无高亮 + 子项与顶级项同色，是否一并统一；「下载」按钮 500 是否处理；`updateSystemInfo()` 死代码是否删。
 3. 收尾：提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
 4. 可选后续（用户未要求）：其余子页 help-block 文案精简 / 行号 / 轮转历史文件列表 / 关键字服务端搜索。
@@ -347,14 +348,15 @@
 - E2E 口径：`POST /DocSystem/User/login.do`（`Admin`/`pwd=QWRtaW4=`，pwd 为 base64 明文）；探针产物写 `%TEMP%\docsys_chk\`。
 - **不要自动 commit**：改完 + 验证 → 汇报 → 等用户确认。
 
-## 未提交改动（子项⑧；基线 `a7012b16f`）
+## 未提交改动（子项⑧ 追加：「保存/取消」门控；基线 `1ccaa57ee`）
 
-- ` M WebRoot/manager/main.js`（Office引擎下拉 + 调试日志去掉编辑态）
-- ` M WebRoot/manager/static/style/style.css`（表格下方按钮行留白 + 表下说明文字不贴边）
-- ` M WebRoot/manager/tmpl/system{EmailConfig,SmsConfig,DbConfig,Ldap,Network,Cluster,Llm,OfficeEditor,DebugLog}{,_en}.html`（18 个模板）
+- ` M WebRoot/manager/main.js`（新增 `isSystemDebugLogDirty` / `updateSystemDebugLogButtons` / `bindSystemDebugLogDirtyCheck`；save 提交前置灰）
+- ` M WebRoot/manager/tmpl/systemDebugLog.html`、` M WebRoot/manager/tmpl/systemDebugLog_en.html`（两按钮默认 `disabled`；复选框去掉 inline `onclick`）
+- ` M CLAUDE.md`、` M DevAgentControl/CURRENT_STATE_日志在线查看.md`（本卡）
 - 无 Java 改动 → **不需要编译、不需要重启**；静态资源有浏览器缓存，验证/上线后需刷新页面。
 
-- 已提交里程碑：`a7012b16f`（子项选中背景高亮 = ⑥补充 + ⑦）、`d01307d8c`（带子项菜单只能一个展开）、
+- 已提交里程碑：`1ccaa57ee`（⑧ 10 页 UI 打磨：按钮留白/表头上间隙/删提示/数据库表格/Office引擎下拉/调试日志去编辑）、
+  `a7012b16f`（子项选中背景高亮 = ⑥补充 + ⑦）、`d01307d8c`（带子项菜单只能一个展开）、
   `b95a0a19c`（新增顶级菜单「智能体设置」）、`11b1a83f9`（5 个参数块拆子页）、`f8727cd03`（调试日志布局）、
   `d6b7eff85`（调试日志从系统设置剥离）、`548b6da49`（在线查看）。
 
@@ -404,6 +406,11 @@
   `#logFile` 仍按「输出到指定文件」是否勾选决定可用性（模板用 `{{if value.outputToFileEn != 1}}disabled{{/if}}`，与旧编辑态一致）；
   「保存/取消」常显；删 `enableSystemDebugLogSet()`，`cancelSystemDebugLogSet()` 只回滚 `systemInfo` 快照值、`saveSystemDebugLogSet()` 不再切按钮/不再禁用字段。
   提交字段仍是 `logLevel` + `logFile`（`logFile` 始终提交的语义不变）。
+- **调试日志「保存/取消」按改动启用**（用户 2026-10-01 追加要求，“不然用户（看不出）参数是否改变过”）：两个按钮默认 `disabled`，
+  只有「表单当前值 ≠ 进页时拉取到的值」才启用（`isSystemDebugLogDirty()` / `updateSystemDebugLogButtons()` / `bindSystemDebugLogDirtyCheck()`），
+  值改回原样会自动重新置灰；`showSystemDebugLog` 用 `$Func.render($bean, tmpl, data, cb)` 的**回调**在每次渲染后重新绑定
+  （render 会替掉整块 DOM，绑定必须在之后）；复选框的 `onclick="selectOutputToFileEn()"` 改为 JS 绑定（顺序可控）；
+  `saveSystemDebugLogSet` 提交前先置灰防重复提交，保存后重新拉取配置 → 又回到置灰。未勾选时 `logFile` 不参与比较（后端会清空它）。
 
 ### 验证（dev 8100，admin，2026-10-01）
 
@@ -420,3 +427,7 @@
 - **配置无抖动**：`WebRoot/WEB-INF/classes/docSysConfig.properties` 保存后仍是 **28 个键**、`isOnlyOfficeUsed=1` 不变；
   hash 变化只因文件头被重写成新的 `#Thu Oct 01 21:24:36 CST 2026` 时间戳 → 印证「按页白名单提交」的设计没被破坏。
 - 截图存档：`%TEMP%\docsys_chk\system{EmailConfig,SmsConfig,DbConfig,OfficeEditor,DebugLog}.png`（含 `_bottom.png`：表下按钮留白取证）。
+- **调试日志「保存/取消」门控**（追加要求，改动后重测）：载入后两按钮 `disabled=true` ✅；级别 info→error 启用 ✅；改回 info 重新置灰 ✅；
+  勾选「输出到指定文件」启用（且 `#logFile` 解禁 + 预填默认路径）✅；取消勾选重新置灰 ✅；勾选+改路径启用 ✅；点「取消」回滚并置灰 ✅；
+  真实保存往返：改成 warn → 保存 → 弹「更新成功！」+ 服务端 `logLevel=2` + 按钮回到置灰 ✅；再改回 info → 保存 → 服务端 `logLevel=1`（净零，已复原）✅。
+  截图：`%TEMP%\docsys_chk\systemDebugLog_gated.png`（载入时按钮灰显）。

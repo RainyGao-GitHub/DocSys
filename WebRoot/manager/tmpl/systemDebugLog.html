@@ -4,8 +4,8 @@
             <div class="widget-head">
               <div class="pull-left">调试日志</div>
               <div class="widget-icons pull-right">
-                <button id="btnSaveSystemDebugLogSet" onclick="saveSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban">保存</button>
-                <button id="btnCancelSystemDebugLogSet" onclick="cancelSystemDebugLogSet()" class="btn btn-lg btn-warning examine_ban">取消</button>
+                <button id="btnSaveSystemDebugLogSet" onclick="saveSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban" disabled="disabled">保存</button>
+                <button id="btnCancelSystemDebugLogSet" onclick="cancelSystemDebugLogSet()" class="btn btn-lg btn-warning examine_ban" disabled="disabled">取消</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -36,7 +36,7 @@
                     <td>日志输出</td>
                     <td>
                       <label class="checkbox-inline">
-                        <input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}} onclick="selectOutputToFileEn()"> 输出到指定文件
+                        <input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}}> 输出到指定文件
                       </label>
                     </td>
                   </tr>
