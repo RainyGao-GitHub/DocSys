@@ -569,11 +569,6 @@ function selectRedisEn()
 	}		
 }
 
-function selectIsOnlyOfficeUsed()
-{
-	// 仅用于切换复选框状态，无额外联动逻辑
-}
-
 function viewLogFile(){
 	//调试日志在线查看：用独立的新标签页打开（看日志需要更大的视觉空间）
 	window.open("/DocSystem/manager/logViewer" + langExt + ".html", "_blank");
@@ -2242,31 +2237,10 @@ function showSystemDebugLog(){
     });
 }
 
-function enableSystemDebugLogSet(){
-	console.log("enableSystemDebugLogSet systemInfo:", systemInfo);
-
-	$("#btnEnableSystemDebugLogSet").hide();
-	$("#btnCancelSystemDebugLogSet").show();
-	$("#btnSaveSystemDebugLogSet").show();
-	$("#logLevel option[value='"+systemInfo.logLevel+"']").attr("selected","selected");
-	$("#logLevel").attr('disabled',false);
-	$("#outputToFileEn").attr('disabled',false);
-	if(systemInfo.outputToFileEn == 1)
-	{
-		$("#logFile").attr('disabled',false);
-	}
-}
-
 function cancelSystemDebugLogSet(){
 	console.log("cancelSystemDebugLogSet systemInfo:", systemInfo);
 
-	$("#btnEnableSystemDebugLogSet").show();
-	$("#btnCancelSystemDebugLogSet").hide();
-	$("#btnSaveSystemDebugLogSet").hide();
-	$("#logLevel").attr('disabled',true);
-	$("#outputToFileEn").attr('disabled',true);
-	$("#logFile").attr('disabled',true);
-	//revert the value
+	//该页没有「编辑」按键，三个字段始终可改；「取消」只把字段回滚到进页时拉取到的值
 	//注意：必须用 val() 回滚。attr("selected","selected") 只在 select 未被赋值/交互过时有效，
 	//用户或脚本改过选项后 select 处于"dirty"状态，改 selected 属性不会再改变当前选中项。
 	$("#logLevel").val(systemInfo.logLevel);
@@ -2279,6 +2253,7 @@ function cancelSystemDebugLogSet(){
 	{
 		$("#outputToFileEn").prop("checked", false);			
 	}
+	$("#logFile").prop("disabled", systemInfo.outputToFileEn != 1);
 }
 
 //只提交日志相关的两个字段：setSystemInfo.do 里其余字段传 null 表示「不改」，
@@ -2287,13 +2262,7 @@ function cancelSystemDebugLogSet(){
 function saveSystemDebugLogSet(){
 	console.log("saveSystemDebugLogSet systemInfo:", systemInfo);
 
-	$("#btnEnableSystemDebugLogSet").show();
-	$("#btnCancelSystemDebugLogSet").hide();
-	$("#btnSaveSystemDebugLogSet").hide();
-	$("#logLevel").attr('disabled',true);
-	$("#outputToFileEn").attr('disabled',true);
-	$("#logFile").attr('disabled',true);
-
+	//该页没有「编辑」按键，字段始终可改，这里不再切换按钮/不再禁用字段
 	var logLevel = $("#logLevel").val();
 	var outputToFileEn = $("#outputToFileEn").is(':checked')? 1: 0;
 	var logFile = "";
@@ -2470,12 +2439,13 @@ function enableSystemOfficeEditorSet(){
 }
 
 function cancelSystemOfficeEditorSet(){
-	$("#isOnlyOfficeUsed").prop("checked", systemInfo.isOnlyOfficeUsed == 1);
+	//Office引擎改为下拉框：0=默认（系统自带转换器）、1=OnlyOffice
+	$("#isOnlyOfficeUsed").val(systemInfo.isOnlyOfficeUsed == 1? 1: 0);
 	setSystemPageEditMode("SystemOfficeEditor", SYSTEM_OFFICE_FIELDS, false);
 }
 
 function saveSystemOfficeEditorSet(){
-	var isOnlyOfficeUsed = $("#isOnlyOfficeUsed").is(':checked')? 1: 0;
+	var isOnlyOfficeUsed = parseInt($("#isOnlyOfficeUsed").val(), 10) == 1? 1: 0;
 	setSystemPageEditMode("SystemOfficeEditor", SYSTEM_OFFICE_FIELDS, false);
 	postSystemInfo({ isOnlyOfficeUsed: isOnlyOfficeUsed }, showSystemOfficeEditor);
 }

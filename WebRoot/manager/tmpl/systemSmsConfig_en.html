@@ -12,13 +12,7 @@
             </div>
 
             <div class="widget-content">
-              <div id="systemSmsConfigForm" style="margin-top: 20px;">
-                {{if value.warnings.length > 0}}
-                <div class="alert alert-info" style="margin: 0 0 10px 0;">
-                  {{each value.warnings as warning i}}<div>{{warning}}</div>{{/each}}
-                </div>
-                {{/if}}
-
+              <div id="systemSmsConfigForm">
                 <!-- Parameter name and value in separate columns (same table style as the System Settings page); provider blocks are separate tbody elements so they can be shown/hidden as a whole -->
                 <table class="table table-striped table-bordered table-hover" id="systemSmsConfigTable">
                   <thead>
@@ -34,7 +28,6 @@
                       <label class="checkbox-inline">
                         <input type="checkbox" id="systemSmsEnabled" name="enabled" value="true" disabled="disabled" {{if value.config.enabled}}checked="checked"{{/if}}> Enable SMS service
                       </label>
-                      <span class="help-block">Current provider: <b>{{value.providerName}}</b>. When disabled, no SMS is sent for register / password reset / phone verification.</span>
                     </td>
                   </tr>
                   <tr>
@@ -234,8 +227,6 @@
                 <input type="hidden" id="systemSmsCodeTtlMinutes" name="codeTtlMinutes" value="{{value.config.options.codeTtlMinutes}}" disabled="disabled">
 
                 <button id="btnTestSystemSmsSet" onclick="showSystemSmsTestSendPanel()" class="btn btn-lg btn-warning examine_ban">Send Test SMS</button>
-                <span class="help-block">While editing, the current (unsaved) form values are used; in read-only mode the saved configuration is used.</span>
-                <span class="help-block">SMS settings are stored in the database (<code>sms.*</code> rows of the <code>system_setting</code> table). The old values in <code>docSysConfig.properties</code> are only seed data for the first setup and have no effect after saving here.</span>
               </div>
               <div class="widget-foot">
                 <div class="clearfix"></div>

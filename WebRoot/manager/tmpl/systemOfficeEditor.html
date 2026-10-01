@@ -12,7 +12,7 @@
             </div>
 
             <div class="widget-content">
-              <div id="systemOfficeForm" style="margin-top: 20px;">
+              <div id="systemOfficeForm">
                 <!-- 参数名与配置值分列展示（与「邮件服务」「调试日志」页同一套表格样式）：每个参数独占一行，页级操作按钮放在表格下方 -->
                 <table class="table table-striped table-bordered table-hover" id="systemOfficeTable">
                   <thead>
@@ -23,11 +23,12 @@
                   </thead>
                   <tbody>
                   <tr>
-                    <td>Office编辑器</td>
+                    <td>Office引擎</td>
                     <td>
-                      <label class="checkbox-inline">
-                        <input type="checkbox" id="isOnlyOfficeUsed" {{if value.isOnlyOfficeUsed == 1}} checked="checked" {{/if}} onclick="selectIsOnlyOfficeUsed()" disabled="disabled"> OnlyOffice
-                      </label>
+                      <select class="form-control" id="isOnlyOfficeUsed" disabled="disabled" style="width:220px;">
+                        <option value="0" {{if value.isOnlyOfficeUsed != 1}}selected="selected"{{/if}}>默认</option>
+                        <option value="1" {{if value.isOnlyOfficeUsed == 1}}selected="selected"{{/if}}>OnlyOffice</option>
+                      </select>
                     </td>
                   </tr>
                   </tbody>

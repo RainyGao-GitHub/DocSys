@@ -319,13 +319,14 @@
   复测：“跳到开头”后等 8 秒行数 2832 → **2832 不变**；“回到末尾”后 2987 → **2988**（正常追加）。
 - ⚠️ **已知现状（非本次引入）**：后台模板用 `$.get('tmpl/xx.html')` 无 cache-busting，
   浏览器会缓存旧模板 → 升级后需**刷新页面**才能看到新按钮（所有模板改动同理）。
+- ✅ **子项⑧（2026-10-01）**：10 个页面 UI 打磨**已实施 + 已 E2E 验证**（详见「子项⑧」小节），**未提交**（基线 `a7012b16f`）。
 
 ## 下一步
 
-1. **等用户确认后提交本批**（不要自动 commit）——只改 `WebRoot/manager/main.js` + `WebRoot/manager/static/style/style.css`。
+1. **等用户确认后提交本批**（不要自动 commit）——20 个文件：`WebRoot/manager/main.js`、`WebRoot/manager/static/style/style.css`、9 页 × 中/英 模板（子项⑧）。
 2. 待用户裁定：移动版导航（`#navMobile`）选中项无高亮 + 子项与顶级项同色，是否一并统一；「下载」按钮 500 是否处理；`updateSystemInfo()` 死代码是否删。
 3. 收尾：提交确认后把本卡移入 `DevAgentControl/已完成/`，并同步 `CLAUDE.md` 指针。
-4. 可选后续（用户未要求）：各子页加 help-block 说明文案 / 行号 / 轮转历史文件列表 / 关键字服务端搜索。
+4. 可选后续（用户未要求）：其余子页 help-block 文案精简 / 行号 / 轮转历史文件列表 / 关键字服务端搜索。
 
 ## 生效约束
 
@@ -346,20 +347,76 @@
 - E2E 口径：`POST /DocSystem/User/login.do`（`Admin`/`pwd=QWRtaW4=`，pwd 为 base64 明文）；探针产物写 `%TEMP%\docsys_chk\`。
 - **不要自动 commit**：改完 + 验证 → 汇报 → 等用户确认。
 
-## 未提交改动（子项⑥补充 + ⑦；基线 `d01307d8c`）
+## 未提交改动（子项⑧；基线 `a7012b16f`）
 
-- ` M WebRoot/manager/main.js`（⑥补充：再点父级收起）
-- ` M WebRoot/manager/static/style/style.css`（⑦：子项选中改浅蓝背景）
-- ` M CLAUDE.md`、` M DevAgentControl/CURRENT_STATE_日志在线查看.md`（本卡）
+- ` M WebRoot/manager/main.js`（Office引擎下拉 + 调试日志去掉编辑态）
+- ` M WebRoot/manager/static/style/style.css`（表格下方按钮行留白 + 表下说明文字不贴边）
+- ` M WebRoot/manager/tmpl/system{EmailConfig,SmsConfig,DbConfig,Ldap,Network,Cluster,Llm,OfficeEditor,DebugLog}{,_en}.html`（18 个模板）
+- 无 Java 改动 → **不需要编译、不需要重启**；静态资源有浏览器缓存，验证/上线后需刷新页面。
 
-- 已提交里程碑：`548b6da49`（在线查看）、`d6b7eff85`（调试日志从系统设置剥离）、`f8727cd03`（调试日志布局）、`11b1a83f9`（5 个参数块拆子页）、`b95a0a19c`（新增顶级菜单「智能体设置」）、`d01307d8c`（带子项菜单只能一个展开）。
-- 本批为**纯前端（main.js + css）→ 不需要编译、不需要重启**。
-- 静态资源有浏览器缓存：验证/上线后需刷新页面（本次验证均先 `Network.clearBrowserCache`）。
+- 已提交里程碑：`a7012b16f`（子项选中背景高亮 = ⑥补充 + ⑦）、`d01307d8c`（带子项菜单只能一个展开）、
+  `b95a0a19c`（新增顶级菜单「智能体设置」）、`11b1a83f9`（5 个参数块拆子页）、`f8727cd03`（调试日志布局）、
+  `d6b7eff85`（调试日志从系统设置剥离）、`548b6da49`（在线查看）。
 
-### ⑥补充：再点一次父级 = 收起
+### ⑥补充（已提交 `a7012b16f`）：再点一次父级 = 收起
 - `collapseParentMenu(curPath)`：在 `showContentPage` **清空 #container 之前**判断——该父级子菜单已展开则只收起（不动内容区、不切页），
   并保留当前子项高亮（否则内容会被提前清成「载入中...」）。
 - 踩坑：① 判断展开状态必须在 `hide()` 之前取，否则永远拿到“收起后”的状态；
   ② 实测点父级时 `li.has_sublist` 处理器**先于** `[data-eb-event]` 执行，所以它在父级带 `data-eb-event` 时必须直接 return，否则会与 showContentPage 互相抢。
 - 验证：① 点系统管理 → 展开+进系统设置；② 再点 → 收起（`ul.sublist:visible`=0）且**内容区仍是系统设置**；③ 再点 → 重新展开；
   ④ 进「调试日志」后点父级 → 收起、内容仍是调试日志；⑥ 智能体设置同样行为；⑧ 点非分组页 → 全部收起。
+
+## 子项⑧ 10 个页面 UI 打磨（2026-10-01 第八里程碑）
+
+### 用户裁定（原文要点）
+
+邮件服务 / 短信服务 / 数据库设置 / LDAP设置 / 安全网络设置 / 集群部署设置 / Office编辑器 / 调试日志 / AI接入设置 / 提示词管理 的 UI 优化：
+
+1. 普遍问题：① 最后一行的操作按键前后/上下没有留白（留白大小参考右上角「编辑」按键）；② 第一行（参数/配置值所在行）竖线和顶部留有间隙，应该是个 bug。
+2. 邮件服务：顶部提示语去掉；「启用邮件服务」行提示去掉（很啰嗦）；操作按键区的提示性文字去掉（数据存哪里属系统设计层面，管理员不需要知道）。
+3. 短信服务：同第 2 条的②③；顶部警告块用户裁定「一并删除」。
+4. 数据库设置：建议也采用表格布局（更统一）。
+5. Office编辑器：第一个参数名改成「Office引擎」，配置值改成下拉框（默认 / OnlyOffice），**只改前端展示、不改真实逻辑**。
+6. 调试日志：去掉「编辑」按键（不需要先点编辑才能改设置）。
+
+### 根因（两个「普遍问题」）
+
+- **① 按钮无留白**：表 `table` 底边与按钮顶边实测间隙 **0px**；参考口径 = `.widget-head` padding `8px 15px`（「编辑」按钮距表头顶 9px、距右侧 15px）。
+- **② 表头与顶部有间隙：是我自己引入的**——9 个页面都套了 `<div id="systemXxxForm" style="margin-top: 20px;">`，
+  而产品原有同类页（`WebRoot/manager/tmpl/systemUpgrade.html`）是把 `<table>` 直接放 `.widget-content` 下**紧贴表头**。
+  像素取证：表头上方有 10~20px 空白带，表格首行又无上边框 → 「参数/配置值」两列之间的竖线看起来从空白带下方才开始。
+
+### 改动
+
+- `WebRoot/manager/static/style/style.css`（1 组规则，覆盖全部 10 页）：
+  `.widget .widget-content table ~ button` → 上下 `margin: 10px`；`:first-of-type` → `margin-left: 15px`；`:last-of-type` → `margin-right: 15px`；
+  `table ~ .help-block` → `margin: 10px 15px 0px 15px`（表下仍有说明文字的页面不贴边）。
+- 18 个模板去掉 `style="margin-top: 20px;"`（9 页 × 中/英），表格紧贴表头（对齐 `systemUpgrade.html`）。
+- 邮件/短信（中英 4 个模板）：删顶部 `{{if value.warnings.length > 0}}` 警告块、「启用邮件/短信服务」行的 help-block、按钮区两段 help-block。
+  注意：`value.warnings` 仍由 `main.js` 组装，只是不再渲染（未改逻辑）。
+- 数据库设置（中英）：`form-horizontal` → 两列「参数/配置值」表格（类型 / 地址 / 用户名 / 密码），5 个操作按钮移到表格下方；
+  **id / onclick 全部不变**（`systemDbType/Url/User/Pwd`、`testDatabase/exportDBData/importDBData/resetDatabaseConfirm/deleteDatabaseConfirm`），
+  `systemDbSetting` 相关 JS 零改动，保存仍走 `setSystemDBConfig.do`。
+- Office编辑器（中英 + `main.js`）：参数名 `Office编辑器` → `Office引擎`；复选框 → `<select id="isOnlyOfficeUsed">`（`0=默认` / `1=OnlyOffice`）；
+  `saveSystemOfficeEditorSet` 改 `parseInt($("#isOnlyOfficeUsed").val(),10)==1?1:0`，`cancelSystemOfficeEditorSet` 改 `.val(...)` 回滚；
+  删掉复选框时代的空函数 `selectIsOnlyOfficeUsed()`。**提交字段仍是 `isOnlyOfficeUsed`（0/1）→ 存储与后端逻辑不变。**
+- 调试日志（中英 + `main.js`）：删表头「编辑」按钮；`#logLevel` / `#outputToFileEn` 去掉 `disabled`（进页即可改）；
+  `#logFile` 仍按「输出到指定文件」是否勾选决定可用性（模板用 `{{if value.outputToFileEn != 1}}disabled{{/if}}`，与旧编辑态一致）；
+  「保存/取消」常显；删 `enableSystemDebugLogSet()`，`cancelSystemDebugLogSet()` 只回滚 `systemInfo` 快照值、`saveSystemDebugLogSet()` 不再切按钮/不再禁用字段。
+  提交字段仍是 `logLevel` + `logFile`（`logFile` 始终提交的语义不变）。
+
+### 验证（dev 8100，admin，2026-10-01）
+
+- **模板编译自检**：10 页 × 中/英 = **20/20 `template.compile` PASS**（先例：`{{if}}` 不配平会让页面静默空白）。
+- **几何量测（中文 9 个表格页）**：`表头↔表格 = 0px`、`表格↔首个按钮 = 10px`、首个按钮左缩进 `15px`、表格左缩进 `0px`（证明 15px 是真实留白）→ 9 页全部一致。
+- **英文变体**（直接 `$Func.render` 实测真实数据）：
+  `systemDbConfig_en` = Parameter/Value + `DB Type|DB URL|Account|Password` + `Test,Export,Import,Reset,Delete`；
+  `systemOfficeEditor_en` = `Office Engine` 行 + 下拉 `0:Default,1:OnlyOffice`（val=1）；
+  `systemDebugLog_en` = 表头只有 `Save,Cancel`，仅 `logFile` disabled。留白量测同中文。
+- **Office 引擎功能**：「编辑 → 改值 → 取消」回滚到 1 ✅；下拉映射 `默认→0` / `OnlyOffice→1` ✅；
+  值不变点「保存」→ 弹「更新成功！」且重渲染后仍选中 OnlyOffice、`编辑` 按钮恢复可见 ✅。
+- **调试日志功能**：进页即 `#logLevel` / `#outputToFileEn` 可改（页面已无 `#btnEnableSystemDebugLogSet`）✅；
+  改值 + 「保存」→ 弹「更新成功！」，保存后字段仍可改、按钮仍为「保存/取消」✅。
+- **配置无抖动**：`WebRoot/WEB-INF/classes/docSysConfig.properties` 保存后仍是 **28 个键**、`isOnlyOfficeUsed=1` 不变；
+  hash 变化只因文件头被重写成新的 `#Thu Oct 01 21:24:36 CST 2026` 时间戳 → 印证「按页白名单提交」的设计没被破坏。
+- 截图存档：`%TEMP%\docsys_chk\system{EmailConfig,SmsConfig,DbConfig,OfficeEditor,DebugLog}.png`（含 `_bottom.png`：表下按钮留白取证）。

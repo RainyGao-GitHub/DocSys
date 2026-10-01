@@ -977,6 +977,25 @@ header .header-data .hdata em{
 	border-radius: 0px;
 }
 
+/* 表格下方的操作按钮行：上下/左右留白与表头「编辑」按钮一致（表头 padding: 8px 15px） */
+.widget .widget-content table ~ button{
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.widget .widget-content table ~ button:first-of-type{
+	margin-left: 15px;
+}
+
+.widget .widget-content table ~ button:last-of-type{
+	margin-right: 15px;
+}
+
+/* 表格下方若仍有说明文字，同样不贴表格边缘 */
+.widget .widget-content table ~ .help-block{
+	margin: 10px 15px 0px 15px;
+}
+
 .widget.wblack{
   background: #fafafa url('../img/black.png') repeat;
   color: #ddd;

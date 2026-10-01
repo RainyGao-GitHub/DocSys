@@ -4,15 +4,14 @@
             <div class="widget-head">
               <div class="pull-left">调试日志</div>
               <div class="widget-icons pull-right">
-                <button id="btnEnableSystemDebugLogSet" onclick="enableSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban">编辑</button>
-                <button id="btnSaveSystemDebugLogSet" onclick="saveSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">保存</button>
-                <button id="btnCancelSystemDebugLogSet" onclick="cancelSystemDebugLogSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
+                <button id="btnSaveSystemDebugLogSet" onclick="saveSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban">保存</button>
+                <button id="btnCancelSystemDebugLogSet" onclick="cancelSystemDebugLogSet()" class="btn btn-lg btn-warning examine_ban">取消</button>
               </div>
               <div class="clearfix"></div>
             </div>
 
             <div class="widget-content">
-              <div id="systemDebugLogForm" style="margin-top: 20px;">
+              <div id="systemDebugLogForm">
                 <!-- 参数名与配置值分列展示（与「邮件服务」「短信服务」页同一套表格样式）：每个参数独占一行，日志文件的运维入口放在表格下方 -->
                 <table class="table table-striped table-bordered table-hover" id="systemDebugLogTable">
                   <thead>
@@ -25,7 +24,7 @@
                   <tr>
                     <td>日志级别</td>
                     <td>
-                      <select class="form-control" id="logLevel" disabled="disabled" style="width:220px;">
+                      <select class="form-control" id="logLevel" style="width:220px;">
                         <option value="0" {{if value.logLevel == 0}} selected="selected" {{/if}}>debug</option>
                         <option value="1" {{if value.logLevel == 1}} selected="selected" {{/if}}>info</option>
                         <option value="2" {{if value.logLevel == 2}} selected="selected" {{/if}}>warn</option>
@@ -37,14 +36,14 @@
                     <td>日志输出</td>
                     <td>
                       <label class="checkbox-inline">
-                        <input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}} onclick="selectOutputToFileEn()" disabled="disabled"> 输出到指定文件
+                        <input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}} onclick="selectOutputToFileEn()"> 输出到指定文件
                       </label>
                     </td>
                   </tr>
                   <tr>
                     <td>日志文件路径</td>
                     <td>
-                      <input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="如需输出到指定文件，请指定日志文件路径" disabled="disabled" style="width:520px;">
+                      <input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="如需输出到指定文件，请指定日志文件路径" {{if value.outputToFileEn != 1}}disabled="disabled"{{/if}} style="width:520px;">
                     </td>
                   </tr>
                   </tbody>

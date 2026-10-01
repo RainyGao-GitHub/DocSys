@@ -12,45 +12,49 @@
             </div>
 
             <div class="widget-content">
-                  <div class="form-horizontal" style="margin-top: 20px;">
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">DB Type</label>
-                      <div class="col-lg-9">
+                  <!-- Parameter/value table, same style as the Email/SMS Service and Debug Log pages: one row per parameter, page actions below the table -->
+                  <table class="table table-striped table-bordered table-hover" id="systemDbConfigTable">
+                    <thead>
+                    <tr>
+                      <th style="width:220px;">Parameter</th>
+                      <th>Value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                      <td>DB Type</td>
+                      <td>
 			            <select class="form-control" id="systemDbType" onchange="doSelectDbType();" disabled="disabled" >   
 				            <option value="mysql" {{if value.type == "mysql"}}selected="selected"{{/if}}>mysql</option>   
 				            <option value="sqlite" {{if value.type == "sqlite"}}selected="selected"{{/if}}>sqlite</option>   
 				         </select>
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">DB URL</label>
-                      <div class="col-lg-9">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>DB URL</td>
+                      <td>
                         <input type="text" class="form-control" id="systemDbUrl" name="systemDbUrl" value="{{value.url}}" disabled="disabled" >
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="name">Account</label>
-                      <div class="col-lg-9">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Account</td>
+                      <td>
                         <input type="text" class="form-control" id="systemDbUser" name="systemDbUser" value="{{value.user}}" disabled="disabled" >
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="pwd">Password</label>
-                      <div class="col-lg-9">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Password</td>
+                      <td>
                         <input type="text" class="form-control" id="systemDbPwd" name="systemDbPwd" value="{{value.pwd}}" disabled="disabled" >
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <label class="control-label col-lg-3" for="op"></label>
-                      <div class="col-lg-9">
-                      	<button onclick="testDatabase()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
-                      	<button onclick="exportDBData()" data-id="" class="btn btn-lg btn-warning examine_ban">Export</button>
-                      	<button onclick="importDBData()" data-id="" class="btn btn-lg btn-warning examine_ban">Import</button>
-                      	<button onclick="resetDatabaseConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">Reset</button>
-                      	<button onclick="deleteDatabaseConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">Delete</button>
-                      </div>
-                    </div>
-                  </div>
+                      </td>
+                    </tr>
+                    </tbody>
+                  </table>
+                  <button onclick="testDatabase()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
+                  <button onclick="exportDBData()" data-id="" class="btn btn-lg btn-warning examine_ban">Export</button>
+                  <button onclick="importDBData()" data-id="" class="btn btn-lg btn-warning examine_ban">Import</button>
+                  <button onclick="resetDatabaseConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">Reset</button>
+                  <button onclick="deleteDatabaseConfirm()" data-id="" class="btn btn-lg btn-danger examine_ban">Delete</button>
             </div>
             
             <div class="widget-foot">

@@ -12,13 +12,7 @@
             </div>
 
             <div class="widget-content">
-              <div id="systemMailConfigForm" style="margin-top: 20px;">
-                {{if value.warnings.length > 0}}
-                <div class="alert alert-info" style="margin: 0 0 10px 0;">
-                  {{each value.warnings as warning i}}<div>{{warning}}</div>{{/each}}
-                </div>
-                {{/if}}
-
+              <div id="systemMailConfigForm">
                 <!-- Name/value table, same style as the SMS Service and System Settings pages; each provider block is its own tbody so it can be shown/hidden as a whole -->
                 <table class="table table-striped table-bordered table-hover" id="systemMailConfigTable">
                   <thead>
@@ -34,7 +28,6 @@
                       <label class="checkbox-inline">
                         <input type="checkbox" id="systemMailEnabled" name="enabled" value="true" disabled="disabled" {{if value.config.enabled}}checked="checked"{{/if}}> Enable email service
                       </label>
-                      <span class="help-block">Current provider: <b>{{value.providerName}}</b>. When disabled, registration codes, password reset and share notifications are not sent.</span>
                     </td>
                   </tr>
                   <tr>
@@ -307,8 +300,6 @@
                 </table>
 
                 <button id="btnTestSystemMailSet" onclick="showSystemMailTestSendPanel()" class="btn btn-lg btn-warning examine_ban">Send test email</button>
-                <span class="help-block">While editing, the values currently on the page are used (try before saving); in read-only mode the saved configuration is used.</span>
-                <span class="help-block">The mail configuration is stored in the database (<code>mail.*</code> rows of <code>system_setting</code>). The old values in <code>docSysConfig.properties</code> are only the defaults for the first-time migration - editing them has no effect afterwards.</span>
               </div>
               <div class="widget-foot">
                 <div class="clearfix"></div>

@@ -4,15 +4,14 @@
             <div class="widget-head">
               <div class="pull-left">Debug Log</div>
               <div class="widget-icons pull-right">
-                <button id="btnEnableSystemDebugLogSet" onclick="enableSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
-                <button id="btnSaveSystemDebugLogSet" onclick="saveSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">Save</button>
-                <button id="btnCancelSystemDebugLogSet" onclick="cancelSystemDebugLogSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
+                <button id="btnSaveSystemDebugLogSet" onclick="saveSystemDebugLogSet()" class="btn btn-lg btn-success examine_ban">Save</button>
+                <button id="btnCancelSystemDebugLogSet" onclick="cancelSystemDebugLogSet()" class="btn btn-lg btn-warning examine_ban">Cancel</button>
               </div>
               <div class="clearfix"></div>
             </div>
 
             <div class="widget-content">
-              <div id="systemDebugLogForm" style="margin-top: 20px;">
+              <div id="systemDebugLogForm">
                 <!-- Parameter/value table style, same as the "Email Service" / "SMS Service" pages: one row per parameter, log-file actions below the table -->
                 <table class="table table-striped table-bordered table-hover" id="systemDebugLogTable">
                   <thead>
@@ -25,7 +24,7 @@
                   <tr>
                     <td>Log Level</td>
                     <td>
-                      <select class="form-control" id="logLevel" disabled="disabled" style="width:220px;">
+                      <select class="form-control" id="logLevel" style="width:220px;">
                         <option value="0" {{if value.logLevel == 0}} selected="selected" {{/if}}>debug</option>
                         <option value="1" {{if value.logLevel == 1}} selected="selected" {{/if}}>info</option>
                         <option value="2" {{if value.logLevel == 2}} selected="selected" {{/if}}>warn</option>
@@ -37,14 +36,14 @@
                     <td>Log Output</td>
                     <td>
                       <label class="checkbox-inline">
-                        <input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}} onclick="selectOutputToFileEn()" disabled="disabled"> Output to file
+                        <input type="checkbox" id="outputToFileEn" {{if value.outputToFileEn == 1}} checked="checked" {{/if}} onclick="selectOutputToFileEn()"> Output to file
                       </label>
                     </td>
                   </tr>
                   <tr>
                     <td>Log File Path</td>
                     <td>
-                      <input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="You can specify a dedicated file path for debug log" disabled="disabled" style="width:520px;">
+                      <input type="text" class="form-control" id="logFile" value="{{value.logFile}}" placeholder="You can specify a dedicated file path for debug log" {{if value.outputToFileEn != 1}}disabled="disabled"{{/if}} style="width:520px;">
                     </td>
                   </tr>
                   </tbody>
