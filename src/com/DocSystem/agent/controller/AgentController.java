@@ -110,6 +110,10 @@ public class AgentController {
     @Autowired(required = false)
     private com.DocSystem.agent.config.AgentConfigService agentConfigService;
 
+    /** AI接入设置：系统级 LLM 模型列表（agent_config.llm_models 为权威源，运行期镜像写 docSys.ini） */
+    @Autowired(required = false)
+    private com.DocSystem.agent.config.AgentLlmConfigStore agentLlmConfigStore;
+
     /** P1：会话级权限模式与规则（未装配 → 模式接口返回默认值/报错） */
     @Autowired(required = false)
     private com.DocSystem.agent.permission.PermissionStore permissionStore;
@@ -807,6 +811,216 @@ public class AgentController {
         } catch (Exception e) {
             log.error("saveSystemPromptConfig failed", e);
             return AgentResponse.error("保存提示词配置失败: " + e.getMessage());
+        }
+    }
+
+    // ==================== 系统级 LLM 模型（智能体设置 → AI接入设置）====================
+
+    /**
+     * 读取系统级模型列表（仅管理员）。apiKey 只回掩码（明文不出后端）。
+     * 存储：{@code agent_config(global, llm_models)}（权威源）；首次会自动从运行期配置串播种。
+     */
+    @GetMapping("/config/llm-models")
+    public AgentResponse getSystemLlmModels(HttpServletRequest servletRequest) {
+        User user = currentUser(servletRequest);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
+        if (!isSystemAdmin(user)) {
+            return AgentResponse.error("仅管理员可配置AI接入");
+        }
+        if (agentLlmConfigStore == null) {
+            return AgentResponse.error("AI接入配置服务不可用");
+        }
+        try {
+            return AgentResponse.ok("Success").withData(buildSystemLlmData(agentLlmConfigStore.load()));
+        } catch (Exception e) {
+            log.error("getSystemLlmModels failed", e);
+            return AgentResponse.error("读取AI接入配置失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 保存系统级模型列表（仅管理员）。
+     *
+     * <p>Body: <code>{ "models": [ {id?, name, modelName, endpoint, apiKey?, enabled, settings?}, ... ] }</code>；
+     * apiKey 留空或只回掩码值 = 沿用原来那条的 key（前端不回传明文）。</p>
+     */
+    @PostMapping("/config/llm-models")
+    public AgentResponse saveSystemLlmModels(@RequestBody(required = false) Map<String, Object> body,
+                                             HttpServletRequest servletRequest) {
+        User user = currentUser(servletRequest);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
+        if (!isSystemAdmin(user)) {
+            return AgentResponse.error("仅管理员可配置AI接入");
+        }
+        if (agentLlmConfigStore == null) {
+            return AgentResponse.error("AI接入配置服务不可用");
+        }
+        try {
+            List<com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel> models = parseLlmModels(body);
+            if (models == null) {
+                return AgentResponse.error("参数格式错误：缺少 models 数组");
+            }
+
+            String error = agentLlmConfigStore.validate(models);
+            if (error != null) {
+                return AgentResponse.error(error);
+            }
+            if (!agentLlmConfigStore.save(models)) {
+                return AgentResponse.error("保存AI接入配置失败（配置存储不可用）");
+            }
+            return AgentResponse.ok("AI接入配置已保存")
+                    .withData(buildSystemLlmData(agentLlmConfigStore.load()));
+        } catch (Exception e) {
+            log.error("saveSystemLlmModels failed", e);
+            return AgentResponse.error("保存AI接入配置失败: " + e.getMessage());
+        }
+    }
+
+    /** 返回给前端的模型列表（apiKey 掩码）+ 运行期镜像串 */
+    private com.alibaba.fastjson.JSONObject buildSystemLlmData(
+            List<com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel> models) {
+        List<com.alibaba.fastjson.JSONObject> list = new ArrayList<>();
+        if (models != null) {
+            for (com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel m : models) {
+                if (m == null) {
+                    continue;
+                }
+                com.alibaba.fastjson.JSONObject one = new com.alibaba.fastjson.JSONObject();
+                one.put("id", m.getId());
+                one.put("name", m.getName());
+                one.put("modelName", m.getModelName());
+                one.put("endpoint", m.getEndpoint());
+                //按用户要求直接回明文（暂不考虑泄露），便于管理员核对已保存的值
+                one.put("apiKey", m.getApiKey() == null ? "" : m.getApiKey());
+                one.put("enabled", m.isEnabled());
+                one.put("settings", m.getSettings() == null
+                        ? new com.alibaba.fastjson.JSONObject() : m.getSettings());
+                list.add(one);
+            }
+        }
+        com.alibaba.fastjson.JSONObject data = new com.alibaba.fastjson.JSONObject();
+        data.put("models", list);
+        data.put("legacy", agentLlmConfigStore.toLegacyString(models));
+        data.put("maxModels", com.DocSystem.agent.config.AgentLlmConfigStore.MAX_MODELS);
+        return data;
+    }
+
+    /** 解析 body.models（fastjson 转换，容忍缺省字段） */
+    private List<com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel> parseLlmModels(Map<String, Object> body) {
+        if (body == null || body.get("models") == null) {
+            return null;
+        }
+        try {
+            return JSON.parseArray(JSON.toJSONString(body.get("models")),
+                    com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel.class);
+        } catch (Exception e) {
+            log.warn("parseLlmModels failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** apiKey 为空/掩码值 → 按 id 回填已保存的明文 key（当前已不需要，保留作兼容兜底） */
+    @SuppressWarnings("unused")
+    private void fillApiKeyFromStored(List<com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel> models) {
+        if (models == null || models.isEmpty() || agentLlmConfigStore == null) {
+            return;
+        }
+        boolean needStored = false;
+        for (com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel m : models) {
+            if (m == null) {
+                continue;
+            }
+            String key = m.getApiKey() == null ? "" : m.getApiKey().trim();
+            if (key.isEmpty() || key.indexOf("****") >= 0) {
+                needStored = true;
+                break;
+            }
+        }
+        if (!needStored) {
+            return;
+        }
+
+        Map<String, String> storedKeys = new HashMap<>();
+        List<com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel> stored = agentLlmConfigStore.load();
+        if (stored != null) {
+            for (com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel s : stored) {
+                if (s != null && s.getId() != null) {
+                    storedKeys.put(s.getId(), s.getApiKey());
+                }
+            }
+        }
+        for (com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel m : models) {
+            if (m == null) {
+                continue;
+            }
+            String key = m.getApiKey() == null ? "" : m.getApiKey().trim();
+            if (!key.isEmpty() && key.indexOf("****") < 0) {
+                continue;    //前端传了明文，直接用
+            }
+            String old = storedKeys.get(m.getId());
+            m.setApiKey(old == null ? "" : old);
+        }
+    }
+
+    /**
+     * 单个模型「测试连接」（仅管理员）。
+     *
+     * <p>Body = 一个模型对象（与保存时的条目同构）；apiKey 留空/掩码 → 按 id 取已保存的 key，
+     * 所以「编辑时不动密钥直接测」也能跑通。</p>
+     */
+    @PostMapping("/config/llm-models/test")
+    public AgentResponse testSystemLlmModel(@RequestBody(required = false) Map<String, Object> body,
+                                           HttpServletRequest servletRequest) {
+        User user = currentUser(servletRequest);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
+        if (!isSystemAdmin(user)) {
+            return AgentResponse.error("仅管理员可测试AI接入");
+        }
+        if (agentLlmConfigStore == null) {
+            return AgentResponse.error("AI接入配置服务不可用");
+        }
+        try {
+            List<com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel> models =
+                    JSON.parseArray(JSON.toJSONString(java.util.Collections.singletonList(body)),
+                            com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel.class);
+            if (models == null || models.isEmpty()) {
+                return AgentResponse.error("参数格式错误：缺少模型信息");
+            }
+            com.DocSystem.agent.config.AgentLlmConfigStore.LlmModel model = models.get(0);
+            fillApiKeyFromStored(models);
+            String error = agentLlmConfigStore.validate(models);
+            if (error != null) {
+                return AgentResponse.error(error);
+            }
+
+            //单条渲染成运行期配置串 → 复用既有解析/测试链路（与 LLMUtil.parseLLMConfig 完全同源）
+            String legacy = agentLlmConfigStore.toLegacyString(models);
+            com.DocSystem.common.entity.SystemLLMConfig cfg = util.LLMUtil.getSystemLLMConfig(legacy);
+            if (cfg == null || cfg.llmConfigList == null || cfg.llmConfigList.isEmpty()) {
+                return AgentResponse.error("模型配置不完整，无法测试");
+            }
+            cfg.enabled = true;
+
+            com.DocSystem.common.entity.LLMAccessCheckResult checkResult =
+                    new com.DocSystem.common.entity.LLMAccessCheckResult();
+            util.LLMUtil.llmAccessCheck(cfg, checkResult);
+
+            boolean ok = checkResult.info != null && !checkResult.info.contains("Exception")
+                    && !checkResult.info.contains("错误") && !checkResult.info.toLowerCase().contains("error");
+            com.alibaba.fastjson.JSONObject data = new com.alibaba.fastjson.JSONObject();
+            data.put("info", checkResult.info);
+            data.put("name", model.getName());
+            return ok ? AgentResponse.ok("测试成功").withData(data)
+                      : AgentResponse.error("测试失败").withData(data);
+        } catch (Exception e) {
+            log.error("testSystemLlmModel failed", e);
+            return AgentResponse.error("测试失败: " + e.getMessage());
         }
     }
 

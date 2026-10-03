@@ -996,6 +996,31 @@ header .header-data .hdata em{
 	margin: 10px 15px 0px 15px;
 }
 
+/* AI接入设置：模型编辑对话框的标签统一左对齐。
+   主题的 .control-label 是固定宽度 + 右对齐，短标签（如「状态」）文字会被推到右边，
+   看起来比其他标签缩进，故此处统一改为左对齐（保留 15px 左内边距，与输入框左边缘齐）。 */
+.systemLlmModelForm .control-label{
+	text-align: left;
+}
+
+/* 表格行内操作按钮之间的间隙（按钮相邻时默认只靠空白字符分隔，太挤） */
+.widget .widget-content table td .btn + .btn{
+	margin-left: 8px;
+}
+
+/* AI接入设置（模型列表）：行内操作按钮紧凑 + 纵向排列（窄窗口下横向放不下），
+   列宽收窄后把空间让给后面的信息列 */
+#systemLlmTable td .btn{
+	padding: 2px 8px;
+	font-size: 11px !important;
+	display: block;
+}
+
+#systemLlmTable td .btn + .btn{
+	margin-left: 0;
+	margin-top: 6px;
+}
+
 .widget.wblack{
   background: #fafafa url('../img/black.png') repeat;
   color: #ddd;

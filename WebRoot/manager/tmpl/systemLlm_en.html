@@ -4,34 +4,53 @@
             <div class="widget-head">
               <div class="pull-left">AI Access</div>
               <div class="widget-icons pull-right">
-                <button id="btnEnableSystemLlmSet" onclick="enableSystemLlmSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
-                <button id="btnSaveSystemLlmSet" onclick="saveSystemLlmSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">Save</button>
-                <button id="btnCancelSystemLlmSet" onclick="cancelSystemLlmSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
+                <button id="btnAddSystemLlmModel" onclick="addSystemLlmModel()" class="btn btn-lg btn-success examine_ban">Add model</button>
+                <button id="btnSaveSystemLlmSet" onclick="saveSystemLlmSet()" class="btn btn-lg btn-success examine_ban" disabled="disabled">Save</button>
+                <button id="btnCancelSystemLlmSet" onclick="cancelSystemLlmSet()" class="btn btn-lg btn-warning examine_ban" disabled="disabled">Cancel</button>
               </div>
               <div class="clearfix"></div>
             </div>
 
             <div class="widget-content">
               <div id="systemLlmForm">
-                <!-- Parameter/value table style, same as the "Email Service" / "Debug Log" pages: one row per parameter, page actions below the table -->
+                <!-- Model list: order = priority; the first ENABLED model is the default one (= first entry of the runtime config string) -->
                 <table class="table table-striped table-bordered table-hover" id="systemLlmTable">
                   <thead>
                   <tr>
-                    <th style="width:220px;">Parameter</th>
-                    <th>Value</th>
+                    <th style="width:150px;">Name</th>
+                    <th>Endpoint / Model / API Key</th>
+                    <th style="width:76px;">Status</th>
+                    <th style="width:76px;">Actions</th>
                   </tr>
                   </thead>
-                  <tbody>
+                  <tbody id="systemLlmModelRows">
+                  {{each value.models as model i}}
                   <tr>
-                    <td>AI Access</td>
+                    <td>{{model.name}}</td>
+                    <td style="word-break:break-all;">
+                      <div>{{model.endpoint}}</div>
+                      <div style="color:#888;">{{model.modelName}}{{if model.apiKey}} · {{model.apiKey}}{{/if}}</div>
+                    </td>
                     <td>
-                      <input type="text" class="form-control" id="llmConfig" name="llmConfig" value="{{value.llmConfig}}" disabled="disabled" placeholder="https://api.deepseek.com/v1/chat/completions; apikey=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;" style="width:520px;">
+                      <label class="checkbox-inline" style="white-space:nowrap;">
+                        <input type="checkbox" {{if model.enabled}}checked="checked"{{/if}} onclick="toggleSystemLlmModel({{i}})"> {{if model.enabled}}enabled{{else}}disabled{{/if}}
+                      </label>
+                    </td>
+                    <td>
+                      <button onclick="testSystemLlmModel({{i}})" class="btn btn-warning examine_ban">Test</button>
+                      <button onclick="editSystemLlmModel({{i}})" class="btn btn-success examine_ban">Edit</button>
+                      <button onclick="moveSystemLlmModelToTop({{i}})" class="btn btn-primary examine_ban" title="Move to the first position (the first ENABLED model is the default)" {{if i == 0}}disabled="disabled"{{/if}}>Top</button>
+                      <button onclick="deleteSystemLlmModel({{i}})" class="btn btn-danger examine_ban">Delete</button>
                     </td>
                   </tr>
+                  {{/each}}
+                  {{if value.models.length == 0}}
+                  <tr>
+                    <td colspan="4" style="text-align:center;color:#999;">No model configured yet - click "Add model" at the top right to start.</td>
+                  </tr>
+                  {{/if}}
                   </tbody>
                 </table>
-
-                <button onclick="llmTest()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
               </div>
               <div class="widget-foot">
                 <div class="clearfix"></div>

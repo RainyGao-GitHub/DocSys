@@ -48,6 +48,10 @@ public class AgentInitService {
     @Autowired(required = false)
     private LlmConfigSyncService llmConfigSyncService;
 
+    /** AI接入设置：系统级模型列表（agent_config.llm_models 为权威源，启动时覆盖 docSys.ini 的引导值） */
+    @Autowired(required = false)
+    private AgentLlmConfigStore agentLlmConfigStore;
+
     /**
      * 在 DocSys 确认数据库就绪后触发 Agent 初始化。
      * 由 {@code BaseController.docSysInit(...)} 的成功路径调用。
@@ -77,6 +81,19 @@ public class AgentInitService {
             copyDefaultSkillsIfAbsent();
         } catch (Exception e) {
             log.error("默认技能拷贝失败（不影响 DocSys 启动）: {}", e.getMessage(), e);
+        }
+
+        // 1.8) AI接入设置：用 agent_config.llm_models（权威源）覆盖运行期配置
+        //      —— 未配置即不动，保持 docSys.ini 的引导值（与改造前行为一致）；
+        //      必须早于下方 LLM 同步（后者要读 systemLLMConfig 取默认模型）
+        if (agentLlmConfigStore != null) {
+            try {
+                agentLlmConfigStore.applyToRuntime();
+            } catch (Exception e) {
+                log.error("AI接入配置覆盖失败（不影响 DocSys 启动）: {}", e.getMessage(), e);
+            }
+        } else {
+            log.warn("AgentLlmConfigStore 未注入，跳过AI接入配置覆盖");
         }
 
         // 2) LLM 配置同步（直接读 DocSys 内存配置，无网络阻塞）

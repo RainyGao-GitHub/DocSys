@@ -1,0 +1,74 @@
+<div class="form-horizontal systemLlmModelForm">
+  <!-- Name -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">模型名称</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLlmModelName" placeholder="例如：deepseek-chat">
+      <span class="help-block">显示名（模型下拉里显示的文字）；留空则用模型标识。同一页内不要重名。</span>
+    </div>
+  </div>
+  <!-- Endpoint -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">接口地址</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLlmModelEndpoint" placeholder="https://api.deepseek.com">
+      <span class="help-block">Base URL，需以 <code>http://</code> 或 <code>https://</code> 开头（本地 Ollama 例：<code>http://localhost:11434/v1/</code>）。</span>
+    </div>
+  </div>
+  <!-- modelName -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">模型标识</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLlmModelModelName" placeholder="deepseek-chat">
+      <span class="help-block">请求体里的 <code>model</code> 字段（服务商文档中的模型 ID）。</span>
+    </div>
+  </div>
+  <!-- apiKey -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">API Key</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLlmModelApiKey" placeholder="sk-xxxxxxxx">
+      <span class="help-block">本地模型可留空。</span>
+    </div>
+  </div>
+  <!-- advanced -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">高级参数</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLlmModelUseAdvanced" onchange="onToggleSystemLlmModelAdvanced()"> 使用高级参数
+      </label>
+      <div id="systemLlmModelAdvancedBlock" style="display:none;margin-top:8px;">
+        <div style="margin-bottom:6px;">
+          temperature：<input type="text" class="form-control" id="systemLlmModelTemperature" placeholder="0.7" style="width:110px;display:inline-block;">
+          maxTokens：<input type="text" class="form-control" id="systemLlmModelMaxTokens" placeholder="1000" style="width:110px;display:inline-block;">
+        </div>
+        <textarea class="form-control" id="systemLlmModelSettings" rows="3" placeholder="每行一个 键=值（原样拼进运行期配置串）"></textarea>
+      </div>
+    </div>
+  </div>
+  <!-- enabled -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">状态</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLlmModelEnabled" checked="checked"> 启用
+      </label>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="form-group">
+    <div class="col-lg-offset-3 col-lg-9">
+      <button type="button" class="btn btn-warning" id="btnTestSystemLlmModel" onclick="testSystemLlmModelEdit()">测试连接</button>
+      <button type="button" class="btn btn-success" id="btnSaveSystemLlmModelEdit" onclick="saveSystemLlmModelEdit()">保存</button>
+      <button type="button" class="btn" onclick="closeSystemLlmModelEditModal()">取消</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-3 col-lg-9">
+      <span class="help-block" id="systemLlmModelTestResult" style="white-space:pre-wrap;"></span>
+    </div>
+  </div>
+</div>
+<script type="text/javascript" src="systemLlmModelEdit.js"></script>

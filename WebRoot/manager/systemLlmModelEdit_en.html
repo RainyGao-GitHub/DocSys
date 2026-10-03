@@ -1,0 +1,74 @@
+<div class="form-horizontal systemLlmModelForm">
+  <!-- Name -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Model name</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLlmModelName" placeholder="e.g. deepseek-chat">
+      <span class="help-block">Display name shown in the model picker; empty means use the model id. Names must be unique on this page.</span>
+    </div>
+  </div>
+  <!-- Endpoint -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Endpoint</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLlmModelEndpoint" placeholder="https://api.deepseek.com">
+      <span class="help-block">Base URL, must start with <code>http://</code> or <code>https://</code> (local Ollama example: <code>http://localhost:11434/v1/</code>).</span>
+    </div>
+  </div>
+  <!-- modelName -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Model id</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLlmModelModelName" placeholder="deepseek-chat">
+      <span class="help-block">The <code>model</code> field of the request body (model ID from the provider docs).</span>
+    </div>
+  </div>
+  <!-- apiKey -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">API Key</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLlmModelApiKey" placeholder="sk-xxxxxxxx">
+      <span class="help-block">Leave empty for local models.</span>
+    </div>
+  </div>
+  <!-- advanced -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Advanced</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLlmModelUseAdvanced" onchange="onToggleSystemLlmModelAdvanced()"> Use advanced parameters
+      </label>
+      <div id="systemLlmModelAdvancedBlock" style="display:none;margin-top:8px;">
+        <div style="margin-bottom:6px;">
+          temperature: <input type="text" class="form-control" id="systemLlmModelTemperature" placeholder="0.7" style="width:110px;display:inline-block;">
+          maxTokens: <input type="text" class="form-control" id="systemLlmModelMaxTokens" placeholder="1000" style="width:110px;display:inline-block;">
+        </div>
+        <textarea class="form-control" id="systemLlmModelSettings" rows="3" placeholder="One key=value per line (appended to the runtime config string)"></textarea>
+      </div>
+    </div>
+  </div>
+  <!-- enabled -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Status</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLlmModelEnabled" checked="checked"> Enabled
+      </label>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="form-group">
+    <div class="col-lg-offset-3 col-lg-9">
+      <button type="button" class="btn btn-warning" id="btnTestSystemLlmModel" onclick="testSystemLlmModelEdit()">Test</button>
+      <button type="button" class="btn btn-success" id="btnSaveSystemLlmModelEdit" onclick="saveSystemLlmModelEdit()">Save</button>
+      <button type="button" class="btn" onclick="closeSystemLlmModelEditModal()">Cancel</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-3 col-lg-9">
+      <span class="help-block" id="systemLlmModelTestResult" style="white-space:pre-wrap;"></span>
+    </div>
+  </div>
+</div>
+<script type="text/javascript" src="systemLlmModelEdit.js"></script>

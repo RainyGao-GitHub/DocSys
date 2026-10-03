@@ -2666,6 +2666,50 @@ public class BaseFunction{
 		}
 	}
 
+	/**
+	 * 供 agent 侧（智能体设置 → AI接入设置）读取当前生效的 LLM 配置串：
+	 * 优先 docSys.ini（运行期权威值），回落 classes 副本（老部署/未初始化时的兜底）。
+	 */
+	public static String getLLMConfigString() {
+		String value = null;
+		try {
+			value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "llmConfig");
+		} catch (Exception e) {
+			Log.info("getLLMConfigString() 读取 docSys.ini 失败:" + e.getMessage());
+		}
+		if (value != null && !value.trim().isEmpty()) {
+			return value;
+		}
+		return getLLMConfig();
+	}
+
+	/**
+	 * 供 agent 侧写回「AI接入设置」的运行期镜像。
+	 *
+	 * <p>权威源是 agent_config.llm_models（结构化 JSON），本方法只负责把渲染出的老格式串
+	 * 落盘并立即生效：① docSys.ini 与 classes 副本都写（避免二者长期不一致导致
+	 * getLLMConfig() 显示滞后）；② 更新内存 systemLLMConfig —— 保存后无需重启。</p>
+	 *
+	 * <p>空串 = 没有启用的模型 → 置空 systemLLMConfig（AI 视为未配置）。</p>
+	 */
+	public static void applyLLMConfigMirror(String llmConfigStr) {
+		String value = (llmConfigStr == null) ? "" : llmConfigStr.trim();
+		try {
+			ReadProperties.setValue(docSysIniPath + "docSysConfig.properties", "llmConfig", value);
+			ReadProperties.setValue(docSysWebPath + "WEB-INF/classes/docSysConfig.properties", "llmConfig", value);
+		} catch (Exception e) {
+			Log.info("applyLLMConfigMirror() 写配置文件失败:" + e.getMessage());
+		}
+		if (value.isEmpty()) {
+			systemLLMConfig = null;
+			Log.info("applyLLMConfigMirror() 没有启用的AI模型，systemLLMConfig 已置空");
+			return;
+		}
+		applySystemLLMConfig(value);
+		int count = (systemLLMConfig == null || systemLLMConfig.llmConfigList == null) ? 0 : systemLLMConfig.llmConfigList.size();
+		Log.info("applyLLMConfigMirror() systemLLMConfig 已更新，模型数:" + count);
+	}
+
 	///////// systemLicense
 	protected boolean systemLicenseInfoCheck(ReturnAjax rt) {
 		return channel.systemLicenseInfoCheck(rt);

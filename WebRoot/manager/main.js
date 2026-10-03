@@ -2400,28 +2400,389 @@ function saveSystemNetworkSet(){
 	postSystemInfo({ allowedNetworkConfig: $("#allowedNetworkConfig").val() || "" }, showSystemNetwork);
 }
 
-//AI接入设置
-var SYSTEM_LLM_FIELDS = ["llmConfig"];
+//======================= 智能体设置 → AI接入设置（系统级 LLM 模型列表）=======================
+//存储：agent_config(global, llm_models) 为权威源（后端 AgentLlmConfigStore）；
+//运行期镜像串（url; name=..; modelName=..; apikey=.. 用 || 连接）由后端渲染并落 docSys.ini，
+//保存后立即生效（无需重启）。列表顺序即优先级，第 1 个「启用」的模型是默认模型。
+var gSystemLlmModels = [];			//当前编辑中的列表（含停用项）
+var gSystemLlmOriginal = "[]";		//进页/上次保存后的列表 JSON 串（用于判定改动）
+var gSystemLlmLegacy = "";			//上次保存后的运行期配置串（只读展示）
+var gSystemLlmMaxModels = 20;
+var gEditingSystemLlmIndex = -1;	//对话框正在编辑的行号（-1 = 新增）
+var gEditingSystemLlmModelId = "";	//对话框正在编辑的模型 id（新增时为空）
+var gLlmModelSettingsError = "";	//对话框里高级参数解析错误（由 systemLlmModelEdit.js 写入）
 
 function showSystemLlm(){
-	showSystemInfoPage("systemLlm", function(){
-		systemInfo.llmConfig = systemInfo.llmConfig || "";
+	$.ajax({
+		url : "/DocSystem/agent/config/llm-models",
+		type : "get",
+		dataType : "json",
+		success : function (ret) {
+			console.log("showSystemLlm() ret", ret);
+			if(ret.success)
+			{
+				loadSystemLlmModels(ret.data);
+			}
+			else
+			{
+				showErrorMessage(_Lang("读取AI接入配置失败", " : ", ret.message || ""));
+			}
+		},
+		error : function () {
+			showErrorMessage(_Lang("读取AI接入配置失败", " : ", "服务器异常"));
+		}
 	});
 }
 
-function enableSystemLlmSet(){
-	console.log("enableSystemLlmSet systemInfo:", systemInfo);
-	setSystemPageEditMode("SystemLlm", SYSTEM_LLM_FIELDS, true);
+function loadSystemLlmModels(data){
+	gSystemLlmModels = (data && data.models) ? data.models : [];
+	gSystemLlmLegacy = (data && data.legacy) ? data.legacy : "";
+	if(data && data.maxModels)
+	{
+		gSystemLlmMaxModels = data.maxModels;
+	}
+	gSystemLlmOriginal = JSON.stringify(gSystemLlmModels);
+	renderSystemLlmView();
 }
 
+//渲染列表
+function renderSystemLlmView(){
+	var models = [];
+	for(var i=0; i<gSystemLlmModels.length; i++)
+	{
+		models.push($.extend({}, gSystemLlmModels[i]));
+	}
+
+	$Func.render($("#container"), "systemLlm" + langExt,
+		{"value" : {"models" : models, "legacy" : gSystemLlmLegacy, "maxModels" : gSystemLlmMaxModels}},
+		function(){ updateSystemLlmButtons(); });
+}
+
+function isSystemLlmDirty(){
+	return JSON.stringify(gSystemLlmModels) != gSystemLlmOriginal;
+}
+
+//「保存/取消」默认置灰，仅在有改动时启用（与「调试日志」页同一门控口径）
+function updateSystemLlmButtons(){
+	var dirty = isSystemLlmDirty();
+	$("#btnSaveSystemLlmSet").prop("disabled", !dirty);
+	$("#btnCancelSystemLlmSet").prop("disabled", !dirty);
+}
+
+//------------- 校验（与后端 AgentLlmConfigStore.validate 同口径，先拦住再请求）-------------
+function systemLlmHasSeparator(value){
+	return value != null && (value.indexOf(";") >= 0 || value.indexOf("|") >= 0);
+}
+
+function validateSystemLlmModel(model, selfIndex){
+	if(selfIndex == undefined)
+	{
+		selfIndex = gEditingSystemLlmIndex;	//对话框路径：跳过正在编辑的那一行
+	}
+	if(gLlmModelSettingsError != "")
+	{
+		return gLlmModelSettingsError;
+	}
+	if(model.name == "")
+	{
+		return _Lang("模型名称不能为空");
+	}
+	if(model.modelName == "")
+	{
+		return _Lang("模型标识不能为空");
+	}
+	if(model.endpoint == "")
+	{
+		return _Lang("接口地址不能为空");
+	}
+	if(model.endpoint.indexOf("http://") != 0 && model.endpoint.indexOf("https://") != 0)
+	{
+		return _Lang("接口地址需以http开头");
+	}
+	if(systemLlmHasSeparator(model.name) || systemLlmHasSeparator(model.modelName)
+		|| systemLlmHasSeparator(model.endpoint) || systemLlmHasSeparator(model.apiKey))
+	{
+		return _Lang("配置值不能包含分号或竖线");
+	}
+	var settings = model.settings || {};
+	for(var key in settings)
+	{
+		if(systemLlmHasSeparator(key) || systemLlmHasSeparator(settings[key]) || key.indexOf("=") >= 0)
+		{
+			return _Lang("高级参数不能包含分号竖线或等号");
+		}
+	}
+	//重名检查（跳过自己）
+	for(var i=0; i<gSystemLlmModels.length; i++)
+	{
+		if(i == selfIndex)
+		{
+			continue;
+		}
+		if(gSystemLlmModels[i].name == model.name)
+		{
+			return _Lang("模型名称已存在", " : ", model.name);
+		}
+	}
+	return null;
+}
+
+//------------- 增删改查（都先改内存，最后点页面「保存」才落盘）-------------
+function addSystemLlmModel(){
+	if(gSystemLlmModels.length >= gSystemLlmMaxModels)
+	{
+		showErrorMessage(_Lang("最多支持的模型数", " : ", gSystemLlmMaxModels));
+		return;
+	}
+	gEditingSystemLlmIndex = -1;
+	gEditingSystemLlmModelId = "";
+	showSystemLlmModelEditPanel(null);
+}
+
+function editSystemLlmModel(index){
+	var model = gSystemLlmModels[index];
+	if(model == null)
+	{
+		return;
+	}
+	gEditingSystemLlmIndex = index;
+	gEditingSystemLlmModelId = model.id || "";
+	showSystemLlmModelEditPanel(model);
+}
+
+function showSystemLlmModelEditPanel(model){
+	qiao.bs.dialog({
+		id: 'systemLlmModelEdit',
+		url: 'systemLlmModelEdit' + langExt + '.html',
+		title: (model == null) ? _Lang('新增模型') : _Lang('编辑模型'),
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		big: true,
+		callback: function(){
+			$("#systemLlmModelName").val(model == null ? "" : (model.name || ""));
+			$("#systemLlmModelEndpoint").val(model == null ? "" : (model.endpoint || ""));
+			$("#systemLlmModelModelName").val(model == null ? "" : (model.modelName || ""));
+			//已保存的 API Key 直接回填（便于管理员核对原值）
+			$("#systemLlmModelApiKey").val(model == null ? "" : (model.apiKey || ""));
+			$("#systemLlmModelEnabled").prop("checked", model == null ? true : (model.enabled != false));
+
+			var settings = (model == null || model.settings == null) ? {} : model.settings;
+			var hasAdvanced = false;
+			for(var key in settings)
+			{
+				hasAdvanced = true;
+				break;
+			}
+			$("#systemLlmModelUseAdvanced").prop("checked", hasAdvanced);
+			$("#systemLlmModelTemperature").val(settings["temperature"] || "");
+			$("#systemLlmModelMaxTokens").val(settings["maxTokens"] || "");
+			$("#systemLlmModelSettings").val(buildSystemLlmExtraSettingsText(settings));
+			onToggleSystemLlmModelAdvanced();
+
+			$("#systemLlmModelTestResult").empty();
+			$("#systemLlmModelName").focus();
+		}
+	}, null);
+}
+
+function buildSystemLlmExtraSettingsText(settings){
+	var lines = [];
+	for(var key in settings)
+	{
+		if(key == "temperature" || key == "maxTokens")
+		{
+			continue;
+		}
+		lines.push(key + "=" + settings[key]);
+	}
+	return lines.join("\n");
+}
+
+//对话框「保存」回写内存（新增 = 追加；编辑 = 覆盖原行）
+function applySystemLlmModelEditResult(model){
+	var one = $.extend({}, model);
+	one.apiKey = one.apiKey || "";
+
+	if(gEditingSystemLlmIndex < 0)
+	{
+		gSystemLlmModels.push(one);
+	}
+	else
+	{
+		one.id = gSystemLlmModels[gEditingSystemLlmIndex].id;	//沿用原 id（对应 agent_config 里那条）
+		gSystemLlmModels[gEditingSystemLlmIndex] = one;
+	}
+	renderSystemLlmView();
+}
+
+function deleteSystemLlmModel(index){
+	var model = gSystemLlmModels[index];
+	if(model == null)
+	{
+		return;
+	}
+	qiao.bs.confirm({
+		id: "deleteSystemLlmModelConfirmDialog",
+		title: _Lang("删除模型"),
+		msg: _Lang("是否删除模型") + " [" + (model.name || model.modelName) + "] ？",
+		okbtn: _Lang("确认"),
+		qubtn: _Lang("取消"),
+	}, function(){
+		gSystemLlmModels.splice(index, 1);
+		renderSystemLlmView();
+		return true;	//close dialog
+	}, function(){
+		return true;	//close dialog
+	});
+}
+
+function toggleSystemLlmModel(index){
+	var model = gSystemLlmModels[index];
+	if(model == null)
+	{
+		return;
+	}
+	model.enabled = (model.enabled == false);	//取反
+	renderSystemLlmView();
+}
+
+//置顶：列表顺序即优先级，置顶后它就是第 1 个模型（若同时是第 1 个启用项，即为默认模型）
+function moveSystemLlmModelToTop(index){
+	if(index <= 0 || index >= gSystemLlmModels.length)
+	{
+		return;
+	}
+	var model = gSystemLlmModels[index];
+	gSystemLlmModels.splice(index, 1);
+	gSystemLlmModels.unshift(model);
+	renderSystemLlmView();
+}
+
+//丢弃未保存的改动
 function cancelSystemLlmSet(){
-	$("#llmConfig").val(systemInfo.llmConfig);
-	setSystemPageEditMode("SystemLlm", SYSTEM_LLM_FIELDS, false);
+	gSystemLlmModels = JSON.parse(gSystemLlmOriginal);
+	renderSystemLlmView();
 }
 
 function saveSystemLlmSet(){
-	setSystemPageEditMode("SystemLlm", SYSTEM_LLM_FIELDS, false);
-	postSystemInfo({ llmConfig: $("#llmConfig").val() || "" }, showSystemLlm);
+	var data = [];
+	for(var i=0; i<gSystemLlmModels.length; i++)
+	{
+		var model = gSystemLlmModels[i];
+		var error = validateSystemLlmModel(model, i);
+		if(error != null)
+		{
+			showErrorMessage(error);
+			return;
+		}
+
+		var one = {
+			id : model.id,
+			name : model.name,
+			modelName : model.modelName,
+			endpoint : model.endpoint,
+			apiKey : model.apiKey || "",
+			enabled : (model.enabled != false),
+			settings : model.settings || {}
+		};
+		data.push(one);
+	}
+
+	$("#btnSaveSystemLlmSet").prop("disabled", true);
+	$.ajax({
+		url : "/DocSystem/agent/config/llm-models",
+		type : "post",
+		contentType : "application/json",
+		data : JSON.stringify({"models" : data}),
+		dataType : "json",
+		success : function (ret) {
+			console.log("saveSystemLlmSet ret", ret);
+			if(ret.success)
+			{
+				loadSystemLlmModels(ret.data);
+				showErrorMessage(_Lang("AI接入配置已保存并生效"));
+			}
+			else
+			{
+				showErrorMessage(_Lang("保存AI接入配置失败", " : ", ret.message || ""));
+				updateSystemLlmButtons();
+			}
+		},
+		error : function () {
+			showErrorMessage(_Lang("保存AI接入配置失败", " : ", "服务器异常"));
+			updateSystemLlmButtons();
+		}
+	});
+}
+
+//------------- 测试连接 --------------
+function sendSystemLlmModelTest(model, cb){
+	$.ajax({
+		url : "/DocSystem/agent/config/llm-models/test",
+		type : "post",
+		contentType : "application/json",
+		data : JSON.stringify(model),
+		dataType : "json",
+		success : function (ret) {
+			cb(ret);
+		},
+		error : function () {
+			cb({"success" : false, "message" : _Lang("服务器异常")});
+		}
+	});
+}
+
+//列表行「测试」：只带 id/地址/标识，密钥由后端按 id 取已保存的明文
+function testSystemLlmModel(index){
+	var model = gSystemLlmModels[index];
+	if(model == null)
+	{
+		return;
+	}
+	showErrorMessage(_Lang("正在测试模型", " : ", (model.name || model.modelName)));
+	sendSystemLlmModelTest({
+		id : model.id,
+		name : model.name,
+		modelName : model.modelName,
+		endpoint : model.endpoint,
+		apiKey : model.apiKey || "",
+		enabled : true
+	}, function(ret){
+		showErrorMessage(buildSystemLlmModelTestHtml(ret));
+	});
+}
+
+//对话框「测试连接」：用表单当前值（apiKey 留空时后端按 id 取已保存的密钥），结果写在弹窗里
+function testSystemLlmModelObj(model, $result, $btn){
+	if($result)
+	{
+		$result.html(_Lang("正在测试，请稍等..."));
+	}
+	if($btn)
+	{
+		$btn.attr("disabled", true);
+	}
+	sendSystemLlmModelTest(model, function(ret){
+		if($btn)
+		{
+			$btn.attr("disabled", false);
+		}
+		if($result)
+		{
+			$result.html(buildSystemLlmModelTestHtml(ret));
+		}
+		else
+		{
+			showErrorMessage(buildSystemLlmModelTestHtml(ret));
+		}
+	});
+}
+
+function buildSystemLlmModelTestHtml(ret){
+	var info = (ret.data && ret.data.info) ? ret.data.info : (ret.message || "");
+	var color = ret.success ? "green" : "red";
+	var title = ret.success ? _Lang("测试成功") : _Lang("测试失败");
+	return "<font color='" + color + "'><strong>" + title + "</strong></font><br/><br/>" + info;
 }
 
 //集群部署设置（未启用集群时不保留两个地址，与原来「系统设置」页的行为一致）
@@ -2572,33 +2933,8 @@ function ldapTest()
         }
     });
 }
-function llmTest()
-{
-	var llmConfig = $("#llmConfig").val();
-	console.log("llmTest() llmConfig:" + llmConfig);
-	
-	$.ajax({
-		url : "/DocSystem/Manage/llmTest.do",
-		type : "post",
-		dataType : "json",
-		data : {
-			llmConfig: llmConfig,
-		},
-		success : function (ret) {
-			if( "ok" == ret.status )
-			{
-				showErrorMessage("<font color='green'><strong>" + _Lang("测试成功") + "</strong></font><br/><br/>" + ret.msgInfo);
-			}
-			else
-			{
-				showErrorMessage("<font color='red'><strong>" + _Lang("测试失败") + "</strong></font><br/><br/>" + ret.msgInfo);
-			}
-		},
-		error : function () {
-			showErrorMessage(_Lang("测试失败", " : ", "服务器异常"));
-		}
-	});
-}
+//（原 llmTest() 已随「AI接入设置」改版移除：单模型测试走
+//  /DocSystem/agent/config/llm-models/test，见上面的 testSystemLlmModel / testSystemLlmModelObj）
 
 function testCluster()
 {
