@@ -130,6 +130,22 @@
 删除→确认框后行消失、服务端仅剩 1 台、**0 个提示弹窗** ✅；服务端拒绝（其他设置用了内置键名）→面板保持打开 + 红字错误 + 列表回读为服务端状态 ✅；
 页面仅剩「新增服务器」按钮、`help-block` 计数 = 0 ✅；dev 环境再次还原为空 ✅
 
+## 追加产出：配置地图文档（2026-10-04）
+
+用户提出「改造参数设置时甚至忘了存储方式与工作机制，需要一份说明文档」→ 新增
+**`devDocs/参数配置存储与工作机制说明.md`**（已从源码逐项核对，关键处带 `文件:行号`）：
+
+- §0 三套机制总览（ini / `system_setting` / `agent_config`）+ 运行期镜像
+- §1 ini 细节：**两个副本读法不同**（`ReadProperties.read`=classes、`getValue(绝对路径)`=ini）、启动期静态块读取的 9 项、
+  请求期读取的 8 个 getter、`setSystemInfo.do` 的「classes→ini→改→回拷 classes」写法、**参数名↔ini 键名不一致清单**
+  （`systemLogStorePath`→`SystemLogStorePath`、`indexDBStorePath`→`DBStorePath`、`clusterServerUrl`→`serverUrl`…）、版本门禁
+- §2 `system_setting`：表结构/API/60s TTL 缓存、**三种使用模式**（a 表为唯一权威源 / b DB JSON 权威+ini 镜像 / c 通用键值）、各页键前缀
+- §3 `agent_config`：表结构 + 5 类键与消费方
+- §4 启动顺序图（静态块读 ini → `triggerAgentInit` → `triggerSystemSettingInit` 各 store 播种/覆盖）
+- §5 **运行期「谁读什么」总表**、§6 集群与一致性、§7 备份覆盖范围
+- §8 新增配置项的**决策树 + 检查清单**、§9 实测踩坑 13 条、§10 现有配置项清单
+- `CLAUDE.md` 会话恢复协议新增第 4 条指针（动配置相关功能前必读）
+
 ## 生效约束
 
 - **未提交**（用户确认后才提交；提交归属：主仓库 `D:/Dev/DocSys`，本任务全部改动都在主仓库）
