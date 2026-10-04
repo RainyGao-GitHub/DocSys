@@ -1910,7 +1910,7 @@ function showSystemInfoPage(templateName, normalize){
     });
 }
 
-//子页的编辑态切换：prefix 为页面按钮 id 的后缀（如 SystemLdap → btnEnableSystemLdapSet / btnSaveSystemLdapSet / btnCancelSystemLdapSet）
+//子页的编辑态切换：prefix 为页面按钮 id 的后缀（如 SystemNetwork → btnEnableSystemNetworkSet / btnSaveSystemNetworkSet / btnCancelSystemNetworkSet）
 function setSystemPageEditMode(prefix, fieldIds, editing){
 	$("#btnEnable" + prefix + "Set").toggle(!editing);
 	$("#btnSave" + prefix + "Set").toggle(editing);
@@ -2352,28 +2352,544 @@ function saveSystemDebugLogSet(){
 
 /****************  系统管理子页：LDAP设置 / 安全网络设置 / AI接入设置 / 集群部署设置 / Office编辑器  ******************/
 
-//LDAP设置
-var SYSTEM_LDAP_FIELDS = ["ldapConfig"];
+//======================= 系统管理 → LDAP设置（多服务器列表）=======================
+//存储：system_setting(ldap.servers) 为权威源（后端 LdapConfigStore）；
+//运行期镜像串（url; name=..; loginMode=.. 用 || 连接）由后端渲染并落 docSys.ini/classes，
+//保存后立即生效（无需重启）。列表顺序 = 不带域名登录时的尝试顺序；停用的服务器不参与登录。
+//每次操作（新增/编辑/删除/启停/置顶）都**立即落盘**，无页面级「保存/取消」。
+var gSystemLdapServers = [];			//当前列表（含停用项）
+var gSystemLdapLegacy = "";				//当前运行期配置串（诊断用）
+var gSystemLdapMaxServers = 20;
+var gSystemLdapDocSysType = 0;
+var gSystemLdapSupported = false;		//是否企业版（非企业版不允许启用LDAP）
+var gSystemLdapDefaultLoginMode = "uid";
+var gSystemLdapSaving = false;			//保存中（防连点）
+var gEditingSystemLdapId = "";			//对话框正在编辑的服务器 id（新增时为空；一律按 id 定位，避免行号失效）
+var gLdapExtraSettingsError = "";		//对话框里「其他设置」解析错误（由 systemLdapServerEdit.js 写入）
 
 function showSystemLdap(){
-	showSystemInfoPage("systemLdap", function(){
-		systemInfo.ldapConfig = systemInfo.ldapConfig || "";
+	$.ajax({
+		url : "/DocSystem/Manage/getSystemLdapConfig.do",
+		type : "post",
+		dataType : "json",
+		success : function (ret) {
+			console.log("showSystemLdap() ret", ret);
+			if("ok" == ret.status)
+			{
+				loadSystemLdapServers(ret.data);
+			}
+			else
+			{
+				showErrorMessage(_Lang("读取LDAP配置失败", " : ", ret.msgInfo));
+			}
+		},
+		error : function () {
+			showErrorMessage(_Lang("读取LDAP配置失败", " : ", "服务器异常"));
+		}
 	});
 }
 
-function enableSystemLdapSet(){
-	console.log("enableSystemLdapSet systemInfo:", systemInfo);
-	setSystemPageEditMode("SystemLdap", SYSTEM_LDAP_FIELDS, true);
+function loadSystemLdapServers(data){
+	gSystemLdapServers = (data && data.servers) ? data.servers : [];
+	gSystemLdapLegacy = (data && data.legacy) ? data.legacy : "";
+	if(data && data.maxServers)
+	{
+		gSystemLdapMaxServers = data.maxServers;
+	}
+	if(data && data.defaultLoginMode)
+	{
+		gSystemLdapDefaultLoginMode = data.defaultLoginMode;
+	}
+	if(data)
+	{
+		gSystemLdapDocSysType = data.docSysType || 0;
+		gSystemLdapSupported = (data.ldapSupported == true);
+	}
+	renderSystemLdapView();
 }
 
-function cancelSystemLdapSet(){
-	$("#ldapConfig").val(systemInfo.ldapConfig);
-	setSystemPageEditMode("SystemLdap", SYSTEM_LDAP_FIELDS, false);
+//接口格式：与后端 LdapServerConfig 一一对应（嵌套 attributes + 对象形 extraSettings）
+function systemLdapApiServer(server){
+	var attr = server.attributes || {};
+	var extra = server.extraSettings || {};
+	var extraObj = {};
+	for(var key in extra)
+	{
+		extraObj[key] = extra[key];
+	}
+	return {
+		id : server.id || "",
+		name : server.name || "",
+		scheme : (server.scheme == null || server.scheme == "") ? "ldap" : server.scheme,
+		host : server.host || "",
+		port : server.port || "",
+		baseDn : server.baseDn || "",
+		enabled : (server.enabled != false),
+		authentication : server.authentication || "",
+		domainCheck : (server.domainCheck == true),
+		loginMode : server.loginMode || "",
+		bindAccount : server.bindAccount || "",
+		bindPassword : server.bindPassword || "",
+		filter : server.filter || "",
+		attributes : {
+			name : attr.name || "",
+			realName : attr.realName || "",
+			nickName : attr.nickName || "",
+			mail : attr.mail || "",
+			description : attr.description || ""
+		},
+		extraSettings : extraObj
+	};
 }
 
-function saveSystemLdapSet(){
-	setSystemPageEditMode("SystemLdap", SYSTEM_LDAP_FIELDS, false);
-	postSystemInfo({ ldapConfig: $("#ldapConfig").val() || "" }, showSystemLdap);
+//渲染列表
+function renderSystemLdapView(){
+	var servers = [];
+	for(var i=0; i<gSystemLdapServers.length; i++)
+	{
+		var one = $.extend({}, gSystemLdapServers[i]);
+		one.url = systemLdapServerUrl(one);
+		one.baseDn = one.baseDn || "";
+		one.bindAccount = one.bindAccount || "";
+		one.authText = (one.authentication == null || one.authentication == "") ? _Lang("简单绑定(simple)") : one.authentication;
+		one.loginModeText = (one.loginMode == null || one.loginMode == "") ? gSystemLdapDefaultLoginMode : one.loginMode;
+		servers.push(one);
+	}
+
+	$Func.render($("#container"), "systemLdap" + langExt,
+		{"value" : {"servers" : servers, "legacy" : gSystemLdapLegacy, "maxServers" : gSystemLdapMaxServers,
+			"ldapSupported" : gSystemLdapSupported, "docSysType" : gSystemLdapDocSysType}});
+}
+
+//列表里展示的服务器地址（与后端的渲染口径一致：scheme://host[:port]/baseDn）
+function systemLdapServerUrl(server){
+	var scheme = (server.scheme == null || server.scheme == "") ? "ldap" : server.scheme;
+	var url = scheme + "://" + (server.host || "");
+	if(server.port != null && server.port != "")
+	{
+		url += ":" + server.port;
+	}
+	url += "/" + (server.baseDn || "");
+	return url;
+}
+
+//------------- 落盘（每次操作后立即保存；成功则用服务端返回值重绘，失败则回读服务端状态）-------------
+//onSuccess 只在「新增/编辑对话框保存」这类显式动作里传（弹一次成功提示）；
+//启停/置顶/删除靠列表自身变化反馈，不弹提示。
+function persistSystemLdapServers(onSuccess, onFail){
+	if(gSystemLdapSaving)
+	{
+		return;
+	}
+	gSystemLdapSaving = true;
+
+	var data = [];
+	for(var i=0; i<gSystemLdapServers.length; i++)
+	{
+		data.push(systemLdapApiServer(gSystemLdapServers[i]));
+	}
+
+	$.ajax({
+		url : "/DocSystem/Manage/setSystemLdapConfig.do",
+		type : "post",
+		dataType : "json",
+		data : { servers : JSON.stringify(data) },
+		success : function (ret) {
+			console.log("persistSystemLdapServers ret", ret);
+			if("ok" == ret.status)
+			{
+				loadSystemLdapServers(ret.data);
+				if(onSuccess) { onSuccess(); }
+			}
+			else
+			{
+				showErrorMessage(_Lang("保存LDAP配置失败", " : ", ret.msgInfo));
+				showSystemLdap();	//回读服务端状态（放弃本地改动）
+				if(onFail) { onFail(ret.msgInfo); }
+			}
+		},
+		error : function () {
+			showErrorMessage(_Lang("保存LDAP配置失败", " : ", "服务器异常"));
+			showSystemLdap();
+			if(onFail) { onFail(""); }
+		},
+		complete : function () {
+			gSystemLdapSaving = false;
+		}
+	});
+}
+
+//------------- 校验（与后端 LdapConfigStore.validate 同口径，先拦住再请求）-------------
+function systemLdapHasSeparator(value){
+	return value != null && (value.indexOf(";") >= 0 || value.indexOf("|") >= 0);
+}
+
+//对话框正在编辑的行号（按 id 定位；新增/未命中 → -1）
+function systemLdapSelfIndex(){
+	if(gEditingSystemLdapId == null || gEditingSystemLdapId == "")
+	{
+		return -1;
+	}
+	for(var i=0; i<gSystemLdapServers.length; i++)
+	{
+		if(gSystemLdapServers[i].id == gEditingSystemLdapId)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+function validateSystemLdapServer(server, selfIndex){
+	if(selfIndex == undefined)
+	{
+		selfIndex = systemLdapSelfIndex();	//对话框路径：跳过正在编辑的那一行
+	}
+	if(gLdapExtraSettingsError != "")
+	{
+		return gLdapExtraSettingsError;
+	}
+
+	var host = $.trim(server.host || "");
+	var scheme = $.trim(server.scheme || "");
+	var port = $.trim(server.port || "");
+	var baseDn = $.trim(server.baseDn || "");
+	var name = $.trim(server.name || "");
+
+	if(host == "")
+	{
+		return _Lang("服务器地址不能为空");
+	}
+	if(scheme != "" && scheme != "ldap" && scheme != "ldaps")
+	{
+		return _Lang("协议只支持 ldap 或 ldaps");
+	}
+	if(port != "")
+	{
+		if(!/^[0-9]+$/.test(port))
+		{
+			return _Lang("端口必须是数字");
+		}
+		var portNum = parseInt(port, 10);
+		if(portNum < 1 || portNum > 65535)
+		{
+			return _Lang("端口必须在1~65535之间");
+		}
+	}
+	if(baseDn == "")
+	{
+		return _Lang("基础DN不能为空");
+	}
+	if(systemLdapHasSeparator(host) || systemLdapHasSeparator(port) || systemLdapHasSeparator(name)
+		|| systemLdapHasSeparator(baseDn) || systemLdapHasSeparator(server.loginMode)
+		|| systemLdapHasSeparator(server.bindAccount) || systemLdapHasSeparator(server.bindPassword)
+		|| systemLdapHasSeparator(server.filter))
+	{
+		return _Lang("配置值不能包含分号或竖线");
+	}
+
+	var attr = server.attributes || {};
+	if(systemLdapHasSeparator(attr.name) || systemLdapHasSeparator(attr.realName)
+		|| systemLdapHasSeparator(attr.nickName) || systemLdapHasSeparator(attr.mail)
+		|| systemLdapHasSeparator(attr.description))
+	{
+		return _Lang("属性映射不能包含分号或竖线");
+	}
+
+	var extra = server.extraSettings || {};
+	for(var key in extra)
+	{
+		if(systemLdapHasSeparator(key) || systemLdapHasSeparator(extra[key]) || key.indexOf("=") >= 0)
+		{
+			return _Lang("其他设置不能包含分号竖线或等号");
+		}
+	}
+
+	//非企业版不允许启用（与后端一致；停用/清空不受限）
+	if(server.enabled != false && !gSystemLdapSupported)
+	{
+		return _Lang("当前版本不支持LDAP登录认证，请购买企业版！");
+	}
+
+	//域名唯一性（只约束启用项）：域名可以不填（单域/主备多台且不带域名登录是合法场景），
+	//但多台启用时「同名域名」会让「域名/账号」登录产生歧义，必须拦住。
+	if(server.enabled != false && name != "")
+	{
+		for(var i=0; i<gSystemLdapServers.length; i++)
+		{
+			if(i == selfIndex)
+			{
+				continue;
+			}
+			var other = gSystemLdapServers[i];
+			if(other.enabled == false)
+			{
+				continue;
+			}
+			if($.trim(other.name || "").toLowerCase() == name.toLowerCase())
+			{
+				return _Lang("域名已存在", " : ", name);
+			}
+		}
+	}
+	return null;
+}
+
+//------------- 增删改查（都先改内存，最后点页面「保存」才落盘）-------------
+function addSystemLdapServer(){
+	if(gSystemLdapServers.length >= gSystemLdapMaxServers)
+	{
+		showErrorMessage(_Lang("最多支持的服务器数", " : ", gSystemLdapMaxServers));
+		return;
+	}
+	gEditingSystemLdapId = "";
+	showSystemLdapServerEditPanel(null);
+}
+
+function editSystemLdapServer(index){
+	var server = gSystemLdapServers[index];
+	if(server == null)
+	{
+		return;
+	}
+	gEditingSystemLdapId = server.id || "";
+	showSystemLdapServerEditPanel(server);
+}
+
+function showSystemLdapServerEditPanel(server){
+	qiao.bs.dialog({
+		id: 'systemLdapServerEdit',
+		url: 'systemLdapServerEdit' + langExt + '.html',
+		title: (server == null) ? _Lang('新增LDAP服务器') : _Lang('编辑LDAP服务器'),
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		big: true,
+		callback: function(){
+			$("#systemLdapServerName").val(server == null ? "" : (server.name || ""));
+			$("#systemLdapServerScheme").val((server == null || server.scheme == null || server.scheme == "") ? "ldap" : server.scheme);
+			$("#systemLdapServerHost").val(server == null ? "" : (server.host || ""));
+			$("#systemLdapServerPort").val(server == null ? "" : (server.port || ""));
+			$("#systemLdapServerBaseDn").val(server == null ? "" : (server.baseDn || ""));
+			$("#systemLdapServerAuthentication").val(server == null ? "" : (server.authentication || ""));
+			$("#systemLdapServerLoginMode").val(server == null ? "" : (server.loginMode || ""));
+			$("#systemLdapServerBindAccount").val(server == null ? "" : (server.bindAccount || ""));
+			//已保存的鉴权密码直接回填（便于管理员核对原值）
+			$("#systemLdapServerBindPassword").val(server == null ? "" : (server.bindPassword || ""));
+			$("#systemLdapServerDomainCheck").prop("checked", (server != null && server.domainCheck == true));
+			$("#systemLdapServerEnabled").prop("checked", server == null ? true : (server.enabled != false));
+
+			var attr = (server == null || server.attributes == null) ? {} : server.attributes;
+			var extra = (server == null || server.extraSettings == null) ? {} : server.extraSettings;
+			var hasAdvanced = (server != null && server.filter != null && server.filter != "");
+			for(var key in attr)
+			{
+				if(attr[key] != null && attr[key] != "")
+				{
+					hasAdvanced = true;
+				}
+			}
+			for(var key2 in extra)
+			{
+				hasAdvanced = true;
+			}
+			$("#systemLdapServerUseAdvanced").prop("checked", hasAdvanced);
+			$("#systemLdapServerFilter").val(server == null ? "" : (server.filter || ""));
+			$("#systemLdapServerNameAttribute").val(attr.name || "");
+			$("#systemLdapServerRealNameAttribute").val(attr.realName || "");
+			$("#systemLdapServerNickNameAttribute").val(attr.nickName || "");
+			$("#systemLdapServerMailAttribute").val(attr.mail || "");
+			$("#systemLdapServerDescriptionAttribute").val(attr.description || "");
+			$("#systemLdapServerOtherSettings").val(buildSystemLdapOtherSettingsText(extra));
+			onToggleSystemLdapServerAdvanced();
+
+			$("#systemLdapTestUser").val("");
+			$("#systemLdapTestPassword").val("");
+			$("#systemLdapServerTestResult").empty();
+			$("#systemLdapServerName").focus();
+		}
+	}, null);
+}
+
+function buildSystemLdapOtherSettingsText(extra){
+	var lines = [];
+	for(var key in extra)
+	{
+		lines.push(key + "=" + extra[key]);
+	}
+	return lines.join("\n");
+}
+
+//对话框「保存」回写内存（新增 = 追加；编辑 = 覆盖原行，沿用原 id）并**立即落盘**
+function applySystemLdapServerEditResult(server){
+	var one = {
+		id : server.id || "",
+		name : server.name || "",
+		scheme : server.scheme || "ldap",
+		host : server.host || "",
+		port : server.port || "",
+		baseDn : server.baseDn || "",
+		enabled : (server.enabled != false),
+		authentication : server.authentication || "",
+		domainCheck : (server.domainCheck == true),
+		loginMode : server.loginMode || "",
+		bindAccount : server.bindAccount || "",
+		bindPassword : server.bindPassword || "",
+		filter : server.filter || "",
+		attributes : server.attributes || {},
+		extraSettings : server.extraSettings || {}
+	};
+
+	//按 id 写入（新增/找不到则追加）；一律按 id，避免保存失败回读后行号失效
+	var index = systemLdapSelfIndex();
+	if(index >= 0)
+	{
+		one.id = gSystemLdapServers[index].id;	//沿用原 id
+		gSystemLdapServers[index] = one;
+	}
+	else
+	{
+		one.id = gEditingSystemLdapId || "";
+		gSystemLdapServers.push(one);
+	}
+	renderSystemLdapView();
+
+	//立即落盘；失败则保持列表与服务端一致（persist 内部会回读），弹窗不关以便修正后重试
+	persistSystemLdapServers(function(){
+		showErrorMessage(_Lang("LDAP配置已保存并生效"));
+		closeSystemLdapServerEditModal();
+	}, function(msg){
+		//服务端拒绝时把完整错误回显到弹窗里（列表已回读为服务端状态）
+		$("#systemLdapServerTestResult").html("<font color='red'><strong>" + _Lang("保存失败") + "</strong></font><br/><br/>" + (msg || ""));
+	});
+}
+
+function deleteSystemLdapServer(index){
+	var server = gSystemLdapServers[index];
+	if(server == null)
+	{
+		return;
+	}
+	qiao.bs.confirm({
+		id: "deleteSystemLdapServerConfirmDialog",
+		title: _Lang("删除LDAP服务器"),
+		msg: _Lang("是否删除服务器") + " [" + (server.name || server.host) + "] ？",
+		okbtn: _Lang("确认"),
+		qubtn: _Lang("取消"),
+	}, function(){
+		gSystemLdapServers.splice(index, 1);
+		renderSystemLdapView();
+		persistSystemLdapServers();	//行消失即反馈；失败会在 persist 里报错
+		return true;	//close dialog
+	}, function(){
+		return true;	//close dialog
+	});
+}
+
+//启用/停用：立即落盘（停用项不参与运行期）
+function toggleSystemLdapServer(index){
+	var server = gSystemLdapServers[index];
+	if(server == null)
+	{
+		return;
+	}
+	server.enabled = (server.enabled == false);	//取反
+	renderSystemLdapView();
+	persistSystemLdapServers();	//列表状态即反馈，不弹提示（失败会在 persist 里报错）
+}
+
+//置顶：不带域名登录时按列表顺序尝试，置顶后它就是第一台；立即落盘
+function moveSystemLdapServerToTop(index){
+	if(index <= 0 || index >= gSystemLdapServers.length)
+	{
+		return;
+	}
+	var server = gSystemLdapServers[index];
+	gSystemLdapServers.splice(index, 1);
+	gSystemLdapServers.unshift(server);
+	renderSystemLdapView();
+	persistSystemLdapServers();	//列表顺序即反馈，不弹提示（失败会在 persist 里报错）
+}
+
+//------------- 测试连接（服务端渲染串 → 复用 Manage/ldapTest.do 做解析/登录测试）-------------
+function sendSystemLdapServerTest(server, testUser, testPassword, cb){
+	$.ajax({
+		url : "/DocSystem/Manage/renderSystemLdapServer.do",
+		type : "post",
+		dataType : "json",
+		data : {
+			server : JSON.stringify(systemLdapApiServer(server)),
+			testUser : testUser || "",
+			testPassword : testPassword || ""
+		},
+		success : function (ret) {
+			if("ok" != ret.status || ret.data == null || !ret.data.ldapConfig)
+			{
+				cb({"status" : "error", "msgInfo" : ret.msgInfo || ""});
+				return;
+			}
+			$.ajax({
+				url : "/DocSystem/Manage/ldapTest.do",
+				type : "post",
+				dataType : "json",
+				data : { ldapConfig : ret.data.ldapConfig },
+				success : function (ret2) {
+					cb(ret2);
+				},
+				error : function () {
+					cb({"status" : "error", "msgInfo" : _Lang("服务器异常")});
+				}
+			});
+		},
+		error : function () {
+			cb({"status" : "error", "msgInfo" : _Lang("服务器异常")});
+		}
+	});
+}
+
+function buildSystemLdapTestHtml(ret){
+	var ok = ("ok" == ret.status);
+	var title = ok ? _Lang("测试成功") : _Lang("测试失败");
+	var color = ok ? "green" : "red";
+	return "<font color='" + color + "'><strong>" + title + "</strong></font><br/><br/>" + (ret.msgInfo || "");
+}
+
+//列表行「测试」：测试账号取该服务器已保存的 testUser（没有则由后端回落默认值 test）
+function testSystemLdapServer(index){
+	var server = gSystemLdapServers[index];
+	if(server == null)
+	{
+		return;
+	}
+	showErrorMessage(_Lang("正在测试LDAP服务器", " : ", (server.name || server.host)));
+	sendSystemLdapServerTest(server, "", "", function(ret){
+		showErrorMessage(buildSystemLdapTestHtml(ret));
+	});
+}
+
+//对话框「测试连接」：用表单当前值 + 弹窗里填的测试账号
+function testSystemLdapServerObj(server, $result, $btn){
+	if($result)
+	{
+		$result.html(_Lang("正在测试，请稍等..."));
+	}
+	if($btn)
+	{
+		$btn.attr("disabled", true);
+	}
+	sendSystemLdapServerTest(server, $("#systemLdapTestUser").val(), $("#systemLdapTestPassword").val(), function(ret){
+		if($btn)
+		{
+			$btn.attr("disabled", false);
+		}
+		if($result)
+		{
+			$result.html(buildSystemLdapTestHtml(ret));
+		}
+		else
+		{
+			showErrorMessage(buildSystemLdapTestHtml(ret));
+		}
+	});
 }
 
 //安全网络设置
@@ -2906,33 +3422,9 @@ function doRestartTomcat(tomcatPath, javaHome)
     });
 }
 
-function ldapTest()
-{
-	var ldapConfig = $("#ldapConfig").val();
-	console.log("ldapTest() ldapConfig:" + ldapConfig);
-	
-	$.ajax({
-        url : "/DocSystem/Manage/ldapTest.do",
-        type : "post",
-        dataType : "json",
-        data : {
-        	ldapConfig: ldapConfig,
-        },
-        success : function (ret) {
-            if( "ok" == ret.status )
-            {
-            	showErrorMessage("<font color='green'><strong>" + _Lang("测试成功") + "</strong></font><br/><br/>" + ret.msgInfo);
-            }
-            else
-            {
-            	showErrorMessage("<font color='red'><strong>" + _Lang("测试失败") + "</strong></font><br/><br/>" + ret.msgInfo);
-            }
-        },
-        error : function () {
-        	showErrorMessage(_Lang("测试失败", " : ", "服务器异常"));
-        }
-    });
-}
+//（原 ldapTest() 已随「LDAP设置」改版移除：页面不再手工拼配置串，
+//  改为「服务端渲染单台串（renderSystemLdapServer.do）→ 复用 ldapTest.do 做解析/登录测试」，
+//  见上面的 sendSystemLdapServerTest / testSystemLdapServer / testSystemLdapServerObj）
 //（原 llmTest() 已随「AI接入设置」改版移除：单模型测试走
 //  /DocSystem/agent/config/llm-models/test，见上面的 testSystemLlmModel / testSystemLlmModelObj）
 

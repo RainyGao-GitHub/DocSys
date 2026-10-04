@@ -2519,6 +2519,48 @@ public class BaseFunction{
 			}		
 		}
 	}
+
+	/**
+	 * 供后台「LDAP设置」页读取当前生效的 LDAP 配置串：
+	 * 优先 docSys.ini（运行期权威值），回落 classes 副本（老部署/未初始化时的兜底）。
+	 */
+	public static String getLdapConfigString() {
+		String value = null;
+		try {
+			value = ReadProperties.getValue(docSysIniPath + "docSysConfig.properties", "ldapConfig");
+		} catch (Exception e) {
+			Log.info("getLdapConfigString() 读取 docSys.ini 失败:" + e.getMessage());
+		}
+		if (value != null && !value.trim().isEmpty()) {
+			return value;
+		}
+		return getLdapConfig();
+	}
+
+	/**
+	 * 供后台「LDAP设置」页写回「运行期镜像」。
+	 *
+	 * <p>权威源是 system_setting.ldap.servers（结构化 JSON），本方法只负责把渲染出的老格式串
+	 * 落盘并立即生效：① docSys.ini 与 classes 副本都写（集群一致性检查读的是 classes 副本，
+	 * getSystemInfo.do 也读它，避免二者长期不一致导致页面显示滞后）；
+	 * ② 更新内存 systemLdapConfig —— 保存后无需重启，且仍走 applySystemLdapConfig
+	 * 以保留「仅企业版启用」的门禁。</p>
+	 *
+	 * <p>空串 = 没有启用的服务器 → LDAP 登录关闭（登录链路自动回落本地账号登录）。</p>
+	 */
+	public static void applyLdapConfigMirror(String ldapConfigStr) {
+		String value = (ldapConfigStr == null) ? "" : ldapConfigStr.trim();
+		try {
+			ReadProperties.setValue(docSysIniPath + "docSysConfig.properties", "ldapConfig", value);
+			ReadProperties.setValue(docSysWebPath + "WEB-INF/classes/docSysConfig.properties", "ldapConfig", value);
+		} catch (Exception e) {
+			Log.info("applyLdapConfigMirror() 写配置文件失败:" + e.getMessage());
+		}
+		applySystemLdapConfig(value);
+		int count = (systemLdapConfig == null || systemLdapConfig.ldapConfigList == null) ? 0 : systemLdapConfig.ldapConfigList.size();
+		Log.info("applyLdapConfigMirror() systemLdapConfig 已更新，服务器数:" + count
+				+ "，LDAP登录:" + (systemLdapConfig != null && systemLdapConfig.enabled ? "启用" : "关闭"));
+	}
 	
 	protected static void applySystemAllowedNetworkConfig(String systemAllowedNetworkConfigStr) 
 	{

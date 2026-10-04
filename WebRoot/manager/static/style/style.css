@@ -1021,6 +1021,23 @@ header .header-data .hdata em{
 	margin-top: 6px;
 }
 
+/* LDAP设置（服务器列表）：与「AI接入设置」同一套列表样式 */
+#systemLdapTable td .btn{
+	padding: 2px 8px;
+	font-size: 11px !important;
+	display: block;
+}
+
+#systemLdapTable td .btn + .btn{
+	margin-left: 0;
+	margin-top: 6px;
+}
+
+/* LDAP设置：服务器编辑对话框的标签统一左对齐（同 .systemLlmModelForm） */
+.systemLdapServerForm .control-label{
+	text-align: left;
+}
+
 .widget.wblack{
   background: #fafafa url('../img/black.png') repeat;
   color: #ddd;

@@ -1,0 +1,133 @@
+<div class="form-horizontal systemLdapServerForm">
+  <!-- Domain -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Domain</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerName" placeholder="corp">
+      <span class="help-block">Required when the servers belong to different domains, and must be unique; log in with "domain/account".</span>
+    </div>
+  </div>
+  <!-- Server -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Server</label>
+    <div class="col-lg-9">
+      <select class="form-control" id="systemLdapServerScheme" style="width:100px;display:inline-block;">
+        <option value="ldap">ldap</option>
+        <option value="ldaps">ldaps</option>
+      </select>
+      <input type="text" class="form-control" id="systemLdapServerHost" placeholder="10.0.0.5" style="width:230px;display:inline-block;">
+      <input type="text" class="form-control" id="systemLdapServerPort" placeholder="389" style="width:90px;display:inline-block;">
+      <span class="help-block">Host is an IP or DNS name (no scheme); empty port means the default: ldap 389, ldaps 636.</span>
+    </div>
+  </div>
+  <!-- Base DN -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Base DN</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerBaseDn" placeholder="ou=users,dc=example,dc=com">
+      <span class="help-block">Search base for users (users cannot be found without it).</span>
+    </div>
+  </div>
+  <!-- Authentication -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Authentication</label>
+    <div class="col-lg-9">
+      <select class="form-control" id="systemLdapServerAuthentication" style="width:220px;">
+        <option value="">simple (default)</option>
+        <option value="none">none (anonymous)</option>
+        <option value="DIGEST-MD5">DIGEST-MD5</option>
+        <option value="CRAM-MD5">CRAM-MD5</option>
+        <option value="EXTERNAL">EXTERNAL</option>
+        <option value="GSSAPI">GSSAPI (Kerberos)</option>
+      </select>
+      <span class="help-block">Almost every LDAP / AD server uses simple.</span>
+    </div>
+  </div>
+  <!-- Login ID -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Login ID</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerLoginMode" placeholder="uid">
+      <span class="help-block">Attribute matched against the login name: OpenLDAP uses <code>uid</code>, AD uses <code>sAMAccountName</code> (empty = uid).</span>
+    </div>
+  </div>
+  <!-- Bind account -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Bind Account</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerBindAccount" placeholder="cn=admin,dc=example,dc=com">
+      <span class="help-block">Account (DN form) used to look up the user DN. <b>Empty = authenticate as the logging-in user</b>.</span>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="control-label col-lg-3">Bind Password</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerBindPassword" placeholder="">
+      <span class="help-block">Password of the bind account (stored in clear text in the system configuration).</span>
+    </div>
+  </div>
+  <!-- Domain check -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Login Form</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLdapServerDomainCheck"> Require a domain name (reject plain "account")
+      </label>
+      <span class="help-block">Only "domain/account" is accepted for this server, so same-named accounts in different domains cannot collide.</span>
+    </div>
+  </div>
+  <!-- Advanced -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Advanced</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLdapServerUseAdvanced" onchange="onToggleSystemLdapServerAdvanced()"> Use advanced settings
+      </label>
+      <div id="systemLdapServerAdvancedBlock" style="display:none;margin-top:8px;">
+        <div style="margin-bottom:6px;">
+          Filter：<input type="text" class="form-control" id="systemLdapServerFilter" placeholder="(objectClass=*)" style="width:320px;display:inline-block;">
+        </div>
+        <div style="margin-bottom:4px;color:#666;">Attribute mapping (empty = runtime default):</div>
+        <div style="margin-bottom:4px;">name：<input type="text" class="form-control" id="systemLdapServerNameAttribute" placeholder="default = Login ID" style="width:200px;display:inline-block;"></div>
+        <div style="margin-bottom:4px;">realName：<input type="text" class="form-control" id="systemLdapServerRealNameAttribute" placeholder="default = cn" style="width:200px;display:inline-block;"></div>
+        <div style="margin-bottom:4px;">nickName：<input type="text" class="form-control" id="systemLdapServerNickNameAttribute" placeholder="default = displayName" style="width:200px;display:inline-block;"></div>
+        <div style="margin-bottom:4px;">mail：<input type="text" class="form-control" id="systemLdapServerMailAttribute" placeholder="default = mail" style="width:200px;display:inline-block;"></div>
+        <div style="margin-bottom:4px;">description：<input type="text" class="form-control" id="systemLdapServerDescriptionAttribute" placeholder="default = description" style="width:200px;display:inline-block;"></div>
+        <textarea class="form-control" id="systemLdapServerOtherSettings" rows="3" placeholder="Other settings: one key=value per line (written verbatim into the runtime config string)" style="margin-top:6px;"></textarea>
+      </div>
+    </div>
+  </div>
+  <!-- Enabled -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Status</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLdapServerEnabled" checked="checked"> Enabled
+      </label>
+    </div>
+  </div>
+  <!-- Test account -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">Test Account</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapTestUser" placeholder="test" style="width:180px;display:inline-block;">
+      <input type="text" class="form-control" id="systemLdapTestPassword" placeholder="password" style="width:180px;display:inline-block;">
+      <span class="help-block">Used by "Test connection" only, never saved.</span>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="form-group">
+    <div class="col-lg-offset-3 col-lg-9">
+      <button type="button" class="btn btn-warning" id="btnTestSystemLdapServer" onclick="testSystemLdapServerEdit()">Test connection</button>
+      <button type="button" class="btn btn-success" id="btnSaveSystemLdapServerEdit" onclick="saveSystemLdapServerEdit()">Save</button>
+      <button type="button" class="btn" onclick="closeSystemLdapServerEditModal()">Cancel</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-3 col-lg-9">
+      <span class="help-block" id="systemLdapServerTestResult" style="white-space:pre-wrap;"></span>
+    </div>
+  </div>
+</div>
+<script type="text/javascript" src="systemLdapServerEdit.js"></script>

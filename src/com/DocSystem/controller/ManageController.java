@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.naming.NamingException;
+import javax.naming.ldap.LdapContext;
 
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
@@ -65,6 +67,7 @@ import com.DocSystem.common.entity.LdapLoginCheckResult;
 import com.DocSystem.common.entity.QueryResult;
 import com.DocSystem.common.entity.SystemAllowedNetworkConfig;
 import com.DocSystem.common.entity.SystemLog;
+import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.common.entity.LongTermTask;
@@ -86,6 +89,9 @@ import com.DocSystem.commonService.sms.SmsSendResult;
 import com.DocSystem.commonService.sms.SmsSender;
 import com.DocSystem.controller.BaseController;
 import com.DocSystem.service.sms.SmsConfigStore;
+import com.DocSystem.commonService.ldap.LdapServerConfig;
+import com.DocSystem.commonService.ldap.LdapServersConfig;
+import com.DocSystem.service.ldap.LdapConfigStore;
 
 @Controller
 @RequestMapping("/Manage")
@@ -95,6 +101,9 @@ public class ManageController extends BaseController{
 
 	@Autowired
 	private ReposServiceImpl reposService;
+
+	@Autowired
+	private LdapConfigStore ldapConfigStore;
 
 	/** 发送测试短信时，回显的运营商原始响应上限（避免超大响应把页面撑爆） */
 	private static final int MAX_SMS_RAW_LEN = 1000;
@@ -2202,24 +2211,56 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
+		//1.5 连通性预检：把「未知错误」变成可定位的原因（仅影响测试输出，不改登录链路）
+		try
+		{
+			LDAPConfig firstConfig = systemLdapConfig.ldapConfigList.get(0);
+			LdapContext preCheckCtx = LDAPUtil.getLDAPConnection(firstConfig.userAccount, firstConfig.userPassword, firstConfig);
+			if(preCheckCtx == null)
+			{
+				testResult += "连接测试失败：无法连接LDAP服务器或绑定账号被拒<br/>";
+				testResult += "请检查：服务器地址/端口/协议（ldap 389、ldaps 636）、基础DN、鉴权账号与密码<br/>";
+				rt.setError(testResult);
+				writeJson(rt, response);
+				return;
+			}
+			try {
+				preCheckCtx.close();
+			} catch (NamingException e) {
+				Log.info(e);
+			}
+			testResult += "连接测试成功<br/>";
+		}
+		catch(Exception e)
+		{
+			Log.info(e);
+		}
+
+		boolean loginOk = false;
 		testResult += "2. 登录测试<br/>";
 		try 
 		{
 			String testUser = systemLdapConfig.ldapConfigList.get(0).settings.getString("testUser");
 			String testUserPassword = systemLdapConfig.ldapConfigList.get(0).settings.getString("testUserPassword");
-			Log.debug("ldapTest() testUser:" + testUser + " testUserPassword:" + testUserPassword);
+			//不把测试密码写进日志与响应（凭据不进日志）
+			Log.debug("ldapTest() testUser:" + testUser);
 			if(testUser == null || testUser.isEmpty())
 			{
 				testUser = "test";
 			}
 			testResult += "登录账号: " + testUser + "<br/>";
-			testResult += "登录密码: " + testUserPassword + "<br/>";
+			
+			if(testUserPassword == null || testUserPassword.isEmpty())
+			{
+				testResult += "登录密码未设置（请在上方测试账号/密码里填写）<br/>";
+			}
 				
 			LdapLoginCheckResult checkResult = new LdapLoginCheckResult();
 			User ldapLoginUser = LDAPUtil.ldapLoginCheck(testUser, testUserPassword, systemLdapConfig, checkResult);
 			if(ldapLoginUser != null)
 			{
 				testResult += "登录测试成功<br/>";
+				loginOk = true;
 			}
 			else
 			{
@@ -2252,8 +2293,198 @@ public class ManageController extends BaseController{
 			testResult += baos.toString();
 		}
 
-		rt.setMsgInfo(testResult);				
+		//解析/连接问题已在上面直接返回；走到这里只分「登录测试成功 / 失败」两种
+		if(loginOk)
+		{
+			rt.setMsgInfo(testResult);
+		}
+		else
+		{
+			rt.setError(testResult);
+		}
 		writeJson(rt, response);
+	}
+
+	// ==================== LDAP设置（结构化配置 + 运行期镜像） ====================
+
+	/**
+	 * 读取 LDAP 服务器列表（仅管理员）。
+	 * 权威源：system_setting.ldap.servers（首次会自动从运行期配置串播种）。
+	 */
+	@RequestMapping("/getSystemLdapConfig.do")
+	public void getSystemLdapConfig(String authCode, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getSystemLdapConfig.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)		
+		{
+			writeJson(rt, response);			
+			return;
+		}
+
+		if(ldapConfigStore == null)
+		{
+			rt.setError("LDAP配置服务不可用");
+			writeJson(rt, response);
+			return;
+		}
+
+		try {
+			rt.setData(buildSystemLdapData(ldapConfigStore.load()));
+		} catch (Exception e) {
+			Log.info(e);
+			rt.setError("读取LDAP配置失败: " + e.getMessage());
+		}
+		writeJson(rt, response);
+	}
+
+	/**
+	 * 保存 LDAP 服务器列表（仅管理员）。
+	 *
+	 * <p>参数 {@code servers} = LDAP服务器数组的 JSON（前端直接提交列表结构与停用项）；
+	 * 服务端校验 → 写 system_setting（权威源）→ 渲染老格式串写 docSys.ini/classes 镜像 → 立即生效。</p>
+	 */
+	@RequestMapping("/setSystemLdapConfig.do")
+	public void setSystemLdapConfig(String authCode, String servers, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** setSystemLdapConfig.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)		
+		{
+			writeJson(rt, response);			
+			return;
+		}
+
+		LdapServersConfig config = new LdapServersConfig();
+		try {
+			List<LdapServerConfig> list = (servers == null || servers.trim().isEmpty())
+					? new ArrayList<LdapServerConfig>() : JSON.parseArray(servers, LdapServerConfig.class);
+			config.setServers(list);
+		} catch (Exception e) {
+			Log.info(e);
+			rt.setError("参数格式错误: servers 必须是LDAP服务器数组的JSON");
+			writeJson(rt, response);
+			return;
+		}
+
+		//只记条数，不记内容（可能含绑定密码）
+		Log.debug("setSystemLdapConfig() servers count:" + config.getServers().size());
+
+		String error = LdapConfigStore.validate(config, docSysType);
+		if(error != null)
+		{
+			rt.setError(error);
+			writeJson(rt, response);
+			return;
+		}
+
+		if(ldapConfigStore == null)
+		{
+			rt.setError("LDAP配置服务不可用");
+			writeJson(rt, response);
+			return;
+		}
+
+		try {
+			if(ldapConfigStore.save(config) == false)
+			{
+				rt.setError("保存LDAP配置失败（配置存储不可用）");
+				writeJson(rt, response);
+				return;
+			}
+		} catch (Exception e) {
+			Log.info(e);
+			rt.setError("保存LDAP配置失败: " + e.getMessage());
+			writeJson(rt, response);
+			return;
+		}
+
+		rt.setMsgInfo("LDAP配置已保存");
+		rt.setData(buildSystemLdapData(ldapConfigStore.load()));
+		writeJson(rt, response);
+	}
+
+	/**
+	 * 渲染单台服务器的运行期配置串（可注入测试账号），供页面把结果提交给 ldapTest.do。
+	 * 渲染逻辑只在服务端保留一份（LdapConfigStore），页面不再自己拼串。
+	 */
+	@RequestMapping("/renderSystemLdapServer.do")
+	public void renderSystemLdapServer(String authCode, String server, String testUser, String testPassword, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** renderSystemLdapServer.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)		
+		{
+			writeJson(rt, response);			
+			return;
+		}
+
+		LdapServerConfig one = null;
+		try {
+			one = JSON.parseObject(server, LdapServerConfig.class);
+		} catch (Exception e) {
+			Log.info(e);
+			rt.setError("参数格式错误: server 必须是LDAP服务器对象的JSON");
+			writeJson(rt, response);
+			return;
+		}
+
+		String ldapConfigStr = LdapConfigStore.buildTestConfigString(one, testUser, testPassword);
+		if(ldapConfigStr == null || ldapConfigStr.isEmpty())
+		{
+			rt.setError("服务器地址不能为空");
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject data = new JSONObject();
+		data.put("ldapConfig", ldapConfigStr);
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
+	/** 页面数据：服务器列表 + 运行期镜像串 + 版本/默认值等元信息 */
+	private JSONObject buildSystemLdapData(LdapServersConfig config)
+	{
+		List<LdapServerConfig> servers = (config == null) ? null : config.getServers();
+		JSONArray list = new JSONArray();
+		if(servers != null)
+		{
+			for(int i=0; i<servers.size(); i++)
+			{
+				LdapServerConfig one = servers.get(i);
+				if(one == null)
+				{
+					continue;
+				}
+				list.add(JSON.toJSON(one));
+			}
+		}
+
+		JSONObject data = new JSONObject();
+		data.put("servers", list);
+		data.put("legacy", LdapConfigStore.toLegacyString(servers));
+		data.put("maxServers", LdapConfigStore.MAX_SERVERS);
+		data.put("defaultPort", LdapConfigStore.DEFAULT_PORT);
+		data.put("defaultSslPort", LdapConfigStore.DEFAULT_SSL_PORT);
+		data.put("defaultFilter", LdapConfigStore.DEFAULT_FILTER);
+		data.put("defaultLoginMode", LdapConfigStore.DEFAULT_LOGIN_MODE);
+		data.put("docSysType", docSysType);
+		data.put("ldapSupported", docSysType == constants.DocSys_Enterprise_Edition);
+
+		//运行期实际生效值（保存后即可回显，不需要重启）
+		boolean runtimeEnabled = (systemLdapConfig != null && systemLdapConfig.enabled);
+		int runtimeCount = (systemLdapConfig == null || systemLdapConfig.ldapConfigList == null)
+				? 0 : systemLdapConfig.ldapConfigList.size();
+		data.put("runtimeEnabled", runtimeEnabled);
+		data.put("runtimeServerCount", runtimeCount);
+		return data;
 	}
 	
 	@RequestMapping("/llmTest.do")

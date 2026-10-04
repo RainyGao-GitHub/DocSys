@@ -14999,6 +14999,18 @@ public class BaseController  extends BaseFunction{
 			Log.info("triggerSystemSettingInit() 邮件配置种子迁移失败（不影响 DocSys）: " + e.getMessage());
 			Log.info(e);
 		}
+
+		try {
+			com.DocSystem.service.ldap.LdapConfigStore ldapConfigStore =
+				wac.getBean(com.DocSystem.service.ldap.LdapConfigStore.class);
+			//先播种（幂等：仅当表内还没有任何 ldap.* 行时，把 docSysConfig.properties 的旧串搬进表）
+			ldapConfigStore.ensureSeeded();
+			//再用表里的结构化配置覆盖运行期（未配置则保持 ini 的引导值）
+			ldapConfigStore.applyToRuntime();
+		} catch (Exception e) {
+			Log.info("triggerSystemSettingInit() LDAP配置种子迁移/覆盖失败（不影响 DocSys）: " + e.getMessage());
+			Log.info(e);
+		}
 	}
 
 	/**

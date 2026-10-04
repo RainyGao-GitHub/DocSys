@@ -2,36 +2,58 @@
         <div class="col-md-12">
           <div class="widget">
             <div class="widget-head">
-              <div class="pull-left">LDAP</div>
+              <div class="pull-left">LDAP Settings</div>
               <div class="widget-icons pull-right">
-                <button id="btnEnableSystemLdapSet" onclick="enableSystemLdapSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
-                <button id="btnSaveSystemLdapSet" onclick="saveSystemLdapSet()" class="btn btn-lg btn-success examine_ban" style="display:none;">Save</button>
-                <button id="btnCancelSystemLdapSet" onclick="cancelSystemLdapSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
+                <button id="btnAddSystemLdapServer" onclick="addSystemLdapServer()" class="btn btn-lg btn-success examine_ban">Add Server</button>
               </div>
               <div class="clearfix"></div>
             </div>
 
             <div class="widget-content">
               <div id="systemLdapForm">
-                <!-- Parameter/value table style, same as the "Email Service" / "Debug Log" pages: one row per parameter, page actions below the table -->
+                <!-- Server list: the order is the try order for logins without a domain name; disabled servers never take part -->
                 <table class="table table-striped table-bordered table-hover" id="systemLdapTable">
                   <thead>
                   <tr>
-                    <th style="width:220px;">Parameter</th>
-                    <th>Value</th>
+                    <th style="width:150px;">Domain</th>
+                    <th>Server / Base DN / Authentication</th>
+                    <th style="width:76px;">Status</th>
+                    <th style="width:76px;">Action</th>
                   </tr>
                   </thead>
-                  <tbody>
+                  <tbody id="systemLdapServerRows">
+                  {{each value.servers as server i}}
                   <tr>
-                    <td>LDAP</td>
+                    <td>{{if server.name}}{{server.name}}{{else}}<span style="color:#999;">No domain</span>{{/if}}</td>
+                    <td style="word-break:break-all;">
+                      <div>{{server.url}}</div>
+                      <div style="color:#888;">{{server.baseDn}}</div>
+                      <div style="color:#888;">Auth: {{server.authText}} · Login ID: {{server.loginModeText}}{{if server.domainCheck}} · Domain required{{/if}}{{if server.bindAccount}} · Bind account: {{server.bindAccount}}{{/if}}</div>
+                    </td>
                     <td>
-                      <input type="text" class="form-control" id="ldapConfig" name="ldapConfig" value="{{value.ldapConfig}}" disabled="disabled" placeholder="ldap://xxx.xxx.xxx.xx:389/ou=xxx,dc=xxx,dc=xxx" style="width:520px;">
+                      <label class="checkbox-inline" style="white-space:nowrap;">
+                        <input type="checkbox" {{if server.enabled}}checked="checked"{{/if}} onclick="toggleSystemLdapServer({{i}})"> {{if server.enabled}}On{{else}}Off{{/if}}
+                      </label>
+                    </td>
+                    <td>
+                      <button onclick="testSystemLdapServer({{i}})" class="btn btn-warning examine_ban">Test</button>
+                      <button onclick="editSystemLdapServer({{i}})" class="btn btn-success examine_ban">Edit</button>
+                      <button onclick="moveSystemLdapServerToTop({{i}})" class="btn btn-primary examine_ban" title="Move to the first position (try order for logins without a domain)" {{if i == 0}}disabled="disabled"{{/if}}>Top</button>
+                      <button onclick="deleteSystemLdapServer({{i}})" class="btn btn-danger examine_ban">Delete</button>
                     </td>
                   </tr>
+                  {{/each}}
+                  {{if value.servers.length == 0}}
+                  <tr>
+                    <td colspan="4" style="text-align:center;color:#999;">No LDAP server configured yet. Click "Add Server" to start.</td>
+                  </tr>
+                  {{/if}}
                   </tbody>
                 </table>
 
-                <button onclick="ldapTest()" data-id="" class="btn btn-lg btn-warning examine_ban">Test</button>
+                {{if value.ldapSupported != true}}
+                <div class="alert alert-warning" style="margin-bottom:10px;">LDAP login is not supported in this edition (Enterprise required); enabled servers will not take effect.</div>
+                {{/if}}
               </div>
               <div class="widget-foot">
                 <div class="clearfix"></div>

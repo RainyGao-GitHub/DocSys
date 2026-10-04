@@ -1,0 +1,133 @@
+<div class="form-horizontal systemLdapServerForm">
+  <!-- 域名 -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">域名</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerName" placeholder="corp">
+      <span class="help-block">多台服务器分属不同域时必填，且不能重复；登录时填「域名/账号」。</span>
+    </div>
+  </div>
+  <!-- 服务器地址 -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">服务器地址</label>
+    <div class="col-lg-9">
+      <select class="form-control" id="systemLdapServerScheme" style="width:100px;display:inline-block;">
+        <option value="ldap">ldap</option>
+        <option value="ldaps">ldaps</option>
+      </select>
+      <input type="text" class="form-control" id="systemLdapServerHost" placeholder="10.0.0.5" style="width:230px;display:inline-block;">
+      <input type="text" class="form-control" id="systemLdapServerPort" placeholder="389" style="width:90px;display:inline-block;">
+      <span class="help-block">主机填 IP 或域名（不含协议）；端口留空则用默认端口：ldap 389、ldaps 636。</span>
+    </div>
+  </div>
+  <!-- 基础DN -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">基础DN</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerBaseDn" placeholder="ou=users,dc=example,dc=com">
+      <span class="help-block">用户查询的起点（不填会查不到用户）。</span>
+    </div>
+  </div>
+  <!-- 鉴权方式 -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">鉴权方式</label>
+    <div class="col-lg-9">
+      <select class="form-control" id="systemLdapServerAuthentication" style="width:220px;">
+        <option value="">simple（默认）</option>
+        <option value="none">none（匿名）</option>
+        <option value="DIGEST-MD5">DIGEST-MD5</option>
+        <option value="CRAM-MD5">CRAM-MD5</option>
+        <option value="EXTERNAL">EXTERNAL</option>
+        <option value="GSSAPI">GSSAPI（Kerberos）</option>
+      </select>
+      <span class="help-block">绝大多数 LDAP / AD 用 simple。</span>
+    </div>
+  </div>
+  <!-- 登录标识 -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">登录标识</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerLoginMode" placeholder="uid">
+      <span class="help-block">用哪个属性匹配登录名：OpenLDAP 常用 <code>uid</code>，AD 常用 <code>sAMAccountName</code>（留空 = uid）。</span>
+    </div>
+  </div>
+  <!-- 鉴权账号 -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">鉴权账号</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerBindAccount" placeholder="cn=admin,dc=example,dc=com">
+      <span class="help-block">用于查询用户DN的账号（DN 形式）。<b>留空 = 用登录用户自身绑定校验</b>。</span>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="control-label col-lg-3">鉴权密码</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapServerBindPassword" placeholder="">
+      <span class="help-block">鉴权账号的密码（明文保存在系统配置中）。</span>
+    </div>
+  </div>
+  <!-- 登录方式 -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">登录方式</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLdapServerDomainCheck"> 必须带域名登录（拒绝「账号」形式）
+      </label>
+      <span class="help-block">勾选后该服务器只接受「域名/账号」登录，避免不同域的同名账号互相串。</span>
+    </div>
+  </div>
+  <!-- 高级参数 -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">高级参数</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLdapServerUseAdvanced" onchange="onToggleSystemLdapServerAdvanced()"> 使用高级参数
+      </label>
+      <div id="systemLdapServerAdvancedBlock" style="display:none;margin-top:8px;">
+        <div style="margin-bottom:6px;">
+          过滤条件：<input type="text" class="form-control" id="systemLdapServerFilter" placeholder="(objectClass=*)" style="width:320px;display:inline-block;">
+        </div>
+        <div style="margin-bottom:4px;color:#666;">属性映射（留空 = 用运行期默认值）：</div>
+        <div style="margin-bottom:4px;">name：<input type="text" class="form-control" id="systemLdapServerNameAttribute" placeholder="默认 = 登录标识" style="width:200px;display:inline-block;"></div>
+        <div style="margin-bottom:4px;">realName：<input type="text" class="form-control" id="systemLdapServerRealNameAttribute" placeholder="默认 = cn" style="width:200px;display:inline-block;"></div>
+        <div style="margin-bottom:4px;">nickName：<input type="text" class="form-control" id="systemLdapServerNickNameAttribute" placeholder="默认 = displayName" style="width:200px;display:inline-block;"></div>
+        <div style="margin-bottom:4px;">mail：<input type="text" class="form-control" id="systemLdapServerMailAttribute" placeholder="默认 = mail" style="width:200px;display:inline-block;"></div>
+        <div style="margin-bottom:4px;">description：<input type="text" class="form-control" id="systemLdapServerDescriptionAttribute" placeholder="默认 = description" style="width:200px;display:inline-block;"></div>
+        <textarea class="form-control" id="systemLdapServerOtherSettings" rows="3" placeholder="其他设置：每行一个 键=值（原样写入运行期配置串，用于历史/特殊参数）" style="margin-top:6px;"></textarea>
+      </div>
+    </div>
+  </div>
+  <!-- 状态 -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">状态</label>
+    <div class="col-lg-9">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="systemLdapServerEnabled" checked="checked"> 启用
+      </label>
+    </div>
+  </div>
+  <!-- 测试账号（仅测试用，不入库） -->
+  <div class="form-group">
+    <label class="control-label col-lg-3">测试账号</label>
+    <div class="col-lg-9">
+      <input type="text" class="form-control" id="systemLdapTestUser" placeholder="test" style="width:180px;display:inline-block;">
+      <input type="text" class="form-control" id="systemLdapTestPassword" placeholder="密码" style="width:180px;display:inline-block;">
+      <span class="help-block">仅用于「测试连接」，不会保存。</span>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="form-group">
+    <div class="col-lg-offset-3 col-lg-9">
+      <button type="button" class="btn btn-warning" id="btnTestSystemLdapServer" onclick="testSystemLdapServerEdit()">测试连接</button>
+      <button type="button" class="btn btn-success" id="btnSaveSystemLdapServerEdit" onclick="saveSystemLdapServerEdit()">保存</button>
+      <button type="button" class="btn" onclick="closeSystemLdapServerEditModal()">取消</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-3 col-lg-9">
+      <span class="help-block" id="systemLdapServerTestResult" style="white-space:pre-wrap;"></span>
+    </div>
+  </div>
+</div>
+<script type="text/javascript" src="systemLdapServerEdit.js"></script>
