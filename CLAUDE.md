@@ -4,7 +4,9 @@
 
 上下文压缩会丢失关键信息（当前任务、参考计划、当前进展、生效约束）。以下步骤写入本文件以便压缩后自动重新触发——本文件每个会话都会被重新注入。
 
-1. **读当前工作卡**：当前**无进行中任务**（「日志管理」日志导出 + 调试日志下载修复 已于 2026-10-06 收尾并提交 `06505f8e0`）。开工前先看下面 3 张**挂起卡**——均为「已调研/已裁定暂不处理」，**未获新裁定前不要改代码**：
+1. **读当前工作卡**：当前任务 `DevAgentControl/CURRENT_STATE_用户批量导入.md`（客户名单批量创建用户：csv/xls/xlsx + **列名别名兼容**；2026-10-06 建立，**调研+方案已完成，待用户裁定后开工**，尚未改任何代码 → 方案文档 `devDocs/用户批量导入方案.md`，裁定项见其 §4 的 D1~D12）。工作卡是**当前任务**相关信息的唯一定义处：必读上下文、参考计划与上下文、当前进展、生效约束（含是否需要先提交）。
+   - 该卡要点：① 已有「导出用户」在 **websocket 仓库** `BussinessController:5285`（写 `docSysIniPath/backup/userList.csv`），导出内容为 `User` **反射全字段**（含 `serialVersionUID`、**含 pwd 哈希**、字符串值**尾随 `\t`**、无引号/无转义、尾随逗号）→ 不能当模板，但导入解析要**兼容回灌**；② 用户 CRUD 都在主仓库 `ManageController`：`addUser`（`type>=1`；`type>login_user.type` 越权拒绝；`checkSystemUsersCount` + `userCheck(user,true,true,rt)`；`createType=ByAdmin`；记一条系统日志）；③ 用户表 **`PWD` NOT NULL** + 字段长度上限（`NAME 40/PWD 40/REAL_NAME 50/NICK_NAME 50/EMAIL 50/TEL 20`）⇒ 导入必须校验长度；④ 密码在库里是 **MD5(明文)**（前端算好提交、服务端原样入库，服务端也有 `MD5.md5`）；⑤ 复用先例：`startImportLicense()` 的 FormData+XHR 上传、系统参数导入的 `{total,success,failed,errors[]}` 结果形状、poi-4.0.0（xls/xlsx/.et）、`FileCharsetDetector.getFileEncode(InputStream)`（缺省 GBK）。
+   - 其余为**挂起卡**（均已调研/已裁定暂不处理，**未获新裁定前不要改代码**）：
    - 挂起卡 `CURRENT_STATE_系统日志显示用户名.md`：日志「用户」列只存账号（`BaseFunction:5835-5841` 的 `log.userName = user.getName()`），客户希望显示「名字/昵称」；A 写入时快照（要加索引字段，老日志补不了）/ B 读取时按 `userId` 查库补名（要兜底已删除用户、`userId="null"` 的失败登录、LDAP 无 realName），**用户 2026-10-06 裁定暂不改**。
    - 挂起卡 `CURRENT_STATE_agent工具技能规模化.md`（同在 `DevAgentControl/`）：P0 调研+方案已完成并提交 `6fbb9e7fd`，**实施等用户裁定** → 未获裁定前不要开工改代码。
    - 挂起卡 `CURRENT_STATE_前端静态资源缓存.md`（同在 `DevAgentControl/`）：静态资源响应无 `Cache-Control`（只有 ETag/Last-Modified）→ 改 JS/CSS/模板必须清浏览器缓存；方案 A（Filter 加 `no-cache`，改完 F5 即生效）代价是每个静态文件多一次 304 条件请求，**用户 2026-10-06 裁定暂不处理** → 未获新裁定前不要实施。

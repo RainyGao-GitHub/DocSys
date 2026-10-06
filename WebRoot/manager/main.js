@@ -6836,6 +6836,20 @@ function showAddUserPanel(){
 	});
 }
 
+//批量导入用户（对话框里的逻辑在 importUser.js）
+function showImportUserPanel(){
+	console.log("showImportUserPanel");
+	gImportUserFileName = "";
+	qiao.bs.dialog({
+		id: 'importUser',
+		url: 'importUser' + langExt + '.html',
+		title: _Lang('批量导入用户'),
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		big: false
+	});
+}
+
 //showAddOfficeLicensePanel
 function showAddOfficeLicensePanel(){
 	console.log("showAddOfficeLicensePanel");

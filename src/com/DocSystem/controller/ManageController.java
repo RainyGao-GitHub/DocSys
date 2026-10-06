@@ -44,6 +44,7 @@ import util.LDAPUtil;
 import util.LLMUtil;
 import util.ReadProperties;
 import util.ReturnAjax;
+import util.Encrypt.MD5;
 import com.DocSystem.entity.DocAuth;
 import com.DocSystem.entity.DocLock;
 import com.DocSystem.entity.GroupMember;
@@ -63,6 +64,7 @@ import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.LogFileUtil;
+import com.DocSystem.common.UserListImporter;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.entity.AuthCode;
@@ -3021,6 +3023,257 @@ public class ManageController extends BaseController{
 		addSystemLog(request, login_user, "addUser", "addUser", "新增用户", null, "成功", null, null, null, buildSystemLogDetailContent(rt));				
 		writeJson(rt, response);
 		return;
+	}
+
+	/**
+	 * 用户批量导入：解析客户名单（CSV/XLS/XLSX/WPS ET）→ 列名别名映射 → 逐行复用 addUser 的校验与创建逻辑。
+	 *
+	 * <p>裁定（2026-10-06，见 {@code devDocs/用户批量导入方案.md} §4）：D1 格式全支持（含 .et）；D2 不支持无表头；
+	 * D3 已存在账号**跳过并报告**（不更新）；D4 有密码列用列、否则默认密码 = 账号本身；D5 角色受越权限制；
+	 * D6 一步式导入；D7 文件≤5MB、行≤5000；D10 系统日志汇总记一条。</p>
+	 *
+	 * <p>逐行处理、逐行报告：失败/跳过的行不影响其它行（与系统参数导入语义一致）。</p>
+	 */
+	@RequestMapping("/importUserList.do")
+	public void importUserList(MultipartFile uploadFile, HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("****************** importUserList.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null)
+		{
+			docSysErrorLog("用户未登录，请先登录！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(login_user.getType() < 1)
+		{
+			docSysErrorLog("非管理员用户，请联系统管理员！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		String fileName = (uploadFile == null || uploadFile.getOriginalFilename() == null) ? "" : uploadFile.getOriginalFilename();
+		Log.info("importUserList file:" + fileName + " size:" + ((uploadFile == null) ? 0 : uploadFile.getSize()));
+
+		//1. 解析文件（格式/编码/表头/上限，任一不过则整份文件不导入）
+		UserListImporter.Result parseResult = UserListImporter.parse(uploadFile);
+		if(parseResult.ok == false)
+		{
+			docSysErrorLog(parseResult.error, rt);
+			writeJson(rt, response);
+			addSystemLog(request, login_user, "importUserList", "importUserList", "批量导入用户", null, "失败", null, null, null,
+					"文件[" + fileName + "] 解析失败：" + parseResult.error);
+			return;
+		}
+
+		Log.info("importUserList format:" + parseResult.table.formatName + " charset:" + parseResult.table.charsetName
+				+ " rows:" + parseResult.users.size() + " columns:" + parseResult.mappedColumns);
+
+		//2. 逐行导入
+		int total = parseResult.users.size();
+		int success = 0;
+		int skipped = 0;
+		int failed = 0;
+		List<Map<String, Object>> errors = new ArrayList<Map<String, Object>>();
+		List<Map<String, Object>> skippedRows = new ArrayList<Map<String, Object>>();
+		Map<String, Integer> fileNames = new HashMap<String, Integer>();	//文件内重复账号检测（值 = 首次出现的行号）
+		boolean licenseLimited = false;
+		String limitedMsg = "";
+
+		long startTime = new Date().getTime();
+
+		for(int i = 0; i < parseResult.users.size(); i++)
+		{
+			UserListImporter.RowUser row = parseResult.users.get(i);
+
+			//2.1 账号不能为空
+			if(row.name.isEmpty())
+			{
+				failed++;
+				addImportUserDetail(errors, row, "用户名（账号）不能为空");
+				continue;
+			}
+
+			//2.2 字段长度（user 表有长度上限，超长会导致入库报错或被静默截断）
+			String lenErr = UserListImporter.checkFieldLengths(row);
+			if(lenErr != null)
+			{
+				failed++;
+				addImportUserDetail(errors, row, lenErr);
+				continue;
+			}
+
+			//2.3 角色
+			if(row.roleInvalid())
+			{
+				failed++;
+				addImportUserDetail(errors, row, "无法识别的角色「" + row.roleRaw + "」，请使用 普通用户/管理员/超级管理员 或 0/1/2");
+				continue;
+			}
+			Integer userType = (row.type == null) ? UserListImporter.USER_TYPE_NORMAL : row.type;
+
+			//2.4 越权检查（与 addUser 一致：不得创建比自己级别高的用户）
+			if(userType.intValue() > login_user.getType().intValue())
+			{
+				failed++;
+				addImportUserDetail(errors, row, "越权操作：您无权创建「" + roleLabel(userType) + "」");
+				continue;
+			}
+
+			//2.5 文件内重复
+			Integer firstRow = fileNames.get(row.name);
+			if(firstRow != null)
+			{
+				failed++;
+				addImportUserDetail(errors, row, "文件内账号重复（第 " + firstRow.intValue() + " 行已导入过该账号）");
+				continue;
+			}
+
+			//2.6 已存在账号：跳过并报告（D3）
+			if(isUserNameUsed(row.name) == true)
+			{
+				skipped++;
+				addImportUserDetail(skippedRows, row, "账号已存在，跳过");
+				continue;
+			}
+
+			//2.7 证书用户数上限（与 addUser 一致；一旦超限，余下行都会失败）
+			if(licenseLimited)
+			{
+				failed++;
+				addImportUserDetail(errors, row, limitedMsg);
+				continue;
+			}
+			ReturnAjax licenseRt = new ReturnAjax();
+			if(checkSystemUsersCount(licenseRt) == false)
+			{
+				licenseLimited = true;
+				limitedMsg = (licenseRt.getMsgInfo() == null) ? "用户数量已达到上限，请购买商业版证书！" : licenseRt.getMsgInfo();
+				failed++;
+				addImportUserDetail(errors, row, limitedMsg);
+				continue;
+			}
+
+			//2.8 组装用户（密码：文件有密码列就用，否则默认 = 账号本身，D4）
+			User user = new User();
+			user.setName(row.name);
+			user.setPwd(MD5.md5(row.pwd.isEmpty() ? row.name : row.pwd));
+			if(row.realName.isEmpty() == false) { user.setRealName(row.realName); }
+			if(row.nickName.isEmpty() == false) { user.setNickName(row.nickName); }
+			if(row.tel.isEmpty() == false) { user.setTel(row.tel); }
+			if(row.email.isEmpty() == false) { user.setEmail(row.email); }
+			user.setType(userType);
+
+			//2.9 复用 addUser 的校验：手机/邮箱格式与唯一性（userCheck 内部还会再查一次账号唯一性）
+			ReturnAjax checkRt = new ReturnAjax();
+			if(userCheck(user, true, true, checkRt) == false)
+			{
+				failed++;
+				addImportUserDetail(errors, row, checkRt.getMsgInfo());
+				continue;
+			}
+
+			//2.10 入库
+			user.setCreateType(UserCreateType_ByAdmin);	//与 addUser 一致
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			user.setCreateTime(df.format(new Date()));
+			if(userService.addUser(user) == 0)
+			{
+				failed++;
+				addImportUserDetail(errors, row, "写入数据库失败");
+				continue;
+			}
+
+			fileNames.put(row.name, Integer.valueOf(row.rowNumber));
+			success++;
+		}
+
+		//3. 结果报告
+		Map<String, Object> data = new HashMap<String, Object>();
+		data.put("total", Integer.valueOf(total));
+		data.put("success", Integer.valueOf(success));
+		data.put("skipped", Integer.valueOf(skipped));
+		data.put("failed", Integer.valueOf(failed));
+		data.put("errors", errors);
+		data.put("skippedRows", skippedRows);
+		data.put("errorsTruncated", Boolean.valueOf(failed > errors.size()));		//明细超上限时只给了前 N 条
+		data.put("skippedTruncated", Boolean.valueOf(skipped > skippedRows.size()));
+		data.put("format", parseResult.table.formatName);
+		data.put("charset", parseResult.table.charsetName);
+		data.put("mappedColumns", parseResult.mappedColumns);
+		data.put("cost", (new Date().getTime() - startTime) + "ms");
+		rt.setData(data);
+		writeJson(rt, response);
+
+		//4. 系统日志汇总记一条（D10）
+		String logResult = (failed == 0) ? "成功" : "失败";
+		String logContent = "文件[" + fileName + "] 共" + total + "行：成功" + success + "，跳过" + skipped + "，失败" + failed
+				+ "，格式[" + parseResult.table.formatName + "/" + parseResult.table.charsetName + "]"
+				+ "，已识别列[" + parseResult.mappedColumns + "]"
+				+ (licenseLimited ? "，因用户数上限中断" : "");
+		addSystemLog(request, login_user, "importUserList", "importUserList", "批量导入用户", null, logResult, null, null, null, logContent);
+		return;
+	}
+
+	/** 导入结果明细（行号/账号/原因）；超过上限只保留前面的，由调用方用 xxxTruncated 标记 */
+	private void addImportUserDetail(List<Map<String, Object>> list, UserListImporter.RowUser row, String reason)
+	{
+		if(list.size() >= UserListImporter.MAX_DETAIL_ROWS)
+		{
+			return;
+		}
+		Map<String, Object> item = new HashMap<String, Object>();
+		item.put("row", Integer.valueOf(row.rowNumber));
+		item.put("name", row.name);
+		item.put("reason", (reason == null) ? "" : reason);
+		list.add(item);
+	}
+
+	/** 角色数字 → 展示名（报错提示用） */
+	private static String roleLabel(Integer type)
+	{
+		if(type == null) { return "普通用户"; }
+		switch(type.intValue())
+		{
+		case 0: return "普通用户";
+		case 1: return "管理员";
+		case 2: return "超级管理员";
+		default: return "未知角色(" + type + ")";
+		}
+	}
+
+	/** 下载用户导入模板（CSV，UTF-8 + BOM，中文列头 + 示例行，D8）；内容由 UserListImporter 统一生成，避免与别名表漂移 */
+	@RequestMapping("/downloadUserImportTemplate.do")
+	public void downloadUserImportTemplate(HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("****************** downloadUserImportTemplate.do ***********************");
+
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null || login_user.getType() < 1)
+		{
+			docSysErrorLog("用户未登录或无权限！", response);
+			return;
+		}
+
+		OutputStream out = null;
+		try {
+			byte[] bytes = UserListImporter.buildTemplateCsv().getBytes("UTF-8");
+
+			response.reset();
+			response.setContentType("text/csv;charset=UTF-8");
+			response.setHeader("Content-Disposition", "attachment; filename=\"userImportTemplate.csv\"");
+			response.setHeader("Cache-Control", "no-cache, must-revalidate");
+			response.setContentLength(bytes.length);
+
+			out = response.getOutputStream();
+			out.write(bytes);
+			out.flush();
+		} catch (Exception e) {
+			Log.info("downloadUserImportTemplate() 异常: " + e.getMessage());
+		}
 	}
 
 	@RequestMapping(value="editUser")
