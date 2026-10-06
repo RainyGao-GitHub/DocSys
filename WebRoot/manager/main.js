@@ -5835,6 +5835,74 @@ function searchSystemLog()
 	showSystemLogList();
 }
 
+//导出操作日志：按当前筛选条件（时间范围 + 关键字）导出**全量** CSV
+//服务端流式生成（不构造大 JSON），前端按 Content-Type 区分「文件」与「错误提示」
+function exportSystemLog(){
+	var $btn = $("#btnExportSystemLog");
+	if($btn.length > 0){ $btn.attr("disabled", true); }
+
+	var body = "startTime=" + encodeURIComponent(systemLogStartTime)
+		+ "&endTime=" + encodeURIComponent(systemLogEndTime)
+		+ "&searchWord=" + encodeURIComponent(systemLogSearchWord == null ? "" : systemLogSearchWord)
+		+ "&lang=" + encodeURIComponent((langExt == "_en") ? "en" : "ch");
+
+	showErrorMessage(_Lang("正在导出，请稍等..."));
+
+	fetch("/DocSystem/Manage/exportSystemLogList.do", {
+		method : "post",
+		headers : {
+			"Content-Type" : "application/x-www-form-urlencoded",
+			//与 jQuery ajax 保持一致：MyInterceptor 对「非 ajax 且未登录」的请求会 302 到 tologin.do
+			"X-Requested-With" : "XMLHttpRequest"
+		},
+		body : body,
+		credentials : "same-origin"
+	}).then(function(res){
+		var contentType = res.headers.get("Content-Type") || "";
+		if(contentType.indexOf("text/csv") < 0){
+			//非 CSV = 服务端拒绝（空结果/超上限/未登录）：尽量把错误文案展示出来
+			return res.text().then(function(text){
+				var msg = text || "";
+				try {
+					var ret = JSON.parse(msg);
+					if(ret && ret.msgInfo){ msg = ret.msgInfo; }
+				} catch(e) {
+					if(msg.indexOf("<") == 0){
+						msg = "登录状态可能已失效，请重新登录后再试";
+					}
+				}
+				showErrorMessage(_Lang("导出失败", " : ", msg));
+			});
+		}
+		var fileName = "SystemLog.csv";
+		var disposition = res.headers.get("Content-Disposition") || "";
+		var match = disposition.match(/filename="?([^";]+)"?/);
+		if(match && match[1]){
+			fileName = match[1];
+		}
+		return res.blob().then(function(blob){
+			downloadBlobAsFile(blob, fileName);
+			showErrorMessage(_Lang("导出成功"));
+		});
+	}).catch(function(){
+		showErrorMessage(_Lang("导出失败", " : ", "服务器异常"));
+	}).then(function(){
+		if($btn.length > 0){ $btn.attr("disabled", false); }
+	});
+}
+
+//用 Blob 触发浏览器保存（与「系统参数导出」同一套路）
+function downloadBlobAsFile(blob, fileName){
+	var url = URL.createObjectURL(blob);
+	var a = document.createElement("a");
+	a.href = url;
+	a.download = fileName;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
+}
+
 function showSystemLogList(pageIndex){
 	var pageSize = gPageSize;
 	pageIndex = pageIndex ? pageIndex : 0;

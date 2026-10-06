@@ -2,10 +2,15 @@ package com.DocSystem.controller;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -3980,14 +3985,77 @@ public class ManageController extends BaseController{
 		String name = temp[1];	
 		
 		Log.debug("downloadLogFile() path:" + path + " name:" + name);		
-		Doc downloadDoc = buildDownloadDocInfo(0, "","", path, name, 0);
-		downloadDoc.encryptEn = 0;
-		
-		String downloadLink = "/DocSystem/Doc/downloadDoc.do?vid=" + downloadDoc.getVid() + "&path="+ downloadDoc.getPath() + "&name="+ downloadDoc.getName() + "&targetPath=" + downloadDoc.targetPath + "&targetName="+downloadDoc.targetName;
+		//直接返回「文件流式下载」接口的地址：日志文件不在仓库里，走 Doc/downloadDoc.do 需要仓库与文档上下文，
+		//这就是原来「下载」按钮 500 的根因；现改为由本控制器直接回写字节流。
+		String downloadLink = "/DocSystem/Manage/streamLogFile.do?key="
+				+ URLEncoder.encode(key == null ? "" : key, "UTF-8");
 		rt.setData(downloadLink);
 		writeJson(rt, response);			
 		addSystemLog(request, login_user, "downloadLogFile", "downloadLogFile", "下载调试日志", null, "成功", null, null, null, buildSystemLogDetailContent(rt));							
 		return;		
+	}
+
+	/**
+	 * 调试日志/控制台日志/catalina 日志的「直接下载」：key 必须命中白名单（{@link #resolveLogFile}），
+	 * 按字节流顺序回写，可下载大文件。
+	 * 注意：本接口**不写调试日志**（与 getLogContent.do 同理）——它的响应内容正是这份日志，
+	 * 写入的标记行会落到「本次下载到的文件」里；也因此下载内容与磁盘文件严格一致（长度/哈希可比对）。
+	 */
+	@RequestMapping("/streamLogFile.do")
+	public void streamLogFile(String key, HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		User login_user = (User) session.getAttribute("login_user");
+		if(login_user == null || login_user.getType() < 1)
+		{
+			docSysErrorLog("用户未登录或无权限！", response);
+			return;
+		}
+
+		File file = resolveLogFile(key);
+		if(file == null || file.isFile() == false)
+		{
+			docSysErrorLog("日志文件不存在！", response);
+			return;
+		}
+
+		FileInputStream in = null;
+		OutputStream out = null;
+		try {
+			response.reset();
+			response.setContentType("text/plain;charset=UTF-8");
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
+			response.setHeader("Cache-Control", "no-cache, must-revalidate");	//日志必须拿到最新内容
+			if(file.length() < Integer.MAX_VALUE) {
+				response.setContentLength((int) file.length());
+			}
+
+			in = new FileInputStream(file);
+			out = response.getOutputStream();
+			byte[] buf = new byte[8192];
+			int len;
+			while((len = in.read(buf)) > 0) {
+				out.write(buf, 0, len);
+			}
+			out.flush();
+		} catch (Exception e) {
+			//客户端中途取消下载也会走到这里，不写系统日志（已下载部分无法回收）
+			Log.info("streamLogFile() 中断: " + e.getMessage());
+		} finally {
+			if(in != null) { try { in.close(); } catch (Exception e1) { } }
+		}
+	}
+
+	/** 下载/接口出错时的文本响应（用于文件流式接口，不能回 JSON 文件） */
+	protected void docSysErrorLog(String msg, HttpServletResponse response)
+	{
+		Log.info("docSysErrorLog() " + msg);
+		try {
+			response.reset();
+			response.setContentType("text/plain;charset=UTF-8");
+			response.getWriter().write(msg);
+		} catch (Exception e) {
+			Log.info(e);
+		}
 	}
 	
 	//cleanLogFile
@@ -4258,24 +4326,7 @@ public class ManageController extends BaseController{
 		List<SystemLog> allLogs = querySystemLogsByTimeRange(startTime, endTime);
 		Log.info("getSystemLogList total logs fetched: " + (allLogs != null ? allLogs.size() : 0));
 
-		//搜索过滤
-		List<SystemLog> filteredList = new ArrayList<SystemLog>();
-		if(allLogs != null)
-		{
-			for(SystemLog log : allLogs)
-			{
-				if(searchWord != null && !searchWord.isEmpty())
-				{
-					boolean matched = false;
-					if(log.userName != null && log.userName.contains(searchWord)) matched = true;
-					else if(log.action != null && log.action.contains(searchWord)) matched = true;
-					else if(log.content != null && log.content.contains(searchWord)) matched = true;
-					else if(log.event != null && log.event.contains(searchWord)) matched = true;
-					if(!matched) continue;
-				}
-				filteredList.add(log);
-			}
-		}
+		List<SystemLog> filteredList = filterSystemLogsBySearchWord(allLogs, searchWord);
 
 		//分页
 		int total = filteredList.size();
@@ -4295,5 +4346,158 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 
+	/** 按关键字过滤（与页面搜索口径一致：用户/动作/内容/事件任一包含）；列表与导出共用 */
+	private List<SystemLog> filterSystemLogsBySearchWord(List<SystemLog> allLogs, String searchWord)
+	{
+		List<SystemLog> filteredList = new ArrayList<SystemLog>();
+		if(allLogs == null)
+		{
+			return filteredList;
+		}
+		for(SystemLog log : allLogs)
+		{
+			if(searchWord != null && !searchWord.isEmpty())
+			{
+				boolean matched = false;
+				if(log.userName != null && log.userName.contains(searchWord)) matched = true;
+				else if(log.action != null && log.action.contains(searchWord)) matched = true;
+				else if(log.content != null && log.content.contains(searchWord)) matched = true;
+				else if(log.event != null && log.event.contains(searchWord)) matched = true;
+				if(!matched) continue;
+			}
+			filteredList.add(log);
+		}
+		return filteredList;
+	}
+
+	/** 操作日志导出上限：超过则直接报错让用户缩小范围，不产生不完整的文件 */
+	private static final int LOG_EXPORT_MAX_ROWS = 100000;
+
+	/** CSV 列头（跟随界面语言） */
+	private static final String LOG_CSV_HEADERS_CH = "时间,用户,用户ID,IP,事件,子事件,动作,结果,仓库,路径,名称,新路径,新名称,内容,queryId,提交信息,id",
+			LOG_CSV_HEADERS_EN = "Time,User,User ID,IP,Event,Sub Event,Action,Result,Repository,Path,Name,New Path,New Name,Content,Query ID,Commit Info,ID";
+
+	/**
+	 * 操作日志导出（CSV，UTF-8 + BOM）。
+	 *
+	 * <p>与列表接口同一套筛选条件（时间范围 + 关键字），但导出的是<b>全量</b>（不是当前页），
+	 * 且<b>直接流式写 CSV</b>：不构造 JSON、不拼整串，避免大数据量下的内存与传输浪费；列头跟随界面语言。</p>
+	 *
+	 * <p>空结果 / 超上限 / 未登录 都返回 JSON 错误（前端按 Content-Type 区分「文件」与「错误」）。</p>
+	 */
+	@RequestMapping("/exportSystemLogList.do")
+	public void exportSystemLogList(Long startTime, Long endTime, String searchWord, String lang,
+			String authCode, HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("*********** exportSystemLogList *******************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = userAccessCheck(authCode, null, session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		if(startTime == null || endTime == null)
+		{
+			docSysErrorLog("startTime and endTime must not be null", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		List<SystemLog> filteredList = filterSystemLogsBySearchWord(querySystemLogsByTimeRange(startTime, endTime), searchWord);
+
+		if(filteredList.isEmpty())
+		{
+			docSysErrorLog("没有可导出的日志！", rt);
+			writeJson(rt, response);
+			return;
+		}
+		if(filteredList.size() > LOG_EXPORT_MAX_ROWS)
+		{
+			docSysErrorLog("结果共 " + filteredList.size() + " 条，超过导出上限 " + LOG_EXPORT_MAX_ROWS
+					+ " 条，请缩小时间范围或增加搜索条件！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		//时间倒序（与页面展示一致：最新在前）
+		Collections.sort(filteredList, new Comparator<SystemLog>() {
+			public int compare(SystemLog a, SystemLog b) {
+				Long ta = (a == null || a.time == null) ? Long.valueOf(0L) : a.time;
+				Long tb = (b == null || b.time == null) ? Long.valueOf(0L) : b.time;
+				return tb.compareTo(ta);
+			}
+		});
+
+		boolean en = (lang != null && lang.toLowerCase().startsWith("en"));
+		SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		SimpleDateFormat fileFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+		String fileName = "SystemLog_" + fileFormat.format(new Date(startTime.longValue()))
+				+ "-" + fileFormat.format(new Date(endTime.longValue())) + ".csv";
+
+		PrintWriter writer = null;
+		try {
+			response.reset();
+			response.setContentType("text/csv;charset=UTF-8");
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+			response.setHeader("Cache-Control", "no-cache, must-revalidate");
+
+			writer = response.getWriter();
+			writer.write('\uFEFF');		//BOM：Excel 直接双击不乱码
+			writer.write(en ? LOG_CSV_HEADERS_EN : LOG_CSV_HEADERS_CH);
+			writer.write("\r\n");
+
+			int count = 0;
+			for(SystemLog log : filteredList)
+			{
+				StringBuilder sb = new StringBuilder();
+				sb.append(csvField(log.time == null ? "" : timeFormat.format(new Date(log.time.longValue())))).append(',');
+				sb.append(csvField(log.userName)).append(',');
+				sb.append(csvField(log.userId)).append(',');
+				sb.append(csvField(log.ip)).append(',');
+				sb.append(csvField(log.event)).append(',');
+				sb.append(csvField(log.subEvent)).append(',');
+				sb.append(csvField(log.action)).append(',');
+				sb.append(csvField(log.result)).append(',');
+				sb.append(csvField(log.reposName)).append(',');
+				sb.append(csvField(log.path)).append(',');
+				sb.append(csvField(log.name)).append(',');
+				sb.append(csvField(log.newPath)).append(',');
+				sb.append(csvField(log.newName)).append(',');
+				sb.append(csvField(log.content)).append(',');
+				sb.append(csvField(log.queryId)).append(',');
+				sb.append(csvField(log.commitInfo)).append(',');
+				sb.append(csvField(log.id));
+				sb.append("\r\n");
+				writer.write(sb.toString());
+				count++;
+				if(count % 1000 == 0)
+				{
+					writer.flush();	//边写边发
+				}
+			}
+			writer.flush();
+			Log.info("exportSystemLogList() done, rows:" + count + " file:" + fileName);
+		} catch (Exception e) {
+			Log.info("exportSystemLogList() 异常: " + e.getMessage());
+		} finally {
+			if(writer != null) { try { writer.close(); } catch (Exception e1) { } }
+		}
+	}
+
+	/** CSV 字段转义：含 , " \r \n 时用双引号包裹，内部 " 变 "" */
+	private static String csvField(String value)
+	{
+		if(value == null)
+		{
+			return "";
+		}
+		if(value.indexOf(',') < 0 && value.indexOf('"') < 0 && value.indexOf('\r') < 0 && value.indexOf('\n') < 0)
+		{
+			return value;
+		}
+		return "\"" + value.replace("\"", "\"\"") + "\"";
+	}
 
 }

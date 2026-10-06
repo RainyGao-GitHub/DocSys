@@ -110,6 +110,7 @@ function lang(str)
 		"更新成功" : "Update Success",
 		"更新失败" : "Update Failed",
 		"导出" : "Export",
+		"正在导出，请稍等..." : "Exporting, please wait...",
 		"导入" : "Import",
 		"备份" : "Backup",
 		"成功" : "Success",
