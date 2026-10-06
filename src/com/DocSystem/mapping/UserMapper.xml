@@ -350,6 +350,28 @@
     from user
   </select>
   
+  <!-- 用户列表排序（列表与导出共用）：sortField ∈ {id, name}、sortOrder ∈ {asc, desc}；
+       取值已由 Java 侧白名单转换（BaseController.addUserSearchAndSortParam），
+       这里只按固定片段拼 ORDER BY，不直接拼接用户输入。
+       默认「用户ID 降序」：新增用户 ID 递增，所以等价于「最近创建的在前」。
+       ID DESC 作为第二排序键，保证顺序稳定。 -->
+  <sql id="User_List_OrderBy">
+  	<choose>
+  	  <when test="sortField == 'name' and sortOrder == 'desc'">
+  	  	ORDER BY NAME DESC, ID DESC
+  	  </when>
+  	  <when test="sortField == 'name'">
+  	  	ORDER BY NAME ASC, ID DESC
+  	  </when>
+  	  <when test="sortOrder == 'asc'">
+  	  	ORDER BY ID ASC
+  	  </when>
+  	  <otherwise>
+  	  	ORDER BY ID DESC
+  	  </otherwise>
+  	</choose>
+  </sql>
+  
   <select id = "getCountWithParamLike" parameterType="HashMap" resultType="Integer">
   	select count(1)
   	from user
@@ -393,7 +415,7 @@
         or TEL like #{tel}
       </if>
       )  
-      ORDER BY NAME ASC, CREATE_TIME DESC
+      <include refid="User_List_OrderBy" />
       <if test="start != null">
   	  	limit ${start},${number}
   	  </if>
@@ -512,7 +534,7 @@
       <if test="intro != null">
         and INTRO = #{intro,jdbcType=VARCHAR}
       </if>
-      ORDER BY NAME ASC, CREATE_TIME DESC
+      <include refid="User_List_OrderBy" />
       <if test="start != null">
   	  	limit ${start},${number}
   	  </if>

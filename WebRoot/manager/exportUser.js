@@ -14,6 +14,9 @@ function exportUserList(format)
         data : {
             //按当前搜索条件导出全部（服务端不分页）
             searchWord : userSearchWord,
+            //导出顺序跟随列表当前排序
+            sortField : userSortField,
+            sortOrder : userSortOrder,
             format : format,
             lang : (langExt == "_en") ? "en" : "ch"
         },

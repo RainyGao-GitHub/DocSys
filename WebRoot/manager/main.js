@@ -328,6 +328,8 @@ function showContentPage(curPath) {
         case "user":
             title = _Lang("用户管理");
             userSearchWord = "";	//清除搜索关键字
+            userSortField = "id";	//默认排序：用户ID 降序（新增用户ID递增 → 最近创建的在前）
+            userSortOrder = "desc";
             showUserList();
             $("#nav li[data-eb-params=user]>a").addClass("open");
             break;
@@ -6878,6 +6880,34 @@ function deperacateLicense(id, pageIndex){
 
 //成员管理
 var userSearchWord = "";	//清除搜索关键字
+var userSortField = "id";	//排序字段：id / name（服务端白名单，非法值回落默认）
+var userSortOrder = "desc";	//排序方向：asc / desc
+
+//表头排序箭头（表头在 tmpl 里，列表每次重渲染都会重建 → 渲染回调里回填）
+function updateUserSortUi()
+{
+	$("#th-userId .user-sort-arrow, #th-userName .user-sort-arrow").html("");
+	var thId = (userSortField == "name") ? "#th-userName" : "#th-userId";
+	var icon = (userSortOrder == "asc") ? "icon-chevron-up" : "icon-chevron-down";
+	$(thId + " .user-sort-arrow").html('<i class="' + icon + '"></i>');
+}
+
+//点击表头排序：同列再点反向；切到新列时用该列的默认方向（用户ID降序=最近创建在前、用户名升序），回到第一页重新查询
+function changeUserSort(field)
+{
+	if(userSortField == field)
+	{
+		userSortOrder = (userSortOrder == "asc") ? "desc" : "asc";
+	}
+	else
+	{
+		userSortField = (field == "name") ? "name" : "id";
+		userSortOrder = (userSortField == "name") ? "asc" : "desc";
+	}
+	console.log("changeUserSort " + userSortField + " " + userSortOrder);
+	showUserList();
+}
+
 function searchUser()
 {
 	userSearchWord = $("#search-userName").val();
@@ -6898,6 +6928,9 @@ function showUserList(pageIndex){
         data : {
             // 新增用户名搜索条件
             userName: userSearchWord,
+            // 排序条件（服务端白名单校验）
+            sortField: userSortField,
+            sortOrder: userSortOrder,
         	pageIndex: pageIndex,
         	pageSize: pageSize
         },
@@ -6956,7 +6989,10 @@ function UserListDisplay(list, pageIndex, pageSize, callback)
        	node.pageIndex = pageIndex;
   		node.index = i + offset;
  	}
-	$Func.render($("#container"),"user" + langExt,{"list":list}, callback);
+	$Func.render($("#container"),"user" + langExt,{"list":list}, function(){
+		updateUserSortUi();	//tmpl 重渲染后回填排序下拉
+		if(callback) callback();
+	});
 }
 
 //导出用户：弹窗选格式（CSV / Excel），实际导出逻辑在 exportUser.js（随弹窗加载）

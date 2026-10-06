@@ -1917,3 +1917,8 @@ footer .copy{
 		flex: 0 0 auto;
 	}
 }
+/* 用户管理：表头点击排序（用户ID / 用户名） —— 箭头由 main.js 的 updateUserSortUi() 在列表渲染后回填 */
+#user_list thead th.user-sort-th{cursor:pointer;-webkit-user-select:none;-moz-user-select:none;user-select:none;white-space:nowrap;}
+#user_list thead th.user-sort-th:hover{background-color:#f5f5f5;}
+#user_list thead th.user-sort-th .user-sort-arrow{margin-left:4px;color:#bbb;}
+#user_list thead th.user-sort-th .user-sort-arrow i{color:#337ab7;}

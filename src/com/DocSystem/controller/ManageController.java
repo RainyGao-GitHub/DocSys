@@ -2831,11 +2831,13 @@ public class ManageController extends BaseController{
 	}
 	/********** 获取用户列表 ***************/
 	@RequestMapping("/getUserList.do")
-	public void getUserList(String userName, Integer pageIndex, Integer pageSize, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void getUserList(String userName, Integer pageIndex, Integer pageSize, 
+			String sortField, String sortOrder,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** getUserList.do ***********************");
 
-		Log.debug("getUserList() searchWord:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize);
+		Log.debug("getUserList() searchWord:" + userName + " pageIndex:" + pageIndex + " pageSize:" + pageSize + " sort:" + sortField + " " + sortOrder);
 		ReturnAjax rt = new ReturnAjax();
 		User accessUser = adminAccessCheck(null, null, session, rt);
 		if(accessUser == null)
@@ -2857,7 +2859,7 @@ public class ManageController extends BaseController{
 		
 		//List <User> UserList = userService.geAllUsers();
 		QueryResult queryResult = new QueryResult();
-		List <User> UserList = getUserListOnPage(user, pageIndex, pageSize, queryResult);
+		List <User> UserList = getUserListOnPage(user, pageIndex, pageSize, sortField, sortOrder, queryResult);
 		
 		//TODO: 获取用户可访问网络配置
 		for(User tempUser : UserList)

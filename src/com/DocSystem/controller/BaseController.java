@@ -3211,7 +3211,13 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected List<User> getUserListOnPage(User user, Integer pageIndex, Integer pageSize, QueryResult queryResult) {
+		return getUserListOnPage(user, pageIndex, pageSize, null, null, queryResult);
+	}
+	
+	//用户列表分页查询：sortField/sortOrder 为排序（白名单，传 null 用默认「用户ID 降序」）
+	protected List<User> getUserListOnPage(User user, Integer pageIndex, Integer pageSize, String sortField, String sortOrder, QueryResult queryResult) {
 		HashMap<String, String> param = buildQueryParamForObj(user, pageIndex, pageSize);
+		addUserSearchAndSortParam(param, user, sortField, sortOrder);
 		
 		List <User> list = null;
 		if(user != null)
@@ -3231,7 +3237,13 @@ public class BaseController  extends BaseFunction{
 	}
 	
 	protected List<User> getUserList(User user) {
+		return getUserList(user, null, null);
+	}
+	
+	//用户列表查询（无分页，导出用户用）：排序参数同 getUserListOnPage，保证导出顺序与列表一致
+	protected List<User> getUserList(User user, String sortField, String sortOrder) {
 		HashMap<String, String> param = buildQueryParamForObj(user, null, null);
+		addUserSearchAndSortParam(param, user, sortField, sortOrder);
 		
 		List <User> list = null;
 		if(user != null)
@@ -3243,6 +3255,53 @@ public class BaseController  extends BaseFunction{
 			list = userService.getUserListWithParam(param);
 		}
 		return list;
+	}
+	
+	//用户搜索参与匹配的字段（必须与 UserMapper.xml 的 getCountWithParamLike/queryUserWithParamLike 一致）
+	private static final String[] USER_SEARCH_FIELDS = {"name", "realName", "nickName", "email", "tel"};
+	//用户列表排序白名单（可选值：字段 id/name × 方向 asc/desc）
+	private static final String UserSortField_Id = "id";
+	private static final String UserSortField_Name = "name";
+	private static final String UserSortOrder_Asc = "asc";
+	private static final String UserSortOrder_Desc = "desc";
+	
+	/*
+	 * 用户列表的「部分匹配」+「排序」参数：
+	 * 1) 部分匹配：把关键字包装成 %关键字%。**必须在 Java 侧拼 %**——SQL 里不能写 concat('%', #{name}, '%')，
+	 *    因为产品默认库是 SQLite（没有 CONCAT 函数），要保证 SQLite/MySQL 都能用。
+	 * 2) 排序：用户输入仅作为「选择」，经白名单转换后交给 mapper 的 <choose> 拼固定 ORDER BY 片段，
+	 *    不把用户输入直接拼进 SQL（避免注入）。
+	 */
+	protected void addUserSearchAndSortParam(HashMap<String, String> param, User user, String sortField, String sortOrder) {
+		if(param == null)
+		{
+			return;
+		}
+		
+		if(user != null)
+		{
+			for(String field : USER_SEARCH_FIELDS)
+			{
+				String value = param.get(field);
+				if(value != null && value.isEmpty() == false)
+				{
+					param.put(field, "%" + value + "%");
+				}
+			}
+		}
+		
+		String field = UserSortField_Id;
+		if(UserSortField_Name.equalsIgnoreCase(sortField))
+		{
+			field = UserSortField_Name;
+		}
+		String order = UserSortOrder_Desc;
+		if(UserSortOrder_Asc.equalsIgnoreCase(sortOrder))
+		{
+			order = UserSortOrder_Asc;
+		}
+		param.put("sortField", field);
+		param.put("sortOrder", order);
 	}
 	
 	public boolean isUserNameUsed(String name)
