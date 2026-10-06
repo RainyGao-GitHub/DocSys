@@ -130,21 +130,17 @@
 删除→确认框后行消失、服务端仅剩 1 台、**0 个提示弹窗** ✅；服务端拒绝（其他设置用了内置键名）→面板保持打开 + 红字错误 + 列表回读为服务端状态 ✅；
 页面仅剩「新增服务器」按钮、`help-block` 计数 = 0 ✅；dev 环境再次还原为空 ✅
 
-## 追加产出：配置地图文档（2026-10-04）
+## 追加产出：参数存储策略文档（2026-10-06）
 
-用户提出「改造参数设置时甚至忘了存储方式与工作机制，需要一份说明文档」→ 新增
-**`devDocs/参数配置存储与工作机制说明.md`**（已从源码逐项核对，关键处带 `文件:行号`）：
+用户提出「改造参数设置时甚至忘了存储方式与工作机制，需要一份说明文档」→ 产出
+**`devDocs/参数存储策略与参数清单.md`**（按用户定的结构：**一、存储策略** / **二、参数清单** / 附：实现细节与排障）：
 
-- §0 三套机制总览（ini / `system_setting` / `agent_config`）+ 运行期镜像
-- §1 ini 细节：**两个副本读法不同**（`ReadProperties.read`=classes、`getValue(绝对路径)`=ini）、启动期静态块读取的 9 项、
-  请求期读取的 8 个 getter、`setSystemInfo.do` 的「classes→ini→改→回拷 classes」写法、**参数名↔ini 键名不一致清单**
-  （`systemLogStorePath`→`SystemLogStorePath`、`indexDBStorePath`→`DBStorePath`、`clusterServerUrl`→`serverUrl`…）、版本门禁
-- §2 `system_setting`：表结构/API/60s TTL 缓存、**三种使用模式**（a 表为唯一权威源 / b DB JSON 权威+ini 镜像 / c 通用键值）、各页键前缀
-- §3 `agent_config`：表结构 + 5 类键与消费方
-- §4 启动顺序图（静态块读 ini → `triggerAgentInit` → `triggerSystemSettingInit` 各 store 播种/覆盖）
-- §5 **运行期「谁读什么」总表**、§6 集群与一致性、§7 备份覆盖范围
-- §8 新增配置项的**决策树 + 检查清单**、§9 实测踩坑 13 条、§10 现有配置项清单
-- `CLAUDE.md` 会话恢复协议新增第 4 条指针（动配置相关功能前必读）
+- **一、存储策略**：三个存储位置（`jdbc.properties` 框架层须重启 + **启动脚本在启 Tomcat 前把 ini 的 jdbc.properties 拷到 classes（`docsys_start.bat:31-40`，`docsys_restart.bat:55`/`docsys_start_hidden.bat:26` 都 call 它）** + 应用内 checksum 兜底（没走脚本时用，会写 needRestart）；`docSysConfig.properties` 业务参数可立即生效 + 为何不直接改 classes（在线升级会替换整个 DocSystem 目录）；数据库 `system_setting`：复杂结构入库、但 per-node 参数（日志调试开关、集群设置）不得入库）；
+  含 5 条硬性约束，防止后人随意改代码；并回答了「改文件会不会触发 Tomcat 重启」（本部署未开 `reloadable`、只监听 web.xml → 不会）与「换 SpringBoot 是否能免重启」（能少写代码，但仍需主动 refresh，不是自动重读文件）。
+- **二、参数清单**：按 A 库/system_setting、B 库/agent_config、C `docSysConfig.properties`（含 ini 键名别名与三种生效方式）、D ini 目录独立文件、E `jdbc.properties`\；
+  并单列 **6 处「同类存储但处理方式不一致」**（`ldapConfig`/`llmConfig` 双轨、`mail.*`/`sms.*` 旧键仅首播、三种生效时机、日志配置在 ini 独立文件、键名别名、checksum 同步只覆盖两个文件）。
+- 附：两个副本的读法与同步方向、8 条实测坑、启动顺序/集群/备份要点。
+- `CLAUDE.md` 会话恢复协议第 4 条指针已同步更新为新文件名与要点。
 
 ## 生效约束
 
