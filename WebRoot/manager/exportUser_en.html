@@ -1,0 +1,28 @@
+<div class="form-horizontal">
+  <div class="form-group">
+    <label class="control-label col-lg-3">Scope</label>
+    <div class="col-lg-9" style="padding-top:7px;color:#888;">
+      Exports <b>all</b> users matching the current search condition (not only the current page).
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="control-label col-lg-3">Format</label>
+    <div class="col-lg-9">
+      <button type="button" class="btn btn-success" onclick="exportUserList('csv')">Export CSV</button>
+      <button type="button" class="btn btn-success" style="margin-left:8px;" onclick="exportUserList('xlsx')">Export Excel</button>
+      <div id="exportUserProgress" style="margin-top:8px;color:#888;"></div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="control-label col-lg-3">Note</label>
+    <div class="col-lg-9" style="padding-top:7px;color:#888;line-height:20px;">
+      Columns: User ID, User Name, Real Name, Nick Name, Mobile, Email, Role, Create Type, Create Time, Last Login Time, Last Login IP, Last Login City, Network Settings, Intro.<br>
+      CSV: comma separated (UTF-8 with BOM) for scripting; Excel: mobile/ID are stored as text so Excel will not turn them into scientific notation.<br>
+      The exported file can be imported directly by "Import".
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" src="exportUser.js"></script>

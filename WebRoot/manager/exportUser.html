@@ -1,0 +1,28 @@
+<div class="form-horizontal">
+  <div class="form-group">
+    <label class="control-label col-lg-3">导出范围</label>
+    <div class="col-lg-9" style="padding-top:7px;color:#888;">
+      按当前搜索条件导出<b>全部</b>用户（不是当前页）。
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="control-label col-lg-3">选择格式</label>
+    <div class="col-lg-9">
+      <button type="button" class="btn btn-success" onclick="exportUserList('csv')">导出 CSV</button>
+      <button type="button" class="btn btn-success" style="margin-left:8px;" onclick="exportUserList('xlsx')">导出 Excel</button>
+      <div id="exportUserProgress" style="margin-top:8px;color:#888;"></div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="control-label col-lg-3">说明</label>
+    <div class="col-lg-9" style="padding-top:7px;color:#888;line-height:20px;">
+      列表：用户ID、用户名、名字、昵称、手机、邮箱、角色、创建方式、创建时间、最后登录时间、最后登录IP、最后登录城市、网络限制、备注。<br>
+      CSV：逗号分隔（UTF-8，带 BOM），适合脚本或批量处理；Excel：手机号、用户ID 等按文本保存，不会被 Excel 转成科学计数法。<br>
+      导出的文件可直接用于「批量导入」。
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" src="exportUser.js"></script>

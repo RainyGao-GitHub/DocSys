@@ -6739,49 +6739,18 @@ function UserListDisplay(list, pageIndex, pageSize, callback)
 	$Func.render($("#container"),"user" + langExt,{"list":list}, callback);
 }
 
-function exportUserConfirm()
+//导出用户：弹窗选格式（CSV / Excel），实际导出逻辑在 exportUser.js（随弹窗加载）
+function showExportUserPanel()
 {
-	console.log("exportUserConfirm userSearchWord:" + userSearchWord);
-	qiao.bs.confirm({
-		id: "exportUserConfirmDialog",
-        title: _Lang("导出用户"),
-        msg: _Lang("是否导出用户？"),
-        okbtn: _Lang("导出"),
-        qubtn: _Lang("取消"),
-    },function () {
-    	exportUserList(userSearchWord);
-    	return true;   
-    });
-}
-
-function exportUserList(userSearchWord){
-	console.log("exportUserList userSearchWord:" + userSearchWord);
-	
-	$.ajax({
-        url : "/DocSystem/Bussiness/exportUserList.do",
-        type : "post",
-        dataType : "json",
-        data : {
-            // 新增用户名搜索条件
-            searchWord: userSearchWord,
-        },
-        success : function (ret) {
-        	console.log("exportUserList ret",ret);
-            if( "ok" == ret.status )
-            {
-        	    console.log("exportUserList Ok");        	   		
-            	window.location.href = ret.data;
-            }
-            else 
-            {
-                console.log(ret.msgInfo);
-	        	showErrorMessage(_Lang("导出用户列表失败", ":", ret.msgInfo));
-            }
-        },
-        error : function () {
-        	showErrorMessage(_Lang("导出用户列表失败", ":", "服务器异常"));
-        }
-    });
+	console.log("showExportUserPanel userSearchWord:" + userSearchWord);
+	qiao.bs.dialog({
+		id: 'exportUser',
+		url: 'exportUser' + langExt + '.html',
+		title: _Lang('导出用户'),
+		msg: _Lang('页面正在加载，请稍等...'),
+		foot: false,
+		big: false
+	});
 }
 
 

@@ -131,8 +131,11 @@ public class UserListImporter {
 		FIELD_LABELS.put(FIELD_TYPE, "角色");
 
 		// 账号（必填）
+		// 注意：别名表里**不能**放 "userid" —— 导出文件的英文列头 "User ID" 归一化后就是 userid，
+		// 若把 userid 当账号别名，英文导出文件回灌时「账号」会被映射到数字 ID 列（实测踩过）。
+		// 中文「用户ID」归一化是「用户id」，与本表不冲突，可安全忽略。
 		addAlias(ALIAS_PRIMARY, FIELD_NAME, "用户名", "帐号", "账号", "用户", "登录名", "登录账号", "登录帐号", "登录用户",
-				"name", "username", "user", "loginname", "login", "loginid", "account", "useraccount", "userid", "usercode", "code");
+				"name", "username", "user", "loginname", "login", "loginid", "account", "useraccount", "usercode", "code");
 		// 密码（可选）
 		addAlias(ALIAS_PRIMARY, FIELD_PWD, "密码", "登录密码", "初始密码", "用户密码", "passwd", "password", "pwd", "pass");
 		// 名字
@@ -335,7 +338,9 @@ public class UserListImporter {
 			return USER_TYPE_ADMIN;
 		}
 		if ("2".equals(key) || "超级管理员".equals(key) || "超管".equals(key) || "系统管理员".equals(key)
-				|| "superadmin".equals(key) || "super".equals(key) || "root".equals(key)) {
+				|| "superadmin".equals(key) || "super".equals(key) || "root".equals(key)
+				//兼容导出文件的英文角色文案（导出写的是 "Super Administrator"，归一化后是 superadministrator）
+				|| "superadministrator".equals(key) || "superuser".equals(key)) {
 			return USER_TYPE_SUPER_ADMIN;
 		}
 		return Integer.valueOf(-1);
