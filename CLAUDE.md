@@ -4,16 +4,18 @@
 
 上下文压缩会丢失关键信息（当前任务、参考计划、当前进展、生效约束）。以下步骤写入本文件以便压缩后自动重新触发——本文件每个会话都会被重新注入。
 
-1. **读当前工作卡**：`DevAgentControl/CURRENT_STATE_日志导出.md`（「日志管理」加导出 + 顺手修调试日志下载，2026-10-06 建立，**已实施，E2E 验证通过，待用户确认提交**）。工作卡是**当前任务**相关信息的唯一定义处：必读上下文、参考计划与上下文、当前进展、生效约束（含是否需要先提交）。
-   - 该卡要点：①「日志管理」= **操作日志**，存 **Lucene 按月索引** `<SystemLogStorePath>/SystemLog-<年>-<月>/`（**per-node**，导出的是本机日志）；② 新增 `POST /Manage/exportSystemLogList.do`：服务端**流式写 CSV**（UTF-8+BOM、列头跟随 `lang`、`time` 倒序、全部 17 字段、超 10 万条或空结果回 JSON 错误、不记系统日志）；前端 `tmpl/systemLog{,_en}.html` 加「导出」按钮 + `main.js` 的 `exportSystemLog()`（`fetch` 按 Content-Type 分流 + Blob 下载）；③ 顺手修掉「调试日志下载 500」：原 `downloadLogFile.do` 返回的是 `/DocSystem/Doc/downloadDoc.do?...`（日志不在仓库里→缺上下文→失败），改为返回新增的 `streamLogFile.do`（白名单 key + 字节流回写），前端调用契约未变；④ `filterSystemLogsBySearchWord()` 被列表与导出共用，避免两侧口径漂移；⑤ 验证期又修两处：前端 fetch 补 `X-Requested-With`（否则未登录时被 `MyInterceptor` 白名单外的 302 重定向成 404 HTML）＋ 判断改正向 `text/csv`；`streamLogFile.do` 去掉自身调试日志（原会写进正在下载的日志）。方案文档 `devDocs/日志导出方案.md`（§5 裁定 / §6 实施记录 + 验证结果/坑）。
-   - 该卡**遗留（待裁定/待办）**：服务端错误文案仍是中文（英文页同）；集群下只导出**本机**日志；超 10 万条分支本机数据量不足未实测。
+1. **读当前工作卡**：当前**无进行中任务**（「日志管理」日志导出 + 调试日志下载修复 已于 2026-10-06 收尾并提交 `06505f8e0`）。开工前先看下面 3 张**挂起卡**——均为「已调研/已裁定暂不处理」，**未获新裁定前不要改代码**：
+   - 挂起卡 `CURRENT_STATE_系统日志显示用户名.md`：日志「用户」列只存账号（`BaseFunction:5835-5841` 的 `log.userName = user.getName()`），客户希望显示「名字/昵称」；A 写入时快照（要加索引字段，老日志补不了）/ B 读取时按 `userId` 查库补名（要兜底已删除用户、`userId="null"` 的失败登录、LDAP 无 realName），**用户 2026-10-06 裁定暂不改**。
+   - 挂起卡 `CURRENT_STATE_agent工具技能规模化.md`（同在 `DevAgentControl/`）：P0 调研+方案已完成并提交 `6fbb9e7fd`，**实施等用户裁定** → 未获裁定前不要开工改代码。
+   - 挂起卡 `CURRENT_STATE_前端静态资源缓存.md`（同在 `DevAgentControl/`）：静态资源响应无 `Cache-Control`（只有 ETag/Last-Modified）→ 改 JS/CSS/模板必须清浏览器缓存；方案 A（Filter 加 `no-cache`，改完 F5 即生效）代价是每个静态文件多一次 304 条件请求，**用户 2026-10-06 裁定暂不处理** → 未获新裁定前不要实施。
+   - 前卡 `CURRENT_STATE_日志导出.md` **已收尾**（「日志管理」加导出 + 顺手修调试日志下载；已提交 `06505f8e0`），已移入 `DevAgentControl/已完成/`，保留供查询。该卡要点（压缩后仍有用的上下文）：
+     - ①「日志管理」= **操作日志**，存 **Lucene 按月索引** `<SystemLogStorePath>/SystemLog-<年>-<月>/`（**per-node**，导出的是本机日志）；② 新增 `POST /Manage/exportSystemLogList.do`：服务端**流式写 CSV**（UTF-8+BOM、列头跟随 `lang`、`time` 倒序、全 17 字段、超 10 万条或空结果回 JSON 错误、不记系统日志）；前端 `tmpl/systemLog{,_en}.html` 加「导出」按钮 + `main.js` 的 `exportSystemLog()`（`fetch` 按 Content-Type 分流 + Blob 下载）；③ 顺手修掉「调试日志下载 500」：原 `downloadLogFile.do` 返回的是 `/DocSystem/Doc/downloadDoc.do?...`（日志不在仓库里→缺上下文→失败），改为返回新增的 `streamLogFile.do`（白名单 key + 字节流回写），前端契约未变；④ `filterSystemLogsBySearchWord()` 被列表与导出共用，避免两侧口径漂移；⑤ 验证期又修两处：前端 fetch 补 `X-Requested-With`（否则未登录时被 `MyInterceptor` 白名单外的 302 重定向成 404 HTML）＋ 判断改正向 `text/csv`；`streamLogFile.do` 去掉自身调试日志（原会写进正在下载的日志）。方案文档 `devDocs/日志导出方案.md`（§5 裁定 / §6 实施记录 + 验证结果/坑）。
+     - 该卡**遗留（待裁定/待办）**：服务端错误文案仍是中文（英文页同）；集群下只导出**本机**日志；超 10 万条分支本机数据量不足未实测。
    - 前卡 `CURRENT_STATE_LDAP设置.md` **已收尾**（LDAP设置改多服务器列表 + 后台级保存/取消去掉改为即时落盘 + 调试日志下载修复以外的 LDAP 部分；已提交 `37596dda9`），已移入 `DevAgentControl/已完成/`，保留供查询。
    - 前卡 `CURRENT_STATE_AI接入设置.md` **已收尾**（AI接入设置改多模型列表：6 轮 UI 反馈 + 标签对齐，共 5 项裁定全部实现；已提交 `1facc4460`），已移入 `DevAgentControl/已完成/`，保留供查询。
    - 前卡 `CURRENT_STATE_日志在线查看.md` **已收尾**（日志在线查看 + 调试日志搬移/布局/拆页/菜单优化/10 页 UI 打磨；已提交 `1ccaa57ee`、`a7012b16f`、`d01307d8c`、`b95a0a19c`、`11b1a83f9`、`f8727cd03`、`d6b7eff85`、`548b6da49`），已移入 `DevAgentControl/已完成/`，保留供查询。
    - 前卡 `CURRENT_STATE_用户使用统计修复.md` **已收尾**（用户维度统计 + 会话推断时长 + 活动上报；已提交主仓库 `677952484`），已移入 `DevAgentControl/已完成/`，保留供查询。
    - 前卡 `CURRENT_STATE_文件分享通知异步化.md` **已收尾**（通知邮件异步化：`addDocShare.do` 响应 6000ms→805ms、弹窗内容 6553ms→857ms；已提交 websocket 仓库 `edb88511` / 主仓库 `bcca467c4`），已移入 `DevAgentControl/已完成/`。
-   - 挂起卡 `CURRENT_STATE_agent工具技能规模化.md`（同在 `DevAgentControl/`）：P0 调研+方案已完成并提交 `6fbb9e7fd`，**实施等用户裁定** → 未获裁定前不要开工改代码。
-   - 挂起卡 `CURRENT_STATE_前端静态资源缓存.md`（同在 `DevAgentControl/`）：静态资源响应无 `Cache-Control`（只有 ETag/Last-Modified）→ 改 JS/CSS/模板必须清浏览器缓存；方案 A（Filter 加 `no-cache`，改完 F5 即生效）代价是每个静态文件多一次 304 条件请求，**用户 2026-10-06 裁定暂不处理** → 未获新裁定前不要实施。
    - 前卡 `CURRENT_STATE_agent产物链接.md` **已收尾**（产物链接 + 多选 @ + 「清空」防误操作，三项均验证并已提交），保留供查询。
    - 前卡 `CURRENT_STATE_agentOffice读写选型.md` **已收尾**（P1 读 / P2 新建 / P2 修改全部完成并验证），保留供查询。
    - 更早的卡 `CURRENT_STATE_agent任务续接与轮数上限.md` **已收尾**（P4 挂起），保留供查询。
