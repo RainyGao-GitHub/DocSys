@@ -1,6 +1,8 @@
 //用户批量导入（用户管理 → 批量导入）
 //文件名与结果只在本次弹窗生命周期内使用，不进列表渲染，因此不需要跨渲染保持状态
 var gImportUserFileName = "";
+var gImportUserResult = null;		//服务端返回的完整结果（用于下载明细）
+var gImportUserDetailItems = [];	//面板里展示的明细（失败在前、跳过在后）
 
 //选择文件（隐藏的 input 在 main.html 里，与其它导入保持一致）
 function importUserSelectFile()
@@ -81,6 +83,7 @@ function startImportUser()
 	var file = input.files[0];
 
 	$("#importUserResultGroup").hide();
+	$("#btn_exportImportUserDetail").hide();
 	$("#importUserResultBody").empty();
 	$("#importUserResultSummary").text("");
 	$("#btn_importUser").attr("disabled", true);
@@ -166,7 +169,63 @@ function importUserResultDisplay(data)
 		body.append(tr);
 	}
 
+	//保留结果供「下载失败明细」用（明细上限与导入行数上限一致，服务端不会截断）
+	gImportUserResult = data;
+	gImportUserDetailItems = items;
+	$("#btn_exportImportUserDetail").toggle(items.length > 0);
+
 	$("#importUserResultGroup").show();
 
 	showErrorMessage(summary);
+}
+
+//下载明细 CSV（失败 + 跳过；UTF-8 + BOM，标准转义）
+function exportImportUserDetailCsv()
+{
+	var items = gImportUserDetailItems || [];
+	if(items.length == 0)
+	{
+		showErrorMessage(_Lang("没有需要下载的明细"));
+		return;
+	}
+
+	var lines = [];
+	lines.push(importUserCsvLine([_Lang("行号"), _Lang("状态"), _Lang("账号"), _Lang("原因")]));
+	for(var i=0; i<items.length; i++)
+	{
+		lines.push(importUserCsvLine([items[i].row, items[i].status, items[i].name, items[i].reason]));
+	}
+
+	//\ufeff(BOM) 让 Excel 双击打开不乱码
+	var blob = new Blob(["\ufeff" + lines.join("\r\n")], {type : "text/csv;charset=utf-8"});
+	var now = new Date();
+	var fileName = "userImportResult_" + now.getFullYear() + importUserPad2(now.getMonth()+1) + importUserPad2(now.getDate())
+		+ importUserPad2(now.getHours()) + importUserPad2(now.getMinutes()) + importUserPad2(now.getSeconds()) + ".csv";
+	downloadBlobAsFile(blob, fileName);	//复用 main.js 的工具函数
+}
+
+//标准 CSV 转义：含 , " CR LF 时用双引号包裹，内部 " 变 ""
+function importUserCsvField(value)
+{
+	var v = (value == null) ? "" : String(value);
+	if(v.indexOf(",") >= 0 || v.indexOf("\"") >= 0 || v.indexOf("\r") >= 0 || v.indexOf("\n") >= 0)
+	{
+		return "\"" + v.replace(/\"/g, "\"\"") + "\"";
+	}
+	return v;
+}
+
+function importUserCsvLine(values)
+{
+	var out = [];
+	for(var i=0; i<values.length; i++)
+	{
+		out.push(importUserCsvField(values[i]));
+	}
+	return out.join(",");
+}
+
+function importUserPad2(n)
+{
+	return (n < 10 ? "0" : "") + n;
 }

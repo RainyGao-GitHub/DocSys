@@ -40,8 +40,9 @@ public class UserListImporter {
 	public static final long MAX_FILE_SIZE = 5 * 1024 * 1024L;
 	/** 数据行数上限（不表头，D7） */
 	public static final int MAX_ROWS = 5000;
-	/** 结果明细（失败/跳过）单类最多回传的条数，超出只报总数 */
-	public static final int MAX_DETAIL_ROWS = 500;
+	/** 结果明细（失败/跳过）单类最多回传的条数
+	 *  取与行数上限一致 → 明细不会被截断（全量明细可下载）；响应体积上界约几百 KB，可接受 */
+	public static final int MAX_DETAIL_ROWS = MAX_ROWS;
 
 	// 与 user 表 DDL 一致（BaseController 建表语句），导入前必须校验，否则严格模式报错/非严格模式静默截断
 	public static final int MAX_LEN_NAME = 40;

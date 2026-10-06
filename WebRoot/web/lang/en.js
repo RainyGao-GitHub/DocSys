@@ -128,6 +128,8 @@ function lang(str)
 		"状态" : "Status",
 		"下载失败" : "Download failed",
 		"服务器返回异常" : "Invalid server response",
+		"下载失败明细" : "Download failed rows",
+		"没有需要下载的明细" : "No details to download",
 		"登录状态可能已失效，请重新登录后再试" : "Your session may have expired, please sign in again",
 		"导入" : "Import",
 		"备份" : "Backup",
