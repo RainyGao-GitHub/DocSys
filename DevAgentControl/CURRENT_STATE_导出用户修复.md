@@ -42,6 +42,16 @@
 - ✅ E2E 全通过（见方案文档 §5）：CSV 中文/英文均 14 列无 `\t`；xlsx POI 读回：冻结/加粗/列宽/**56 个数据单元格全为 STRING**；转义往返（`张三,李四`/`a"b` 导出→导入字段无损）；**导出的文件（中/英 CSV 与 xlsx）直接回灌导入全部跳过 4/4**；真实页面两个按钮都能触发下载
 - 验证中发现并修：① `User ID` 与导入别名 `userid` 冲突 ② 导出角色文案 `Super Administrator` 导入不识别（导致英文回灌 2 条失败）③ 同秒导出同名覆盖 → 加毫秒 ④ 空结果文案
 
+## 附：导入失败明细下载（2026-10-06 用户追加要求，已实现）
+
+原「批量导入」的 D9 可选项，本次追加实现（**纯前端**，不新增接口）：
+
+- `UserListImporter.MAX_DETAIL_ROWS`：`500` → `MAX_ROWS`(5000) → 明细**不再截断**（行数上限即 5000，超限在文件级报错），下载即全量，响应体积上界约几百 KB
+- `importUser{,_en}.html`：结果区加「下载失败明细 / Download failed rows」按钮（无明细时隐藏）+ 提示文案更新
+- `importUser.js`：`exportImportUserDetailCsv()`（表头 `行号,状态,账号,原因`，跟随界面语言；含 `, " CR LF` 时标准转义；UTF-8+BOM；文件名 `userImportResult_<时间戳>.csv`；复用 `downloadBlobAsFile()`）
+- `en.js`：新增 2 条词条
+- **验证**：失败用例下载 298B/3 行、跳过用例 194B/4 行；BOM 字节 `EF BB BF` ✅；转义单元 `a,b`→`"a,b"`、`a"b`→`"a""b"` ✅；英文页按钮与表头均为英文 ✅；测试期间新建的 `okuser` 已清理（用户数回到 Admin/test/test2/wangwu）
+
 ## 未提交改动（等用户确认）
 
 - **websocket 仓库**：`src/com/DocSystem/websocket/BussinessController.java`
