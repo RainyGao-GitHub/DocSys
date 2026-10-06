@@ -379,13 +379,13 @@ function showContentPage(curPath) {
             title = _Lang("证书管理");
             $("#nav li[data-eb-params=license]>a").addClass("open");
             licenseSearchWord = "";
-            showLicenseList();
+            initLicenseTimeRange();		//默认近3年（与服务端原默认窗口一致），可点时间筛选按钮改
             break;
         case "order":
             title = _Lang("订单管理");
             $("#nav li[data-eb-params=order]>a").addClass("open");
             orderSearchWord = "";
-            showOrderList();
+            initOrderTimeRange();		//默认近1年（与服务端原默认窗口一致），可点时间筛选按钮改
             break;
         case "agent":
         case "systemLlm":
@@ -6262,25 +6262,132 @@ function formatDuration(millis) {
 }
 
 var orderSearchWord = "";
+//订单管理：时间范围筛选（默认近1年，与服务端原默认窗口一致）
+var orderStartTime = 0;
+var orderEndTime = 0;
+var orderActiveRange = "last1year";
+
+function clearOrderQuickButtons() {
+    orderActiveRange = "custom";
+    $("#order-btn-last30days, #order-btn-last1year, #order-btn-last3years, #order-btn-all").removeClass("btn-primary").addClass("btn-default");
+}
+
+function highlightOrderButton() {
+    //模板渲染后恢复按钮高亮和日期值
+    $("#order-btn-last30days, #order-btn-last1year, #order-btn-last3years, #order-btn-all").removeClass("btn-primary").addClass("btn-default");
+    if(orderActiveRange != "custom") {
+        $("#order-btn-" + orderActiveRange).removeClass("btn-default").addClass("btn-primary");
+    }
+    if(orderActiveRange == "all") {
+        //「全部」不显示具体日期，避免出现 1970-01-01
+        $("#orderStartDate").val("");
+        $("#orderEndDate").val("");
+    } else {
+        $("#orderStartDate").val(formatDateStr(new Date(orderStartTime)));
+        $("#orderEndDate").val(formatDateStr(new Date(orderEndTime)));
+    }
+    $("#search-order").val(orderSearchWord);
+}
+
+function initOrderTimeRange() {
+    setOrderTimeRange("last1year");
+}
+
+function setOrderTimeRange(range) {
+    orderActiveRange = range;
+    var now = new Date();
+    var startDate, endDate;
+
+    //先高亮（渲染前），渲染后 OrderListDisplay 会重新调 highlightOrderButton
+    highlightOrderButton();
+
+    switch(range) {
+        case "last30days":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29, 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "last1year":
+            startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "last3years":
+            startDate = new Date(now.getFullYear() - 3, now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "all":
+            //startTime=0 = 不限制起始时间（服务端只在参数为 null 时才用默认窗口）
+            startDate = new Date(0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "custom":
+            var startStr = $("#orderStartDate").val();
+            var endStr = $("#orderEndDate").val();
+            if(!startStr || !endStr) {
+                showErrorMessage(_Lang("请选择开始和结束日期"));
+                return;
+            }
+            startDate = new Date(startStr + "T00:00:00");
+            endDate = new Date(endStr + "T23:59:59");
+            break;
+        default:
+            return;
+    }
+    orderStartTime = startDate.getTime();
+    orderEndTime = endDate.getTime();
+
+    highlightOrderButton();
+    showOrderList();
+}
+
 function searchOrder()
 {
-	orderSearchWord = $("#search-order").val();		
-	showOrderList();		
+	orderSearchWord = $("#search-order").val();
+
+	//检查是否修改了自定义日期（「全部」时日期框为空，保持不变）
+	var startStr = $("#orderStartDate").val();
+	var endStr = $("#orderEndDate").val();
+	var hasStart = (startStr && startStr.length > 0);
+	var hasEnd = (endStr && endStr.length > 0);
+	if(hasStart || hasEnd)
+	{
+		//只要动了日期输入框，必须开始和结束日期都指定
+		if(!hasStart || !hasEnd)
+		{
+			showErrorMessage(_Lang("请选择开始和结束日期"));
+			return;
+		}
+		var newStart = new Date(startStr + "T00:00:00").getTime();
+		var newEnd = new Date(endStr + "T23:59:59").getTime();
+		if(newStart != orderStartTime || newEnd != orderEndTime)
+		{
+			orderStartTime = newStart;
+			orderEndTime = newEnd;
+			orderActiveRange = "custom";
+		}
+	}
+	showOrderList();
 }
 function showOrderList(pageIndex){
 	var pageSize = gPageSize;
 	pageIndex = pageIndex ? pageIndex : 0;
 	gPageIndex = pageIndex;
 
+	//时间范围未初始化时不传（服务端用默认窗口）；「全部」时 startTime=0 是有效值
+	var data = {
+        searchWord: orderSearchWord,
+    	pageIndex: pageIndex,
+    	pageSize: pageSize
+	};
+	if(orderEndTime > 0) {
+		data.startTime = orderStartTime;
+		data.endTime = orderEndTime;
+	}
+
 	$.ajax({
         url : "/DocSystem/pay/getOrderList.do",
         type : "post",
         dataType : "json",
-        data : {
-            searchWord: orderSearchWord,
-        	pageIndex: pageIndex,
-        	pageSize: pageSize
-        },
+        data : data,
         success : function (ret) {
         	console.log("getOrderList ret",ret);
             if( "ok" == ret.status )
@@ -6340,7 +6447,10 @@ function OrderListDisplay(list, pageIndex, pageSize, callback)
 		node.formatedPayType = formatePayType(node);
 		node.showRefund = needShowRefundBtn(node);
     }		
-	$Func.render($("#container"),"order" + langExt,{"list":list}, callback);
+	$Func.render($("#container"),"order" + langExt,{"list":list}, function(){
+		highlightOrderButton();		//模板渲染会清空筛选控件状态，渲染后恢复
+		if(callback) callback();
+	});
 }
 
 function needShowRefundBtn(node)
@@ -6438,9 +6548,109 @@ function refundOrder(orderNo, pageIndex, index){
 }
 
 var licenseSearchWord = "";
+//证书管理：时间范围筛选（默认近3年，与服务端原默认窗口一致）
+var licenseStartTime = 0;
+var licenseEndTime = 0;
+var licenseActiveRange = "last3years";
+
+function clearLicenseQuickButtons() {
+    licenseActiveRange = "custom";
+    $("#license-btn-last30days, #license-btn-last1year, #license-btn-last3years, #license-btn-all").removeClass("btn-primary").addClass("btn-default");
+}
+
+function highlightLicenseButton() {
+    //模板渲染后恢复按钮高亮和日期值
+    $("#license-btn-last30days, #license-btn-last1year, #license-btn-last3years, #license-btn-all").removeClass("btn-primary").addClass("btn-default");
+    if(licenseActiveRange != "custom") {
+        $("#license-btn-" + licenseActiveRange).removeClass("btn-default").addClass("btn-primary");
+    }
+    if(licenseActiveRange == "all") {
+        //「全部」不显示具体日期，避免出现 1970-01-01
+        $("#licenseStartDate").val("");
+        $("#licenseEndDate").val("");
+    } else {
+        $("#licenseStartDate").val(formatDateStr(new Date(licenseStartTime)));
+        $("#licenseEndDate").val(formatDateStr(new Date(licenseEndTime)));
+    }
+    $("#search-license").val(licenseSearchWord);
+}
+
+function initLicenseTimeRange() {
+    setLicenseTimeRange("last3years");
+}
+
+function setLicenseTimeRange(range) {
+    licenseActiveRange = range;
+    var now = new Date();
+    var startDate, endDate;
+
+    //先高亮（渲染前），渲染后 LicenseListDisplay 会重新调 highlightLicenseButton
+    highlightLicenseButton();
+
+    switch(range) {
+        case "last30days":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29, 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "last1year":
+            startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "last3years":
+            startDate = new Date(now.getFullYear() - 3, now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "all":
+            //startTime=0 = 不限制起始时间（服务端只在参数为 null 时才用默认窗口）
+            startDate = new Date(0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            break;
+        case "custom":
+            var startStr = $("#licenseStartDate").val();
+            var endStr = $("#licenseEndDate").val();
+            if(!startStr || !endStr) {
+                showErrorMessage(_Lang("请选择开始和结束日期"));
+                return;
+            }
+            startDate = new Date(startStr + "T00:00:00");
+            endDate = new Date(endStr + "T23:59:59");
+            break;
+        default:
+            return;
+    }
+    licenseStartTime = startDate.getTime();
+    licenseEndTime = endDate.getTime();
+
+    highlightLicenseButton();
+    showLicenseList();
+}
+
 function searchLicense()
 {
 	licenseSearchWord = $("#search-license").val();
+
+	//检查是否修改了自定义日期（「全部」时日期框为空，保持不变）
+	var startStr = $("#licenseStartDate").val();
+	var endStr = $("#licenseEndDate").val();
+	var hasStart = (startStr && startStr.length > 0);
+	var hasEnd = (endStr && endStr.length > 0);
+	if(hasStart || hasEnd)
+	{
+		//只要动了日期输入框，必须开始和结束日期都指定
+		if(!hasStart || !hasEnd)
+		{
+			showErrorMessage(_Lang("请选择开始和结束日期"));
+			return;
+		}
+		var newStart = new Date(startStr + "T00:00:00").getTime();
+		var newEnd = new Date(endStr + "T23:59:59").getTime();
+		if(newStart != licenseStartTime || newEnd != licenseEndTime)
+		{
+			licenseStartTime = newStart;
+			licenseEndTime = newEnd;
+			licenseActiveRange = "custom";
+		}
+	}
 	showLicenseList();
 }
 
@@ -6450,15 +6660,22 @@ function showLicenseList(pageIndex){
 	pageIndex = pageIndex ? pageIndex : 0;
 	gPageIndex = pageIndex;
 	
+	//时间范围未初始化时不传（服务端用默认窗口）；「全部」时 startTime=0 是有效值
+	var data = {
+        searchWord: licenseSearchWord,
+    	pageIndex: pageIndex,
+    	pageSize: pageSize
+	};
+	if(licenseEndTime > 0) {
+		data.startTime = licenseStartTime;
+		data.endTime = licenseEndTime;
+	}
+
 	$.ajax({
         url : "/DocSystem/Sales/getLicenseList.do",
         type : "post",
         dataType : "json",
-        data : {
-            searchWord: licenseSearchWord,
-        	pageIndex: pageIndex,
-        	pageSize: pageSize
-        },
+        data : data,
         success : function (ret) {
         	console.log("getLicenseList ret",ret);
             if( "ok" == ret.status )
@@ -6535,7 +6752,10 @@ function LicenseListDisplay(list, pageIndex, pageSize, callback)
 			node.formatedInstallInfo = "已安装" + node.installedCount + "次, [" + node.installedMacList + "]";
 		}
     }		
-	$Func.render($("#container"),"license" + langExt,{"list":list}, callback);
+	$Func.render($("#container"),"license" + langExt,{"list":list}, function(){
+		highlightLicenseButton();		//模板渲染会清空筛选控件状态，渲染后恢复
+		if(callback) callback();
+	});
 }
 
 function downloadLicenseConfirm(id)

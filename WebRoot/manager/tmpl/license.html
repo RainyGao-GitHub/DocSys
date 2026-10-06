@@ -7,6 +7,17 @@
                   <div class="form-inline">
                       <button onclick="showAddLicensePanel()" class="btn btn-md btn-success examine_ban">新增证书</button>
                       <button onclick="importLicense()" class="btn btn-md btn-success examine_ban">导入证书</button>
+                      <div class="form-group" style="margin-left:10px;">
+                          <button onclick="setLicenseTimeRange('last30days')" id="license-btn-last30days" class="btn btn-sm btn-default">近30天</button>
+                          <button onclick="setLicenseTimeRange('last1year')" id="license-btn-last1year" class="btn btn-sm btn-default">近1年</button>
+                          <button onclick="setLicenseTimeRange('last3years')" id="license-btn-last3years" class="btn btn-sm btn-default">近3年</button>
+                          <button onclick="setLicenseTimeRange('all')" id="license-btn-all" class="btn btn-sm btn-default">全部</button>
+                      </div>
+                      <div class="form-group" style="margin-left:10px;">
+                          <input type="date" id="licenseStartDate" class="form-control" style="width:140px;display:inline;" onfocus="clearLicenseQuickButtons()">
+                          <span> ~ </span>
+                          <input type="date" id="licenseEndDate" class="form-control" style="width:140px;display:inline;">
+                      </div>
                       <div class="form-group">
                           <input type="input" class="form-control" id="search-license" placeholder="请输入关键字">
                       </div>

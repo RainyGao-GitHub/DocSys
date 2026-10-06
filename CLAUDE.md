@@ -4,7 +4,8 @@
 
 上下文压缩会丢失关键信息（当前任务、参考计划、当前进展、生效约束）。以下步骤写入本文件以便压缩后自动重新触发——本文件每个会话都会被重新注入。
 
-1. **读当前工作卡**：当前**无进行中任务**（用户批量导入 → 导出用户修复 + 失败明细下载，均已收尾并提交：主仓库 `09ffeb19c`/`baa263e34`/`3075240b1`/`9875be2ff`/`70b6b723c`，websocket 仓库 `627b98ee`）。开工前先看下面 3 张**挂起卡**——均为「已调研/已裁定暂不处理」，**未获新裁定前不要改代码**：
+1. **读当前工作卡**：当前任务 `DevAgentControl/CURRENT_STATE_证书订单时间筛选.md`（证书管理/订单管理加时间范围筛选：快捷按钮 近30天/近1年/近3年/全部 + 日期输入；2026-10-06 建立，**已实施并验证，待用户确认提交**，纯前端、无需重启）。工作卡是**当前任务**相关信息的唯一定义处：必读上下文、参考计划与上下文、当前进展、生效约束（含是否需要先提交）。
+   - 该卡要点：① 起因「证书超过 3 年看不到」的**根因是服务端默认时间窗口**——证书 `SalesBase.getLicenseListOnPage:460` = `now - 36*CONST_MONTH`（36×30 天 ≈ 2.96 年）、订单 `getOrderListOnPage:1774` = `now - 12*CONST_MONTH`（仅 1 年），而前端 `showLicenseList/showOrderList` **从不传时间** → 永远走默认窗口；② **数据没被删**（单一累积 Lucene 索引 `<SaleDataStorePath>/License/licensesIndex/`、`<SaleDataStorePath>/OderInfo/`，销售模块无任何清理代码），接口一直接受 `startTime/endTime`（仅 `null` 时用默认；`startTime=0` 即「全部」）→ 只需前端传参；③ 裁定 A：照日志管理页加时间筛选；**默认值与服务端原默认保持一致**（证书=近3年、订单=近1年）；④ 落点：`tmpl/license{,_en}.html`、`order{,_en}.html`（按钮+日期输入）、`main.js`（每组页面 4 个函数 `clear/highlight/init/setXxxTimeRange` + `searchXxx` 三态处理 + 请求带参 + 渲染回调恢复高亮）；⑤ 服务端默认窗口**本次未动**（要放宽需另裁定）；其三处过期注释已按用户指示修正（2026-10-06，属 **`src/com/DocSystem/sales/` 独立仓库**的改动，需与该仓库单独提交；纯注释、已重编译、无需重启）；⑥ 全程纯前端 + 注释，无 Java 逻辑改动。
    - 前卡 `CURRENT_STATE_导出用户修复.md` **已收尾**（导出用户：去掉 `pwd`/`serialVersionUID`、修 `\t`/无转义、新增 xlsx 导出 + 导入失败明细下载；websocket 仓库 `627b98ee`，主仓库 `baa263e34`/`3075240b1`/`9875be2ff`/`70b6b723c`），已移入 `DevAgentControl/已完成/`。该卡要点：① 导出接口在 **websocket 仓库** `BussinessController`（`POST /Bussiness/exportUserList.do`，格式成因是 `LuceneUtil2.buildCsv{Title,}StrForObject` 反射全字段 + String 值尾随 `\t` + 无转义；**这两个通用 util 保持原样**，用户导出已改为**列白名单**实现）；② 导出列 = 客户友好 14 列、列头跟随 `lang`、角色/创建方式输出文案；CSV 标准转义 + UTF-8+BOM；xlsx 用 POI（首行加粗+冻结、列宽自适应、**数据列全部文本**）；文件名 `userList_<yyyyMMddHHmmssSSS>`（毫秒，避免同秒覆盖）+ 清理 24h 旧文件；③ **列头↔导入别名必须一致**：英文 `User ID` 归一化成 `userid` 与导入账号别名冲突 → 已从 `UserListImporter` 去掉 `userid`，并补角色别名 `superadministrator`/`superuser`；④ 导入失败明细下载：`MAX_DETAIL_ROWS` 提到 5000（不截断）、`importUser.js` 新增 `exportImportUserDetailCsv()`（含转义 + BOM）；⑤ 回归验证含“导出的文件（中/英 CSV 与 xlsx）直接回灌导入”。
    - 前卡 `CURRENT_STATE_用户批量导入.md` **已收尾**（客户名单批量创建用户：csv/xls/xlsx/et + 列名别名兼容；已提交 `09ffeb19c`），已移入 `DevAgentControl/已完成/`。该卡要点：新增 `UserListImporter`（编码识别 BOM→严格UTF-8→GBK、标准 CSV 状态机、列名归一化+主/次别名、角色文本→数字、手机归一化、长度校验、模板生成）+ `POST /Manage/importUserList.do`（逐行复用 `addUser` 的校验：越权/证书用户数/`userCheck`；已存在账号跳过；汇总记 1 条日志）+ `GET /Manage/downloadUserImportTemplate.do` + 前端 `importUser{,_en}.html`/`importUser.js`；探针 66/66、真实页面 E2E 全通过（含**旧导出文件回灌**）。未做：无表头解析、预检、更新已存在账号（按裁定）；**失败明细下载已于 2026-10-06 追加实现**（`devDocs/用户批量导入方案.md` §9）。
    - 其余为**挂起卡**（均已调研/已裁定暂不处理，**未获新裁定前不要改代码**）：
@@ -46,6 +47,7 @@
 DocSys 是**多 git 仓库**，office 相关共三条提交路径：
 
 - 主仓库 `D:/Dev/DocSys`（`devInt`）：`.gitignore` 排除整棵 `src/com/DocSystem/websocket`；office 相关对它 clean，根目录 `git commit` 是空操作。
+- **销售模块 `src/com/DocSystem/sales/`（独立仓库，`master`）**：`SalesBase.java`/`SalesController.java`/`PayController.java` 等（**不属于**主仓库——`git ls-files` 对该路径报 `did not match any file(s)`，改动要单独提交）。
 - **业务/WebSocket 层 `src/com/DocSystem/websocket`（独立仓库，`master`）**：`BussinessController.java`、`BusinessBaseController.java`、`BussinessBase.java`、`OfficeController.java` 等（**不属于**主仓库，改动要单独提交；该仓库未跟踪 `office/`）。
 - office 核心 `src/com/DocSystem/websocket/office`（`dev/office`）：核心 Java 代码 + `docs/`/`devDocs/`；`.gitignore` 只排除 `/原始CPP代码` 和 `/test`。
 - **test 仓库独立** `src/com/DocSystem/websocket/office/test`（`master`）：测试类 + fixture。

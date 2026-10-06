@@ -6,6 +6,17 @@
               <div class="widget-icons pull-right">
                   <div class="form-inline">
                       <div class="form-group">
+                          <button onclick="setOrderTimeRange('last30days')" id="order-btn-last30days" class="btn btn-sm btn-default">Last 30 Days</button>
+                          <button onclick="setOrderTimeRange('last1year')" id="order-btn-last1year" class="btn btn-sm btn-default">Last Year</button>
+                          <button onclick="setOrderTimeRange('last3years')" id="order-btn-last3years" class="btn btn-sm btn-default">Last 3 Years</button>
+                          <button onclick="setOrderTimeRange('all')" id="order-btn-all" class="btn btn-sm btn-default">All</button>
+                      </div>
+                      <div class="form-group" style="margin-left:10px;">
+                          <input type="date" id="orderStartDate" class="form-control" style="width:140px;display:inline;" onfocus="clearOrderQuickButtons()">
+                          <span> ~ </span>
+                          <input type="date" id="orderEndDate" class="form-control" style="width:140px;display:inline;">
+                      </div>
+                      <div class="form-group">
                           <input type="input" class="form-control" id="search-order" placeholder="search order...">
                       </div>
                       <button onclick="searchOrder()" class="btn btn-md btn-primary" style="margin-left: 0px;">Search</button>
