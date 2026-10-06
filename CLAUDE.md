@@ -12,6 +12,7 @@
    - 前卡 `CURRENT_STATE_用户使用统计修复.md` **已收尾**（用户维度统计 + 会话推断时长 + 活动上报；已提交主仓库 `677952484`），已移入 `DevAgentControl/已完成/`，保留供查询。
    - 前卡 `CURRENT_STATE_文件分享通知异步化.md` **已收尾**（通知邮件异步化：`addDocShare.do` 响应 6000ms→805ms、弹窗内容 6553ms→857ms；已提交 websocket 仓库 `edb88511` / 主仓库 `bcca467c4`），已移入 `DevAgentControl/已完成/`。
    - 挂起卡 `CURRENT_STATE_agent工具技能规模化.md`（同在 `DevAgentControl/`）：P0 调研+方案已完成并提交 `6fbb9e7fd`，**实施等用户裁定** → 未获裁定前不要开工改代码。
+   - 挂起卡 `CURRENT_STATE_前端静态资源缓存.md`（同在 `DevAgentControl/`）：静态资源响应无 `Cache-Control`（只有 ETag/Last-Modified）→ 改 JS/CSS/模板必须清浏览器缓存；方案 A（Filter 加 `no-cache`，改完 F5 即生效）代价是每个静态文件多一次 304 条件请求，**用户 2026-10-06 裁定暂不处理** → 未获新裁定前不要实施。
    - 前卡 `CURRENT_STATE_agent产物链接.md` **已收尾**（产物链接 + 多选 @ + 「清空」防误操作，三项均验证并已提交），保留供查询。
    - 前卡 `CURRENT_STATE_agentOffice读写选型.md` **已收尾**（P1 读 / P2 新建 / P2 修改全部完成并验证），保留供查询。
    - 更早的卡 `CURRENT_STATE_agent任务续接与轮数上限.md` **已收尾**（P4 挂起），保留供查询。
