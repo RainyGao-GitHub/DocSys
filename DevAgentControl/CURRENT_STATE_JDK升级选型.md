@@ -38,12 +38,22 @@
 
 ## 当前进展（2026-10-07）
 
-### 进行中：步 1 纯引擎 PoC（JDK 8 + GraalVM CE 21.2）
+### 进行中 / 已完成：步 1 纯引擎 PoC（JDK 8 + GraalVM CE 21.2）—— ✅ **已完成（2026-10-07）**
 
-- ✅ 运行时可得性已确认（`graalvm-ce-java8-windows-amd64-21.2.0.zip`，250 MB，仍在 GitHub 上）。
-- ⏳ **下载中**：`D:\Dev\GraalVM-PoC\graalvm-ce-java8-21.2.0.zip`（GitHub 链接慢，约 3 MB/min；24/238 MB 时记录）。下载完需解压并确认自带 `js` 组件。
-- ❌ **已排除一条捷径**：Maven Central 手工组装 classpath（`org.graalvm.js:js:21.2.0` + `truffle-api:21.2.0` + `graal-sdk` + `regex` + `js-scriptengine`）在 **JDK 8u162** 上**引擎初始化即失败**：`BootstrapMethodError: IllegalAccessError: no such method: com.oracle.truffle.js.runtime.JSRealm.getFunctionPrototype()…`。已排除版本不一致/重复类/方法不存在（class 版本 52）。→ **步 1 必须用 GraalVM 自带运行时**（顺带也才能拿到 Graal JIT；stock JDK 8 只有解释模式，已实测出现该警告）。
-- 工具已就位（在仓库外，不入 git）：`D:\Dev\GraalVM-PoC\`（`Harness.java` 已编译、`artifacts\` 已下好、`bin\`）。
+**结论：三端全部 PASS；载入整包脚本 GraalJS ≈ 13× 于 Nashorn。**
+
+| 端 | 脚本量 | 冷 | **热中位** |
+|---|---|---|---|
+| word / document | 7,690 K chars | 3,507 ms | **1,281 ms** |
+| slide / presentation | 7,808 K chars | 3,161 ms | **1,312 ms** |
+| cell / spreadsheet | 8,936 K chars | 3,052 ms | **1,449 ms** |
+| **Nashorn 对照**（同机同脚本，JDK 1.8.0_162） | 7,690 K chars | — | **17,236 ms** |
+
+- Context 创建：冷 ~280 ms、**热 1–2 ms**（默认共享 `Engine`）→ 生命周期 B 的成本几乎为零。
+- 与生产的差别：Java embed 对象用 JS 桩替代（全脚本集只用到 `NativeEngine.ConsoleLog / GetDevicePixelRatio / GetEditorType` 三个方法）；**未跑** open→applyChanges→getFileData，**未比 golden**（那是步 2）。
+- 运行时：GraalVM CE 21.2.0 (java8)，SHA256 `3366c51e…1206bb4` 与官方一致，自带 OpenJDK 1.8.0_302。
+- **副产发现**：`sdk-all-min.js` 里的 `/[,\s-+/^&%<=>]/` 是 ES5 非法正则，原始文件 Nashorn 解析不了；生产靠 `CDoctRenderer_Private.java:1179` 的**硬编码字符串替换**救回；**GraalJS 不需要该补丁** → 迁移可删掉这个版本耦合点（计划 §4.5、风险 13）。
+- harness 在仓库外 `D:\Dev\GraalVM-PoC\`（`HarnessBundle.java`/`NashornBundle.java`，未入库）；步 2 建议移入 `office/test`。
 
 ### 已完成：调研（有实测证据，全部写进计划 §6.1、§6.2、§6.3、§9.1）
 
