@@ -20,10 +20,47 @@
 
 ## 下一步
 
-**① 待用户裁定（阻塞测试树）**：office/test 里 **132 个文件 import 了已删除的 jmerge 类 → 现在编译不过**，
-含三端转换门 `TestJsPathEngineCompare`。三选一：
-(a) 全删 126（连 oracle/trace 族一起删）；(b) **删 121、保留 `jmerge/bin` 的 12 个纯流测试**（推荐，成本最低且不丢纯流回归）；
-(c) 暂不动。→ **在定案前不要跑那 132 个测试**；名单在 `%TEMP%\del_list.txt` / `fix_list.txt`（临时文件，可重扫）。
+**① 待用户裁定（阻塞测试树）**：office/test 里 **131 个文件 import 了已删除的 jmerge 子包 → 编译不过**。
+其中 **30 个**引用 `JMergeEngine`（24 个已改为走唯一 JS 路径并验证，见下；**5 个不可救**：
+`TestJMergeJavaGolden2`（直接调已删 `JDocxCompactBinFixer`）、`TestJSlideIdResolver`、
+`TestJSlideIdResolverNewFixture`（断言1 直接 `new JPPTYFileReader`）、`TestMultiSlideEngineE2E`
+（直接调 `JMergeEngine.tryApplyChanges`）、`TestSlideGetFileDataOracle`（用已删 `JPPTYFileReader` 解析 bin））；
+其余 **101 个**是已删 Java 实现的内部单测（直接 `new JDocumentReader`/`JXLSXFileReader`/`JPPTYWriter`…），
+被测对象已不存在 → **改调用方式也救不活**。三选一：(a) 全删；(b) **归档**（移入 `attic/` + README 标注不可运行）；
+(c) 原样保留（IDE 会一直报 131 个错）。→ **在定案前不要跑这些测试**。
+
+**✅ 已完成第一步：24 个端到端测试改造为"唯一 JS 引擎路径"（2026-10-07）**
+
+用户裁定：**测试代码保留**（用于与 x2t 输出对比），其中一部分改走 `FileConverter.convert`。实际做法 =
+删掉 `JMergeEngine.setEnabled/markEditorCovered/clearCoveredEditors` 与相关 import（转换本来就已走
+`FileConverter.convert`，被删的只是"强制 Java 路径"的开关）；**24 个文件全部编译通过**（stock javac 8u162）。
+
+实测（GraalVM CE 21.2 运行时，缺省 graaljs；结果取自 stdout 汇总行）：
+
+| 测试 | 结果 |
+|---|---|
+| W1 / W2 / W2_4 / 3（word golden） | ✅ 通过（W1/W2_4 打印 `[INFO] 包结构差异`，非断言项） |
+| TestJSlideMergeGolden | ✅ 通过（zip 对比为信息性 `same=45 realDiff=12`） |
+| TestComplexFixtureMergeGolden / TestTableImageFixtureMerge / TestSlideNashornBaseline / TestW1IdTrace | ✅ 通过 |
+| **TestJsPathEngineCompare**（三端门） | ✅ `RESULT: OK mode=graaljs` |
+| **TestJMergeJavaGolden**（word） | ❌ `realDiff=1`：`word/document.xml` 差 5 字节，**唯一差异 = `w:orient`**（JS 路径写 `portrait`，golden 写 `landscape`） |
+| **TestJSlideMergeGoldenNew** | ❌ `通过=12 失败=3`（S-1/S-2/S-3 各 `realDiff=12`） |
+| **TestT8XlsyMergeGolden**（cell） | ❌ 2 项：`[AfColor]` Tier1 schema 新错 + AutoFilter 定义与 golden 不一致 |
+| **TestAutoFilterSmoke** | ❌ `convert ret=-2147216554`：`ReferenceError: "$" is not defined`（`CDoctRenderer_Private.ExecuteScript:564`，2 行脚本） |
+| TestS3Diag | ⚠️ 无任何输出，**未定性** |
+
+**已查清的两处**：
+- **`w:orient` 差异（已完全解释，非引擎问题）**：同一 fixture 用 **stock JDK8 分别跑 nashorn / graaljs，产物完全一致**
+  （都 `portrait`，都同一处失败）→ **不是引擎差异**。原始文档写 `orient="landscape"` 但 `w:h=16838 > w:w=11906`
+  （实际是纵向），JS 路径按真实版面**规范化**为 `portrait`；`TestJMergeJavaGolden_W2_4` 里真正的横向节
+  （`w=23811 > h=16838`）JS 路径输出 `orient=landscape` **正确**。→ 差异源于"golden 保留了自相矛盾的属性"，
+  以前靠强制 Java 路径才字节一致。
+- **`$ is not defined` 不是字体目录问题**：`TestAutoFilterSmoke`/`DiagAFMeta` 原先把 `gProcessPath` 指向
+  **不存在的** `test/fonts/`（全仓库仅这 2 个文件这么写），已改为产品 bin 目录，**但报错不变** → 与字体目录无关，
+  仍是未解项（疑似 sdkjs 的 AutoFilter 代码引用了浏览器端全局，**待查**）。
+
+**⚠️ 未做**：`TestS3Diag` 为何无输出；上述 4 个失败项的定性；105 处 "Nashorn/Java 路径" 历史注释未清理（只清了代码引用）；
+本项目**未提交**。
 
 **② ✅ 已完成：重启 dev 服务让新类生效（2026-10-07 17:30）**
 
