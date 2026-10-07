@@ -53,7 +53,7 @@
 - 与生产的差别：Java embed 对象用 JS 桩替代（全脚本集只用到 `NativeEngine.ConsoleLog / GetDevicePixelRatio / GetEditorType` 三个方法）；**未跑** open→applyChanges→getFileData，**未比 golden**（那是步 2）。
 - 运行时：GraalVM CE 21.2.0 (java8)，SHA256 `3366c51e…1206bb4` 与官方一致，自带 OpenJDK 1.8.0_302。
 - **副产发现**：`sdk-all-min.js` 里的 `/[,\s-+/^&%<=>]/` 是 ES5 非法正则，原始文件 Nashorn 解析不了；生产靠 `CDoctRenderer_Private.java:1179` 的**硬编码字符串替换**救回；**GraalJS 不需要该补丁** → 迁移可删掉这个版本耦合点（计划 §4.5、风险 13）。
-- harness 在仓库外 `D:\Dev\GraalVM-PoC\`（`HarnessBundle.java`/`NashornBundle.java`，未入库）；步 2 建议移入 `office/test`。
+- harness 已入库 **office/test 仓库**（`TestGraalJsBundleEval.java` / `TestNashornBundleEval.java` / `ScriptBundle.java` + `tools/run_graaljs_poc.ps1`，脚本清单从 `DoctRenderer.config` 读取）；台面产物落 `test/tmp/GraalJsPoc/`。GraalVM CE 21.2 运行时在仓库外 `D:\Dev\GraalVM-PoC\`。
 
 ### 已完成：调研（有实测证据，全部写进计划 §6.1、§6.2、§6.3、§9.1）
 
