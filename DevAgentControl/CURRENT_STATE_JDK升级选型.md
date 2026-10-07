@@ -123,6 +123,30 @@ OFFICE: OFFICE: saveDoc() convert bin to office failed      ← 保存转换失�
   需在启动进程内注入 `CATALINA_OPTS`）。
 - 若 nashorn 同样失败 → **既有缺陷**（与本轮迁移无关，但产品已知问题）；若只有 graaljs 失败 → **迁移引入的回归**（严重）。
 
+**🔴 结论（2026-10-07 18:28，nashorn 对照实验）：这是【既有缺陷】，不是 GraalJS 回归**
+
+用 `CATALINA_OPTS=-Ddocsys.office.jsEngine=nashorn` 重启 dev 服务（**已在 JVM 命令行确认参数生效**），
+重跑同一条 UI 流程（编辑器里加自动筛选 → 关窗 → 等后台保存）。`docsys.log` 原文：
+
+```
+【apply_changes】JS 引擎路径 eType:1 引擎:nashorn
+LOGGER_SPEED_LAP() compile/run/open ...        ← run 单步 27476 ms（graaljs 时仅 120 ms）
+<eval>:18937 TypeError: null has no such function "Qf"
+  at jdk.nashorn.internal.runtime.ECMAErrors.typeError(ECMAErrors.java:213/185/172)   ← 栈帧证明跑的是 Nashorn
+  at NExtractToolsStatic.apply_changes(NExtractToolsStatic.java:946)
+CDoctrenderer.Execute ... strError:<error index="-1" message="TypeError: null has no such function "Qf" [stack: jdk.nashorn.internal.runtime...
+OFFICE: saveDoc() convert bin to office failed
+```
+
+→ **同一条 `Qf` 错误、同样保存失败**，只是引擎不同。因此：
+1. **AutoFilter 变更保存失败是 JS 路径的既有缺陷**（与本轮 GraalJS 迁移无关；JS 路径代码本轮一行未改）。
+   修它要动 `sdkjs`（前端代码）或找出该变更为何让 `null` 调 `Qf`，**属独立立项**。
+2. **佐证迁移收益**：同一操作 nashorn `run` 单步 **27476 ms**，graaljs **120 ms**（差 200+ 倍）。
+3. **迁移结论不受影响**：GraalJS 没有引入这个缺陷。
+
+**环境已恢复**：实验后已用 `docsys_start_hidden.bat` 重新以**缺省（graaljs）**启动，
+并在 JVM 命令行确认**不含** `docsys.office.jsEngine` 参数（PID 27096、HTTP 200）；临时包装脚本与 mark 文件已删。
+
 **② ✅ 已完成：重启 dev 服务让新类生效（2026-10-07 17:30）**
 
 `docsys_restart.bat`（后台隐藏窗口）；旧 PID 39460 退出 → 新 PID **16916**（17:30:23 启动，运行时仍是 GraalVM CE 21.2 / 1.8.0_302）。
