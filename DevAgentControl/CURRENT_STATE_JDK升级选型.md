@@ -44,12 +44,35 @@
 | 条件 | 状态 |
 |---|---|
 | 三端内容一致（时间戳归一化） | ✅ 已满足 |
-| **运行时切到 GraalVM（形态 C）** | ❌ **未做**——`tomcat\java\jre` 仍是 JRE 1.8.0_162 |
+| **运行时切到 GraalVM（形态 C）** | ✅ **已做（2026-10-07）**——开发服务器那棵的 `tomcat\java\jre` 已换成 GraalVM CE 21.2，旧 JRE 备份为 `jre_orig_8u162`，脚本一行未改 |
 | 权限收敛（风险 11） | ✅ **已做**（`EXPLICIT` + 2 个 `@Export`；删掉 classLookup/IO） |
 | 共享 `Engine` | ✅ **已做**（`JSEngineFactory` 静态共享 Engine） |
 | 共享 `Source` / 缓存 | 不需要（实测共享 Engine 即够，`CDoctRenderer_Private` 未动） |
 
-→ **阶段 B 只剩"切运行时"这一个动作**（外加最后一道完整双引擎回归）。
+→ **阶段 B 代码侧与运行时侧均已完成**；剩下的只有"是否把默认引擎切成 graaljs"这一项裁定。
+
+**✅ 已完成：运行时切换到 GraalVM CE 21.2（计划 §6.4.9，2026-10-07）**
+
+⚠️ **先纠正一个事实**：开发环境有**两棵**安装树，此前描述说错了角色——
+`C:\TomcatForDocSysDev\docsys`（**正在跑的开发服务器**，`webapps\DocSystem` 是指向 `D:\Dev\DocSys\WebRoot` 的 junction，
+脚本是 `docsys_*.bat`）与 `C:\docsysRel\docsys-WDK\docsys`（**构建/发布工具树**，测试脚本的 nashorn 基线靠它的 `jdk`）。
+我最初检查的是后者，而真正在跑的是前者。
+
+- **做法**：`docsys_stop.bat /q` 停机 → `tomcat\java\jre` 改名 `jre_orig_8u162` 备份 →
+  复制 GraalVM `jre\*`（354 文件 / 471.9 MB）→ 补 `release` 与许可声明。**脚本一行未改，编译 JDK 未动。**
+- ⚠️ **为什么原地替换是唯一安全选项**：`docsys_stop.bat`／`docsys_restart.bat` 靠
+  `ExecutablePath -like '*\tomcat\java\jre\bin\java.exe'` **匹配路径**杀进程——原地替换路径不变所以照常工作；
+  当初的"并排放 `graalvm-jre`"方案会让这两个脚本**匹配不到进程**。
+- **Graal JIT 无需额外参数**：实测 `EnableJVMCI`／`UseJVMCICompiler` **默认都是 `true`**（stock 8u162 连这两个 flag 都没有）
+  → **不加 `JAVA_OPTS`**。
+- **回滚**：删掉新 `jre`，把 `jre_orig_8u162` 改回 `jre`（脚本无需回改）。
+- **验证**：13 项冒烟 nashorn 13/13 + graaljs 13/13（用已安装运行时）；三端真实转换
+  word 32.1→13.0 s、slide 32.4→14.4 s、cell 68.8→18.7 s，全部 IDENTICAL-MODULO-TIMESTAMPS；
+  开发服务 `Server startup in 28878 ms`，`/DocSystem/` **HTTP 200**，office-editor `native.js` 200 / 9829 字节（与切换前一致）。
+- **顺带发现（既有噪声，非本次引入）**：Tomcat 7 启动期大量
+  `ClassFormatException: Invalid byte tag in constant pool: 19`（Java 9+ 的 `CONSTANT_Module`）。
+  实测**自 2026-09-30 就存在**，涉及约 **90 个 jar**；我们的 4 个 GraalJS jar 只贡献 6 行；
+  Tomcat 跳过这些条目的注解扫描后继续，不影响运行，阶段 2 换 Tomcat 9 后消失。
 
 **✅ 已完成：阶段 B 代码侧两项改动（计划 §6.4.8，2026-10-07）**
 
@@ -135,10 +158,11 @@
 
 **仍未做（通往阶段 B 完成只剩这些）**：
 
-1. **切运行时到 GraalVM CE 21.2（形态 C）**——`tomcat\java\jre` 仍是 JRE 1.8.0_162。这是阶段 B 最后一个动作。
-2. 切完后跑**完整双引擎回归**（13 项冒烟两模式 + 三端真实转换两引擎；nashorn 对照必须仍行为不变）。
-3. 补测**三端同时使用**时共享 Engine 的内存曲线（风险 20）。
-4. 裁定是否把默认引擎切成 graaljs（阶段 B 的正题；必须与运行时切换绑定）。
+1. **裁定是否把默认引擎切成 graaljs**（阶段 B 的正题）。触发条件已全部满足（三端 golden 一致 + 运行时已切 GraalVM）。
+   切换方式：`JSEngineFactory.getMode()` 的缺省值由 nashorn 改为 graaljs，nashorn 退居显式开关
+   `-Ddocsys.office.jsEngine=nashorn`（按 §6.4.5 的 A/B/C 分阶段退役，C 阶段才删分支）。
+2. 补测**三端同时使用**时共享 Engine 的内存曲线（风险 20）。
+3. 阶段 2（未开始）：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + §6.2 整张清单。
 
 **第 2 步的调研（已完成，结论并入计划 §6.4.2）**：
 
