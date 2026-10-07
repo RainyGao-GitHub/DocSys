@@ -223,7 +223,7 @@
   - 主仓库 `devInt`：`970aca4a5`、`01bf4d489`、`e0d596b28`、`385dfef57`、`6fef895d4` → **`a2329c04f`（本卡）**
 - **最新提交**（2026-10-07）：
   - 三端真实转换：office `dev/office` **`f47f86be`**（计划 §6.4.6 三端结果）；office/test `master` **`43f4859`**（测试与脚本三端参数化）；主仓库 `devInt` **`a4097f941`**（本卡）。
-  - 宿主权限面修正：office `dev/office` **`dd4dd93e`**（计划 §6.4.7 + §5.2/风险 11 + `JSEngineFactory` 注释）；主仓库 `devInt` **`11863680f`**（本卡）。
+  - 宿主权限面修正：office `dev/office` **`d8026227`**（计划 §6.4.7 + §5.2/风险 11 + `JSEngineFactory` 注释）；主仓库 `devInt` **`9bf578fe3`**（本卡）。
   - 阶段 1 第 2 步（更早）：office `dev/office` `45ba91be`→`217d107a`→`ff8ad1bc`→`b968d8bd`→`99560b9e`→`dc5c334b`；office/test `master` `3933e1a`→`fe859ef`→`9e40617`→`bcde713`；**`WebRoot/WEB-INF/lib`（独立仓库）`25d6f2c`**（4 个 GraalJS jar）；主仓库 `devInt` `cb07c73ce`（CLAUDE.md 补第 5 个仓库）等。
 - **不要**在未获裁定前动阶段 2 的内容（§6.2 的 Tomcat/jar/JDK 改造项）。
 - 阶段 1 期间**默认必须仍是 Nashorn**（`docsys.office.jsEngine` 不设即 nashorn）；任何提交都不得改变默认路径行为。
