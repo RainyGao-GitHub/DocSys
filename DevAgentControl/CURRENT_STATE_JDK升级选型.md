@@ -1,7 +1,8 @@
 # CURRENT_STATE_JDK升级选型（工作卡）
 
-> 状态：**阶段 B 全部完成**（代码侧：共享 Engine / 权限收敛 / 默认翻转 graaljs；运行时侧：GraalVM CE 21.2）；
-> 下一步 = **C 阶段（nashorn 退役，等上线稳定）** 与 **阶段 2（JDK 17 + Tomcat 9）**（2026-10-07）
+> 状态：**阶段 B 全部完成并三层验证通过**（代码侧：共享 Engine / 权限收敛 / 默认翻转 graaljs；
+> 运行时侧：GraalVM CE 21.2；**应用侧：用户手动 4 次保存，全部走 GraalJS、零错误**）；
+> 下一步 = **C 阶段（nashorn 退役）** 与 **阶段 2（JDK 17 + Tomcat 9）**（2026-10-07）
 > 前置卡 `CURRENT_STATE_war打包.md` **已收尾**（导出可发布 `DocSystem.war` 并校验通过），已移入 `DevAgentControl/已完成/`。
 
 ## 已裁定（2026-10-07）
@@ -50,8 +51,34 @@
 | 共享 `Engine` | ✅ **已做**（`JSEngineFactory` 静态共享 Engine） |
 | 共享 `Source` / 缓存 | 不需要（实测共享 Engine 即够，`CDoctRenderer_Private` 未动） |
 | **默认引擎翻转为 graaljs** | ✅ **已做（2026-10-07）**——`DEFAULT_MODE = graaljs`，nashorn 退居显式开关 |
+| **应用侧端到端（真实 UI 保存）** | ✅ **已做（2026-10-07）**——用户手动 4 次保存，全部走 GraalJS、`strError` 全空（§6.4.11） |
 
-→ **阶段 B 全部完成**。后续只剩 **C 阶段**（上线稳定后删 nashorn 分支）与阶段 2（JDK 17 + Tomcat 9）。
+→ **阶段 B 全部完成（代码 / 运行时 / 应用三层）**。后续只剩 **C 阶段**（上线稳定后删 nashorn 分支）与阶段 2（JDK 17 + Tomcat 9）。
+
+**✅ 已完成：app 内端到端验证（2026-10-07，用户手动 4 次保存）—— 计划 §6.4.11**
+
+三条取证把"app 里到底跑了哪个引擎"钉死了：
+
+1. `docsys.log` 里 `【JMergeEngine】Nashorn 路径 (enabled=false covered=true eType=…)` **4 次** → Java 移植路径不接管，回退 JS 引擎；
+2. `CDoctrenderer.Execute(String strXml, …)` 全日志 **4 次**（每次保存一次），`strError` **非空 0 次**；
+3. `jcmd GC.class_histogram`：**大量 `com.oracle.truffle.js.*`**（`JSReadCurrentFrameSlotNodeGen` **288 万实例/115 MB** 等），**`jdk.nashorn.*` 一个都没有** → **确认跑的是 GraalJS**。
+
+| # | 时间 | 文档 | eType | run | save 总计 |
+|---|---|---|---|---|---|
+| 1 | 17:10:44 | MxsDoc产品介绍.docx | 0 DOCT | 781 | 3008 |
+| 2 | 17:12:11 | MxsDoc产品介绍.pptx | 2 PPTT | 174 | 1177 |
+| 3 | 17:12:47 | JS调用测试.xlsx（第 1 次） | 1 XLST | **906** | **2063** |
+| 4 | 17:13:40 | JS调用测试.xlsx（第 2 次） | 1 XLST | **200** | **1178** |
+
+- **共享 Engine 的生产实证**：#3 vs #4 同文档同类型 → `run` **906→200 ms（4.5×）**、合计 **2063→1178 ms（省 885 ms / 43%）**，
+  与 §6.4.8 探针预测吻合。
+- **内存实测（风险 20）**：`jcmd GC.heap_info` → ParOldGen **1537 MB / 2713 MB（55%）**、Metaspace 117 MB。
+  Truffle AST 常驻堆规模很大；当前 dev 无 `-Xmx`（上限约 4.8 GB）尚有余量，
+  ⚠️ **交付前必须核对 `-Xmx`**，设小值会成为瓶颈。
+- **未解释的一处**（已如实标注、未下结论）：第 2 次 slide 包 `run` 仅 174 ms，远快于探针冷载约 3.8 s，而全日志只有这 4 次 Execute。
+- **两处顺带发现**：① `JMergeEngine.java:127` 日志标签仍是 `【JMergeEngine】Nashorn 路径`，
+  但这条分支现在跑 GraalJS，**排查时会误导**，建议改文案；② 每次保存都伴随
+  `executeCommonActionList() failed actions:1`（紧跟 `TextSearch was Disabled`），看着与保存无关，**未定性**。
 
 **✅ 已完成：默认引擎翻转为 graaljs（计划 §6.4.10，2026-10-07）**
 
@@ -181,11 +208,15 @@
 
 1. **C 阶段（nashorn 退役）**：上线稳定、无回退需求后删除 nashorn 分支
    （`CJSContext` 11 处 + `JSEngineFactory.createNashorn()` + `engine`/`globals` 字段），此后 `docsys.office.jsEngine` 开关可一并移除。
-2. 补测**三端同时使用**时共享 Engine 的内存曲线（风险 20）。
-3. （可选）受控 A/B 测 GraalVM 对**启动耗时**的影响——当前数据不足以判断
+2. ⚠️ **交付前核对 `-Xmx`**（新出现，来自 §6.4.11 内存实测）：4 次保存后 ParOldGen 已用 1537 MB / 2713 MB（55%），
+   而当前 dev 没设 `-Xmx`（默认上限约 4.8 GB）。生产若给较小堆会成瓶颈。
+3. （小）`JMergeEngine.java:127` 的日志标签 `【JMergeEngine】Nashorn 路径` 已过时（现在跑 GraalJS），建议改文案。
+4. （小）定性每次保存都出现的 `executeCommonActionList() failed actions:1`（疑与 `TextSearch was Disabled` 相关）。
+5. （未解释）slide 包首次 Execute 的 `run` 仅 174 ms，远快于探针冷载约 3.8 s——需时可查。
+6. （可选）受控 A/B 测 GraalVM 对**启动耗时**的影响——当前数据不足以判断
    （切换后两次启动 166592 ms / 31557 ms，而旧 JRE 历史区间本身就是 28.6–259 s，
    故我先前"启动 28878 ms"的说法是**误读日志**，已在计划 §6.4.9 更正）。
-4. 阶段 2（未开始）：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + §6.2 整张清单。
+7. 阶段 2（未开始）：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + §6.2 整张清单。
 
 **第 2 步的调研（已完成，结论并入计划 §6.4.2）**：
 
