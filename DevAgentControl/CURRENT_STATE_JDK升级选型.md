@@ -85,6 +85,44 @@
 不是字体目录（修正后错误变更为 TypeError）。`TestJSlideMergeGoldenNew`（`通过=12 失败=3`）与
 `TestJMergeJavaGolden`（`通过=5 失败=1`，`w:orient`）**用正确 classpath 重跑结果不变** → 不是遮蔽假象，结论仍成立。
 
+**🔴 重大发现：AutoFilter 变更在真实产品里保存失败（产品级复现，2026-10-07 18:22）**
+
+按用户给的步骤做端到端复现：浏览器打开 mxsdoc → 用 `showOffice(gDocInfo,'openInArtDialog')` 打开真实编辑器
+（也确认新窗口入口是 `/DocSystem/web/office.html?<buildRequestParamStrForDoc 的结果>`）→ 在 sdkjs 里调
+`asc_addAutoFilter()`（`asc_isDocumentModified()` 返回 **true**）→ **关闭编辑器窗口** → 约 2 分钟后服务端触发保存。
+`docsys.log` 原文（关键行）：
+
+```
+OFFICE: saveBinToOfficeFile() dockey:377630261 targetPath:.../377630261/output/ targetName:output.xlsx
+【apply_changes】JS 引擎路径 eType:1 引擎:graaljs        ← 命中的正是被改造的那条路径
+LOGGER_SPEED_LAP() compile/run/open ...
+TypeError: null has no such function "Qf"
+  at JSValueAccess.callMember(JSValueAccess.java:239)
+  at CJSObject.call_func(CJSObject.java:139 / :115)
+  at CDoctRenderer_Private.ExecuteScript(CDoctRenderer_Private.java:935)
+  at CDoctrenderer.Execute(CDoctrenderer.java:957)
+  at NExtractToolsStatic.apply_changes(NExtractToolsStatic.java:946)
+CDoctrenderer.Execute(...) strError:<result><error index="-1" message="TypeError: null has no such function &quot;Qf&quot; ...
+[error] DoctRenderer:<result><error index="-1" ...
+【NExtractToolsStatic】fromInputParams() Success
+OFFICE: OFFICE: saveDoc() convert bin to office failed      ← 保存转换失败
+```
+
+**证据链说明"不是 fixture 陈旧"**：这次用的是**我刚刚在浏览器里用当前 sdkjs 录的新变更**——
+`.../377630261/data/changes/changes0.json` + `changes1.json`（各 180 B，18:22:09）；
+失败后应用还自动留下诊断产物 `output/Failed_output.xlsx`(5068 B) 与 `ErrorChanges20261007182218/changes.zip`(508 B)。
+与 `TestAutoFilterSmoke` 复现的是**同一条错误**（同一个 `Qf`），也与 §6.4.8 记录的 `lF` **同族**。
+
+**影响判定**：**用户在产品里对 xlsx 添加/修改自动筛选后保存，转换会失败**（`saveDoc() convert bin to office failed`）。
+失败时**没有覆盖仓库文件**（`rdata/JS调用测试.xlsx` 仍是 17:13:45 / 5068 B，未被本次写入）。
+
+**⚠️ 尚未区分的关键问题**：这是**GraalJS 特有**还是**既有 JS 路径缺陷**？
+- 已知：JS 路径代码本轮**一行未改**（只删了 Java 分支 + 翻默认引擎）；§6.4.8 记录的 `lF` 在 **nashorn 下同样出现**。
+- 决定性实验：**用 nashorn 重跑同一条 UI 流程**。运行时可做——GraalVM CE 21.2 的 `jre/lib/ext/nashorn.jar` **存在**
+  （`jre_orig_8u162` 也有），只需给 Tomcat 传 `-Ddocsys.office.jsEngine=nashorn`（`docsys_start*.bat` 无 JAVA_OPTS/setenv，
+  需在启动进程内注入 `CATALINA_OPTS`）。
+- 若 nashorn 同样失败 → **既有缺陷**（与本轮迁移无关，但产品已知问题）；若只有 graaljs 失败 → **迁移引入的回归**（严重）。
+
 **② ✅ 已完成：重启 dev 服务让新类生效（2026-10-07 17:30）**
 
 `docsys_restart.bat`（后台隐藏窗口）；旧 PID 39460 退出 → 新 PID **16916**（17:30:23 启动，运行时仍是 GraalVM CE 21.2 / 1.8.0_302）。
