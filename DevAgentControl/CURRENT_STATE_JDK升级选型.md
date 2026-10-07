@@ -45,7 +45,7 @@
 |---|---|
 | 三端内容一致（时间戳归一化） | ✅ 已满足 |
 | **运行时切到 GraalVM（形态 C）** | ❌ **未做**——`tomcat\java\jre` 仍是 JRE 1.8.0_162 |
-| `HostAccess.ALL` 收敛为白名单（风险 11） | ❌ 未做（安全加固，非门槛） |
+| `HostAccess.ALL` 收敛为白名单（风险 11） | ❌ 未做（安全加固，非门槛）——**权限面已实测摸清**（计划 §6.4.7） |
 | 共享 `Engine` + 缓存 `Source` | ❌ 未做（纯优化；当前仍已快 2.3–5.0×） |
 
 → **阶段 B 只剩"切运行时"这一个动作**（外加两项非门槛的加固/优化）。
@@ -96,7 +96,14 @@
 
 **仍未做（通往 golden 对比只剩这些）**：
 
-1. `HostAccess.ALL` 过宽，上线前应收敛为白名单（计划风险 11）。
+1. **权限收敛（计划风险 11，2026-10-07 已实测摸清，见计划 §6.4.7）**：`allowHostClassLookup(className -> true)`
+   与 `allowIO(true)` 是**凭猜想加的、生产脚本集一处都没用到**（整个 office-editor 静态树 + office 源码 + test
+   的 `Java.type`/`Packages`/`importClass` 全 **0** 处，脚本里也没有 JS 层 `load(`）→ **可直接去掉**；
+   但 `allowHostAccess(ALL)` 不是简单关掉就行：它是**真正的闸门**（实测即使不开类查找，JS 仍能经
+   `h.getClass().getClassLoader()`/`getMethods()` 反射出去），要收敛需换成 `HostAccess.EXPLICIT`
+   + `@HostAccess.Export` 白名单——触及面有界（全局仅 `CJavaEmbedBinder`，加 `Embed(...)` 注册的 8 个类）。
+   另注意 `EXPLICIT` 的失败方式很隐蔽：**读未导出字段静默返回 `undefined`**，不报错。
+   **按裁定留到阶段 B**，与"切运行时"一起做，必须过 13 项冒烟 + 三端真实转换两道门。
 2. 每个 `new CJSContext()` 都新建 `Context` → 拿不到"共享 Engine 复用编译产物"的收益
    （§4.5 冷 3.2s vs 热 1.4s），后续应共享 `Engine` + 缓存 `Source`。
 3. **还没跑真实转换**：`asc_nativeOpenFile → applyChanges2 → getFileData` 三步与 golden 逐字节对比尚未开始；
@@ -170,8 +177,9 @@
 ### 已完成：调研（有实测证据，全部写进计划 §6.1、§6.2、§6.3、§9.1）
 
 - **新增（计划 §4.1 修订 + §5.2）**：harness 的正解是**复用生产类、只换 `CJSContext` 的引擎**（`CDoctRenderer_Private.ExecuteScript()` 的前置注入全是生产类做的），**不是**另写 native 桥；但前提是**先改掉 `ScriptObjectMirror`**（GraalJS **不提供** `ScriptObjectMirror`，官方 `NashornMigrationGuide` 明写）→ 因此建议 **Phase 1 与 spike 合并做**。
-- **新增（计划 §5.2，10 条官方约束）**：`js.nashorn-compat` 需 `allowExperimentalOptions`；开 compat 后默认 ES5；**不提供 `ScriptObjectMirror`**（改 `Map`/`Value`）；compat 专属能力清单（`Java.isScriptObject`、`new Interface(fn)`、`JavaImporter`、`JSAdapter`、`load("nashorn:...")`、`exit/quit`）；Nashorn 语法扩展默认开；`Java.type`/`Packages` 等默认可用于是 sdk-all.js 不用改；**secure by default** 要显式放开 `allowHostAccess`/`allowHostClassLookup`/`allowIO`；**不允许有损转换**（数值不匹配抛 `TypeError`）；ScriptEngine 名是 `graal.js` 不是 `nashorn`（**必须钉死构建，防止运行时加载到真 Nashorn**）；compat 自动开选项**只对 legacy ScriptEngine、对 `Context` 不会**。
+- **新增（计划 §5.2，10 条官方约束）**：`js.nashorn-compat` 需 `allowExperimentalOptions`；开 compat 后默认 ES5；**不提供 `ScriptObjectMirror`**（改 `Map`/`Value`）；compat 专属能力清单（`Java.isScriptObject`、`new Interface(fn)`、`JavaImporter`、`JSAdapter`、`load("nashorn:...")`、`exit/quit`）；Nashorn 语法扩展默认开；~~`Java.type`/`Packages` 等默认可用于是 sdk-all.js 不用改~~ **❌ 该判断已被实测推翻（2026-10-07，计划 §6.4.7）：整个 office-editor 静态树 + office 源码 + test 的 `Java.type` 全 0 处，脚本里也没有 JS 层 `load(` → 这些能力我们一处都没用**；**secure by default** 要显式放开 `allowHostAccess`/`allowHostClassLookup`/`allowIO`（实测**只有 `allowHostAccess` 必需**，另两个是凭猜想加的、可去掉）；**不允许有损转换**（数值不匹配抛 `TypeError`）；ScriptEngine 名是 `graal.js` 不是 `nashorn`（**必须钉死构建，防止运行时加载到真 Nashorn**）；compat 自动开选项**只对 legacy ScriptEngine、对 `Context` 不会**。
 - **新增风险 11/12**：安全面扩大（与现网 Nashorn 行为不同，要逐条对比，优先 `HostAccess.EXPLICIT`+白名单）；有损转换（桥里 `int/long/byte` 互操作点要逐个核对 + `targetTypeMapping`）。
+- **风险 11 已实测摸清（2026-10-07，计划 §6.4.7）**：① 默认即 `HostAccess.EXPLICIT`（`ALL` 是我们主动开的口子）；② **闸门是 `HostAccess` 而非类查找**——不开类查找、只留 `ALL` 时 JS 仍能经 `h.getClass().getClassLoader()`/`getMethods()` 反射出去，故"关掉 classLookup 就安全"的想法不成立；③ `EXPLICIT` 的失败方式隐蔽（读未导出字段**静默返回 `undefined`**，不报错）；④ 收敛触及面有界（全局仅 `CJavaEmbedBinder` + `Embed(...)` 注册的 8 个类），但**按裁定留到阶段 B**。
 - **新增事实**：sdk-all.js **不是一份而是三份**（`sdkjs\word` 5.79MB / `slide` 5.97MB / `cell` 7.02MB，选择逻辑在 `CDoctRendererConfig`）；`sdkjs\*\sdk-all.cache` 是**浏览器 V8 代码缓存**（前端产物），不是 Java 侧缓存。
 
 **A. JDK 版本选型（回答用户第 1 点）**
@@ -191,10 +199,20 @@
 - **降风险项**：原生 `x2t.exe` 走 `ProcessBuilder`（与 JVM 版本无关，源码对 `doctrenderer.dll` **0 引用**）；数据源是 c3p0 直连（**不是** Tomcat DBCP/JNDI → 避开 dbcp→dbcps2 包名坑）；`spring-instrument-tomcat` 的 `TomcatInstrumentableClassLoader` 未在任何配置启用。
 - **构建**：字节码 target **保持 1.8**（Spring 4.3.8 内嵌 CGLIB/ASM 5 **读不懂 class file 61+**，提上去会让所有 CGLIB 代理炸）；`-d WebRoot\WEB-INF\classes` 不变量不变；war 打包流程不变但要重跑内容校验。
 
+### 已完成：宿主权限面实测 + 推翻两条错误判断（2026-10-07）—— 计划 §6.4.7
+
+- **起因**：核对 `createGraalContext()` 开的 `allowHostClassLookup` / `allowIO` 依据时，发现它们是**凭"nashorn-compat 提供 `Java.type`"的印象加的，从未验证**。
+- **实测（探针 `test/tmp/HostAccessProbe/`，用 PoC 运行时）**：
+  1. **`Java.type`/`Packages`/`importClass` 全项目 0 处**（整个 `WebRoot/web/static/office-editor` 递归 + office 源码 + test），脚本里也没有 JS 层 `load(` → 那两个开关**多余，可直接去掉**。
+  2. **默认即 `HostAccess.EXPLICIT`**（`ALL` 是主动开的口子）；`EXPLICIT` 读未导出字段**静默返回 `undefined`**（不报错，隐蔽）。
+  3. ❌ **"关掉类查找就能消掉风险 11"不成立**：不开类查找、只留 `ALL` 时 JS 仍可经 `h.getClass().getClassLoader()`/`getMethods()` 反射出去 → **真正的闸门是 `HostAccess`**。
+- **已改**：计划 §5.2 约束 6/7、§6.4.7（新增小节）、风险 11、§9.1 证据；`JSEngineFactory` 注释；本卡。
+- **裁定（用户 2026-10-07）**：本轮**只修正文档/注释里的错误结论**，**权限收敛留到阶段 B** 与"切运行时"一起做。
+
 ### 未做 / 待裁定
 
-- **未执行任何代码改动**：本次**纯文档**。
-- **未实测**：没有真正在 JDK 17 上跑过；§4 spike 仍未执行；GraalJS 在 17 档的实际性能/兼容性仍是**承诺**而非事实。
+- **首轮调研曾"未执行任何代码改动"（纯文档）**；此后阶段 1 已落地代码改动（见上）。
+- **未实测**：没有真正在 JDK 17 上跑过；GraalJS 在 17 档的实际性能/兼容性仍是**承诺**而非事实（阶段 1 用的是 JDK 8 档运行时）。
 - 计划 §6.1.6 的裁定项：**D1/D2/D3 已裁定（2026-10-07）= 锁定 JDK 17 + GraalJS 23.0.x；运行时采用形态 A（Oracle GraalVM for JDK 17，GFTC），随产品分发并保留其 LICENSE/NOTICE**；**D4/D5 待裁定**（D4 Tomcat 9.0.x 还是 10.1；D5 是否先做 JDK8+GraalVM CE 21.2 的纯引擎 PoC）。
 
 ## 生效约束
@@ -203,11 +221,10 @@
   - office `dev/office`：`d8e86829`（计划补选型+影响清单）→ `1c6cd941`（步 1 PoC 结果）→ `5feb46c8`（三端 Nashorn 对照）→ `1dd452d9`（形态 C + 两阶段）→ **`c10d614e`（阶段 1 第一步：`JSEngineFactory` + `CJSContext` + 计划 §6.4.1）**
   - office/test `master`：`c708b57`（纯引擎 harness + 一键脚本）→ **`c95d3ca`（`TestCJSContextEngineMode` + 引擎模式运行脚本）**
   - 主仓库 `devInt`：`970aca4a5`、`01bf4d489`、`e0d596b28`、`385dfef57`、`6fef895d4` → **`a2329c04f`（本卡）**
-- **最新提交**（2026-10-07，阶段 1 第 2 步）：
-  - office `dev/office`：`45ba91be`（§6.4.2 探针结论）→ **`217d107a`**（更正"组装路线不可用"）→ **`ff8ad1bc`**（`JSValueAccess` + 6 文件改造 + §6.4.3）
-  - office/test `master`：`3933e1a`（两个探针）→ **`fe859ef`**（冒烟断言更新）
-  - **`WebRoot/WEB-INF/lib`（独立仓库）**：**`25d6f2c`**（4 个 GraalJS jar）
-  - 主仓库 `devInt`：`e562036e8` → `7ec9690c3` → **`cb07c73ce`**（CLAUDE.md 补第 5 个仓库）→ **`8eedbd4ed`**（本卡）
+- **最新提交**（2026-10-07）：
+  - 三端真实转换：office `dev/office` **`f47f86be`**（计划 §6.4.6 三端结果）；office/test `master` **`43f4859`**（测试与脚本三端参数化）；主仓库 `devInt` **`a4097f941`**（本卡）。
+  - 宿主权限面修正：office `dev/office` **`dd4dd93e`**（计划 §6.4.7 + §5.2/风险 11 + `JSEngineFactory` 注释）；主仓库 `devInt` **`11863680f`**（本卡）。
+  - 阶段 1 第 2 步（更早）：office `dev/office` `45ba91be`→`217d107a`→`ff8ad1bc`→`b968d8bd`→`99560b9e`→`dc5c334b`；office/test `master` `3933e1a`→`fe859ef`→`9e40617`→`bcde713`；**`WebRoot/WEB-INF/lib`（独立仓库）`25d6f2c`**（4 个 GraalJS jar）；主仓库 `devInt` `cb07c73ce`（CLAUDE.md 补第 5 个仓库）等。
 - **不要**在未获裁定前动阶段 2 的内容（§6.2 的 Tomcat/jar/JDK 改造项）。
 - 阶段 1 期间**默认必须仍是 Nashorn**（`docsys.office.jsEngine` 不设即 nashorn）；任何提交都不得改变默认路径行为。
 - 计划 §6.1 的选型结论**尚未经 spike 验证**，引用时不要当作已验证事实。
