@@ -16,6 +16,11 @@ xlsx 里**添加/修改自动筛选（AutoFilter）后保存**，服务端 `appl
   但**本次修改丢失**。
 - 相关测试同样失败：`test/TestAutoFilterSmoke.java`（`convert ret != 0`）、
   `test/TestT8XlsyMergeGolden.java` 的 `[AfColor]` 两项。二者报的是**同一条 `Qf` 错误**。
+- **失败路径还会连带漏关一个 JS 上下文**（2026-10-07 发现并已修，见下）：栈帧显示该异常是从
+  `CDoctRenderer_Private.ExecuteScript:930` **作为 Java 异常抛出并逃出方法**的，而修复前该方法只在正常
+  返回时调 `Dispose()` → **每失败一次就漏掉一个 GraalJS Context**（要等 GC 才回收）。该泄漏已随
+  `docs/CJSContext资源关闭调研与修改方案.md` 的方案 A 修掉（`try/finally`），**本缺陷本身仍未修**
+  （仍需改 sdkjs，属独立立项）。
 
 ## 最小复现（产品级，已实测两遍：graaljs + nashorn）
 
