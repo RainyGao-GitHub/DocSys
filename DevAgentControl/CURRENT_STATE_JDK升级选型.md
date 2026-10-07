@@ -35,14 +35,27 @@
 - **回归门已绿**：`tools/run_cjscontext_engine_mode.ps1` → **nashorn PASS=10/FAIL=0（行为不变）**、
   **graaljs PASS=10/FAIL=0**（原 7/8/9 三个失败点全部消灭）。
 
-**仍未做（做 golden 对比前必须补）**：
+**第 3 步（定长数组 + embed 桥）：已完成，双模式 13/13**（计划 §6.4.4）
 
-1. `CJSTypedArray` / `JSUint8Array` / `CJavaEmbedBinder` 仍用 `ScriptEngine`（`engine.eval`、`getGlobals()`）
-   → graaljs 模式下 `engine` 为 null，**走到即 NPE**；而 `Uint8Array` 是 `getFileData` 的返回类型 → 必须先改造。
-2. `Uint8Array` 在 graaljs 模式暂时归为 `Type.ARRAY`（缺少 `Value` 感知的 `CJSTypedArray`），代码中已留 TODO。
-3. `HostAccess.ALL` 过宽，上线前应收敛为白名单（计划风险 11）。
-4. 每个 `new CJSContext()` 都新建 `Context` → 拿不到"共享 Engine 复用编译产物"的收益（§4.5 冷 3.2s vs 热 1.4s），
-   后续应共享 `Engine` + 缓存 `Source`。
+- 改造 `CJSTypedArray`（新增 Value 构造器；`byte[]` 构造与 `getCount`/`getData` 走适配层）、
+  `CJavaEmbedBinder`（wrapper 由 `CJSContext.createObject()` 建；`createMethodWrapper` 用 `evalRaw`；
+  `extractArgs`/`convertArg` 引擎无关化）；`CJSContext` 新增 `evalRaw`/`createUint8ArrayRaw`，
+  `convertGraalValue` 现在把 Uint8Array 还原成 `CJSTypedArray`。
+- **回归门**：`run_cjscontext_engine_mode.ps1` → **nashorn 13/13（行为不变）**、**graaljs 13/13**
+  （新增 3 项：Uint8Array 往返、eval 出的 Uint8Array 识别与取字节、embed 桥调用宿主方法）。
+- **风险 18（新发现）**：Truffle 把 JS 真数组作为宿主 `Object` 形参传入时给的是 `PolyglotMap`，
+  且该视图对真数组**没有索引**（`isList()==false`、`keySet()` 空）→ 宿主侧参数永远取不到
+  （表现为 `NoSuchMethodException: m(1)`）。对策：JS 侧改传"数组样式对象"`{length:n,0:…}`
+  （普通对象在 Truffle 下是可枚举 `Map`），两引擎共用同一套 JS。已修并验证。
+- 核实：`JSUint8Array` **零引用 = 死代码**，不碰 `CJSContext.engine` → 不构成 NPE 风险，本次未动。
+
+**仍未做（通往 golden 对比只剩这些）**：
+
+1. `HostAccess.ALL` 过宽，上线前应收敛为白名单（计划风险 11）。
+2. 每个 `new CJSContext()` 都新建 `Context` → 拿不到"共享 Engine 复用编译产物"的收益
+   （§4.5 冷 3.2s vs 热 1.4s），后续应共享 `Engine` + 缓存 `Source`。
+3. **还没跑真实转换**：`asc_nativeOpenFile → applyChanges2 → getFileData` 三步与 golden 逐字节对比尚未开始；
+   建议先用 `-Ddocsys.doctrenderer.dumpScriptPath` 取"真脚本"，再按计划 §4.2 的 fixture 矩阵跑三端。
 
 之后才是三端 golden 逐字节对比 → 达标即**退役 JMergeEngine** → 阶段 2（JDK 17 + Tomcat 9）排期。
 
