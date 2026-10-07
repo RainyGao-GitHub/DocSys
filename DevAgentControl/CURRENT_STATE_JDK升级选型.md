@@ -112,10 +112,12 @@
 
 ## 生效约束
 
-- 本次改动**只有 2 个文件**：`src/com/DocSystem/websocket/office/docs/GraalJS替代Nashorn评估计划.md`（在 **office 仓库** `dev/office` 分支）+ 本工作卡（主仓库）→ **已提交**：
-  - office 仓库 `dev/office`：**`d8e86829`**（评估计划，+286/-15）
-  - 主仓库 `devInt`：**`970aca4a5`**（本卡新增 + war打包卡移入已完成为）
-- **不要**在未获裁定前动任何代码（尤其 §6.2 清单里的源码/jar/Tomcat）。
+- **提交记录**（本卡相关，按时间）：
+  - office `dev/office`：`d8e86829`（计划补选型+影响清单）→ `1c6cd941`（步 1 PoC 结果）→ `5feb46c8`（三端 Nashorn 对照）→ `1dd452d9`（形态 C + 两阶段）→ **`c10d614e`（阶段 1 第一步：`JSEngineFactory` + `CJSContext` + 计划 §6.4.1）**
+  - office/test `master`：`c708b57`（纯引擎 harness + 一键脚本）→ **`c95d3ca`（`TestCJSContextEngineMode` + 引擎模式运行脚本）**
+  - 主仓库 `devInt`：`970aca4a5`、`01bf4d489`、`e0d596b28`、`385dfef57`、`6fef895d4` → **`a2329c04f`（本卡）**
+- **不要**在未获裁定前动阶段 2 的内容（§6.2 的 Tomcat/jar/JDK 改造项）。
+- 阶段 1 期间**默认必须仍是 Nashorn**（`docsys.office.jsEngine` 不设即 nashorn）；任何提交都不得改变默认路径行为。
 - 计划 §6.1 的选型结论**尚未经 spike 验证**，引用时不要当作已验证事实。
 
 ## 挂起（未获新裁定前不要开工）
