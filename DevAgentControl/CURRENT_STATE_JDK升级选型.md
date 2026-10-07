@@ -158,6 +158,31 @@ OFFICE: saveDoc() convert bin to office failed
 **环境已恢复**：实验后已用 `docsys_start_hidden.bat` 重新以**缺省（graaljs）**启动，
 并在 JVM 命令行确认**不含** `docsys.office.jsEngine` 参数（PID 27096、HTTP 200）；临时包装脚本与 mark 文件已删。
 
+**✅ 已完成：测试收尾（术语清理 + 失败项如实标注，2026-10-07）**
+
+用户裁定做"105 处历史注释 + 4 个失败项断言对齐"。实际执行：
+
+1. **术语清理**（19 个文件，commit `bf47cb7`）：`Nashorn 路径` / `Java 路径` / `JMergeEngine` 等已过期说法
+   统一改为 **`JS 引擎路径`**（现在只有一条路径且默认 graaljs）；并删掉 **12 行"开关已删除、内容已是假话"的日志**
+   （如 `Log.debug("【TestJMergeJavaGolden】Java 路径已启用 …")`）。
+   **类名/文件名里的 Nashorn 保持不变**（`TestSlideNashornBaseline`/`TestT8NashornTrace`）——改名会牵动
+   tmp 输出目录与文档引用；`js.nashorn-compat` 这类真实 API 选项名也不动。
+2. **`DiagAdd.java:30`** 修掉非法转义符（Java 字符串里 `"\d"` 不合法）→ 改用字符类 `[0-9]`。
+   它是"整批编译"此前唯一的不通过项（既有问题，与本轮删除无关）。→ **82 个测试文件整批编译 exit 0**。
+3. **4 个失败项（不掩盖真实信号）**：
+   - `TestJMergeJavaGolden` → **转绿**：`word/document.xml` 唯一差异是 `w:orient`（JS 引擎 portrait / golden
+     landscape，差 5 字节），已实测排除引擎因素（同 fixture 用 stock JDK8 跑 nashorn 与 graaljs 产物**完全一致**），
+     成因是原文 `orient="landscape"` 与其 `w:h>w:w` 纵向版面自相矛盾、JS 引擎按真实版面规范化 →
+     **带完整理由**加入 `KNOWN_BENIGN_DIFF`，现 `[PASS] 6 项通过`。
+   - `TestAutoFilterSmoke` / `TestT8XlsyMergeGolden([AfColor])` → **故意保持失败**，加注释指向缺陷卡
+     （AutoFilter 既有缺陷）。**不加白名单掩盖**。
+   - `TestJSlideMergeGoldenNew`（S-1/S-2/S-3 各 `realDiff=12`）→ **根因未查清，不加白名单**，注释标注为待查。
+
+**⚠️ 教训（已踩两次，务必记住）**：用 `@'...'@ | python -` 这种**管道传脚本**时，PowerShell 会破坏
+**非 ASCII 字符**（我的替换文本 `JS 引擎路径` 变成了 `JS ????`，一版注释被写坏后已回滚）。
+**必须把脚本写成 UTF-8 文件再 `python <file>`**；另外批量文本替换**绝不能碰标识符/类名**
+（第一次过宽的替换把 `TestSlideNashornBaseline` 改成含空格的非法标识符，已回滚重做）。
+
 **② ✅ 已完成：重启 dev 服务让新类生效（2026-10-07 17:30）**
 
 `docsys_restart.bat`（后台隐藏窗口）；旧 PID 39460 退出 → 新 PID **16916**（17:30:23 启动，运行时仍是 GraalVM CE 21.2 / 1.8.0_302）。
