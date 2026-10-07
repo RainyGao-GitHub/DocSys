@@ -2,7 +2,8 @@
 
 > 状态：**阶段 B 全部完成并三层验证通过**（代码侧：共享 Engine / 权限收敛 / 默认翻转 graaljs；
 > 运行时侧：GraalVM CE 21.2；**应用侧：用户手动 4 次保存，全部走 GraalJS、零错误**）；
-> 下一步 = **C 阶段（nashorn 退役）** 与 **阶段 2（JDK 17 + Tomcat 9）**（2026-10-07）
+> **并已完成"删除 apply_changes 的 Java 移植路径"（198 文件，系统复杂度下降）**；
+> 下一步 = **用户裁定测试树那 132 个文件怎么处理** + **C 阶段（nashorn 退役）** + **阶段 2（JDK 17 + Tomcat 9）**（2026-10-07）
 > 前置卡 `CURRENT_STATE_war打包.md` **已收尾**（导出可发布 `DocSystem.war` 并校验通过），已移入 `DevAgentControl/已完成/`。
 
 ## 已裁定（2026-10-07）
@@ -15,10 +16,43 @@
 | **D4 Tomcat 档位** | **Tomcat 9.0.x**（保持 `javax.servlet`，源码包名不动）；`10.1/11` 的 jakarta 全量迁移**另行立项** |
 | **D5 spike 顺序** | **先做纯引擎 PoC（JDK 8 + GraalVM CE 21.2 跑 `sdk-all.js`），拿到兼容/性能数据再动 JDK**；PoC 结论只是预判，最终必须在 17 档重验一次（计划 §4.0）→ ✅ **已执行**（计划 §4.5） |
 | **实施路径（2026-10-07 裁定）** | **两阶段**（计划 §6.4）：**阶段 1 = 引擎先行**（运行时用 **形态 C：GraalVM CE 21.2 / JDK 8**，JDK 与 Tomcat 都不动，只做 `CJSContext` 引擎工厂 + §5/§5.2 的 `ScriptObjectMirror` 改写 + golden 验证 → 出口即**可退役 JMergeEngine**）；**阶段 2 = 基础设施迁移**（换形态 A：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + §6.2 整张清单）。**最终目标档位 D1（JDK 17）不变，变的只是到达顺序。** |
+| **删除 Java 移植路径（2026-10-07 裁定）** | 用户"不再需要 apply_changes 的 Java 路径"→ 按既有方案 `docs/apply_changes移除Java路径修改方案.md` 执行；**并明确"先只删生产代码、测试那 132 个引用先不动，用户自己看过再决定"** |
 
 ## 下一步
 
-**阶段 1（引擎先行）** —— 运行时用形态 C（GraalVM CE 21.2 / JDK 8），**不动 JDK、不动 Tomcat、不动任何 jar**。
+**① 待用户裁定（阻塞测试树）**：office/test 里 **132 个文件 import 了已删除的 jmerge 类 → 现在编译不过**，
+含三端转换门 `TestJsPathEngineCompare`。三选一：
+(a) 全删 126（连 oracle/trace 族一起删）；(b) **删 121、保留 `jmerge/bin` 的 12 个纯流测试**（推荐，成本最低且不丢纯流回归）；
+(c) 暂不动。→ **在定案前不要跑那 132 个测试**；名单在 `%TEMP%\del_list.txt` / `fix_list.txt`（临时文件，可重扫）。
+
+**② 重启 dev 服务**：本轮新编译的 `NExtractToolsStatic.class` 尚未生效（当前 JVM 里是旧类）。
+重启后可用新日志行确认：`【apply_changes】JS 引擎路径 eType:<n> 引擎:graaljs`。
+
+**③ C 阶段（nashorn 退役）**：上线稳定后删 nashorn 分支（`CJSContext` 11 处双分支 + `JSEngineFactory.createNashorn()`）。
+
+**④ 阶段 2**：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + 计划 §6.2 整张清单。
+
+**✅ 已完成：删除 apply_changes 的 Java 移植路径（计划 §6.4.12，2026-10-07）—— 用户要求"降低系统复杂度"**
+
+用户裁定：① 改掉会误导的日志标签；② **删除 apply_changes 的 Java 路径代码**。按既有方案
+`docs/apply_changes移除Java路径修改方案.md` 执行。
+
+| 项 | 结果 |
+|---|---|
+| `doctrenderer/jmerge/**` | **删 198 文件 / 2.43 MB**（word 114 + slide 62 + cell 18 + common 2 + `JMergeEngine`/`JMergeResult`） |
+| `jmerge/bin/` 5 文件 | **保留**（纯流工具、生产不用、oracle/trace 族测试依赖） |
+| `NExtractToolsStatic.apply_changes()` | 删 Java 调度块（原 934–960）；JS 路径"拷图片 + 打包 changes.zip"仍在（现 979–990），**未丢功能** |
+| 误导标签 | `【JMergeEngine】Nashorn 路径` 随类消失；**同位置补准确的** `【apply_changes】JS 引擎路径 eType:<n> 引擎:<mode>` |
+| 旧 `.class` | 清理 1394 个残留 class，保留 `bin` 的 8 个 |
+| 保留的 `jmerge.*` 字符串 | `CDoctRenderer_Private` 的 `jmerge.oracle{,2,3}` 钩子、`NExtractToolsStatic` 的 `jmerge.getFileDataDump`（纯 system property 名、不引用 Java 类）→ 名字过时但不改（改名会连带改测试，而测试本轮不动） |
+
+**验证（两道门全绿）**：13 项冒烟 **nashorn 13/13 + graaljs 13/13**；
+三端真实转换 **word/slide/cell 全部 IDENTICAL-MODULO-TIMESTAMPS**（内容不同 0）
+→ 证明"删掉那个 flag-off 恒 no-op 的分支"对 JS 路径**行为零影响**。
+
+⚠️ **副作用（用户已知情）**：**office/test 132 个文件编译不过**。本轮回归用其**临时副本**跑的
+（`test/tmp/JsPathEngineCompare/patched/`，只摘掉 `import` 与 `setEnabled(false)` 两处），
+**仓库内测试文件一个未改**；`git status` 里 test 仓库的改动只有那个**既有的、被覆盖过的 fixture**。
 
 **✅ 已完成：真实转换三端验证（内容一致）**（计划 §6.4.6）
 
@@ -320,6 +354,12 @@
 
 - **首轮调研曾"未执行任何代码改动"（纯文档）**；此后阶段 1 已落地代码改动（见上）。
 - **未实测**：没有真正在 JDK 17 上跑过；GraalJS 在 17 档的实际性能/兼容性仍是**承诺**而非事实（阶段 1 用的是 JDK 8 档运行时）。
+- **待用户裁定（阻塞测试树）**：office/test **132 个文件** import 已删的 jmerge 类 → 编译不过；
+  (a) 全删 126 / (b) 删 121 保留 `jmerge/bin` 12 个纯流测试 / (c) 暂不动。用户已说"我自己看过再决定"。
+- **未做**：新 `NExtractToolsStatic.class` 尚未在 dev 服务生效（需重启）。
+- **未定性**：① slide 包首次 `Execute` 的 `run` 仅 174 ms（远快于探针冷载 3.8 s）；② 每次保存伴随
+  `executeCommonActionList() failed actions:1`（紧跟 `TextSearch was Disabled`）。
+- **交付前必做**：核对 `-Xmx`（实测 ParOldGen 1537 MB / 2713 MB，当前 dev 无 `-Xmx`）。
 - 计划 §6.1.6 的裁定项：**D1/D2/D3 已裁定（2026-10-07）= 锁定 JDK 17 + GraalJS 23.0.x；运行时采用形态 A（Oracle GraalVM for JDK 17，GFTC），随产品分发并保留其 LICENSE/NOTICE**；**D4/D5 待裁定**（D4 Tomcat 9.0.x 还是 10.1；D5 是否先做 JDK8+GraalVM CE 21.2 的纯引擎 PoC）。
 
 ## 生效约束
@@ -329,11 +369,12 @@
   - office/test `master`：`c708b57`（纯引擎 harness + 一键脚本）→ **`c95d3ca`（`TestCJSContextEngineMode` + 引擎模式运行脚本）**
   - 主仓库 `devInt`：`970aca4a5`、`01bf4d489`、`e0d596b28`、`385dfef57`、`6fef895d4` → **`a2329c04f`（本卡）**
 - **最新提交**（2026-10-07）：
+  - **删除 apply_changes Java 移植路径**：office `dev/office` **`1ec922e5`**（201 文件：3 改 + 198 删；计划 §6.4.12 + 方案文档执行记录 + `NExtractToolsStatic` 日志修正）；主仓库 `devInt` **`81b39d2a6`**（本卡）。**office/test 无改动**（回归用的补丁副本在 `test/tmp/`，已 gitignore；test 工作区只剩那个既有的被覆盖 fixture）。
   - 三端真实转换：office `dev/office` **`f47f86be`**（计划 §6.4.6 三端结果）；office/test `master` **`43f4859`**（测试与脚本三端参数化）；主仓库 `devInt` **`a4097f941`**（本卡）。
   - 宿主权限面修正：office `dev/office` **`d8026227`**（计划 §6.4.7 + §5.2/风险 11 + `JSEngineFactory` 注释）；主仓库 `devInt` **`9bf578fe3`**（本卡）。
   - 阶段 1 第 2 步（更早）：office `dev/office` `45ba91be`→`217d107a`→`ff8ad1bc`→`b968d8bd`→`99560b9e`→`dc5c334b`；office/test `master` `3933e1a`→`fe859ef`→`9e40617`→`bcde713`；**`WebRoot/WEB-INF/lib`（独立仓库）`25d6f2c`**（4 个 GraalJS jar）；主仓库 `devInt` `cb07c73ce`（CLAUDE.md 补第 5 个仓库）等。
 - **不要**在未获裁定前动阶段 2 的内容（§6.2 的 Tomcat/jar/JDK 改造项）。
-- 阶段 1 期间**默认必须仍是 Nashorn**（`docsys.office.jsEngine` 不设即 nashorn）；任何提交都不得改变默认路径行为。
+- 阶段 1 期间**默认必须仍是 Nashorn**（`docsys.office.jsEngine` 不设即 nashorn）；任何提交都不得改变默认路径行为。→ ⚠️ **本条已于 2026-10-07 作废**：用户裁定把默认翻转为 **`graaljs`**（`nashorn` 退居显式开关，见 `JSEngineFactory.DEFAULT_MODE`）。新的等效约束是：**缺省即 graaljs ⇒ 运行时必须是 GraalVM（或 classpath 上有 GraalJS）**；换回 stock JDK 8 时 GraalJS 只能解释执行，须显式 `-Ddocsys.office.jsEngine=nashorn`。
 - 计划 §6.1 的选型结论**尚未经 spike 验证**，引用时不要当作已验证事实。
 
 ## 挂起（未获新裁定前不要开工）
