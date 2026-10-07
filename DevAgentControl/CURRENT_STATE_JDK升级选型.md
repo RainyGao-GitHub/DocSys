@@ -18,6 +18,29 @@
 
 **阶段 1（引擎先行）** —— 运行时用形态 C（GraalVM CE 21.2 / JDK 8），**不动 JDK、不动 Tomcat、不动任何 jar**。
 
+**✅ 已完成：真实转换首跑（slide 端内容一致）**（计划 §6.4.6）
+
+首次真实执行 `open → applyChanges → getFileData → x2t`（`JMergeEngine.setEnabled(false)` 强制走 JS 路径，
+唯一变量 = `-Ddocsys.office.jsEngine`）：
+
+| | nashorn | graaljs |
+|---|---|---|
+| 整次转换 | **32.3 s** | **13.6 s**（2.4×；其中载入脚本 17.5 s → 4.3 s，4.1×） |
+| 产物（ZIP 条目级） | 59 条 → **内容一致 58、仅时间戳不同 1（`docProps/core.xml`）、内容不同 0** | 同 |
+| VERDICT | **IDENTICAL-MODULO-TIMESTAMPS** | |
+
+- 复现：`test/tools/run_js_path_engine_compare.ps1`（`TestJsPathEngineCompare.java`）。
+- **方法学更正**：§4.2 的"逐字节一致"**不可达**（OOXML 天然带保存时刻），判据已改为
+  **"时间戳归一化后逐字节一致"**，且比较必须落到 **ZIP 条目级**（整文件哈希/大小会被时间戳影响）。
+- 顺带修掉真实缺陷：`CJSObject.getNative()` 需 `JSValueAccess.unwrapHost()`
+  （GraalJS 把宿主对象包成 `Value` 返回，`instanceof CJSEmbedObject` 不成立 → NPE）。
+
+**下一步（阶段 B 触发条件尚未满足）**：
+
+1. **word / cell 两端还没跑**（§4.2 的 fixture 矩阵只完成 slide）→ 扩 fixture 覆盖。
+2. `HostAccess.ALL` 收敛为白名单（风险 11）。
+3. 共享 `Engine` + 缓存 `Source`（可有可无的优化；注意每请求新建 Context 会丢掉编译产物复用）。
+
 **第 1 步（引擎获取收敛 + 冒烟）已完成**（计划 §6.4.1）：
 
 - 新增 `doctrenderer/NSJSBase/JSEngineFactory.java`（开关 `-Ddocsys.office.jsEngine=nashorn|graaljs`，缺省 nashorn 且逻辑与改造前逐句等价）；
