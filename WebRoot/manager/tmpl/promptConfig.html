@@ -4,7 +4,9 @@
             <div class="widget-head">
               <div class="pull-left">提示词管理</div>
               <div class="widget-icons pull-right">
-                <button onclick="savePromptConfig()" class="btn btn-lg btn-success examine_ban">保存</button>
+                <button id="btnEnablePromptConfigSet" onclick="enablePromptConfigSet()" class="btn btn-lg btn-success examine_ban">编辑</button>
+                <button id="btnSavePromptConfigSet" onclick="savePromptConfig()" class="btn btn-lg btn-success examine_ban" style="display:none;">保存</button>
+                <button id="btnCancelPromptConfigSet" onclick="cancelPromptConfigSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">取消</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -15,14 +17,14 @@
 	                  <tr>
 	                    <td style="width:180px">附加提示词（推荐）</td>
 	                    <td>
-	                    	<textarea id="promptSuffix" class="form-control" rows="5" placeholder="例：你是XX公司的文档助手，请优先用中文回答；回答先给结论再给细节。">{{value.suffix}}</textarea>
+                     	<textarea id="promptSuffix" class="form-control" rows="5" disabled="disabled" placeholder="例：你是XX公司的文档助手，请优先用中文回答；回答先给结论再给细节。">{{value.suffix}}</textarea>
 	                    	<span class="help-block">追加到默认提示词末尾，用于设定 Agent 的行为规范/身份定位，不影响默认工具调用规则。</span>
 	                    </td>
 	                  </tr>
 	                  <tr>
 	                    <td>覆盖提示词（高级）</td>
 	                    <td>
-	                    	<textarea id="promptOverride" class="form-control" rows="8" placeholder="留空则使用默认提示词。填写后将完全替换默认提示词（含工具调用格式规则），请谨慎使用！">{{value.override}}</textarea>
+                     	<textarea id="promptOverride" class="form-control" rows="8" disabled="disabled" placeholder="留空则使用默认提示词。填写后将完全替换默认提示词（含工具调用格式规则），请谨慎使用！">{{value.override}}</textarea>
 	                    </td>
 	                  </tr>
 	                  <tr>

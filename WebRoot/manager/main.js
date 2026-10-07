@@ -434,7 +434,10 @@ function showAgentPage(curPath)
    	}
 }
 
-//提示词管理（T8.6）
+//提示词管理（T8.6）：默认只读，需先点「编辑」才能改（与「系统管理-系统设置」页一致的交互）
+var PROMPT_CONFIG_FIELDS = ["promptSuffix", "promptOverride"];
+var promptConfigData = null;	//已保存的值，用于「取消」时还原
+
 function showPromptConfig(){
 	$.ajax({
         url : "/DocSystem/agent/config/system-prompt",
@@ -444,6 +447,7 @@ function showPromptConfig(){
             console.log("showPromptConfig() ret", ret);
         	if(ret.success)
             {
+            	promptConfigData = ret.data;	//缓存已保存值（取消时还原）
             	$Func.render($("#container"),"promptConfig" + langExt,{"value":ret.data});
             }
             else
@@ -457,9 +461,26 @@ function showPromptConfig(){
     });
 }
 
+function enablePromptConfigSet(){
+	console.log("enablePromptConfigSet");
+	setSystemPageEditMode("PromptConfig", PROMPT_CONFIG_FIELDS, true);
+}
+
+function cancelPromptConfigSet(){
+	console.log("cancelPromptConfigSet promptConfigData:", promptConfigData);
+
+	//还原成已保存的值
+	$("#promptSuffix").val(promptConfigData ? (promptConfigData.suffix || "") : "");
+	$("#promptOverride").val(promptConfigData ? (promptConfigData.override || "") : "");
+	setSystemPageEditMode("PromptConfig", PROMPT_CONFIG_FIELDS, false);
+}
+
 function savePromptConfig(){
 	var suffix = $("#promptSuffix").val() || "";
 	var override = $("#promptOverride").val() || "";
+
+	setSystemPageEditMode("PromptConfig", PROMPT_CONFIG_FIELDS, false);	//先退出编辑态
+
 	$.ajax({
         url : "/DocSystem/agent/config/system-prompt",
         type : "post",
@@ -471,13 +492,17 @@ function savePromptConfig(){
         	if(ret.success)
             {
             	showErrorMessage(_Lang("提示词配置已保存，将于后续请求生效"));
+            	showPromptConfig();	//重新拉取并渲染（回到只读态、显示已保存的值）
             }
             else
             {
+            	//保存失败：留在编辑态，方便修正后重试（不重新渲染，避免丢掉已输入内容）
+            	setSystemPageEditMode("PromptConfig", PROMPT_CONFIG_FIELDS, true);
             	showErrorMessage(_Lang("保存提示词配置失败", " : ", ret.message || ""));
             }
         },
         error : function () {
+        	setSystemPageEditMode("PromptConfig", PROMPT_CONFIG_FIELDS, true);
         	showErrorMessage(_Lang("保存提示词配置失败", " : ", "服务器异常"));
         }
     });

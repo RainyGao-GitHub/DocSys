@@ -4,7 +4,9 @@
             <div class="widget-head">
               <div class="pull-left">Prompt Config</div>
               <div class="widget-icons pull-right">
-                <button onclick="savePromptConfig()" class="btn btn-lg btn-success examine_ban">Save</button>
+                <button id="btnEnablePromptConfigSet" onclick="enablePromptConfigSet()" class="btn btn-lg btn-success examine_ban">Edit</button>
+                <button id="btnSavePromptConfigSet" onclick="savePromptConfig()" class="btn btn-lg btn-success examine_ban" style="display:none;">Save</button>
+                <button id="btnCancelPromptConfigSet" onclick="cancelPromptConfigSet()" class="btn btn-lg btn-warning examine_ban" style="display:none;">Cancel</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -15,14 +17,14 @@
 	                  <tr>
 	                    <td style="width:180px">Suffix Prompt (recommended)</td>
 	                    <td>
-	                    	<textarea id="promptSuffix" class="form-control" rows="5" placeholder="e.g. You are the doc assistant of XX company, answer in Chinese first; conclusion first then details.">{{value.suffix}}</textarea>
+                     	<textarea id="promptSuffix" class="form-control" rows="5" disabled="disabled" placeholder="e.g. You are the doc assistant of XX company, answer in Chinese first; conclusion first then details.">{{value.suffix}}</textarea>
 	                    	<span class="help-block">Appended to the default prompt. Set behavior/persona without touching default tool-calling rules.</span>
 	                    </td>
 	                  </tr>
 	                  <tr>
 	                    <td>Override Prompt (advanced)</td>
 	                    <td>
-	                    	<textarea id="promptOverride" class="form-control" rows="8" placeholder="Leave empty to use the default prompt. If filled, it fully replaces the default (including tool-call format rules). Use with caution!">{{value.override}}</textarea>
+                     	<textarea id="promptOverride" class="form-control" rows="8" disabled="disabled" placeholder="Leave empty to use the default prompt. If filled, it fully replaces the default (including tool-call format rules). Use with caution!">{{value.override}}</textarea>
 	                    </td>
 	                  </tr>
 	                  <tr>
