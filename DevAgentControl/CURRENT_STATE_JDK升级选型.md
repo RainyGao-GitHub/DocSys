@@ -25,7 +25,26 @@
 - 冒烟（真实生产类）：**nashorn 缺省模式 PASS=10/FAIL=0（行为不变 ✅）**；**graaljs 模式 PASS=7/FAIL=3**。
 - 复现：`test/tools/run_cjscontext_engine_mode.ps1`（`TestCJSContextEngineMode.java`）。
 
-**第 2 步（进行中）：值类型探针已完成，实现规格已确定**（计划 §6.4.2）
+**第 2 步（适配层）：已完成基础部分，双模式全绿**（计划 §6.4.3）
+
+- 新增 `NSJSBase/JSValueAccess.java`（引擎无关的值访问层，20 个静态方法，按
+  `ScriptObjectMirror` → `Value` → `Map/List` 三级分派）。
+- 改造 `JSEngineFactory`（新增 `createGraalContext()`）、`CJSContext`（新增 `graalContext` 后端 +
+  `convertGraalValue()` + 六处按后端分支）、`CJSObject`（6 处 cast）、`CJSArray`（6 处 cast）、
+  `CJSValue`（5 个转换/判定方法加 `Value` 分支）。
+- **回归门已绿**：`tools/run_cjscontext_engine_mode.ps1` → **nashorn PASS=10/FAIL=0（行为不变）**、
+  **graaljs PASS=10/FAIL=0**（原 7/8/9 三个失败点全部消灭）。
+
+**仍未做（做 golden 对比前必须补）**：
+
+1. `CJSTypedArray` / `JSUint8Array` / `CJavaEmbedBinder` 仍用 `ScriptEngine`（`engine.eval`、`getGlobals()`）
+   → graaljs 模式下 `engine` 为 null，**走到即 NPE**；而 `Uint8Array` 是 `getFileData` 的返回类型 → 必须先改造。
+2. `Uint8Array` 在 graaljs 模式暂时归为 `Type.ARRAY`（缺少 `Value` 感知的 `CJSTypedArray`），代码中已留 TODO。
+3. `HostAccess.ALL` 过宽，上线前应收敛为白名单（计划风险 11）。
+4. 每个 `new CJSContext()` 都新建 `Context` → 拿不到"共享 Engine 复用编译产物"的收益（§4.5 冷 3.2s vs 热 1.4s），
+   后续应共享 `Engine` + 缓存 `Source`。
+
+之后才是三端 golden 逐字节对比 → 达标即**退役 JMergeEngine** → 阶段 2（JDK 17 + Tomcat 9）排期。
 
 - 新增两个探针（office/test）：`TestJsValueProbe.java`（两引擎对比"JS 值→Java 类型"）、
   `TestGraalJsApiProbe.java`（Polyglot `Context`/`Value` 的 API 映射逐项实测）。
