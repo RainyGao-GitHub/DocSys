@@ -3,7 +3,9 @@
 > 状态：**阶段 B 全部完成并三层验证通过**（代码侧：共享 Engine / 权限收敛 / 默认翻转 graaljs；
 > 运行时侧：GraalVM CE 21.2；**应用侧：用户手动 4 次保存，全部走 GraalJS、零错误**）；
 > **并已完成"删除 apply_changes 的 Java 移植路径"（198 文件，系统复杂度下降）**；
-> 下一步 = **用户裁定测试树那 132 个文件怎么处理** + **C 阶段（nashorn 退役）** + **阶段 2（JDK 17 + Tomcat 9）**（2026-10-07）
+> 测试树已收尾（24 个端到端测试改走唯一 JS 路径 + 删除 107 个不可编译文件 + 术语清理 + 失败项如实标注）；
+> **C 阶段（删 nashorn 分支）用户 2026-10-07 裁定暂不做**（工作量过大：8 类 ~60 处、3000+ 行）；
+> 下一步 = **阶段 2（JDK 17 + Tomcat 9）**（2026-10-07）
 > 前置卡 `CURRENT_STATE_war打包.md` **已收尾**（导出可发布 `DocSystem.war` 并校验通过），已移入 `DevAgentControl/已完成/`。
 
 ## 已裁定（2026-10-07）
@@ -196,7 +198,8 @@ OFFICE: saveDoc() convert bin to office failed
 `mxsdoc.jar` 已不存在（符合"开发期删 jar 用源码"的约定）。
 → 无需 UI 触发即可确认：日志标签会在下次 apply_changes 时以新文案出现。
 
-**③ C 阶段（nashorn 退役）**：上线稳定后删 nashorn 分支（`CJSContext` 11 处双分支 + `JSEngineFactory.createNashorn()`）。
+**③ C 阶段（删 nashorn 分支）**：**用户 2026-10-07 裁定暂不做**（调研已完成、清单在"挂起"节；改动量 8 类 ~60 处、
+3000+ 行，收益不足）→ **保留现状**：默认 graaljs ＋ `docsys.office.jsEngine=nashorn` 作显式回退。
 
 **④ 阶段 2**：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + 计划 §6.2 整张清单。
 
@@ -255,7 +258,7 @@ OFFICE: saveDoc() convert bin to office failed
 | **默认引擎翻转为 graaljs** | ✅ **已做（2026-10-07）**——`DEFAULT_MODE = graaljs`，nashorn 退居显式开关 |
 | **应用侧端到端（真实 UI 保存）** | ✅ **已做（2026-10-07）**——用户手动 4 次保存，全部走 GraalJS、`strError` 全空（§6.4.11） |
 
-→ **阶段 B 全部完成（代码 / 运行时 / 应用三层）**。后续只剩 **C 阶段**（上线稳定后删 nashorn 分支）与阶段 2（JDK 17 + Tomcat 9）。
+→ **阶段 B 全部完成（代码 / 运行时 / 应用三层）**。**C 阶段已裁定暂不做**，后续只剩阶段 2（JDK 17 + Tomcat 9）。
 
 **✅ 已完成：app 内端到端验证（2026-10-07，用户手动 4 次保存）—— 计划 §6.4.11**
 
@@ -404,15 +407,17 @@ OFFICE: saveDoc() convert bin to office failed
 
 ⚠️ **约束**：默认切 graaljs **必须与"运行时切 GraalVM"绑定**——在 stock JDK 8 上 GraalJS 只能解释执行
 （实测打印 `does not support runtime compilation … interpreted mode only`），那时**可能比 nashorn 还慢**。
-另：nashorn 退场**不等于没有 JS 引擎兜底**，长期兜底是 **`JMergeEngine`（纯 Java 移植）**。
+另：nashorn 退场**不等于没有 JS 引擎兜底**（长期兜底曾是 `JMergeEngine` 纯 Java 移植）—— 但该兜底
+**2026-10-07 已按用户裁定删除**（"降低系统复杂度"，§6.4.12），所以现在**唯一的回退就是 `docsys.office.jsEngine=nashorn` 开关**，
+这也是本轮 C 阶段裁定"暂不做"的一个理由：保住这条路。
 
 **仍未做（阶段 B 已完成，剩下的是后续项）**：
 
-1. **C 阶段（nashorn 退役）**：上线稳定、无回退需求后删除 nashorn 分支
-   （`CJSContext` 11 处 + `JSEngineFactory.createNashorn()` + `engine`/`globals` 字段），此后 `docsys.office.jsEngine` 开关可一并移除。
+1. ~~**C 阶段（删 nashorn 分支）**~~ → **用户 2026-10-07 裁定暂不做**（调研已完成、清单在"挂起"节）。
 2. ⚠️ **交付前核对 `-Xmx`**（新出现，来自 §6.4.11 内存实测）：4 次保存后 ParOldGen 已用 1537 MB / 2713 MB（55%），
    而当前 dev 没设 `-Xmx`（默认上限约 4.8 GB）。生产若给较小堆会成瓶颈。
-3. （小）`JMergeEngine.java:127` 的日志标签 `【JMergeEngine】Nashorn 路径` 已过时（现在跑 GraalJS），建议改文案。
+3. ~~（小）`JMergeEngine.java:127` 的日志标签已过时~~ → **已随 JMergeEngine 一并删除**；`apply_changes` 的日志标签
+   已改为 `【apply_changes】JS 引擎路径 eType:<n> 引擎:<mode>`（§6.4.12）。
 4. （小）定性每次保存都出现的 `executeCommonActionList() failed actions:1`（疑与 `TextSearch was Disabled` 相关）。
 5. （未解释）slide 包首次 Execute 的 `run` 仅 174 ms，远快于探针冷载约 3.8 s——需时可查。
 6. （可选）受控 A/B 测 GraalVM 对**启动耗时**的影响——当前数据不足以判断
@@ -551,6 +556,32 @@ OFFICE: saveDoc() convert bin to office failed
   里的 `<a:fld type="datetimeFigureOut">` 时会丢掉字段缓存文本**（`<a:t>30.10.2013</a:t>` → `<a:t></a:t>`）
   并多写一个空 `<a:rPr></a:rPr>`，每文件恒定 +13 字节（S-3 的 12 个 part 同一个根因）。已定位到确切差异点、
   影响未评估（**重点待查：是否会让服务端转 PDF 时该日期占位符变空**）→ **不属于本任务待办，未获裁定前不要开工**。
+- **C 阶段（删 nashorn 分支）—— 用户 2026-10-07 裁定【暂不做】**：调研已完成（清单见下，留作将来参考），
+  但改动量为 **8 个类 / 约 60 处 / 涉及 3000+ 行**（`CJSContext` 单独 40 处），属"逐个分支的语义收敛"、
+  不是删几行，收益不足 → **用户决定不删，保持现状**。
+  现状 = **默认 graaljs ＋ 保留 `-Ddocsys.office.jsEngine=nashorn` 作为显式回退** —— 即保留了
+  "真出问题能退回（慢约 200 倍但能跑）"的能力，这本身有价值。**未获新裁定前不要开工。**
+  （此前用户曾选过"方案 A：彻底删开关、显式传 nashorn 只告警后走 graaljs、双引擎 runner/测试改单引擎"；
+  若将来恢复本项，先与用户确认是否仍按 A。）
+
+  **改动清单（已逐一定位，可直接照做）**：
+  | 文件 | 改什么 |
+  |---|---|
+  | `NSJSBase/JSEngineFactory.java`（193 行） | 删 `MODE_NASHORN`/`DEFAULT_MODE`/`getMode()`/`isGraalJs()`/`create()`/`createNashorn()`/`createGraalJs()`/`describe(ScriptEngine)` 与 `javax.script.*`+`Iterator`+`Arrays` import；**保留** `MODE_PROP`（只用于检测遗留开关并告警）、`warnOnce`、`sharedGraalEngine()`（**含 nashorn-compat**）、`createGraalContext()`（去掉 `isGraalJs()` 守卫）；新增静态块：属性存在且 != graaljs 时 `warnOnce` 提示"该开关已废弃、Nashorn 分支已删除、请从启动脚本移除" |
+  | `NSJSBase/CJSContext.java`（1249 行） | **40 处**：行 `24,36,37,39,46,47,58,61,77,78,95,96,97,98,101,104,107,118,120,130,225,349,353,381,384,458,460,464,479,480,485,492,493,509,521,539,541,619,621,632` —— 删 `engine`/`globals` 字段与 nashorn 构造器分支、`getEngine()` getter、两处 `eval("({})")`/`eval("[]")` 的 JSR-223 版本、`instanceof ScriptObjectMirror` 分支、`ScriptObjectMirror` import |
+  | `CJSArray`(1) `CJSObject`(2) `CJSTypedArray`(4) `JSUint8Array`(2) `CJSValue`(2) `JSValueAccess`(8) `CJavaEmbedBinder`(3) | 删 `import jdk.nashorn.api.scripting.ScriptObjectMirror;` 与对应分支；`CJSValue` 的类型嗅探 `cn.contains("jdk.nashorn")` 一并去掉 |
+  | `NExtractToolsStatic.java:937` | 去掉 `引擎:<getMode()>` 日志 |
+  | runner：`run_cjscontext_engine_mode.ps1`(12 处) / `run_js_path_engine_compare.ps1`(20 处) / `run_graaljs_poc.ps1`(13 处) | 去掉 nashorn 腿与 `-Ddocsys.office.jsEngine=...` |
+  | 测试：`TestCJSContextEngineMode`(28/31/32/35) / `TestJsPathEngineCompare`(43) / `TestJsValueProbe`(24/26/27) | 改单引擎；`TestJsValueProbe`（两引擎对照探针）与 `TestNashornBundleEval` 删除 |
+  | 文档 | 计划 §6.4.5 的 A/B/C 退役计划补状态；两个类的注释改为"唯一引擎 GraalJS" |
+
+  ⚠️ **前提（最容易踩的坑）**：`sharedGraalEngine()` 里的 `.option("js.nashorn-compat","true")` **必须保留** ——
+  它名字带 nashorn，但不是"nashorn 引擎依赖"，而是**保住 ES5 全局对象面的关键**（§6.4.8 实测：开 compat 后与真
+  Nashorn 8u162 的全局对象面 16 项全一致）。做本项是"删 nashorn 引擎路径"，不是"删所有 nashorn 字样"。
+  ⚠️ **顺序必须保证每步可编译**：① 先改 `CJSContext` + 7 个 NSJSBase 类（此时 `isGraalJs()`/`create()` 还在，
+  仍可编译）→ ② 再删 `JSEngineFactory` API 并同步改 `NExtractToolsStatic` 与 3 个测试 → ③ 最后 runner 与文档。
+  **验证**：javac 全量 → 13 项冒烟（单引擎）→ 三端转换门（与 nashorn 基线比对，应仍 IDENTICAL-MODULO-TIMESTAMPS）。
+
 - **`CURRENT_STATE_AutoFilter保存失败.md`**（本目录，2026-10-07 建立）：**xlsx 添加/修改自动筛选后保存失败**——
   已定性为 **JS 路径既有缺陷**（graaljs 与 nashorn 报同一条 `TypeError: null has no such function "Qf"`，
   `saveDoc() convert bin to office failed`），与本轮迁移无关，**修它要动 sdkjs，属独立立项**。
