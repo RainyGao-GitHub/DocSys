@@ -62,6 +62,29 @@
 **⚠️ 未做**：`TestS3Diag` 为何无输出；上述 4 个失败项的定性；105 处 "Nashorn/Java 路径" 历史注释未清理（只清了代码引用）；
 本项目**未提交**。
 
+**`$ is not defined` 已定性（含一次自我更正）**：根因是**两个叠加的测试环境缺陷**，**不是产品缺陷**：
+1. `TestAutoFilterSmoke` / `DiagAFMeta` 把 `gProcessPath`/`m_sFontDir` 指向**不存在的** `test/fonts/`
+   （全仓库仅这 2 个文件），导致 `CFileBinary OpenFile() file does not exist: .../test/fonts/DoctRenderer.config`
+   → **一个脚本都没加载**，`strScript` 只剩 `CDoctrenderer` 对 spreadsheet 无条件追加的那 11 字节
+   `\n$.ready();`（`CDoctrenderer.java` 里 `if (m_strEditorType.equals("spreadsheet")) strScript += "\n$.ready();";`）
+   → `ReferenceError: "$" is not defined`。已改为产品 bin 目录。
+2. ⚠️ **classpath 遮蔽（重要教训）**：`WebRoot/WEB-INF/classes/.../office/test/` 下有 **237 个陈旧测试类**
+   （IDE auto-build 写的），而我跑测试时把 `WEB-INF\classes` 排在测试 bin 目录**之前** → **跑的是旧类**，
+   导致我第一次"改了字体目录仍然报 `$`"的结论**是错的**、以及第一次"三端/对比结果"里凡涉及这 2 个测试的
+   结论都不可信。**正确顺序：测试 bin 目录必须在 `WEB-INF\classes` 之前。**
+   重新用正确顺序验证：`m_sFontDir` 已是产品目录、`DoctRenderer.config` 不再缺失、`Doctrenderer.Init` 正常完成
+   → **`$ is not defined` 消失**。用临时 dump 钩子（`-Ddocsys.script.dump`，已还原）实测确认了那条 11 字节脚本。
+
+**更正后 AutoFilter 的真实现象**：`TestAutoFilterSmoke` 仍 `convert ret=-2147216554`，但错误已变为
+**`TypeError: null has no such function "Qf"`（index=-1）**——与文档 §6.4.8 记录的 `null has no such function "lF"`
+**同一族**（cell sdk 应用变更时炸）。即：**JS 路径在这类 AutoFilter 变更上会失败**，而 `TestT8XlsyMergeGolden`
+的 `[AfColor]` 两项失败指向同一方向。⚠️ **尚未做决定性的产品级验证**：在 app UI 里真实改一次 AutoFilter 再保存，
+看是否同样失败（这才能区分"fixture 是用别的 sdkjs 版本录的"还是"产品真有问题"）。
+
+**已排除**：不是引擎差异（同 fixture 用 nashorn/graaljs 产物一致）；不是脚本缓存污染（office-editor 下无近期改动）；
+不是字体目录（修正后错误变更为 TypeError）。`TestJSlideMergeGoldenNew`（`通过=12 失败=3`）与
+`TestJMergeJavaGolden`（`通过=5 失败=1`，`w:orient`）**用正确 classpath 重跑结果不变** → 不是遮蔽假象，结论仍成立。
+
 **② ✅ 已完成：重启 dev 服务让新类生效（2026-10-07 17:30）**
 
 `docsys_restart.bat`（后台隐藏窗口）；旧 PID 39460 退出 → 新 PID **16916**（17:30:23 启动，运行时仍是 GraalVM CE 21.2 / 1.8.0_302）。
