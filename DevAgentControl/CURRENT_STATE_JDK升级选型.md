@@ -20,14 +20,25 @@
 
 ## 下一步
 
-**① 待用户裁定（阻塞测试树）**：office/test 里 **131 个文件 import 了已删除的 jmerge 子包 → 编译不过**。
-其中 **30 个**引用 `JMergeEngine`（24 个已改为走唯一 JS 路径并验证，见下；**5 个不可救**：
-`TestJMergeJavaGolden2`（直接调已删 `JDocxCompactBinFixer`）、`TestJSlideIdResolver`、
-`TestJSlideIdResolverNewFixture`（断言1 直接 `new JPPTYFileReader`）、`TestMultiSlideEngineE2E`
-（直接调 `JMergeEngine.tryApplyChanges`）、`TestSlideGetFileDataOracle`（用已删 `JPPTYFileReader` 解析 bin））；
-其余 **101 个**是已删 Java 实现的内部单测（直接 `new JDocumentReader`/`JXLSXFileReader`/`JPPTYWriter`…），
-被测对象已不存在 → **改调用方式也救不活**。三选一：(a) 全删；(b) **归档**（移入 `attic/` + README 标注不可运行）；
-(c) 原样保留（IDE 会一直报 131 个错）。→ **在定案前不要跑这些测试**。
+**✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
+
+用户裁定：**删除**已删实现的内部单测 + 5 个不可救文件。按可复现口径执行：
+删掉 office/test 下**所有 import 了已删 jmerge 子包**（`word`/`slide`/`cell`/`common`/`JMergeEngine`/`JMergeResult`）
+的测试文件 → **共 107 个**，`git rm` 后剩余测试文件 **82 个**（原 189）。清单内已逐一确认包含那 5 个不可救的
+（`TestJMergeJavaGolden2` / `TestJSlideIdResolver` / `TestJSlideIdResolverNewFixture` / `TestMultiSlideEngineE2E` /
+`TestSlideGetFileDataOracle`）。**⚠️ 数量更正：是 107，不是我先前估的 101+5=106**（差 1）——
+以后一律以"是否 import 已删子包"这个可复现口径为准，不用估算。
+
+**提交**：office/test `dc0ed30`（107 文件删除 / −25866 行）；office `5b8c093c`（文档）；主仓库本条。
+
+**验证**：剩余 **82 个测试文件一起整批编译**（测试 bin 目录排在 `WEB-INF\classes` 之前）→
+**只剩 1 个错误，且是既有无关问题**：`DiagAdd.java:30` 的 `Pattern.compile("\"(\d+);([A-Za-z0-9+/=]+)\"")`
+是**非法转义符**（Java 字符串字面量里 `\d` 不合法），不 import jmerge、与本轮删除无关 → **按"不修无关既有问题"原则未动**。
+
+**`jmerge/bin` 保持不删**：删除后仍有 **15 个留下的测试**在用（`TestBinEnvelope`/`TestBinMemoryWriter`/`TestBinStreamReader`/
+`TestJBinCommonWriter`/`TestIdSequenceOracle`/`TestIdSequenceOracle2`/`TestIdSequenceOracleW1`/`TestSlideIdSequenceOracle`/
+`TestSlideIdSequenceOracleComplex`/`TestSlideRPrDecodeDiag`/`TestSlideRPrFlagDiag`/`TestT703XlsxGaps`/`TestW1ChangeOwners`/
+`DiagW24Sections`/`DiagAFMeta`）→ 仍是"测试专用工具"，按用户原定条件（"如果没有用才删"）**不该删**。
 
 **✅ 已完成第一步：24 个端到端测试改造为"唯一 JS 引擎路径"（2026-10-07）**
 
