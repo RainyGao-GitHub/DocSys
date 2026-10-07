@@ -49,6 +49,19 @@
   （普通对象在 Truffle 下是可枚举 `Map`），两引擎共用同一套 JS。已修并验证。
 - 核实：`JSUint8Array` **零引用 = 死代码**，不碰 `CJSContext.engine` → 不构成 NPE 风险，本次未动。
 
+**nashorn 的定位（2026-10-07 裁定，详见计划 §6.4.5）**：**不是产品路径**（实测载入 18.1–20.6 s/篇，性能不可交付），
+只作①**过渡期"行为不变"对照物**（唯一能二分"是 GraalJS 的问题还是重构的问题"的手段，且本次重构同时改到了 nashorn 侧）
+②**回退路径**。**现在不删**——保留成本仅 **11 处分支，全在 `CJSContext`**。
+
+退役按 **A/B/C 三阶段**：
+- **A（现在）**：保留 + 定性（本次已落地）。
+- **B**：触发条件 = **三端 golden 在 graaljs 下逐字节一致** **且** **运行时已切到 GraalVM** → 默认切 graaljs，nashorn 退居显式开关 `-Ddocsys.office.jsEngine=nashorn`，保留一个发布周期。
+- **C**：上线稳定后删除 nashorn 分支（`CJSContext` 11 处 + `JSEngineFactory.createNashorn()` + `engine`/`globals` 字段）→ 单引擎。
+
+⚠️ **约束**：默认切 graaljs **必须与"运行时切 GraalVM"绑定**——在 stock JDK 8 上 GraalJS 只能解释执行
+（实测打印 `does not support runtime compilation … interpreted mode only`），那时**可能比 nashorn 还慢**。
+另：nashorn 退场**不等于没有 JS 引擎兜底**，长期兜底是 **`JMergeEngine`（纯 Java 移植）**。
+
 **仍未做（通往 golden 对比只剩这些）**：
 
 1. `HostAccess.ALL` 过宽，上线前应收敛为白名单（计划风险 11）。
