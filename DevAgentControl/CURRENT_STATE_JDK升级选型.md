@@ -523,6 +523,30 @@ OFFICE: saveDoc() convert bin to office failed
 - **已改**：计划 §5.2 约束 6/7、§6.4.7（新增小节）、风险 11、§9.1 证据；`JSEngineFactory` 注释；本卡。
 - **裁定（用户 2026-10-07）**：本轮**只修正文档/注释里的错误结论**，**权限收敛留到阶段 B** 与"切运行时"一起做。
 
+### 已完成：内存归因（2026-10-07）——计划 §6.4.14（含一条结论更正）
+
+用户问"内存占用过多是不是共享 `Engine` 引起的"（源于 §6.4.11 记的 ParOldGen 1537/2713 MB）。新增探针
+`office/test/tmp/MemoryAttribution/MemoryProbe.java`（`tmp/` 已 gitignore，可复跑；参数：`-Dmode=shared|private|nashorn`、
+`-DnoClose`、`-DshallowGc`、`-Ds1Perms`、`-DnamedSource`、`-DpauseBeforeCloseMs`）。与老探针
+`SharedEngineProbe`（只量耗时）的区别是**同时打三口径**：`noGC` / `shallowGC`（`System.gc()`×2 立刻读 = 老口径）/
+`gc`（`System.gc()`×3 + 等 200 ms 让宿主清理线程跑完 = 存活集）。
+
+**结论 1：不是共享 Engine 引起的。** 同口径同负载、各自独立 JVM、`-Xmx1g`，充分 GC 后的**常驻存活集**：
+共享 Engine 一端 **220 MB** / 三端全载 **260 MB**（**4 轮恒定、不随文档数增长**；`engine.close()` 后掉到 23 MB）；
+不共享 **20 MB**；**nashorn 237–601 MB 且 `-Xmx1g` 下直接 OOM** → 内存问题不是迁移引入的。
+
+**结论 2：1537 MB 是"未 GC 的 used"，不是存活集。** 同一 JVM、同一配置三口径同时读 =
+`noGC 424 / shallowGC 217 / gc 21 MB`；堆放到 4g：`noGC 752`、`committed 1.6 GB`、`gc` 仍 260 MB。
+dev JVM 实测堆上限 **8,459,911,168 B ≈ 7.88 GiB**（计划原写"约 4.8 GB"是过期数字）。
+→ 定 `-Xmx` 要按**存活集**估（基线 ~100 MB + 引擎 ≤260 MB + Lucene/文档工作集）。
+
+**❗更正计划 §6.4.8 的"内存无实质差异（214–240 vs 217–244 MB）"**：那两个数字量的是**未回收垃圾**
+（shallowGC 口径），两边被同一批 ~200 MB 垃圾抬到同一量级；真实差异 **20 vs 220 MB**。已逐变量排除
+其他解释（`allowHostClassLookup`+`allowIO`、命名 `Source` 的四个组合实测均 20 MB）。同步更正
+风险 4（"GraalVM 比 nashorn 更吃内存" → 实测相反）与风险 20。
+
+**提交**：office `6af6dc40`（计划 §6.4.8 / §6.4.11 / 风险 4 / 风险 20 + 新增 §6.4.14）；主仓库本条。
+
 ### 未做 / 待裁定
 
 - **首轮调研曾"未执行任何代码改动"（纯文档）**；此后阶段 1 已落地代码改动（见上）。
@@ -532,7 +556,19 @@ OFFICE: saveDoc() convert bin to office failed
 - **未做**：~~新 `NExtractToolsStatic.class` 尚未在 dev 服务生效（需重启）~~ → ✅ **已于 2026-10-07 17:30 重启生效**（新 PID 16916、`Server startup in 40377 ms`、HTTP 200、classes 内已无 `JMergeEngine`）。
 - **未定性**：① slide 包首次 `Execute` 的 `run` 仅 174 ms（远快于探针冷载 3.8 s）；② 每次保存伴随
   `executeCommonActionList() failed actions:1`（紧跟 `TextSearch was Disabled`）。
-- **交付前必做**：核对 `-Xmx`（实测 ParOldGen 1537 MB / 2713 MB，当前 dev 无 `-Xmx`）。
+- **交付前必做**：核对 `-Xmx`。~~实测 ParOldGen 1537 MB / 2713 MB，当前 dev 无 `-Xmx`~~
+  → ✅ **已于 2026-10-07 归因（§6.4.14）**：1537 MB 是**未 GC 的 used**；真实常驻存活集是
+  **一端 220 MB / 三端全载 260 MB**（不随文档数增长），dev 实测堆上限 **7.88 GiB**。
+  定值方法：按**存活集**（基线 ~100 MB + 引擎 ≤260 MB + Lucene/文档工作集）估，**不要按 1.5 GB**。
+- **新发现·未定性①**：**`CJSContext.close()` 在生产里从未被调用**（7 个创建点：
+  `CDoctrenderer:1082/1372`、`CDoctRenderer_Private:523/1618`、`CV8RealTimeWorker:233/780/881`；0 个关闭点；
+  `CJSContextScope` 只切 ThreadLocal，`JSSmart`/`smart_ptr` 无 finalize）。**实测当前不构成泄漏**
+  （`noClose=true` 4 轮恒定 221 MB，GraalVM 21.2 能回收不可达 Context），但与官方"Context 必须 close"不符，
+  属"全靠 GC 兜底"的隐式契约。**未获裁定前不动代码。**
+- **新发现·未定性②**：**共享 Engine 的性能收益在更严格方法下未复现**。老探针 S1 vs S3 =
+  `1620 vs 340 ms`（2 轮、轮间不插 GC、**命名** `Source`）；新探针（4 轮、轮间 Full GC）≈ `1.3 s vs 0.8 s` 无差异。
+  且生产是**逐文件** `graalContext.eval("js", 字符串)`（匿名 literal），与老探针的命名 `Source` 形态不同。
+  → "花 220 MB 常驻换每篇省 1 s"是否在生产 eval 形态下成立，**需要一次方法学对齐的测量**（未做）。
 - 计划 §6.1.6 的裁定项：**D1/D2/D3 已裁定（2026-10-07）= 锁定 JDK 17 + GraalJS 23.0.x；运行时采用形态 A（Oracle GraalVM for JDK 17，GFTC），随产品分发并保留其 LICENSE/NOTICE**；**D4/D5 待裁定**（D4 Tomcat 9.0.x 还是 10.1；D5 是否先做 JDK8+GraalVM CE 21.2 的纯引擎 PoC）。
 
 ## 生效约束
