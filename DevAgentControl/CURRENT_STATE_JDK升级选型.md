@@ -18,28 +18,37 @@
 
 **阶段 1（引擎先行）** —— 运行时用形态 C（GraalVM CE 21.2 / JDK 8），**不动 JDK、不动 Tomcat、不动任何 jar**。
 
-**✅ 已完成：真实转换首跑（slide 端内容一致）**（计划 §6.4.6）
+**✅ 已完成：真实转换三端验证（内容一致）**（计划 §6.4.6）
 
 首次真实执行 `open → applyChanges → getFileData → x2t`（`JMergeEngine.setEnabled(false)` 强制走 JS 路径，
 唯一变量 = `-Ddocsys.office.jsEngine`）：
 
-| | nashorn | graaljs |
-|---|---|---|
-| 整次转换 | **32.3 s** | **13.6 s**（2.4×；其中载入脚本 17.5 s → 4.3 s，4.1×） |
-| 产物（ZIP 条目级） | 59 条 → **内容一致 58、仅时间戳不同 1（`docProps/core.xml`）、内容不同 0** | 同 |
-| VERDICT | **IDENTICAL-MODULO-TIMESTAMPS** | |
+| 端 | nashorn | graaljs | 倍率 | ZIP 条目 | 内容一致 / 仅时间戳 / 内容不同 |
+|---|---|---|---|---|---|
+| word（W1段落属性全家桶） | 35.6 s | **12.8 s** | 2.8× | 14 | 13 / 1 / **0** |
+| slide（商业计划书） | 33.8 s | **14.9 s** | 2.3× | 59 | 58 / 1 / **0** |
+| cell（复杂修改测试） | 97.9 s | **19.6 s** | **5.0×** | 13 | 12 / 1 / **0** |
 
-- 复现：`test/tools/run_js_path_engine_compare.ps1`（`TestJsPathEngineCompare.java`）。
-- **方法学更正**：§4.2 的"逐字节一致"**不可达**（OOXML 天然带保存时刻），判据已改为
-  **"时间戳归一化后逐字节一致"**，且比较必须落到 **ZIP 条目级**（整文件哈希/大小会被时间戳影响）。
+六次运行全部 OK、无异常；"仅时间戳不同"的条目三端都是同一个 `docProps/core.xml`。
+→ 判定 **IDENTICAL-MODULO-TIMESTAMPS**。
+
+- 复现：`test/tools/run_js_path_engine_compare.ps1`（`TestJsPathEngineCompare.java`，三端参数化）。
+- **方法学更正**：§4.2 的"逐字节一致"**不可达**（OOXML 天然带保存时刻，同引擎跑两次也不同），
+  判据已改为 **"时间戳归一化后逐字节一致"**，且比较必须落到 **ZIP 条目级**
+  （只看整文件哈希/大小会误判：大小会因时间戳内容的 deflate 长度漂移 ±2 字节）。
 - 顺带修掉真实缺陷：`CJSObject.getNative()` 需 `JSValueAccess.unwrapHost()`
   （GraalJS 把宿主对象包成 `Value` 返回，`instanceof CJSEmbedObject` 不成立 → NPE）。
 
-**下一步（阶段 B 触发条件尚未满足）**：
+**阶段 B 触发条件盘点**：
 
-1. **word / cell 两端还没跑**（§4.2 的 fixture 矩阵只完成 slide）→ 扩 fixture 覆盖。
-2. `HostAccess.ALL` 收敛为白名单（风险 11）。
-3. 共享 `Engine` + 缓存 `Source`（可有可无的优化；注意每请求新建 Context 会丢掉编译产物复用）。
+| 条件 | 状态 |
+|---|---|
+| 三端内容一致（时间戳归一化） | ✅ 已满足 |
+| **运行时切到 GraalVM（形态 C）** | ❌ **未做**——`tomcat\java\jre` 仍是 JRE 1.8.0_162 |
+| `HostAccess.ALL` 收敛为白名单（风险 11） | ❌ 未做（安全加固，非门槛） |
+| 共享 `Engine` + 缓存 `Source` | ❌ 未做（纯优化；当前仍已快 2.3–5.0×） |
+
+→ **阶段 B 只剩"切运行时"这一个动作**（外加两项非门槛的加固/优化）。
 
 **第 1 步（引擎获取收敛 + 冒烟）已完成**（计划 §6.4.1）：
 
