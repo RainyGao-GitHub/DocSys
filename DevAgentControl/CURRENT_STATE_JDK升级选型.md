@@ -1,6 +1,6 @@
 # CURRENT_STATE_JDK升级选型（工作卡）
 
-> 状态：**调研 + 文档已完成；D1~D4 已裁定（JDK 17 / Oracle GraalVM 形态 A / Tomcat 9.0.x），只剩 D5（spike 顺序）**（2026-10-07）
+> 状态：**调研完成、D1~D5 已裁定、步 1 PoC 已完成；实施路径已定为两阶段；下一步 = 阶段 1（引擎先行）**（2026-10-07）
 > 前置卡 `CURRENT_STATE_war打包.md` **已收尾**（导出可发布 `DocSystem.war` 并校验通过），已移入 `DevAgentControl/已完成/`。
 
 ## 已裁定（2026-10-07）
@@ -11,13 +11,20 @@
 | **D2 运行时形态** | **形态 A：Oracle GraalVM for JDK 17（GFTC）**，接受"17 档持续引擎补丁由 GFTC 版本提供" |
 | **D3 随产品分发** | **是**（替换 `tomcat\java\jre`）；义务：分发时**不得删改** Oracle GraalVM 的版权/商标声明 → 打包校验加一条 LICENSE/NOTICE 检查 |
 | **D4 Tomcat 档位** | **Tomcat 9.0.x**（保持 `javax.servlet`，源码包名不动）；`10.1/11` 的 jakarta 全量迁移**另行立项** |
-| **D5 spike 顺序** | **先做纯引擎 PoC（JDK 8 + GraalVM CE 21.2 跑 `sdk-all.js`），拿到兼容/性能数据再动 JDK**；PoC 结论只是预判，最终必须在 17 档重验一次（计划 §4.0） |
+| **D5 spike 顺序** | **先做纯引擎 PoC（JDK 8 + GraalVM CE 21.2 跑 `sdk-all.js`），拿到兼容/性能数据再动 JDK**；PoC 结论只是预判，最终必须在 17 档重验一次（计划 §4.0）→ ✅ **已执行**（计划 §4.5） |
+| **实施路径（2026-10-07 裁定）** | **两阶段**（计划 §6.4）：**阶段 1 = 引擎先行**（运行时用 **形态 C：GraalVM CE 21.2 / JDK 8**，JDK 与 Tomcat 都不动，只做 `CJSContext` 引擎工厂 + §5/§5.2 的 `ScriptObjectMirror` 改写 + golden 验证 → 出口即**可退役 JMergeEngine**）；**阶段 2 = 基础设施迁移**（换形态 A：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + §6.2 整张清单）。**最终目标档位 D1（JDK 17）不变，变的只是到达顺序。** |
 
 ## 下一步
 
-1. **步 1：纯引擎 PoC**（当前卡点）—— JDK 8 + GraalVM CE 21.2 的最小 harness 跑 `sdk-all.js`，出兼容性 + 三段计时数据。
-2. **步 2**：Oracle GraalVM for JDK 17 + GraalJS 23.0.x 重跑同一套判据（计划 §4.4 以步 2 为准）+ JDK 17/Tomcat 9 的 war 冒烟。
-3. 之后按计划 §6.3 走 Phase 1~4。
+**阶段 1（引擎先行，零 JDK 风险）** —— 运行时用形态 C（GraalVM CE 21.2 / JDK 8），
+**不动 JDK、不动 Tomcat、不动任何 jar**，只做：
+
+1. `doctrenderer/NSJSBase/CJSContext` 加**引擎工厂**（开关选 Nashorn / GraalJS），默认仍是 Nashorn（零行为变化）。
+2. 按计划 §5 + §5.2 改写 `ScriptObjectMirror` 依赖（**8 个文件、64 处**）→ 抽象成适配层，
+   Nashorn 侧走 `ScriptObjectMirror`、GraalJS 侧走 `org.graalvm.polyglot.Value`。
+3. 用冻结 golden 做三端逐字节对比；达标后**退役 JMergeEngine**。
+
+出口判据见计划 §6.4；阶段 2 的排期要在阶段 1 出口时一并定下来（避免长期停留在冻结运行时）。
 
 ## 需求
 
