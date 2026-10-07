@@ -176,12 +176,15 @@ OFFICE: saveDoc() convert bin to office failed
      **带完整理由**加入 `KNOWN_BENIGN_DIFF`，现 `[PASS] 6 项通过`。
    - `TestAutoFilterSmoke` / `TestT8XlsyMergeGolden([AfColor])` → **故意保持失败**，加注释指向缺陷卡
      （AutoFilter 既有缺陷）。**不加白名单掩盖**。
-   - `TestJSlideMergeGoldenNew`（S-1/S-2/S-3 各 `realDiff=12`）→ **根因未查清，不加白名单**，注释标注为待查。
+   - `TestJSlideMergeGoldenNew` → **已定位到具体差异点并单独立卡**（见下方挂起清单），测试保持失败、不加白名单。
 
 **⚠️ 教训（已踩两次，务必记住）**：用 `@'...'@ | python -` 这种**管道传脚本**时，PowerShell 会破坏
 **非 ASCII 字符**（我的替换文本 `JS 引擎路径` 变成了 `JS ????`，一版注释被写坏后已回滚）。
 **必须把脚本写成 UTF-8 文件再 `python <file>`**；另外批量文本替换**绝不能碰标识符/类名**
 （第一次过宽的替换把 `TestSlideNashornBaseline` 改成含空格的非法标识符，已回滚重做）。
+
+**fixture 说明（用户 2026-10-07 澄清）**：那个"被覆盖的 fixture"是**用户自己回退的**，内容已确认与 HEAD 一致，
+应是某次不小心重新生成导致；**没有问题**。后续如需重新生成参照文件，可以用 **x2t** 重录。
 
 **② ✅ 已完成：重启 dev 服务让新类生效（2026-10-07 17:30）**
 
@@ -544,6 +547,10 @@ OFFICE: saveDoc() convert bin to office failed
 
 ## 挂起（未获新裁定前不要开工）
 
+- **`CURRENT_STATE_JSlideMergeGoldenNew字节差异.md`**（本目录，2026-10-07 建立）：**JS 引擎路径序列化幻灯片版式/母版
+  里的 `<a:fld type="datetimeFigureOut">` 时会丢掉字段缓存文本**（`<a:t>30.10.2013</a:t>` → `<a:t></a:t>`）
+  并多写一个空 `<a:rPr></a:rPr>`，每文件恒定 +13 字节（S-3 的 12 个 part 同一个根因）。已定位到确切差异点、
+  影响未评估（**重点待查：是否会让服务端转 PDF 时该日期占位符变空**）→ **不属于本任务待办，未获裁定前不要开工**。
 - **`CURRENT_STATE_AutoFilter保存失败.md`**（本目录，2026-10-07 建立）：**xlsx 添加/修改自动筛选后保存失败**——
   已定性为 **JS 路径既有缺陷**（graaljs 与 nashorn 报同一条 `TypeError: null has no such function "Qf"`，
   `saveDoc() convert bin to office failed`），与本轮迁移无关，**修它要动 sdkjs，属独立立项**。
