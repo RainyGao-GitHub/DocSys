@@ -16,15 +16,33 @@
 
 ## 下一步
 
-**阶段 1（引擎先行，零 JDK 风险）** —— 运行时用形态 C（GraalVM CE 21.2 / JDK 8），
-**不动 JDK、不动 Tomcat、不动任何 jar**，只做：
+**阶段 1（引擎先行）** —— 运行时用形态 C（GraalVM CE 21.2 / JDK 8），**不动 JDK、不动 Tomcat、不动任何 jar**。
 
-1. `doctrenderer/NSJSBase/CJSContext` 加**引擎工厂**（开关选 Nashorn / GraalJS），默认仍是 Nashorn（零行为变化）。
-2. 按计划 §5 + §5.2 改写 `ScriptObjectMirror` 依赖（**8 个文件、64 处**）→ 抽象成适配层，
-   Nashorn 侧走 `ScriptObjectMirror`、GraalJS 侧走 `org.graalvm.polyglot.Value`。
-3. 用冻结 golden 做三端逐字节对比；达标后**退役 JMergeEngine**。
+**第 1 步（引擎获取收敛 + 冒烟）已完成**（计划 §6.4.1）：
 
-出口判据见计划 §6.4；阶段 2 的排期要在阶段 1 出口时一并定下来（避免长期停留在冻结运行时）。
+- 新增 `doctrenderer/NSJSBase/JSEngineFactory.java`（开关 `-Ddocsys.office.jsEngine=nashorn|graaljs`，缺省 nashorn 且逻辑与改造前逐句等价）；
+  `CJSContext` 构造器改为 `JSEngineFactory.create()`。
+- 冒烟（真实生产类）：**nashorn 缺省模式 PASS=10/FAIL=0（行为不变 ✅）**；**graaljs 模式 PASS=7/FAIL=3**。
+- 复现：`test/tools/run_cjscontext_engine_mode.ps1`（`TestCJSContextEngineMode.java`）。
+
+**第 2 步（当前卡点）：把 3 个 `ScriptObjectMirror` 失败点移植掉**（计划 §5 的 8 个文件），
+精确清单来自冒烟：
+
+| # | 失败点 | 异常 |
+|---|---|---|
+| 7 | `CJSContext.createObject()` + 成员回读 | NPE（createObject 内部抛 `ClassCastException` 后被吞） |
+| 8 | `CJSContext.createArray(3)` | `PolyglotMap cannot be cast to ScriptObjectMirror` |
+| 9 | `global.set` + `eval` 回读 | 同上 |
+
+**路线简化（重要，待验证）**：GraalJS **自带可用的 JSR-223 `ScriptEngine`**（实测
+`com.oracle.truffle.js.scriptengine.GraalJSScriptEngine`）→ **不必**按原设想改写成 Polyglot
+`Context`/`Value`，可以保留 `javax.script.ScriptEngine` 这层抽象、只适配值类型
+（`ScriptObjectMirror` → `ScriptObjectMirror | Map/List`），改动面显著更小。
+⚠️ 但每次 `getEngineByName` 会新建 polyglot `Context`，会丢掉"共享 Engine 复用编译产物"的收益
+（§4.5：冷 3.2s vs 热 1.4s）→ 应改用 `GraalJSScriptEngine.create(sharedEngine, builder)` 共享 Engine
+并缓存 `Source`。
+
+之后：三端 golden 逐字节对比 → 达标即**退役 JMergeEngine** → 阶段 2（JDK 17 + Tomcat 9）排期。
 
 ## 需求
 
