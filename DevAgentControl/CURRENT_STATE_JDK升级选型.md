@@ -77,7 +77,9 @@
 
 ## 生效约束
 
-- 本次改动**只有 2 个文件**：`src/com/DocSystem/websocket/office/docs/GraalJS替代Nashorn评估计划.md`（在 **office 仓库** `dev/office` 分支）+ 本工作卡（主仓库）→ **是否先提交由用户裁定**（未提交）。
+- 本次改动**只有 2 个文件**：`src/com/DocSystem/websocket/office/docs/GraalJS替代Nashorn评估计划.md`（在 **office 仓库** `dev/office` 分支）+ 本工作卡（主仓库）→ **已提交**：
+  - office 仓库 `dev/office`：**`d8e86829`**（评估计划，+286/-15）
+  - 主仓库 `devInt`：**`970aca4a5`**（本卡新增 + war打包卡移入已完成为）
 - **不要**在未获裁定前动任何代码（尤其 §6.2 清单里的源码/jar/Tomcat）。
 - 计划 §6.1 的选型结论**尚未经 spike 验证**，引用时不要当作已验证事实。
 
