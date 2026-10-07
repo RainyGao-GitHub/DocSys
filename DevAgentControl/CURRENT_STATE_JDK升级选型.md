@@ -508,6 +508,11 @@ OFFICE: saveDoc() convert bin to office failed
 
 ## 挂起（未获新裁定前不要开工）
 
+- **`CURRENT_STATE_AutoFilter保存失败.md`**（本目录，2026-10-07 建立）：**xlsx 添加/修改自动筛选后保存失败**——
+  已定性为 **JS 路径既有缺陷**（graaljs 与 nashorn 报同一条 `TypeError: null has no such function "Qf"`，
+  `saveDoc() convert bin to office failed`），与本轮迁移无关，**修它要动 sdkjs，属独立立项**。
+  完整证据（最小复现步骤 / 双引擎日志 / 失败产物路径 / 待查方向）都在该卡里 → **未获裁定前不要开工**。
+
 - 前卡 `CURRENT_STATE_war打包.md` 已收尾，其残留项（如有需要）：
   - war 未做**真实部署验证**（dev 是 junction 部署，不是 war）；
   - 打包流程**未固化成脚本**（现是一次性命令）；
