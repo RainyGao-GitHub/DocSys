@@ -46,44 +46,32 @@
 
 之后才是三端 golden 逐字节对比 → 达标即**退役 JMergeEngine** → 阶段 2（JDK 17 + Tomcat 9）排期。
 
-- 新增两个探针（office/test）：`TestJsValueProbe.java`（两引擎对比"JS 值→Java 类型"）、
+**第 2 步的调研（已完成，结论并入计划 §6.4.2）**：
+
+- 新增两个探针（office/test）：`TestJsValueProbe.java`（两引擎对比"JS 值 → Java 类型"）、
   `TestGraalJsApiProbe.java`（Polyglot `Context`/`Value` 的 API 映射逐项实测）。
-- **更正**：第 1 步里我记的"可保留 `javax.script` 抽象只适配值类型"这条路 **实测不成立**——
+- **更正**：第 1 步里"可保留 `javax.script` 抽象只适配值类型"的判断 **实测不成立**——
   JSR-223 下 GraalJS 把**数组**还原成 `PolyglotMap`（非 `List`、无索引视图），
-  **数组元素与 `Uint8Array` 元素取不到**，且拿不到 `Value`。
-  而 sdkjs 的 `getFileData`（返回 `Uint8Array`）与 `apply_changes`（数组）都依赖元素访问
+  **数组元素与 `Uint8Array` 元素取不到**，且拿不到 `Value`
   → **graaljs 模式必须自带 `org.graalvm.polyglot.Context`**（回到 §3/§5 原设想）。
-- 两个新陷阱登记为风险 16/17：`Value.asInt()` 对非整数**直接抛**（`1.5` 抛），
-  故 `toInt()/toInt32()` 必须写成"`fitsInInt()` 优先，否则 `(int) asDouble()`"；
+- 两个新陷阱（计划风险 16/17）：`Value.asInt()` 对非整数**直接抛**（`1.5` 抛），
+  故 `toInt()/toInt32()` 必须"`fitsInInt()` 优先，否则 `(int) asDouble()`"；
   `null` 与 `undefined` 在 `Value` 上都是 `isNull()==true`，**无法区分**。
-- **实现规格（下一步执行）**：① `JSBackend`（Nashorn/Graal 两实现）② `JSValueAccess`（双引擎统一 12 个操作）
-  ③ 改造 `CJSContext`/`CJSObject`/`CJSArray`/`CJSTypedArray`/`JSUint8Array`/`CJavaEmbedBinder`
-  ④ **默认必须仍是 nashorn**，用 `test/tools/run_cjscontext_engine_mode.ps1` 双模式回归（nashorn 必须保持 10/10）。
 
-**已落地（2026-10-07）**：
+**依赖方案（已实施，2026-10-07）**：
 
-- **方案 A 已采纳并实施**：`WEB-INF/lib` 新增 GraalJS 4 个 jar（`js-21.2.0` / `truffle-api-21.2.0` /
-  `graal-sdk-21.2.0` / `regex-21.2.0`，合计 **29.7 MB**），提交在 **`WEB-INF/lib` 独立仓库** `f080fdb`。
-  已验证：用现有构建链（JDK 1.8.0_162 javac + `WebRoot/WEB-INF/classes` + `WebRoot/WEB-INF/lib/*`）
+- **方案 A**：`WEB-INF/lib` 新增 4 个 GraalJS jar（`js-21.2.0` / `truffle-api-21.2.0` /
+  `graal-sdk-21.2.0` / `regex-21.2.0`，合计 **29.7 MB**），提交在 **`WEB-INF/lib` 独立仓库** `25d6f2c`。
+  已验证：现有构建链（JDK 1.8.0_162 javac + `WebRoot/WEB-INF/classes` + `WebRoot/WEB-INF/lib/*`）
   可正常编译 `import org.graalvm.polyglot.Context/Value` 的代码（exit 0）。
 - **另更正一处**：上一轮记的"Maven 组装路线在 JDK 8 上不可用"**不成立**——用**含全工程 jar 的
   生产 classpath** 重跑，**stock JDK 8u162 上 GraalJS 能跑**（`hasMembers=true arrSize=3 elem1=2`），
   只是**纯解释模式、没有 Graal JIT**（当时缺的是工程里已有的 `icu4j` 等依赖）。
   故"必须用 GraalVM 运行时"的理由是**要拿 JIT / 可比性能**，不是"跑不起来"。
 - 待核对：js 21.2 的 pom 声明 `com.ibm.icu:icu4j:69.1`，工程内是 `icu4j-72.1.jar` → graaljs 模式实跑时验 Intl 路径。
-
-**注意**：`WEB-INF/lib` 是我发现的第 5 个独立 git 仓库；其中已有一个**非本任务造成**的待提交项
-（`D mxsdoc.jar`），与 test 仓库里那个被覆盖的 fixture 一样，**我都没动**。
-
-**待移植清单**（来自第 1 步冒烟，第 2 步要消灭的 3 项）：
-
-| # | 失败点 | 异常 |
-|---|---|---|
-| 7 | `CJSContext.createObject()` + 成员回读 | NPE（createObject 内部抛 `ClassCastException` 后被吞） |
-| 8 | `CJSContext.createArray(3)` | `PolyglotMap cannot be cast to ScriptObjectMirror` |
-| 9 | `global.set` + `eval` 回读 | 同上 |
-
-之后：三端 golden 逐字节对比 → 达标即**退役 JMergeEngine** → 阶段 2（JDK 17 + Tomcat 9）排期。
+- `WEB-INF/lib` 是第 5 个独立 git 仓库（已记入 `CLAUDE.md`）；其中的 `D mxsdoc.jar` 与实际代码同源
+  （该部分不开源，开发环境有源码故必须删除），**属预期状态，不要恢复也不要提交**；
+  test 仓库那个被覆盖的 fixture 同理，**均未动**。
 
 ## 需求
 
@@ -157,6 +145,11 @@
   - office `dev/office`：`d8e86829`（计划补选型+影响清单）→ `1c6cd941`（步 1 PoC 结果）→ `5feb46c8`（三端 Nashorn 对照）→ `1dd452d9`（形态 C + 两阶段）→ **`c10d614e`（阶段 1 第一步：`JSEngineFactory` + `CJSContext` + 计划 §6.4.1）**
   - office/test `master`：`c708b57`（纯引擎 harness + 一键脚本）→ **`c95d3ca`（`TestCJSContextEngineMode` + 引擎模式运行脚本）**
   - 主仓库 `devInt`：`970aca4a5`、`01bf4d489`、`e0d596b28`、`385dfef57`、`6fef895d4` → **`a2329c04f`（本卡）**
+- **最新提交**（2026-10-07，阶段 1 第 2 步）：
+  - office `dev/office`：`45ba91be`（§6.4.2 探针结论）→ **`217d107a`**（更正"组装路线不可用"）→ **`ff8ad1bc`**（`JSValueAccess` + 6 文件改造 + §6.4.3）
+  - office/test `master`：`3933e1a`（两个探针）→ **`fe859ef`**（冒烟断言更新）
+  - **`WebRoot/WEB-INF/lib`（独立仓库）**：**`25d6f2c`**（4 个 GraalJS jar）
+  - 主仓库 `devInt`：`e562036e8` → `7ec9690c3` → **`cb07c73ce`**（CLAUDE.md 补第 5 个仓库）→ **`8eedbd4ed`**（本卡）
 - **不要**在未获裁定前动阶段 2 的内容（§6.2 的 Tomcat/jar/JDK 改造项）。
 - 阶段 1 期间**默认必须仍是 Nashorn**（`docsys.office.jsEngine` 不设即 nashorn）；任何提交都不得改变默认路径行为。
 - 计划 §6.1 的选型结论**尚未经 spike 验证**，引用时不要当作已验证事实。
