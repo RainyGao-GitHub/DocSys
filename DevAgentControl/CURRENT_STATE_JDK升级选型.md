@@ -41,6 +41,21 @@
   ③ 改造 `CJSContext`/`CJSObject`/`CJSArray`/`CJSTypedArray`/`JSUint8Array`/`CJavaEmbedBinder`
   ④ **默认必须仍是 nashorn**，用 `test/tools/run_cjscontext_engine_mode.ps1` 双模式回归（nashorn 必须保持 10/10）。
 
+**已落地（2026-10-07）**：
+
+- **方案 A 已采纳并实施**：`WEB-INF/lib` 新增 GraalJS 4 个 jar（`js-21.2.0` / `truffle-api-21.2.0` /
+  `graal-sdk-21.2.0` / `regex-21.2.0`，合计 **29.7 MB**），提交在 **`WEB-INF/lib` 独立仓库** `f080fdb`。
+  已验证：用现有构建链（JDK 1.8.0_162 javac + `WebRoot/WEB-INF/classes` + `WebRoot/WEB-INF/lib/*`）
+  可正常编译 `import org.graalvm.polyglot.Context/Value` 的代码（exit 0）。
+- **另更正一处**：上一轮记的"Maven 组装路线在 JDK 8 上不可用"**不成立**——用**含全工程 jar 的
+  生产 classpath** 重跑，**stock JDK 8u162 上 GraalJS 能跑**（`hasMembers=true arrSize=3 elem1=2`），
+  只是**纯解释模式、没有 Graal JIT**（当时缺的是工程里已有的 `icu4j` 等依赖）。
+  故"必须用 GraalVM 运行时"的理由是**要拿 JIT / 可比性能**，不是"跑不起来"。
+- 待核对：js 21.2 的 pom 声明 `com.ibm.icu:icu4j:69.1`，工程内是 `icu4j-72.1.jar` → graaljs 模式实跑时验 Intl 路径。
+
+**注意**：`WEB-INF/lib` 是我发现的第 5 个独立 git 仓库；其中已有一个**非本任务造成**的待提交项
+（`D mxsdoc.jar`），与 test 仓库里那个被覆盖的 fixture 一样，**我都没动**。
+
 **待移植清单**（来自第 1 步冒烟，第 2 步要消灭的 3 项）：
 
 | # | 失败点 | 异常 |
