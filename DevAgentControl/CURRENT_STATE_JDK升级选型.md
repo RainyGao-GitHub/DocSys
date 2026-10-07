@@ -1,6 +1,7 @@
 # CURRENT_STATE_JDK升级选型（工作卡）
 
-> 状态：**调研完成、D1~D5 已裁定、步 1 PoC 已完成；实施路径已定为两阶段；下一步 = 阶段 1（引擎先行）**（2026-10-07）
+> 状态：**阶段 B 全部完成**（代码侧：共享 Engine / 权限收敛 / 默认翻转 graaljs；运行时侧：GraalVM CE 21.2）；
+> 下一步 = **C 阶段（nashorn 退役，等上线稳定）** 与 **阶段 2（JDK 17 + Tomcat 9）**（2026-10-07）
 > 前置卡 `CURRENT_STATE_war打包.md` **已收尾**（导出可发布 `DocSystem.war` 并校验通过），已移入 `DevAgentControl/已完成/`。
 
 ## 已裁定（2026-10-07）
@@ -44,12 +45,32 @@
 | 条件 | 状态 |
 |---|---|
 | 三端内容一致（时间戳归一化） | ✅ 已满足 |
-| **运行时切到 GraalVM（形态 C）** | ✅ **已做（2026-10-07）**——开发服务器那棵的 `tomcat\java\jre` 已换成 GraalVM CE 21.2，旧 JRE 备份为 `jre_orig_8u162`，脚本一行未改 |
+| **运行时切到 GraalVM（形态 C）** | ✅ **已做（2026-10-07）**——开发服务器 `tomcat\java\jre` 已换成 GraalVM CE 21.2，旧 JRE 备份为 `jre_orig_8u162`，脚本一行未改 |
 | 权限收敛（风险 11） | ✅ **已做**（`EXPLICIT` + 2 个 `@Export`；删掉 classLookup/IO） |
 | 共享 `Engine` | ✅ **已做**（`JSEngineFactory` 静态共享 Engine） |
 | 共享 `Source` / 缓存 | 不需要（实测共享 Engine 即够，`CDoctRenderer_Private` 未动） |
+| **默认引擎翻转为 graaljs** | ✅ **已做（2026-10-07）**——`DEFAULT_MODE = graaljs`，nashorn 退居显式开关 |
 
-→ **阶段 B 代码侧与运行时侧均已完成**；剩下的只有"是否把默认引擎切成 graaljs"这一项裁定。
+→ **阶段 B 全部完成**。后续只剩 **C 阶段**（上线稳定后删 nashorn 分支）与阶段 2（JDK 17 + Tomcat 9）。
+
+**✅ 已完成：默认引擎翻转为 graaljs（计划 §6.4.10，2026-10-07）**
+
+- `JSEngineFactory.DEFAULT_MODE = graaljs`；未设置 → graaljs；`nashorn` → 回退路径；
+  **拼错/无法识别 → 回落 DEFAULT 并打一次性告警**（不静默）。
+- **连带修掉三个"翻转默认值会静默引入"的陷阱**：
+  1. 两个 runner 的"nashorn 腿"原本靠**不传属性**取 nashorn，翻转后会静默跑成 graaljs、基线失去意义
+     → 两条 runner 的 nashorn 腿都改为**显式** `-Ddocsys.office.jsEngine=nashorn`。
+  2. `JSEngineFactory.create()` 在新缺省下是错误 API（返回 JSR-223 包装引擎，数组/Uint8Array 取不到）
+     → 加一次性告警并保留返回值（保住 `TestJsValueProbe` 的两引擎对照能力）。
+  3. `createGraalContext()` 失败由每次打印改为 `warnOnce`，文案明确"office 转换的 JS 路径将不可用"。
+- **不做"失败自动退回 nashorn"**：那会把"运行时/classpath 配错"变成静默的性能回退（18–20 s/篇）；
+  本任务已吃过两次静默失败的亏（未导出字段静默 `undefined`、运行时 jar 静默遮蔽 `WEB-INF/lib`），故选择**显式失败 + 告警**。
+- **新增部署约束**：缺省 graaljs ⇒ 运行时必须是 GraalVM（或 classpath 上有 GraalJS）；
+  换回 stock JDK 8 时 GraalJS 只能解释执行，须显式 `-Ddocsys.office.jsEngine=nashorn`。已写进类注释。
+- **验证**：显式 nashorn 13/13、显式 graaljs 13/13、**不带属性（新缺省）** `mode resolved: graaljs`
+  且 13/13；缺省路径真实转换与 nashorn 基线 **IDENTICAL-MODULO-TIMESTAMPS**；
+  完整双引擎三端回归 word 32.5→13.2 s、slide 34.0→14.9 s、cell 70.8→18.5 s，三端全一致；
+  dev 服务在 graaljs 缺省下重启成功（`Server startup in 31557 ms`、`/DocSystem/` 200）。
 
 **✅ 已完成：运行时切换到 GraalVM CE 21.2（计划 §6.4.9，2026-10-07）**
 
@@ -156,13 +177,15 @@
 （实测打印 `does not support runtime compilation … interpreted mode only`），那时**可能比 nashorn 还慢**。
 另：nashorn 退场**不等于没有 JS 引擎兜底**，长期兜底是 **`JMergeEngine`（纯 Java 移植）**。
 
-**仍未做（通往阶段 B 完成只剩这些）**：
+**仍未做（阶段 B 已完成，剩下的是后续项）**：
 
-1. **裁定是否把默认引擎切成 graaljs**（阶段 B 的正题）。触发条件已全部满足（三端 golden 一致 + 运行时已切 GraalVM）。
-   切换方式：`JSEngineFactory.getMode()` 的缺省值由 nashorn 改为 graaljs，nashorn 退居显式开关
-   `-Ddocsys.office.jsEngine=nashorn`（按 §6.4.5 的 A/B/C 分阶段退役，C 阶段才删分支）。
+1. **C 阶段（nashorn 退役）**：上线稳定、无回退需求后删除 nashorn 分支
+   （`CJSContext` 11 处 + `JSEngineFactory.createNashorn()` + `engine`/`globals` 字段），此后 `docsys.office.jsEngine` 开关可一并移除。
 2. 补测**三端同时使用**时共享 Engine 的内存曲线（风险 20）。
-3. 阶段 2（未开始）：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + §6.2 整张清单。
+3. （可选）受控 A/B 测 GraalVM 对**启动耗时**的影响——当前数据不足以判断
+   （切换后两次启动 166592 ms / 31557 ms，而旧 JRE 历史区间本身就是 28.6–259 s，
+   故我先前"启动 28878 ms"的说法是**误读日志**，已在计划 §6.4.9 更正）。
+4. 阶段 2（未开始）：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + §6.2 整张清单。
 
 **第 2 步的调研（已完成，结论并入计划 §6.4.2）**：
 
