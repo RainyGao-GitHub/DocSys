@@ -560,11 +560,26 @@ dev JVM 实测堆上限 **8,459,911,168 B ≈ 7.88 GiB**（计划原写"约 4.8 
   → ✅ **已于 2026-10-07 归因（§6.4.14）**：1537 MB 是**未 GC 的 used**；真实常驻存活集是
   **一端 220 MB / 三端全载 260 MB**（不随文档数增长），dev 实测堆上限 **7.88 GiB**。
   定值方法：按**存活集**（基线 ~100 MB + 引擎 ≤260 MB + Lucene/文档工作集）估，**不要按 1.5 GB**。
-- **新发现·未定性①**：**`CJSContext.close()` 在生产里从未被调用**（7 个创建点：
-  `CDoctrenderer:1082/1372`、`CDoctRenderer_Private:523/1618`、`CV8RealTimeWorker:233/780/881`；0 个关闭点；
-  `CJSContextScope` 只切 ThreadLocal，`JSSmart`/`smart_ptr` 无 finalize）。**实测当前不构成泄漏**
-  （`noClose=true` 4 轮恒定 221 MB，GraalVM 21.2 能回收不可达 Context），但与官方"Context 必须 close"不符，
-  属"全靠 GC 兜底"的隐式契约。**未获裁定前不动代码。**
+- **新发现・已更正 + 已出方案（待裁定）**：`CJSContext` 关闭问题。
+  ❗**更正我先前的错误判断**：我第一版写"`CJSContext.close()` 生产里从未被调用（7 个创建点、0 个关闭点）"——
+  **是错的**，我只检索了 `close()`/`Close()`，**漏掉 C++ 风格别名 `Dispose()`**（`CJSContext.java:269` 的
+  `Dispose()` → `close()`）。按注释边界逐个核对后的真实情况：**4 个活创建点全部有配对的 `Dispose()`**
+  （`CDoctrenderer:1082→1109`、`CDoctRenderer_Private:523→1129`、`CV8RealTimeWorker:233→290`、`:780→795`）；
+  另 3 个创建点（`CDoctRenderer_Private:1618`、`CDoctrenderer:1372`、`CV8RealTimeWorker:881`）
+  **在 C++ 镜像注释块内、不参与编译**。
+  **真实缺口两个**：① `Dispose()` **不在 `finally`**（`CDoctRenderer_Private.ExecuteScript` 与
+  `CDoctrenderer.CreateCache` 均为"创建 → `if (true) {…}` → `Dispose()`"，体内无提前 `return` →
+  唯一漏关路径是异常）；② 这两处的 **`CJSContextScope.close()` 从未调用** → ThreadLocal `CURRENT` 残留
+  （对比 `CV8RealTimeWorker` 有 5 处 `finally { scope.close(); }`，写法正确）。
+  实测当前**不构成泄漏**（GC 能回收不可达 Context），故不是内存问题的原因；但两点仍值得修（确定性释放 / API 契约 /
+  避免"已关闭 context 经 ThreadLocal 被取到"）。
+  **调研与修改方案已成文**：`office/docs/CJSContext资源关闭调研与修改方案.md`（逐点核对表、改动形状、
+  验证方案、风险）。**用户已要求"先调研、确认后再决定是否改" → 三选一待裁定：A 两处 try/finally + 1 行防御（推荐）
+  / B＝A+AutoCloseable / C 暂不改。未获裁定前不动代码。**
+- **新发现·未定性②**：**共享 Engine 的性能收益在更严格方法下未复现**。老探针 S1 vs S3 =
+  `1620 vs 340 ms`（2 轮、轮间不插 GC、**命名** `Source`）；新探针（4 轮、轮间 Full GC）≈ `1.3 s vs 0.8 s` 无差异。
+  且生产是**逐文件** `graalContext.eval("js", 字符串)`（匿名 literal），与老探针的命名 `Source` 形态不同。
+  → "花 220 MB 常驻换每篇省 1 s"是否在生产 eval 形态下成立，**需要一次方法学对齐的测量**（未做）。
 - **新发现·未定性②**：**共享 Engine 的性能收益在更严格方法下未复现**。老探针 S1 vs S3 =
   `1620 vs 340 ms`（2 轮、轮间不插 GC、**命名** `Source`）；新探针（4 轮、轮间 Full GC）≈ `1.3 s vs 0.8 s` 无差异。
   且生产是**逐文件** `graalContext.eval("js", 字符串)`（匿名 literal），与老探针的命名 `Source` 形态不同。
