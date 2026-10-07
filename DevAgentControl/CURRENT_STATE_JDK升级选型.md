@@ -45,10 +45,49 @@
 |---|---|
 | 三端内容一致（时间戳归一化） | ✅ 已满足 |
 | **运行时切到 GraalVM（形态 C）** | ❌ **未做**——`tomcat\java\jre` 仍是 JRE 1.8.0_162 |
-| `HostAccess.ALL` 收敛为白名单（风险 11） | ❌ 未做（安全加固，非门槛）——**权限面已实测摸清**（计划 §6.4.7） |
-| 共享 `Engine` + 缓存 `Source` | ❌ 未做（纯优化；当前仍已快 2.3–5.0×） |
+| 权限收敛（风险 11） | ✅ **已做**（`EXPLICIT` + 2 个 `@Export`；删掉 classLookup/IO） |
+| 共享 `Engine` | ✅ **已做**（`JSEngineFactory` 静态共享 Engine） |
+| 共享 `Source` / 缓存 | 不需要（实测共享 Engine 即够，`CDoctRenderer_Private` 未动） |
 
-→ **阶段 B 只剩"切运行时"这一个动作**（外加两项非门槛的加固/优化）。
+→ **阶段 B 只剩"切运行时"这一个动作**（外加最后一道完整双引擎回归）。
+
+**✅ 已完成：阶段 B 代码侧两项改动（计划 §6.4.8，2026-10-07）**
+
+1. **共享 `Engine`**：`JSEngineFactory` 新增静态共享 Engine（懒建、进程级单例、永不 close），
+   `createGraalContext()` 改用 `.engine(sharedGraalEngine())`。
+   实测（**每场景独立 JVM**，注意第一次同 JVM 连跑被 JIT 预热污染）：
+   稳态载入 slide **1215→251 ms**、word **1386→223 ms**、cell **1486→334 ms**（每篇省约 1 s）；
+   4 线程 × 4 次并发 16 次转换墙钟 **14808→7051 ms（2.1×）**，**零异常**；
+   内存无实质差异（214–240 vs 217–244 MB）；**冷启动不受益**（两边都约 4 s）。
+   否掉了"复用 Context"方案（稳态 232 ms 相当，但会串上一篇文档的 JS 全局状态）。
+2. **权限收敛**：删掉 `allowHostClassLookup`/`allowIO`；`HostAccess.ALL` → **`EXPLICIT`**，
+   只给 `CJavaEmbedBinder.create/invoke` 加 `@HostAccess.Export`。
+   **为什么只需 2 个注解**：JS 拿到的是我们建的 JS wrapper，其成员是 JS 闭包（闭包再调 `JavaCreateEmbed.invoke`）；
+   embed 实例（`__nativeEmbed`）只被 Java 侧 `CJSObject.getNative()` 读，sdkjs 里 `__nativeEmbed` **0 处**
+   → JS 能触达的宿主对象**只有 `JavaCreateEmbed` 一个**。
+
+**门禁**：13 项冒烟 **nashorn 13/13 + graaljs 13/13**；三端真实转换 word/slide/cell 全部
+**IDENTICAL-MODULO-TIMESTAMPS**（内容不同 0）。耗时 word 12.78 s、slide 14.56 s、cell 18.76 s。
+
+⚠️ **一处需要澄清的"假警报"**：cell 端日志有 `TypeError: null has no such function "lF"` ＋
+`AVS_FILEUTILS_ERROR_CONVERT_CORRUPTED`。与 **nashorn 基线日志逐字比对**后确认**此前就存在**
+（同样的 `index="35"`），是 xlsx fixture 里两端都拒绝的变更项，与本次改动无关，且**两端产物仍一致**。
+
+**顺带关闭/新增的结论**：
+
+- **编译期 JDK 不用换**（用户提问）：① 实测 stock javac **8u162** 能编译阶段 1 全部 8 个类、产物 major=52；
+  ② GraalJS 的 jar 主体都是 Java 8（`module-info`/`META-INF/versions/*` 在 8 下不参与解析）；
+  ③ 编译 JDK(8u162) ≤ 运行 JDK(8u302) 是**安全方向**，且默认 nashorn 回退路径要求用旧 javac。
+  GraalVM 的 `jre/` 里**没有 `javac.exe`**，4 个启动脚本统一指向 `%CATALINA_HOME%\java\jre`
+  → **换运行时不用改脚本、也碰不到编译 JDK**。
+  ⚠️ 唯一未验：Eclipse/JDT（ECJ）编译（手边无 ecj；风险低）。
+- **`js.nashorn-compat` 的真正价值**：实测开 compat 后全局对象面与真 Nashorn 8u162 **16 项全一致**
+  （连 `Map`/`Set`/`Symbol`/`Proxy`/`Promise`/`Object.assign`/`Array.from` 都同为 undefined）；
+  **不开则 sdkjs 会突然看见一批 Nashorn 下不存在的 ES6 全局** → 它不是"顺手加的开关"。
+- **icu4j/Intl 风险关闭**：`Intl` 在 GraalJS（compat 与默认）与 Nashorn 下**都不存在**，我们从不依赖 ICU 路径。
+- **新风险 19**：切运行时后 GraalVM 的 `jre/languages/js/graaljs.jar` 与 `WEB-INF/lib/js-21.2.0.jar` 并存，
+  **boot classpath 优先** → 将来换 GraalVM 版本而忘了同步 `WEB-INF/lib` 时实际生效的是运行时那份，易误判。
+- **新风险 20**：共享 Engine 是官方"实验特性"，且引擎级代码缓存随脚本集增长；需补测三端同时使用的内存曲线。
 
 **第 1 步（引擎获取收敛 + 冒烟）已完成**（计划 §6.4.1）：
 
@@ -94,22 +133,12 @@
 （实测打印 `does not support runtime compilation … interpreted mode only`），那时**可能比 nashorn 还慢**。
 另：nashorn 退场**不等于没有 JS 引擎兜底**，长期兜底是 **`JMergeEngine`（纯 Java 移植）**。
 
-**仍未做（通往 golden 对比只剩这些）**：
+**仍未做（通往阶段 B 完成只剩这些）**：
 
-1. **权限收敛（计划风险 11，2026-10-07 已实测摸清，见计划 §6.4.7）**：`allowHostClassLookup(className -> true)`
-   与 `allowIO(true)` 是**凭猜想加的、生产脚本集一处都没用到**（整个 office-editor 静态树 + office 源码 + test
-   的 `Java.type`/`Packages`/`importClass` 全 **0** 处，脚本里也没有 JS 层 `load(`）→ **可直接去掉**；
-   但 `allowHostAccess(ALL)` 不是简单关掉就行：它是**真正的闸门**（实测即使不开类查找，JS 仍能经
-   `h.getClass().getClassLoader()`/`getMethods()` 反射出去），要收敛需换成 `HostAccess.EXPLICIT`
-   + `@HostAccess.Export` 白名单——触及面有界（全局仅 `CJavaEmbedBinder`，加 `Embed(...)` 注册的 8 个类）。
-   另注意 `EXPLICIT` 的失败方式很隐蔽：**读未导出字段静默返回 `undefined`**，不报错。
-   **按裁定留到阶段 B**，与"切运行时"一起做，必须过 13 项冒烟 + 三端真实转换两道门。
-2. 每个 `new CJSContext()` 都新建 `Context` → 拿不到"共享 Engine 复用编译产物"的收益
-   （§4.5 冷 3.2s vs 热 1.4s），后续应共享 `Engine` + 缓存 `Source`。
-3. **还没跑真实转换**：`asc_nativeOpenFile → applyChanges2 → getFileData` 三步与 golden 逐字节对比尚未开始；
-   建议先用 `-Ddocsys.doctrenderer.dumpScriptPath` 取"真脚本"，再按计划 §4.2 的 fixture 矩阵跑三端。
-
-之后才是三端 golden 逐字节对比 → 达标即**退役 JMergeEngine** → 阶段 2（JDK 17 + Tomcat 9）排期。
+1. **切运行时到 GraalVM CE 21.2（形态 C）**——`tomcat\java\jre` 仍是 JRE 1.8.0_162。这是阶段 B 最后一个动作。
+2. 切完后跑**完整双引擎回归**（13 项冒烟两模式 + 三端真实转换两引擎；nashorn 对照必须仍行为不变）。
+3. 补测**三端同时使用**时共享 Engine 的内存曲线（风险 20）。
+4. 裁定是否把默认引擎切成 graaljs（阶段 B 的正题；必须与运行时切换绑定）。
 
 **第 2 步的调研（已完成，结论并入计划 §6.4.2）**：
 
