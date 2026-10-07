@@ -25,22 +25,29 @@
 - 冒烟（真实生产类）：**nashorn 缺省模式 PASS=10/FAIL=0（行为不变 ✅）**；**graaljs 模式 PASS=7/FAIL=3**。
 - 复现：`test/tools/run_cjscontext_engine_mode.ps1`（`TestCJSContextEngineMode.java`）。
 
-**第 2 步（当前卡点）：把 3 个 `ScriptObjectMirror` 失败点移植掉**（计划 §5 的 8 个文件），
-精确清单来自冒烟：
+**第 2 步（进行中）：值类型探针已完成，实现规格已确定**（计划 §6.4.2）
+
+- 新增两个探针（office/test）：`TestJsValueProbe.java`（两引擎对比"JS 值→Java 类型"）、
+  `TestGraalJsApiProbe.java`（Polyglot `Context`/`Value` 的 API 映射逐项实测）。
+- **更正**：第 1 步里我记的"可保留 `javax.script` 抽象只适配值类型"这条路 **实测不成立**——
+  JSR-223 下 GraalJS 把**数组**还原成 `PolyglotMap`（非 `List`、无索引视图），
+  **数组元素与 `Uint8Array` 元素取不到**，且拿不到 `Value`。
+  而 sdkjs 的 `getFileData`（返回 `Uint8Array`）与 `apply_changes`（数组）都依赖元素访问
+  → **graaljs 模式必须自带 `org.graalvm.polyglot.Context`**（回到 §3/§5 原设想）。
+- 两个新陷阱登记为风险 16/17：`Value.asInt()` 对非整数**直接抛**（`1.5` 抛），
+  故 `toInt()/toInt32()` 必须写成"`fitsInInt()` 优先，否则 `(int) asDouble()`"；
+  `null` 与 `undefined` 在 `Value` 上都是 `isNull()==true`，**无法区分**。
+- **实现规格（下一步执行）**：① `JSBackend`（Nashorn/Graal 两实现）② `JSValueAccess`（双引擎统一 12 个操作）
+  ③ 改造 `CJSContext`/`CJSObject`/`CJSArray`/`CJSTypedArray`/`JSUint8Array`/`CJavaEmbedBinder`
+  ④ **默认必须仍是 nashorn**，用 `test/tools/run_cjscontext_engine_mode.ps1` 双模式回归（nashorn 必须保持 10/10）。
+
+**待移植清单**（来自第 1 步冒烟，第 2 步要消灭的 3 项）：
 
 | # | 失败点 | 异常 |
 |---|---|---|
 | 7 | `CJSContext.createObject()` + 成员回读 | NPE（createObject 内部抛 `ClassCastException` 后被吞） |
 | 8 | `CJSContext.createArray(3)` | `PolyglotMap cannot be cast to ScriptObjectMirror` |
 | 9 | `global.set` + `eval` 回读 | 同上 |
-
-**路线简化（重要，待验证）**：GraalJS **自带可用的 JSR-223 `ScriptEngine`**（实测
-`com.oracle.truffle.js.scriptengine.GraalJSScriptEngine`）→ **不必**按原设想改写成 Polyglot
-`Context`/`Value`，可以保留 `javax.script.ScriptEngine` 这层抽象、只适配值类型
-（`ScriptObjectMirror` → `ScriptObjectMirror | Map/List`），改动面显著更小。
-⚠️ 但每次 `getEngineByName` 会新建 polyglot `Context`，会丢掉"共享 Engine 复用编译产物"的收益
-（§4.5：冷 3.2s vs 热 1.4s）→ 应改用 `GraalJSScriptEngine.create(sharedEngine, builder)` 共享 Engine
-并缓存 `Source`。
 
 之后：三端 golden 逐字节对比 → 达标即**退役 JMergeEngine** → 阶段 2（JDK 17 + Tomcat 9）排期。
 
