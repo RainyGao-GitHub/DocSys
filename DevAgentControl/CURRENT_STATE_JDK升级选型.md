@@ -25,8 +25,15 @@
 (a) 全删 126（连 oracle/trace 族一起删）；(b) **删 121、保留 `jmerge/bin` 的 12 个纯流测试**（推荐，成本最低且不丢纯流回归）；
 (c) 暂不动。→ **在定案前不要跑那 132 个测试**；名单在 `%TEMP%\del_list.txt` / `fix_list.txt`（临时文件，可重扫）。
 
-**② 重启 dev 服务**：本轮新编译的 `NExtractToolsStatic.class` 尚未生效（当前 JVM 里是旧类）。
-重启后可用新日志行确认：`【apply_changes】JS 引擎路径 eType:<n> 引擎:graaljs`。
+**② ✅ 已完成：重启 dev 服务让新类生效（2026-10-07 17:30）**
+
+`docsys_restart.bat`（后台隐藏窗口）；旧 PID 39460 退出 → 新 PID **16916**（17:30:23 启动，运行时仍是 GraalVM CE 21.2 / 1.8.0_302）。
+启动证据：`Server startup in 40377 ms`（在历史区间 28.6–259 s 内）、`/DocSystem/` **HTTP 200**、`docsys.log` 尾部 `docSysInit() End docSysInitState:0`。
+部署核对：`WebRoot/WEB-INF/classes/.../NExtractToolsStatic.class` 含新日志串、**不含 `JMergeEngine`**；
+`classes/.../doctrenderer/jmerge/` 下只剩 `bin` 的 8 个 class；
+**扫过 `WEB-INF/lib` 全部 jar，无任何 jar 含 `NExtractToolsStatic` 或 `jmerge/{word,slide,cell,common}/`**（确认不会遮蔽）；
+`mxsdoc.jar` 已不存在（符合"开发期删 jar 用源码"的约定）。
+→ 无需 UI 触发即可确认：日志标签会在下次 apply_changes 时以新文案出现。
 
 **③ C 阶段（nashorn 退役）**：上线稳定后删 nashorn 分支（`CJSContext` 11 处双分支 + `JSEngineFactory.createNashorn()`）。
 
@@ -356,7 +363,7 @@
 - **未实测**：没有真正在 JDK 17 上跑过；GraalJS 在 17 档的实际性能/兼容性仍是**承诺**而非事实（阶段 1 用的是 JDK 8 档运行时）。
 - **待用户裁定（阻塞测试树）**：office/test **132 个文件** import 已删的 jmerge 类 → 编译不过；
   (a) 全删 126 / (b) 删 121 保留 `jmerge/bin` 12 个纯流测试 / (c) 暂不动。用户已说"我自己看过再决定"。
-- **未做**：新 `NExtractToolsStatic.class` 尚未在 dev 服务生效（需重启）。
+- **未做**：~~新 `NExtractToolsStatic.class` 尚未在 dev 服务生效（需重启）~~ → ✅ **已于 2026-10-07 17:30 重启生效**（新 PID 16916、`Server startup in 40377 ms`、HTTP 200、classes 内已无 `JMergeEngine`）。
 - **未定性**：① slide 包首次 `Execute` 的 `run` 仅 174 ms（远快于探针冷载 3.8 s）；② 每次保存伴随
   `executeCommonActionList() failed actions:1`（紧跟 `TextSearch was Disabled`）。
 - **交付前必做**：核对 `-Xmx`（实测 ParOldGen 1537 MB / 2713 MB，当前 dev 无 `-Xmx`）。
