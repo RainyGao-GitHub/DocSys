@@ -31,6 +31,7 @@ public class TestStreamChatChunks {
         testProgressiveStreaming();
         testReasoningSeparationInStream();
         testErrorStatusThrows();
+        testOutputTruncatedFlagFromSse();
         System.out.println("\n======== TestStreamChatChunks: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -238,6 +239,67 @@ public class TestStreamChatChunks {
                 threw = true;
             }
             check("error-status: throws (caller can fallback)", threw);
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    /** finish_reason=length（撞上 max_tokens 上限）：正文为空 —— "无声停下"的最常见形态 */
+    private static String lengthChunk() {
+        JSONObject delta = new JSONObject();
+        JSONObject choice = new JSONObject();
+        choice.put("delta", delta);
+        choice.put("finish_reason", "length");
+        JSONObject obj = new JSONObject();
+        obj.put("choices", new Object[]{choice});
+        return obj.toJSONString();
+    }
+
+    /**
+     * 2026-10-08：`finish_reason=length` 必须产出 {@link StreamChunk#TYPE_OUTPUT_TRUNCATED} 标记块 ——
+     * 推理模型思考吃光 max_tokens 时正文为空，上层只有拿到这个标记才不会把"空正文"当最终回答
+     * （先例：桌面整理任务无声停下 5 次，见 DevAgentControl/CURRENT_STATE_agent任务中途停止.md）。
+     */
+    private static void testOutputTruncatedFlagFromSse() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/v1/proxy/v1/chat/completions", exchange -> {
+            exchange.getResponseHeaders().set("Content-Type", "text/event-stream");
+            exchange.sendResponseHeaders(200, 0);
+            OutputStream out = exchange.getResponseBody();
+            try {
+                sendSseLine(out, reasoningChunk("思考很长很长的"));
+                sendSseLine(out, reasoningChunk("还没写完就撞上限了"));
+                sendSseLine(out, lengthChunk());
+                sendSseLine(out, "[DONE]");
+                out.flush();
+            } catch (Exception ignored) {
+            } finally {
+                try { out.close(); } catch (Exception ignored) {}
+            }
+        });
+        server.start();
+        try {
+            int port = server.getAddress().getPort();
+            LLMService svc = newLlmService();
+            ResolvedLlmConfig resolved = new ResolvedLlmConfig(
+                    "http://127.0.0.1:" + port + "/v1/proxy", "test-model", null, "test");
+
+            Iterator<StreamChunk> it = svc.streamChatChunks(messages("hi"), resolved);
+            int markers = 0;
+            int textChunks = 0;
+            int reasoningChunks = 0;
+            boolean doneSeen = false;
+            while (it.hasNext()) {
+                StreamChunk c = it.next();
+                if (c.isOutputTruncated()) markers++;
+                if (c.isText()) textChunks++;
+                if (c.isReasoning()) reasoningChunks++;
+                if (c.isDone()) { doneSeen = true; break; }
+            }
+            check("truncated-flag: marker emitted once", markers == 1);
+            check("truncated-flag: no text chunk (blank content)", textChunks == 0);
+            check("truncated-flag: reasoning still streamed", reasoningChunks == 2);
+            check("truncated-flag: done still emitted", doneSeen);
         } finally {
             server.stop(0);
         }

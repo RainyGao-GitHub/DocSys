@@ -3699,20 +3699,24 @@
         });
     }
 
-    /** P3：到顶续接页脚 —— 「预算到顶 N 轮」徽标 + 「继续」按钮（仅 truncated 的 assistant 气泡） */    function buildTruncatedFooterHtml(msg) {
+    /** P3：到顶续接页脚 —— 「预算到顶 N 轮」徽标 + 「继续」按钮（仅 truncated 的 assistant 气泡） */
+    function buildTruncatedFooterHtml(msg) {
         if (!msg || msg.role !== 'assistant' || !msg.truncated) return '';
         var turns = msg.truncatedTurns ? ('（' + msg.truncatedTurns + ' 轮）') : '';
+        // 2026-10-08：两种截断原因徽标文案不同 —— 输出被截断（reasoning 吃光 max_tokens）别说成"预算到顶"
+        var badge = (msg.truncatedReason === 'outputTruncated') ? '⏸ 输出被截断' : ('⏸ 预算到顶' + turns);
         return '<div class="truncated-footer">'
-             + '<span class="truncated-badge">⏸ 预算到顶' + turns + '</span>'
+             + '<span class="truncated-badge">' + badge + '</span>'
              + '<button type="button" class="continue-btn" title="接着做剩余部分">继续</button>'
              + '<span class="truncated-hint">只补做未完成的部分，不会重复已完成的工作</span>'
              + '</div>';
     }
 
-    /** P3：解析 done.meta —— 记下到顶状态（truncated / turns）供渲染用 */
+    /** P3：解析 done.meta —— 记下到顶状态（truncated / turns / 原因）供渲染用 */
     function applyDoneMeta(msg, meta) {
         if (!msg || !meta) return;
         msg.truncated = (meta.truncated === true || meta.truncated === 'true');
+        msg.truncatedReason = meta.truncatedReason ? String(meta.truncatedReason) : '';
         var m = /turns=(\d+)/.exec(String(meta.toolLoop || ''));
         msg.truncatedTurns = m ? parseInt(m[1], 10) : null;
     }

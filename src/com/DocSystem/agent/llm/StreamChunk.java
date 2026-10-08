@@ -10,6 +10,7 @@ package com.DocSystem.agent.llm;
  * <ul>
  *   <li>{@link #TYPE_TEXT}：正文分片（最终回答 / 工具调用中间文本）</li>
  *   <li>{@link #TYPE_REASONING}：思考过程分片（OpenAI 兼容流 reasoning_content/reasoning）</li>
+ *   <li>{@link #TYPE_OUTPUT_TRUNCATED}：**输出被截断**标记（`finish_reason=length`，正文可能为空/不完整）</li>
  *   <li>{@link #TYPE_DONE}：流结束标记（保证迭代器末尾必有）</li>
  * </ul>
  */
@@ -22,6 +23,12 @@ public final class StreamChunk {
     public static final String TYPE_TOOL_CALL = "tool_call";
     /** T10：端点拒绝 tools（已去 tools 重试；本轮后续分片来自无 tools 请求） */
     public static final String TYPE_TOOLS_REJECTED = "tools_rejected";
+    /**
+     * 输出被截断标记（2026-10-08）：`finish_reason=length` —— 达到 max_tokens 上限。
+     * 推理模型最常见：reasoning 吃光预算，正文（content）为空或只有半截。
+     * 到达顺序在 done 之前；调用方**不应**把这种轮的正文当最终回答。
+     */
+    public static final String TYPE_OUTPUT_TRUNCATED = "output_truncated";
 
     /** 分片类型（text/reasoning/tool_call/done） */
     public final String type;
@@ -66,11 +73,17 @@ public final class StreamChunk {
         return new StreamChunk(TYPE_TOOLS_REJECTED, "");
     }
 
+    /** 输出被截断标记块（`finish_reason=length`；先于 done 到达） */
+    public static StreamChunk outputTruncated() {
+        return new StreamChunk(TYPE_OUTPUT_TRUNCATED, "");
+    }
+
     public boolean isText() { return TYPE_TEXT.equals(type); }
     public boolean isReasoning() { return TYPE_REASONING.equals(type); }
     public boolean isDone() { return TYPE_DONE.equals(type); }
     public boolean isToolCall() { return TYPE_TOOL_CALL.equals(type); }
     public boolean isToolsRejected() { return TYPE_TOOLS_REJECTED.equals(type); }
+    public boolean isOutputTruncated() { return TYPE_OUTPUT_TRUNCATED.equals(type); }
 
     @Override
     public String toString() {

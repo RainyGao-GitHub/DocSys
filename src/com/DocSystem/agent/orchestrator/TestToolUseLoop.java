@@ -36,6 +36,8 @@ public class TestToolUseLoop {
         testMaxTurnsExceeded();
         testBudgetWrapupPartial();
         testMaxTurnsConfigurable();
+        testBlankAnswerRetryThenAnswer();
+        testBlankAnswerTwiceDeliversPartial();
         testAdminFilteringInPrompt();
         testConsecutiveIdenticalToolCall();
         testTranscriptTrimming();
@@ -341,6 +343,57 @@ public class TestToolUseLoop {
                 high.getMaxTurns() == ToolUseLoop.MAX_TURNS_LIMIT);
         high.setMaxTurns(1);
         check("configurable: clamp low → MIN_TURNS", high.getMaxTurns() == ToolUseLoop.MIN_TURNS);
+    }
+
+    /**
+     * 2026-10-08：空正文不能当最终回答 —— 先注入"直接给结论"提示重试一次，
+     * 拿到正文则正常交付（不再出现"success + 空回答"的无声停下）。
+     */
+    private static void testBlankAnswerRetryThenAnswer() {
+        List<String> script = new ArrayList<>();
+        script.add("");                                   // 第 1 轮：模型没输出正文
+        script.add("查完了：共 2 个仓库。");                  // 重试后给了正文
+
+        List<List<Map<String, String>>> seen = new ArrayList<>();
+        ToolUseLoop loop = new ToolUseLoop(recording(script, seen), buildRegistry(false), false);
+        ToolUseResult r = loop.run("列出仓库");
+
+        check("blank retry: success", r.success);
+        check("blank retry: not truncated", !r.truncated);
+        check("blank retry: answer delivered", r.message != null && r.message.contains("查完了"));
+        check("blank retry: turns=2 (1 blank + 1 answer)", r.turns == 2);
+        check("blank retry: hint injected",
+                hasMessageContaining(seen.get(seen.size() - 1), "没有输出任何正文"));
+    }
+
+    /**
+     * 2026-10-08：重试后仍无正文 → 交付阶段性结论（partial + outputTruncated），
+     * 前端据此渲染「继续」入口 —— 关键是不能静默返回空回答。
+     */
+    private static void testBlankAnswerTwiceDeliversPartial() {
+        List<String> script = new ArrayList<>();
+        script.add("");   // 一直只有空正文（脚本用尽后重复最后一条）
+
+        ToolUseLoop loop = new ToolUseLoop(scripted(script), buildRegistry(false), false);
+        ToolUseResult r = loop.run("列出仓库");
+
+        check("blank partial: success", r.success);
+        check("blank partial: truncated flag", r.truncated);
+        check("blank partial: reason=outputTruncated",
+                ToolUseResult.REASON_OUTPUT_TRUNCATED.equals(r.truncatedReason));
+        check("blank partial: turns=2 (blank + 1 retry)", r.turns == 2);
+        check("blank partial: fallback notice",
+                r.message != null && r.message.contains("没有返回任何正文"));
+    }
+
+    /** messages 里是否存在包含某段文字的消息（断言"注入的提示"用） */
+    private static boolean hasMessageContaining(List<Map<String, String>> messages, String needle) {
+        for (Map<String, String> m : messages) {
+            if (m.get("content") != null && m.get("content").contains(needle)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void testAdminFilteringInPrompt() {

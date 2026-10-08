@@ -33,6 +33,8 @@ public class TestToolUseLoopStreaming {
         testStreamingToolFailure();
         testStreamingFallbackNonStreaming();
         testStreamingRetryHint();
+        testStreamingOutputTruncatedWithText();
+        testStreamingBlankAnswerThenRetry();
         System.out.println("\n======== TestToolUseLoopStreaming: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -165,6 +167,59 @@ public class TestToolUseLoopStreaming {
                 && sink.toolResults.get(0).equals("list_repos:true"));
         check("stream chain: reasoning in turn2", sink.reasoning.toString().contains("工具结果"));
         check("stream chain: final answer", r.message.contains("仓库1"));
+    }
+
+    /** 2026-10-08：有正文但被输出上限截断（finish_reason=length）→ 交付 + 标记"可能未完成" */
+    private static void testStreamingOutputTruncatedWithText() {
+        List<List<StreamChunk>> script = new ArrayList<>();
+        List<StreamChunk> turn1 = new ArrayList<>();
+        turn1.add(StreamChunk.reasoning("想了很久…"));
+        turn1.add(StreamChunk.text("我先给你半截结论："));
+        turn1.add(StreamChunk.outputTruncated());
+        turn1.add(StreamChunk.done());
+        script.add(turn1);
+
+        RecordingSink sink = new RecordingSink();
+        ToolUseLoop loop = new ToolUseLoop(scriptedStreaming(script), buildRegistry(), false);
+        ToolUseResult r = loop.runStreaming("整理桌面", null, sink);
+
+        check("stream truncated: success", r.success);
+        check("stream truncated: truncated flag", r.truncated);
+        check("stream truncated: reason=outputTruncated",
+                ToolUseResult.REASON_OUTPUT_TRUNCATED.equals(r.truncatedReason));
+        check("stream truncated: partial answer kept",
+                r.message != null && r.message.contains("半截结论"));
+        check("stream truncated: marker not treated as text",
+                sink.text.toString().equals("我先给你半截结论："));
+    }
+
+    /**
+     * 2026-10-08（生产故障复现形态）：推理模型思考吃光 max_tokens → 正文为空 + 截断标记。
+     * 第 1 轮空正文 → 注入提示重试；第 2 轮拿到正文 → 正常交付（不再无声停下）。
+     */
+    private static void testStreamingBlankAnswerThenRetry() {
+        List<List<StreamChunk>> script = new ArrayList<>();
+        List<StreamChunk> turn1 = new ArrayList<>();
+        turn1.add(StreamChunk.reasoning("（思考被截断，正文一个字都没出）"));
+        turn1.add(StreamChunk.outputTruncated());
+        turn1.add(StreamChunk.done());
+        script.add(turn1);
+        List<StreamChunk> turn2 = new ArrayList<>();
+        turn2.add(StreamChunk.text("结论：桌面共 83 项，建议分 10 类。"));
+        turn2.add(StreamChunk.done());
+        script.add(turn2);
+
+        RecordingSink sink = new RecordingSink();
+        ToolUseLoop loop = new ToolUseLoop(scriptedStreaming(script), buildRegistry(), false);
+        ToolUseResult r = loop.runStreaming("整理桌面", null, sink);
+
+        check("stream blank: success", r.success);
+        check("stream blank: not truncated (retry recovered)", !r.truncated);
+        check("stream blank: turns=2", r.turns == 2);
+        check("stream blank: answer delivered",
+                r.message != null && r.message.contains("结论：桌面共 83 项"));
+        check("stream blank: reasoning reached sink",
+                sink.reasoning.toString().contains("正文一个字都没出"));
     }
 
     private static void testStreamingToolFailure() {

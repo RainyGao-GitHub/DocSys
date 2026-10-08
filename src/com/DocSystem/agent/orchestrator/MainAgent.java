@@ -638,8 +638,7 @@ public class MainAgent {
             com.DocSystem.agent.orchestrator.ToolUseResult tr, long durationMs, String extraMeta) {
         String answer = tr.message;
         if (tr.truncated) {
-            answer = tr.message + "\n\n---\n⚠️ 本轮工具预算到顶（" + tr.turns + " 轮 / " + tr.toolCalls
-                    + " 次工具调用），任务**可能未完成**。回复「继续」我会基于上面的进展接着做。";
+            answer = tr.message + "\n\n---\n" + truncationNotice(tr);
         }
         AgentResponse resp = AgentResponse.ok(answer);
         resp.withProcessingTime(durationMs);
@@ -647,8 +646,24 @@ public class MainAgent {
         resp.addMetadata("toolLoop", prefix + "turns=" + tr.turns + ", toolCalls=" + tr.toolCalls);
         if (tr.truncated) {
             resp.addMetadata("truncated", "true");
+            resp.addMetadata("truncatedReason", tr.truncatedReason != null
+                    ? tr.truncatedReason : com.DocSystem.agent.orchestrator.ToolUseResult.REASON_MAX_TURNS);
         }
         return resp;
+    }
+
+    /**
+     * 被截断时的用户提示 —— 两类原因文案必须不同（2026-10-08）：
+     * 轮数预算到顶是"工具预算"问题，输出被截断（reasoning 吃光 max_tokens）是"输出上限"问题，
+     * 对用户说成"工具预算到顶"会把人带偏（先例：桌面整理任务连停 5 次，日志/提示都指不到真因）。
+     */
+    private static String truncationNotice(com.DocSystem.agent.orchestrator.ToolUseResult tr) {
+        if (com.DocSystem.agent.orchestrator.ToolUseResult.REASON_OUTPUT_TRUNCATED.equals(tr.truncatedReason)) {
+            return "⚠️ 模型本轮输出被截断（没拿到完整正文，通常是思考过程过长触发了输出上限），"
+                 + "任务**可能未完成**。回复「继续」我会基于上面的进展接着做。";
+        }
+        return "⚠️ 本轮工具预算到顶（" + tr.turns + " 轮 / " + tr.toolCalls
+                + " 次工具调用），任务**可能未完成**。回复「继续」我会基于上面的进展接着做。";
     }
 
     /**

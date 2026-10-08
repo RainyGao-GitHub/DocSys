@@ -27,22 +27,37 @@ public final class LlmTurnResult {
     /** 端点拒绝了 tools 参数（本轮已无 tools 重试成功） */
     public final boolean toolsRejected;
 
-    private LlmTurnResult(String text, List<ToolCall> nativeToolCalls, boolean toolsRejected) {
+    /**
+     * 本轮输出被截断（`finish_reason=length`，达到 max_tokens 上限）。
+     *
+     * <p>典型场景：推理模型的 reasoning 吃光预算 → 正文为空。此时 {@link #text} 可能是空串，
+     * **不能**当作"模型给出的最终回答"（否则用户看到 Agent 无声停下）。</p>
+     */
+    public final boolean outputTruncated;
+
+    private LlmTurnResult(String text, List<ToolCall> nativeToolCalls, boolean toolsRejected,
+                          boolean outputTruncated) {
         this.text = text != null ? text : "";
         this.nativeToolCalls = nativeToolCalls != null ? nativeToolCalls : new ArrayList<ToolCall>();
         this.toolsRejected = toolsRejected;
+        this.outputTruncated = outputTruncated;
     }
 
     public static LlmTurnResult text(String text) {
-        return new LlmTurnResult(text, null, false);
+        return new LlmTurnResult(text, null, false, false);
+    }
+
+    /** 正文 + 是否被输出上限截断（流式通道用） */
+    public static LlmTurnResult text(String text, boolean outputTruncated) {
+        return new LlmTurnResult(text, null, false, outputTruncated);
     }
 
     public static LlmTurnResult toolCalls(String text, List<ToolCall> calls) {
-        return new LlmTurnResult(text, calls, false);
+        return new LlmTurnResult(text, calls, false, false);
     }
 
     public static LlmTurnResult rejected(String text) {
-        return new LlmTurnResult(text, null, true);
+        return new LlmTurnResult(text, null, true, false);
     }
 
     public boolean hasNativeCalls() {
@@ -53,6 +68,7 @@ public final class LlmTurnResult {
     public String toString() {
         return "LlmTurnResult{textLen=" + text.length()
                 + ", nativeToolCalls=" + (nativeToolCalls == null ? "null" : nativeToolCalls.size())
-                + ", toolsRejected=" + toolsRejected + "}";
+                + ", toolsRejected=" + toolsRejected
+                + ", outputTruncated=" + outputTruncated + "}";
     }
 }

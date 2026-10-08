@@ -51,7 +51,18 @@ public class LLMService {
     @Value("${llm.temperature:0.7}")
     private double temperature;
 
-    @Value("${llm.max-tokens:2048}")
+    /**
+     * 单次请求的输出上限。⚠️ 推理模型的 reasoning（CoT）**也计入**该预算
+     * （DeepSeek 等：`usage.completion_tokens_details.reasoning_tokens` 是其中的一部分）。
+     *
+     * <p>2026-10-08：默认值 2048 → **8192**。原值对推理模型太小：多步任务的 reasoning 一长就把预算吃光，
+     * `finish_reason=length` 且正文（content）为空 → 上层把"空正文"当最终回答，Agent 无声停在半路
+     * （取证见 DevAgentControl/CURRENT_STATE_agent任务中途停止.md）。</p>
+     *
+     * <p>⚠️ 生效时机：Spring bean 初始化时**静态读取** → 改 properties 后必须重启；
+     * 「AI接入设置」的按模型高级参数 `maxTokens` 目前**未接线**（见 devDocs/参数存储策略与参数清单.md）。</p>
+     */
+    @Value("${llm.max-tokens:8192}")
     private int maxTokens;
 
     @Value("${llm.connect-timeout:30}")
@@ -1168,6 +1179,8 @@ public class LLMService {
         private boolean finished = false;
         private boolean toolCallsFlushed = false;
         private boolean closed = false;
+        /** 本轮是否撞上输出上限（finish_reason=length）——见 {@link StreamChunk#TYPE_OUTPUT_TRUNCATED} */
+        private boolean outputTruncated = false;
 
         StreamChunkIterator(BufferedReader reader, Response response, boolean openAi) {
             this(reader, response, openAi, false, false);
@@ -1242,6 +1255,10 @@ public class LLMService {
                                 }
                                 String finishReason = choices.getJSONObject(0).getString("finish_reason");
                                 done = finishReason != null && !finishReason.isEmpty() && !"length".equals(finishReason);
+                                if ("length".equals(finishReason)) {
+                                    // 撞上 max_tokens 上限：推理模型的正文可能整个没输出（reasoning 吃光预算）
+                                    markOutputTruncated();
+                                }
                             }
                         } else {
                             // Ollama SSE format: {"message":{"content":"..."},"done":true}
@@ -1255,6 +1272,10 @@ public class LLMService {
                             }
                             Boolean d = obj.getBoolean("done");
                             done = d != null && d;
+                            // Ollama 原生流：done_reason=length 同样表示撞上输出上限
+                            if ("length".equals(obj.getString("done_reason"))) {
+                                markOutputTruncated();
+                            }
                         }
 
                         if (reasoning != null && !reasoning.isEmpty()) {
@@ -1323,6 +1344,16 @@ public class LLMService {
             return pending.isEmpty() ? StreamChunk.done() : pending.poll();
         }
 
+        /** 标记本轮输出被截断（只记一次，避免同轮重复刷日志） */
+        private void markOutputTruncated() {
+            if (outputTruncated) {
+                return;
+            }
+            outputTruncated = true;
+            log.warn("[LLM] 输出被截断（finish_reason=length，已达 max_tokens 上限）：本轮正文可能为空或不完整，"
+                    + "调用方不得把它当作最终回答（先例：推理模型思考吃光预算 → 正文为空 → Agent 无声停下）");
+        }
+
         private void finish() {
             if (finished) return;
             finished = true;
@@ -1354,6 +1385,9 @@ public class LLMService {
                     String name = acc.name != null ? acc.name : "";
                     pending.add(StreamChunk.toolCall(new ToolCall(acc.id, name, args, argsStr)));
                 }
+            }
+            if (outputTruncated) {
+                pending.add(StreamChunk.outputTruncated());
             }
             pending.add(StreamChunk.done());
         }

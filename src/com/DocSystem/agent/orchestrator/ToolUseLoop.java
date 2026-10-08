@@ -76,6 +76,22 @@ public class ToolUseLoop {
             "[SYSTEM] 工具预算已用尽。请立即基于已有信息给出回答，**不要再调用任何工具**：\n"
           + "① 已完成什么（含关键结论/数据）；② 还缺什么（明确说出未完成的部分）；③ 建议的下一步。";
 
+    /**
+     * 空正文重试上限（2026-10-08）。模型的 reasoning 可能吃光 max_tokens 导致正文为空
+     * （`finish_reason=length`，见 {@link com.DocSystem.agent.llm.StreamChunk#TYPE_OUTPUT_TRUNCATED}）——
+     * 这种轮**不能当最终回答**（否则用户看到 Agent 无声停下）。先注入"直接给结论"提示重试一次，
+     * 仍为空则交付阶段性结论（partial + truncated → 前端「继续」入口）。
+     */
+    private static final int MAX_EMPTY_ANSWER_RETRIES = 1;
+
+    /** 空正文重试提示：明确要求"用文字收口"，不要继续长篇思考（否则又撞输出上限） */
+    static final String EMPTY_ANSWER_HINT =
+            "[SYSTEM] 你上一轮没有输出任何正文（很可能思考过程过长、撞上了输出上限）。"
+          + "本轮**不要再展开长篇分析**，直接用简短的中文文字给出：① 你已经查到/完成了什么；② 下一步做什么（或直接给出结论）。";
+
+    /** 空正文兜底时，进展摘要的字符上限（与 P1 重试续接、P3 续接同口径） */
+    private static final int EMPTY_ANSWER_SUMMARY_CHARS = 2000;
+
     /** 连续 tool_call 格式错误最大次数（超过则放弃，防死循环） */
     private static final int MAX_MALFORMED = 3;
 
@@ -416,6 +432,7 @@ public class ToolUseLoop {
         int turns = 0;
         int toolCalls = 0;
         int consecutiveMalformed = 0;
+        int emptyAnswerRetries = 0;
         // 重复调用检测状态（每次 run 重置；本实例每请求单独构建，无并发复用）
         lastCallKey = null;
         consecutiveIdentical = 0;
@@ -503,6 +520,33 @@ public class ToolUseLoop {
 
                 if (parsed.isEmpty()) {
                     // 无工具调用 → 最终回答（方案 B：末尾带本轮写入产物标记）
+                    String answer = responseText == null ? "" : responseText;
+                    if (answer.trim().isEmpty()) {
+                        // 2026-10-08：**空正文不算成功回答**。推理模型思考吃光输出预算时正是这种形态
+                        // （finish_reason=length + content 空）；原实现直接 success("") → 用户看到 Agent 无声停下。
+                        if (emptyAnswerRetries < MAX_EMPTY_ANSWER_RETRIES) {
+                            emptyAnswerRetries++;
+                            com.DocSystem.common.Log.warn("[ToolUseLoop][EMPTY] turn=" + turns
+                                    + " outputTruncated=" + turn.outputTruncated
+                                    + " → 注入“直接给结论”提示后重试本轮");
+                            messages.add(assistantMsg(answer));
+                            messages.add(userMsg(EMPTY_ANSWER_HINT));
+                            continue;
+                        }
+                        com.DocSystem.common.Log.warn("[ToolUseLoop][EMPTY] turn=" + turns
+                                + " outputTruncated=" + turn.outputTruncated
+                                + " toolCalls=" + toolCalls + " → 重试后仍无正文，交付阶段性结论（partial）");
+                        return ToolUseResult.partialOutputTruncated(
+                                withProductFooter(emptyAnswerFallback(messages)),
+                                toStringMaps(messages), turns, toolCalls);
+                    }
+                    if (turn.outputTruncated) {
+                        // 有正文但撞了输出上限（半截回答）→ 交付，但必须让用户知道"可能未完成 + 可继续"
+                        com.DocSystem.common.Log.warn("[ToolUseLoop][TRUNCATED] turn=" + turns
+                                + " answerLen=" + answer.length() + "（finish_reason=length）");
+                        return ToolUseResult.partialOutputTruncated(
+                                withProductFooter(answer), toStringMaps(messages), turns, toolCalls);
+                    }
                     return ToolUseResult.success(withProductFooter(responseText), toStringMaps(messages), turns, toolCalls);
                 }
 
@@ -555,6 +599,20 @@ public class ToolUseLoop {
      */
     private String withProductFooter(String answer) {
         return AgentProductLink.appendFooter(answer, products);
+    }
+
+    /**
+     * 空正文兜底文案（2026-10-08）：给用户一个可读的交代（发生了什么 + 已完成什么），
+     * 而不是一句空的"成功回答"。进展摘要与 P1 重试续接 / P3 续接同一口径（{@link TranscriptCompactor}）。
+     */
+    private static String emptyAnswerFallback(List<Map<String, Object>> messages) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("⚠️ 模型本轮没有返回任何正文（大概率是思考过程过长、撞上了输出上限）。");
+        String progress = TranscriptCompactor.summarize(toStringMaps(messages), EMPTY_ANSWER_SUMMARY_CHARS);
+        if (!progress.isEmpty()) {
+            sb.append("\n\n已查到的进展：\n").append(progress);
+        }
+        return sb.toString();
     }
 
     /**
@@ -655,12 +713,16 @@ public class ToolUseLoop {
         StringBuilder full = new StringBuilder();
         List<ToolCall> nativeCalls = new ArrayList<>();
         boolean toolsRejected = false;
+        boolean outputTruncated = false;
         Iterator<StreamChunk> it = streamingTurnCaller.chat(messages);
         while (it.hasNext()) {
             StreamChunk chunk = it.next();
             if (chunk.isDone()) break;
             if (chunk.isToolsRejected()) {
                 toolsRejected = true;
+            } else if (chunk.isOutputTruncated()) {
+                // 撞上 max_tokens 上限（finish_reason=length）→ 上层不得把本轮正文当最终回答
+                outputTruncated = true;
             } else if (chunk.isReasoning()) {
                 if (sink != null) {
                     sink.onReasoning(chunk.content);
@@ -680,7 +742,7 @@ public class ToolUseLoop {
             return LlmTurnResult.rejected(full.toString());
         }
         return nativeCalls.isEmpty()
-                ? LlmTurnResult.text(full.toString())
+                ? LlmTurnResult.text(full.toString(), outputTruncated)
                 : LlmTurnResult.toolCalls(full.toString(), nativeCalls);
     }
 
