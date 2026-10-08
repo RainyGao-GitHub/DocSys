@@ -38,6 +38,8 @@ public class TestTruncationContract {
         loopSide(toolUseLoop);
         responseSide(mainAgent);
         frontendSide(indexHtml);
+        perModelMaxTokensWiring();
+        escalationAndMetrics(mainAgent);
 
         System.out.println("\n======== TestTruncationContract: " + pass + " passed, " + fail
                 + " failed ========");
@@ -119,6 +121,81 @@ public class TestTruncationContract {
                 html.contains("输出被截断") && html.contains("预算到顶"));
         check("frontend keeps the continue entry for both reasons",
                 html.contains("class=\"continue-btn\"") && html.contains("function continueFromTruncated("));
+    }
+
+    // ---------- D1：按模型 maxTokens 的真正接线（2026-10-08） ----------
+
+    /**
+     * D1：以前「高级参数 → maxTokens」只存不发。这里钉住"请求体的输出上限必须走
+     * {@code effectiveMaxTokens(按模型值)}"，任何一处退回写死全局默认都会被这条拦下。
+     */
+    private static void perModelMaxTokensWiring() throws Exception {
+        String llm = read("src/com/DocSystem/agent/llm/LLMService.java");
+        String resolved = read("src/com/DocSystem/agent/llm/ResolvedLlmConfig.java");
+        String userLlm = read("src/com/DocSystem/agent/llm/UserLlmModelService.java");
+
+        check("LLMService resolves per-request budget", llm.contains("private int effectiveMaxTokens(Integer"));
+        check("LLMService exposes global default for escalation", llm.contains("public int getDefaultMaxTokens()"));
+        check("no request body hardcodes the global default any more",
+                !llm.contains("requestBody.put(\"max_tokens\", maxTokens)"),
+                "所有 max_tokens 请求体都必须走 effectiveMaxTokens(...)");
+        check("streaming bodies use the per-request budget",
+                countOccurrences(llm, "requestBody.put(\"max_tokens\", effectiveMaxTokens(") >= 3);
+        check("non-streaming bodies use it too",
+                countOccurrences(llm, "retryBody.put(\"max_tokens\", effectiveMaxTokens(") >= 1);
+        check("default-config resolution carries the model's maxTokens",
+                llm.contains("ResolvedLlmConfig.parseMaxTokens(m.settings)"));
+        check("system/user model resolution carries it",
+                userLlm.contains("ResolvedLlmConfig.parseMaxTokens(c.settings)")
+                        && userLlm.contains("ResolvedLlmConfig.parseMaxTokensFromJson(m.getSettings())"));
+
+        check("ResolvedLlmConfig parses maxTokens (both key spellings)",
+                resolved.contains("parseMaxTokens") && resolved.contains("\"max_tokens\""));
+        check("ResolvedLlmConfig clamps/bounds the value",
+                resolved.contains("MIN_MAX_TOKENS") && resolved.contains("MAX_MAX_TOKENS"));
+        check("ResolvedLlmConfig can copy with a new budget (escalation)",
+                resolved.contains("public ResolvedLlmConfig withMaxTokens(int"));
+    }
+
+    // ---------- D2/D3：撞顶升级重试 + 截断计数 ----------
+
+    private static void escalationAndMetrics(String mainAgent) {
+        check("escalation hook exists in both run paths",
+                countOccurrences(mainAgent, "escalateAndRerun(toolQuery, tr,") == 2);
+        check("escalation only fires for output truncation",
+                mainAgent.contains("isOutputTruncated(tr)")
+                        && mainAgent.contains("REASON_OUTPUT_TRUNCATED"));
+        check("escalation tells the frontend to clear the half-streamed text",
+                mainAgent.contains("streamSink.onRetry()"));
+        check("escalation keeps the first partial on failure",
+                mainAgent.contains("keeping the partial answer"));
+        check("escalation is bounded by a ceiling constant",
+                mainAgent.contains("ESCALATED_MAX_TOKENS = 32768"));
+        check("truncation is counted (observability)",
+                mainAgent.contains("agentMetrics.incrementCounter(\"agent.tool.truncated\"")
+                        && mainAgent.contains("countTruncation(tr, \"streaming\")")
+                        && mainAgent.contains("countTruncation(tr, \"sync\")"));
+
+        // 升级公式（纯函数）：×4 与 +4096 取大者，再夹到上限；≤ 当前值表示"无法升级"
+        check("escalation formula: 2048 → 8192", MainAgent.escalatedMaxTokensFor(2048) == 8192);
+        check("escalation formula: 8192 → 32768 (capped)",
+                MainAgent.escalatedMaxTokensFor(8192) == 32768);
+        check("escalation formula: tiny budget still gets +4096 floor",
+                MainAgent.escalatedMaxTokensFor(16) == 4112);
+        check("escalation formula: at ceiling → no escalation",
+                MainAgent.escalatedMaxTokensFor(32768) == 32768);
+        check("escalation formula: above ceiling → no escalation",
+                MainAgent.escalatedMaxTokensFor(200000) == 32768);
+    }
+
+    private static int countOccurrences(String haystack, String needle) {
+        int count = 0;
+        int idx = haystack.indexOf(needle);
+        while (idx >= 0) {
+            count++;
+            idx = haystack.indexOf(needle, idx + needle.length());
+        }
+        return count;
     }
 
     // ---------- helpers ----------

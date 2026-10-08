@@ -32,6 +32,7 @@ public class TestStreamChatChunks {
         testReasoningSeparationInStream();
         testErrorStatusThrows();
         testOutputTruncatedFlagFromSse();
+        testPerModelMaxTokensInRequestBody();
         System.out.println("\n======== TestStreamChatChunks: " + pass + " passed, " + fail + " failed ========");
         if (fail > 0) {
             System.exit(1);
@@ -39,12 +40,17 @@ public class TestStreamChatChunks {
     }
 
     private static void check(String name, boolean cond) {
+        check(name, cond, null);
+    }
+
+    /** 带 detail 的断言（失败时打印实际请求体里的 max_tokens，便于定位） */
+    private static void check(String name, boolean cond, String detail) {
         if (cond) {
             pass++;
             System.out.println("[PASS] " + name);
         } else {
             fail++;
-            System.out.println("[FAIL] " + name);
+            System.out.println("[FAIL] " + name + (detail == null ? "" : "  -> " + detail));
         }
     }
 
@@ -303,5 +309,87 @@ public class TestStreamChatChunks {
         } finally {
             server.stop(0);
         }
+    }
+
+    /**
+     * D1（2026-10-08）：按模型配置的 maxTokens 必须**真的出现在请求体里**。
+     * 此前它只存在库里/配置串里，请求体永远发全局默认值 —— 这就是"高级参数存了也没用"。
+     * 这里用本地假服务端**抓住真实请求体**断言（生产走的是 streamChatChunksNative）。
+     */
+    private static void testPerModelMaxTokensInRequestBody() throws Exception {
+        final StringBuilder captured = new StringBuilder();
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/v1/proxy/v1/chat/completions", exchange -> {
+            try {
+                byte[] buf = new byte[8192];
+                java.io.InputStream in = exchange.getRequestBody();
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    captured.append(new String(buf, 0, n, StandardCharsets.UTF_8));
+                }
+            } catch (Exception ignored) {
+            }
+            exchange.getResponseHeaders().set("Content-Type", "text/event-stream");
+            exchange.sendResponseHeaders(200, 0);
+            OutputStream out = exchange.getResponseBody();
+            try {
+                sendSseLine(out, textChunk("ok"));
+                sendSseLine(out, doneChunk());
+                out.flush();
+            } catch (Exception ignored) {
+            } finally {
+                try { out.close(); } catch (Exception ignored) {}
+            }
+        });
+        server.start();
+        try {
+            int port = server.getAddress().getPort();
+            LLMService svc = newLlmService();     // 全局默认 maxTokens = 2048
+            String base = "http://127.0.0.1:" + port + "/v1/proxy";
+
+            // ① 模型配了 maxTokens → 请求体用它（不是全局默认）
+            drain(svc.streamChatChunksNative(nativeMessages("hi"),
+                    new ResolvedLlmConfig(base, "test-model", null, "test", false, Integer.valueOf(4096)),
+                    null, null));
+            check("per-model maxTokens wins in request body",
+                    hasMaxTokens(captured.toString(), 4096), maxTokensOf(captured.toString()));
+
+            // ② 模型没配 → 回落全局默认
+            captured.setLength(0);
+            drain(svc.streamChatChunksNative(nativeMessages("hi"),
+                    new ResolvedLlmConfig(base, "test-model", null, "test"), null, null));
+            check("falls back to global default when model has none",
+                    hasMaxTokens(captured.toString(), 2048), maxTokensOf(captured.toString()));
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    private static List<Map<String, Object>> nativeMessages(String content) {
+        List<Map<String, Object>> msgs = new ArrayList<>();
+        Map<String, Object> user = new HashMap<>();
+        user.put("role", "user");
+        user.put("content", content);
+        msgs.add(user);
+        return msgs;
+    }
+
+    /** 把流读干净（不关心内容），确保请求真的发出去了 */
+    private static void drain(Iterator<StreamChunk> it) {
+        while (it.hasNext()) {
+            if (it.next().isDone()) {
+                break;
+            }
+        }
+    }
+
+    private static String maxTokensOf(String body) {
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("\"max_tokens\"\\s*:\\s*(\\d+)").matcher(body);
+        return m.find() ? m.group(1) : "<absent>";
+    }
+
+    private static boolean hasMaxTokens(String body, int expected) {
+        return String.valueOf(expected).equals(maxTokensOf(body));
     }
 }

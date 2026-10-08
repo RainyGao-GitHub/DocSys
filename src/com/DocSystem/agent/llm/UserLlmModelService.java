@@ -108,7 +108,8 @@ public class UserLlmModelService {
                     Long id = Long.parseLong(idStr);
                     UserCustomLlmModel m = get(id, userId);
                     if (m != null) {
-                        return new ResolvedLlmConfig(m.getEndpoint(), m.getModelName(), m.getApiKey(), m.getName());
+                        return new ResolvedLlmConfig(m.getEndpoint(), m.getModelName(), m.getApiKey(), m.getName(),
+                                false, ResolvedLlmConfig.parseMaxTokensFromJson(m.getSettings()));
                     }
                     log.warn("resolve: user model not found (selector={}, user={}), falling back to default", selector, userId);
                     // 落到下面的默认
@@ -159,6 +160,7 @@ public class UserLlmModelService {
     }
 
     private ResolvedLlmConfig toResolved(LLMConfig c) {
-        return new ResolvedLlmConfig(c.url, c.modelName, c.apikey, c.name);
+        return new ResolvedLlmConfig(c.url, c.modelName, c.apikey, c.name, false,
+                ResolvedLlmConfig.parseMaxTokens(c.settings));
     }
 }

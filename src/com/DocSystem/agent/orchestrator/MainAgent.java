@@ -553,6 +553,17 @@ public class MainAgent {
                         "turns", String.valueOf(tr.turns));
             }
             if (tr.success) {
+                countTruncation(tr, "sync");
+                if (isOutputTruncated(tr)) {
+                    // D2：撞输出上限（reasoning 吃光预算）→ 一次"升级重试"，拿一次干净回答
+                    com.DocSystem.agent.orchestrator.ToolUseResult esc = escalateAndRerun(toolQuery, tr, false,
+                            client, context, sessionInfo, confirmSink, resolvedLlm, historySessionId,
+                            priorHistory, null);
+                    if (esc != null && esc.success) {
+                        savePendingContinuation(esc, historySessionId);
+                        return loopResponse(esc, System.currentTimeMillis() - loopStart, "escalated=true");
+                    }
+                }
                 savePendingContinuation(tr, historySessionId);
                 return loopResponse(tr, duration, null);
             }
@@ -605,6 +616,18 @@ public class MainAgent {
                         "turns", String.valueOf(tr.turns));
             }
             if (tr.success) {
+                countTruncation(tr, "streaming");
+                if (isOutputTruncated(tr)) {
+                    // D2：撞输出上限（reasoning 吃光预算）→ 一次"升级重试"，拿一次干净回答
+                    com.DocSystem.agent.orchestrator.ToolUseResult esc = escalateAndRerun(toolQuery, tr, true,
+                            client, context, sessionInfo, confirmSink, resolvedLlm, historySessionId,
+                            priorHistory, streamSink);
+                    if (esc != null && esc.success) {
+                        savePendingContinuation(esc, historySessionId);
+                        return loopResponse(esc, System.currentTimeMillis() - loopStart,
+                                "streaming=true, escalated=true");
+                    }
+                }
                 savePendingContinuation(tr, historySessionId);
                 return loopResponse(tr, duration, "streaming=true");
             }
@@ -664,6 +687,92 @@ public class MainAgent {
         }
         return "⚠️ 本轮工具预算到顶（" + tr.turns + " 轮 / " + tr.toolCalls
                 + " 次工具调用），任务**可能未完成**。回复「继续」我会基于上面的进展接着做。";
+    }
+
+    /** 输出被截断（reasoning 吃光 max_tokens）——与"轮数预算到顶"是两回事 */
+    private static boolean isOutputTruncated(com.DocSystem.agent.orchestrator.ToolUseResult tr) {
+        return tr != null && tr.truncated
+                && com.DocSystem.agent.orchestrator.ToolUseResult.REASON_OUTPUT_TRUNCATED
+                        .equals(tr.truncatedReason);
+    }
+
+    /**
+     * D3：截断计数（可观测）——按原因 + 路径分桶，用来回答"默认值改大之后还会不会撞、一个月撞几次"。
+     * 没有它，"调大默认值"就只是把故障藏起来；有了它，故障变成可度量的数字。
+     */
+    private void countTruncation(com.DocSystem.agent.orchestrator.ToolUseResult tr, String path) {
+        if (agentMetrics == null || tr == null || !tr.truncated) {
+            return;
+        }
+        agentMetrics.incrementCounter("agent.tool.truncated",
+                "reason", tr.truncatedReason != null
+                        ? tr.truncatedReason
+                        : com.DocSystem.agent.orchestrator.ToolUseResult.REASON_MAX_TURNS,
+                "path", path);
+    }
+
+    /** 本次请求实际用的输出上限（按模型配置优先，否则全局默认） */
+    private int currentMaxTokens(com.DocSystem.agent.llm.ResolvedLlmConfig resolvedLlm) {
+        if (resolvedLlm != null && resolvedLlm.maxTokens != null) {
+            return resolvedLlm.maxTokens.intValue();
+        }
+        return llmService != null ? llmService.getDefaultMaxTokens() : ESCALATED_MAX_TOKENS;
+    }
+
+    /** 升级后的预算；**无法升级**（无显式模型配置 / 已到上限）→ null */
+    private Integer escalatedMaxTokens(com.DocSystem.agent.llm.ResolvedLlmConfig resolvedLlm) {
+        if (resolvedLlm == null) {
+            // 没显式模型配置 → 不动全局默认（本次保留 partial；见工作卡的"未做/遗留"）
+            return null;
+        }
+        int current = currentMaxTokens(resolvedLlm);
+        int escalated = escalatedMaxTokensFor(current);
+        return escalated > current ? Integer.valueOf(escalated) : null;
+    }
+
+    /**
+     * 升级公式（纯函数，便于护栏直接断言）：{@code min(max(当前×4, 当前+4096), ESCALATED_MAX_TOKENS)}。
+     * 返回值 ≤ current 时表示"无法升级"（已在上限）。
+     */
+    static int escalatedMaxTokensFor(int current) {
+        return Math.min(Math.max(current * 4, current + 4096), ESCALATED_MAX_TOKENS);
+    }
+
+    /**
+     * D2（2026-10-08）：输出被截断时的**一次**"升级重试" —— 把 max_tokens 升到
+     * {@code min(当前×4, ESCALATED_MAX_TOKENS)}，带着已查到的进展重跑一轮
+     * （照 Claude Code：撞顶先升到更大预算拿一次干净重试；续接提示明确"不要重复调用同样的工具"）。
+     *
+     * <p>只升一次；升级不了或重试出异常一律返回 null，由调用方**保留第一次的 partial** ——
+     * 升级重试绝不能把"已经有部分成果"变成"什么都没有"。</p>
+     */
+    private ToolUseResult escalateAndRerun(String toolQuery, ToolUseResult original, boolean streaming,
+                                           DocSysClient client, AgentContext context, Object sessionInfo,
+                                           com.DocSystem.agent.tool.ConfirmEventSink confirmSink,
+                                           com.DocSystem.agent.llm.ResolvedLlmConfig resolvedLlm,
+                                           String historySessionId, List<Map<String, String>> priorHistory,
+                                           com.DocSystem.agent.orchestrator.ToolUseLoop.StreamSink streamSink) {
+        Integer escalated = escalatedMaxTokens(resolvedLlm);
+        if (escalated == null) {
+            return null;
+        }
+        try {
+            log.warn("ToolUseLoop output truncated ({}), escalating max_tokens {} → {} and retrying once",
+                    original.truncatedReason, currentMaxTokens(resolvedLlm), escalated);
+            if (streaming && streamSink != null) {
+                streamSink.onRetry();   // 通知前端清空已流式的半截内容（重试会重新流一遍）
+            }
+            com.DocSystem.agent.orchestrator.ToolUseLoop escLoop = buildToolLoop(client, context, sessionInfo,
+                    confirmSink, resolvedLlm.withMaxTokens(escalated.intValue()), streaming, historySessionId);
+            ToolUseResult esc = streaming
+                    ? escLoop.runStreaming(retryQueryWithProgress(toolQuery, original), priorHistory, streamSink)
+                    : escLoop.run(retryQueryWithProgress(toolQuery, original), priorHistory);
+            countTruncation(esc, "escalated");
+            return esc;
+        } catch (Exception e) {
+            log.warn("escalated retry failed (keeping the partial answer): {}", e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -887,6 +996,15 @@ public class MainAgent {
         });
         return loop;
     }
+
+    /**
+     * D2（2026-10-08）：撞输出上限时的"升级重试"上限 —— 一次把预算升到
+     * {@code min(当前×4, 该值)} 再跑（照 Claude Code「撞顶先升到更大预算，拿一次干净重试」）。
+     *
+     * <p>取 32768 是折中：够覆盖已观测的推理长度，又不至于大到常见服务商直接拒绝；真被拒也只是退回
+     * 第一次的 partial（见 {@code escalateAndRerun*}），不会让情况变差。</p>
+     */
+    private static final int ESCALATED_MAX_TOKENS = 32768;
 
     /** P1：计划模式的 system prompt 段落（写操作会被策略层拒绝，故先出计划等人批准） */
     static final String PLAN_MODE_PROMPT =

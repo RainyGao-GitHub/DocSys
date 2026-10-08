@@ -1,10 +1,11 @@
 # CURRENT_STATE_agent任务中途停止（工作卡）
 
-建立于 2026-10-08。**状态：根因已定位 + 已离线/在线复现 + 修复（A+B+C）已实施并验证；未提交（等用户确认）→ 页面级 E2E 留给用户。**
+建立于 2026-10-08。**状态：根因已定位并复现 → A+B+C 已实施验证并提交（`eba99636c`）→ 追加 D1+D2+D3（按模型可配 / 撞顶升级重试 / 截断计数）已实施验证，待提交、待页面验证。**
 
 - 第一轮：只做"建卡 + 够写锚点的最小取证"。
-- 第二轮（本 session）：锁定那 5 次运行、对齐日志时间线、**用同一模型/端点离线复现**了截断，根因明确（见下「根因」节）。
-- 第三轮（本 session 同轮继续）：用户裁定 **A+B+C 全做** → 已实施 + 全量护栏/运行时探针验证（见下「修复」节）。
+- 第二轮：锁定那 5 次运行、对齐日志时间线、**用同一模型/端点离线复现**了截断，根因明确（见下「根因」节）。
+- 第三轮：用户裁定 **A+B+C 全做** → 已实施 + 全量护栏/运行时探针验证；**用户已提交 `eba99636c`**。
+- 第四轮（同日）：用户指出"改大默认值会让问题触发不出来" → 调研业界做法 → 裁定 **D1+D2+D3 全做** → 已实施验证（见「追加」节）。
 - ⚠️ **权限怀疑已被证伪**：Agent 连一次写工具都没调用就停了。
 
 - 归属：`src/com/DocSystem/agent/`（**主仓库**，不是 office / websocket）
@@ -199,12 +200,64 @@ dev 库 `C:\TomcatForDocSysDev\docsys\tomcat\DocSystem.db` →
 - **`llm.max-tokens` 未落 properties 键**：只改了代码默认值（`llm.*` 一族本来就只有 `@Value` 兜底、properties 无键；且 `docSysConfig.properties` 的 checksum 同步只覆盖两个文件）。已登记进 `devDocs/参数存储策略与参数清单.md` §2.1-E。
 - **按模型「高级参数」的 `maxTokens` 仍未接线**（`settings` 渲染进 `llmConfig` 串但 `ResolvedLlmConfig` 不带 → 到不了请求体）：这是**独立缺陷**，已作为第 7 条写进 `devDocs/参数存储策略与参数清单.md` §2.2；本次不改（用户只要 A）。
 - 8192 是"覆盖已观测的 ~3.2K reasoning + 正文"的经验值；再长的思考仍可能撞顶 → 由 B 兜住（partial + 「继续」），不再无声停下。
-- 未提交（等用户确认）。
+- **A+B+C 已由用户提交：主仓库 `eba99636c`**（13 files changed, +665/−51）。
+
+## 追加：D1 + D2 + D3（用户裁定，2026-10-08 同日）
+
+### 触发与调研
+
+用户指出："**改成 8192 很可能让问题触发不出来**"（即调大默认值只是掩盖触发条件），要求调研
+"这个值能不能配、别的 Agent 通常怎么处理"。**调研结论**（来源为官方文档/仓库源码，未验证项已注明）：
+
+| 项目 | 可配置 | 默认/范围 | 撞 `length` 处理 |
+|---|---|---|---|
+| Claude Code | ✅ `CLAUDE_CODE_MAX_OUTPUT_TOKENS`（被模型上限钳制；官方 settings 页未列该键） | **按模型**：默认 32k / 上限 64k | ①先**升级重试**到 64k；②**有界自动续接 ≤3 次**，注入"Resume directly — no apology, no recap… Break remaining work into smaller pieces" |
+| Aider | ✅ 每模型 + `extra_params.max_tokens` | 按模型 | **显式抛 `FinishReasonLength`**（不静默） |
+| Cline | ✅ 每请求 `options.maxTokens` | 门槛 32k；`min(模型上限, 上下文−提示−预留, 用户上限)` | 以 `finish_reason:"error"` 暴露，调用方必须检查 |
+| Roo Code | ✅ 每模型 "Max Output Tokens" | 按模型 | **自动拒绝**截断输出 |
+| Codex CLI / Agents SDK | SDK ✅ `ModelSettings.max_tokens` | 透传 | 不做续接；Codex 主循环里**没找到**按请求上限（**未完全验证**） |
+| Copilot / Cursor | ❌（服务端按模型定 / 闭源） | — | 未见专门机制（**未验证**） |
+| OpenRouter（provider 口径） | ✅ `max_tokens` / `reasoning.max_tokens` | — | 文档明确：**reasoning 与正文共用预算**，被吃光 → `length` + **空 `content`**；检测法 `completion_tokens − completion_tokens_details.reasoning_tokens ≈ 0` |
+
+**反复出现的 5 个模式**：①按模型默认 + 用户覆盖并钳制（单一全局数字是少数派）；②给推理留"地板"别饿死正文；
+③**必须显式检测 `length`**，绝不把空正文当回答；④有界自动续接 + 反思考提示；⑤撞顶先"升级重试"。
+
+### 改了什么（用户裁定：D1+D2+D3 全做）
+
+| # | 目标 | 落点 |
+|---|---|---|
+| **D1** | 让「按模型 maxTokens」**真正生效**（顺带修掉 §2.2-7 那个"只存不发"的独立缺陷） | `ResolvedLlmConfig`：新增 `maxTokens`（+`withMaxTokens` 复制、`parseMaxTokens(JSONObject)` / `parseMaxTokensFromJson(String)`，兼容 `maxTokens`/`max_tokens`，非法/越界回落 null）；`LLMService`：新增 `effectiveMaxTokens(override)`，**6 处请求体全覆盖**（`doChat`/`doChatNative`/`streamChat`/`streamChatChunks`/`openStreamResponse`＋其 400 重试体），`getDefaultMaxTokens()` 暴露全局默认；解析侧接线 `LLMService.resolveDefaultConfig`、`UserLlmModelService.toResolved` 与 `user:` 分支。**前端无需改动**——管理端「高级参数 → maxTokens」输入框本来就有 |
+| **D2** | 撞顶**升级重试一次**（照 Claude Code） | `MainAgent`：`escalatedMaxTokensFor(current)=min(max(current*4, current+4096), 32768)`；`escalateAndRerun(...)` 用 `resolved.withMaxTokens(升后值)` 重建 ToolUseLoop、带进展摘要重跑、流式路径先 `onRetry()` 清掉半截内容；**只升一次**，升级不了/重试异常 → 保留第一次的 partial（绝不让"有部分成果"变"什么都没有"）。两条运行路径（sync/streaming）都接 |
+| **D3** | 让截断**可观测**（直接回应"问题看不见"） | `MainAgent.countTruncation(...)` → `agentMetrics.incrementCounter("agent.tool.truncated", reason=…, path=…)`（`sync`/`streaming`/`escalated` 分桶）；配合已有的 WARN 日志 |
+
+### 验证结果（D1~D3）
+
+1. **全量护栏：45 套 / 1955 断言 / 0 失败**（A+B+C 时为 1916 → 本次 +39）
+   - `TestResolvedLlmConfig` 7→**23**：maxTokens 字段/复制/两种键名/越界/非数字/**坏 JSON 不抛**
+   - `TestStreamChatChunks` 13→**17**（+4）：**抓真实请求体**断言"按模型值 4096 下发、未配回落全局 2048"（生产走 `streamChatChunksNative`）
+   - `TestTruncationContract` 23→**36**（+13）：D1 接线（6 处请求体都走 `effectiveMaxTokens`、**不得再有** `max_tokens", maxTokens`）、D2 公式与"只对 outputTruncated 生效"、D3 计数
+2. **真端点运行时探针**（`AgentStopProbe`，生产同一条链路）：**7/7 PASS**
+   - 全局默认 2048 → `truncated=true reason=outputTruncated answerLen=1998`（故障真复现；已是有提示的 partial，不再是无声停下）
+   - 全局默认 8192 → `truncated=false answerLen=4036`
+   - **全局默认 2048 + 按模型覆盖 8192 → `truncated=false answerLen=3557`** ← **这就是 D1 的决定性证据**：若"按模型值"没到请求体，这一次会沿用 2048 而照样截断
+3. 编译：`javac` 退出码 0（改动源码 + 45 个护栏类）；`.class` 全在 `WebRoot/WEB-INF/classes`
+
+> ⚠️ **踩坑记录（务必照抄命令）**：
+> - 只 grep `error` 的中文报错会被乱码吞掉 → **编译后必须看 `COMPILE_EXIT`**；否则护栏跑的是旧 class（本次就出现了"假绿"：断言数停在旧值）。
+> - PowerShell 传带 `=` 的 Java 参数（`-Dfile.encoding=UTF-8`、`-J-Duser.language=en`）会被拆开 → 必须加引号；
+>   想让报错变英文用 `'-J-Duser.language=en'`（引号不可省）。
+
+### 未做 / 遗留（D 部分）
+
+- **页面级 E2E 仍未跑**（dev 8100 未启动 + 凭据不在手）；D1/D2/D3 靠"真实请求体断言 + 真端点探针 + 源码 lint"覆盖。
+- **全局默认值仍不落 properties 键**（只改代码默认 8192）——见 §2.1-E；想改就得新增 `llm.max-tokens` 键并重启。
+- **升级上限 32768 是经验值**：真被服务商拒绝时只是退回 partial（已 try/catch 兜住），但会白花一次调用。
+- **`max_tokens` vs `max_completion_tokens` 未做 provider 分支**（OpenAI 推理模型只认后者）；接了那类模型再说。
+- **无显式模型配置（`resolvedLlm == null`）时不升级**（拿不到"当前值/复制"），直接保留 partial。
 
 ## 生效约束
 
-- **取证已完成；修复已实施并验证**（见上两节）。
-- **用户裁定（2026-10-08）：先不提交 —— 用户要自己重启 dev 在页面上验一遍**；验完再决定提交。
+- **取证已完成；A+B+C 已提交（`eba99636c`）；D1+D2+D3 已实施验证但尚未提交** —— 按用户长期要求（2026-09-29「我确认过后再 commit」）等确认。
 - **未取到证据前不要改代码**（项目惯例：事实驱动；根因与证据位置写进本卡）——已满足。
 - 出现里程碑（定位根因 / 拿到验证数字 / 结论被推翻 / 用户裁定 / 提交）**立即**更新本卡，不要攒批。
 - 本卡**不要**顺手改 `CURRENT_STATE_agent工具技能规模化.md` 里的内容（独立挂起项）。

@@ -59,11 +59,28 @@ public class LLMService {
      * `finish_reason=length` 且正文（content）为空 → 上层把"空正文"当最终回答，Agent 无声停在半路
      * （取证见 DevAgentControl/CURRENT_STATE_agent任务中途停止.md）。</p>
      *
-     * <p>⚠️ 生效时机：Spring bean 初始化时**静态读取** → 改 properties 后必须重启；
-     * 「AI接入设置」的按模型高级参数 `maxTokens` 目前**未接线**（见 devDocs/参数存储策略与参数清单.md）。</p>
+     * <p>⚠️ 生效时机：Spring bean 初始化时**静态读取** → 改 properties 后必须重启。
+     * 想要**按模型**配就填「AI接入设置 → 高级参数 → maxTokens」（2026-10-08 已接线，见
+     * {@link ResolvedLlmConfig#maxTokens}；请求级覆盖值优先于本默认值）。</p>
      */
     @Value("${llm.max-tokens:8192}")
     private int maxTokens;
+
+    /**
+     * 本请求实际使用的输出上限：**按模型配置优先**（{@link ResolvedLlmConfig#maxTokens}，来自
+     * 「AI接入设置 → 高级参数 → maxTokens」），否则回落到全局默认 {@link #maxTokens}。
+     *
+     * <p>2026-10-08：此前只认全局默认 → 高级参数里存的 maxTokens **存了也不生效**；而推理模型的
+     * reasoning 也吃这个预算，撞上限即 {@code finish_reason=length} + 空正文。</p>
+     */
+    private int effectiveMaxTokens(Integer override) {
+        return override != null && override.intValue() > 0 ? override.intValue() : maxTokens;
+    }
+
+    /** 全局默认输出上限（未配按模型值时生效；MainAgent 的"撞顶升级重试"以它为基准） */
+    public int getDefaultMaxTokens() {
+        return maxTokens;
+    }
 
     @Value("${llm.connect-timeout:30}")
     private int connectTimeout;
@@ -162,14 +179,15 @@ public class LLMService {
      * Extracted from chat() to support primary/backup switching.
      */
     private String doChat(String targetEndpoint, String targetModel,
-                          String targetApiKey, List<Map<String, String>> messages) throws IOException {
+                          String targetApiKey, List<Map<String, String>> messages,
+                          Integer maxTokensOverride) throws IOException {
         boolean targetOpenAi = detectOpenAiCompatible(targetEndpoint);
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", targetModel);
         requestBody.put("messages", messages);
         requestBody.put("temperature", temperature);
-        requestBody.put("max_tokens", maxTokens);
+        requestBody.put("max_tokens", effectiveMaxTokens(maxTokensOverride));
         requestBody.put("stream", false);
 
         String json = JSON.toJSONString(requestBody);
@@ -264,7 +282,7 @@ public class LLMService {
             log.info("Primary LLM circuit breaker OPEN — switching to backup endpoint");
             String backupM = backupModel.isEmpty() ? defaultModel : backupModel;
             try {
-                String response = doChat(backupEndpoint, backupM, apiKey, messages);
+                String response = doChat(backupEndpoint, backupM, apiKey, messages, null);
                 // Per D-08: Add to conversation history (preserved for next call)
                 Map<String, String> asstMsg = new HashMap<>();
                 asstMsg.put("role", "assistant");
@@ -279,7 +297,7 @@ public class LLMService {
         }
 
         // Primary LLM call
-        String response = doChat(endpoint, model, apiKey, messages);
+        String response = doChat(endpoint, model, apiKey, messages, null);
         // Add to conversation history
         Map<String, String> asstMsg2 = new HashMap<>();
         asstMsg2.put("role", "assistant");
@@ -333,7 +351,7 @@ public class LLMService {
             chatOpenAi = detectOpenAiCompatible(chatEndpoint);
         }
 
-        String response = doChat(chatEndpoint, chatModel, chatApiKey, messages);
+        String response = doChat(chatEndpoint, chatModel, chatApiKey, messages, resolved.maxTokens);
 
         // Add to conversation history
         Map<String, String> asstMsg = new HashMap<>();
@@ -372,7 +390,7 @@ public class LLMService {
             chatApiKey = apiKey;
         }
 
-        return doChat(chatEndpoint, chatModel, chatApiKey, messages);
+        return doChat(chatEndpoint, chatModel, chatApiKey, messages, resolved.maxTokens);
     }
 
     /**
@@ -405,10 +423,12 @@ public class LLMService {
         }
 
         boolean toolsRequested = tools != null && !tools.isEmpty();
-        LlmTurnResult result = doChatNative(chatEndpoint, chatModel, chatApiKey, messages, tools, toolChoice);
+        LlmTurnResult result = doChatNative(chatEndpoint, chatModel, chatApiKey, messages, tools, toolChoice,
+                resolved.maxTokens);
         if (result.toolsRejected && toolsRequested) {
             log.warn("LLM native tools rejected (HTTP 400) — retrying once without tools");
-            LlmTurnResult retried = doChatNative(chatEndpoint, chatModel, chatApiKey, messages, null, null);
+            LlmTurnResult retried = doChatNative(chatEndpoint, chatModel, chatApiKey, messages, null, null,
+                    resolved.maxTokens);
             // 保留 rejected 标记（调用方据此在后续轮次关闭原生通道），文本取重试结果
             return retried.hasNativeCalls() ? retried : LlmTurnResult.rejected(retried.text);
         }
@@ -417,7 +437,8 @@ public class LLMService {
 
     /** 单次原生请求：带 tools 时 400 → 返回 rejected 结果（不抛异常，交由上层去 tools 重试） */
     private LlmTurnResult doChatNative(String targetEndpoint, String targetModel, String targetApiKey,
-            List<Map<String, Object>> messages, JSONArray tools, String toolChoice) throws IOException {
+            List<Map<String, Object>> messages, JSONArray tools, String toolChoice,
+            Integer maxTokensOverride) throws IOException {
         boolean targetOpenAi = detectOpenAiCompatible(targetEndpoint);
         boolean toolsRequested = tools != null && !tools.isEmpty();
 
@@ -425,7 +446,7 @@ public class LLMService {
         requestBody.put("model", targetModel);
         requestBody.put("messages", messages);
         requestBody.put("temperature", temperature);
-        requestBody.put("max_tokens", maxTokens);
+        requestBody.put("max_tokens", effectiveMaxTokens(maxTokensOverride));
         requestBody.put("stream", false);
         if (toolsRequested) {
             requestBody.put("tools", tools);
@@ -711,7 +732,8 @@ public class LLMService {
                 com.DocSystem.common.entity.LLMConfig m = cfg.llmConfigList.get(0);
                 if (m != null && m.url != null && !m.url.isEmpty()) {
                     String modelName = m.modelName != null ? m.modelName : defaultModel;
-                    return new ResolvedLlmConfig(m.url, modelName, m.apikey, modelName);
+                    return new ResolvedLlmConfig(m.url, modelName, m.apikey, modelName, false,
+                            ResolvedLlmConfig.parseMaxTokens(m.settings));
                 }
             }
         } catch (Exception e) {
@@ -816,7 +838,7 @@ public class LLMService {
             requestBody.put("model", streamModel);
             requestBody.put("messages", messages);
             requestBody.put("temperature", temperature);
-            requestBody.put("max_tokens", maxTokens);
+            requestBody.put("max_tokens", effectiveMaxTokens(resolved.maxTokens));
             requestBody.put("stream", true);
 
             String json = JSON.toJSONString(requestBody);
@@ -951,7 +973,7 @@ public class LLMService {
             requestBody.put("model", streamModel);
             requestBody.put("messages", messages);
             requestBody.put("temperature", temperature);
-            requestBody.put("max_tokens", maxTokens);
+            requestBody.put("max_tokens", effectiveMaxTokens(resolved.maxTokens));
             requestBody.put("stream", true);
 
             String json = JSON.toJSONString(requestBody);
@@ -1038,7 +1060,8 @@ public class LLMService {
                     ? (toolChoice != null && !toolChoice.trim().isEmpty() ? toolChoice.trim() : "auto")
                     : null;
             StreamOpenResult open = openStreamResponse(streamEndpoint, streamModel, streamApiKey,
-                    streamOpenAi, messages, toolsRequested ? tools : null, effectiveToolChoice);
+                    streamOpenAi, messages, toolsRequested ? tools : null, effectiveToolChoice,
+                    resolved.maxTokens);
 
             ResponseBody respBody = open.response.body();
             if (respBody == null) {
@@ -1071,13 +1094,14 @@ public class LLMService {
     }
 
     private StreamOpenResult openStreamResponse(String endpoint, String model, String apiKey,
-            boolean openAi, List<Map<String, Object>> messages, JSONArray tools, String toolChoice)
+            boolean openAi, List<Map<String, Object>> messages, JSONArray tools, String toolChoice,
+            Integer maxTokensOverride)
             throws IOException {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", model);
         requestBody.put("messages", messages);
         requestBody.put("temperature", temperature);
-        requestBody.put("max_tokens", maxTokens);
+        requestBody.put("max_tokens", effectiveMaxTokens(maxTokensOverride));
         requestBody.put("stream", true);
         if (tools != null && !tools.isEmpty()) {
             requestBody.put("tools", tools);
@@ -1113,7 +1137,7 @@ public class LLMService {
             retryBody.put("model", model);
             retryBody.put("messages", messages);
             retryBody.put("temperature", temperature);
-            retryBody.put("max_tokens", maxTokens);
+            retryBody.put("max_tokens", effectiveMaxTokens(maxTokensOverride));
             retryBody.put("stream", true);
             Request.Builder retryBuilder = new Request.Builder()
                     .url(url)
