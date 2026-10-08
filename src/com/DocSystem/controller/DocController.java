@@ -3748,50 +3748,6 @@ public class DocController extends BaseController{
 		//addSystemLog(request, reposAccess.getAccessUser(), "downloadDoc", "downloadDoc", "下载文件", "成功",  null, doc, null, "");	
 	}
 
-	/**************** get Tmp File ******************/
-	@RequestMapping("/doGetTmpFile.do")
-	public void doGetTmp(Integer reposId,String path, String fileName,
-			Integer shareId,
-			HttpServletResponse response,HttpServletRequest request,HttpSession session) throws Exception
-	{
-		Log.infoHead("************** doGetTmpFile ****************");
-		Log.info("doGetTmpFile  reposId:" + reposId + " path:" + path + " fileName:" + fileName+ " shareId:" + shareId);
-
-		if(path == null)
-		{
-			path = "";
-		}
-
-		ReturnAjax rt = new ReturnAjax();
-		ReposAccess reposAccess = checkAndGetAccessInfo(shareId, session, request, response, reposId, path, fileName, true, rt);
-		if(reposAccess == null)
-		{
-			writeJson(rt, response);			
-			return;	
-		}
-		
-		//虚拟文件下载
-		Repos repos = getReposEx(reposId);
-		if(repos == null)
-		{
-			docSysErrorLog("仓库 " + reposId + " 不存在！", ErrorCode.REPOS_NOT_FOUND, rt);
-			//writeJson(rt, response);			
-			//return;
-			throw new Exception(rt.getMsgInfo());
-		}
-		
-		//get userTmpDir
-		String userTmpDir = Path.getReposTmpPathForDownload(repos,reposAccess.getAccessUser());
-		
-		String localParentPath = userTmpDir;
-		if(path != null)
-		{
-			localParentPath = userTmpDir + path;
-		}
-		
-		sendFileToWebPage(localParentPath,fileName,rt, response, request, null); 
-	}
-
 	public String getCheckSum(File localEntry, Long chunkSize) 
 	{
 		String hash = null;
