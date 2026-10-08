@@ -1,11 +1,14 @@
 # CURRENT_STATE_agent任务中途停止（工作卡）
 
-建立于 2026-10-08。**状态：根因已定位并复现 → A+B+C 已实施验证并提交（`eba99636c`）→ 追加 D1+D2+D3（按模型可配 / 撞顶升级重试 / 截断计数）已实施验证，待提交、待页面验证。**
+建立于 2026-10-08。**状态：全部完成 —— 根因已定位并复现 → A+B+C 已实施验证并提交（`eba99636c`）→ 追加 D1+D2+D3（按模型可配 / 撞顶升级重试 / 截断计数）已实施验证并提交（`0c840f6af`）→ **页面级 E2E 已通过（第五轮，配置已复原）**。**
+
+**剩余待办：① 本卡第五轮的改动待提交；② "Eclipse 编译不生成方法参数名"隐患待用户裁定（详见「页面验证要点」末条）。**
 
 - 第一轮：只做"建卡 + 够写锚点的最小取证"。
 - 第二轮：锁定那 5 次运行、对齐日志时间线、**用同一模型/端点离线复现**了截断，根因明确（见下「根因」节）。
 - 第三轮：用户裁定 **A+B+C 全做** → 已实施 + 全量护栏/运行时探针验证；**用户已提交 `eba99636c`**。
-- 第四轮（同日）：用户指出"改大默认值会让问题触发不出来" → 调研业界做法 → 裁定 **D1+D2+D3 全做** → 已实施验证（见「追加」节）。
+- 第四轮（同日）：用户指出"改大默认值会让问题触发不出来" → 调研业界做法 → 裁定 **D1+D2+D3 全做** → 已实施验证并**提交 `0c840f6af`**（见「追加」节）。
+- 第五轮（同日）：用户裁定"**由我启动 dev 并跑页面级 E2E**（含临时把某模型 maxTokens 设成 2048 验截断分支，验完清掉）" → **已执行并通过，配置已复原**（见「页面级 E2E」节）。
 - ⚠️ **权限怀疑已被证伪**：Agent 连一次写工具都没调用就停了。
 
 - 归属：`src/com/DocSystem/agent/`（**主仓库**，不是 office / websocket）
@@ -196,7 +199,7 @@ dev 库 `C:\TomcatForDocSysDev\docsys\tomcat\DocSystem.db` →
 
 ### 未做 / 遗留（如实记录）
 
-- **页面级 E2E 未跑**：dev Tomcat（8100）当前**没在监听**（用户常态；Java 改动本来也需要重启才生效），且登录凭据不在手 → 浏览器验证留给用户。已用"响应层探针 + 前端 lint"覆盖同一契约。
+- ~~页面级 E2E 未跑（当时 dev 8100 没在监听、凭据不在手）~~ → **第五轮已补跑并通过**（见「页面级 E2E」节）；当时靠"响应层探针 + 前端 lint"覆盖同一契约。
 - **`llm.max-tokens` 未落 properties 键**：只改了代码默认值（`llm.*` 一族本来就只有 `@Value` 兜底、properties 无键；且 `docSysConfig.properties` 的 checksum 同步只覆盖两个文件）。已登记进 `devDocs/参数存储策略与参数清单.md` §2.1-E。
 - **按模型「高级参数」的 `maxTokens` 仍未接线**（`settings` 渲染进 `llmConfig` 串但 `ResolvedLlmConfig` 不带 → 到不了请求体）：这是**独立缺陷**，已作为第 7 条写进 `devDocs/参数存储策略与参数清单.md` §2.2；本次不改（用户只要 A）。
 - 8192 是"覆盖已观测的 ~3.2K reasoning + 正文"的经验值；再长的思考仍可能撞顶 → 由 B 兜住（partial + 「继续」），不再无声停下。
@@ -249,22 +252,63 @@ dev 库 `C:\TomcatForDocSysDev\docsys\tomcat\DocSystem.db` →
 
 ### 未做 / 遗留（D 部分）
 
-- **页面级 E2E 仍未跑**（dev 8100 未启动 + 凭据不在手）；D1/D2/D3 靠"真实请求体断言 + 真端点探针 + 源码 lint"覆盖。
+- ~~页面级 E2E 仍未跑~~ → **第五轮已补跑并通过**（per-model 2048 真截断 + B 兜住 + 恢复配置复验）。
+- **D2 的"升级重试"分支未被真实触发**：2048 下 B 的空正文重试**一次就拿到完整正文**了，所以没走到升级 → 该分支目前只有单元/响应层探针证据，**别写成"已实机验证"**。
 - **全局默认值仍不落 properties 键**（只改代码默认 8192）——见 §2.1-E；想改就得新增 `llm.max-tokens` 键并重启。
 - **升级上限 32768 是经验值**：真被服务商拒绝时只是退回 partial（已 try/catch 兜住），但会白花一次调用。
 - **`max_tokens` vs `max_completion_tokens` 未做 provider 分支**（OpenAI 推理模型只认后者）；接了那类模型再说。
 - **无显式模型配置（`resolvedLlm == null`）时不升级**（拿不到"当前值/复制"），直接保留 partial。
 
+## 页面级 E2E（第五轮，2026-10-08，全程由我执行）
+
+### 环境事实（顺带解掉用户"编译/运行 JDK 不一致"的担心）
+
+- 用户担心"Eclipse 编译与运行是同一个 JDK，理论上运行期会出问题（没有 GraalVM）"：实测 **运行期 JRE = `tomcat\java\jre` = OpenJDK 1.8.0_302 + GraalVM CE 21.2.0 (jvmci-21.2-b08)**，
+  编译期 `javac` = 1.8.0_162（产物 major 52），Eclipse 工程 compliance/source/targetPlatform 全 = 1.8
+  → **无字节码版本问题**，也不需要拿 GraalVM 去编译；Eclipse 与脚本编译共用 `WebRoot/WEB-INF/classes`。
+- dev Tomcat 由我启动：`C:\TomcatForDocSysDev\docsys\docsys_start_hidden.bat`（**async attached**，控制台日志 `tomcat\logs\docsys_console.log`），约 **56s** 才就绪。
+- 登录：`POST /DocSystem/User/login.do`（**前缀必须 `/DocSystem/User/`**，`/DocSys/login.do` 会 404）`userName=Admin&pwd=<base64(Admin)>`；测试账号 `Admin / Admin`。
+- 模型配置：`GET/POST /DocSystem/agent/config/llm-models`，body `{"models":[...]}`，响应结构 **`data.models[]`**；
+  ⚠️ 响应的 **`legacy` 字段会回显明文 apiKey** → 别贴进报告；`save()` → `applyLLMConfigMirror()` → **改完即时生效、不用重启**。
+
+### 步骤与结果
+
+| # | 动作 | 结果 |
+|---|---|---|
+| 1 | 临时把两个模型 `settings.maxTokens=2048`（原值 `{}`；快照 `%TEMP%\docsys_chk\agentfix\llm_models_before.json`） | POST 200；镜像即时刷新（`applyLLMConfigMirror() … 模型数:2` + 解析出 `maxTokens : 2048`）——**已复原，见第 4 行** |
+| 2 | **复现原任务**：`?ctxVid=2&ctxKind=dir`（焦点 = 整个「我的桌面」）+ **标准模式**（不批准写操作，绝不碰用户真实文件）+ 原任务文本（202 字符，与原卡一致） | turn1/2 `list_docs` → `turn=3 len=0 EMPTY`（**真截断**）→ `[ToolUseLoop][EMPTY] … outputTruncated=true → 注入"直接给结论"提示后重试本轮`（**B 生效**）→ `turn=4 len=1419` 拿到完整正文 → `ToolUseLoop(streaming) finished: success=true, turns=4, toolCalls=2, cost=15113ms` |
+| 3 | 核对页面 + 落库 | 页面**无**「⏸ 输出被截断 / 预算到顶」徽标、**无**「继续」按钮（因重试成功 → `truncated=false`，符合预期）；最终回答完整（① 桌面根目录 84 项 = 22 目录 + 62 文件 ② 归置方案表格 + 反问确认）；DB **`assistant seq=33 len=1419`** ← **原 Bug 会话缺的正是这条**（原会话只有 user+reasoning） |
+| 4 | **恢复配置**：用快照 POST 回（`settings={}`） | 200；GET 复查两模型 `settings={}` + apiKey 指纹不变（sha1 前 8 位 `fcecca92`）+ 模型数 2 → `RESTORE_MATCHES_SNAPSHOT: True` |
+| 5 | 恢复后复验默认路径 | 短任务 `success=true, turns=1, toolCalls=0, cost=1244ms`；页面答"正常"、无徽标；DB `assistant seq=36 len=2` |
+
+### 结论与未覆盖
+
+- ✅ **D1 在生产链路上成立**：per-model `maxTokens` 真到了 wire —— 同一模型 / 同一任务文本在 2048 下**真的截断**（若"按模型值"没下发，就不会出现 `outputTruncated=true`）。
+- ✅ **用户报的现象已消除**：截断发生后不再无声停下，B 兜住并给出完整回答（且落库可见）。
+- ✅ 配置已复原、无残留；E2E 期间**未批准任何写操作**，未改动用户桌面文件。
+- ⚠️ **未覆盖**：D2 升级重试分支（见「未做 / 遗留（D 部分）」）；「⏸ 输出被截断」徽标的**真机渲染**也没被看到（只在 `LoopResponseProbe` 里验过契约）——要看到它得让重试也失败。
+
 ## 生效约束
 
-- **取证已完成；A+B+C 已提交（`eba99636c`）；D1+D2+D3 已实施验证但尚未提交** —— 按用户长期要求（2026-09-29「我确认过后再 commit」）等确认。
+- **取证已完成；A+B+C 已提交（`eba99636c`）；D1+D2+D3 已实施验证并提交（`0c840f6af`）；页面级 E2E 已通过（第五轮）**。
+- **工作区当前不 clean**：只有本卡这一处改动（第五轮 E2E 记录）**待提交**；源码零改动。
 - **未取到证据前不要改代码**（项目惯例：事实驱动；根因与证据位置写进本卡）——已满足。
 - 出现里程碑（定位根因 / 拿到验证数字 / 结论被推翻 / 用户裁定 / 提交）**立即**更新本卡，不要攒批。
 - 本卡**不要**顺手改 `CURRENT_STATE_agent工具技能规模化.md` 里的内容（独立挂起项）。
 
-### 页面验证要点（给用户 / 下次会话）
+### 页面验证要点（下次会话照这个走）
 
 - dev 是 **junction**：`C:\TomcatForDocSysDev\docsys\tomcat\webapps\DocSystem → D:\Dev\DocSys\WebRoot`
-  → 新 `.class` 已在位（`LLMService.class` 已于 2026-10-08 07:40 更新），**重启即生效**；HTML/JS 改动硬刷新即可（静态资源无 `Cache-Control`，见挂起卡）。
-- dev 的 ini 副本 `tomcat\webapps\docSys.ini\docSysConfig.properties` **没有 `llm.max-tokens` 键** → A 的新默认 8192 不会被覆盖（已核对）。
-- **想主动复现"被截断"分支**：把 `llm.max-tokens=2048` 加进 **dev 的 ini 副本**（不要只改 `classes/docSysConfig.properties`：`docSysInit()` 会用 ini 整文件覆盖 classes，加在 classes 里会被冲掉）→ 重启 → 跑长思考任务 → 验完删掉再重启。
+  → 新 `.class` 已在位（`LLMService.class` 2026-10-08 07:40），**重启即生效**；HTML/JS 改动硬刷新即可（静态资源无 `Cache-Control`，见挂起卡）。
+- 启动：`docsys_start_hidden.bat`，约 **56s** 才就绪 —— **早期 HTTP 超时/404 多半是还在初始化**。
+- 登录：`/DocSystem/User/login.do`（`userName=Admin&pwd=base64(Admin)`，账号 `Admin/Admin`）。
+- **复现「被截断」分支的首选手段**：`POST /agent/config/llm-models` 把某模型 `settings.maxTokens` 设 2048 → **即时生效、不用重启** → 验完 POST 回 `{}`（第五轮就是这么做的）。
+  - 备选（验**全局**默认）：把 `llm.max-tokens=2048` 加进 **dev 的 ini 副本**（别只改 `classes/docSysConfig.properties`：`docSysInit()` 会用 ini 整文件覆盖 classes）→ 重启 → 验完删掉再重启。
+  - dev 的 ini 副本当前**没有** `llm.max-tokens` 键 → 不会被覆盖（已核对）。
+- **页面 URL 参数**：`?ctxVid=2&ctxKind=dir` = 焦点为整个「我的桌面」 —— **vid=2 映射真实 `C:/Users/65205/Desktop/`，写操作会动真实文件** → 用标准模式且**不批准**写确认。
+- **日志读法（极易误读）**：`[ToolUseLoop][PARSE] turn=N len=M result=EMPTY(视为最终回答) head=[...]`
+  —— `len` 是**正文长度**，`EMPTY` 指**工具调用表为空**（不是正文为空）。原 Bug 的签名是 `len=0` **且** `head=[]` 同时成立。
+- **Eclipse 编译隐患（本轮新发现，待用户裁定）**：工程 `codegen.methodParameters=do not generate`，而本项目 Spring MVC 控制器**历史上必须带 `-parameters`**
+  （先例：探针暴露 4 个接口 500 `IllegalArgumentException: Name for argument type [java.lang.Integer] not available`，见 `devDocs/Agent工具与接口可靠性计划.md:716`）；
+  当前 `AgentController.class`（10/7 17:08）确实**无 `MethodParameters` 属性**。本次 E2E 实测 agent 端点正常（`/agent/stream`、`/agent/config/llm-models` 均 200，它们不依赖参数名反解），**未触发**该隐患
+  → 属**独立隐患排查项**（处置方式：Eclipse 勾选生成方法参数名，或统一走带 `-parameters` 的 `do_compile.ps1 -Spring`），**本次不动**。
