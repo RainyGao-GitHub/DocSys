@@ -1,0 +1,36 @@
+<style type="text/css">
+/* 「选择目录」对话框（系统设置-存储位置）局部样式：随对话框 DOM 一起销毁，不影响其它页面 */
+.store-path-tree-box{ max-height:360px; overflow:auto; border:1px solid #e5e5e5; border-radius:4px; padding:6px 8px; background:#fff; }
+.store-path-tree-box ul{ list-style:none; margin:0; padding-left:16px; }
+.store-path-tree-box > ul{ padding-left:0; }
+.store-path-tree-box li{ margin:1px 0; white-space:nowrap; }
+.store-path-toggle{ display:inline-block; width:12px; text-align:center; color:#999; cursor:pointer; font-family:monospace; }
+/* 目录图标：与仓库主页目录树/文件列表同一套 SVG（front-end 不引入 zTree 的 CSS，只复用图片） */
+.store-path-folder{ display:inline-block; width:14px; height:14px; vertical-align:-2px; margin-right:4px; background:url("../web/static/zTree/css/metroStyle/img/folder_close.svg") no-repeat center/14px 14px; }
+.store-path-folder.open{ background-image:url("../web/static/zTree/css/metroStyle/img/folder_open.svg"); }
+.store-path-node{ cursor:pointer; padding:1px 4px; border-radius:3px; }
+.store-path-node:hover{ background:#f2f6fb; }
+.store-path-node.selected{ background:#428bca; color:#fff; }
+.store-path-node.selected .store-path-folder{ -webkit-filter:brightness(0) invert(1); filter:brightness(0) invert(1); }
+.store-path-empty{ color:#999; padding-left:16px; }
+.store-path-error{ color:#a94442; }
+.store-path-picker-bar{ display:flex; justify-content:space-between; align-items:center; margin:8px 0 6px 0; }
+.store-path-picker-bar .checkbox-inline{ margin:0; }
+.store-path-selected{ font-weight:bold; color:#333; min-height:20px; word-break:break-all; }
+.store-path-tip{ color:#999; font-size:12px; min-height:18px; }
+</style>
+<div class="store-path-picker">
+  <!-- 目录树（根节点由后端按操作系统返回：Windows 盘符 / Linux·macOS 的 "/"） -->
+  <div id="storePathPickerTree" class="store-path-tree-box"></div>
+
+  <!-- 树底部：隐藏目录开关 + 刷新 -->
+  <div class="store-path-picker-bar">
+    <label class="checkbox-inline"><input type="checkbox" id="storePathPickerShowHidden" onchange="onToggleStorePathShowHidden()"> 显示隐藏目录</label>
+    <button type="button" class="btn btn-default btn-sm" onclick="reloadStorePath()">刷新</button>
+  </div>
+
+  <!-- 已选路径（纯文本） -->
+  <div class="store-path-selected" id="storePathPickerSelected"></div>
+  <div class="store-path-tip" id="storePathPickerTreeTip"></div>
+</div>
+<script type="text/javascript" src="systemStorePathPicker.js"></script>

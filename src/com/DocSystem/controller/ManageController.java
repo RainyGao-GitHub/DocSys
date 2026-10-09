@@ -64,6 +64,7 @@ import com.DocSystem.common.BaseFunction;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.LogFileUtil;
+import com.DocSystem.common.OS;
 import com.DocSystem.common.UserListImporter;
 import com.DocSystem.common.Path;
 import com.DocSystem.common.constants;
@@ -1716,6 +1717,132 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 	
+	/**************** getServerDirList ******************/
+	//服务器本机目录列表 —— 供「系统设置」页 5 个存储位置的「目录树选择」使用
+	//只读：只返回目录名与路径，不返回文件、不读文件内容、不做递归
+	//根节点随操作系统不同：Windows = 各盘符（File.listRoots()）；Linux/macOS = 只有 "/"（没有盘符概念）
+	@RequestMapping("/getServerDirList.do")
+	public void getServerDirList(String authCode, String path, String showHidden, HttpSession session, HttpServletRequest request, HttpServletResponse response)
+	{
+		Log.infoHead("****************** getServerDirList.do ***********************");
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		int maxDirs = 500;	//单层最多返回的目录数，防止超大目录把页面卡死
+		boolean isShowHidden = "1".equals(showHidden);
+		boolean isWin = OS.isWinOS(OSType);
+
+		JSONObject data = new JSONObject();
+		JSONArray dirs = new JSONArray();
+
+		String reqPath = (path == null) ? null : path.trim();
+		if(reqPath == null || reqPath.isEmpty())
+		{
+			//未指定路径：只返回根列表（前端用 roots 渲染第一层）
+			JSONArray roots = new JSONArray();
+			if(isWin)
+			{
+				File[] rootFiles = File.listRoots();
+				if(rootFiles != null)
+				{
+					for(File rootFile : rootFiles)
+					{
+						//盘符形如 "C:/"
+						roots.add(Path.localDirPathFormat(rootFile.getPath(), OSType));
+					}
+				}
+			}
+			else
+			{
+				roots.add("/");
+			}
+
+			data.put("path", "");
+			data.put("parentPath", "");
+			data.put("roots", roots);
+			data.put("dirs", dirs);
+			data.put("total", 0);
+			data.put("truncated", false);
+			rt.setData(data);
+			writeJson(rt, response);
+			return;
+		}
+
+		String dirPath = Path.localDirPathFormat(reqPath, OSType);
+		data.put("path", dirPath);
+
+		//目录不存在 / 不是目录 / 无权限：按空列表返回（不报错），前端给出提示
+		File dir = new File(dirPath);
+		File[] subFiles = null;
+		if(dir.exists() && dir.isDirectory())
+		{
+			subFiles = dir.listFiles();
+		}
+		else
+		{
+			Log.debug("getServerDirList() 目录不存在或不是目录 dirPath:" + dirPath);
+		}
+
+		//父目录：根目录（C:/、/）时为 null ⇒ 统一置空串，前端据此禁用「向上」
+		String parentPath = Path.getParentPath(dirPath, 1, OSType);
+		if(parentPath == null || parentPath.equals(dirPath))
+		{
+			parentPath = "";
+		}
+		data.put("parentPath", parentPath);
+
+		ArrayList<String> dirNameList = new ArrayList<String>();
+		if(subFiles != null)
+		{
+			for(File subFile : subFiles)
+			{
+				if(subFile.isDirectory() == false)
+				{
+					continue;	//只列目录
+				}
+				String subName = subFile.getName();
+				if(!isShowHidden && (subName.startsWith(".") || subFile.isHidden()))
+				{
+					continue;	//默认隐藏 "." 开头（*nix）与带系统隐藏属性的目录
+				}
+				dirNameList.add(subName);
+			}
+		}
+
+		//服务端排一次序（与大小写无关，保证响应稳定）；前端展示时会再用 localeCompare 按中文重排
+		Collections.sort(dirNameList, new Comparator<String>(){
+			public int compare(String nameA, String nameB)
+			{
+				return nameA.compareToIgnoreCase(nameB);
+			}
+		});
+
+		boolean truncated = false;
+		for(int i=0; i<dirNameList.size(); i++)
+		{
+			if(i >= maxDirs)
+			{
+				truncated = true;
+				break;
+			}
+			String subName = dirNameList.get(i);
+			JSONObject dirObj = new JSONObject();
+			dirObj.put("name", subName);
+			dirObj.put("path", dirPath + subName + "/");
+			dirs.add(dirObj);
+		}
+		data.put("dirs", dirs);
+		data.put("total", dirNameList.size());
+		data.put("truncated", truncated);
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
 	/********** 设置系统数据库配置 ***************/
 	@RequestMapping("/setSystemInfo.do")
 	public void setSystemInfo(String authCode, 

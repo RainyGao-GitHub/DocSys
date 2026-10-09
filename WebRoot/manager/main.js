@@ -1907,6 +1907,62 @@ var systemInfo = {
 //「系统设置」页保留的字段（其余配置已拆到各自的子页面维护）
 var SYSTEM_INFO_FIELDS = ["tomcatPath", "javaHome", "defaultReposStorePath", "indexDBStorePath", "agentSkillStorePath", "salesDataStorePath", "systemLogStorePath", "maxThreadCount"];
 
+//「系统设置」页支持「目录树选择」的存储位置字段（与页面上的「选择…」按钮一一对应）
+var STORE_PATH_FIELDS = ["defaultReposStorePath", "indexDBStorePath", "agentSkillStorePath", "salesDataStorePath", "systemLogStorePath"];
+
+//打开「选择目录」对话框（对话框实现见 systemStorePathPicker.js）
+//重要：选择结果只回填输入框，**不自动保存** —— 仍需点页面上的「保存」
+function openStorePathPicker(fieldId){
+	if($.inArray(fieldId, STORE_PATH_FIELDS) < 0){
+		console.log("openStorePathPicker() 未知字段:", fieldId);
+		return;
+	}
+	var fieldName = $.trim($("#" + fieldId).closest("tr").find("td:first").text());
+	//底部「确定 / 取消」用 qiao 自带的 modal-footer（右下角）：foot = 显示底部，btn = 同时显示「取消」
+	//注：qiao.bs.dialog 内部会把 big 强制置 false，所以宽度用 mstyle 直接指定
+	qiao.bs.dialog({
+		id: 'systemStorePathPicker',
+		url: 'systemStorePathPicker' + langExt + '.html',
+		title: _Lang('选择目录') + (fieldName == "" ? "" : ("：" + fieldName)),
+		msg: _Lang('页面正在加载，请稍候') + '...',
+		foot: true,
+		btn: true,
+		okbtn: _Lang('确定'),
+		qubtn: _Lang('取消'),
+		mstyle: 'width:760px;max-width:calc(100% - 24px);',
+		callback: function(){
+			//对话框的 HTML 里带的 <script> 是异步加载的：等 systemStorePathPicker.js 执行完再初始化
+			waitStorePathPickerReady(fieldId, 0);
+		}
+	}, function(){
+		//「确定」：返回 false 时保持对话框打开（例如还没选目录）
+		return onStorePathPickerOk();
+	}, function(){
+		//「取消」：不改动输入框
+		return true;
+	});
+}
+
+//等待「选择目录」对话框的脚本就绪（注入 HTML 里的 <script> 是异步执行的，直接调用可能函数还未定义）
+function waitStorePathPickerReady(fieldId, tryCount){
+	if(typeof initStorePathPicker == "function"){
+		initStorePathPicker(fieldId);
+		return;
+	}
+	if(tryCount >= 50){	//约 5 秒
+		console.log("waitStorePathPickerReady() 超时：systemStorePathPicker.js 未加载？");
+		return;
+	}
+	setTimeout(function(){ waitStorePathPickerReady(fieldId, tryCount + 1); }, 100);
+}
+
+//目录选择结果回填：只改输入框（不写 systemInfo）
+//⇒ 点页面「取消」时 cancelSystemInfoSet() 会按 systemInfo 回滚，即「取消 = 回到进入编辑态前的值」
+function applyStorePathPickResult(fieldId, path){
+	console.log("applyStorePathPickResult", fieldId, path);
+	$("#" + fieldId).val(path);
+}
+
 //子页共用的取数 + 渲染：templateName 为 tmpl 下的模板名（不含 _en）
 function showSystemInfoPage(templateName, normalize){
 	$.ajax({
@@ -1946,6 +2002,8 @@ function setSystemPageEditMode(prefix, fieldIds, editing){
 	{
 		$("#" + fieldIds[i]).prop('disabled', !editing);
 	}
+	//存储位置的「选择…」按钮与字段同步启停（其它子页没有这类按钮，选择器命中为空）
+	$(".storePathPickBtn").prop('disabled', !editing);
 }
 
 //保存系统参数：只提交 fields 里显式给出的字段。

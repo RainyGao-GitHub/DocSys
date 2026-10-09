@@ -56,6 +56,7 @@
 	                    	<input type="text" class="form-control" id="defaultReposStorePath" name="defaultReposStorePath" value="{{value.defaultReposStorePath}}" disabled="disabled">
 	                    </td>
 	                    <td class="edit">
+	                    	<button class="btn btn-lg btn-default storePathPickBtn" disabled="disabled" onclick="openStorePathPicker('defaultReposStorePath')">Choose...</button>
 	                    </td>
 	                  </tr>
 	                  <tr>
@@ -64,6 +65,7 @@
 	                    	<input type="text" class="form-control" id="indexDBStorePath" name="indexDBStorePath" value="{{value.indexDBStorePath}}" disabled="disabled">
 	                    </td>
 	                    <td class="edit">
+	                    	<button class="btn btn-lg btn-default storePathPickBtn" disabled="disabled" onclick="openStorePathPicker('indexDBStorePath')">Choose...</button>
 	                    </td>
 	                  </tr>
 	                  {{if value.isSalesServer == 1}}
@@ -73,6 +75,7 @@
 	                    	<input type="text" class="form-control" id="salesDataStorePath" name="salesDataStorePath" value="{{value.salesDataStorePath}}" disabled="disabled">
 	                    </td>
 	                    <td class="edit">
+	                    	<button class="btn btn-lg btn-default storePathPickBtn" disabled="disabled" onclick="openStorePathPicker('salesDataStorePath')">Choose...</button>
 	                    </td>
 	                  </tr>
 	                  {{/if}}
@@ -82,6 +85,7 @@
 	                    	<input type="text" class="form-control" id="systemLogStorePath" name="systemLogStorePath" value="{{value.systemLogStorePath}}" disabled="disabled">
 	                    </td>
 	                    <td class="edit">
+	                    	<button class="btn btn-lg btn-default storePathPickBtn" disabled="disabled" onclick="openStorePathPicker('systemLogStorePath')">Choose...</button>
 	                    </td>
 	                  </tr>
 	                  <tr>

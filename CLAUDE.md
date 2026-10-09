@@ -29,7 +29,12 @@
 
 ## 当前任务
 
-- **无**。上一个任务 = 仓库详情页（project）UI 优化，已收尾归档：工作卡 `DevAgentControl/已完成/CURRENT_STATE_仓库详情页UI优化.md`，方案 `devDocs/仓库页面UI优化方案.md`。
+- **系统设置-存储位置：目录树选择**：工作卡 `DevAgentControl/CURRENT_STATE_系统设置存储路径选择.md`，方案 `devDocs/系统设置存储位置目录选择方案.md`（**已成文，§7 有 7 项待裁定**）。
+  状态：**P1 已实施 + 真实浏览器 E2E 验收通过；改动未提交（等用户确认）**；P2/P3 未开始。
+  已做：后端新增只读超管接口 `ManageController.getServerDirList.do`（只列目录、根节点按 `OS.isWinOS` 区分「Windows 盘符」/「*nix 只有 `/`」、`showHidden` 开关、单层 500 条截断）；前端新增 `WebRoot/manager/systemStorePathPicker.html/_en.html/.js`（懒加载目录树、打开自动定位当前值、转到/向上/刷新、单击选中+确定回填、隐藏目录开关）+ `tmpl/systemUpgrade.html(_en)` 各行加「选择…」按钮 + `main.js` 的 `STORE_PATH_FIELDS/openStorePathPicker/applyStorePathPickResult`。
+  ⚠️ **4 个 ini 键名与字段名不一致**（`DBStorePath` / `SystemLogStorePath` / `AgentSkillStorePath` / `SalesDataStorePath`）；页面显示的是**生效值**（`BaseController.getSystemInfo():23291`）；这 5 个是**服务器本机绝对路径**。
+  故意未做（待裁定）：新建文件夹、P3（校验/冲突告警/恢复默认/多节点提示）、英文页缺失的 `agentSkillStorePath` 行。
+- 上一任务 = 仓库详情页（project）UI 优化，已收尾归档：工作卡 `DevAgentControl/已完成/CURRENT_STATE_仓库详情页UI优化.md`，方案 `devDocs/仓库页面UI优化方案.md`。
   S1（修掉 3 个缺陷：拖动可拖到最窄但不再透出 + 分隔条不再压滚动条/双击复位 + 二/三栏表头吸顶）已提交（主仓库 `864614c12`）并经用户人工验证；**S2 视觉现代化 / S3 交互增强经用户裁定「暂时不做，以后再说」**。
 
 - 除此以外，`DevAgentControl/` 下的其余 `CURRENT_STATE*.md` 均属**挂起 / 暂停**，未获用户明确裁定前不要动代码（清单**以目录实际内容为准**，本文件不硬编码）。
