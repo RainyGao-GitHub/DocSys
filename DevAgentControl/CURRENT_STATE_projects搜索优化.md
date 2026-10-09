@@ -66,7 +66,14 @@
     - **取舍**：**未改后端**（前端在已解码的摘要里重新定位关键词）⇒ 零协议变更、仓内搜索 `project.js` 零影响
     - ⚠️ **遗留 1**：摘要只可能出现在**第 1 页**（后端只给排序前 10 条抽摘要，实测有 content 的仅 index 0~9）→ 第 2 页起没摘要也没高亮（P3 前后一致，**非回归**；要靠 P2-1 解决）
     - ⚠️ **遗留 2（新发现的既有缺陷）**：窄屏下**回车不触发搜索** —— `EnterKeyListenerForSearchDoc():292` 用 `$("#searchWord").is(":focus")`，但页面有两个 `#searchWord`（顶部 eq0 在 <992px 被隐藏 + 行内 eq1），`is(":focus")` 恒 false。**1 行可修**（`$("[id='searchWord']").is(":focus")`），**未改，待裁定**
-19. ⚠️ **待提交（等用户确认）**：主仓库 `WebRoot/web/projects.js`、`projects.html`、`projects_en.html`、`lang/en.js` + 方案/卡（websocket 仓库无改动）。
+19. ✅ **P3 已提交**：代码 `4d422c47e`（4 文件）+ 文档 `7adf09d63`。
+20. ✅ **P3.1 窄屏回车修复（已提交 `c445a18b2`）**：`EnterKeyListenerForSearchDoc()` 的 `$("#searchWord").is(":focus")` → `$("[id='searchWord']").is(":focus")`（页面有两个 `#searchWord`，顶部那个窄屏被父容器隐藏 ⇒ 只查 eq0 恒 false ⇒ 回车静默无效）。E2E：修复前按回车 `searchDoc.do` 请求数 = 0，修复后 = true 且正常出结果。
+21. ✅ **高亮配色已定（2026-10-09，用户裁定）**：**标题保持原样式（`#c00` + 下划线，未动）**；**摘要把红换成黄底并去掉下划线**（`background:#fff3cd; text-decoration:none`）。已改 `WebRoot/web/static/styles/styles.css`（**只改 CSS，不碰 JS**），刻意做到**零删除、纯新增**：`.s-box em` 一字未动，仅新增 `.s-content em{ color: inherit; background: #fff3cd; border-radius: 2px; text-decoration: none; }` ⇒ `git diff` = 10 行纯新增。
+    - **调研数据（真实渲染实测）**：命中密度 **74 处 / 5 687 字 = 1.3 处每 100 字**（最密一行 11 处/718 字）；原样式 `#c00`+下划线而**字重仍 400（并没加粗）**；`#c00` 全站仅此一处；标题是 `#428bca` 下划线链接
+    - **试色演进**：① 原样式（红+下划线）→ ② A 同色加粗（蓝粗，反馈“太过冷清”）→ ③ C 标题红粗+摘要黄底粗 → ④ **最终：标题原样 + 摘要黄底无下划线**
+    - **E2E（最终版）**：标题命中 `rgb(204,0,0)`+`underline`+`fw:500`（原样式未动）；摘要命中 `rgb(51,51,51)`+底 `rgb(255,243,205)`+**`text-decoration:none`** ✅（`.s-content` 自身无装饰 ⇒ 彻底移除；已截图）
+    - ⏳ **待提交**
+22. ⚠️ **当前待提交（等用户确认）**：主仓库 `WebRoot/web/static/styles/styles.css` + 方案/卡文档。
 
 ## 下一步
 
