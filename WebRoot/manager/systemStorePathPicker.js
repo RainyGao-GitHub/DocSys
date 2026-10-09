@@ -19,6 +19,7 @@ var gStorePathPickerExpanded = {};		//path -> true/false
 var gStorePathPickerChildUl = {};		//path -> 该节点的子 <ul>（jQuery 对象）
 var gStorePathPickerSelected = "";		//已选路径
 var gStorePathPickerShowHidden = false;	//是否显示隐藏目录
+var gStorePathPickerLeafPaths = {};		//path -> true：已确认是空目录（按叶子处理，不再展开）
 
 /**************** 初始化 / 关闭 ****************/
 
@@ -40,6 +41,7 @@ function resetStorePathTree()
 	gStorePathPickerDirCache = {};
 	gStorePathPickerExpanded = {};
 	gStorePathPickerChildUl = {};
+	gStorePathPickerLeafPaths = {};
 	$("#storePathPickerTree").html('<div class="store-path-empty">' + _Lang("正在加载") + "...</div>");
 	loadStorePathRoots();
 }
@@ -168,8 +170,16 @@ function fillStorePathChildren(path, data)
 
 	if(dirs.length == 0)
 	{
-		var emptyText = data.error ? data.error : _Lang("（无子目录）");
-		$ul.append($('<li class="store-path-empty">').text(emptyText));
+		if(data.error)
+		{
+			//读取失败（无权限/不存在）才给提示
+			$ul.append($('<li class="store-path-empty">').text(data.error));
+		}
+		else
+		{
+			//空目录：按叶子处理（不提示"无子目录"，也不必展开——点不开用户自然就知道）
+			markStorePathNodeAsLeaf(path);
+		}
 		return;
 	}
 
@@ -193,6 +203,20 @@ function setStorePathToggle(path, expanded)
 	}
 	$ul.closest("li").children(".store-path-toggle").text(expanded ? "\u25be" : "\u25b8");
 	$ul.closest("li").children(".store-path-node").children(".store-path-folder").toggleClass("open", expanded);
+}
+
+//空目录按叶子节点处理：隐藏展开箭头、保持收起（不提示“无子目录”——点不开用户自然就知道）
+function markStorePathNodeAsLeaf(path)
+{
+	var $ul = gStorePathPickerChildUl[path];
+	if(!$ul)
+	{
+		return;
+	}
+	gStorePathPickerLeafPaths[path] = true;
+	gStorePathPickerExpanded[path] = false;
+	$ul.hide();
+	$ul.closest("li").children(".store-path-toggle").text(" ");
 }
 
 function expandStorePathNode(path)
@@ -221,6 +245,10 @@ function collapseStorePathNode(path)
 
 function toggleStorePathNode(path)
 {
+	if(gStorePathPickerLeafPaths[path])
+	{
+		return;	//已确认是空目录（箭头已隐藏，不再展开）
+	}
 	if(gStorePathPickerExpanded[path])
 	{
 		collapseStorePathNode(path);
@@ -232,6 +260,10 @@ function toggleStorePathNode(path)
 		return;
 	}
 	ensureStorePathChildren(path, function () {
+		if(gStorePathPickerLeafPaths[path])
+		{
+			return;	//空目录：已在 fillStorePathChildren 里按叶子处理好了
+		}
 		expandStorePathNode(path);
 	});
 }

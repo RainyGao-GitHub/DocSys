@@ -41,6 +41,8 @@
 8. ✅ **UI 已按用户反馈改版并复测**（2026-10-09，用户 4 点反馈）：① 去掉「路径」整行（含转到/向上）；② 去掉「目录」标题、每个节点前加**目录图标**（复用仓库主页 `folder_close/open.svg`，不引入 zTree CSS）；③ 「已选」改为**纯文本**（无标签、非编辑框）；④ 确定/取消移到**右下角**（改用 `qiao.bs.dialog` 自带 `.modal-footer`；未选目录点确定会保持打开+提示）
    - ↳ 顺带修掉一个真 bug：`qiao.bs.dialog` 注入 HTML 后**同步**调 `callback()`，而注入的 `<script>` 是**异步**执行 ⇒ 原来会偶发 `initStorePathPicker undefined`（现象：对话框打开、树是空的），改为 `waitStorePathPickerReady()` 轮询等就绪
 9. ✅ **改版后复测**：无路径框/无标签 ✔；22 节点各带图标且图标真实加载（`folder_open.svg` 200×200）✔；已选为 `<div>` 纯文本 `font-weight:700` ✔；`.modal-footer text-align:right`、按钮 centerX 809/864 位于右端 ✔；选中→确定→回填并关闭 ✔；未选直接确定→保持打开+提示 ✔；取消不改输入框 ✔
+10. ✅ **用户已提交**：主仓库 `devInt` 提交 **`f327c8ad8`【优化】系统设置增加从目录树选择的功能**（10 个文件：`ManageController.java` + `main.js` + 两个 `tmpl/systemUpgrade*.html` + 3 个新对话框文件 + 本工作卡 + 方案文档）
+11. ✅ **提交后追加一处小修（⚠️ 未提交）**：空目录不再显示「（无子目录）」提示，改为**按叶子处理**（记入 `gStorePathPickerLeafPaths`、隐藏展开箭头、不展开；**读取失败仍提示**）—— 用户 2026-10-09：「点不开自然就知道」。实测 `C:/inetpub/`：点击后箭头为空、ul 不展开、无占位；再点击仍保持；有子目录节点展开回归正常 ✔。⇒ 当前工作区仅 `WebRoot/manager/systemStorePathPicker.js` 一个改动待提交
 
 ## 下一步
 
