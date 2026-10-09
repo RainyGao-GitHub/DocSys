@@ -7396,10 +7396,14 @@ public class DocController extends BaseController{
 		searchContext.chunkSize = 100;
 		searchContext.maxContentSize = 1000;
 		searchContext.convertToBase64 = true;
+		//P2-1(2026-10-09) 服务端分批：不传 pageIndex/pageSize 时保持原行为（返回全部）
+		searchContext.pageIndex = pageIndex;
+		searchContext.pageSize = pageSize;
 		channel.searchDocAsync(reposList, searchContext);
 		List<Doc> searchResult = searchContext.result;
 //		Collections.sort(searchResult);	//searchDocAsync已经排好序了
-		Integer total = searchResult.size();
+		//P2-1(2026-10-09) dataEx = 命中总数（切分前），前端用它算总页数；不传分页参数时两者相等（行为不变）
+		Integer total = searchContext.resultTotalCount > 0 ? searchContext.resultTotalCount : searchResult.size();
 		rt.setData(searchResult);
 		rt.setDataEx(total);
 		writeJson(rt, response);

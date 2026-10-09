@@ -3,7 +3,12 @@ var gAiModelList = null;
 var login_user = "";
 var gShareId;
 var gPageIndex = 1;
-var gPageSize = 10;
+var gPageSize = 10;			//每页显示条数（批内本地翻页）
+//P2-1(2026-10-09): 服务端分批 —— 一次请求取 gBatchSize 条，批内本地翻页，跳批才再请求。
+//  改成 10 即退化为「真分页（每次翻页都重搜）」（方案A）；当前采用 100（方案B，响应体 497KB → ~60KB）
+var gBatchSize = 100;
+var gResultTotal = 0;		//服务端命中总数（dataEx）：用于显示总数与总页数
+var gBatchBase = 0;			//当前已加载批次的第一条在全局结果里的下标
 
 function pageInit()
 {
@@ -329,6 +334,8 @@ function searchDoc(pageIndex)
 
 	var searchWord = searchWordInputs.eq(0).val();
 	var sort = "";
+	//P2-1(2026-10-09): 目标页（0-based）。翻页越出当前批时也会走本函数去取对应批
+	var page = pageIndex ? pageIndex : 0;
 	
 	//P1(2026-10-09): 新搜索自动取消上一次未完成的搜索，并立即给出进度反馈（不再只禁用输入框）
 	if(gSearchState.jqXHR != null)
@@ -352,8 +359,9 @@ function searchDoc(pageIndex)
            data : {
                searchWord:searchWord,
                sort:sort,
-               //pageIndex: page,
-           	   //pageSize: gPageSize
+               //P2-1(2026-10-09): 服务端分批 —— 只取目标页所在的那一批（pageIndex 为 0-based 批序号）
+               pageIndex : Math.floor((page * gPageSize) / gBatchSize),
+               pageSize : gBatchSize
            },
            success : function (ret) {
 if(token != gSearchState.token) { return; }	//P1: 丢弃过期响应（已被更新的搜索取代）
@@ -367,7 +375,9 @@ if(token != gSearchState.token) { return; }	//P1: 丢弃过期响应（已被更
 					searchResults = docList; //赋值给searchResult,用于分页显示控制
 					gSearchState.showingResults = true;	//P1: #project-box 已变为搜索结果
 					
-					var total = ret.dataEx; //搜索结果总数
+					//P2-1(2026-10-09): dataEx = 服务端命中总数（不是本批条数）；并记录本批起点
+					gResultTotal = (ret.dataEx != null) ? ret.dataEx : docList.length;
+					gBatchBase = Math.floor((page * gPageSize) / gBatchSize) * gBatchSize;
 			      	for(var i=0; i<docList.length; i++)
 			      	{
 			           var jsonObj = docList[i];
@@ -396,7 +406,7 @@ if(token != gSearchState.token) { return; }	//P1: 丢弃过期响应（已被更
                         jsonObj.nameHtml = searchWordsRender(jsonObj.name, gSearchWords);
 			       }
 
-			       showSearchResults(searchResults, pageIndex);
+			       showSearchResults(searchResults, page);	//P2-1: 渲染请求的那一页
                	}
                	else
                	{
@@ -482,8 +492,23 @@ function showSearchResults(searchResults, pageIndex)
 	console.log("showSearchResults pageIndex:" + pageIndex);
 	var page = pageIndex ? pageIndex : 0;
 
+	//P2-1(2026-10-09): searchResults 现在是「一批」（gBatchSize 条）而不是全部结果 ⇒ 换算批内下标；
+	//  目标页不在本批内则去取对应批（复用 searchDoc 的取批逻辑，带进度条/可取消）
+	var absStart = page * gPageSize;					//该页第一条在全局结果里的下标
+	var batchIndex = Math.floor(absStart / gBatchSize);		//该页所在的批
+	var startIndex = absStart - gBatchBase;				//换算成批内下标
+	if(startIndex < 0 || startIndex >= searchResults.length)
+	{
+		if(batchIndex == Math.round(gBatchBase / gBatchSize))	//防御：这批已取过（避免空批时反复请求）
+		{
+			return;
+		}
+		console.log("showSearchResults() 目标页不在当前批内，改取第 " + batchIndex + " 批");
+		searchDoc(page);
+		return;
+	}
+
 	var docList = [];
-	var startIndex = page * gPageSize; //当前页第一个搜索结果索引号
 	var total = searchResults.length;
 	var size = total - startIndex;
 	if(size > gPageSize)
@@ -515,7 +540,8 @@ function showSearchResults(searchResults, pageIndex)
     //P1(2026-10-09): 结果头部显示命中数与耗时（用户取消时保留旧结果，不覆盖）
     if(!gSearchState.cancelled)
     {
-    	$("#searchResultInfo").html(_Lang("找到") + " <b>" + total + "</b> " + _Lang("条")
+    	//P2-1: 头部显示服务端命中总数（dataEx），不是本批条数
+    	$("#searchResultInfo").html(_Lang("找到") + " <b>" + gResultTotal + "</b> " + _Lang("条")
     			+ " · " + _Lang("用时") + " " + gSearchState.elapsed + "s").show();
     }
     var html = template('tmpl-searchResults', {
@@ -530,7 +556,7 @@ function showSearchResults(searchResults, pageIndex)
          /*当前页码*/
          currentPage: page + 1,
          /*总共有多少页*/
-         totalPage: Math.ceil(total/gPageSize),
+         totalPage: Math.ceil(gResultTotal/gPageSize),	//P2-1: 用服务端命中总数算总页数（未加载的页访问时会自动取批）
          /*是否显示首页、尾页 true：显示 false：不显示*/
          isShow:true,
          /*分页条显示可见页码数量, 小屏幕只显示3个页码，大屏幕显示5个*/
