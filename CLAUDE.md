@@ -29,9 +29,8 @@
 
 ## 当前任务
 
-- **仓库详情页（project）前端 UI 优化**：工作卡 `DevAgentControl/CURRENT_STATE_仓库详情页UI优化.md`，方案 `devDocs/仓库页面UI优化方案.md`。
-  状态：**S1 已完成 + 真实浏览器 E2E 验收通过；5 个文件改动尚未提交（等用户确认）**；S2（视觉现代化）/ S3（交互增强）**未开始、未获确认不得开工**。
-  S1 修掉 3 个问题：① 拖动**保持原手感（可拖到最窄，不设最小宽度）** + 第三栏补不透明底色 ⇒「新文档」不再透出到内容栏；② 分隔条**不再压住第二栏滚动条**（根因：原宽度公式把分隔条 3px 算进了栏宽，双击时人手微抖触发一次 mousemove 就会命中）、双击改为**复位**、补 hover 与命中区；③ 第二/三栏表头 `position:sticky` 吸顶。改动文件全在**主仓库**：`WebRoot/web/{project.html,project_en.html,project.js,css/style.css,static/styles/kancloud.css}`（0 行 Java 改动）。
+- **无**。上一个任务 = 仓库详情页（project）UI 优化，已收尾归档：工作卡 `DevAgentControl/已完成/CURRENT_STATE_仓库详情页UI优化.md`，方案 `devDocs/仓库页面UI优化方案.md`。
+  S1（修掉 3 个缺陷：拖动可拖到最窄但不再透出 + 分隔条不再压滚动条/双击复位 + 二/三栏表头吸顶）已提交（主仓库 `864614c12`）并经用户人工验证；**S2 视觉现代化 / S3 交互增强经用户裁定「暂时不做，以后再说」**。
 
 - 除此以外，`DevAgentControl/` 下的其余 `CURRENT_STATE*.md` 均属**挂起 / 暂停**，未获用户明确裁定前不要动代码（清单**以目录实际内容为准**，本文件不硬编码）。
 
