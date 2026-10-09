@@ -290,7 +290,9 @@ function showFeebackPanel()
 function EnterKeyListenerForSearchDoc(event){
 	if (event.keyCode == 13)
 	{  
-		var isFocus=$("#searchWord").is(":focus");  
+		//P3.1(2026-10-09): 页面有两个 #searchWord（顶部搜索栏 eq0 + 列表行内 eq1，靠 oninput 互相镜像），
+		//  窄屏下顶部那个被父容器隐藏，此时聚焦的是 eq1；原写法只查 eq0 ⇒ is(":focus") 恒 false ⇒ 回车静默无效
+		var isFocus=$("[id='searchWord']").is(":focus");  
 		if(isFocus)
 		{
 			console.log("enter key listener for SearchDoc");
