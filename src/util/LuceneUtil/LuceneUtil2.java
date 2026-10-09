@@ -842,7 +842,7 @@ public class LuceneUtil2   extends BaseFunction
 			            	searchResult.put(newHitDoc.docPath, newHitDoc);
 			            }
 			            hitDoc.hitType = hitDoc.hitType | hitType;
-			            Log.debug("multiSearch() [" + hitDoc.docPath + "] was hit on indexLib:" + indexLib + " hitType:" + hitType);
+			            //P0(2026-10-09) 日志瘦身：逐命中日志已移除（改由 multiSearch 末尾一行汇总）
 			            
 			            //收集词命中信息并更新命中积分
 			            collectHitTermInfo(ireader, scoreDoc, termHitInfoFields, hitType, hitDoc, context);
@@ -901,14 +901,14 @@ public class LuceneUtil2   extends BaseFunction
 
 	private static void collectHitTermInfo(DirectoryReader ireader, ScoreDoc scoreDoc, Map<String, String> termHitInfoFields, int hitType, HitDoc hitDoc, DocSearchContext context) throws IOException 
     {
-		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "]");        	
+		//P0(2026-10-09) 日志瘦身：逐命中/逐词/逐位置日志已移除（改由 multiSearch 末尾一行汇总）        	
     	int weight = context.getHitWeight(hitType);
     	
     	//每个文件的命中信息只需要收集一次
         Map<String, Integer> termHitInfo = hitDoc.getHitTermInfo(hitType);
         if(termHitInfo != null)
         {
-    		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] termHitInfo[" + hitType +"] 已收集, 跳过!");        	
+    		//P0(2026-10-09) 日志瘦身：重复命中的逐条日志已移除        	
         	return;
         }	
         
@@ -926,7 +926,7 @@ public class LuceneUtil2   extends BaseFunction
         	//遍历所有field
         	for (String field : fields) 
             {
-        		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] field:" + field);     
+        		//P0(2026-10-09) 日志瘦身：逐字段日志已移除     
             	//只收集termHitInfoFields里的
             	if(termHitInfoFields.get(field) == null)
             	{
@@ -937,7 +937,7 @@ public class LuceneUtil2   extends BaseFunction
                 Terms terms = fields.terms(field);
                 if (terms == null) 
                 {
-            		Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] field:" + field + " 没有词向量信息!");
+            		//P0(2026-10-09) 日志瘦身：逐字段日志已移除
                 	continue;
                 }
                 
@@ -957,9 +957,9 @@ public class LuceneUtil2   extends BaseFunction
                 			termHitInfo.put(hitTermText, 1);
                 			
                 			//更新命中积分
-                			Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] 命中[" + hitTermText + "], before hitScore[" + hitType + "]" + hitDoc.getHitScore(hitType));
+                			//P0(2026-10-09) 日志瘦身：逐词日志已移除
     						hitDoc.setHitScore(hitType, caculateHitScore(hitDoc.getHitScore(hitType), weight, hitTermText, context.searchWord));
-    						Log.debug("collectHitTermInfo() [" + hitDoc.docPath + "] 命中[" + hitTermText + "], after hitScore[" + hitType + "]" + hitDoc.getHitScore(hitType));
+    						//P0(2026-10-09) 日志瘦身：逐词日志已移除
     						
         		            //获取命中词的位置信息，需要额外的时间，如果没有必要，建议不要获取
         		            switch(hitType)
@@ -988,7 +988,7 @@ public class LuceneUtil2   extends BaseFunction
 		}
 		
 		int newHitScore = curHitScore + weight * hitTermText.length() / orgSearchWord.length();
-		Log.debug("caculateHitScore() hitTermText:" + hitTermText + " newHitScore:" + newHitScore);
+		//P0(2026-10-09) 日志瘦身：逐词日志已移除
 		
 		if(newHitScore > weight)
 		{
@@ -1020,7 +1020,7 @@ public class LuceneUtil2   extends BaseFunction
             int startOffset = postingsEnum.startOffset();
             int endOffset = postingsEnum.endOffset();
             positions.add(new int[]{startOffset, endOffset});
-            Log.debug("getHitTermPositions() hitTerm pos[" + i +"] at [" + startOffset + "," + endOffset + "]");
+            //P0(2026-10-09) 日志瘦身：逐位置日志已移除
         }
         termPositions.put(field, positions);
      }

@@ -38,20 +38,16 @@ public class HitDoc
 		{
 		case HitDoc.HitType_FileName:
 			hitScore_FileName = newHitScore;
-			Log.debug("setHitScore() hitDoc:" + docPath + " hitScore_FileName:" + hitScore_FileName);
 			break;
 		case HitDoc.HitType_FileContent:
 			hitScore_FileContent = newHitScore;
-			Log.debug("setHitScore() hitDoc:" + docPath + " hitScore_FileContent:" + hitScore_FileContent);
-
 			break;
 		case HitDoc.HitType_FileComment:
 			hitScore_FileComment = newHitScore;
-			Log.debug("setHitScore() hitDoc:" + docPath + " hitScore_FileComment:" + hitScore_FileComment);
 			break;
 		}
+		//P0(2026-10-09): setHitScore 在"每命中×每词"上被调用，原逐次日志已移除（日志瘦身）
 		hitScore_Total = hitScore_FileName + hitScore_FileContent + hitScore_FileComment;
-		Log.debug("setHitScore() hitDoc:" + docPath + " hitScore_Total:" + hitScore_Total);
 	}
 	
 	public Integer getHitScore(int hitType) 
@@ -70,10 +66,7 @@ public class HitDoc
 	
 	public int getTotalHitScore() 
 	{
-		Log.debug("getTotalHitScore() hitDoc:" + docPath + " hitScore_Total:" + hitScore_Total 
-				+ " hitScore_FileName:" + hitScore_FileName 
-				+ " hitScore_FileContent:" + hitScore_FileContent
-				+ " hitScore_FileComment:" + hitScore_FileComment);
+		//P0(2026-10-09): 该方法在排序比较器里被高频调用，原日志已移除（日志瘦身）
 		return hitScore_Total;
 	}
 	
