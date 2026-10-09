@@ -151,6 +151,17 @@
         </div>
 
         <div class="row">
+            <!-- P1(2026-10-09): 搜索状态条（进度/耗时/取消）+ 结果头部（命中数/耗时）；取消按钮文案由 JS 用 _Lang 设置 -->
+            <div id="searchStatusBox" style="display:none;margin:10px 0 0 0;">
+                <div class="progress progress-striped active" style="margin-bottom:4px;">
+                    <div class="bar" style="width:100%;"></div>
+                </div>
+                <div>
+                    <span id="searchStatusText"></span>
+                    <a href="javascript:;" id="searchCancelBtn" class="btn btn-mini" style="display:none;" onclick="cancelSearch();"></a>
+                </div>
+            </div>
+            <div id="searchResultInfo" style="display:none;margin:10px 0 0 0;"></div>
             <div id="project-box" class="project-box"></div>
             <div class="clearfix"></div>
             <div class="manual-page">

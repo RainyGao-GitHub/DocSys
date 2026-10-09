@@ -300,11 +300,23 @@ function EnterKeyListenerForSearchDoc(event){
  	}
 }
 
+//P1(2026-10-09): 搜索交互状态 —— 进度提示 / 可取消 / 保留旧结果 / 丢弃过期响应
+var gSearchState = {
+	jqXHR : null,			//当前请求（用于取消）
+	token : 0,				//请求序号（用于丢弃过期响应）
+	startTime : 0,
+	timer : null,
+	cancelled : false,
+	elapsed : "0.0",
+	showingResults : false	//#project-box 里当前是搜索结果还是仓库列表
+};
+
 //注意:page从0开始，pageIndex从1开始
 var searchResults = [];
 function searchDoc(pageIndex)
 {
 	var searchWordInputs = $("[id='searchWord']");
+	//P1(2026-10-09): 输入框不再被禁用（搜索中可继续输入/回车），此判断保留仅为兼容旧行为
 	if(searchWordInputs.filter(":disabled").length > 0)
 	{
 		return;
@@ -313,12 +325,24 @@ function searchDoc(pageIndex)
 	var searchWord = searchWordInputs.eq(0).val();
 	var sort = "";
 	
-   	$.ajax({
+	//P1(2026-10-09): 新搜索自动取消上一次未完成的搜索，并立即给出进度反馈（不再只禁用输入框）
+	if(gSearchState.jqXHR != null)
+	{
+		console.log("searchDoc() 取消上一次搜索");
+		gSearchState.jqXHR.abort();
+		gSearchState.jqXHR = null;
+	}
+	var token = ++gSearchState.token;
+	gSearchState.cancelled = false;
+	gSearchState.startTime = (new Date()).getTime();
+	startSearchStatus();
+	
+	gSearchState.jqXHR = $.ajax({
            url : "/DocSystem/Doc/searchDoc.do",
            type : "post",
            dataType : "json",
            beforeSend : function () {
-		   	searchWordInputs.prop("disabled", true);
+		   	//P1(2026-10-09): 不再禁用输入框（改为状态条 + 可取消）
 		   },
            data : {
                searchWord:searchWord,
@@ -327,12 +351,15 @@ function searchDoc(pageIndex)
            	   //pageSize: gPageSize
            },
            success : function (ret) {
+if(token != gSearchState.token) { return; }	//P1: 丢弃过期响应（已被更新的搜索取代）
+		   	gSearchState.elapsed = (((new Date()).getTime() - gSearchState.startTime) / 1000).toFixed(1);
            		console.log("searchDoc ret:", ret);
         		if(ret.status == "ok")
            		{
            			console.log("文件搜索成功", ret);
 					var docList = ret.data;
 					searchResults = docList; //赋值给searchResult,用于分页显示控制
+					gSearchState.showingResults = true;	//P1: #project-box 已变为搜索结果
 					
 					var total = ret.dataEx; //搜索结果总数
 			      	for(var i=0; i<docList.length; i++)
@@ -375,7 +402,9 @@ function searchDoc(pageIndex)
                 		});
                	}
            },
-           error : function () {
+           error : function (xhr, textStatus) {
+        	   if(token != gSearchState.token) { return; }	//P1: 过期响应
+        	   if(textStatus == "abort") { console.log("searchDoc() 请求已取消，保留旧结果"); return; }	//P1: 取消不报错
         	   showErrorMessage({
            		id: "idAlertDialog",	
            		title: _Lang("提示"),
@@ -384,9 +413,62 @@ function searchDoc(pageIndex)
            		});
 		   },
 		   complete : function () {
-		   	searchWordInputs.prop("disabled", false);
+		   	gSearchState.jqXHR = null;
+		   	stopSearchStatus(gSearchState.cancelled);	//P1: 结束状态条（取消时显示"已取消"）
            }
        });
+}
+
+//P1(2026-10-09): 搜索状态条 —— 立即反馈（不再只禁用输入框）+ 实时已耗时 + >2s 可取消
+function startSearchStatus()
+{
+	$("#searchResultInfo").hide();
+	$("#searchStatusBox").show();
+	$("#searchCancelBtn").text(_Lang("取消")).hide();
+	if(gSearchState.timer != null) { clearInterval(gSearchState.timer); }
+	gSearchState.timer = setInterval(updateSearchStatus, 100);
+	updateSearchStatus();
+	//P1: 保留旧内容（仓库列表或上次结果），只做淡化提示，不清空页面
+	$("#project-box").css("opacity", "0.45");
+}
+
+function updateSearchStatus()
+{
+	var sec = ((new Date()).getTime() - gSearchState.startTime) / 1000;
+	$("#searchStatusText").text(_Lang("正在搜索") + "… " + sec.toFixed(1) + "s");
+	if(sec >= 2) { $("#searchCancelBtn").show(); }	//超过 2s 才显示取消，避免闪一下
+}
+
+function stopSearchStatus(cancelled)
+{
+	if(gSearchState.timer != null) { clearInterval(gSearchState.timer); gSearchState.timer = null; }
+	$("#searchCancelBtn").hide();
+	$("#project-box").css("opacity", "1");
+	if(cancelled)
+	{
+		var sec = ((new Date()).getTime() - gSearchState.startTime) / 1000;
+		$("#searchStatusText").text(_Lang("已取消") + " · " + _Lang("用时") + " " + sec.toFixed(1) + "s");
+		setTimeout(function(){ $("#searchStatusBox").hide(); }, 2000);
+	}
+	else
+	{
+		$("#searchStatusBox").hide();
+	}
+}
+
+function cancelSearch()
+{
+	console.log("cancelSearch()");
+	gSearchState.cancelled = true;
+	if(gSearchState.jqXHR != null)
+	{
+		gSearchState.jqXHR.abort();
+		gSearchState.jqXHR = null;
+	}
+	else
+	{
+		stopSearchStatus(true);
+	}
 }
 
 function showSearchResults(searchResults, pageIndex)
@@ -418,6 +500,12 @@ function showSearchResults(searchResults, pageIndex)
 	}
 	console.log(docList);
 	
+    //P1(2026-10-09): 结果头部显示命中数与耗时（用户取消时保留旧结果，不覆盖）
+    if(!gSearchState.cancelled)
+    {
+    	$("#searchResultInfo").html(_Lang("找到") + " <b>" + total + "</b> " + _Lang("条")
+    			+ " · " + _Lang("用时") + " " + gSearchState.elapsed + "s").show();
+    }
     var html = template('tmpl-searchResults', {
             list : docList,
     });

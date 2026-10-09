@@ -115,6 +115,17 @@
         </div>
 
         <div class="row">
+            <!-- P1(2026-10-09): search status bar (progress/elapsed/cancel) + result info (hits/elapsed); cancel label set by JS via _Lang -->
+            <div id="searchStatusBox" style="display:none;margin:10px 0 0 0;">
+                <div class="progress progress-striped active" style="margin-bottom:4px;">
+                    <div class="bar" style="width:100%;"></div>
+                </div>
+                <div>
+                    <span id="searchStatusText"></span>
+                    <a href="javascript:;" id="searchCancelBtn" class="btn btn-mini" style="display:none;" onclick="cancelSearch();"></a>
+                </div>
+            </div>
+            <div id="searchResultInfo" style="display:none;margin:10px 0 0 0;"></div>
             <div id="project-box" class="project-box"></div>
             <div class="clearfix"></div>
             <div class="manual-page">
