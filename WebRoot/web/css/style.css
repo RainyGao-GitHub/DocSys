@@ -5,16 +5,28 @@
     bottom: 0;
     width: 450px;
 }
-.second-line{
-    position: absolute;
-    cursor: col-resize;
-    left: 903px;
-    top: 55px;
-    bottom: 0;
-    width: 3px;
-    background: #ddd;
-    z-index: 100;
+/* 分隔条样式已统一到 static/styles/kancloud.css（#line.manual-line / #second-line.manual-line）：
+   原来 CSS(style.css) / JS(project.js) / HTML(id="second-line"、规则写 #line2) 三处命名不一致，是历史缺陷来源（2026-10-09） */
+/* ---- 三栏表头吸顶（2026-10-09）：栏本身就是滚动容器，栏内首行必须固定，否则随内容滚走 ---- */
+/* 第二栏表头（搜索行 + 排序） */
+#secondDropZone > .searchBox{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #fafafa;
 }
+/* 第三栏补不透明底色：原来只有 .manual-article 是白底、表头行透明，第一栏溢出的内容会从这一栏透出来 */
+#previewPane{
+    background: #fff;
+}
+/* 第三栏表头（返回 + 文件名） */
+#previewPane > .searchBox{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #fff;
+}
+
 .searchBox{
     padding:10px 0;
     border-bottom:1px solid #e0e1e5;

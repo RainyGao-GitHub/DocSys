@@ -51,15 +51,16 @@ h6 {
 .m-manual:not(.manual-mobile) ::-webkit-scrollbar {
     height: 10px;
     width: 7px;
-    background: rgba(0,0,0,.1);
+    /* 原为 rgba(0,0,0,.1)：悬停时轨道变深会与 thumb 混成一片，看起来像「滚动条变细」（2026-10-09） */
+    background: transparent;
 }
 
-.m-manual:not(.manual-mobile) ::-webkit-scrollbar:hover {
-    background: rgba(0,0,0,.2)
+.m-manual:not(.manual-mobile) ::-webkit-scrollbar-corner {
+    background: transparent
 }
 
 .m-manual:not(.manual-mobile) ::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,.3);
+    background: rgba(0,0,0,.28);
     -webkit-border-radius: 6px;
     -moz-border-radius: 6px;
     -ms-border-radius: 6px;
@@ -67,13 +68,9 @@ h6 {
     border-radius: 6px
 }
 
-.m-manual:not(.manual-mobile)::-webkit-scrollbar-thumb:hover {
-    -webkit-box-shadow: inset 1px 1px 1px rgba(0,0,0,.25);
-    -moz-box-shadow: inset 1px 1px 1px rgba(0,0,0,.25);
-    -ms-box-shadow: inset 1px 1px 1px rgba(0,0,0,.25);
-    -o-box-shadow: inset 1px 1px 1px rgba(0,0,0,.25);
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,.25);
-    background-color: rgba(0,0,0,.4)
+/* 选择器原来漏了空格（写成 .m-manual::-webkit-scrollbar-thumb:hover），实际从未生效；悬停只加深 thumb，不动轨道 */
+.m-manual:not(.manual-mobile) ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,.45)
 }
 .m-manual.manual-reader .manual-head .slidebar {
     display: none
@@ -134,7 +131,8 @@ h6 {
      	background:#ddd;
      	z-index:100
 }       
-#line2.manual-line{
+/* 第二条分隔条：原规则写的是 #line2，而 HTML 里是 id="second-line"，这条规则从未生效（2026-10-09 修正） */
+#second-line.manual-line{
        position:absolute;
        cursor: col-resize;
        left:903px;
@@ -142,7 +140,34 @@ h6 {
        bottom:0;
        width:3px;
        background:#ddd;
-       z-index:301
+       z-index:100
+}
+
+/* 分隔条命中区：只向右扩 4px（右侧是第三栏的空白内边距），不侵占第二栏的滚动条 */
+#line.manual-line:after,
+#second-line.manual-line:after{
+       content:'';
+       position:absolute;
+       left:0;
+       top:0;
+       bottom:0;
+       right:-4px
+}
+
+/* 分隔条悬停反馈（原实现没有任何反馈，用户不知道这条灰线可以拖） */
+#line.manual-line:hover,
+#second-line.manual-line:hover{
+       background:#428bca
+}
+
+/* 拖拽中：整页禁止选中，并保持 col-resize 光标 */
+body.m-manual.pane-dragging,
+body.m-manual.pane-dragging *{
+       cursor: col-resize !important;
+       -webkit-user-select:none;
+       -moz-user-select:none;
+       -ms-user-select:none;
+       user-select:none
 }
 
 .m-manual .manual-left {

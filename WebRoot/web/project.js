@@ -4305,62 +4305,131 @@ function checkIn(node)
 }
 
 //目录列表区域拖放功能：预览区和子目录区域需要一起变化
-var oDiv=document.getElementById('line');
-oDiv.onmousedown=function(ev){
-  var disX=ev.clientX-oDiv.offsetLeft;
-  var disY=ev.clientY-oDiv.offsetTop;
+//---- 三栏布局：拖拽分隔条 / 双击复位（2026-10-09 重写）------------------------
+//布局模型：三栏都是绝对定位；第一栏 left:0，第二栏紧跟 #line，第三栏用 left 定位 + CSS 的 right:0 自适应宽度。
+//手感：**保持原行为 —— 第一栏、第二栏都可以一路拖到最窄（0）**，第三栏由 right:0 自动吃掉剩余宽度。
+//历史缺陷（本次修的两个真问题，与宽度下限无关）：
+//  ① 拖第二条分隔条时把它自己的 3px 也算进了第二栏宽度，第二栏右边界就压到分隔条右缘 ⇒ 分隔条盖住滚动条最右 3px
+//     （双击时人手微抖触发一次 mousemove 就会命中，滚动条可见宽 7px→4px）；
+//  ② 栏内固定宽度内容（「新文档」块）在栏被拖窄时会溢出到栏外，而第三栏原来背景透明 ⇒ 从内容栏透出来。
+//     修法选的是「给上层栏不透明底色」而不是「给下层加裁剪」：第一栏加 overflow:hidden 会剪掉下拉菜单，
+//     第二/三栏本身就是滚动容器更不能裁。
+var PANE_SPLITTER_WIDTH = 3;		//分隔条宽度（与 CSS 一致）
+var PANE_DEFAULT_LEFT_WIDTH = 450;	//默认第一栏宽度（与 CSS 一致）
+var PANE_DEFAULT_MID_WIDTH = 450;	//默认第二栏宽度（与 CSS 一致）
 
-  document.onmousemove=function(ev){
-      var l=ev.clientX-disX;	//计算Line的位置
-      oDiv.style.left=l+'px';	//设置Line的位置
+//移动端分支（gIsPC == false）会隐藏第一栏、把第二栏铺满 100vw；此时不干预三栏布局
+function isPaneLayoutAvailable()
+{
+	return $(".manual-left").length > 0 && $(".manual-left").css("display") != "none";
+}
 
-      //左边框的偏移位置总是0，因此只需要设置with
- 	  $(".manual-left")[0].style.width=ev.clientX+'px';
-      //second-table只要调整左边位置就可以了，宽度不变
-   	  $(".second-table").css("left",$(".manual-left").width() + $("#line").width());
-   	  $(".second-line").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width()); //第二个拖拽线的位置
-      $(".manual-right").css("left", $(".manual-left").width() + $("#line").width() + $(".second-table").width() + $(".second-line").width()); //第二个拖拽线的位置
-      //$(".manual-right")[0].style.left = $(".manual-left").width() + $("#line").width()) + $(".second-table").width() + $(".second-table").width() + 'px';
-  };
+//读取当前三栏宽度
+function readPaneLayout()
+{
+	return { left: $(".manual-left").width(), mid: $(".second-table").width() };
+}
 
-  document.onmouseup=function(ev){
-  	//$(".manual-left")[0].style.width=ev.clientX+'px';
- 	//$(".manual-right")[0].style.left=ev.clientX+'px';
- 	document.onmousemove=null;
-  	document.onmouseup=null;
-  };
-};
+//按「第一栏宽 + 第二栏宽」重排三栏与两条分隔条：所有几何只在这里算一次，避免多处口径不一致
+//钳制：**不设最小宽度**，只保证三栏都不出现负值（第一/二栏最窄到 0，第三栏最窄到 0）
+function applyPaneLayout(leftWidth, midWidth)
+{
+	if(!isPaneLayoutAvailable())
+	{
+		return null;
+	}
 
-var oDiv2=document.getElementById('second-line');
-oDiv2.onmousedown=function(ev){
-	var disX=ev.clientX-oDiv2.offsetLeft;
-	var disY=ev.clientY-oDiv2.offsetTop;
-	
-	document.onmousemove=function(ev){
-   		var l=ev.clientX-disX;	//计算Line的位置
-       	oDiv2.style.left=l+'px';	//设置Line的位置
-       	
-       	var lineLeft = $("#line").position().left;
-       	var secondLineLeft = $("#second-line").position().left;
-       	console.log("lineLeft:" + lineLeft + " secondLineLeft:" + secondLineLeft);
-       	if(lineLeft > secondLineLeft)
-       	{
-       		oDiv.style.left=l+'px';
-       		$(".manual-left")[0].style.width=ev.clientX+'px';
-       		//second-table只要调整左边位置就可以了，宽度不变
-         	$(".second-table").css("left",$(".manual-left").width() + $("#line").width());             	
-       	}
-       	
-       	$('.second-table').width($(".second-line").position().left-$('.manual-left').width());
-        $(".manual-right").css("left", $('.manual-left').width() + $(".second-table").width() + $(".second-line").width());
-       	return false;
-  	};
-  
-  	document.onmouseup=function(ev){
-	 	document.onmousemove=null;
-	  	document.onmouseup=null;
-    };
-};
+	var avail = document.documentElement.clientWidth - PANE_SPLITTER_WIDTH * 2;	//三栏可用总宽
+
+	//第一栏：0 ~ 「avail − 第二栏宽」（第二、三栏都可以被挤到 0）
+	leftWidth = Math.max(0, Math.min(leftWidth, avail - Math.max(midWidth, 0)));
+	//第二栏：0 ~ 「avail − 第一栏宽」（第三栏不会被挤成负宽）
+	midWidth = Math.max(0, Math.min(midWidth, avail - leftWidth));
+
+	$(".manual-left").css("width", leftWidth + "px");
+	$("#line").css("left", leftWidth + "px");								//第一条分隔条紧贴第一栏右缘
+	$(".second-table").css({ "left": (leftWidth + PANE_SPLITTER_WIDTH) + "px", "width": midWidth + "px" });
+	$("#second-line").css("left", (leftWidth + PANE_SPLITTER_WIDTH + midWidth) + "px");	//第二条分隔条紧贴第二栏右缘（第二栏宽度不含分隔条自身）
+	$(".manual-right").css("left", (leftWidth + PANE_SPLITTER_WIDTH + midWidth + PANE_SPLITTER_WIDTH) + "px");	//宽度由 CSS 的 right:0 自适应
+	return { left: leftWidth, mid: midWidth };
+}
+
+//双击分隔条复位：恢复默认三栏宽度（与 CSS 初值一致）
+function resetPaneLayout()
+{
+	return applyPaneLayout(PANE_DEFAULT_LEFT_WIDTH, PANE_DEFAULT_MID_WIDTH);
+}
+
+//绑定分隔条拖拽：按「起始宽度 + 位移」计算（不累计漂移）；双击恢复默认三栏宽度
+function bindPaneSplitterDrag(splitterSelector, resizePane)
+{
+	var splitter = $(splitterSelector)[0];
+	if(!splitter)
+	{
+		return;
+	}
+
+	splitter.onmousedown = function(ev)
+	{
+		ev = ev || window.event;
+		var startLayout = readPaneLayout();
+		var startX = ev.clientX;
+
+		//拖拽期间整页禁止选中（否则拖动/双击会出现文字选中）
+		$(document.body).addClass("pane-dragging");
+
+		document.onmousemove = function(ev)
+		{
+			ev = ev || window.event;
+			var layout = resizePane(startLayout, ev.clientX - startX);
+			applyPaneLayout(layout.left, layout.mid);
+			return false;
+		};
+
+		document.onmouseup = function()
+		{
+			document.onmousemove = null;
+			document.onmouseup = null;
+			$(document.body).removeClass("pane-dragging");
+		};
+
+		if(ev.preventDefault)
+		{
+			ev.preventDefault();
+		}
+		return false;
+	};
+
+	//双击分隔条：恢复默认三栏宽度（原实现双击没有任何反馈）
+	splitter.ondblclick = function()
+	{
+		resetPaneLayout();
+		return false;
+	};
+}
+
+//第一条分隔条：只改第一栏宽度（第二栏整体平移，第三栏自适应）
+bindPaneSplitterDrag("#line", function(startLayout, offsetX)
+{
+	return { left: startLayout.left + offsetX, mid: startLayout.mid };
+});
+
+//第二条分隔条：先改第二栏宽度（第三栏自适应）；**第二栏被压到 0 之后继续往左拖 = 接着缩第一栏**
+//（原实现的行为：第二栏拖拽线越过第一栏拖拽线时就转去改第一栏宽度；这里用「多余的位移转给第一栏」等价表达）
+bindPaneSplitterDrag("#second-line", function(startLayout, offsetX)
+{
+	var midWidth = startLayout.mid + offsetX;
+	var leftWidth = startLayout.left;
+	if(midWidth < 0)
+	{
+		leftWidth = Math.max(0, leftWidth + midWidth);	//midWidth 为负，等价于第一栏跟着一起往左缩
+		midWidth = 0;
+	}
+	return { left: leftWidth, mid: midWidth };
+});
+
+//注：不做 resize 重排（保持原行为）—— 第一/二栏保持已拖好的宽度，第三栏宽度由 CSS 的 right:0 自适应；
+//窗口变窄时第三栏会被挤到 0，但不会出现负宽度。
 
 //页面加载完成处理函数
 $(document).ready(function()
@@ -4481,6 +4550,7 @@ function globalVarInit()
     	console.log("It is MP");
 	    //hide the drag lines
 	    $("#line").hide();
+	    //移动端的三栏布局由 isPaneLayoutAvailable() 自动跳过，这里不需要额外开关
 	    $(".second-line").hide();
 	    //hide the left div
         $(".manual-left").hide();

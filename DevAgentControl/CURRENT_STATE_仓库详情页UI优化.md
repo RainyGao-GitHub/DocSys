@@ -1,0 +1,74 @@
+# CURRENT_STATE — 仓库详情页（project）前端 UI 优化（工作卡）
+
+建立于 2026-10-09。**状态：S1 已实施 + 真实浏览器 E2E 验收通过；5 个文件改动尚未提交（等用户确认）；S2 / S3 未开始。**
+
+> 本卡是**当前任务**的唯一口径处：必读上下文 / 参考计划 / 当前进展 / 下一步 / 生效约束。
+
+## 任务
+
+优化**仓库详情页**（三栏式）的前端 UI / 交互。
+
+- 页面：`WebRoot/web/project.html`（结构） + `WebRoot/web/project.js`（逻辑，约 4k+ 行）
+- 用户诉求①：**调研市面三栏式（three-pane）产品里设计漂亮的**，先看它们长什么样，再据此改造本页。
+- 用户诉求②：解决下面 3 个**已知问题**。
+
+## 用户给出的 3 个已知问题（本次必须解决）
+
+| # | 现象 | 初步猜测（**待读代码确认，不得当结论**） |
+|---|---|---|
+| 1 | **内容栏（第三栏）拖到最边上之后，"新建文档"反而显示出来了** | 分隔条拖动时第二栏表头的「新建文档」按钮透出来（z-index / 背景透明 / overflow 可见性） |
+| 2 | **双击第二栏的滚动条，它会变细** | 原生滚动条 + 双击触发文本选中/布局抖动；或 JS 滚动条（需先确认是原生还是自绘） |
+| 3 | **第二栏第一行（搜索框行）与第三栏第一行（标题行）没有固定** | 滚动时随内容滚走 → 需要 sticky 表头 |
+
+## 必读上下文（续接锚点）
+
+- 三栏结构 / 分隔条拖动：`WebRoot/web/project.html`、`WebRoot/web/project.js`（搜索 `resize` / `mousedown` / `splitter` / `drag`）
+- 样式：`WebRoot/web/css/style.css`、`WebRoot/web/static/styles/styles.css`
+- 既有能力（复用时先读）：`project.js` 仓内搜索（复用 `/DocSystem/Doc/searchDoc.do`）、`DocList.showList()` 列表渲染、`gPageSize/gBatchSize` 分页（P2-1 刚加的）
+- 参考（同仓前序任务结论，可复用）：`devDocs/仓库列表搜索优化方案.md`（含 `.s-box em` 高亮、结果头、分批翻页等既有约定）
+
+## 当前进展（如实）
+
+1. ✅ **现状与根因已实测定位**（真实浏览器 + 源码，非推测；视口 1059×770）
+   - 布局模型 = **绝对定位 + JS 改几何**（`project.js:4290` 与 `:4334` 两条拉手 `#line`/`#second-line`）；栏内滚动条是**自绘 7px**（`kancloud.css:51`）
+   - **问题 1（拖到边上后「新文档」透出）根因已实证**：① 拖动**无宽度钳制**（实测 `.manual-left` 450→**5px**、`.second-table` 450→**0px**）② 栏内固定 **100px** 的「新文档」块**溢出栏外**（实测 l=0/w=77、`超出左栏: true`）③ **第三栏背景透明**（`rgba(0,0,0,0)`）⇒ 底层溢出内容从内容栏里透出来
+   - **问题 3（表头不固定）根因已实证**：**栏本身即滚动容器**（`.second-table` scrollH 3615 / clientH 715；`.manual-right` 1007/715）⇒ 栏内第一行随内容滚走
+   - **问题 2（双击 3px 灰线 → 滚动条变细）已定位并修复**：用户确认双击的是那条 3px 灰线。根因 = 拖动公式 `$('.second-table').width($(".second-line").position().left - $('.manual-left').width())` 把分隔条自身 3px 算进了第二栏宽度 ⇒ 第二栏右边界 903→**906**，分隔条（z-index:100）盖住滚动条最右 3px ⇒ **滚动条可见宽 7px→4px**。**用合成 dblclick 永远复现不了**（真实双击里两次 mousedown 之间必夹一次 mousemove，而拖动监听此时才装上）
+   - 附带缺陷：`kancloud.css:137` 的 `#line2.manual-line` 是**死规则**（HTML 是 `id="second-line"`）⇒ CSS/JS/HTML 三处 id 命名不统一
+2. ✅ **市场调研已完成（首轮）**：实截 **Seafile**（细图标栏 + 列表固定列头 + 行悬停出操作）与 **Linear**（窄导航 + **内容区吸顶头**）两张图；归纳 8 条可借鉴做法（方案 §3）
+3. ✅ **方案已成文**：`devDocs/仓库页面UI优化方案.md`（§1 现状 / §2 三问题根因+实测 / §3 市场参考 / §4 S1-S3 分级 / §5 验收口径 / §6 风险 / §7 待裁定 5 项）
+4. ✅ **用户已裁定**（2026-10-09）：按 S1→S2→S3 推进但**先只做 S1**；吸顶先用 `position: sticky`；「第一栏可折叠」先不做；不需要更多参考图
+5. ✅ **S1 已实施**（5 个文件）：
+   - `project.js`：重写两条分隔条逻辑（新增 `readPaneLayout/applyPaneLayout/resetPaneLayout/bindPaneSplitterDrag/isPaneLayoutAvailable`，几何只在 `applyPaneLayout` 算一次；双击复位；删掉原「lineLeft>secondLineLeft 就缩第一栏」的混乱分支与热循环里的 `console.log`）
+   - **不设最小宽度**（用户 2026-10-09 追加裁定：保持原来可以拖到最小的逻辑）：`applyPaneLayout` 只做「不为负」钳制；拖动 delta 基于起始宽度；**第一栏可拖到 4px、第二栏可拖到 0px**
+   - **保留原行为「第二栏分隔条越过第一栏分隔条 → 转而缩第一栏」**：第二栏被压到 0 后继续往左拖，多余位移转给第一栏（实测一次连续拖动：二栏 450→150→0，随后一栏 450→300→150→100→0，第一栏分隔条同步跟走）
+   - 因最小宽度取消，原先为防第三栏被挤成 0 而加的 **resize 重排已整体删除**（第三栏靠 `right:0` 不会为负）；过程中留下的教训：`resize` 事件里读到的 `clientWidth` 可能还是旧值（改到 800 时首轮得到 367/367/60，需立即+rAF 各钳一次才稳）
+   - `static/styles/kancloud.css`：修死规则 `#line2` → `#second-line.manual-line`（与 `#line` 共用样式、z-index 统一 100）；新增 `:after` 命中区（只向右 4px，不侵占滚动条）、`:hover` 反馈（#428bca）、拖拽期禁选；滚动条轨道改透明、thumb 悬停只加深（并修好原来漏空格的选择器）
+   - 未裁剪：第一栏**没加** `overflow:hidden`（会剪掉「新文档」下拉菜单），第二/三栏本身是滚动容器更不能裁 —— 溢出靠「上层栏不透明底色」挡住（三栏按 DOM 顺序左→中→右绘制）
+   - `css/style.css`：删重复的 `.second-line` 定义；新增 `#secondDropZone > .searchBox` / `#previewPane > .searchBox` 吸顶 + `#previewPane` 不透明底色
+   - `project.html` / `project_en.html`：`#second-line` 补 `manual-line` 类、`.manual-right` 加 `id="previewPane"`、「新文档」块补 `max-width:100%`
+6. ✅ **E2E 验收通过**（真实浏览器，视口 1013，第二栏 39 条内容）：
+   - 第一栏可一路拖到 **4px**、第二栏可拖到 **0px**（无最小宽度限制，保持原手感）；「新文档」块加 `max-width:100%` 后被压缩换行；**同一行扫描证明 x≥10 处取到的都是上层栏元素**（不再从透明的内容栏透出）
+   - 分隔条压住第二栏 **0→3px（双击后）→ 恒 0px**（左栏 4px / 中栏 0px / 中栏 20px 三种窄态均实测）；第二栏滚动条可见宽 **7→4px → 恒 7px**（含中栏 20px 时）
+   - 吸顶：第二栏滚动 400px 后表头 top **55 → 55**；第二、三栏均为 `position:sticky`
+   - 双击分隔条 → 复位**默认 450/450**（视口放不下时按「不让其余栏为负」收紧，如 465 宽 → 9/450/0；原为「无任何反馈且会改坏栏宽」）；hover → `rgb(66,139,202)`
+   - 三栏和恒等于视口宽（`左+中+右+6px == clientWidth`）；`overlap` 恒 0、滚动条可见宽恒 7px
+   - **不做 resize 重排（原行为）**：第一/二栏保持已拖好的宽度，第三栏 `right:0` 自适应（变窄只挤到 0，不为负）
+   - 移动端分支冒烟（CDP 模拟 iPhone UA + 390×844）：`gIsPC=false`、第一栏与两条分隔条 `display:none`、第二栏 `left:0/width:100vw`、`isPaneLayoutAvailable()=false` ⇒ 新代码不干预移动端
+   - 点击可达性：排序图标 / 新文档 / 搜索框 / 返回箭头 / 列表行 全部 `clickable:true`（分隔条 4px 扩展区未挡住第三栏返回箭头）
+   - 功能回归：搜索「合同」4.98s 出结果并渲染；点文件行 `#filetitle`=「BasicInfo页面显示流程.docx」；预览 iframe 正常；排序下拉浮在吸顶头之上（z-index 1000 > 2）
+   - 英文页 `project_en.html` 同步生效；`em=0` 属既有行为（本页列表从不输出高亮标记，`project.js` 无 `nameHtml/contentHtml/s-content` 引用）
+7. ⏳ **未提交**（等用户确认）：5 个文件均在**主仓库**（`devInt`）—— `WebRoot/web/project.html`、`project_en.html`、`project.js`、`css/style.css`、`static/styles/kancloud.css`
+
+## 下一步
+
+1. **等用户确认后提交 S1**（提交信息建议：`仓库详情页 S1：三栏宽度钳制 + 分隔条/滚动条修复 + 表头吸顶`）
+2. S1 确认无问题后，再与用户谈 **S2 视觉现代化**（第一栏折叠已明确不做）与 **S3 交互增强**（栏宽持久化等）
+3. 遗留可选跟进（留到 S2）：① 第一栏目录树在窄栏时会出横向滚动条（现由 `#uuz` 的 `overflow:auto` 裁剪，属既有行为）；② 第二栏表头行比容器内容宽 3px（`searchBox 446` vs `clientW 443`），会有一条很短的横向滚动条（既有小瑕疵）
+
+## 生效约束
+
+- ✅ 用户已确认推进 S1（原「未获确认前不得改代码」已满足）；**S2 / S3 未获确认前不要开工**
+- **不要自动提交**：改完 → 汇报 + 验证结果 → 等用户确认后再提交（用户长期要求）
+- 提交归属：本任务改的 5 个文件全在**主仓库**（`devInt`）；本轮 **0 行 Java 改动**（纯前端）
+- 改 `project.js` 时**不要动仓内搜索相关代码**（P2-1 / P3 刚交付并归档）
