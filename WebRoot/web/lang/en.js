@@ -85,6 +85,7 @@ function lang(str)
 		"找到" : "Found",
 		"条" : "results",
 		"用时" : "took",
+		"命中文件名" : "File name match",
 		"登录" : "Sign In",
 		"注册" : "Sign Up",
 		"退出登录" : "Log Out",

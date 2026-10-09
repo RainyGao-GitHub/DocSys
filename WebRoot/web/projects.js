@@ -312,6 +312,9 @@ var gSearchState = {
 };
 
 //注意:page从0开始，pageIndex从1开始
+//P3(2026-10-09): 当前结果对应的关键词数组（只在搜索成功后更新，取消/翻页时不会用错词）
+var gSearchWords = [];
+
 var searchResults = [];
 function searchDoc(pageIndex)
 {
@@ -358,6 +361,7 @@ if(token != gSearchState.token) { return; }	//P1: 丢弃过期响应（已被更
            		{
            			console.log("文件搜索成功", ret);
 					var docList = ret.data;
+					gSearchWords = searchWordsSplit(searchWord);	//P3: 当前结果对应的关键词（高亮用）
 					searchResults = docList; //赋值给searchResult,用于分页显示控制
 					gSearchState.showingResults = true;	//P1: #project-box 已变为搜索结果
 					
@@ -386,8 +390,8 @@ if(token != gSearchState.token) { return; }	//P1: 丢弃过期响应（已被更
 			           }
 
                         // 加粗渲染搜索结果
-                        jsonObj.name = searchWordsRender(jsonObj.name, searchWord);
-                        jsonObj.info = searchWordsRender(jsonObj.info, searchWord);
+                        //P3(2026-10-09): 加粗渲染搜索结果 —— 写入独立的 nameHtml；name 保持原文（getDocLink 等仍用原文）
+                        jsonObj.nameHtml = searchWordsRender(jsonObj.name, gSearchWords);
 			       }
 
 			       showSearchResults(searchResults, pageIndex);
@@ -495,6 +499,12 @@ function showSearchResults(searchResults, pageIndex)
 				docList[i].content = base64_decode(docList[i].content);
 				docList[i].content = subByte(docList[i].content, docList[i].content.length);
 			}
+			//P3(2026-10-09): 摘要也要高亮命中词（原来只对 name/info 做加粗，而模板渲染的是 content ⇒ 摘要永远不高亮）
+			//  命中片段里一定有命中词（后端按命中位置取窗口）；此处按关键词重新定位，并在【转义后】插 <em>
+			var hitType = docList[i].hitType || 0;
+			var isNameOnly = ((hitType & 1) != 0) && ((hitType & 6) == 0);	//1=文件名 2=内容 4=备注
+			docList[i].contentHtml = (isNameOnly ? '<span style="color:#999">' + escapeHtml(_Lang("命中文件名")) + '</span> ' : "")
+					+ searchWordsRender(docList[i].content, gSearchWords);
 			docList[i].state = 1;
 		}
 	}
@@ -554,40 +564,93 @@ function subByte(source, length) {
  * @param str 原始字符串
  * @param keyword 关键字
  */
-function searchWordsRender(str, keyword) {
-    if (str && keyword && str.length > keyword.length) {
-        var keywordLength = keyword.length;
-        var tmpStr = str.toLowerCase();
-        keyword = keyword.toLowerCase();
-        var indexs = [];
+//P3(2026-10-09): 关键词拆词（与后端 multiSearch 一致：按空白分割，支持多关键词）
+function searchWordsSplit(searchWord)
+{
+	var words = String(searchWord == null ? "" : searchWord).split(/\s+/);
+	var list = [];
+	for(var i=0; i<words.length; i++)
+	{
+		if(words[i].length > 0) { list.push(words[i]); }
+	}
+	return list;
+}
 
-        var startPosition = 0;
-        var index = -1;
-        while ((index = tmpStr.indexOf(keyword, startPosition)) >= 0) {
-            startPosition = index + keyword.length;
-            indexs.push(index);
-        }
+//P3(2026-10-09): HTML 转义 —— 模板用的是 {{# }}（原样输出、不转义），
+//  所以所有要显示的文本都必须先转义，否则文件内容/文件名里的 <script>/<img onerror>
+//  会被浏览器当 HTML 执行（改造前 {{# doc.content}} 就有这个隐患）
+function escapeHtml(str)
+{
+	if(str == null) { return ""; }
+	return String(str)
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
+}
 
-        if (indexs.length == 0) {
-            return str;
-        } else {
-            // 倒序替换
-            for (var i = indexs.length - 1; i >=0; i--) {
-                var start = indexs[i];
-                var end = start + keywordLength;
-                var left = str.substring(0, start);
-                var mid = str.substring(start, end);
-                var right = str.substring(end, str.length);
+/**
+ * 加粗加红显示搜索关键字（P3：多关键词 + 摘要高亮 + 转义后插标记）
+ * 返回的是【已转义的安全 HTML】：命中词包 <em>，其余字符全部转义
+ * （加粗加红由 .s-box em 的 CSS 提供）
+ * @param str 原始字符串（未转义）
+ * @param words 关键词数组；也可传单个字符串（向后兼容）
+ */
+function searchWordsRender(str, words)
+{
+	if(str == null || str === "") { return ""; }
+	str = String(str);
+	if(typeof(words) == "string") { words = searchWordsSplit(words); }
+	if(words == null || words.length == 0) { return escapeHtml(str); }
 
-                // 关键字加粗显示
-                str = left + "<em>" + mid + "</em>" + right;
-            }
-            return str;
-        }
-    } else {
-        return str;
-    }
+	//1. 在原文上找所有命中区间（大小写不敏感）
+	var lowerStr = str.toLowerCase();
+	var ranges = [];
+	for(var i=0; i<words.length; i++)
+	{
+		var word = String(words[i]).toLowerCase();
+		if(word.length == 0) { continue; }
+		var pos = 0;
+		var index = -1;
+		while((index = lowerStr.indexOf(word, pos)) >= 0)
+		{
+			ranges.push([index, index + word.length]);
+			pos = index + word.length;
+			if(ranges.length >= 200) { break; }	//防御：命中过多时不再继续收集
+		}
+	}
+	if(ranges.length == 0) { return escapeHtml(str); }
 
+	//2. 按起点排序并合并重叠区间（多关键词互相重叠时只包一次 <em>）
+	ranges.sort(function(a, b) { return a[0] - b[0] || a[1] - b[1]; });
+	var merged = [];
+	for(var i=0; i<ranges.length; i++)
+	{
+		var last = merged[merged.length-1];
+		if(last != null && ranges[i][0] <= last[1])
+		{
+			if(ranges[i][1] > last[1]) { last[1] = ranges[i][1]; }
+		}
+		else
+		{
+			merged.push([ranges[i][0], ranges[i][1]]);
+		}
+	}
+
+	//3. 逐段拼接：非命中段转义后原样输出，命中段转义后包 <em>
+	var html = "";
+	var cursor = 0;
+	for(var i=0; i<merged.length; i++)
+	{
+		var start = merged[i][0];
+		var end = merged[i][1];
+		if(start > cursor) { html += escapeHtml(str.substring(cursor, start)); }
+		html += "<em>" + escapeHtml(str.substring(start, end)) + "</em>";
+		cursor = end;
+	}
+	if(cursor < str.length) { html += escapeHtml(str.substring(cursor)); }
+	return html;
 }
 
 function onSmallScreen() {
