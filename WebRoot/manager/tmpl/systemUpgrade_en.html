@@ -68,6 +68,15 @@
 	                    	<button class="btn btn-lg btn-default storePathPickBtn" disabled="disabled" onclick="openStorePathPicker('indexDBStorePath')">Choose...</button>
 	                    </td>
 	                  </tr>
+	                  <tr>
+	                    <td>Agent Skill Storage Path</td>
+	                    <td>
+	                    	<input type="text" class="form-control" id="agentSkillStorePath" name="agentSkillStorePath" value="{{value.agentSkillStorePath}}" disabled="disabled">
+	                    </td>
+	                    <td class="edit">
+	                    	<button class="btn btn-lg btn-default storePathPickBtn" disabled="disabled" onclick="openStorePathPicker('agentSkillStorePath')">Choose...</button>
+	                    </td>
+	                  </tr>
 	                  {{if value.isSalesServer == 1}}
 	                  <tr>
 	                    <td>Sales Data Storage Path</td>

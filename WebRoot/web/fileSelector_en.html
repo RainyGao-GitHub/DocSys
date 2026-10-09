@@ -1,0 +1,316 @@
+<div id="dialog-fileSelector" class="form-horizontal">
+    <div class="form-group">
+    	<ul id="ztreeForFileSelector" class="ztree" style="margin-bottom: 120px;"></ul>
+    </div>
+	<div class="modal-footer">
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="FileSelector.doSelect();" style="width: 100px;height: 42px;">Ok</button>
+		        <button  type="button" class="btn btnPrimary" onclick="FileSelector.cancelSelect();" style="width: 100px;height: 42px;">Cancel</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+var FileSelector = (function () {
+	var _config;
+	var _localDiskPath = "";
+	var _reposId = "";
+	var _repos;
+	var _serverId = "";
+	var _targetReposId = "";
+	var _targetDiskPath = "";
+	var _listType = ""; //Not specified by default
+	var _docInfo;
+	var _menu;
+	var _selectedNode;
+	
+    function zTreeBeforeAsync(treeId, treeNode) {
+    	console.log("zTreeBeforeAsync treeId:"+ treeId, treeNode);
+    }
+
+    function zTreeOnAsyncSuccess(event, treeId, treeNode, msg) {
+    	console.log("zTreeOnAsyncSuccess treeId:" + treeId);
+    }
+
+	//This function was used to get the rightClick treeNode,it will be used for contextjs
+	function zTreeBeforeRightClick(treeId, treeNode) {
+		_selectedNode = treeNode;
+    	return true;
+	};
+
+	//This function will replace all righot click, so i did not use it
+	function zTreeOnRightClick(event, treeId, treeNode) {
+    	//alert(treeNode ? treeNode.tId + ", " + treeNode.name : "isRoot");
+	};
+	
+	//zTree callback definitions
+    function zTreeOnClick(event, treeId, treeNode) 
+    {
+    	console.log("zTreeOnClick treeId:"+ treeId, treeNode);
+    	_selectedNode = treeNode;
+    }
+      
+    function zTreeOnDbClick(event, treeId, treeNode) 
+    {
+    	console.log("zTreeOnDbClick treeId:"+ treeId, treeNode);
+    	_selectedNode = treeNode;
+
+    	doSelect();
+    }
+    
+    function formatDocList(docList)
+    {
+    	if(!docList)
+		{
+			return docList;
+		}
+	
+    	//Traverse the json array and convert the node type to the isParent flag
+      	for(var i=0; i<docList.length; i++)
+      	{
+           var jsonObj = docList[i];
+           jsonObj.id = jsonObj.docId;
+           jsonObj.pId = jsonObj.pid != -1? jsonObj.pid : "root",
+           jsonObj.isParent = jsonObj.type == 1? false: true;
+           jsonObj.rootPath = "";
+           jsonObj.rootName = "";
+           //Set the user-defined file icon (must be defined in standardStyle)
+           if(jsonObj.type == 1)
+           {
+        	   var iconType = getDiyFileIconType(jsonObj.name);
+        	   if(iconType && iconType != "")
+        	   {
+        		   jsonObj.iconSkin = iconType;
+        	   }
+           }
+      	}
+    }
+    
+  	function asyncDataFilter(treeId, parentNode, responseData) 
+  	{
+		console.log("asyncDataFilter");
+		var docList = responseData.data;
+		formatDocList(docList);		
+		console.log(docList);
+		return docList;
+	}
+	
+	function zTreeInit(data, node) {
+	    console.log("zTreeInit");
+        //Set the parameters for async loading
+        var async =  {
+    		enable : true,//Set whether zTree enables async loading mode
+            url : "/DocSystem/Doc/getSubDocList.do",
+            type : "post",
+    		autoParam : ["path","name"],//Parent node attributes to submit automatically on async loading
+    		otherParam:{
+    			"storageType" : _storageType,
+    			"localDiskPath" : _localDiskPath,
+    			"reposId" : _reposId,
+				"serverId"	: _serverId,
+				"targetReposId" : _targetReposId,
+		    	"targetDiskPath" : _targetDiskPath,
+				"listType": _listType,	//3: LocalEntryAndRemoteStorage
+    		},
+    		dataFilter: asyncDataFilter,
+		};
+        
+    	//zTree's setting
+    	var setting = {
+    	   	//Editable feature settings
+    		edit: {},
+               //zTree data format
+    	   	data: {
+    	   			//Use simple data mode
+    	            simpleData: {
+    	                enable: true,
+    	            },
+    	            //Do not allow modifying the isParent attribute of leaf nodes and parent nodes
+    	            keep: {
+    	            	leaf: true,
+    	            	parent: true,
+    	            },
+    	    },
+    	    //Callback definitions for zTree operations
+    	    callback: {
+    	            beforeAsync: zTreeBeforeAsync, //Callback before async loading, can be used to decide whether async loading is needed
+                    onAsyncSuccess: zTreeOnAsyncSuccess, //Callback after async loading completes
+    	            onClick: zTreeOnClick,
+    	            onDblClick: zTreeOnDbClick,
+    	            beforeRightClick: zTreeBeforeRightClick,
+    	            onRightClick: zTreeOnRightClick, //Defining this callback blocks the browser's right-click event
+    	    },
+    	};
+    	
+    	setting.async = async;
+	    
+    	var zTree = $.fn.zTree.init($("#ztreeForFileSelector"), setting, data);
+	    if(node && node.docId)	//try to select the node
+	    {
+	    	var treeNode = zTree.getNodeByParam("id", node.docId);
+    		if(treeNode && treeNode != null)
+    		{
+    		 	zTree.selectNode(treeNode);
+    			_selectedNode = treeNode;
+    		}
+	    }
+	    else
+	    {
+	    	var rootNode = zTree.getNodeByParam("id", 0);
+			if(rootNode)
+			{
+				zTree.expandNode(rootNode, true, false, true); //Expand the root directory
+			}
+	    }
+	}
+	
+	function buildRootDoc(repos)
+	{
+		var node = {};
+		node.vid = _reposId;
+		node.id = 0;
+		node.docId = 0;	//docId same to id
+		node.pid = -1;
+		node.path = "";
+		node.name = "";
+		node.type = 2;	//rootDoc must be folder
+		return node;
+	}
+	
+	function getInitMenu(node)
+   	{
+		console.log("getInitMenu node:", node);
+		var docId = 0;
+		var path = "";
+		var name = "";
+		if(node)
+		{
+			path = node.path;
+			name = node.name;
+		}
+		
+		$.ajax({
+		    url : "/DocSystem/Doc/getInitSubDocList.do",
+		    type : "post",
+		    dataType : "json",
+		    data : {
+		        storageType: _storageType,
+		        localDiskPath: _localDiskPath,
+		        reposId  : _reposId,
+		    	serverId : _serverId,
+		    	targetReposId: _targetReposId,
+		    	targetDiskPath: _targetDiskPath,
+		    	path: path,
+		    	name: name,
+		    	listType : 3,    //LocalEntryAndRemoteStorage
+		    },
+		    success : function (ret) {
+		        	if( "ok" == ret.status ){
+		        		console.log("getInitMenu() ret",ret);
+
+		        		var docList = ret.data || [];
+		        		InitMenu(docList, node);
+		            }
+		            else
+		           	{
+						showErrorMessage("Failed to get directory: " + ret.msgInfo);
+		           	}
+		        },
+		        error : function () {
+		            showErrorMessage("Failed to get directory: server error");
+		        }
+		    });
+	}
+	
+	function InitMenu(menu, node)
+	{
+		var rootDoc = buildRootDoc(_repos);
+		menu.push(rootDoc);
+		formatDocList(menu);
+	    zTreeInit(menu, node);
+	}
+	
+	function fileSelectorPageInit(config)
+	{
+		//Initial directory
+		console.log("fileSelectorPageInit() config:",config);
+		_config = config || {};
+		_storageType = _config.storageType;
+		
+		if(_config.localDiskPath)
+		{
+			_localDiskPath = _config.localDiskPath;	
+		}
+		
+		if(_config.reposId)
+		{
+			_reposId = _config.reposId;	
+			_repos = config.repos;
+		}
+		
+		if(_config.serverId)
+		{
+			_serverId = _config.serverId;
+			if(_config.targetDiskPath)
+			{
+				_targetDiskPath = _config.targetDiskPath;
+			}
+			if(_config.targetReposId)
+			{
+				_targetReposId = _config.targetReposId;	
+			}
+		}
+		
+		if(_config.listType)
+		{
+			_listType = _config.listType;
+		}
+		
+		_docInfo = config.doc;
+		
+		if(_config.menu)
+		{
+			InitMenu(_config.menu, _docInfo);
+		}
+		else
+		{
+			getInitMenu(_docInfo);
+		}
+	}
+	
+	function closeFileSelectorDialog()
+	{
+		closeBootstrapDialog("fileSelector");
+	}
+
+	function doSelect()
+	{
+		console.log("doSelect() _selectedNode:",_selectedNode);
+
+		//callbck
+		_config.onSelect && _config.onSelect(_selectedNode);
+		
+		closeFileSelectorDialog();	
+	}
+	
+	function cancelSelect()
+	{
+		closeFileSelectorDialog();
+	}
+	
+	//Interfaces exposed to the outside
+    return {
+    	fileSelectorPageInit: function(config){
+    		fileSelectorPageInit(config);
+		},
+		doSelect: function(){
+			doSelect();
+		},		
+		cancelSelect: function(){
+			cancelSelect();
+		},    };
+})();
+</script>
+

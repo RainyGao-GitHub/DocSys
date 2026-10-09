@@ -1,0 +1,139 @@
+<div class="form-horizontal">
+	<div class="form-group">
+    	<label class="control-label col-lg-3" for="server">Target Server</label>
+        <div class="col-lg-9">
+        	<input type="text" class="form-control" id="migrateUrl" placeholder="http://localhost:8100"/>
+        </div> 
+    </div>
+    
+    <div class="form-group">
+    	<label class="control-label col-lg-3" for="name">User Name</label>
+        <div class="col-lg-9">
+        	<input type="text" class="form-control" id="migrateUser" placeholder="System administrator account on the target server" />
+        </div> 
+    </div>
+
+    <div class="form-group">
+    	<label class="control-label col-lg-3" for="password">Password</label>
+        <div class="col-lg-9">
+        	<input type="password" class="form-control" id="migratePwd" placeholder="System administrator password on the target server"/>
+        </div> 
+    </div>
+    
+    <div class="form-group">
+    	<label class="control-label col-lg-3" for="path">Repository Location</label>
+        <div class="col-lg-9">
+        	<input type="text" class="form-control" id="migratePath" placeholder="Leave empty to use the default repository location of the target server."/>
+        </div>
+    </div>
+	
+	<div class="form-group">
+		<label class="control-label col-lg-3" for="type">Repository Conflict Resolution</label>
+       	<div class="col-lg-9" style="margin-top:10px;">
+			<select class="form-control" id="migrateConflictSolution" onchange="doSelectMigrateConflictSolution();" style="width: 100%">   
+				<option value="0" selected="selected">Skip Automatically</option>   
+				<option value="1">Overwrite</option>
+				<option value="2">Create New Repository</option>   
+			</select>
+       </div>
+	</div>
+    
+    <div class="form-group">
+    	<label class="control-label col-lg-3" for="info">Migration Info</label>
+        <div class="col-lg-9">
+        	<textarea type="text" class="form-control" id="systemMigrateInfo" disabled="disabled" />
+        </div>
+    </div>
+        
+    <!-- Buttons -->
+    <div class="form-group">
+    	<div class="col-lg-offset-9 col-lg-2">
+        	<button id="systemMigrateBtn" type="submit" class="btn btn-success" onclick="doSystemMigrate()">Start Migration</button>
+        </div>
+    </div>
+ </div>
+ 
+<script src="js/base64.js"></script>
+<script type="text/javascript">
+	var migrateReposesInfo = {};
+	function SystemMigrateConfirmPageInit(reposList)
+	{
+		console.log("SystemMigrateConfirmPageInit()");
+		migrateReposesInfo.reposList = reposList;
+
+		var reposListInfo = "";
+		var reposIds = "";
+		for( var i = 0 ; i < reposList.length ; i++ )
+		{
+			var repos = reposList[i];
+			reposListInfo += "[" + repos.id + "] " + repos.name + ";  \n";
+			reposIds += repos.id + ",";
+		}
+		migrateReposesInfo.reposListInfo = reposListInfo;
+		migrateReposesInfo.reposIds = reposIds;
+		$("#systemMigrateInfo").val(reposListInfo);
+	}
+	
+	function showSystemMigrateConfirmModal(text){
+		$(".systemMigrateConfirmModal").fadeIn("slow");
+	}
+	
+	function closeSystemMigrateConfirmModal(){
+		$(".systemMigrateConfirmModal").fadeOut("slow");
+	}
+	
+	function doSystemMigrate()
+	{
+		console.log("doSystemMigrate");
+		
+		var serverUrl = $("#migrateUrl").val();
+		var user = $("#migrateUser").val();
+		var pwd =  base64_encode($("#migratePwd").val());
+		var reposStorePath = $("#migratePath").val();
+		var conflictSolution = $("#migrateConflictSolution").val();
+		var reposIds = migrateReposesInfo.reposIds;
+		
+		if(!serverUrl)
+		{
+	    	alert("Target server cannot be empty!");
+	    	return false;
+		}
+		
+        $.ajax({
+            url : "/DocSystem/Bussiness/systemMigrate.do",
+            type : "post",
+            dataType : "json",
+            data : {
+            	serverUrl : serverUrl,
+            	user : user,
+            	pwd : pwd,
+            	reposStorePath : reposStorePath,
+            	conflictSolution: conflictSolution,
+            	reposIds: reposIds,
+            },
+            success : function (ret) {
+                if( "ok" == ret.status )
+                {
+                	console.log("doSystemMigrate ret:", ret);
+                    $("#systemMigrateBtn").text("Migration Completed");
+                    $("#systemMigrateInfo").val(ret.dataEx.info);
+                	//alert("Migration completed");
+                }else {
+                	alert("Error: " + ret.msgInfo);      
+                }
+            },
+            error : function () {
+            	alert("Server error: system migration failed");
+            }
+        });
+        
+        //Change the text of the confirm button
+        $("#systemMigrateBtn").attr("disabled",true);
+        $("#systemMigrateBtn").text("Migrating...");        
+    }
+					
+	//Page init code    
+    $(function(){
+    	console.log("systemMigrateConfirm Page init");
+    });
+</script>
