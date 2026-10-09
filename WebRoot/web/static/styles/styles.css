@@ -631,6 +631,17 @@ body {
     font-style: normal;
     color: #c00;
 }
+
+/*P3.2(2026-10-09) 摘要命中词：红 → 黄底 + 去下划线（用户裁定：标题保持原样式、摘要改黄色、改动最小）
+  依据：摘要命中密度实测 1.3 处/100 字（最密一行 11 处 / 718 字），红色文字在此密度下会「整段发红」；
+  黄底（荧光笔）干扰小得多。下划线是链接语义（摘要里会看着能点却点不动），故去掉。
+  中间试过的「方案A 同色加粗」反馈「太过冷清」，故不采用。*/
+.s-content em{
+    color: inherit;
+    background: #fff3cd;
+    border-radius: 2px;
+    text-decoration: none;
+}
 .s-img{
     position: absolute;
 }
