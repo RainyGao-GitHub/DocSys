@@ -31,6 +31,22 @@
                       </select>
                     </td>
                   </tr>
+                  <tr>
+                    <td>字体库状态</td>
+                    <td>
+                      <span id="officeFontsStatus">正在获取...</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>字体库缺失时自动生成</td>
+                    <td>
+                      <select class="form-control" id="officeAutoGenerateFonts" disabled="disabled" style="width:220px;">
+                        <option value="1" {{if value.officeAutoGenerateFonts != 0}}selected="selected"{{/if}}>开启</option>
+                        <option value="0" {{if value.officeAutoGenerateFonts == 0}}selected="selected"{{/if}}>关闭</option>
+                      </select>
+                      <div style="color:#888;font-size:12px;">开启后：新安装/在线升级导致字体库缺失时，由前端自动检测并生成（首次约 10-30 分钟，期间无法使用Office）；自动生成失败一次后不再重试，改为提示管理员手动「重置字体库」。</div>
+                    </td>
+                  </tr>
                   </tbody>
                 </table>
 

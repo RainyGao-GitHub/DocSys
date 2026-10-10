@@ -181,3 +181,50 @@ function CompareObj(objA, objB, flag) {
     }
     return flag;
 }
+
+/* Office 字体库静默预检：缺失时触发一次自动生成（后端后台线程执行，不影响本页面）。
+   目的：新装/升级后字体库被清空时，由前端发起自动生成，避免管理员忘记手动「重置字体库」。
+   见 devDocs/Office字体库自动生成方案.md。这里用原生 XHR，避免依赖 jQuery 是否已加载。*/
+(function officeFontsAutoCheck(){
+	if(window.__officeFontsAutoCheckStarted) {
+		return;
+	}
+	window.__officeFontsAutoCheckStarted = true;
+
+	function postOfficeFonts(url, callback){
+		try {
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", url, true);
+			xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState != 4) {
+					return;
+				}
+				var ret = null;
+				try {
+					ret = JSON.parse(xhr.responseText);
+				} catch(e) {
+					ret = null;
+				}
+				callback(ret);
+			};
+			xhr.send(null);
+		} catch(e) {
+			callback(null);
+		}
+	}
+
+	postOfficeFonts("/DocSystem/Bussiness/getOfficeFontsStatus.do", function(ret){
+		if(!ret || "ok" != ret.status || !ret.data) {
+			return;		//未登录 / 接口不可用：忽略
+		}
+		var status = ret.data;
+		if(status.installed == false || status.ready == true || status.generating == true) {
+			return;		//未安装Office / 已就绪 / 已在生成中
+		}
+		console.log("officeFontsAutoCheck() 字体库缺失，触发自动生成。missing:", status.missing);
+		postOfficeFonts("/DocSystem/Bussiness/autoGenerateOfficeFonts.do", function(ret2){
+			console.log("officeFontsAutoCheck() 自动生成请求结果:", ret2);
+		});
+	});
+})();

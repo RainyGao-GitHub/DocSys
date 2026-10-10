@@ -1473,6 +1473,7 @@ public class ManageController extends BaseController{
 		config.put("systemDisabled", systemDisabled);
 		config.put("officeDisabled", officeDisabled);
 		config.put("isOnlyOfficeUsed", isOnlyOfficeUsed ? 1 : 0);
+		config.put("officeAutoGenerateFonts", Path.getOfficeAutoGenerateFonts() ? 1 : 0);
 		config.put("redisEn", redisEn);
 		config.put("redisUrl", redisUrl);
 		config.put("clusterServerUrl", clusterServerUrl);
@@ -1865,6 +1866,7 @@ public class ManageController extends BaseController{
 			String redisUrl,
 			String clusterServerUrl,
 			Integer isOnlyOfficeUsed,
+			Integer officeAutoGenerateFonts,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** setSystemInfo.do ***********************");
@@ -1881,7 +1883,8 @@ public class ManageController extends BaseController{
 				+ " llmConfig:" + llmConfig
 				+ " logLevel:" + logLevel + " logFile:" + logFile
 				+ " redisEn:" + redisEn + " redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl
-				+ " isOnlyOfficeUsed:" + isOnlyOfficeUsed);
+				+ " isOnlyOfficeUsed:" + isOnlyOfficeUsed
+				+ " officeAutoGenerateFonts:" + officeAutoGenerateFonts);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
@@ -1909,7 +1912,8 @@ public class ManageController extends BaseController{
 			redisEn == null &&
 			redisUrl == null &&
 			clusterServerUrl == null &&
-			isOnlyOfficeUsed == null)	
+			isOnlyOfficeUsed == null &&
+			officeAutoGenerateFonts == null)	
 		{
 			docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
@@ -2087,6 +2091,12 @@ public class ManageController extends BaseController{
 		{
 			BaseFunction.isOnlyOfficeUsed = (isOnlyOfficeUsed == 1);
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "isOnlyOfficeUsed", isOnlyOfficeUsed+"");
+		}
+		
+		if(officeAutoGenerateFonts != null)
+		{
+			//字体库缺失时是否允许前端自动生成（默认开启）；见 devDocs/Office字体库自动生成方案.md
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "OfficeAutoGenerateFonts", (officeAutoGenerateFonts == 1? "true" : "false"));
 		}
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)

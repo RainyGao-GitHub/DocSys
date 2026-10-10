@@ -864,6 +864,19 @@ function lang(str)
 		"是否取消Office安装！" : "Do you want to cancel install OfficeEditor ?",
 		"是否取消字体安装！" : "Do you want to cancel install Office Fonts ?",
 		"安装成功" : "Install Success",
+		//Office字体库自动检测与生成（见 devDocs/Office字体库自动生成方案.md）
+		"字体库正在生成中（首次可能需要 10-30 分钟），完成后本页面会自动打开，也可稍后重试" : "Office fonts library is being generated (10-30 minutes for the first time). This page will open automatically when it is ready, or you can try again later",
+		"字体库初始化超时，请在 管理后台-系统管理-Office编辑器 手动重置字体库后重试" : "Timed out while initializing the Office fonts library. Please reset the fonts library manually (Admin Console - System - Office Editor) and try again",
+		"字体库状态" : "Fonts Library Status",
+		"字体库缺失时自动生成" : "Auto Generate Fonts When Missing",
+		"获取字体库状态失败" : "Failed to get fonts library status",
+		"未安装Office编辑器" : "OfficeEditor is not installed",
+		"已就绪" : "Ready",
+		"生成中（首次约 10-30 分钟），期间无法使用Office" : "Generating (10-30 minutes for the first time), Office is unavailable meanwhile",
+		"缺失，需重新生成" : "Missing, needs to be regenerated",
+		"；「字体库缺失时自动生成」已关闭，请手动重置字体库" : "; 'Auto Generate Fonts When Missing' is disabled, please reset the fonts library manually",
+		"；自动生成已失败" : "; automatic generation failed",
+		"，请手动重置字体库" : ", please reset the fonts library manually",
 		
 		//System
 		"新建仓库" : "Create Reposiotry",

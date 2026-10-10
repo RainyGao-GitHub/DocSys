@@ -1964,7 +1964,8 @@ function applyStorePathPickResult(fieldId, path){
 }
 
 //子页共用的取数 + 渲染：templateName 为 tmpl 下的模板名（不含 _en）
-function showSystemInfoPage(templateName, normalize){
+//normalize：渲染前修正 systemInfo；afterRender：渲染完成后的补充动作（如动态状态刷新）
+function showSystemInfoPage(templateName, normalize, afterRender){
 	$.ajax({
         url : "/DocSystem/Manage/getSystemInfo.do",
         type : "post",
@@ -1980,6 +1981,10 @@ function showSystemInfoPage(templateName, normalize){
             		normalize();
             	}
             	$Func.render($("#container"),templateName + langExt,{"value":systemInfo});
+            	if(afterRender)
+            	{
+            		afterRender();
+            	}
             }
             else
             {
@@ -3428,7 +3433,7 @@ function saveSystemClusterSet(){
 }
 
 //Office编辑器（officeEditorApi / openOfficePath 是残留配置，系统已不再使用，不再提交）
-var SYSTEM_OFFICE_FIELDS = ["isOnlyOfficeUsed"];
+var SYSTEM_OFFICE_FIELDS = ["isOnlyOfficeUsed", "officeAutoGenerateFonts"];
 
 function showSystemOfficeEditor(){
 	showSystemInfoPage("systemOfficeEditor", function(){
@@ -3436,6 +3441,13 @@ function showSystemOfficeEditor(){
 		{
 			systemInfo.isOnlyOfficeUsed = 0;
 		}
+		if(systemInfo.officeAutoGenerateFonts == undefined)
+		{
+			systemInfo.officeAutoGenerateFonts = 1;
+		}
+	}, function(){
+		//渲染完成后才能取 DOM：刷新字体库状态（只读，生成中会自动轮询）
+		refreshOfficeFontsStatus();
 	});
 }
 
@@ -3447,13 +3459,66 @@ function enableSystemOfficeEditorSet(){
 function cancelSystemOfficeEditorSet(){
 	//Office引擎改为下拉框：0=默认（系统自带转换器）、1=OnlyOffice
 	$("#isOnlyOfficeUsed").val(systemInfo.isOnlyOfficeUsed == 1? 1: 0);
+	$("#officeAutoGenerateFonts").val(systemInfo.officeAutoGenerateFonts == 0? 0: 1);
 	setSystemPageEditMode("SystemOfficeEditor", SYSTEM_OFFICE_FIELDS, false);
 }
 
 function saveSystemOfficeEditorSet(){
 	var isOnlyOfficeUsed = parseInt($("#isOnlyOfficeUsed").val(), 10) == 1? 1: 0;
+	var officeAutoGenerateFonts = parseInt($("#officeAutoGenerateFonts").val(), 10) == 0? 0: 1;
 	setSystemPageEditMode("SystemOfficeEditor", SYSTEM_OFFICE_FIELDS, false);
-	postSystemInfo({ isOnlyOfficeUsed: isOnlyOfficeUsed }, showSystemOfficeEditor);
+	postSystemInfo({ isOnlyOfficeUsed: isOnlyOfficeUsed, officeAutoGenerateFonts: officeAutoGenerateFonts }, showSystemOfficeEditor);
+}
+
+//字体库状态（只读展示，数据来自 /Bussiness/getOfficeFontsStatus.do；生成中时自动轮询刷新）
+function refreshOfficeFontsStatus(){
+	$.ajax({
+		url : "/DocSystem/Bussiness/getOfficeFontsStatus.do",
+		type : "post",
+		dataType : "json",
+		data : {},
+		success : function (ret) {
+			if("ok" != ret.status || ret.data == undefined)
+			{
+				$("#officeFontsStatus").text(_Lang("获取字体库状态失败", " : ", ret.msgInfo));
+				return;
+			}
+			renderOfficeFontsStatus(ret.data);
+		},
+		error : function () {
+			$("#officeFontsStatus").text(_Lang("获取字体库状态失败", " : ", "服务器异常"));
+		}
+	});
+}
+
+function renderOfficeFontsStatus(status){
+	console.log("renderOfficeFontsStatus()", status);
+	if(status.installed == false)
+	{
+		$("#officeFontsStatus").text(_Lang("未安装Office编辑器"));
+		return;
+	}
+	if(status.ready == true)
+	{
+		$("#officeFontsStatus").text(_Lang("已就绪"));
+		return;
+	}
+	if(status.generating == true)
+	{
+		$("#officeFontsStatus").text(_Lang("生成中（首次约 10-30 分钟），期间无法使用Office") + (status.taskInfo? "（" + status.taskInfo + "）" : ""));
+		setTimeout(refreshOfficeFontsStatus, 15000);	//生成中：15秒后自动刷新状态
+		return;
+	}
+	var msg = _Lang("缺失，需重新生成") + ": " + (status.missing? status.missing.join(", ") : "");
+	if(status.autoEnabled == false)
+	{
+		msg += _Lang("；「字体库缺失时自动生成」已关闭，请手动重置字体库");
+	}
+	else if(status.autoFailed == true)
+	{
+		msg += _Lang("；自动生成已失败", status.lastError? ":" + status.lastError : "", "") + _Lang("，请手动重置字体库");
+	}
+	$("#officeFontsStatus").text(msg);
 }
 
 function restartTomcat(){

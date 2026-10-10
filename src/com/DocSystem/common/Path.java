@@ -600,6 +600,34 @@ public class Path {
 		return "1".equals(val) || "true".equalsIgnoreCase(val);
 	}
 	
+	//获取「字体库缺失时自动生成」的配置（默认true=开启；见 devDocs/Office字体库自动生成方案.md）
+	public static boolean getOfficeAutoGenerateFonts() {
+		String val = ReadProperties.read("docSysConfig.properties", "OfficeAutoGenerateFonts");
+		if(val == null || val.isEmpty())
+		{
+			return true; // 默认开启：新装/升级后字体库缺失时自动生成一次
+		}
+		return !("0".equals(val) || "false".equalsIgnoreCase(val));
+	}
+	
+	//获取「字体库自动生成最大尝试次数」的配置（默认1=只自动尝试一次，失败后改为提示管理员手动重置）
+	public static int getOfficeAutoGenerateFontsMaxAttempts() {
+		String val = ReadProperties.read("docSysConfig.properties", "OfficeAutoGenerateFontsMaxAttempts");
+		if(val != null && !val.isEmpty())
+		{
+			try {
+				int attempts = Integer.parseInt(val.trim());
+				if(attempts > 0)
+				{
+					return attempts;
+				}
+			} catch (Exception e) {
+				Log.debug("getOfficeAutoGenerateFontsMaxAttempts() 配置值非法:" + val);
+			}
+		}
+		return 1;
+	}
+	
 	public static Integer getLogLevel() {
 		String logLevelString = ReadProperties.read("docSysConfig.properties", "logLevel");
 		if(logLevelString != null && !logLevelString.isEmpty())

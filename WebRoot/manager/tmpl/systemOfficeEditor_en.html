@@ -31,6 +31,22 @@
                       </select>
                     </td>
                   </tr>
+                  <tr>
+                    <td>Fonts Library Status</td>
+                    <td>
+                      <span id="officeFontsStatus">Loading...</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Auto Generate Fonts</td>
+                    <td>
+                      <select class="form-control" id="officeAutoGenerateFonts" disabled="disabled" style="width:220px;">
+                        <option value="1" {{if value.officeAutoGenerateFonts != 0}}selected="selected"{{/if}}>Enabled</option>
+                        <option value="0" {{if value.officeAutoGenerateFonts == 0}}selected="selected"{{/if}}>Disabled</option>
+                      </select>
+                      <div style="color:#888;font-size:12px;">When enabled: if the fonts library is missing after a fresh install / online upgrade, it is detected and generated automatically by the browser (10-30 minutes for the first time, Office is unavailable meanwhile). After one failed attempt it stops retrying and asks the administrator to reset the fonts library manually.</div>
+                    </td>
+                  </tr>
                   </tbody>
                 </table>
 
