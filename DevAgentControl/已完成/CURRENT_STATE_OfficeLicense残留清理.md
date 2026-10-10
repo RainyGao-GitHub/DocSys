@@ -1,6 +1,6 @@
 # CURRENT_STATE — OfficeLicense 残留代码清理（工作卡）
 
-建立于 2026-10-10。**状态：已完成实现与验证，未提交（等用户确认）。**
+建立于 2026-10-10。**状态：已收尾归档（2026-10-10）—— 实现与验证完成，已由用户提交（`93d6ccab4 【优化】清除Office证书安装残留`，随该提交一起归档的还有上一张卡「中英文页面一致性修复」）。未做项：英文后台「证书安装」页状态列的翻译缺失（见下「顺带发现」）—— 属翻译缺失而非本次清理范围，留待以后。**
 
 > 上一任务「中英文页面一致性修复」已提交（`3021fe217 【BugFix】英文版页面修复`）并归档到 `DevAgentControl/已完成/`。
 
@@ -46,13 +46,15 @@
 
 ## 下一步
 
-1. 汇报 + 等用户确认后提交
-2. 提交后：把本卡移到 `DevAgentControl/已完成/`
-3. 若用户要修上面那条翻译缺失：把 `SystemLicensesDisplay()` 里 3 个状态串改用 `_Lang("未安装","...","Not Installed")` 形式（单独做，不与本次混together）
+**无待办 —— 本任务已收尾归档。**
+
+- 提交：`93d6ccab4 【优化】清除Office证书安装残留`（主仓库；含本卡 + 上张卡的归档移动 + `main.js` −48 + `en.js` −3）。
+- 归档后**独立复查**过一遍：`WebRoot` 全树对 `showAddOfficeLicensePanel` / `showOfficeLicenseInfoPanel` / `OfficeLicenseInfoPageCallback` / `新增Office证书` / `Add OfficeEidtor License` / `officeLicense` 搜 **0 命中**（ripgrep），与卡里结论一致。
+- 若以后要修「顺带发现」的翻译缺失：把 `SystemLicensesDisplay()` 里 3 个状态串改用 `_Lang("未安装","...","Not Installed")` 形式（单独做，不要与清理混在一起）。
 
 ## 生效约束
 
-- **未获用户确认前不要提交**
+- 本任务**已完成并提交**；**未获新裁定前不要再改这块**。
 - **不动后端**（`src/**` 的 `officeLicenseInfo` 全是活代码；本次只清 `WebRoot` 前端残留）
 - 不顺手做其他清理（用户明确要求别把不相关改动混在一起）
 - 静态文件经 junction 生效 ⇒ 无需编译、无需重启 Tomcat；前端 E2E 必须绕缓存
