@@ -819,6 +819,16 @@ public class Path {
 		return "encryptConfig.txt";
 	}
 	
+	//仓库「允许操作隐藏文件和系统文件」配置
+	public static String getReposHiddenFileConfigPath(Repos repos) {
+		String path = getReposPath(repos) + "data/hiddenFileSetting/";
+		return path;
+	}
+	
+	public static String getReposHiddenFileConfigFileName() {
+		return "hiddenFileConfig.txt";
+	}
+	
 	public static String getReposVersionIgnoreConfigPath(Repos repos) {
 		String path = getReposPath(repos) + "data/versionIgnoreSetting/";
 		return path;

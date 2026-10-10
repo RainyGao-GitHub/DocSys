@@ -529,6 +529,7 @@ public class ReposController extends BaseController{
 			String textSearch,
 			String recycleBin,
 			Integer encryptType,
+			Integer allowHiddenFile,
 			String autoSyncup,
 			String autoBackup,
 			String lang,
@@ -541,7 +542,7 @@ public class ReposController extends BaseController{
 				+ " remoteStorage: " + remoteStorage 
 				+ " verCtrl: " + verCtrl  + " isRemote:" +isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1  + " isRemote1:" +isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
-				+ "textSearch:" + textSearch + " recycleBin:" + recycleBin + " autoSyncup:" + autoSyncup + " autoBackup:" + autoBackup);
+				+ "textSearch:" + textSearch + " recycleBin:" + recycleBin + " encryptType:" + encryptType + " allowHiddenFile:" + allowHiddenFile + " autoSyncup:" + autoSyncup + " autoBackup:" + autoBackup);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
@@ -758,6 +759,12 @@ public class ReposController extends BaseController{
 		initReposVersionIgnoreConfig(repos);
 		
 		setReposEncrypt(repos, encryptType);
+		
+		//「允许操作隐藏文件和系统文件」仅超级管理员可设置
+		if(login_user.getType() == 2)
+		{
+			setReposHiddenFileConfig(repos, allowHiddenFile);
+		}
 		
 		InitReposAuthInfo(repos,login_user,rt);		
 
@@ -1471,6 +1478,7 @@ public class ReposController extends BaseController{
 			String textSearch,
 			String recycleBin,
 			Integer encryptType,
+			Integer allowHiddenFile,
 			String autoSyncup,
 			String autoBackup,
 			String lang,
@@ -1483,7 +1491,7 @@ public class ReposController extends BaseController{
 				+ " remoteStorage:" + remoteStorage 
 				+" verCtrl: " + verCtrl + " isRemote:" + isRemote + " localSvnPath:" + localSvnPath + " svnPath: " + svnPath + " svnUser: " + svnUser + " svnPwd: " + svnPwd 
 				+ " verCtrl1: " + verCtrl1 + " isRemote1:"+ isRemote1 + " localSvnPath1:" + localSvnPath1 + " svnPath1: " + svnPath1 + " svnUser1: " + svnUser1 + " svnPwd1: " + svnPwd1
-				+ " textSearch:" + textSearch + " recycleBin:" + recycleBin + " encryptType:" + encryptType + " autoSyncup:" + autoSyncup+ " autoBackup:" + autoBackup);
+				+ " textSearch:" + textSearch + " recycleBin:" + recycleBin + " encryptType:" + encryptType + " allowHiddenFile:" + allowHiddenFile + " autoSyncup:" + autoSyncup+ " autoBackup:" + autoBackup);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		User login_user = getLoginUser(session, request, response, rt);
@@ -1597,6 +1605,19 @@ public class ReposController extends BaseController{
 				setReposEncrypt(reposInfo, encryptType);
 				encryptTypeChanged = true;
 			}			
+		}
+		
+		//「允许操作隐藏文件和系统文件」仅超级管理员可设置（配置文件: <仓库目录>/data/hiddenFileSetting/hiddenFileConfig.txt）
+		if(allowHiddenFile != null && login_user.getType() == 2)
+		{
+			Integer curAllowHiddenFile = (reposInfo.allowHiddenFile == null) ? 0 : reposInfo.allowHiddenFile;
+			if(allowHiddenFile.intValue() != curAllowHiddenFile.intValue())
+			{
+				if(setReposHiddenFileConfig(reposInfo, allowHiddenFile) == false)
+				{
+					Log.info("updateReposInfo() 保存「允许操作隐藏文件和系统文件」配置失败");
+				}
+			}
 		}
 		
 		if(autoSyncup != null)

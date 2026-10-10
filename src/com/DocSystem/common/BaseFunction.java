@@ -3188,6 +3188,43 @@ public class BaseFunction{
 		return repos.getType() < 3;
 	}
 	
+	//*** 仓库「允许操作隐藏文件和系统文件」开关 ****
+	//未开启（默认）时: 文件区不显示隐藏/系统条目，且针对它们的操作一律拒绝
+	protected static boolean isAllowHiddenFileOp(Repos repos) {
+		return repos != null && repos.allowHiddenFile != null && repos.allowHiddenFile != 0;
+	}
+	
+	//未开启开关时，检查目标条目（含 path 的每一级父目录与末级 name）是否为隐藏/系统条目；命中则报错并返回false
+	//列表不显示只是给界面看的，这里才是挡住「手工构造请求直接访问隐藏目录/文件」的地方
+	protected boolean checkHiddenFileAccess(Repos repos, Doc doc, ReturnAjax rt) {
+		if(isAllowHiddenFileOp(repos) || doc == null)
+		{
+			return true;
+		}
+		
+		String localRootPath = doc.getLocalRootPath();
+		return checkHiddenFileAccess(repos, localRootPath, doc.getPath(), doc.getName(), rt);
+	}
+	
+	protected boolean checkHiddenFileAccess(Repos repos, String localRootPath, String path, String name, ReturnAjax rt) {
+		if(isAllowHiddenFileOp(repos))
+		{
+			return true;
+		}
+		
+		if(localRootPath == null || localRootPath.isEmpty())
+		{
+			localRootPath = Path.getReposRealPath(repos);
+		}
+		
+		if(FileUtil.containsHiddenOrSystemEntry(localRootPath, path, name, OSType))
+		{
+			Log.debug("checkHiddenFileAccess() [" + path + name + "] 为隐藏/系统文件，当前仓库不允许操作");
+			setPermissionError(rt, "该目录或文件为隐藏/系统文件，当前仓库不允许操作！");
+			return false;
+		}
+		return true;
+	}
 	
 	//*** 仓库远程存储配置 **********
 	protected static void initReposRemoteStorageConfig(Repos repos, String remoteStorage)
@@ -4962,6 +4999,51 @@ public class BaseFunction{
 		}
 		
 		return FileUtil.moveFileOrDir(path, name, path, "old" + name, true);
+	}
+	
+	//*** 仓库「允许操作隐藏文件和系统文件」配置 ****
+	//注意: 不缓存，每次直读（保证保存即生效，且集群各节点天然一致）
+	protected Integer getReposHiddenFileConfig(Repos repos) {
+		String path = Path.getReposHiddenFileConfigPath(repos);
+		String name = Path.getReposHiddenFileConfigFileName();
+		String content = FileUtil.readDocContentFromFile(path, name, "UTF-8");
+		if(content == null || content.isEmpty())
+		{
+			return 0;	//未配置: 不允许
+		}
+		
+		try {
+			JSONObject json = JSON.parseObject(content);
+			Integer allow = json.getInteger("allow");
+			if(allow != null && allow != 0)
+			{
+				return 1;
+			}
+		} catch (Exception e) {
+			Log.info("getReposHiddenFileConfig() 配置解析失败 " + path + name);
+			Log.info(e);
+		}
+		return 0;
+	}
+	
+	protected boolean setReposHiddenFileConfig(Repos repos, Integer allowHiddenFile) {
+		if(allowHiddenFile == null || allowHiddenFile == 0)
+		{
+			return removeReposHiddenFileConfig(repos);
+		}
+		
+		JSONObject json = new JSONObject();
+		json.put("allow", 1);
+		
+		String path = Path.getReposHiddenFileConfigPath(repos);
+		String name = Path.getReposHiddenFileConfigFileName();
+		return FileUtil.saveDocContentToFile(json.toJSONString(), path, name, "UTF-8");
+	}
+	
+	protected boolean removeReposHiddenFileConfig(Repos repos) {
+		String path = Path.getReposHiddenFileConfigPath(repos);
+		String name = Path.getReposHiddenFileConfigFileName();
+		return FileUtil.delFile(path + name);
 	}
 	
 	protected EncryptConfig recoverReposEncryptConfig(Repos repos) 

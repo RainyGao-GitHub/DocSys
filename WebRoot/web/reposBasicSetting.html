@@ -47,6 +47,13 @@
                	<div id="reposStorageRealDocPathConfig" style="display:none">
 					<input class="form-control" type="text" id="repos-realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width: 100%"/>
 				</div>
+				
+				<label style="margin-top:10px">允许操作隐藏文件和系统文件
+					<span style="margin-left:20px">
+						<input type="checkbox" id="allowHiddenFile" value="0" disabled="disabled" onclick="ReposConfig.doSetAllowHiddenFileConfirm()">
+					</span>
+				</label>
+				<div style="font-size:12px;color:#999">默认不允许：文件区不显示隐藏文件和系统文件，也不能修改、删除或下载它们。（仅超级管理员可设置）</div>
 			</div>
 
             <div id="verCtrlDiv"  style="margin-top:20px;">

@@ -101,6 +101,7 @@ public class Repos {
 	public RecycleBinConfig recycleBinConfig;
 	public Integer encryptType;
 	public EncryptConfig encryptConfig;
+	public Integer allowHiddenFile;	//是否允许操作隐藏文件和系统文件（0/null:不允许 1:允许）
 	public Boolean disableRemoteAction;	//用于禁用远程操作（在远程接口中设置成true）
 	public String verReposIndexLib;	//版本仓库的indexLib
 	

@@ -1230,6 +1230,13 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
 		//repos是本地服务器的目录（远程的暂不支持）
 		String ret = localExecuteDoc(repos, doc, cmdLine, reposAccess.getAccessUser());
 		
@@ -2421,12 +2428,29 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		
 		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true,localRootPath, localVRootPath, null, null);
+		
+		//隐藏/系统文件检查: 未开启「允许操作隐藏文件和系统文件」的仓库不允许下载
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		
 		if(downloadList != null && downloadList.isEmpty() == false)
 		{
 			//如果下载列表非空，表示要打包下载，那么需要逐个文件检查权限，此时Doc是一个虚拟的doc只是用于指定文件的名字
 			List<Doc> docList = getDocListFromDownloadList(repos, downloadList);
 			for(Doc subDoc: docList)
 			{
+				//隐藏/系统文件检查
+				if(checkHiddenFileAccess(repos, subDoc, rt) == false)
+				{
+					writeJson(rt, response);
+					addSystemLog(request, reposAccess.getAccessUser(), "downloadDocPrepare", "downloadDocPrepare", "下载文件", taskId, "失败", repos, subDoc, null, buildSystemLogDetailContent(rt));
+					return;
+				}
+				
 				//检查用户是否有权限下载文件
 				if(checkUserDownloadRight(repos, reposAccess.getAccessUser().getId(), subDoc, reposAccess.getAuthMask(), rt) == false)
 				{
@@ -2522,6 +2546,12 @@ public class DocController extends BaseController{
 
 	public void downloadDocPrepare_FSM(Repos repos, Doc doc, ReposAccess reposAccess,  boolean remoteStorageEn, ReturnAjax rt)
 	{	
+		//隐藏/系统文件检查: 未开启「允许操作隐藏文件和系统文件」的仓库不允许下载
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			return;
+		}
+		
 		if(isFSM(repos) == false)
 		{
 			//文件服务器前置仓库不允许远程存储
@@ -2786,6 +2816,12 @@ public class DocController extends BaseController{
 
 	public void downloadVDocPrepare_FSM(Repos repos, Doc doc, User accessUser, ReturnAjax rt)
 	{	
+		//隐藏/系统文件检查: 未开启「允许操作隐藏文件和系统文件」的仓库不允许下载
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			return;
+		}
+		
 		Doc vDoc = buildVDoc(doc);
 
 		Log.printObject("downloadVDocPrepare_FSM vDoc:",vDoc);
@@ -4761,6 +4797,13 @@ public class DocController extends BaseController{
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(reposId, null, null, reposPath, path, name, null, null, true, localRootPath, localVRootPath, null, null);
 		
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
 		//TODO: 根据用户的权限获取真实的preview值，前端需要该值进行逻辑判断
 		String previewForCheck = preview;
 		if(saveAsExt != null && saveAsExt.isEmpty() == false)
@@ -5407,6 +5450,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, Path.getReposRealPath(repos), path, name, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
 		if(historyType == null)
 		{
 			historyType = HistoryType_RealDoc;
@@ -5711,6 +5761,13 @@ public class DocController extends BaseController{
 		if(name == null)
 		{
 			name = "";
+		}
+		
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, Path.getReposRealPath(repos), path, name, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
 		}
 		
 		String reposPath = Path.getReposPath(repos);
@@ -7767,6 +7824,13 @@ public class DocController extends BaseController{
 			return;
 		}
 		
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, Path.getReposRealPath(repos), path, name, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
 		if(name == null || name.isEmpty())
 		{
 			docSysErrorLog("文件名不能为空！", rt);
@@ -7913,6 +7977,13 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, Path.getReposRealPath(repos), path, name, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
 		String fileSuffix = FileUtil.getFileSuffix(name);
 		if(OfficeDocWriter.isSupportedExt(fileSuffix) == false)
 		{
@@ -8115,6 +8186,13 @@ public class DocController extends BaseController{
 			writeJson(rt, response);
 			return;
 		}
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, Path.getReposRealPath(repos), path, name, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
 		String fileSuffix = FileUtil.getFileSuffix(name);
 		if(OfficeDocEditor.supportedOps(fileSuffix).length == 0)
 		{

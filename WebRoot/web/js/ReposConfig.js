@@ -20,6 +20,8 @@ var ReposConfig = (function () {
         MyJquery.setValue("repos-path", gDocSysConfig.defaultReposStorePath);
         MyJquery.enable("repos-path");
        
+        showAllowHiddenFileAuth();	//「允许操作隐藏文件和系统文件」仅超级管理员可设置
+       
         doSelectFS(); 
         
         MyJquery.setValue("repos-localSvnPath", defaultLocalVerReposStorePath);
@@ -174,6 +176,17 @@ var ReposConfig = (function () {
 	   	{
 		   	$("#isEncryptEnabled").attr("checked","checked");
 	   	}
+	   	
+	   	//允许操作隐藏文件和系统文件（仅超级管理员可设置）
+	   	if(reposInfo.allowHiddenFile == 1)
+	   	{
+		   	$("#allowHiddenFile").attr("checked","checked");
+	   	}
+	   	else
+	   	{
+		   	$("#allowHiddenFile").attr("checked",false);
+	   	}
+	   	showAllowHiddenFileAuth();
 	   	
 	   	//自动同步
 	   	showAutoSyncupConfig(reposInfo);
@@ -1033,6 +1046,7 @@ var ReposConfig = (function () {
 		console.log("newReposSetting.recycleBin:" + recycleBin);
 		
 		newReposSetting.encryptType =  $("#isEncryptEnabled").is(':checked')? 1: 0;
+		newReposSetting.allowHiddenFile =  $("#allowHiddenFile").is(':checked')? 1: 0;
 	    //default to set VirtualDoc VersionControl as GIT
 	    if(newReposSetting.verCtrl1 == 0)
 	    {
@@ -1081,6 +1095,7 @@ var ReposConfig = (function () {
 	                    textSearch: newReposSetting.textSearch,
 	                    recycleBin: newReposSetting.recycleBin,
 	                    encryptType: newReposSetting.encryptType,
+	                    allowHiddenFile: newReposSetting.allowHiddenFile,
 	                    autoSyncup : newReposSetting.autoSyncup,                    
 	                    autoBackup : newReposSetting.autoBackup,                    
 	                },
@@ -1221,6 +1236,10 @@ var ReposConfig = (function () {
 	       		{
 	       			return true;
 	       		}
+	       		if(oldSetting.allowHiddenFile != newSetting.allowHiddenFile)
+	       		{
+	       			return true;
+	       		}
 	       		
 	       		if(oldSetting.autoBackup != newSetting.autoBackup)
 	       		{
@@ -1246,6 +1265,7 @@ var ReposConfig = (function () {
 	    var textSearch = getTextSearchConfig();
 		var recycleBin = getRecycleBinConfig();
 	    var encryptType = MyJquery.isChecked("isEncryptEnabled");
+	    var allowHiddenFile = MyJquery.isChecked("allowHiddenFile");
 	    
 	    var autoSyncupConfig = getAutoSyncupConfig();	//autoSyncupConfig
 	    console.log("autoSyncupConfig = " + autoSyncupConfig);
@@ -1353,6 +1373,7 @@ var ReposConfig = (function () {
 	                textSearch: textSearch,
 	                recycleBin: recycleBin,
 	                encryptType : encryptType,
+	                allowHiddenFile : allowHiddenFile,
 	                autoSyncup : autoSyncupConfig,	                
 	                autoBackup : autoBackupConfig,	                
 	            },
@@ -1576,6 +1597,79 @@ var ReposConfig = (function () {
 		else
 		{	
 			MyJquery.show("reposStorageRealDocPathConfig");
+		}
+	}
+	
+	/** 「允许操作隐藏文件和系统文件」设置 **/
+	//该选项仅超级管理员可设置（服务端同样只认超级管理员，普通管理员/仓库owner只能看）
+	//注意: 复选框在HTML里默认 disabled（fail-closed），确认是超级管理员后才放开
+	function getLoginUserType()
+	{
+		if(typeof login_user != "undefined" && login_user != null && login_user.type != undefined)
+		{
+			return login_user.type;
+		}
+		if(typeof loginUser != "undefined" && loginUser != null && loginUser.type != undefined)
+		{
+			return loginUser.type;	//管理后台的登录用户变量
+		}
+		return null;
+	}
+	
+	function applyAllowHiddenFileAuth(userType)
+	{
+		if(userType == 2)
+		{
+			$("#allowHiddenFile").removeAttr("disabled");
+		}
+		else
+		{
+			$("#allowHiddenFile").attr("disabled","disabled");
+		}
+	}
+	
+	function showAllowHiddenFileAuth()
+	{
+		var userType = getLoginUserType();
+		if(userType != null)
+		{
+			applyAllowHiddenFileAuth(userType);
+			return;
+		}
+		
+		//当前页面没有登录用户变量（如 reposManager），向服务端确认一次
+		$.ajax({
+			url : "/DocSystem/User/getLoginUser.do",
+			type : "post",
+			dataType : "json",
+			data : {},
+			success : function (ret) {
+				if("ok" == ret.status && ret.data != null)
+				{
+					applyAllowHiddenFileAuth(ret.data.type);
+				}
+			}
+		});
+	}
+	
+	function doSetAllowHiddenFileConfirm()
+	{
+		var en = MyJquery.isChecked("allowHiddenFile");
+		if(en == 1)
+		{
+			qiao.bs.confirm({
+		        id: 'setAllowHiddenFileConfirm',
+		        title : _Lang("确认操作"),
+		        okbtn : _Lang("确定"),
+		        qubtn : _Lang("取消"),
+		        msg: _Lang('开启后用户可以查看并修改、删除该仓库目录下的隐藏文件与系统文件，是否开启？'),
+		    },function(){
+		    	//确认
+		    	$("#allowHiddenFile").attr("checked","checked");
+		    },function(){
+				//取消
+		    	$("#allowHiddenFile").attr("checked",false);			
+		    });
 		}
 	}
 	
@@ -2369,6 +2463,9 @@ var ReposConfig = (function () {
 	    },    
 	    doSetEncryptConfirm: function(){
 	    	doSetEncryptConfirm();
+	    },    
+	    doSetAllowHiddenFileConfirm: function(){
+	    	doSetAllowHiddenFileConfirm();
 	    },    
 	    doSelectAutoSyncupConfigEnable: function(){
 	    	doSelectAutoSyncupConfigEnable();

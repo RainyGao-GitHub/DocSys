@@ -47,6 +47,13 @@
                	<div id="reposStorageRealDocPathConfig" style="display:none">
 					<input class="form-control" type="text" id="repos-realDocPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width: 100%"/>
 				</div>
+				
+				<label style="margin-top:10px">Allow operations on hidden and system files
+					<span style="margin-left:20px">
+						<input type="checkbox" id="allowHiddenFile" value="0" disabled="disabled" onclick="ReposConfig.doSetAllowHiddenFileConfirm()">
+					</span>
+				</label>
+				<div style="font-size:12px;color:#999">Disabled by default: hidden and system files are not listed and cannot be modified, deleted or downloaded. (Super administrator only)</div>
 			</div>
 
             <div id="verCtrlDiv"  style="margin-top:20px;">

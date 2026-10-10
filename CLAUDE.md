@@ -29,7 +29,10 @@
 
 ## 当前任务
 
-- **无**。上一个任务 = 系统设置-存储位置「目录树选择」，已收尾归档：工作卡 `DevAgentControl/已完成/CURRENT_STATE_系统设置存储路径选择.md`，方案 `devDocs/系统设置存储位置目录选择方案.md`。
+- **仓库「允许操作隐藏文件和系统文件」选项** —— 已按用户裁定（D1~D6 全按推荐值）**实施并验证完毕，代码尚未提交**；方案 `devDocs/仓库隐藏文件与系统文件操作控制方案.md`（§6 裁定 / §10 实施记录 + 验证结果 / 教训）；工作卡 `DevAgentControl/CURRENT_STATE_仓库隐藏文件操作控制.md`。
+  一句话现状：仓库「文件存储位置（realDocPath）」可指向服务器任意目录（唯一防线 `ReposController.java:585 isPathConflict` 只防两个路径互相包含），而仓库文件区**对隐藏/系统条目零过滤**（`BaseController.java getLocalEntryList`），用户可直接看到并改名/移动/复制/删除/下载 → 已新增仓库级选项（默认不允许）实现「列表不显示 + 操作拒绝」，落点 = `FileUtil` 判定 + `BaseFunction` 守卫 + `BaseController`/`DocController` 12+X 处 `*RealDoc*`/下载/office/agent + websocket `BussinessController` 3 处 + 前端 6 页复选框；存储 = 仓库目录下 `data/hiddenFileSetting/hiddenFileConfig.txt`（照抄 `encryptType`，**零数据库改动**），读写无缓存、仅超管可改。
+  ✅ 验证：探针 14/14、接口 E2E 40/40、真实浏览器中英文回环（38↔39 条 + 配置文件增删）。⚠️ 改动跨**两个仓库**（主仓库 + `src/com/DocSystem/websocket`），须分别提交。
+- 上一任务 = 系统设置-存储位置「目录树选择」，已收尾归档：工作卡 `DevAgentControl/已完成/CURRENT_STATE_系统设置存储路径选择.md`，方案 `devDocs/系统设置存储位置目录选择方案.md`。
   已完成：后端只读超管接口 `ManageController.getServerDirList.do`（跨平台根节点、500 条截断、`showHidden`）+ 前端「选择…」对话框（懒加载目录树、目录图标、自动定位当前值、确定/取消在右下角、空目录按叶子处理）+ 5 个入口按钮；用户提交 `f327c8ad8`（P1 + UI 改版）、`a0136271f`（空目录不提示）。
   ⚠️ **4 个 ini 键名与字段名不一致**（`DBStorePath` / `SystemLogStorePath` / `AgentSkillStorePath` / `SalesDataStorePath`）；故意未做：新建文件夹、P3（校验/冲突告警/恢复默认/多节点提示）、英文页缺失的 `agentSkillStorePath` 行。
 - 上一任务 = 仓库详情页（project）UI 优化，已收尾归档：工作卡 `DevAgentControl/已完成/CURRENT_STATE_仓库详情页UI优化.md`，方案 `devDocs/仓库页面UI优化方案.md`。
@@ -56,6 +59,7 @@ DocSys 是**多 git 仓库**，office 相关共**五条**提交路径：
 `.class` **一律输出到 `D:/Dev/DocSys/WebRoot/WEB-INF/classes`**（相对工程根 `WebRoot/WEB-INF/classes`），**绝不落在源码树 `src/...` 里**。命令行编译必须带 `-d WebRoot/WEB-INF/classes`；这是 Eclipse 工程本身的输出目录，与 IDE auto-build 共享同一份 `.class`。
 
 - javac：`C:\docsysRel\docsys-WDK\docsys\tomcat\Java\jdk\bin\javac`（JDK 8）
+- ⚠️ **命令行编译必须同时带 `-g -encoding UTF-8`**：Eclipse 工程默认生成 `LocalVariableTable`（`.settings/org.eclipse.jdt.core.prefs` 的 `debug.localVariable=generate`），而 `javac` 不带 `-g` 时**不生成局部变量表** ⇒ Spring MVC 无法解析控制器方法参数名（这些参数是**不带 `@RequestParam` 注解**、靠 debug 信息取名的）⇒ 凡带 `String/Integer/Long` 等形参的端点直接 **500**：`java.lang.IllegalArgumentException: Name for argument type [java.lang.String] not available, and parameter name information not found in class file either`。只有 `HttpSession/HttpServletRequest/HttpServletResponse` 这类按类型解析的参数不受影响，所以**症状是"部分接口 500"、极易误判为业务 bug**。先例：2026-10-10 仓库设置改造时漏 `-g`，`ReposController.addRepos.do` 等全部 500（Tomcat 堆栈见 `logs/localhost.<日期>.log`）。完整命令：`& $javac -g -encoding UTF-8 -cp "WebRoot/WEB-INF/lib/*" -d WebRoot/WEB-INF/classes <源文件...>`
 - 运行测试：工作目录切到 `D:/Dev/DocSys`，classpath=`WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*`
 - 源码树里出现 `.class` = 编译命令漏了 `-d`，须 `git clean -fd -- '*.class'` 清掉。**无例外**：office 核心仓库 `.gitignore` 已加 `*.class`，源码树里不该有任何 `.class`（原误提交的 `PdfFile/CPdfReader.class` 已于 2026-08-29 从版本控制移除）。
 

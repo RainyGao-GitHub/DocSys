@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.attribute.DosFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -37,6 +40,72 @@ import util.Encrypt.Base64File;
 import util.FileUtil.CompressPic;
 
 public class FileUtil {
+	
+	/******* 隐藏文件/系统文件判定 *******/
+	//判断是否为隐藏文件或系统文件（仓库「允许操作隐藏文件和系统文件」开关的判定口径，列表过滤与操作拦截共用）
+	//Windows: 条目带 HIDDEN 或 SYSTEM 属性（File.isHidden() 只认 HIDDEN，不够）；非Windows: 名字以 "." 开头
+	//仅判断条目自身: NOFOLLOW 避免把符号链接/junction（如 C:/Documents and Settings）目标的属性当成链接自身的属性
+	public static boolean isHiddenOrSystemFile(File file, Integer OSType)
+	{
+		if(file == null)
+		{
+			return false;
+		}
+		
+		String name = file.getName();
+		if(name != null && name.startsWith("."))
+		{
+			return true;	//"." 开头（.git、.gitignore、.env 等）
+		}
+		
+		if(OS.isWinOS(OSType))
+		{
+			try {
+				DosFileAttributes attrs = Files.readAttributes(file.toPath(), DosFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+				if(attrs.isHidden() || attrs.isSystem())
+				{
+					return true;
+				}
+			} catch (Exception e) {
+				//读取属性失败（不存在/权限不足/非Windows卷）时回落 isHidden()
+			}
+		}
+		
+		return file.isHidden();
+	}
+	
+	//逐级判断 localRootPath 下 relativePath(各级目录) + name(末级条目) 的每一级是否为隐藏/系统文件
+	//末级条目允许不存在（新建/重命名），此时只能命中 "." 前缀规则
+	public static boolean containsHiddenOrSystemEntry(String localRootPath, String path, String name, Integer OSType)
+	{
+		String relativePath = (path == null) ? "" : path;
+		if(name != null && name.isEmpty() == false)
+		{
+			relativePath = relativePath + name;
+		}
+		if(relativePath.isEmpty())
+		{
+			return false;
+		}
+		
+		String entryPath = Path.dirPathFormat(localRootPath);
+		String[] components = relativePath.split("/");
+		for(int i=0; i<components.length; i++)
+		{
+			String component = components[i];
+			if(component.isEmpty())
+			{
+				continue;
+			}
+			entryPath = entryPath + component;
+			if(isHiddenOrSystemFile(new File(entryPath), OSType))
+			{
+				return true;
+			}
+			entryPath = entryPath + "/";
+		}
+		return false;
+	}
 	
 	//convert string to buffer with charset
 	public static byte[] getBytes(String content, String charset) {

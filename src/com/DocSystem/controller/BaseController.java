@@ -681,7 +681,7 @@ public class BaseController  extends BaseFunction{
 			switch(type)
 			{
 			case GetDocList_LocalEntry:
-				docList =  getLocalEntryList(repos, doc);
+				docList =  getLocalEntryListForBrowse(repos, doc);
 				break;
 			case GetDocList_RemoteStorage:
 				docList = getReposRemoteStorageEntryList(repos, doc);
@@ -724,7 +724,7 @@ public class BaseController  extends BaseFunction{
 	}
 
 	protected List<Doc> docSysGetDocListWithChangeType(Repos repos, Doc doc) {
-		List<Doc> localList = getLocalEntryList(repos, doc);
+		List<Doc> localList = getLocalEntryListForBrowse(repos, doc);
 		RemoteStorageConfig remote = repos.remoteStorageConfig;
 		if(remote == null)
 		{
@@ -840,7 +840,21 @@ public class BaseController  extends BaseFunction{
 		return getLocalEntryList(doc);
 	}
 	
+	//仓库文件区列表用: 未开启「允许操作隐藏文件和系统文件」时不返回隐藏/系统条目
+	protected static List<Doc> getLocalEntryListForBrowse(Repos repos, Doc doc) 
+	{
+		String reposPath = Path.getReposPath(repos);
+		doc.setReposPath(reposPath);
+		doc.setVid(repos.getId());
+		return getLocalEntryList(doc, !isAllowHiddenFileOp(repos));
+	}
+	
 	protected static List<Doc> getLocalEntryList(Doc doc) 
+	{
+		return getLocalEntryList(doc, false);
+	}
+	
+	protected static List<Doc> getLocalEntryList(Doc doc, boolean filterHiddenOrSystem) 
 	{
 		//Log.debug("getLocalEntryList() " + doc.getDocId() + " " + doc.getPath() + doc.getName());
     	try {
@@ -878,6 +892,11 @@ public class BaseController  extends BaseFunction{
 	    	for(int i=0;i<localFileList.length;i++)
 	    	{
 	    		File file = localFileList[i];
+	    		
+	    		if(filterHiddenOrSystem && FileUtil.isHiddenOrSystemFile(file, OSType))
+	    		{
+	    			continue;	//隐藏/系统条目: 当前仓库不允许显示
+	    		}
 	    		
 	    		int type = 1;
 	    		if(file.isDirectory())
@@ -4640,6 +4659,12 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean moveRealDocToRecycleBin(Repos repos, Doc srcDoc, ActionContext context, ReturnAjax rt)
 	{
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, srcDoc, rt) == false)
+		{
+			return false;
+		}
+		
 		boolean ret = false;
 		//Build ActionContext for RecycleBin
 		//对于回收站而言，属于add操作
@@ -11267,6 +11292,11 @@ public class BaseController  extends BaseFunction{
 	protected boolean createRealDoc(Repos repos, Doc doc, ReturnAjax rt) {
 		Log.debug("createRealDoc() localRootPath:" + doc.getLocalRootPath() + " path:" + doc.getPath() + " name:" + doc.getName());
 		
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			return false;
+		}
+		
 		String name = doc.getName();
 		Integer type = doc.getType();
 		
@@ -11297,6 +11327,11 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean deleteRealDoc(Repos repos, Doc doc, ReturnAjax rt) {
 		
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			return false;
+		}
+		
 		String reposRPath = Path.getReposRealPath(repos);
 		String parentPath = doc.getPath();
 		String name = doc.getName();
@@ -11314,6 +11349,11 @@ public class BaseController  extends BaseFunction{
 	//TODO: 有版本管理的仓库需要记录删除的所有节点，需要在写入版本仓库完成后写入
 	protected boolean deleteRealDocEx(Repos repos, Doc doc, ActionContext context, ReturnAjax rt)
 	{	
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			return false;
+		}
+		
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
 			return deleteRealDoc(repos, doc, rt);
@@ -11396,6 +11436,11 @@ public class BaseController  extends BaseFunction{
 			Integer chunkNum, Long chunkSize, String chunkParentPath, 
 			ReturnAjax rt) 
 	{
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			return false;
+		}
+		
 		String name = doc.getName();
 		Long fileSize = doc.getSize();
 		String fileCheckSum = doc.getCheckSum();
@@ -11488,6 +11533,11 @@ public class BaseController  extends BaseFunction{
 	//chunkNum: null:非分片上传(直接用uploadFile存为文件)  1: 单文件或单分片文件  >1:多分片文件（需要进行合并）
 	protected boolean updateRealDoc(Repos repos, Doc doc, MultipartFile uploadFile, Integer chunkNum, Long chunkSize, String chunkParentPath, ReturnAjax rt) 
 	{
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			return false;
+		}
+		
 		String parentPath = doc.getPath();
 		String name = doc.getName();
 		Long fileSize = doc.getSize();
@@ -11860,6 +11910,11 @@ public class BaseController  extends BaseFunction{
 	//chunkNum: null:非分片上传(直接用uploadFile存为文件)  1: 单文件或单分片文件  >1:多分片文件（需要进行合并）
 	protected boolean updateRealDoc(Repos repos, Doc doc, byte[] docData, Integer chunkNum, Long chunkSize, String chunkParentPath, ReturnAjax rt) 
 	{
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			return false;
+		}
+		
 		String parentPath = doc.getPath();
 		String name = doc.getName();
 		Long fileSize = doc.getSize();
@@ -12087,6 +12142,11 @@ public class BaseController  extends BaseFunction{
 
 	protected boolean moveRealDocEx(Repos repos, Doc srcDoc, Doc dstDoc, ActionContext context, ReturnAjax rt)
 	{
+		if(checkHiddenFileAccess(repos, srcDoc, rt) == false || checkHiddenFileAccess(repos, dstDoc, rt) == false)
+		{
+			return false;
+		}
+		
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
 			return moveRealDoc(repos, srcDoc, dstDoc, rt);
@@ -12181,6 +12241,11 @@ public class BaseController  extends BaseFunction{
 			return true;
 		}	
 		
+		if(checkHiddenFileAccess(repos, srcDoc, rt) == false || checkHiddenFileAccess(repos, dstDoc, rt) == false)
+		{
+			return false;
+		}
+		
 		String srcParentPath = srcDoc.getPath();
 		String srcName = srcDoc.getName();
 		String dstParentPath = dstDoc.getPath();
@@ -12211,6 +12276,11 @@ public class BaseController  extends BaseFunction{
 	
 	protected boolean copyRealDocEx(Repos repos, Doc srcDoc, Doc dstDoc, ActionContext context, ReturnAjax rt) 
 	{
+		if(checkHiddenFileAccess(repos, srcDoc, rt) == false || checkHiddenFileAccess(repos, dstDoc, rt) == false)
+		{
+			return false;
+		}
+		
 		if(repos.getVerCtrl() == null || repos.getVerCtrl() == 0)
 		{
 			return copyRealDoc(repos, srcDoc, dstDoc, rt);
@@ -12344,6 +12414,11 @@ public class BaseController  extends BaseFunction{
 			Log.debug("copyRealDoc 前置仓库不需要本地复制");
 			return true;
 		}	
+		
+		if(checkHiddenFileAccess(repos, srcDoc, rt) == false || checkHiddenFileAccess(repos, dstDoc, rt) == false)
+		{
+			return false;
+		}
 		
 		String reposRPath = Path.getReposRealPath(repos);
 		String srcParentPath = srcDoc.getPath();
@@ -12526,6 +12601,11 @@ public class BaseController  extends BaseFunction{
 
 	protected String readRealDocContent(Repos repos, Doc doc) 
 	{
+		if(checkHiddenFileAccess(repos, doc, null) == false)
+		{
+			return "";
+		}
+		
 		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
 		if(buff == null)
 		{
@@ -12543,6 +12623,11 @@ public class BaseController  extends BaseFunction{
 	//支持加密文件的内容读取
 	protected String readRealDocContentEx(Repos repos, Doc doc) 
 	{
+		if(checkHiddenFileAccess(repos, doc, null) == false)
+		{
+			return "";
+		}
+		
 		byte [] buff = FileUtil.readBufferFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName());
 		if(buff == null)
 		{
@@ -12572,6 +12657,11 @@ public class BaseController  extends BaseFunction{
 	//读取文件部分数据无法解密
 	protected String readRealDocContent(Repos repos, Doc doc, int offset, int size) 
 	{
+		if(checkHiddenFileAccess(repos, doc, null) == false)
+		{
+			return "";
+		}
+		
 		if(doc.getCharset() == null  && doc.autoCharsetDetect)
 		{
 			return FileUtil.readDocContentFromFile(doc.getLocalRootPath() + doc.getPath(), doc.getName(), (long) offset, size);
@@ -20584,6 +20674,7 @@ public class BaseController  extends BaseFunction{
 			}
 			
 			//common configs
+			repos.allowHiddenFile = getReposHiddenFileConfig(repos);
 			repos.disabled = reposData.disabled;
 			repos.isBusy = reposData.isBusy;
 			repos.isBussiness = systemLicenseInfo.hasLicense;
@@ -25183,6 +25274,14 @@ public class BaseController  extends BaseFunction{
 		String localRootPath = Path.getReposRealPath(repos);
 		String localVRootPath = Path.getReposVirtualPath(repos);
 		Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, path, name, null, type, true, localRootPath, localVRootPath, size, checkSum);
+		
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		
 		//Build ActionContext
 		ActionContext context = buildBasicActionContext(getRequestIpAddress(request), reposAccess.getAccessUser(), event, event, eventName, queryId, repos, doc, null, folderUploadAction);
 		context.info = eventName + " [" + doc.getPath() + doc.getName() + "]";

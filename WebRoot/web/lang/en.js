@@ -227,6 +227,8 @@ function lang(str)
 		"普通用户无权修改仓库存储位置，请联系管理员！" : "You can not change the storage folder, please contact System Administrator",
 		"版本仓库初始化失败！" : "Failed to init history storage repository",
 		"仓库文件将被加密存储，密钥一旦丢失将导致文件无法恢复，是否加密？" : "Do you want to encrypt files in this repository?",
+		"开启后用户可以查看并修改、删除该仓库目录下的隐藏文件与系统文件，是否开启？" : "Once enabled, users can view, modify and delete hidden/system files under this repository folder. Enable it?",
+		"允许操作隐藏文件和系统文件" : "Allow operations on hidden and system files",
 		"更新仓库配置失败" : "Failed to update repoistory configuration",
 		"仓库类型不能修改" : "Repository Type can not be changed",
 		"仓库信息未变化" : "Repository configuration was not changed",
