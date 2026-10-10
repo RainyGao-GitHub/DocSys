@@ -7,14 +7,18 @@ import java.util.List;
 /**
  * 权限判定（**纯函数，无 Spring / 无 IO**，可离线护栏）。
  *
- * <p>求值顺序（自上而下，第一条命中即生效；用户 2026-09-23 定稿）：</p>
+ * <p>求值顺序（自上而下，第一条命中即生效；用户 2026-09-23 定稿，2026-10-10 裁定 D2 修订③）：</p>
  * <pre>
  * ① 绝对保护（ABSOLUTE）  → ASK   ← delete_repos 等；4 档全问，规则也不能豁免
  * ② 计划模式（PLAN）      → DENY  ← 写操作不执行（引导先出计划，批准后切档）
- * ③ 会话规则命中（*仅自动档*）→ ALLOW ← 覆盖硬清单（含删除/权限变更）
+ * ③ 会话规则命中（自动档 **与标准档**）→ ALLOW ← 覆盖硬清单（含删除/权限变更）
  * ④ 硬清单（DESTRUCTIVE / PERMISSION） → ASK ← 自动档仍问；仅"全部允许"不问
  * ⑤ 模式默认             → MANUAL: ASK ；AUTO / ALLOW_ALL: ALLOW
  * </pre>
+ *
+ * <p>2026-10-10 用户裁定 D2：规则不再限定"仅自动档"——标准档也允许用户通过弹窗里的
+ * "批准并记住"主动授权（仅本会话、按工具+作用域），否则"整理目录"在标准档下无路可脱身。
+ * 绝对保护仍不可豁免。</p>
  *
  * <p>调用约定：只对 {@code needsConfirm=true} 的写工具调用（只读工具不参与判定）。
  * 未注入策略时调用方保持改造前行为（每次都问）。</p>
@@ -49,9 +53,10 @@ public final class PermissionPolicy {
             return PermissionDecision.deny("plan");
         }
 
-        // ③ 会话规则命中：**仅自动档生效**（用户裁定：手动档保持“每次都要确认”的纯粹语义），
+        // ③ 会话规则命中：**自动档与标准档都生效**（2026-10-10 用户裁定 D2：标准档也必须
+        //    给用户一条"主动授权后不再问"的脱身路径，否则整理目录时会被逐个弹窗困住），
         //    命中可覆盖硬清单（含删除/权限变更），但不能覆盖绝对保护
-        if (m == PermissionMode.AUTO && rules != null) {
+        if ((m == PermissionMode.AUTO || m == PermissionMode.MANUAL) && rules != null) {
             for (PermissionRule rule : rules) {
                 if (rule != null && rule.matches(toolName, args)) {
                     return PermissionDecision.allow("rule(" + rule.kind.id + ")");

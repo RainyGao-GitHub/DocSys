@@ -18,6 +18,12 @@ public interface AuditLogRepository {
 
     List<AuditLogEntity> findBySessionIdOrderByCreatedAtDesc(@Param("sessionId") String sessionId);
 
+    /**
+     * D11：某会话下**仍在等待用户答复**（status=PENDING）的写操作，按创建时间**升序**
+     * （先问的先答），供前端在页面重载/断网重连后恢复确认弹窗。
+     */
+    List<AuditLogEntity> findPendingBySessionId(@Param("sessionId") String sessionId, @Param("limit") int limit);
+
     List<AuditLogEntity> findByUserId(@Param("userId") String userId, @Param("offset") int offset, @Param("limit") int limit);
 
     List<AuditLogEntity> findByOperation(@Param("operation") String operation, @Param("offset") int offset, @Param("limit") int limit);

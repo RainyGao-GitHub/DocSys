@@ -29,6 +29,14 @@
         SELECT * FROM audit_logs WHERE session_id = #{sessionId} ORDER BY created_at DESC
     </select>
 
+    <!-- D11：待确认（PENDING）查询 —— 页面重载/重连后恢复确认弹窗用；先问的先答（升序） -->
+    <select id="findPendingBySessionId" resultMap="AuditLogEntityResultMap">
+        SELECT * FROM audit_logs
+        WHERE session_id = #{sessionId} AND status = 'PENDING'
+        ORDER BY created_at ASC
+        LIMIT #{limit}
+    </select>
+
     <select id="findByUserId" resultMap="AuditLogEntityResultMap">
         SELECT * FROM audit_logs WHERE user_id = #{userId} ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>

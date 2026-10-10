@@ -33,10 +33,8 @@ public final class ToolRiskCatalog {
         // 绝对保护：删仓库（风险过大，任何档位/规则都不能豁免）
         TABLE.put("delete_repos", ToolRisk.ABSOLUTE);
 
-        // 破坏性：删除 / 移动 / 改名 / 仓库更新
+        // 破坏性：删除 / 仓库更新
         TABLE.put("delete_doc", ToolRisk.DESTRUCTIVE);
-        TABLE.put("move_doc", ToolRisk.DESTRUCTIVE);
-        TABLE.put("rename_doc", ToolRisk.DESTRUCTIVE);
         TABLE.put("update_repos", ToolRisk.DESTRUCTIVE);
 
         // 权限/共享变更
@@ -51,6 +49,12 @@ public final class ToolRiskCatalog {
         TABLE.put("write_note", ToolRisk.NORMAL);
         TABLE.put("copy_doc", ToolRisk.NORMAL);
         TABLE.put("backup_repos", ToolRisk.NORMAL);
+        // 移动 / 改名（2026-10-10 用户裁定 D8：由 DESTRUCTIVE 降为 NORMAL）——
+        // 理由：整理目录时大量 move/rename 属"可逆且高频"，对齐 Claude Code `acceptEdits`
+        // （其自动通过 `mv`/`cp`）；已知代价：自动档会静默移动/改名，且可能破坏外部引用
+        // （分享链接 / 历史 / 他人书签），故**删除/权限变更/仓库更新仍是硬清单**。
+        TABLE.put("move_doc", ToolRisk.NORMAL);
+        TABLE.put("rename_doc", ToolRisk.NORMAL);
 
         // 技能调用：按被调技能的声明判定（见 SkillRiskRegistry）→ 这里给保守默认
         TABLE.put("run_skill", ToolRisk.ABSOLUTE);

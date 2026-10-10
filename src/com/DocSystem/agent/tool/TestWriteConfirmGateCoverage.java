@@ -41,6 +41,8 @@ public class TestWriteConfirmGateCoverage {
         testArgsSummary();
         testRiskCatalogCoverage();
         testModeDecisions();
+        testNoAutoDecisionOnTimeout();
+        testMoveDirScope();
         System.out.println("\n======== TestWriteConfirmGateCoverage: " + pass + " passed, " + fail
                 + " failed ========");
         if (fail > 0) {
@@ -145,15 +147,17 @@ public class TestWriteConfirmGateCoverage {
         check("delete_repos 登记为绝对保护",
                 com.DocSystem.agent.permission.ToolRiskCatalog.registered("delete_repos")
                         == com.DocSystem.agent.permission.ToolRisk.ABSOLUTE);
-        check("删文档/移动/改名/更新仓库 = 破坏性",
+        // 2026-10-10 裁定 D8：移动/改名由 DESTRUCTIVE 降为 NORMAL（对齐 Claude Code acceptEdits 的 mv/cp）
+        check("删文档/更新仓库 = 破坏性（硬清单）",
                 com.DocSystem.agent.permission.ToolRiskCatalog.registered("delete_doc")
-                        == com.DocSystem.agent.permission.ToolRisk.DESTRUCTIVE
-                        && com.DocSystem.agent.permission.ToolRiskCatalog.registered("move_doc")
-                        == com.DocSystem.agent.permission.ToolRisk.DESTRUCTIVE
-                        && com.DocSystem.agent.permission.ToolRiskCatalog.registered("rename_doc")
                         == com.DocSystem.agent.permission.ToolRisk.DESTRUCTIVE
                         && com.DocSystem.agent.permission.ToolRiskCatalog.registered("update_repos")
                         == com.DocSystem.agent.permission.ToolRisk.DESTRUCTIVE);
+        check("移动/改名 = 常规（D8 降级后；自动档不再确认）",
+                com.DocSystem.agent.permission.ToolRiskCatalog.registered("move_doc")
+                        == com.DocSystem.agent.permission.ToolRisk.NORMAL
+                        && com.DocSystem.agent.permission.ToolRiskCatalog.registered("rename_doc")
+                        == com.DocSystem.agent.permission.ToolRisk.NORMAL);
         check("外链分享 = 权限变更",
                 com.DocSystem.agent.permission.ToolRiskCatalog.registered("create_doc_share")
                         == com.DocSystem.agent.permission.ToolRisk.PERMISSION);
@@ -253,6 +257,100 @@ public class TestWriteConfirmGateCoverage {
                 .isWrite(true).needsConfirm(true).build();
     }
 
+    /**
+     * ⑥ ★ V8 / D5：**等待超时不做任何自动决定**（既不自动批准、也不自动否决）。
+     *
+     * <p>改造前 `waitForApproval` 到点就 `return false`——等价于"用户没及时答 = 自动否决"，
+     * 于是"离开网络一会儿回来再点批准"必然失败；对高频写操作（整理目录）尤其致命。
+     * 现在：只要**有确认通道**（SSE，即界面上能答复），到点只 WARN 一次并**继续等**，
+     * 批准/拒绝只由用户决定；去重计时靠 {@code agent.tool-loop.confirm-timeout}（默认 0 = 无限）。</p>
+     *
+     * <p>用假 `AuditLogService`（可控状态）+ 真 `AuditWriteConfirmGate`：把等待上限配成 1s，
+     * 断言 1.6s 后调用**仍未返回**，且此后用户的答复依然生效。</p>
+     */
+    private static void testNoAutoDecisionOnTimeout() throws Exception {
+        // ① 到点不否决：1s 上限 → 1.6s 后仍在等；此后"批准"仍然生效
+        java.util.concurrent.atomic.AtomicReference<String> status =
+                new java.util.concurrent.atomic.AtomicReference<String>("PENDING");
+        AuditWriteConfirmGate gate = new AuditWriteConfirmGate(
+                fakeAuditService(status), "u1", "s1", "127.0.0.1", "trace-v8a", 1);
+        gate.setConfirmEventSink(withConfirmChannel());
+        final boolean[] result = new boolean[1];
+        Thread t = new Thread(() -> {
+            try {
+                result[0] = gate.confirm("move_doc", moveArgs());
+            } catch (Throwable ignore) {
+                // 异常即失败：result 保持 false
+            }
+        }, "v8-no-auto-decision");
+        t.setDaemon(true);
+        t.start();
+        Thread.sleep(1700);
+        check("V8：越过等待上限（1s）后仍在等 —— 没自动批准也没自动否决", t.isAlive());
+        check("V8：越过上限后审计条目仍是 PENDING", "PENDING".equals(status.get()), String.valueOf(status.get()));
+        check("V8：等待期间挂起位被占用", AuditWriteConfirmGate.pendingConfirms() == 1,
+                String.valueOf(AuditWriteConfirmGate.pendingConfirms()));
+        status.set("APPROVED");
+        t.join(5000);
+        check("V8：越过上限之后用户再批准 → 操作照样被批准执行", !t.isAlive() && result[0]);
+        check("V8：确认门返回后挂起位已释放", AuditWriteConfirmGate.pendingConfirms() == 0,
+                String.valueOf(AuditWriteConfirmGate.pendingConfirms()));
+
+        // ② 到点也不批准：用户的"拒绝"照常按拒绝收场
+        java.util.concurrent.atomic.AtomicReference<String> status2 =
+                new java.util.concurrent.atomic.AtomicReference<String>("PENDING");
+        AuditWriteConfirmGate gate2 = new AuditWriteConfirmGate(
+                fakeAuditService(status2), "u1", "s1", "127.0.0.1", "trace-v8b", 1);
+        gate2.setConfirmEventSink(withConfirmChannel());
+        final boolean[] result2 = new boolean[]{true};
+        Thread t2 = new Thread(() -> {
+            try {
+                result2[0] = gate2.confirm("move_doc", moveArgs());
+            } catch (Throwable ignore) {
+                result2[0] = true;
+            }
+        }, "v8-reject-after-timeout");
+        t2.setDaemon(true);
+        t2.start();
+        Thread.sleep(1300);
+        status2.set("REJECTED");
+        t2.join(5000);
+        check("V8：越过上限之后用户拒绝 → 返回 false（拒绝照常生效）", !t2.isAlive() && !result2[0]);
+        check("V8：两条等待都收场后挂起位归零", AuditWriteConfirmGate.pendingConfirms() == 0,
+                String.valueOf(AuditWriteConfirmGate.pendingConfirms()));
+    }
+
+    /** 假审计服务：状态由测试控制（真实实现要 DB，离线跑不了） */
+    private static com.DocSystem.agent.controller.AuditLogService fakeAuditService(
+            final java.util.concurrent.atomic.AtomicReference<String> status) {
+        return new com.DocSystem.agent.controller.AuditLogService() {
+            @Override
+            public String createPendingEntry(String userId, String sessionId, String operation,
+                                             java.util.Map<String, String> params, String clientIp,
+                                             String traceId, boolean force) {
+                return "TOKEN-V8";
+            }
+
+            @Override
+            public String getStatusByConfirmToken(String confirmToken) {
+                return status.get();
+            }
+        };
+    }
+
+    /** "有界面能答复"的推送通道（非 NOOP：判断无限等待时会看它） */
+    private static ConfirmEventSink withConfirmChannel() {
+        return (toolName, confirmToken, message) -> { };
+    }
+
+    private static com.alibaba.fastjson.JSONObject moveArgs() {
+        com.alibaba.fastjson.JSONObject args = new com.alibaba.fastjson.JSONObject();
+        args.put("vid", 5);
+        args.put("path", "66666/");
+        args.put("name", "a.txt");
+        return args;
+    }
+
     /** ③ R3-9：确认弹窗必须能看到“到底动哪个对象” */
     private static void testArgsSummary() {
         com.alibaba.fastjson.JSONObject args = new com.alibaba.fastjson.JSONObject();
@@ -313,6 +411,41 @@ public class TestWriteConfirmGateCoverage {
         // 消息契约：确认文案必须带上参数摘要（否则弹窗又变成“只显示工具名”）
         String gate = readSource("src/com/DocSystem/agent/tool/AuditWriteConfirmGate.java");
         check("确认文案拼接了参数摘要", gate != null && gate.contains("\"\\n参数：\" + summary"), "");
+    }
+
+    /**
+     * ⑦ D9 补锁：**目录级授权对"移动/复制"必须真的可用**。
+     *
+     * <p>2026-10-10 验证期发现：`move_doc`/`copy_doc` 的目录参数是 `srcPath`/`dstPath`（不是 `path`），
+     * 而目录规则只认 `path` ⇒ 弹窗给不出目录选项、规则也永远命中不了，"整理目录"的脱身入口形同虚设。
+     * 这里锁三处（服务端事件 / 规则匹配 / 前端选项）。</p>
+     */
+    private static void testMoveDirScope() {
+        String reg = readSource("src/com/DocSystem/agent/permission/PermissionRule.java");
+        String ctrl = readSource("src/com/DocSystem/agent/controller/AgentController.java");
+        String html = readSource("WebRoot/web/agent/index.html");
+        if (reg == null || ctrl == null || html == null) {
+            check("能读到权限规则/控制层/前端页面源码（lint 前置）", false);
+            return;
+        }
+        check("规则匹配覆盖 path/srcPath/dstPath（否则移动的目录授权永远不命中）",
+                reg.contains("DIR_ARGS = {\"path\", \"srcPath\", \"dstPath\"}") && reg.contains("callDirs(args)"),
+                reg.contains("DIR_ARGS") ? "" : "DIR_ARGS 缺失");
+        check("confirm 事件带目录列表（前端据此给出目录选项）",
+                ctrl.contains("\\\"dirs\\\":") && ctrl.contains("dirArrayJson(")
+                        && ctrl.contains("PermissionRule.DIR_ARGS"));
+        check("确认弹窗按目录列表生成选项（源目录/目标目录各一组）",
+                html.contains("collectConfirmDirs") && html.contains("confirmScopeDirs")
+                        && html.contains("'dirAll:' + i")
+                        && html.contains("dirs: event.dirs"));
+        check("恢复未决确认时按 JSON 解析参数并收集目录（含根目录空串）",
+                html.contains("function putScopeParam") && html.contains("'dstPath'"));
+        check("待确认恢复**同时**按对话会话 id 与 HTTP 会话 id 查询（审计里存的是 jsessionid）",
+                ctrl.contains("collectPending(byToken, currentHttpSessionId(request))")
+                        && ctrl.contains("findPendingBySessionId"));
+        check("恢复出来的待确认带风险类别（绝对保护 → 前端不给放宽授权入口）",
+                ctrl.contains("ToolRiskCatalog.registered(e.getOperation())")
+                        && html.contains("extra.risk = it.risk"));
     }
 
     private static String readSource(String relative) {

@@ -316,6 +316,26 @@ public class AuditLogService {
      * Get pending audit log entry by confirm token.
      * Only returns entries that are still PENDING.
      */
+    /**
+     * D11：查询某会话下**仍在等待用户答复**（PENDING）的写操作，按创建时间升序。
+     *
+     * <p>用途：页面重载、断网重连后，前端用它把"还没答复的确认"重新弹出来
+     * （否则用户回来时页面上什么都没有、Agent 却一直等着）。</p>
+     *
+     * @param limit 上限（{@code <=0} → 50）；查询异常一律返回空列表（不抛给调用方）
+     */
+    public List<AuditLogEntity> findPendingBySessionId(String sessionId, int limit) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        try {
+            return auditLogRepository.findPendingBySessionId(sessionId.trim(), limit > 0 ? limit : 50);
+        } catch (Exception e) {
+            log.warn("findPendingBySessionId failed for session={}: {}", sessionId, e.getMessage());
+            return java.util.Collections.emptyList();
+        }
+    }
+
     public AuditLogEntity getPendingEntry(String confirmToken) {
         AuditLogEntity entry = auditLogRepository.findByConfirmToken(confirmToken);
         if (entry != null && "PENDING".equals(entry.getStatus().name())) {

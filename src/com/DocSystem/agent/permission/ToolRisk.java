@@ -5,7 +5,8 @@ package com.DocSystem.agent.permission;
  *
  * <ul>
  *   <li>{@link #NORMAL} 常规写：自动/全部允许档直接放行</li>
- *   <li>{@link #DESTRUCTIVE} 破坏性（删除/移动/改名）：自动档仍确认；全部允许档放行；规则可豁免</li>
+ *   <li>{@link #DESTRUCTIVE} 破坏性（删除文档、更新仓库等）：自动档仍确认；全部允许档放行；规则可豁免。
+ *       ⚠️ 移动/改名**不属此类**（2026-10-10 裁定 D8 降为 {@link #NORMAL}）</li>
  *   <li>{@link #PERMISSION} 权限/共享变更：同 DESTRUCTIVE</li>
  *   <li>{@link #ABSOLUTE} **绝对保护**：任何档位（含全部允许）都要确认，**会话规则也不能豁免**
  *       —— 目前只有删仓库（{@code delete_repos}）；另：{@code run_skill} 当被调技能未声明 risk 时按此类处理</li>

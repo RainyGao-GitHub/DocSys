@@ -13,12 +13,14 @@ import java.util.List;
  * <ul>
  *   <li>① 绝对保护：4 档全 ASK（含"全部允许"档），且**会话规则不能豁免**</li>
  *   <li>② 计划模式：写工具 DENY（即使有规则也 DENY）</li>
- *   <li>③ 规则命中：覆盖硬清单（含删除）</li>
+ *   <li>③ 规则命中：覆盖硬清单（含删除）——**自动档与标准档都生效**（2026-10-10 裁定 D2）</li>
  *   <li>④ 硬清单（DESTRUCTIVE/PERMISSION）：自动档 ASK、"全部允许"档 ALLOW</li>
  *   <li>⑤ 模式默认：手动 ASK / 自动・全部允许 ALLOW</li>
  *   <li>技能 risk：声明优先 → 内置只读白名单 → 未声明 fail-safe 绝对保护</li>
- *   <li>工具风险目录：登记值、未登记 fail-safe、delete_repos 绝对保护</li>
- *   <li>规则匹配：该工具 / 该目录（含子目录）/ 该仓库；跨目录/跨仓库不命中</li>
+ *   <li>工具风险目录：登记值、未登记 fail-safe、delete_repos 绝对保护；
+ *       **移动/改名已于 2026-10-10 由 DESTRUCTIVE 降为 NORMAL（裁定 D8）**</li>
+ *   <li>规则匹配：该工具 / 该目录（含子目录）/ 该目录内所有写操作（DIR_ALL）/ 该仓库；
+ *       跨目录/跨仓库不命中；**DIR/REPO 必须同时匹配工具名（裁定 D9）**</li>
  * </ul>
  */
 public class TestPermissionPolicy {
@@ -87,8 +89,15 @@ public class TestPermissionPolicy {
                 decide(PermissionMode.AUTO, ToolRisk.DESTRUCTIVE, null, "delete_doc", args()).isAsk());
         check("自动 + 权限变更（分享） → ASK",
                 decide(PermissionMode.AUTO, ToolRisk.PERMISSION, null, "create_doc_share", args()).isAsk());
-        check("自动 + 移动 → ASK",
-                decide(PermissionMode.AUTO, ToolRisk.DESTRUCTIVE, null, "move_doc", args()).isAsk());
+        // 2026-10-10 裁定 D8：移动/改名由 DESTRUCTIVE 降为 NORMAL ⇒ 自动档不再问
+        check("自动 + 移动（D8 降级后 → 常规写） → ALLOW",
+                decide(PermissionMode.AUTO, ToolRiskCatalog.resolve(moveDef()), null, "move_doc", args()).isAllow());
+        check("自动 + 改名（D8 降级后 → 常规写） → ALLOW",
+                decide(PermissionMode.AUTO, ToolRiskCatalog.resolve(renameDef()), null, "rename_doc", args()).isAllow());
+        check("标准 + 移动 → ASK（标准档对所有写操作都要问）",
+                decide(PermissionMode.MANUAL, ToolRiskCatalog.resolve(moveDef()), null, "move_doc", args()).isAsk());
+        check("自动 + 仓库更新 → 仍 ASK（仍属硬清单）",
+                decide(PermissionMode.AUTO, ToolRisk.DESTRUCTIVE, null, "update_repos", args()).isAsk());
         check("全部允许 + 破坏性 → ALLOW（用户已知风险）",
                 decide(PermissionMode.ALLOW_ALL, ToolRisk.DESTRUCTIVE, null, "delete_doc", args()).isAllow());
         PermissionDecision d = decide(PermissionMode.AUTO, ToolRisk.DESTRUCTIVE, null, "delete_doc", args());
@@ -104,7 +113,7 @@ public class TestPermissionPolicy {
         }
         // 规则也不能豁免
         List<PermissionRule> rules = new ArrayList<>();
-        rules.add(new PermissionRule(PermissionRule.Kind.REPO, null, 3, null));
+        rules.add(new PermissionRule(PermissionRule.Kind.REPO, "delete_repos", 3, null));
         rules.add(new PermissionRule(PermissionRule.Kind.TOOL, "delete_repos", null, null));
         for (PermissionMode m : PermissionMode.values()) {
             PermissionDecision d = decide(m, ToolRisk.ABSOLUTE, rules, "delete_repos", args("vid", 3));
@@ -134,38 +143,59 @@ public class TestPermissionPolicy {
         rules.add(new PermissionRule(PermissionRule.Kind.TOOL, "delete_doc", null, null));
         check("自动 + 规则命中（该工具，危险项） → ALLOW",
                 decide(PermissionMode.AUTO, ToolRisk.DESTRUCTIVE, rules, "delete_doc", args()).isAllow());
-        check("自动 + 规则未命中 → ASK",
-                decide(PermissionMode.AUTO, ToolRisk.DESTRUCTIVE, rules, "move_doc", args()).isAsk());
+        check("自动 + 规则未命中（同类危险项） → ASK",
+                decide(PermissionMode.AUTO, ToolRisk.PERMISSION, rules, "create_doc_share", args()).isAsk());
         PermissionDecision d = decide(PermissionMode.AUTO, ToolRisk.DESTRUCTIVE, rules, "delete_doc", args());
         check("规则命中原因标注 rule(tool)", "rule(tool)".equals(d.reason));
-        // P2：规则只在自动档生效（手动档保持“每次都要确认”的纯粹语义）
-        check("手动 + 规则命中 → 仍 ASK（规则不适用于手动档）",
-                decide(PermissionMode.MANUAL, ToolRisk.DESTRUCTIVE, rules, "delete_doc", args()).isAsk());
+        // 2026-10-10 裁定 D2：规则**标准档也生效**（否则整理目录在标准档下无路可脱身）
+        PermissionDecision md = decide(PermissionMode.MANUAL, ToolRisk.DESTRUCTIVE, rules, "delete_doc", args());
+        check("标准 + 规则命中 → ALLOW（D2：覆盖硬清单）", md.isAllow());
+        check("标准 + 规则命中原因标注 rule(tool)", "rule(tool)".equals(md.reason));
+        check("标准 + 规则未命中 → ASK", 
+                decide(PermissionMode.MANUAL, ToolRisk.DESTRUCTIVE, rules, "update_repos", args()).isAsk());
         check("全部允许 + 规则无关（本来就 ALLOW）",
                 decide(PermissionMode.ALLOW_ALL, ToolRisk.NORMAL, rules, "write_file", args()).isAllow());
     }
 
     private static void testRuleMatching() {
-        PermissionRule dirRule = new PermissionRule(PermissionRule.Kind.DIR, null, 5, "a/b");
-        check("目录规则：同目录命中", dirRule.matches("write_file", args("vid", 5, "path", "a/b")));
+        // D9：DIR/REPO 现在**同时校验工具名**（只有 DIR_ALL 忽略工具名）
+        PermissionRule dirRule = new PermissionRule(PermissionRule.Kind.DIR, "write_file", 5, "a/b");
+        check("目录规则：同目录+同工具命中", dirRule.matches("write_file", args("vid", 5, "path", "a/b")));
         check("目录规则：子目录命中", dirRule.matches("write_file", args("vid", 5, "path", "a/b/c")));
         check("目录规则：反斜杠/首尾斜杠等价", dirRule.matches("write_file", args("vid", 5, "path", "\\a\\b\\c\\")));
         check("目录规则：父目录不命中", !dirRule.matches("write_file", args("vid", 5, "path", "a")));
         check("目录规则：其它目录不命中", !dirRule.matches("write_file", args("vid", 5, "path", "a/bb")));
         check("目录规则：其它仓库不命中", !dirRule.matches("write_file", args("vid", 6, "path", "a/b/c")));
-        check("目录规则：删除同样命中（覆盖硬清单）", dirRule.matches("delete_doc", args("vid", 5, "path", "a/b/x.txt")));
+        check("目录规则：**异工具不命中**（D9：删除不会因目录授权被放行）",
+                !dirRule.matches("delete_doc", args("vid", 5, "path", "a/b/x.txt")));
 
-        PermissionRule repoRule = new PermissionRule(PermissionRule.Kind.REPO, null, 7, null);
-        check("仓库规则：同仓库命中", repoRule.matches("move_doc", args("vid", 7, "path", "deep/dir")));
+        // DIR_ALL：显式宽授权 —— 该目录内所有写操作（忽略工具名）
+        PermissionRule dirAllRule = new PermissionRule(PermissionRule.Kind.DIR_ALL, "write_file", 5, "a/b");
+        check("目录(所有写操作)规则：同目录任意工具命中",
+                dirAllRule.matches("delete_doc", args("vid", 5, "path", "a/b/x.txt")));
+        check("目录(所有写操作)规则：子目录任意工具命中",
+                dirAllRule.matches("move_doc", args("vid", 5, "path", "a/b/c")));
+        check("目录(所有写操作)规则：其它目录不命中",
+                !dirAllRule.matches("move_doc", args("vid", 5, "path", "a/c")));
+
+        PermissionRule repoRule = new PermissionRule(PermissionRule.Kind.REPO, "move_doc", 7, null);
+        check("仓库规则：同仓库+同工具命中", repoRule.matches("move_doc", args("vid", 7, "path", "deep/dir")));
+        check("仓库规则：异工具不命中（D9）", !repoRule.matches("rename_doc", args("vid", 7, "path", "deep/dir")));
         check("仓库规则：其它仓库不命中", !repoRule.matches("move_doc", args("vid", 8, "path", "x")));
 
         PermissionRule toolRule = new PermissionRule(PermissionRule.Kind.TOOL, "write_file", null, null);
         check("工具规则：同名命中", toolRule.matches("write_file", args()));
         check("工具规则：异名不命中", !toolRule.matches("write_note", args()));
 
+        check("工具名为空 → 不命中（fail-safe，宁严不松）",
+                !new PermissionRule(PermissionRule.Kind.DIR, null, 5, "a/b")
+                        .matches("write_file", args("vid", 5, "path", "a/b/x")));
+
         check("路径规范化", "a/b".equals(PermissionRule.normalizePath("\\a//b/")));
         check("规则 JSON 往返",
-                PermissionRule.parseList(PermissionRule.toJsonString(Arrays.asList(dirRule, repoRule, toolRule))).size() == 3);
+                PermissionRule.parseList(PermissionRule.toJsonString(
+                        Arrays.asList(dirRule, dirAllRule, repoRule, toolRule))).size() == 4);
+        check("dirAll kind 往返", PermissionRule.Kind.fromId("dirAll") == PermissionRule.Kind.DIR_ALL);
         check("非法规则 JSON → 空列表（不抛异常）", PermissionRule.parseList("{not-json").isEmpty());
     }
 
@@ -209,14 +239,28 @@ public class TestPermissionPolicy {
                 .isWrite(true).needsConfirm(true).build();
     }
 
+    /** 构造 move_doc 的最小 ToolDefinition（按**目录**解析风险，用于验证 D8 降级） */
+    private static com.DocSystem.agent.tool.ToolDefinition moveDef() {
+        return com.DocSystem.agent.tool.ToolDefinition
+                .builder("move_doc", "移动文件/目录", a -> com.DocSystem.agent.tool.ToolResult.ok("ok"))
+                .isWrite(true).needsConfirm(true).build();
+    }
+
+    /** 构造 rename_doc 的最小 ToolDefinition（同上） */
+    private static com.DocSystem.agent.tool.ToolDefinition renameDef() {
+        return com.DocSystem.agent.tool.ToolDefinition
+                .builder("rename_doc", "改名", a -> com.DocSystem.agent.tool.ToolResult.ok("ok"))
+                .isWrite(true).needsConfirm(true).build();
+    }
+
     // ---------- 工具风险目录 ----------
 
     private static void testCatalog() {
         check("删仓库 = 绝对保护", ToolRiskCatalog.registered("delete_repos") == ToolRisk.ABSOLUTE);
         check("删文档 = 破坏性", ToolRiskCatalog.registered("delete_doc") == ToolRisk.DESTRUCTIVE);
-        check("移动 = 破坏性", ToolRiskCatalog.registered("move_doc") == ToolRisk.DESTRUCTIVE);
-        check("改名 = 破坏性", ToolRiskCatalog.registered("rename_doc") == ToolRisk.DESTRUCTIVE);
-        check("更新仓库 = 破坏性", ToolRiskCatalog.registered("update_repos") == ToolRisk.DESTRUCTIVE);
+        check("移动 = 常规（2026-10-10 D8 降级）", ToolRiskCatalog.registered("move_doc") == ToolRisk.NORMAL);
+        check("改名 = 常规（2026-10-10 D8 降级）", ToolRiskCatalog.registered("rename_doc") == ToolRisk.NORMAL);
+        check("更新仓库 = 破坏性（仍属硬清单）", ToolRiskCatalog.registered("update_repos") == ToolRisk.DESTRUCTIVE);
         check("分享 = 权限变更", ToolRiskCatalog.registered("create_doc_share") == ToolRisk.PERMISSION);
         check("写文件 = 常规", ToolRiskCatalog.registered("write_file") == ToolRisk.NORMAL);
         check("建目录 = 常规", ToolRiskCatalog.registered("create_folder") == ToolRisk.NORMAL);
@@ -259,7 +303,8 @@ public class TestPermissionPolicy {
         com.DocSystem.agent.tool.ToolDefinition moveDef = com.DocSystem.agent.tool.ToolDefinition
                 .builder("move_doc", "d", a -> com.DocSystem.agent.tool.ToolResult.ok("x"))
                 .isWrite(true).needsConfirm(true).build();
-        check("追加前：move_doc = 破坏性", ToolRiskCatalog.resolve(moveDef) == ToolRisk.DESTRUCTIVE);
+        // 2026-10-10 裁定 D8：move_doc 已降为常规写 ⇒ 这里的"追加前"基线改成 NORMAL
+        check("追加前：move_doc = 常规（D8 降级后）", ToolRiskCatalog.resolve(moveDef) == ToolRisk.NORMAL);
         ToolRiskCatalog.setExtraGuarded(PermissionConfig.parseToolList("move_doc"));
         check("追加后：move_doc = 绝对保护", ToolRiskCatalog.resolve(moveDef) == ToolRisk.ABSOLUTE);
         check("追加不影响内置项",
@@ -271,7 +316,7 @@ public class TestPermissionPolicy {
                         java.util.Arrays.asList(new PermissionRule(PermissionRule.Kind.TOOL, "move_doc", null, null)),
                         "move_doc", args("vid", 1, "path", "a")).isAsk());
         ToolRiskCatalog.setExtraGuarded(null);
-        check("清空追加后：move_doc 回到破坏性", ToolRiskCatalog.resolve(moveDef) == ToolRisk.DESTRUCTIVE);
+        check("清空追加后：move_doc 回到常规（D8 降级后）", ToolRiskCatalog.resolve(moveDef) == ToolRisk.NORMAL);
     }
 
     // ---------- 模式解析 ----------

@@ -798,6 +798,27 @@
             max-height: 160px;
             overflow: auto;
         }
+        /* D5/D10：让"Agent 正在等你"可见（不做倒计时自动决定） */
+        .confirm-wait {
+            background: #e3f2fd;
+            color: #0d47a1;
+            font-size: 12px;
+            line-height: 1.5;
+            padding: 6px 10px;
+            border-radius: 8px;
+            margin: 0 0 12px;
+        }
+        /* D4：弹窗内一步切到自动档（不含"全部允许"） */
+        .confirm-auto {
+            padding: 8px 14px;
+            background: #e8f5e9;
+            color: #1b5e20;
+            border: 1px solid #a5d6a7;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .confirm-auto:hover { background: #d7efd9; }
         .confirm-actions {
             display: flex;
             justify-content: flex-end;
@@ -2155,7 +2176,9 @@
         <div class="confirm-dialog">
             <div class="confirm-title">⚠️ 需要确认操作 <span class="confirm-op" id="confirmOp"></span></div>
             <div class="confirm-msg" id="confirmMsg"></div>
-            <!-- P2：作用域授权（仅“自动”档显示）—— 批准并记住后同作用域不再询问 -->
+            <!-- D5/D10：让"Agent 卡在等你"这件事可见；刻意不做倒计时自动决定 -->
+            <div class="confirm-wait" id="confirmWaitHint">⏳ Agent 正在等待你的确认（可以稍后回来再处理；不答复就不会继续）</div>
+            <!-- D2/D9：作用域授权（标准档也显示）——"批准并记住"后同作用域不再询问 -->
             <div class="confirm-scope" id="confirmScope" style="display:none;">
                 <div class="confirm-scope-title">以后这类操作：</div>
                 <select id="confirmScopeSelect"></select>
@@ -2164,6 +2187,7 @@
             <div class="confirm-actions">
                 <button class="confirm-reject" id="confirmRejectBtn">拒绝</button>
                 <button class="confirm-remember" id="confirmRememberBtn" style="display:none;">批准并记住</button>
+                <button class="confirm-auto" id="confirmAutoModeBtn" style="display:none;">切到自动模式并继续</button>
                 <button class="confirm-approve" id="confirmApproveBtn">批准执行</button>
             </div>
         </div>
@@ -2972,32 +2996,115 @@
     }
 
     // ==================== T7.2 写操作确认弹窗 ====================
-    var pendingConfirm = null;
+    /**
+     * 待确认**队列**（2026-10-10 裁定 D7①）。
+     *
+     * <p>原先是单槽 `pendingConfirm`：第二个 `confirm` 事件会**覆盖**前一个的 token，
+     * 那个操作就永远等不到答复（多标签页/多会话并发时真会发生）。改为队列后逐条展示。</p>
+     */
+    var pendingConfirms = [];
 
-    /** P2：弹窗里可选的作用域（按当前工具参数可用性生成） */
+    /** 当前正在展示的那一条（null = 没在展示） */
+    var currentConfirm = null;
+
+    /** D11：恢复查询的最小间隔（避免 visibilitychange 抖动时反复发请求） */
+    var lastPendingFetchAt = 0;
+
+    /** 作用域下拉里"目录类"选项 → 目录路径（提交"批准并记住"时用） */
+    var confirmScopeDirs = {};
+
+    /**
+     * 弹窗里可选的作用域（2026-10-10 裁定 D9）。
+     *
+     * <p>`dir` / `repo` 现在**同时限定工具**（后端 `PermissionRule.matches` 也按此校验），
+     * 所以文案要写清"执行工具 X 时"；想"该目录内所有写操作都不再问"的用户，
+     * 显式选 `dirAll`（范围更大，单独写出来，不做默认）。</p>
+     *
+     * <p>目录可能有多个：移动/复制带 `srcPath`/`dstPath`，其余写工具只有 `path`
+     * （后端 `sendConfirm` 的 `dirs` 字段给出）——每个目录各给一组选项。</p>
+     */
     function buildConfirmScopes(extra) {
         extra = extra || {};
         var list = [];
-        if (extra.operation) list.push({ id: 'tool', label: '都执行工具 ' + extra.operation + ' 时不再询问（本会话）' });
-        if (extra.vid !== undefined && extra.vid !== null && extra.path !== undefined && extra.path !== null) {
-            list.push({ id: 'dir', label: '仓库 ' + extra.vid + ' 的目录 "' + (extra.path || '(根目录)') + '" 及子目录内不再询问（本会话）' });
+        confirmScopeDirs = {};
+        var tool = extra.operation || '';
+        var dirs = collectConfirmDirs(extra);
+        if (tool) {
+            list.push({ id: 'tool', label: '都执行工具 ' + tool + ' 时不再询问（本会话）' });
         }
-        if (extra.vid !== undefined && extra.vid !== null) {
-            list.push({ id: 'repo', label: '仓库 ' + extra.vid + ' 内不再询问（本会话）' });
+        dirs.forEach(function(d, i) {
+            var id = 'dir:' + i, idAll = 'dirAll:' + i;
+            var where = '仓库 ' + extra.vid + ' 的' + d.label + ' "' + (d.path || '(根目录)') + '" 及子目录内';
+            list.push({ id: id, label: where + '，执行工具 ' + tool + ' 时不再询问（本会话）' });
+            list.push({ id: idAll, label: where + '，所有写操作都不再询问（本会话，范围更大）' });
+            confirmScopeDirs[id] = d.path;
+            confirmScopeDirs[idAll] = d.path;
+        });
+        if (extra.vid !== undefined && extra.vid !== null && tool) {
+            list.push({ id: 'repo', label: '仓库 ' + extra.vid + ' 内执行工具 ' + tool + ' 时不再询问（本会话）' });
         }
         return list;
     }
 
-    function showConfirmModal(operation, token, message, extra) {
-        pendingConfirm = { token: token, operation: operation, extra: extra || {} };
-        document.getElementById('confirmOp').textContent = operation || '';
-        document.getElementById('confirmMsg').textContent = message || '';
+    /** 取本次确认涉及的目录：优先服务端 `dirs`，回退到单个 `path`（兼容旧事件/恢复数据） */
+    function collectConfirmDirs(extra) {
+        var out = [];
+        if (extra && extra.dirs && extra.dirs.length) {
+            extra.dirs.forEach(function(d) {
+                if (!d || d.path === undefined || d.path === null) return;
+                out.push({ label: dirArgLabel(d.key, d.label), path: d.path });
+            });
+        } else if (extra && extra.path !== undefined && extra.path !== null) {
+            out.push({ label: '目录', path: extra.path });
+        }
+        return out;
+    }
 
-        // P2：仅“自动”档提供作用域授权（规则只在自动档产生/生效）
+    /** 目录参数的展示名（"目录/源目录/目标目录"；以服务端给的 label 为准） */
+    function dirArgLabel(key, label) {
+        if (label) return label;
+        if (key === 'srcPath') return '源目录';
+        if (key === 'dstPath') return '目标目录';
+        return '目录';
+    }
+
+    /** 入队一条待确认；若当前没有在展示，则立刻展示 */
+    function enqueueConfirm(item) {
+        if (!item || !item.token) return;
+        if (currentConfirm && currentConfirm.token === item.token) return;
+        for (var i = 0; i < pendingConfirms.length; i++) {
+            if (pendingConfirms[i].token === item.token) return;   // 去重
+        }
+        pendingConfirms.push(item);
+        if (!currentConfirm) showNextConfirm();
+    }
+
+    /** 展示队首（队列空 → 关闭弹窗）。**全屏模态保留**（2026-10-10 裁定 D3） */
+    function showNextConfirm() {
+        if (!currentConfirm && pendingConfirms.length === 0) {
+            document.getElementById('confirmModal').classList.remove('show');
+            return;
+        }
+        if (currentConfirm) return;                 // 正在展示中
+        currentConfirm = pendingConfirms.shift();
+        var extra = currentConfirm.extra || {};
+        document.getElementById('confirmOp').textContent = currentConfirm.operation || '';
+        document.getElementById('confirmMsg').textContent = currentConfirm.message || '';
+
+        var more = pendingConfirms.length;
+        var waitHint = document.getElementById('confirmWaitHint');
+        if (waitHint) {
+            waitHint.textContent = '⏳ Agent 正在等待你的确认（可以稍后回来再处理；不答复就不会继续）'
+                 + (more > 0 ? ('；另有 ' + more + ' 个待确认') : '');
+        }
+
+        // D2/D9：作用域授权在**标准档也显示**；但"绝对保护"（如删仓库）不给任何放宽入口
+        var isAbsolute = (extra.risk === 'absolute');
         var scopeBox = document.getElementById('confirmScope');
         var scopeSel = document.getElementById('confirmScopeSelect');
         var rememberBtn = document.getElementById('confirmRememberBtn');
-        var scopes = (currentPermMode() === 'auto') ? buildConfirmScopes(pendingConfirm.extra) : [];
+        var autoBtn = document.getElementById('confirmAutoModeBtn');
+        var scopes = isAbsolute ? [] : buildConfirmScopes(extra);
         if (scopeBox && scopeSel && rememberBtn) {
             if (scopes.length > 0) {
                 var html = '';
@@ -3007,67 +3114,241 @@
                 rememberBtn.style.display = 'inline-block';
                 var hint = document.getElementById('confirmScopeHint');
                 if (hint) {
-                    hint.textContent = (pendingConfirm.extra.risk === 'absolute')
-                        ? '⚠️ 删仓库等绝对保护操作不受授权影响，每次都会询问'
-                        : '授权只在本会话生效；切到“手动”档则每次都会询问';
+                    hint.textContent = '授权只在本会话生效，且只覆盖你选的范围（标准模式下同样有效）。';
                 }
             } else {
                 scopeBox.style.display = 'none';
                 rememberBtn.style.display = 'none';
             }
         }
+        if (autoBtn) {
+            // D4：弹窗内一步切到自动档（**不含"全部允许"**）；绝对保护给了也没用（它永远要问）
+            var mode = currentPermMode();
+            autoBtn.style.display = (isAbsolute || mode === 'auto' || mode === 'allowAll')
+                    ? 'none' : 'inline-block';
+        }
         document.getElementById('confirmModal').classList.add('show');
     }
 
-    /** 批准/拒绝；scope 非空时额外落一条会话规则（“批准并记住”） */
-    function resolveConfirm(action, scope) {
-        if (!pendingConfirm) return;
-        var token = pendingConfirm.token;
-        var operation = pendingConfirm.operation;
-        var extra = pendingConfirm.extra || {};
-        pendingConfirm = null;
+    /** 清空队列与弹窗（切换/新建会话时用：旧会话的待确认不该在新会话里弹出来） */
+    function resetPendingConfirms() {
+        pendingConfirms = [];
+        currentConfirm = null;
         document.getElementById('confirmModal').classList.remove('show');
-        fetch(API_BASE + '/confirm', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ confirmToken: token, action: action })
-        }).catch(function(e) {
-            showMessage('确认请求发送失败: ' + e.message, 'error');
+    }
+
+    /** 兼容入口：SSE `{type:confirm}` 事件调用（现在是入队，不再覆盖） */
+    function showConfirmModal(operation, token, message, extra) {
+        enqueueConfirm({ token: token, operation: operation, message: message, extra: extra || {} });
+    }
+
+    /**
+     * 审计行里的参数（`operation_params`）存的是 **JSON**（`{"vid":"5","srcPath":"a/"}`，
+     * 见 `AuditLogService.sanitizeParams`）。旧代码按 `k=v；k=v` 解析，恢复出来的确认
+     * 只会有"该工具"一个作用域选项（vid/目录全丢）——这里按 JSON 解析，
+     * 仅对历史/异常格式退回 `k=v；` 兜底。
+     */
+    function parseParamsForScope(params) {
+        var out = { dirs: [] };
+        if (params === undefined || params === null) return out;
+        var s = String(params).trim();
+        if (!s) return out;
+        if (s.charAt(0) === '{') {
+            try {
+                var obj = JSON.parse(s);
+                for (var k in obj) {
+                    if (Object.prototype.hasOwnProperty.call(obj, k)) putScopeParam(out, k, obj[k]);
+                }
+                return out;
+            } catch (e) { /* 非法 JSON → 落到下面的 key=value 兜底 */ }
+        }
+        s.split(/[；;]/).forEach(function(kv) {
+            var i = kv.indexOf('=');
+            if (i <= 0) return;
+            putScopeParam(out, kv.slice(0, i).trim(), kv.slice(i + 1).trim());
         });
+        return out;
+    }
+
+    /**
+     * 作用域选项只用到 vid（仓库）与目录类参数（与后端 `PermissionRule.DIR_ARGS` 一致）。
+     *
+     * <p>⚠️ 空串是**合法值**（= 仓库根目录），不能当"没传"丢掉，否则根目录下的操作
+     * 恢复后就没有目录选项了。</p>
+     */
+    function putScopeParam(out, key, value) {
+        if (value === undefined || value === null) return;
+        if (key === 'vid') {
+            var n = parseInt(value, 10);
+            if (!isNaN(n)) out.vid = n;
+            return;
+        }
+        if (key === 'path' || key === 'srcPath' || key === 'dstPath') {
+            if (!out.dirs) out.dirs = [];
+            out.dirs.push({ key: key, label: dirArgLabel(key), path: String(value) });
+        }
+    }
+
+    /**
+     * 从审计行重建确认文案（与 `AuditWriteConfirmGate` 的文案保持一致）。
+     *
+     * <p>审计里是 JSON，直接贴出来是 `参数：{"vid":"5",...}`，与实时弹窗的
+     * `参数：vid=5；path=...` 不一致；这里还原成同一种可读形式。</p>
+     */
+    function buildRecoveredConfirmMessage(item) {
+        var msg = '此操作将执行写操作 [' + ((item && item.operation) || '') + ']，是否继续？';
+        var params = item ? item.params : null;
+        if (!params) return msg;
+        var text = String(params);
+        if (text.trim().charAt(0) === '{') {
+            try {
+                var obj = JSON.parse(text);
+                var parts = [];
+                for (var k in obj) {
+                    if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
+                    var v = obj[k];
+                    if (v === undefined || v === null || v === '') continue;
+                    parts.push(k + '=' + v);
+                }
+                if (parts.length > 0) text = parts.join('；');
+            } catch (e) { /* 非法 JSON → 原样展示 */ }
+        }
+        return msg + '\n参数：' + text;
+    }
+
+    /**
+     * D11：把"还没答复的确认"从服务端取回来并重新弹窗。
+     *
+     * <p>为什么必须：`confirm` 是 SSE **一次性推送**，页面一刷新/断网，用户就再也看不到
+     * "要批准什么"；而服务端按 D5/D10 会**一直等**。本函数在进入应用、切换会话、
+     * 切回标签页时调用，把未决确认补回界面上。</p>
+     *
+     * @param force true = 忽略 5s 节流（进入应用/切换会话时用）
+     */
+    async function loadPendingConfirms(force) {
+        var sid = state.sessionId || '';
+        if (!sid) return;
+        var now = Date.now();
+        if (!force && now - lastPendingFetchAt < 5000) return;
+        lastPendingFetchAt = now;
+        try {
+            var res = await fetch('/DocSystem/agent/confirm/pending?sessionId=' + encodeURIComponent(sid),
+                    { credentials: 'same-origin' });
+            var ret = await res.json();
+            if (!ret || ret.success !== true || !ret.data || !ret.data.items) return;
+            ret.data.items.forEach(function(it) {
+                if (!it || !it.confirmToken) return;
+                var extra = parseParamsForScope(it.params);
+                extra.operation = it.operation;
+                extra.risk = it.risk || undefined;   // 绝对保护 → 不给"放宽授权"入口
+                enqueueConfirm({
+                    token: it.confirmToken,
+                    operation: it.operation,
+                    message: buildRecoveredConfirmMessage(it),
+                    extra: extra
+                });
+            });
+        } catch (e) {
+            // 恢复失败不影响正常使用（下次进入/切回再试）
+        }
+    }
+
+    /** 批准/拒绝；scope 非空时先落一条会话规则再批准（“批准并记住”） */
+    async function resolveConfirm(action, scope) {
+        if (!currentConfirm) return;
+        var token = currentConfirm.token;
+        var operation = currentConfirm.operation;
+        var extra = currentConfirm.extra || {};
+        currentConfirm = null;
+        document.getElementById('confirmModal').classList.remove('show');
+        // ⚠️ 顺序很关键：**先**把"记住授权"规则落库，**再**批准。
+        // 批准会让服务端立刻放行并继续本轮的下一个工具调用（D1 实时生效），规则晚到一步
+        // 就会出现"同一轮第 2 个操作又被问一次"（2026-10-10 实测到该竞态）。
         if (action === 'approve' && scope) {
-            var body = 'scope=' + encodeURIComponent(scope)
-                     + '&tool=' + encodeURIComponent(operation || '')
-                     + '&vid=' + encodeURIComponent(extra.vid === undefined || extra.vid === null ? '' : extra.vid)
-                     + '&path=' + encodeURIComponent(extra.path || '')
-                     + '&sessionId=' + encodeURIComponent(state.sessionId || '');
-            fetch(API_BASE + '/permission/rule', {
+            await rememberConfirmScope(operation, extra, scope);
+        }
+        await sendConfirmAction(token, action);
+        showNextConfirm();   // 处理完这条 → 展示队列里的下一条
+    }
+
+    /** 把选中的作用域落成会话规则（选项 id 形如 "dir:0"/"dirAll:1"，按序号对应到具体目录） */
+    async function rememberConfirmScope(operation, extra, scope) {
+        var scopeKind = scope;
+        var scopePath = (extra.path === undefined || extra.path === null) ? '' : extra.path;
+        var ci = scope.indexOf(':');
+        if (ci > 0) {
+            scopeKind = scope.slice(0, ci);
+            scopePath = confirmScopeDirs[scope];
+            if (scopePath === undefined || scopePath === null) scopePath = '';
+        }
+        var body = 'scope=' + encodeURIComponent(scopeKind)
+                 + '&tool=' + encodeURIComponent(operation || '')
+                 + '&vid=' + encodeURIComponent(extra.vid === undefined || extra.vid === null ? '' : extra.vid)
+                 + '&path=' + encodeURIComponent(scopePath)
+                 + '&sessionId=' + encodeURIComponent(state.sessionId || '');
+        try {
+            var r = await fetch(API_BASE + '/permission/rule', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: body
-            }).then(function(r) { return r.json(); }).then(function(ret) {
-                if (ret && ret.success) {
-                    state.permission.rules = (ret.data && ret.data.rules) ? ret.data.rules : state.permission.rules;
-                    renderPermChip();
-                    showMessage('已记住授权：' + ((ret.data && ret.data.added) || scope), 'success');
-                } else {
-                    showMessage('记住授权失败：' + ((ret && ret.message) || '未知错误'), 'error');
-                }
-            }).catch(function(e) {
-                showMessage('记住授权失败：' + e.message, 'error');
             });
+            var ret = await r.json();
+            if (ret && ret.success) {
+                state.permission.rules = (ret.data && ret.data.rules) ? ret.data.rules : state.permission.rules;
+                renderPermChip();
+                showMessage('已记住授权：' + ((ret.data && ret.data.added) || scopeKind), 'success');
+            } else {
+                showMessage('记住授权失败：' + ((ret && ret.message) || '未知错误'), 'error');
+            }
+        } catch (e) {
+            showMessage('记住授权失败：' + e.message, 'error');
         }
+    }
+
+    /** 批准/拒绝当前确认（POST /agent/confirm） */
+    async function sendConfirmAction(token, action) {
+        try {
+            var r = await fetch(API_BASE + '/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ confirmToken: token, action: action })
+            });
+            var ret = await r.json();
+            // D7②：token 已失效/已被处理（页面重开后重复提交、服务端已超时清理等）→ 明确告知
+            if (ret && ret.success === false) {
+                showMessage('该确认已失效或已被处理：' + ((ret && ret.message) || ''), 'error');
+            }
+        } catch (e) {
+            showMessage('确认请求发送失败: ' + e.message, 'error');
+        }
+    }
+
+    /** D4：切到自动模式并批准当前操作（一步脱身；弹窗内**不提供**"全部允许"） */
+    function confirmSwitchAutoAndApprove() {
+        setPermissionMode('auto').then(function() {
+            resolveConfirm('approve');
+        }, function() {
+            resolveConfirm('approve');   // 切档失败也放行这一次；模式没变则下一个操作仍会问
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         var approveBtn = document.getElementById('confirmApproveBtn');
         var rejectBtn = document.getElementById('confirmRejectBtn');
         var rememberBtn = document.getElementById('confirmRememberBtn');
+        var autoBtn = document.getElementById('confirmAutoModeBtn');
         if (approveBtn) approveBtn.addEventListener('click', function() { resolveConfirm('approve'); });
         if (rejectBtn) rejectBtn.addEventListener('click', function() { resolveConfirm('reject'); });
         if (rememberBtn) rememberBtn.addEventListener('click', function() {
             var sel = document.getElementById('confirmScopeSelect');
             resolveConfirm('approve', sel ? sel.value : 'tool');
         });
+        if (autoBtn) autoBtn.addEventListener('click', function() { confirmSwitchAutoAndApprove(); });
+    });
+
+    // D11：切回标签页（含"断网离开、回来继续"）时把未答复的确认补回界面
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && state.isLoggedIn) loadPendingConfirms(false);
     });
 
     // ==================== 通用确认 / 提示弹窗（替代原生 confirm/alert） ====================
@@ -3477,7 +3758,7 @@
     var PERM_MODES = [
         { id: 'plan', label: '计划模式', chip: '计划模式', desc: '只做调研并输出计划；写操作不执行' },
         { id: 'manual', label: '标准模式', chip: '标准模式', desc: '每个写操作都要确认（默认）' },
-        { id: 'auto', label: '自动模式', chip: '自动模式', desc: '常规写操作自动通过；删除/权限变更仍需确认' },
+        { id: 'auto', label: '自动模式', chip: '自动模式', desc: '常规写操作（含移动/改名）自动通过；删除/权限变更/仓库更新仍需确认' },
         { id: 'allowAll', label: '全部允许', chip: '全部允许', desc: '除删仓库等绝对保护外全部自动通过（谨慎）' }
     ];
 
@@ -4240,11 +4521,14 @@
                             // 结束：一次性全量渲染（智能 markdown/mermaid）
                             renderMessages();
                         } else if (event.type === 'confirm') {
-                            // P2：透传作用域授权所需信息（仅自动档弹窗会展示）
+                            // P2：透传作用域授权所需信息（D2 改后**标准档也会展示**这些入口）
+                            // dirs：调用涉及的目录类参数（移动/复制 = srcPath/dstPath，其余 = path），
+                            // 2026-10-10 补：**必须一起透传**，否则移动/改名时给不出"本目录内不再询问"
                             showConfirmModal(event.operation, event.confirmToken, event.message, {
                                 operation: event.operation,
                                 vid: event.vid,
                                 path: event.path,
+                                dirs: event.dirs,
                                 risk: event.risk
                             });
                         } else if (event.type === 'error') {
@@ -6208,6 +6492,10 @@
             state.currentSession = sid;
             state.sessionId = sid;
             state.messages = [];
+            resetPendingConfirms();   // D11：新会话没有待确认，清掉旧会话的队列
+            // 新会话的模式/授权规则是**独立的**（服务端默认标准模式、规则为空）→ 必须重新读一次，
+            // 否则 chip 会继续显示上一个会话的档位（会让"切模式/记住授权"看起来生效了其实没有）
+            loadPermission();
             // 已选 @ 对象 / 操作保留（2026-09-18 规则：只有用户点 × 才移除）
             renderSessions();
             renderMessages();
@@ -6224,8 +6512,10 @@
         if (e.target.closest('.session-del')) return; // 删除按钮已单独处理
         state.currentSession = item.dataset.id;
         state.sessionId = item.dataset.id;
+        resetPendingConfirms();   // D11：旧会话的待确认不该在新会话里弹出来
         await loadSessionMessages(item.dataset.id);
         renderSessions();
+        loadPendingConfirms(true);   // D11：把新会话里未答复的确认补回界面
         if (window.closeSessionDropdown) window.closeSessionDropdown();
     });
 
@@ -6267,8 +6557,12 @@
         loadFocusDrafts();
         initFocusFromContext();
         renderFocusBar();
-        loadSessionsFromServer();   // T5.2a 从服务端加载会话历史
-        loadPermission();           // P1：加载会话权限模式（计划/手动/自动/全部允许）
+        // D11：必须**等会话列表就绪**（`state.sessionId` 由它设置）再恢复待确认、再读权限模式——
+        // 否则首次进入/刷新时 sessionId 还是 null，恢复查询会被直接跳过，页面刷新后弹窗回不来。
+        Promise.resolve(loadSessionsFromServer()).then(function() {
+            loadPermission();           // P1：加载会话权限模式（计划/手动/自动/全部允许）
+            loadPendingConfirms(true);  // D11：把"还没答复的确认"补回界面（刷新/断网重连后）
+        });
         renderPermChip();
     }
 

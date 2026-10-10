@@ -90,7 +90,7 @@
 | 类别 | 语义 | 初始归类（实现时逐工具核对语义后可微调） |
 |---|---|---|
 | **`ABSOLUTE`（绝对保护）** | **永远 ASK**：任何档位（含“全部允许”）都要确认；**会话规则也不能豁免** | `delete_repos`（硬编码，**不可移除**）；`run_skill` **当被调技能未声明 risk 或声明为 `absolute` 时** |
-| `DESTRUCTIVE` | 自动档仍 ASK；“全部允许”档放行；规则可豁免 | `delete_doc`、`move_doc`、`rename_doc`、`update_repos`（若含物理路径变更） |
+| `DESTRUCTIVE` | 自动档仍 ASK；“全部允许”档放行；规则可豁免 | `delete_doc`、`update_repos`（若含物理路径变更）<br>⚠️ **2026-10-10 裁定 D8**：`move_doc` / `rename_doc` **已降为 `NORMAL`**（对齐 Claude Code `acceptEdits` 的 `mv`/`cp`；代价：自动档会静默移动/改名，且可能破坏外部引用）——见 `devDocs/Agent确认疲劳与模式切换方案.md` |
 | `PERMISSION` | 同 `DESTRUCTIVE`（权限/共享变更） | `create_doc_share`、`update_repos`（成员/权限/配置变更） |
 | `NORMAL` | 自动/全部允许档直接放行 | `create_repos`、`create_folder`、`write_file`、`write_note`、`copy_doc`、`backup_repos` |
 
@@ -149,6 +149,7 @@
 | V3 | **手动档回归**：与改造前一致（每个写工具都弹一次）；不出现"记住授权"入口 | 护栏 `TestWriteConfirmGateCoverage`（按模式改写后）+ 页面 E2E |
 | V4 | **自动档**：连续 ≥5 次 `write_file`/`create_folder` 0 弹窗；**`delete_doc`/`create_doc_share` 仍弹**；审计有记录且标注"自动档" | 页面 E2E（计数弹窗次数）+ 审计查询 |
 | V5 | **自动档作用域规则**：弹窗选"此目录内不再询问" → 同目录 `write_file`/`move_doc`/`delete_doc` 各 ≥3 次**均不再弹**；换目录仍弹 | 页面 E2E + `[Permission] decision=ALLOW reason=rule(dir)` 日志 |
+| ⚠️ V5 **修正（2026-10-10）** | 原文有三处与实现不符：① 规则在**标准档也生效**（D2）；② `dir`/`repo` 规则**按工具授权**（D9，只有新增的 `dirAll` 才覆盖"该目录内所有写操作"）；③ 当时"同一次请求内连做 ≥3 次"这个说法**不可能成立**——那时模式/规则是**每请求快照**，同一请求内改档/授权要到下一次请求才生效（D1 已修）。**正确口径**：装好实时上下文后，"批准并记住 → 同一请求内后续同类操作 0 弹窗"是**可验证**的（见 `TestPermissionLiveContext` 与方案 §6 的 V1） | 页面 E2E + `TestPermissionLiveContext` 护栏 |
 | V6 | **规则只到本会话**：新会话/清空规则后重新弹；服务端不持久化跨会话规则 | 护栏（规则存储断言）+ 页面 E2E |
 | ~~V7~~ | ~~**管理员禁用"全部允许"**：UI 不提供该档；服务端收到 `allowAll` 降级为 `auto` 并有提示~~ **已取消**（2026-09-23 用户裁定：用途不大，直接移除；见下） | — |
 | V8 | **绝对保护**：`delete_repos` 在 **4 个档位下都弹确认**（含"全部允许"档）；且在自动档已授权含该仓库的作用域规则时**仍弹** | 护栏（判定矩阵全覆盖）+ 页面 E2E |

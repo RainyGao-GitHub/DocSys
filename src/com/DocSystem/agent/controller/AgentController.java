@@ -461,14 +461,20 @@ public class AgentController {
                     // ⚠️ 不能用 ToolRegistry.getInstance().find() 反查——注册表是**每请求构建**的，
                     // 单例里没有这些工具，反查得到 null 会一律按 fail-safe 判成 absolute（E2E 暴露）。
                     String risk = riskFromTrace(com.DocSystem.agent.permission.PermissionTrace.last());
+                    // scopes 与前端 buildConfirmScopes 一致（2026-10-10 D9 起 dir/repo 都按工具授权，
+                    // 另给"该目录内所有写操作"= dirAll）；前端目前自己算选项，这里只为契约完整。
+                    // dirs：调用涉及的**目录类参数**——移动/复制用 srcPath/dstPath，其余写工具用 path。
+                    // 前端据此给出"本目录内不再询问"（单靠 path 会让 move_doc/copy_doc 没有目录选项，
+                    // 且 PermissionRule 也匹配不到它们的目录授权）。
                     StringBuilder sb = new StringBuilder();
                     sb.append("{\"type\":\"confirm\",\"confirmToken\":\"").append(token)
                       .append("\",\"operation\":\"").append(toolName)
                       .append("\",\"message\":").append(escapeJson(msg))
-                      .append(",\"scopes\":[\"tool\",\"dir\",\"repo\"]")
+                      .append(",\"scopes\":[\"tool\",\"dir\",\"dirAll\",\"repo\"]")
                       .append(",\"risk\":").append(escapeJson(risk))
                       .append(",\"vid\":").append(vid == null ? "null" : String.valueOf(vid))
                       .append(",\"path\":").append(escapeJson(path))
+                      .append(",\"dirs\":").append(dirArrayJson(args))
                       .append("}");
                     sendSse(emitter, sb.toString());
                     log.info("SSE confirm pushed: tool={}, confirmToken={}, vid={}, path={}, risk={}",
@@ -1171,6 +1177,81 @@ public class AgentController {
     }
 
     /**
+     * D11：取某会话下**仍在等待用户答复**的写操作（页面重载 / 断网重连后恢复确认弹窗用）。
+     *
+     * <p>GET /agent/confirm/pending?sessionId=xxx → `{ items: [{confirmToken, operation, params, risk, createdAt}], count }`</p>
+     *
+     * <p>为什么必须有：`confirm` 事件是通过 SSE **一次性推送**的，前端此前只在内存里存一个
+     * `pendingConfirm`；页面一刷新、网络一断，用户就再也看不到"要批准什么"，
+     * 而服务端（按 D5/D10（裁定）默认无限等待）会一直等下去。</p>
+     *
+     * <p>⚠️ 参数里的 sessionId 是**对话会话 id**，而审计里存的是 **HTTP 会话 id**
+     * （`MainAgent` 用 `context.getSessionId()`，即 jsessionid）——只查前者永远查不到，
+     * 所以两者都查并按 token 去重。</p>
+     */
+    @GetMapping("/confirm/pending")
+    public AgentResponse getPendingConfirmations(
+            @RequestParam(value = "sessionId", required = false) String sessionId,
+            HttpServletRequest request) {
+        User user = currentUser(request);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
+        if (auditLogService == null) {
+            return AgentResponse.error("AuditLogService not available");
+        }
+        java.util.LinkedHashMap<String, AuditLogEntity> byToken =
+                new java.util.LinkedHashMap<String, AuditLogEntity>();
+        collectPending(byToken, sessionId);
+        collectPending(byToken, currentHttpSessionId(request));
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (AuditLogEntity e : byToken.values()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("confirmToken", e.getConfirmToken());
+            item.put("operation", e.getOperation());
+            item.put("params", e.getOperationParams());
+            // 风险类别：恢复出来的弹窗据此决定要不要给"放宽授权"的入口（绝对保护不给）
+            com.DocSystem.agent.permission.ToolRisk risk =
+                    com.DocSystem.agent.permission.ToolRiskCatalog.registered(e.getOperation());
+            item.put("risk", risk != null ? risk.id : null);
+            item.put("createdAt", e.getCreatedAt() != null ? e.getCreatedAt().toString() : null);
+            items.add(item);
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("items", items);
+        data.put("count", items.size());
+        return AgentResponse.ok("OK").withData(data);
+    }
+
+    /** 把某会话下仍 PENDING 的写操作并入结果（按 token 去重；上限 {@link #MAX_PENDING_CONFIRM_QUERY}） */
+    private void collectPending(java.util.LinkedHashMap<String, AuditLogEntity> byToken, String sessionId) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            return;
+        }
+        for (AuditLogEntity e : auditLogService.findPendingBySessionId(sessionId, MAX_PENDING_CONFIRM_QUERY)) {
+            if (e == null || e.getConfirmToken() == null || byToken.containsKey(e.getConfirmToken())) {
+                continue;
+            }
+            if (byToken.size() >= MAX_PENDING_CONFIRM_QUERY) {
+                return;
+            }
+            byToken.put(e.getConfirmToken(), e);
+        }
+    }
+
+    /** 当前 HTTP 会话 id（拿不到 → null） */
+    private String currentHttpSessionId(HttpServletRequest request) {
+        try {
+            return request != null ? request.getSession().getId() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** D11：单次最多返回的待确认条数（防极端情况下一次拉太多） */
+    private static final int MAX_PENDING_CONFIRM_QUERY = 50;
+
+    /**
      * Debug endpoint to check DocSysClient state.
      * Requires X-API-Key header matching DOCSYS_API_KEY.
      * Never exposes session cookie in response.
@@ -1491,8 +1572,7 @@ public class AgentController {
             MDC.put("requestId", streamRequestId);
             log.info("SSE stream started for command: {}", command);
             try {
-                emitter.send(SseEmitter.event()
-                    .data("{\"type\":\"start\"}", MediaType.TEXT_PLAIN));
+                sendSse(emitter, "{\"type\":\"start\"}");
 
                 // ===== P1：「@」关注对象 + 「/」操作 =====
                 // 1) 可见性校验（剔除无权限/已不存在的仓库）
@@ -1606,30 +1686,31 @@ public class AgentController {
                             if (chunk.isDone()) break;
                             if (chunk.isReasoning()) {
                                 reasoningAccum.append(chunk.content);
-                                emitter.send(SseEmitter.event()
-                                    .data("{\"type\":\"reasoning\",\"content\":" + escapeJson(chunk.content) + "}", MediaType.TEXT_PLAIN));
+                                sendSse(emitter, "{\"type\":\"reasoning\",\"content\":" + escapeJson(chunk.content) + "}");
                             } else if (chunk.isText()) {
                                 fullContent.append(chunk.content);
-                                emitter.send(SseEmitter.event()
-                                    .data("{\"type\":\"text\",\"content\":" + escapeJson(chunk.content) + "}", MediaType.TEXT_PLAIN));
+                                sendSse(emitter, "{\"type\":\"text\",\"content\":" + escapeJson(chunk.content) + "}");
                             }
                         }
                     } catch (Exception e) {
                         log.warn("isAiChat streaming failed: {}", e.getMessage());
-                        emitter.send(SseEmitter.event()
-                            .data("{\"type\":\"error\",\"message\":" + escapeJson("AI 流式响应失败: " + e.getMessage()) + "}", MediaType.TEXT_PLAIN));
+                        sendSse(emitter, "{\"type\":\"error\",\"message\":" + escapeJson("AI 流式响应失败: " + e.getMessage()) + "}");
                         emitter.complete();
                         return;
                     }
 
-                    emitter.send(SseEmitter.event()
-                        .data("{\"type\":\"done\",\"fullContent\":" + escapeJson(fullContent.toString()) + "}", MediaType.TEXT_PLAIN));
-
-                    // T5.2a 会话历史持久化（关页面后可续接；T7.3 含 reasoning）
-                    if (conversationHistoryService != null) {
-                        conversationHistoryService.saveExchange(effectiveSession, message,
-                                fullContent.toString(), reasoningAccum.toString());
+                    // D10：**先落库、再推送**。客户端可能早已断开（用户离开网络去别处、
+                    // 稍后才回来批准），此时 send 会失败/被吞 —— 但会话历史里必须有这条回答，
+                    // 否则"批准了却看不到结果"。落库自身失败也不阻断后续推送。
+                    try {
+                        if (conversationHistoryService != null) {
+                            conversationHistoryService.saveExchange(effectiveSession, message,
+                                    fullContent.toString(), reasoningAccum.toString());
+                        }
+                    } catch (Exception e) {
+                        log.warn("saveExchange failed (answer not persisted): {}", e.getMessage());
                     }
+                    sendSse(emitter, "{\"type\":\"done\",\"fullContent\":" + escapeJson(fullContent.toString()) + "}");
 
                 } else {
                     // Non-AI command: execute and stream result
@@ -1692,16 +1773,26 @@ public class AgentController {
 
                         // Emit SSE confirm event (per D-13: SSE pause + frontend confirm dialog)
                         String confirmMessage = buildConfirmMessage(operationType, command);
-                        emitter.send(SseEmitter.event()
-                            .data("{\"type\":\"confirm\",\"confirmToken\":\"" + confirmToken +
-                                  "\",\"operation\":\"" + operationType +
-                                  "\",\"message\":" + escapeJson(confirmMessage) + "}", MediaType.TEXT_PLAIN));
+                        sendSse(emitter, "{\"type\":\"confirm\",\"confirmToken\":\"" + confirmToken +
+                              "\",\"operation\":\"" + operationType +
+                              "\",\"message\":" + escapeJson(confirmMessage) + "}");
 
-                        // Wait for confirmation (poll with timeout)
-                        boolean approved = waitForConfirmation(confirmToken, 120, TimeUnit.SECONDS);
+                        // 等待用户确认（D5：不设时限、到点不做任何决定；D10：复用全局挂起上限）
+                        if (!com.DocSystem.agent.tool.AuditWriteConfirmGate.tryAcquirePendingSlot()) {
+                            log.warn("Too many pending confirmations — refusing operation '{}'", operationType);
+                            sendSse(emitter, "{\"type\":\"error\",\"message\":" + escapeJson(
+                                    "当前有太多操作在等待确认，请先处理已有的确认后再继续。") + "}");
+                            emitter.complete();
+                            return;
+                        }
+                        boolean approved;
+                        try {
+                            approved = waitForConfirmation(confirmToken, 0, TimeUnit.SECONDS);
+                        } finally {
+                            com.DocSystem.agent.tool.AuditWriteConfirmGate.releasePendingSlot();
+                        }
                         if (!approved) {
-                            emitter.send(SseEmitter.event()
-                                .data("{\"type\":\"error\",\"message\":\"Confirmation timeout or rejected\"}", MediaType.TEXT_PLAIN));
+                            sendSse(emitter, "{\"type\":\"error\",\"message\":\"操作被拒绝\"}");
                             emitter.complete();
                             return;
                         }
@@ -1714,8 +1805,7 @@ public class AgentController {
                         result = runCommand(command, capturedUsername, capturedJsessionid);
                     } catch (Exception ex) {
                         log.error("executeInternal failed", ex);
-                        emitter.send(SseEmitter.event()
-                            .data("{\"type\":\"error\",\"message\":" + escapeJson("执行失败: " + ex.getMessage()) + "}", MediaType.TEXT_PLAIN));
+                        sendSse(emitter, "{\"type\":\"error\",\"message\":" + escapeJson("执行失败: " + ex.getMessage()) + "}");
                         emitter.complete();
                         return;
                     }
@@ -1732,27 +1822,28 @@ public class AgentController {
 
                     String responseText = result.isSuccess() ? result.getMessage() : "错误: " + result.getMessage();
 
-                    // Stream in small chunks
+                    // Stream in small chunks（sendSse：客户端断开也不抛，避免中断整个流程）
                     int chunkSize = 5;
                     for (int i = 0; i < responseText.length(); i += chunkSize) {
                         int end = Math.min(i + chunkSize, responseText.length());
                         String part = responseText.substring(i, end);
-                        emitter.send(SseEmitter.event()
-                            .data("{\"type\":\"chunk\",\"content\":" + escapeJson(part) + "}", MediaType.TEXT_PLAIN));
+                        sendSse(emitter, "{\"type\":\"chunk\",\"content\":" + escapeJson(part) + "}");
                         if (i + chunkSize < responseText.length()) {
                             Thread.sleep(15); // typing effect delay
                         }
                     }
 
-                    emitter.send(SseEmitter.event()
-                        .data("{\"type\":\"done\",\"fullContent\":" + escapeJson(responseText) + "}", MediaType.TEXT_PLAIN));
-
-                    // T5.2a 会话历史持久化（legacy 路径）
-                    if (conversationHistoryService != null) {
-                        conversationHistoryService.saveExchange(
-                                sessionId != null ? sessionId : capturedJsessionid,
-                                command, responseText);
+                    // D10：**先落库、再推送**（客户端可能已断开；结果必须能在会话历史里回看）
+                    try {
+                        if (conversationHistoryService != null) {
+                            conversationHistoryService.saveExchange(
+                                    sessionId != null ? sessionId : capturedJsessionid,
+                                    command, responseText);
+                        }
+                    } catch (Exception e) {
+                        log.warn("saveExchange failed (answer not persisted): {}", e.getMessage());
                     }
+                    sendSse(emitter, "{\"type\":\"done\",\"fullContent\":" + escapeJson(responseText) + "}");
                 }
 
                 emitter.complete();
@@ -1784,7 +1875,7 @@ public class AgentController {
         return emitter;
     }
 
-    private String escapeJson(String s) {
+    private static String escapeJson(String s) {
         if (s == null) return "\"\"";
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") + "\"";
     }
@@ -2466,11 +2557,15 @@ public class AgentController {
     }
 
     /**
-     * P2：批准并记住 —— 把一次确认转成**会话内作用域规则**（仅在"自动"档产生）。
+     * P2：批准并记住 —— 把一次确认转成**会话内作用域规则**。
      *
-     * <p>作用域：{@code tool}（该工具）/ {@code dir}（该目录，含子目录）/ {@code repo}（该仓库）。
+     * <p>作用域（2026-10-10 D9 起）：{@code tool}（该工具）/ {@code dir}（该目录内的**该工具**，含子目录）/
+     * {@code dirAll}（该目录内的**所有写操作**，显式宽授权）/ {@code repo}（该仓库内的**该工具**）。
      * 存 {@code agent_sessions.metadata.permissionRules}，命中后同作用域内不再弹窗
      * （**但不能豁免绝对保护**，如删仓库）。</p>
+     *
+     * <p>2026-10-10 D2：规则**不再限制"仅自动档产生"**——标准档也允许用户主动授权
+     * （否则"整理目录"在标准档下无路可脱身）。</p>
      */
     @PostMapping("/permission/rule")
     public AgentResponse addPermissionRule(
@@ -2534,7 +2629,43 @@ public class AgentController {
         return "normal";
     }
 
-    /** 权限模式的会话 id：优先前端传的对话会话 id，其次 HTTP 会话 id（两者都无 → null） */    private String resolvePermissionSessionId(String sessionId, HttpServletRequest request) {
+    /**
+     * 调用涉及的"目录类"参数 → {@code [{"key":"srcPath","label":"源目录","path":"..."}]}。
+     *
+     * <p>弹窗据此给出"本目录内不再询问"。只列**实际出现**的参数（空串 = 仓库根目录，是合法值）；
+     * 一个都没有 → {@code []}。移动/复制用 {@code srcPath}/{@code dstPath}，其余写工具用 {@code path}。</p>
+     */
+    static String dirArrayJson(com.alibaba.fastjson.JSONObject args) {
+        StringBuilder sb = new StringBuilder("[");
+        if (args != null) {
+            for (String key : com.DocSystem.agent.permission.PermissionRule.DIR_ARGS) {
+                if (!args.containsKey(key)) {
+                    continue;
+                }
+                if (sb.length() > 1) {
+                    sb.append(',');
+                }
+                sb.append("{\"key\":\"").append(key).append("\",\"label\":\"")
+                  .append(dirArgLabel(key)).append("\",\"path\":")
+                  .append(escapeJson(args.getString(key))).append("}");
+            }
+        }
+        return sb.append(']').toString();
+    }
+
+    /** 目录类参数的展示名（弹窗里显示"目录/源目录/目标目录"） */
+    private static String dirArgLabel(String key) {
+        if ("srcPath".equals(key)) {
+            return "源目录";
+        }
+        if ("dstPath".equals(key)) {
+            return "目标目录";
+        }
+        return "目录";
+    }
+
+    /** 权限模式的会话 id：优先前端传的对话会话 id，其次 HTTP 会话 id（两者都无 → null） */
+    private String resolvePermissionSessionId(String sessionId, HttpServletRequest request) {
         if (sessionId != null && !sessionId.trim().isEmpty()) {
             return sessionId.trim();
         }
@@ -3041,21 +3172,38 @@ public class AgentController {
     }
 
     /**
-     * Wait for user confirmation via POST /api/agent/confirm.
-     * Uses polling with a timeout to avoid blocking indefinitely.
+     * 等待用户确认（操作级确认的旧路径，供 streamInternal 用）。
+     *
+     * <p>2026-10-10 裁定 D5 同样适用：**到点不做任何批准/否决**——若 {@code timeout <= 0}
+     * （或到点后）就继续等待，只在到点时 WARN 一次；有界面在时不存在"没人能答"的问题。</p>
      */
     private boolean waitForConfirmation(String confirmToken, long timeout, TimeUnit unit) {
         if (auditLogService == null) return true;  // Graceful degradation
-        long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
+        boolean unlimited = timeout <= 0;
+        long deadline = unlimited ? Long.MAX_VALUE : System.currentTimeMillis() + unit.toMillis(timeout);
+        boolean deadlineWarned = false;
         int pollIntervalMs = 500;
 
-        while (System.currentTimeMillis() < deadline) {
+        while (true) {
             try {
                 AuditLogEntity entry = auditLogService.getPendingEntry(confirmToken);
                 if (entry == null) {
-                    // Entry was processed — check its final status
-                    // Note: getPendingEntry returns null if not PENDING, meaning it was approved/rejected
-                    return false;  // Rejected or expired
+                    // 已离开 PENDING（批准/拒绝/过期/被清理）→ 按**实际终态**决定。
+                    // 注意：原来这里直接 return false，会把"用户已批准"也当成拒绝（旧缺陷），
+                    // 故改为读终态；读不到（null）→ 视为拒绝（保守）。
+                    String status = auditLogService.getStatusByConfirmToken(confirmToken);
+                    boolean approved = "APPROVED".equals(status);
+                    log.info("Operation confirmation finished (status={}): {}", status, confirmToken);
+                    return approved;
+                }
+                if (!unlimited && System.currentTimeMillis() >= deadline) {
+                    // D5：到点**不做任何决定**，只告警一次并继续等（用户可能很久才回答）
+                    if (!deadlineWarned) {
+                        log.warn("Operation confirmation still PENDING after {} {} ({}); keep waiting — "
+                                + "never auto approve/reject (D5)", timeout, unit, confirmToken);
+                        deadlineWarned = true;
+                    }
+                    unlimited = true;
                 }
                 Thread.sleep(pollIntervalMs);
             } catch (InterruptedException e) {
@@ -3063,7 +3211,6 @@ public class AgentController {
                 return false;
             }
         }
-        return false;  // Timeout
     }
 
     // ==================== FILE UPLOAD ENDPOINTS ====================

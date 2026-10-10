@@ -179,9 +179,21 @@ public class MainAgent {
         return v != null && v;
     }
 
-    /** 写操作确认超时（秒） */
-    @org.springframework.beans.factory.annotation.Value("${agent.tool-loop.confirm-timeout:120}")
+    /**
+     * 写操作确认等待上限（秒）。**2026-10-10 裁定 D5/D10：默认 0 = 无限等待**，
+     * 因为用户可能很久才回答、甚至故意不答（例如离开有网络的地方回来再继续）；
+     * 到点**不做任何批准/否决**（只在"无确认通道"时由门内部退回有限等待）。
+     * 设成正数 → 到点仅 WARN 一次后继续等待。
+     */
+    @org.springframework.beans.factory.annotation.Value("${agent.tool-loop.confirm-timeout:0}")
     private long toolLoopConfirmTimeoutSeconds;
+
+    /**
+     * 全局同时挂起的待确认数上限（D10「上限保护」）。默认 8；{@code <=0} → 不限制。
+     * 达到上限时，新的写操作会直接失败并提示"请先处理待确认"（不排队、不自动放行）。
+     */
+    @org.springframework.beans.factory.annotation.Value("${agent.tool-loop.max-pending-confirms:8}")
+    private int toolLoopMaxPendingConfirms;
     
     public MainAgent(DocSysClient docSysClient) {
         this.docSysClient = docSysClient;
@@ -877,6 +889,8 @@ public class MainAgent {
                 auditLogService, toolUserId, toolSessionId, toolClientIp, toolTraceId,
                 toolLoopConfirmTimeoutSeconds);
         gate.setConfirmEventSink(confirmSink);
+        // D10：全局挂起上限（无限等待的上限保护）
+        com.DocSystem.agent.tool.AuditWriteConfirmGate.setMaxPendingConfirms(toolLoopMaxPendingConfirms);
         registry.setConfirmGate(gate);
         // P1：权限模式（会话级）→ 注入判定上下文；未装配 PermissionStore / 无会话 → ctx 保持 null（行为同改造前）
         com.DocSystem.agent.permission.PermissionMode permMode = com.DocSystem.agent.permission.PermissionMode.DEFAULT;
@@ -891,10 +905,21 @@ public class MainAgent {
             }
             java.util.List<com.DocSystem.agent.permission.PermissionRule> permRules =
                     permissionStore.getRules(permissionSessionId);
+            com.DocSystem.agent.permission.PermissionContext.SkillRiskResolver skillRisk =
+                    skillId -> resolveSkillRisk(skillId);
+            // 请求开始时的快照：兜底路径（供应器未装配/异常时用）
             registry.setPermissionContext(new com.DocSystem.agent.permission.PermissionContext(
-                    permMode, permRules, skillId -> resolveSkillRisk(skillId)));
+                    permMode, permRules, skillRisk));
+            // 2026-10-10 用户裁定 D1：再装配**实时供应器** —— 每次工具调用重读模式与规则，
+            // 使"运行中切档 / 弹窗里批准并记住"在同一请求内立即生效（对齐 Claude Code）。
+            // 读取失败/为空 → ToolRegistry 回落到保守上下文（标准档 + 无规则 = 该问还问）。
+            final String liveSessionId = permissionSessionId;
+            registry.setPermissionContextSupplier(() -> new com.DocSystem.agent.permission.PermissionContext(
+                    permissionStore.getMode(liveSessionId),
+                    permissionStore.getRules(liveSessionId),
+                    skillRisk));
             com.DocSystem.common.Log.info("[Permission] sessionId=" + permissionSessionId
-                    + " mode=" + permMode.id + " rules=" + permRules.size());
+                    + " mode=" + permMode.id + " rules=" + permRules.size() + " live=1");
         }
         final com.DocSystem.agent.permission.PermissionMode activePermMode = permMode;
         // 执行监听器：写工具落审计 + 指标打点（T4.2/T4.3）

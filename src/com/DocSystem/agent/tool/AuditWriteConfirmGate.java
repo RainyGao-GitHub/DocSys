@@ -17,8 +17,13 @@ import java.util.Map;
  * 1. auditLogService.createPendingEntry(...) → confirmToken（PENDING 状态 + 审计落库）
  * 2. 日志打印 confirmToken（当前无 SSE 推送，token 从审计/日志获取；SSE 推送为后续增强）
  * 3. 轮询等待用户经 POST /agent/confirm 批准（approve/reject）
- * 4. 批准 → 返回 true 继续执行；拒绝/超时 → 返回 false 中止
+ * 4. 批准 → 返回 true 继续执行；拒绝 → 返回 false 中止
  * </pre>
+ *
+ * <p><b>2026-10-10 用户裁定 D5/D10</b>：等待默认**无限**、到点**不做任何批准/否决**
+ * （只有"无确认通道"时才退回有限等待，因为那时没有可被代决定的用户）；
+ * 另有**全局挂起上限**：超限时抛 {@link ConfirmGateBusyException} 让新的写操作明确失败，
+ * 既不排队也不自动放行。</p>
  */
 public class AuditWriteConfirmGate implements WriteConfirmGate {
 
@@ -33,6 +38,51 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
 
     /** 确认事件推送器（SSE；无推送通道时为 NOOP） */
     private volatile ConfirmEventSink confirmEventSink = ConfirmEventSink.NOOP;
+
+    /**
+     * 全局同时挂起的待确认数上限（D10「A+」的上限保护）。{@code <=0} → 不限制。
+     * 由 {@code MainAgent} 用配置初始化；默认 8。
+     */
+    private static volatile int maxPendingConfirms = 8;
+
+    /** 当前挂起数（诊断/日志用） */
+    private static final java.util.concurrent.atomic.AtomicInteger PENDING_COUNT =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    /**
+     * 无确认通道（{@code NOOP}，即没有任何界面能答复）时的兜底等待秒数：
+     * 此时"无限等待"没有意义（永远没人答），故退回有限等待，到点按**未批准**收场
+     * ——现行行为不变，也不违反"不代用户决定"（因为没有用户可代）。
+     */
+    static final long NOOP_FALLBACK_TIMEOUT_SECONDS = 120;
+
+    /** 设置全局挂起上限（{@code <=0} → 不限制） */
+    public static void setMaxPendingConfirms(int max) {
+        maxPendingConfirms = max;
+    }
+
+    /** 当前挂起数（护栏/诊断用） */
+    public static int pendingConfirms() {
+        return PENDING_COUNT.get();
+    }
+
+    /**
+     * 尝试占用一个"挂起位"（供其它确认流程复用同一全局上限，如操作级确认）。
+     *
+     * @return true = 已占用（调用方**必须**在 finally 里 {@link #releasePendingSlot()}）
+     */
+    public static boolean tryAcquirePendingSlot() {
+        if (maxPendingConfirms > 0 && PENDING_COUNT.get() >= maxPendingConfirms) {
+            return false;
+        }
+        PENDING_COUNT.incrementAndGet();
+        return true;
+    }
+
+    /** 释放"挂起位" */
+    public static void releasePendingSlot() {
+        PENDING_COUNT.decrementAndGet();
+    }
 
     public AuditWriteConfirmGate(AuditLogService auditLogService, String userId, String sessionId,
                                  String clientIp, String traceId, long timeoutSeconds) {
@@ -56,6 +106,23 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
             return true;
         }
 
+        // D10「上限保护」：挂起数已达上限 → **拒绝开始新的等待**（不排队、不自动放行）
+        if (!tryAcquirePendingSlot()) {
+            log.error("Too many pending write confirmations ({}/{}) — refusing to wait for '{}'",
+                    PENDING_COUNT.get(), maxPendingConfirms, toolName);
+            throw new ConfirmGateBusyException(
+                    "当前已有 " + PENDING_COUNT.get() + " 个写操作在等待你的确认（上限 "
+                    + maxPendingConfirms + " 个）。请先在会话里批准或拒绝这些待确认操作，"
+                    + "再继续执行新的写操作。");
+        }
+        try {
+            return waitForUserDecision(toolName, args);
+        } finally {
+            releasePendingSlot();
+        }
+    }
+
+    private boolean waitForUserDecision(String toolName, JSONObject args) throws Exception {
         // 1. 创建 PENDING 审计 + confirmToken
         Map<String, String> params = new HashMap<>();
         if (args != null) {
@@ -146,9 +213,32 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
         return sb.toString();
     }
 
-    private boolean waitForApproval(String confirmToken, long timeoutSeconds) {        long deadline = System.currentTimeMillis() + timeoutSeconds * 1000L;
+    /**
+     * 轮询等待用户答复（2026-10-10 裁定 D5/D10 后重写）。
+     *
+     * <p>核心变化：**到点不做任何批准、也不做任何否决**。
+     * <ul>
+     *   <li><b>有确认通道</b>（SSE，即有界面能答复）且 {@code timeoutSeconds <= 0}（默认）→ **无限等待**；
+     *       若配置了正数，到点只 WARN 一次并**继续等待**（用户可能很久才回答，甚至故意不答）。</li>
+     *   <li><b>无确认通道</b>（{@code NOOP}，没人能答复）→ 退回
+     *       {@link #NOOP_FALLBACK_TIMEOUT_SECONDS} 有限等待，到点按**未批准**收场（与改造前一致，
+     *       且此时不存在"被代决定"的用户）。</li>
+     * </ul>
+     * 其它收场口：用户点「拒绝」（`POST /agent/confirm`）、审计条目被清理（视为拒绝）。</p>
+     */
+    private boolean waitForApproval(String confirmToken, long timeoutSeconds) {
+        boolean hasChannel = confirmEventSink != null && confirmEventSink != ConfirmEventSink.NOOP;
+        long effectiveTimeout = timeoutSeconds;
+        if (!hasChannel && effectiveTimeout <= 0) {
+            effectiveTimeout = NOOP_FALLBACK_TIMEOUT_SECONDS;
+            log.warn("No confirm channel for {} — using {}s fallback wait instead of unlimited",
+                    confirmToken, effectiveTimeout);
+        }
+        boolean unlimited = effectiveTimeout <= 0;
+        long deadline = unlimited ? Long.MAX_VALUE : System.currentTimeMillis() + effectiveTimeout * 1000L;
+        boolean deadlineWarned = false;
         int pollIntervalMs = 500;
-        while (System.currentTimeMillis() < deadline) {
+        while (true) {
             try {
                 String status = auditLogService.getStatusByConfirmToken(confirmToken);
                 if (status == null) {
@@ -162,13 +252,23 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
                             status, confirmToken);
                     return approved;
                 }
+                if (!unlimited && System.currentTimeMillis() >= deadline) {
+                    if (!hasChannel) {
+                        log.warn("Write operation confirmation TIMEOUT (no confirm channel): {}", confirmToken);
+                        return false;
+                    }
+                    if (!deadlineWarned) {
+                        log.warn("Write operation confirmation still PENDING after {}s ({}); keep waiting — "
+                                + "never auto approve/reject (D5)", effectiveTimeout, confirmToken);
+                        deadlineWarned = true;
+                    }
+                    unlimited = true;   // 有界面：到点后不再设限，继续等用户答复
+                }
                 Thread.sleep(pollIntervalMs);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return false;
             }
         }
-        log.warn("Write operation confirmation TIMEOUT: {}", confirmToken);
-        return false;
     }
 }

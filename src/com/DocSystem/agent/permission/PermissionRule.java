@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 会话内的"记住授权"规则（用户 2026-09-23 裁定：**作用域只做会话级**）。
  *
@@ -13,14 +16,20 @@ import com.alibaba.fastjson.JSONObject;
  * <p>作用域维度（最细优先，命中即放行——**但不豁免 {@link ToolRisk#ABSOLUTE}**）：</p>
  * <ul>
  *   <li>{@link Kind#TOOL} 该工具（如 run_skill 的某个具体技能、某类写操作）</li>
- *   <li>{@link Kind#DIR}  该目录（**含子目录**，按仓库 vid + 规范化的目录路径前缀匹配）</li>
- *   <li>{@link Kind#REPO} 该仓库（vid）</li>
+ *   <li>{@link Kind#DIR}  该目录内的**该工具**（含子目录，按仓库 vid + 规范化的目录路径前缀匹配；
+ *       目录取 {@code path}/{@code srcPath}/{@code dstPath}，任一落在授权目录内即命中）</li>
+ *   <li>{@link Kind#DIR_ALL} 该目录内的**所有写操作**（含子目录；**忽略工具名**——前端显式标注的宽授权）</li>
+ *   <li>{@link Kind#REPO} 该仓库内的**该工具**（vid）</li>
  * </ul>
+ *
+ * <p>2026-10-10（用户裁定 D9）：{@code DIR}/{@code REPO} **必须同时匹配工具名**；
+ * 只有 {@code DIR_ALL} 才忽略工具名（"该目录内所有写操作都不再询问"要由用户显式选择，
+ * 不能因为选了个"本目录内不再询问"而被默默放大）。</p>
  */
 public final class PermissionRule {
 
     public enum Kind {
-        TOOL("tool"), DIR("dir"), REPO("repo");
+        TOOL("tool"), DIR("dir"), DIR_ALL("dirAll"), REPO("repo");
 
         public final String id;
 
@@ -74,7 +83,21 @@ public final class PermissionRule {
         return p.replaceAll("/{2,}", "/");
     }
 
-    /** 是否命中该次工具调用 */
+    /**
+     * 是否命中该次工具调用。
+     *
+     * <p>{@code DIR}/{@code REPO} 会**同时校验工具名**（D9）；只有 {@code DIR_ALL} 忽略工具名。
+     * 工具名缺失/不匹配 → **不命中**（fail-safe：宁严不松）。</p>
+     *
+     * <p>"调用所在的目录"取 {@link #DIR_ARGS} 里出现的参数（移动/复制用 {@code srcPath}/{@code dstPath}，
+     * 其余写工具用 {@code path}）——任一落在授权目录下（含自身、含子目录）即命中。
+     * 2026-10-10 修：改之前只看 {@code path}，于是 {@code move_doc}/{@code copy_doc} 的目录授权
+     * **永远不可能命中**（它们的参数是 srcPath/dstPath），"整理目录"场景的作用域授权形同虚设。</p>
+     *
+     * <p>⚠️ 语义是"该目录**参与**了本次调用"（源目录或目标目录命中都算），不是"必须以它为源"。
+     * 弹窗里给"源目录/目标目录"两个选项只是让用户知道这个目录是**怎么**参与的；
+     * 规则本身不区分源/目标（用户 2026-10-10 裁定 D9 的作用域维度只有 工具/目录/仓库 三种）。</p>
+     */
     public boolean matches(String toolName, JSONObject args) {
         if (kind == Kind.TOOL) {
             return tool != null && tool.equals(toolName);
@@ -84,17 +107,46 @@ public final class PermissionRule {
         }
         Integer argVid = args.getInteger("vid");
         if (kind == Kind.REPO) {
-            return vid != null && vid.equals(argVid);
+            if (vid == null || !vid.equals(argVid)) {
+                return false;
+            }
+            return toolMatches(toolName);
         }
-        // DIR：同仓库 + 目标路径落在已授权目录下（含自身、含子目录）
+        // DIR / DIR_ALL：同仓库 + 目标路径落在已授权目录下（含自身、含子目录）
         if (vid != null && !vid.equals(argVid)) {
             return false;
         }
-        String argPath = normalizePath(args.getString("path"));
-        if (argPath.equals(path)) {
-            return true;
+        if (kind == Kind.DIR && !toolMatches(toolName)) {
+            return false;
         }
-        return !path.isEmpty() && argPath.startsWith(path + "/");
+        for (String argPath : callDirs(args)) {
+            if (argPath.equals(path)) {
+                return true;
+            }
+            if (!path.isEmpty() && argPath.startsWith(path + "/")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 目录类参数名（按此顺序；空串 = 仓库根目录，是合法值） */
+    public static final String[] DIR_ARGS = {"path", "srcPath", "dstPath"};
+
+    /** 取本次调用涉及的目录（**只取实际出现的参数**；都没出现 → 空列表 ⇒ 不命中，fail-safe） */
+    static List<String> callDirs(JSONObject args) {
+        List<String> out = new ArrayList<String>();
+        for (String key : DIR_ARGS) {
+            if (args.containsKey(key)) {
+                out.add(normalizePath(args.getString(key)));
+            }
+        }
+        return out;
+    }
+
+    /** DIR/REPO 规则的按工具匹配（工具名为空/不匹配 → 不命中，宁严不松） */
+    private boolean toolMatches(String toolName) {
+        return tool != null && !tool.isEmpty() && tool.equals(toolName);
     }
 
     /** 人类可读描述（前端 chip / 日志用） */
@@ -103,9 +155,10 @@ public final class PermissionRule {
             return "工具 " + tool;
         }
         if (kind == Kind.REPO) {
-            return "仓库 vid=" + vid;
+            return "仓库 vid=" + vid + " / 工具 " + tool;
         }
-        return "目录 vid=" + vid + "/" + (path.isEmpty() ? "(根)" : path);
+        String scope = (kind == Kind.DIR_ALL) ? "目录(所有写操作)" : ("目录 / 工具 " + tool);
+        return scope + " vid=" + vid + "/" + (path.isEmpty() ? "(根)" : path);
     }
 
     public JSONObject toJson() {

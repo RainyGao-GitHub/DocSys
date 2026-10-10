@@ -39,6 +39,24 @@ public class ToolRegistry {
     /** 权限策略上下文（P1）：null = 未接入权限模式，行为与改造前完全一致（每次都问） */
     private volatile com.DocSystem.agent.permission.PermissionContext permissionContext = null;
 
+    /**
+     * 权限上下文供应器（2026-10-10 用户裁定 D1）：**非 null 时每次工具调用都取最新上下文**，
+     * 使"运行中改档 / 弹窗里批准并记住"在同一请求内**立即生效**
+     * （对齐 Claude Code："applies starting with Claude's next tool call in the same turn"）。
+     *
+     * <p>null → 回落到上面的 {@link #permissionContext} 快照（旧行为，护栏与非 SSE 路径不受影响）。</p>
+     */
+    private volatile java.util.function.Supplier<com.DocSystem.agent.permission.PermissionContext>
+            permissionContextSupplier = null;
+
+    /**
+     * 实时读取失败时的保守回落：**标准档 + 无规则 = 该问还问**。
+     * 方向必须是"更严"，绝不回落成放行。
+     */
+    private static final com.DocSystem.agent.permission.PermissionContext CONSERVATIVE_CONTEXT =
+            new com.DocSystem.agent.permission.PermissionContext(
+                    com.DocSystem.agent.permission.PermissionMode.MANUAL, null);
+
     /** 执行监听器（每次工具执行后调用；用于审计/指标，默认 no-op） */
     private volatile ToolExecutionListener executionListener = (tool, args, result, durationMs) -> {};
 
@@ -155,6 +173,34 @@ public class ToolRegistry {
         return permissionContext;
     }
 
+    /**
+     * 设置**实时**权限上下文供应器（D1）：每次工具调用都从它取最新上下文，
+     * 让运行中的模式/规则变更立即生效；传 null → 退回 {@link #setPermissionContext} 的快照路径。
+     */
+    public void setPermissionContextSupplier(
+            java.util.function.Supplier<com.DocSystem.agent.permission.PermissionContext> supplier) {
+        this.permissionContextSupplier = supplier;
+    }
+
+    /**
+     * 取本次判定用的权限上下文：优先实时供应器（D1）；供应器缺失 → 快照；
+     * 供应器返回 null 或抛异常 → {@link #CONSERVATIVE_CONTEXT}（更严，不放行）。
+     */
+    private com.DocSystem.agent.permission.PermissionContext resolvePermissionContext() {
+        java.util.function.Supplier<com.DocSystem.agent.permission.PermissionContext> supplier =
+                this.permissionContextSupplier;
+        if (supplier == null) {
+            return this.permissionContext;
+        }
+        try {
+            com.DocSystem.agent.permission.PermissionContext fresh = supplier.get();
+            return fresh != null ? fresh : CONSERVATIVE_CONTEXT;
+        } catch (Exception e) {
+            log.warn("permission context refresh failed — falling back to conservative context (manual, no rules)", e);
+            return CONSERVATIVE_CONTEXT;
+        }
+    }
+
     /** 当前执行监听器（测试/诊断用） */
     public ToolExecutionListener getExecutionListener() {
         return executionListener;
@@ -186,8 +232,9 @@ public class ToolRegistry {
         }
 
         // 写操作权限判定（P1）：needsConfirm 工具先问策略 → DENY / ASK / ALLOW
+        // D1：上下文可**每次调用**重新取（运行时改档/记住授权当场生效）；无供应器时用快照
         if (def.needsConfirm) {
-            com.DocSystem.agent.permission.PermissionContext ctx = this.permissionContext;
+            com.DocSystem.agent.permission.PermissionContext ctx = resolvePermissionContext();
             com.DocSystem.agent.permission.PermissionDecision decision;
             if (ctx == null) {
                 // 未接入权限模式（旧路径/测试）→ 保持改造前行为：直接走确认门
@@ -212,6 +259,10 @@ public class ToolRegistry {
                         log.warn("Tool '{}' rejected by user confirm gate", name);
                         return ToolResult.error("操作被用户拒绝");
                     }
+                } catch (ConfirmGateBusyException busy) {
+                    // D10：待确认已达全局上限 → 明确告知用户先处理已有待确认（不排队、不自动放行）
+                    log.warn("Tool '{}' not started (confirm gate busy): {}", name, busy.getMessage());
+                    return ToolResult.error(busy.getMessage());
                 } catch (Exception e) {
                     log.error("Tool '{}' confirm gate threw exception", name, e);
                     return ToolResult.error("确认流程异常: " + e.getMessage());
