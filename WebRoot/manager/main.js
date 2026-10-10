@@ -7158,19 +7158,6 @@ function showImportUserPanel(){
 	});
 }
 
-//showAddOfficeLicensePanel
-function showAddOfficeLicensePanel(){
-	console.log("showAddOfficeLicensePanel");
-	qiao.bs.dialog({
-		id: 'addOfficeLicense',
-		url: 'addOfficeLicense' + langExt + '.html',
-		title: _Lang('新增Office证书'),
-		msg: _Lang('页面正在加载，请稍等...'),
-		foot: false,
-		big: false
-	});
-}
-
 function importLicense(){
 	console.log("importLicense()");
 	//清除文件控件
@@ -7349,25 +7336,6 @@ function getFormatedLicenseType(type, hasLicense)
 	return formatedType;
 }
 
-//showOfficeLicenseInfoPanel
-function showOfficeLicenseInfoPanel(){
-	console.log("showOfficeLicenseInfoPanel");
-	//后台管理页面的对话框都需要指定id
-	qiao.bs.dialog({
-		id: 'officeLicenseInfo',
-		url: 'officeLicenseInfo' + langExt + '.html',
-		title: 'Office证书',
-		msg: '页面正在加载，请稍等...',
-		foot: false,
-		big: false,
-		callback: function(){
-		    console.log("page loaded callback");
-		    var officeLicenseInfo = systemLicenses.officeLicense;
-		    OfficeLicenseInfoPageCallback(officeLicenseInfo);
-		}
-	});
-}
-
 function showEditUserPanel(e, userId, pageIndex, index)
 {
 	console.log("showEditUserPanel() userId:" + userId + " pageIndex:" + pageIndex);
@@ -7509,22 +7477,6 @@ function SystemLicensesDisplay(systemLicenses)
 			if(systemLicense.state == 0)
 			{
 				systemLicense.status = "已失效";							
-			}				
-		}
-	}
-	
-	var officeLicense = systemLicenses.officeLicense;
-	if(officeLicense.hasLicense == false)
-	{
-		officeLicense.status = "未安装";
-	}
-	else{
-		officeLicense.status = "已安装";		
-		if(officeLicense.state != undefined)
-		{
-			if(officeLicense.state == 0)
-			{
-				officeLicense.status = "已失效";							
 			}				
 		}
 	}

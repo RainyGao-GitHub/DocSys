@@ -914,9 +914,6 @@ function lang(str)
 		//License
 		"获取证书列表失败" : "Failed to get License List",
 		
-		//Office License
-		"新增Office证书" : "Add OfficeEidtor License",
-		
 		//仓库类型
 		"文件管理系统" : "Storage",
 		"文件服务器前置" : "Front-End",
