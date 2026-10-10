@@ -1,6 +1,6 @@
 # CURRENT_STATE — 仓库「允许操作隐藏文件和系统文件」选项（工作卡）
 
-建立于 2026-10-10。**状态：已实施 + 已验证（E2E 全通过），代码未提交；仅剩收尾（文档已补、待用户决定是否提交）。**
+建立于 2026-10-10。**状态：已收尾归档（2026-10-10）—— 方案/实施/验证全部完成（探针 14/14、接口 E2E 40/40、真实浏览器中英文回环通过），已由用户提交：主仓库 `f782bcb0b`、websocket 仓库 `413a7674`；未做项（`getReposList.do` 是否回传该字段、D6 \*nix 系统目录黑名单、收窄「文件存储位置」可选范围）留待以后。**
 
 > 本卡是**当前任务**的唯一口径处：必读上下文 / 参考计划 / 当前进展 / 下一步 / 生效约束。
 
@@ -48,27 +48,35 @@
 
 ## 下一步
 
-1. **待用户决定是否提交**（用户原话只说「开工」，未说提交）。需提交两处：
-   - 主仓库 `D:/Dev/DocSys`：`FileUtil.java`、`Path.java`、`Repos.java`、`BaseFunction.java`、`BaseController.java`、`ReposController.java`、`DocController.java`、6 个 HTML、`ReposConfig.js`、`lang/en.js`、`devDocs/仓库隐藏文件与系统文件操作控制方案.md`、`devDocs/参数存储策略与参数清单.md`、`DevAgentControl/CURRENT_STATE_仓库隐藏文件操作控制.md`、`CLAUDE.md`。
-   - websocket 独立仓库 `src/com/DocSystem/websocket`：`BussinessController.java`。
-2. 可选/待用户裁定（本轮均未做）：① `getReposList.do` 是否也回传 `allowHiddenFile`（当前只有 `getRepos.do`/`getReposEx` 有）；② D6 的 \*nix 系统目录（`/proc`、`/sys`、`/dev`…）黑名单是否补做；③ 是否把「仓库文件存储位置」本身的可选目录收窄（`isPathConflict` 之外的限制）。
-3. 如需改动，务必带 `-g` 重编译 + 重启 dev Tomcat；前端改完硬刷新。
+**无待办 —— 本任务已收尾归档。** 若以后要改这一功能：
+
+1. 改后端务必带 `-g -encoding UTF-8` 重编译（见上「关键教训」）+ 重启 dev Tomcat；改前端硬刷新。
+2. 新增/调整「隐藏或系统条目」的拦截点时，以「所有 `RealDoc` 调用点 + 下载/预览/Agent 写入口」为清单复核（不要只看 `*RealDoc*` 命名）；判定口径统一走 `FileUtil.isHiddenOrSystemFile` / `containsHiddenOrSystemEntry`，别各写一份。
+3. 存储策略与「同类参数处理方式」的登记见 `devDocs/参数存储策略与参数清单.md` §2.1-D2 与 §2.2-8/9。
 
 ## 生效约束
 
-- 本任务**已获用户裁定并实施完毕**；本卡转为「收尾/待提交」状态，**未获新裁定前不要再改代码**。
+- 本任务**已完成并提交**（`f782bcb0b` / `413a7674`）；**未获新裁定前不要再改这块代码**。
 - D1 选了配置文件方案 ⇒ **零数据库改动**（不加列、不动 mapper / `docsystem_REPOS.json` / `getDBTabListForUpgarde`）。
 - 选项**无缓存**：读写都走文件，保存后下一个请求即生效，集群一致。
 - 权限：**仅超管（`User.type == 2`）**能改；非超管即使直接 POST 也会被忽略（不报错、不落盘）。前端复选框 HTML 里默认 `disabled`（fail-closed），拿到超管身份才解锁。
 - 只拦**隐藏/系统**条目：普通条目行为必须与改动前完全一致（E2E 已回归）。默认关闭 ⇒ **存量仓库行为不变**（若某仓库的存储位置下有隐藏文件，默认从「可见可操作」变成「不可见不可操作」，这是功能本意）。
 - 改动落在两个 git 仓库（主仓库 + `src/com/DocSystem/websocket`），**必须分别提交**。
 
-## 未提交改动
+## 提交记录（已提交，2026-10-10）
 
-- 新增：`devDocs/仓库隐藏文件与系统文件操作控制方案.md`
-- 新增：`DevAgentControl/CURRENT_STATE_仓库隐藏文件操作控制.md`（本卡）
-- 修改：`CLAUDE.md`（「当前任务」指向本卡 + 编译输出目录一节的 `-g` 要求）
-- 修改：`devDocs/参数存储策略与参数清单.md`（登记仓库级配置文件这一类与本文件）
-- 修改（主仓库代码）：`src/com/DocSystem/common/FileUtil.java`、`src/com/DocSystem/common/Path.java`、`src/com/DocSystem/entity/Repos.java`、`src/com/DocSystem/common/BaseFunction.java`、`src/com/DocSystem/controller/BaseController.java`、`src/com/DocSystem/controller/ReposController.java`、`src/com/DocSystem/controller/DocController.java`
-- 修改（前端）：`WebRoot/web/reposBasicSetting.html`、`WebRoot/web/reposBasicSetting_en.html`、`WebRoot/manager/addRepos.html`、`WebRoot/manager/addRepos_en.html`、`WebRoot/manager/editRepos.html`、`WebRoot/manager/editRepos_en.html`、`WebRoot/web/js/ReposConfig.js`、`WebRoot/web/lang/en.js`
-- 修改（**websocket 独立仓库**）：`src/com/DocSystem/websocket/BussinessController.java`
+**主仓库 `D:/Dev/DocSys` → `f782bcb0b`（【优化】隐藏文件和系统文件操作控制，19 files / +944 −7）**：
+- 后端（7）：`src/com/DocSystem/common/FileUtil.java`、`src/com/DocSystem/common/Path.java`、`src/com/DocSystem/entity/Repos.java`、`src/com/DocSystem/common/BaseFunction.java`、`src/com/DocSystem/controller/BaseController.java`、`src/com/DocSystem/controller/ReposController.java`、`src/com/DocSystem/controller/DocController.java`
+- 前端（8）：`WebRoot/web/reposBasicSetting{,_en}.html`、`WebRoot/manager/{addRepos,editRepos}{,_en}.html`、`WebRoot/web/js/ReposConfig.js`、`WebRoot/web/lang/en.js`
+- 文档（4）：`devDocs/仓库隐藏文件与系统文件操作控制方案.md`、`devDocs/参数存储策略与参数清单.md`、`DevAgentControl/CURRENT_STATE_仓库隐藏文件操作控制.md`、`CLAUDE.md`
+
+**websocket 独立仓库 `src/com/DocSystem/websocket` → `413a7674`（【优化】隐藏文件和系统文件操作控制，1 file / +21）**：
+- `BussinessController.java`（`addDocShare.do` / `getDocOfficeLink.do` / `getDocCadLink.do` 守卫）
+
+> 提交后两个仓库都 clean（websocket 仓库只剩 `?? office/`，属该仓库既有未跟踪项，与本任务无关）；`git status` 无残留、源码树无 `.class`、工程根无 `tmp*`、测试夹具 `C:\DocSysHiddenTest` 与临时仓库已删除、仓库 2 已还原为默认。
+
+## 未做（留待以后，勿当成缺陷）
+
+1. `getReposList.do` 不返回 `allowHiddenFile`（只有 `getRepos.do`/`getReposEx` 有）——列表接口本来就只给概要，前端也只在详情/设置页用该字段。
+2. D6：\*nix 的系统目录（`/proc`、`/sys`、`/dev`…）黑名单未做（用户裁定本轮不做）。
+3. 未收窄「文件存储位置（realDocPath）」本身的可选范围（`isPathConflict` 之外的限制属另一个议题）。

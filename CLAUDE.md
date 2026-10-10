@@ -29,9 +29,14 @@
 
 ## 当前任务
 
-- **仓库「允许操作隐藏文件和系统文件」选项** —— 已按用户裁定（D1~D6 全按推荐值）**实施并验证完毕，代码尚未提交**；方案 `devDocs/仓库隐藏文件与系统文件操作控制方案.md`（§6 裁定 / §10 实施记录 + 验证结果 / 教训）；工作卡 `DevAgentControl/CURRENT_STATE_仓库隐藏文件操作控制.md`。
-  一句话现状：仓库「文件存储位置（realDocPath）」可指向服务器任意目录（唯一防线 `ReposController.java:585 isPathConflict` 只防两个路径互相包含），而仓库文件区**对隐藏/系统条目零过滤**（`BaseController.java getLocalEntryList`），用户可直接看到并改名/移动/复制/删除/下载 → 已新增仓库级选项（默认不允许）实现「列表不显示 + 操作拒绝」，落点 = `FileUtil` 判定 + `BaseFunction` 守卫 + `BaseController`/`DocController` 12+X 处 `*RealDoc*`/下载/office/agent + websocket `BussinessController` 3 处 + 前端 6 页复选框；存储 = 仓库目录下 `data/hiddenFileSetting/hiddenFileConfig.txt`（照抄 `encryptType`，**零数据库改动**），读写无缓存、仅超管可改。
-  ✅ 验证：探针 14/14、接口 E2E 40/40、真实浏览器中英文回环（38↔39 条 + 配置文件增删）。⚠️ 改动跨**两个仓库**（主仓库 + `src/com/DocSystem/websocket`），须分别提交。
+- **无（用户未指定）** —— 上一个任务（仓库「允许操作隐藏文件和系统文件」选项）已收尾归档。**未指定任务时：先列出 `DevAgentControl/` 下未归档的卡问用户做哪张，不要自己挑一张开工。**
+
+- 上一任务 = 仓库设置「允许操作隐藏文件和系统文件」选项，已收尾归档（2026-10-10）：工作卡 `DevAgentControl/已完成/CURRENT_STATE_仓库隐藏文件操作控制.md`，方案 `devDocs/仓库隐藏文件与系统文件操作控制方案.md`（§6 六项裁定 / §10 实施记录与验证结果）。
+  已完成：仓库级选项（默认不允许）—— 隐藏/系统条目**不出现在列表**（含全文索引）且**拦下**改名/移动/复制/删除/下载/预览编辑/Agent 写入，勾选后恢复原行为；存储 = 仓库目录下 `data/hiddenFileSetting/hiddenFileConfig.txt`（照抄 `encryptType`，**零数据库改动**、无缓存、仅超管可改）；落点 = `FileUtil` 判定 + `BaseFunction` 守卫 + `BaseController`/`DocController` 全族 + websocket `BussinessController` + 前端 6 页。提交：主仓库 `f782bcb0b`、websocket 仓库 `413a7674`。
+  ✅ 验证：探针 14/14、接口 E2E 40/40、真实浏览器中英文回环（38↔39 条 + 配置文件增删）。
+  ⚠️ **两个通用教训已沉淀**：① 命令行 `javac` **必须带 `-g`**（否则 Spring MVC 参数名不可用 → 端点 500），已写进下面「编译输出目录」一节；② 「仓库级配置文件」这一类已登记进 `devDocs/参数存储策略与参数清单.md`（§2.1-D2、§2.2-8/9）。
+  未做（留待以后）：`getReposList.do` 不回传该字段、D6 的 \*nix 系统目录黑名单、收窄「文件存储位置」可选范围。
+
 - 上一任务 = 系统设置-存储位置「目录树选择」，已收尾归档：工作卡 `DevAgentControl/已完成/CURRENT_STATE_系统设置存储路径选择.md`，方案 `devDocs/系统设置存储位置目录选择方案.md`。
   已完成：后端只读超管接口 `ManageController.getServerDirList.do`（跨平台根节点、500 条截断、`showHidden`）+ 前端「选择…」对话框（懒加载目录树、目录图标、自动定位当前值、确定/取消在右下角、空目录按叶子处理）+ 5 个入口按钮；用户提交 `f327c8ad8`（P1 + UI 改版）、`a0136271f`（空目录不提示）。
   ⚠️ **4 个 ini 键名与字段名不一致**（`DBStorePath` / `SystemLogStorePath` / `AgentSkillStorePath` / `SalesDataStorePath`）；故意未做：新建文件夹、P3（校验/冲突告警/恢复默认/多节点提示）、英文页缺失的 `agentSkillStorePath` 行。
