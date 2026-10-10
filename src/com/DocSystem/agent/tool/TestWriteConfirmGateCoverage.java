@@ -43,6 +43,7 @@ public class TestWriteConfirmGateCoverage {
         testModeDecisions();
         testNoAutoDecisionOnTimeout();
         testMoveDirScope();
+        testConfirmAuthorization();
         System.out.println("\n======== TestWriteConfirmGateCoverage: " + pass + " passed, " + fail
                 + " failed ========");
         if (fail > 0) {
@@ -446,6 +447,61 @@ public class TestWriteConfirmGateCoverage {
         check("恢复出来的待确认带风险类别（绝对保护 → 前端不给放宽授权入口）",
                 ctrl.contains("ToolRiskCatalog.registered(e.getOperation())")
                         && html.contains("extra.risk = it.risk"));
+    }
+
+    /**
+     * ⑧ 2026-10-10 补锁：**确认接口的授权**（必须登录 + 待确认必须属于调用者 + 日志脱敏）。
+     *
+     * <p>由来：`POST /agent/confirm` 原来既不校验登录（全站拦截器对任何带
+     * `X-Requested-With: XMLHttpRequest` 的请求直接放行）也不校验 token 归属，
+     * 而 confirmToken 会明文进日志 ⇒ 拿到 token 的人**无需登录**就能"替用户批准"
+     * 一个 `delete_repos` 这类最危险的操作。</p>
+     */
+    private static void testConfirmAuthorization() {
+        String ctrl = readSource("src/com/DocSystem/agent/controller/AgentController.java");
+        String gate = readSource("src/com/DocSystem/agent/tool/AuditWriteConfirmGate.java");
+        if (ctrl == null || gate == null) {
+            check("能读到控制层/确认门源码（lint 前置）", false);
+            return;
+        }
+        check("① /confirm 必须登录（声明 request 并做 currentUser 校验）",
+                ctrl.contains("public AgentResponse confirmOperation(@RequestBody Map<String, String> body,\n"
+                        + "                                          HttpServletRequest request)")
+                        && ctrl.contains("User user = currentUser(request);"));
+        check("② /confirm 必须校验归属（ownedByCaller 在批准/拒绝之前）", () -> {
+            int own = ctrl.indexOf("!ownedByCaller(entry, user, request)");
+            int appr = ctrl.indexOf("auditLogService.approve(confirmToken");
+            return own > 0 && appr > own;
+        });
+        check("③ /confirm/pending 的 sessionId 参数必须校验归属（isOwnedSessionId）",
+                ctrl.contains("if (isOwnedSessionId(sessionId, user, request))"));
+        check("④ 审计记录批准者（不再只写 'Approved by user'）",
+                ctrl.contains("\"Approved by user: \" + operator"));
+        check("⑤ 日志脱敏：控制层/确认门用 maskToken，不打印明文 token/session",
+                ctrl.contains("AuditWriteConfirmGate.maskToken(") && gate.contains("maskToken(confirmToken)")
+                        && !ctrl.contains("confirmToken={}, operation={}\",\n                                confirmToken"));
+        check("⑥ 按会话分名额的挂起上限存在（避免一个会话锁死全局名额）",
+                gate.contains("maxPendingConfirmsPerSession") && gate.contains("tryAcquirePendingSlot(String sessionKey)")
+                        && gate.contains("pendingBusyMessage"));
+        check("⑦ 重启后遗留 PENDING 作废：审计服务有启动清理 + mapper 有对应 UPDATE",
+                readSource("src/com/DocSystem/agent/controller/AuditLogService.java") != null
+                        && readSource("src/com/DocSystem/agent/controller/AuditLogService.java")
+                                .contains("@PostConstruct")
+                        && readSource("src/com/DocSystem/agent/controller/AuditLogService.java")
+                                .contains("markPendingAbandonedBefore")
+                        && readSource("src/mapper/AuditLogRepositoryMapper.xml")
+                                .contains("markPendingAbandonedBefore"));
+    }
+
+    /** 带自定义条件的 check（供需要多步判断的 lint 用） */
+    private static void check(String name, java.util.function.BooleanSupplier cond) {
+        boolean ok;
+        try {
+            ok = cond.getAsBoolean();
+        } catch (Throwable t) {
+            ok = false;
+        }
+        check(name, ok, null);
     }
 
     private static String readSource(String relative) {

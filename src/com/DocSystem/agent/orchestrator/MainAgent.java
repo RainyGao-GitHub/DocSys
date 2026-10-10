@@ -194,6 +194,16 @@ public class MainAgent {
      */
     @org.springframework.beans.factory.annotation.Value("${agent.tool-loop.max-pending-confirms:8}")
     private int toolLoopMaxPendingConfirms;
+
+    /**
+     * **单个会话**同时挂起的待确认数上限（默认 2；{@code <=0} → 不限制）。
+     *
+     * <p>为什么要有：全局上限是"所有人合计"，若不按会话分名额，一个用户（可能只是离开电脑、
+     * 按 D5 慢慢答）就能占满全部名额，**其他人的写操作会被全部拒绝**。分名额后一个会话
+     * 最多占这么多，提示语也会讲明是不是自己的待确认。</p>
+     */
+    @org.springframework.beans.factory.annotation.Value("${agent.tool-loop.max-pending-confirms-per-session:2}")
+    private int toolLoopMaxPendingConfirmsPerSession;
     
     public MainAgent(DocSysClient docSysClient) {
         this.docSysClient = docSysClient;
@@ -891,6 +901,9 @@ public class MainAgent {
         gate.setConfirmEventSink(confirmSink);
         // D10：全局挂起上限（无限等待的上限保护）
         com.DocSystem.agent.tool.AuditWriteConfirmGate.setMaxPendingConfirms(toolLoopMaxPendingConfirms);
+        // 2026-10-10：按会话分名额（避免一个会话占满全局名额，把别人的写操作全锁死）
+        com.DocSystem.agent.tool.AuditWriteConfirmGate.setMaxPendingConfirmsPerSession(
+                toolLoopMaxPendingConfirmsPerSession);
         registry.setConfirmGate(gate);
         // P1：权限模式（会话级）→ 注入判定上下文；未装配 PermissionStore / 无会话 → ctx 保持 null（行为同改造前）
         com.DocSystem.agent.permission.PermissionMode permMode = com.DocSystem.agent.permission.PermissionMode.DEFAULT;

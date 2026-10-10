@@ -29,7 +29,17 @@
 
 ## 当前进展（如实）
 
-9. ✅ **已按方案 §9.2 全部实施完成（2026-10-10），并完成验收 V1~V10**：
+10. ✅ **二轮加固（2026-10-10，用户裁定"①+②"）**：用户追问"挂起项危害"时我**实测复现了一个授权缺口**，据此落地：
+    - ① **确认接口授权（4 处）**：`POST /agent/confirm` 补**登录校验** + **归属校验**（`ownedByCaller`：自己的 jsessionid / 自己的用户名 / 自己名下的对话会话，任一成立；否则 `FORBIDDEN`）；`GET /agent/confirm/pending` 对**调用方传入的 sessionId 也校验归属**（不归属 → 忽略）；日志里 `confirmToken`/`jsessionid` **一律打码**（只留前 8 位）；审计**记录批准者**（`Approved by user: <用户名>`）。
+      - 实测（改前/改后对照）：未登录 + ajax 头 → 改前**进入控制器**（`Invalid or expired confirmToken`）、改后 `NOT_LOGGED_IN`；Admin 批准**别人的** → `FORBIDDEN` 且该行仍 PENDING；批准**自己的** → OK + 审计含批准者；pending 传别人 sessionId → 被忽略（`count=0`）。
+      - 缺口成因（既有）：全站 `MyInterceptor` 对任何带 `X-Requested-With: XMLHttpRequest` 的请求**直接放行**，而 `confirmToken` 明文进日志 ⇒ 拿到 token 即可**免登录**批准（含 `delete_repos` 这类绝对保护）且**不可追责**。
+    - ② **两条缓解**：(a) 挂起上限**按会话分名额**（新参数 `agent.tool-loop.max-pending-confirms-per-session`，默认 2）——原来全局 8 的名额可被一个会话占满、把**所有人**的写操作全拒掉，现在 A 会话占满后 B 照常可用，且提示语讲明"可能来自其他会话/用户"；(b) **重启后遗留 PENDING 失效化**（新参数 `agent.tool-loop.sweep-stale-confirms-on-start`，默认 true）：启动（根上下文 refresh 后）把早于「启动时间 − 60s」的 `PENDING` 置为新状态 `ABANDONED`，消除"恢复弹窗里点了批准却没反应"的静默失败（库里原有 3 条历史孤儿）。
+    - 顺带修掉既有缺陷：**操作级（legacy）确认路径拿错 token**（先自己 UUID 再建审计、丢掉返回值 ⇒ 该路径确认从未生效），改为用落库返回的 token、拿不到则 fail-closed；`createPendingEntry` 的日志同样脱敏。
+    - 验证：全量护栏 **46 套 / 2021 项 / 0 失败**（LiveContext 15→24、GateCoverage 56→63）；SQL 侧实测启动作废与宽限期（重启够快时新行保持 PENDING 未被误伤）；真实回合回归（标准档触发 `move_doc` → 6 个作用域选项照常 → 拒绝 → 如实汇报未执行）。
+    - 文档：方案 **§11**（含实测证据表与集群注意）；`devDocs/参数存储策略与参数清单.md` §2.1-E 再登记两个新参数（第三次更新）。
+    - ⚠️ 仍未做：**D10 选项 B（不占线程的挂起）**（完整解需工具执行链支持挂起/恢复，留后续专项）；**D6 计划先行**（P2）；启动清理日志在本机 dev 环境未落到 `docsys*.log`（原因未确认，故以数据库状态为验收依据）。
+
+9. ✅ **一轮实施（2026-10-10，方案 §9.2 A→B→C）**：
    - ✅ **A 组（服务端 10 项）**：A1 `ToolRiskCatalog`（move/rename → NORMAL）｜A2 `PermissionPolicy`（规则门放开到 AUTO+MANUAL）｜A3 `PermissionRule`（DIR/REPO 校验工具名 + 新增 `DIR_ALL` + **目录来源扩到 path/srcPath/dstPath**）｜A4 `ToolRegistry`（`permissionContextSupplier` + 保守回落）｜A5 `MainAgent`（实时供应器 + `live=1` 日志 + `max-pending-confirms`）｜A6 等待语义重写（两处：工具门 + 操作级；**到点不做决定**）+ 全局挂起上限（`ConfirmGateBusyException`）｜A7 `findPendingBySessionId`（含 mapper XML 同步到 classes）｜A8 `GET /agent/confirm/pending`（**同时按对话会话 id 与 jsessionid 查**，返回 `risk`；**未加** `timeoutSeconds`）｜A10 `/stream` 的 `done` 先落库再推送 + `sendSse` 吞异常。
      - 顺带修掉一处**旧缺陷**：`AgentController.waitForConfirmation` 原先把"已批准"也当拒绝 → 改为按 `getStatusByConfirmToken` 真实终态判定。
    - ✅ **B 组（前端 7 项）**：等待提示 + 「切到自动模式并继续」；`pendingConfirm` 队列化；作用域选项按 D9（标准档也显示，源/目标目录分开）；恢复（`loadPendingConfirms` + JSON 解析 params）；chip 文案按 D8 修正；token 失效提示；**先落规则再批准**。
@@ -95,10 +105,16 @@
 
 ## 未提交改动
 
-- ✅ **已提交：主仓库 `e32c0f038`**（24 个文件；含实现 + 护栏 + 文档；无 websocket/sales 仓库改动）：
-  - `src/com/DocSystem/agent/**` 17 个文件（新增 `tool/ConfirmGateBusyException.java`、`tool/TestPermissionLiveContext.java`）
-  - `WebRoot/web/agent/index.html`、`src/mapper/AuditLogRepositoryMapper.xml`
-  - `devDocs/Agent确认疲劳与模式切换方案.md`（+§10）、`devDocs/Agent审批机制业界调研（一手来源）.md`、`devDocs/Agent权限模式改造计划.md`、`devDocs/参数存储策略与参数清单.md`
-  - `CLAUDE.md`、本卡（`DevAgentControl/CURRENT_STATE_Agent确认弹窗脱困.md`）
-- 工作树已干净（`git status --porcelain` 为空）。编译产物输出在 `WebRoot/WEB-INF/classes`（git 忽略，不入库）。
+- **二轮加固（待提交，主仓库）**：
+  - `src/com/DocSystem/agent/entity/AuditLogEntity.java`（新增 `OperationStatus.ABANDONED`）
+  - `src/com/DocSystem/agent/repository/AuditLogRepository.java` + `src/mapper/AuditLogRepositoryMapper.xml`（`markPendingAbandonedBefore`；XML 已同步到 `WebRoot/WEB-INF/classes/mapper/`）
+  - `src/com/DocSystem/agent/controller/AuditLogService.java`（启动清理 `onApplicationEvent` + 宽限期 + 日志脱敏）
+  - `src/com/DocSystem/agent/controller/AgentController.java`（`/confirm` 登录+归属校验、`/confirm/pending` sessionId 归属校验、审计记批准者、操作级路径用落库 token、日志脱敏）
+  - `src/com/DocSystem/agent/tool/AuditWriteConfirmGate.java`（按会话分名额 + `pendingBusyMessage` + `maskToken`）
+  - `src/com/DocSystem/agent/orchestrator/MainAgent.java`（新参数装配）
+  - `src/com/DocSystem/agent/tool/TestPermissionLiveContext.java`、`TestWriteConfirmGateCoverage.java`（护栏 15→24、56→63）
+  - `devDocs/Agent确认疲劳与模式切换方案.md`（§11）、`devDocs/参数存储策略与参数清单.md`（第三次更新）、`CLAUDE.md`、本卡
+- ✅ **一轮实施已提交：主仓库 `e32c0f038`**（24 个文件；含实现 + 护栏 + 文档；无 websocket/sales 仓库改动）。
+  - 一句话：`WebRoot/web/agent/index.html` + `src/com/DocSystem/agent/**` 17 个文件（含新增 `ConfirmGateBusyException`、`TestPermissionLiveContext`）+ 4 个 devDocs + `CLAUDE.md` + 本卡。
+- 编译产物输出在 `WebRoot/WEB-INF/classes`（git 忽略，不入库）；源码树内不应出现 `.class`（本卡相关改动均输出到 classes）。
 

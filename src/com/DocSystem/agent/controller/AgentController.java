@@ -373,7 +373,8 @@ public class AgentController {
                         .data("{\"type\":\"confirm\",\"confirmToken\":\"" + token +
                               "\",\"operation\":\"" + toolName +
                               "\",\"message\":" + escapeJson(msg) + "}", MediaType.TEXT_PLAIN));
-                    log.info("SSE confirm pushed: tool={}, confirmToken={}", toolName, token);
+                    log.info("SSE confirm pushed: tool={}, confirmToken={}", toolName,
+                            com.DocSystem.agent.tool.AuditWriteConfirmGate.maskToken(token));
                 } catch (Exception e) {
                     log.warn("SSE confirm push failed for tool '{}': {}", toolName, e.getMessage());
                 }
@@ -478,7 +479,8 @@ public class AgentController {
                       .append("}");
                     sendSse(emitter, sb.toString());
                     log.info("SSE confirm pushed: tool={}, confirmToken={}, vid={}, path={}, risk={}",
-                            toolName, token, vid, path, risk);
+                            toolName, com.DocSystem.agent.tool.AuditWriteConfirmGate.maskToken(token),
+                            vid, path, risk);
                 }
             };
 
@@ -1130,15 +1132,22 @@ public class AgentController {
     }
 
     /**
-     * Confirm or reject a pending operation.
-     * POST /api/agent/confirm
+     * 批准/拒绝一个待确认的写操作。
+     * POST /agent/confirm
      *
-     * Per D-13: SSE confirmation flow — frontend sends approval/rejection here.
+     * <p>Per D-13：SSE 确认流程 —— 前端在这里提交批准/拒绝。</p>
      *
-     * Body: { "confirmToken": "xxx", "action": "approve|reject" }
+     * <p>Body: { "confirmToken": "xxx", "action": "approve|reject" }</p>
+     *
+     * <p>⚠️ **授权（2026-10-10 补）**：原来只校验"token 存在"，既没校验登录、也不校验这条待确认
+     * 是否属于调用者——而 confirmToken 等于"一次批准权"（日志里泄露、或被别有用心的登录用户拿到
+     * 他人会话 id 后从 `/confirm/pending` 读到）。这里补两道锁：① 必须已登录；
+     * ② 该待确认必须属于调用者（自己 HTTP 会话 / 自己用户名 / 自己名下的对话会话，
+     * 见 {@link #ownedByCaller}）。不满足 → 拒绝（fail-safe）。</p>
      */
     @PostMapping("/confirm")
-    public AgentResponse confirmOperation(@RequestBody Map<String, String> body) {
+    public AgentResponse confirmOperation(@RequestBody Map<String, String> body,
+                                          HttpServletRequest request) {
         String confirmToken = body.get("confirmToken");
         String action = body.get("action");  // "approve" or "reject"
 
@@ -1148,8 +1157,10 @@ public class AgentController {
         if (action == null || action.isEmpty()) {
             return AgentResponse.error("action is required (approve or reject)");
         }
-
-        // Verify the confirmToken exists and is pending
+        User user = currentUser(request);
+        if (user == null) {
+            return AgentResponse.error("NOT_LOGGED_IN");
+        }
         if (auditLogService == null) {
             return AgentResponse.error("AuditLogService not available");
         }
@@ -1157,6 +1168,15 @@ public class AgentController {
         if (entry == null) {
             return AgentResponse.error("Invalid or expired confirmToken");
         }
+        if (!ownedByCaller(entry, user, request)) {
+            log.warn("Refuse confirm on someone else's pending operation: token={}, session={}, operator={}",
+                    com.DocSystem.agent.tool.AuditWriteConfirmGate.maskToken(confirmToken),
+                    com.DocSystem.agent.tool.AuditWriteConfirmGate.maskToken(entry.getSessionId()),
+                    user.getName());
+            return AgentResponse.error("FORBIDDEN: 该待确认不属于当前用户");
+        }
+
+        String operator = user.getName() != null ? user.getName() : "anonymous";
 
         // Store the result for SSE to pick up
         if ("reject".equalsIgnoreCase(action) || "cancel".equalsIgnoreCase(action)) {
@@ -1166,7 +1186,8 @@ public class AgentController {
             rejectData.put("action", "rejected");
             return AgentResponse.ok("Operation cancelled").withData(rejectData);
         } else if ("approve".equalsIgnoreCase(action)) {
-            auditLogService.approve(confirmToken, "Approved by user");
+            // 记录**谁**批准的（原来只有 "Approved by user"，出了事无法追责）
+            auditLogService.approve(confirmToken, "Approved by user: " + operator);
             Map<String, Object> approveData = new HashMap<>();
             approveData.put("confirmToken", confirmToken);
             approveData.put("action", "approved");
@@ -1174,6 +1195,36 @@ public class AgentController {
         } else {
             return AgentResponse.error("Invalid action. Use 'approve' or 'reject'");
         }
+    }
+
+    /**
+     * 这条待确认是否属于当前调用者（任一成立即算）：
+     * <ol>
+     *   <li>行的 {@code session_id} == 调用者当前 HTTP 会话 id（jsessionid）——工具门写的就是它；</li>
+     *   <li>行的 {@code user_id} == 调用者用户名（对话会话 id 场景下 userId 仍是发起人）；</li>
+     *   <li>行的 {@code session_id} 是调用者名下的对话会话（{@code agent_sessions.username}）。</li>
+     * </ol>
+     * 三条都不成立 → 不是他的（fail-safe：不放行）。
+     */
+    private boolean ownedByCaller(AuditLogEntity entry, User user, HttpServletRequest request) {
+        String rowSession = entry.getSessionId();
+        String jsid = currentHttpSessionId(request);
+        if (jsid != null && rowSession != null && jsid.equalsIgnoreCase(rowSession)) {
+            return true;
+        }
+        String name = user.getName();
+        if (name != null && !name.isEmpty()) {
+            if (name.equals(entry.getUserId())) {
+                return true;
+            }
+            if (rowSession != null && sessionService != null) {
+                com.DocSystem.agent.session.SessionEntity s = sessionService.findBySessionId(rowSession);
+                if (s != null && name.equals(s.getUsername())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -1202,7 +1253,15 @@ public class AgentController {
         }
         java.util.LinkedHashMap<String, AuditLogEntity> byToken =
                 new java.util.LinkedHashMap<String, AuditLogEntity>();
-        collectPending(byToken, sessionId);
+        // ⚠️ 参数 sessionId 是调用方给的 → **必须先校验归属**，否则登录用户可拿别人的会话 id
+        //    读出别人的待确认（连带拿到 token 就能替他批准）。不归属 → 忽略该参数。
+        if (isOwnedSessionId(sessionId, user, request)) {
+            collectPending(byToken, sessionId);
+        } else if (sessionId != null && !sessionId.trim().isEmpty()) {
+            log.warn("Ignore /confirm/pending sessionId not owned by caller: operator={}, session={}",
+                    user.getName(),
+                    com.DocSystem.agent.tool.AuditWriteConfirmGate.maskToken(sessionId));
+        }
         collectPending(byToken, currentHttpSessionId(request));
         List<Map<String, Object>> items = new ArrayList<>();
         for (AuditLogEntity e : byToken.values()) {
@@ -1221,6 +1280,24 @@ public class AgentController {
         data.put("items", items);
         data.put("count", items.size());
         return AgentResponse.ok("OK").withData(data);
+    }
+
+    /** 该会话 id 是否属于调用者（自己的 HTTP 会话 id，或自己名下的对话会话） */
+    private boolean isOwnedSessionId(String sessionId, User user, HttpServletRequest request) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            return false;
+        }
+        String sid = sessionId.trim();
+        String jsid = currentHttpSessionId(request);
+        if (jsid != null && jsid.equalsIgnoreCase(sid)) {
+            return true;
+        }
+        String name = user.getName();
+        if (name == null || name.isEmpty() || sessionService == null) {
+            return false;
+        }
+        com.DocSystem.agent.session.SessionEntity s = sessionService.findBySessionId(sid);
+        return s != null && name.equals(s.getUsername());
     }
 
     /** 把某会话下仍 PENDING 的写操作并入结果（按 token 去重；上限 {@link #MAX_PENDING_CONFIRM_QUERY}） */
@@ -1758,7 +1835,6 @@ public class AgentController {
 
                     if (isWriteOp) {
                         // Per D-13: Emit SSE confirm event and wait for user approval
-                        String confirmToken = UUID.randomUUID().toString();
                         String userId = capturedUsername;
                         String effectiveSession = capturedJsessionid;
                         String traceId = MDC.get("traceId");
@@ -1768,8 +1844,17 @@ public class AgentController {
                         params.put("command", command);
                         params.put("operation", operationType);
 
-                        auditLogService.createPendingEntry(userId, effectiveSession, operationType,
-                                params, capturedClientIp, traceId);
+                        // ⚠️ token 必须用**落库那一个**（原来先自己 UUID.randomUUID() 再建审计、
+                        //    把审计返回的 token 丢掉 ⇒ 等待时永远查不到该行，被当成"拒绝"）
+                        String confirmToken = auditLogService.createPendingEntry(userId, effectiveSession,
+                                operationType, params, capturedClientIp, traceId);
+                        if (confirmToken == null) {
+                            log.warn("Cannot create pending audit for operation '{}' — refusing", operationType);
+                            sendSse(emitter, "{\"type\":\"error\",\"message\":" + escapeJson(
+                                    "无法创建确认请求，操作已取消。") + "}");
+                            emitter.complete();
+                            return;
+                        }
 
                         // Emit SSE confirm event (per D-13: SSE pause + frontend confirm dialog)
                         String confirmMessage = buildConfirmMessage(operationType, command);
@@ -1777,11 +1862,13 @@ public class AgentController {
                               "\",\"operation\":\"" + operationType +
                               "\",\"message\":" + escapeJson(confirmMessage) + "}");
 
-                        // 等待用户确认（D5：不设时限、到点不做任何决定；D10：复用全局挂起上限）
-                        if (!com.DocSystem.agent.tool.AuditWriteConfirmGate.tryAcquirePendingSlot()) {
+                        // 等待用户确认（D5：不设时限、到点不做任何决定；D10：复用挂起上限，
+                        // 2026-10-10 起按会话分名额）
+                        if (!com.DocSystem.agent.tool.AuditWriteConfirmGate.tryAcquirePendingSlot(effectiveSession)) {
                             log.warn("Too many pending confirmations — refusing operation '{}'", operationType);
                             sendSse(emitter, "{\"type\":\"error\",\"message\":" + escapeJson(
-                                    "当前有太多操作在等待确认，请先处理已有的确认后再继续。") + "}");
+                                    com.DocSystem.agent.tool.AuditWriteConfirmGate
+                                            .pendingBusyMessage(effectiveSession)) + "}");
                             emitter.complete();
                             return;
                         }
@@ -1789,7 +1876,7 @@ public class AgentController {
                         try {
                             approved = waitForConfirmation(confirmToken, 0, TimeUnit.SECONDS);
                         } finally {
-                            com.DocSystem.agent.tool.AuditWriteConfirmGate.releasePendingSlot();
+                            com.DocSystem.agent.tool.AuditWriteConfirmGate.releasePendingSlot(effectiveSession);
                         }
                         if (!approved) {
                             sendSse(emitter, "{\"type\":\"error\",\"message\":\"操作被拒绝\"}");
@@ -1797,7 +1884,8 @@ public class AgentController {
                             return;
                         }
                         log.info("User confirmed write operation: confirmToken={}, operation={}",
-                                confirmToken, operationType);
+                                com.DocSystem.agent.tool.AuditWriteConfirmGate.maskToken(confirmToken),
+                                operationType);
                     }
 
                     AgentResponse result;
@@ -3193,14 +3281,16 @@ public class AgentController {
                     // 故改为读终态；读不到（null）→ 视为拒绝（保守）。
                     String status = auditLogService.getStatusByConfirmToken(confirmToken);
                     boolean approved = "APPROVED".equals(status);
-                    log.info("Operation confirmation finished (status={}): {}", status, confirmToken);
+                    log.info("Operation confirmation finished (status={}): {}", status,
+                            com.DocSystem.agent.tool.AuditWriteConfirmGate.maskToken(confirmToken));
                     return approved;
                 }
                 if (!unlimited && System.currentTimeMillis() >= deadline) {
                     // D5：到点**不做任何决定**，只告警一次并继续等（用户可能很久才回答）
                     if (!deadlineWarned) {
                         log.warn("Operation confirmation still PENDING after {} {} ({}); keep waiting — "
-                                + "never auto approve/reject (D5)", timeout, unit, confirmToken);
+                                + "never auto approve/reject (D5)", timeout, unit,
+                                com.DocSystem.agent.tool.AuditWriteConfirmGate.maskToken(confirmToken));
                         deadlineWarned = true;
                     }
                     unlimited = true;

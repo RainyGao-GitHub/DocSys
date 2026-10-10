@@ -486,3 +486,66 @@
 - **验收 V1 用"2 次连续同类写操作"取证**（等价覆盖 D1/D2/D9；4+ 次会真的移动用户文件，故用"文件不存在"的调用做到零副作用）。§6 表格里的"≥4 次"表述保留为原始验收意图。
 - **未做（保持挂起）**：`D10` 的"不占线程的挂起（选项 B）"；`D6` 计划先行（P2）；`/agent/confirm` 与 `/agent/confirm/pending` 的**会话归属校验**（现状只校验"已登录"，属**既有缺口**，未在本轮改，需用户裁定）。
 
+---
+
+## 11. 追加加固（2026-10-10 第二轮，用户裁定"①+②"）
+
+第一轮收尾后用户追问"挂起项的危害"，据此**实测复现了一个授权缺口**并裁定加固：**① 确认接口的授权（4 处）+ ② 全局挂起上限互踩 / 孤儿确认的两条缓解**。本轮改动已实现并验收（详见下文与 §11.4）。
+
+### 11.1 ① 确认接口授权缺口（实测复现 → 已修）
+
+**实测事实（改前）**
+- 全站拦截器 [`MyInterceptor.preHandle`](../../src/com/DocSystem/controller/MyInterceptor.java) 对任何带 `X-Requested-With: XMLHttpRequest` 的请求 **直接放行**（`if (isAjaxRequest(request)) return true;`）；
+- `POST /agent/confirm` **自身不校验登录、也不校验 token 归属**（只 `getPendingEntry` 判存在）；
+- 实测：无任何 Cookie + ajax 头 → `200 {"message":"Invalid or expired confirmToken"}`（**进入了控制器**）；不带 ajax 头 → 404（被重定向到登录）；
+- `confirmToken` **明文进日志**（`AuditWriteConfirmGate` 与 `AgentController` 多处，实测在 `tomcat/logs/docsys_console.log` 可搜到），而日志在本产品内可在线查看/下载（`streamLogFile.do` 仅要求 `type>=1`）。
+
+**危害**：拿到 token 的人**无需登录**即可"替用户批准"一条待确认，而被批准的对象可能是 `delete_repos`（绝对保护）或 `delete_doc` —— 恰是整套人类确认机制要拦的操作；反向也能"替用户拒绝"（把正常操作卡死）。另有：批准者不入审计（`"Approved by user"` 无用户名）⇒ **不可追责**。
+
+**修法（4 处）**
+1. `POST /agent/confirm` 补**登录校验**（`currentUser`）；
+2. 补**归属校验** `ownedByCaller`：审计行 `session_id` == 调用者当前 jsessionid，**或** `user_id` == 调用者用户名，**或** 该 `session_id` 是调用者名下的对话会话（`agent_sessions.username`）；三条都不成立 → `FORBIDDEN`（fail-safe）；
+3. `GET /agent/confirm/pending` 的**调用方传入 `sessionId` 也要校验归属**（不归属 → 忽略该参数并记 WARN），否则登录用户可拿别人的会话 id 读出别人的待确认；
+4. **日志脱敏**：`confirmToken`/`jsessionid` 一律 `maskToken()`（只留前 8 位）；**审计记录批准者**（`"Approved by user: <用户名>"`）。
+
+**实测证据（改后）**
+
+| 场景 | 结果 |
+|---|---|
+| 未登录 + ajax 头 `POST /agent/confirm` | `200 {"message":"NOT_LOGGED_IN"}` ✓（改前会进控制器） |
+| 登录用户批准**别人的**待确认 | `200 {"message":"FORBIDDEN: 该待确认不属于当前用户"}`，该行**仍是 PENDING** ✓ |
+| 登录用户批准**自己的**待确认 | `Operation approved` + 审计 `Approved by user: Admin` ✓ |
+| `GET /confirm/pending?sessionId=<别人的会话>` | 被忽略（`count=0`）✓ |
+
+### 11.2 ② 两条缓解
+
+**（a）挂起上限按会话分名额**（`agent.tool-loop.max-pending-confirms-per-session`，默认 **2**）
+- 原来上限是**全局**的（默认 8）：一个用户留下 8 个未答复确认（按 D5 允许"慢慢答/离开再回来"）就能把**所有人**的写操作全拒掉，且提示语与本人无关、排查困难。
+- 现在 `tryAcquire/releasePendingSlot(sessionKey)` 同时受**全局**与**单会话**约束；提示语区分两种情况，全局满时明确写"**可能来自其他会话/用户**"。
+- 实测（护栏）：同会话占满 2 → 第 3 个被拒；**A 会话占满后 B 会话照常可用**（原缺陷的直接反证）；释放后计数归零。
+
+**（b）重启后遗留 PENDING 失效化**
+- 现状问题：等待状态在**内存线程**里，重启后线程消失、审计行仍 `PENDING` ⇒ D11 的恢复弹窗会把它弹出来，用户点"批准"只改了数据库、**操作不执行**（静默失败）。改前库里就躺着 3 条这样的历史孤儿（`delete_doc`/`write_file`/`move_doc`，2026-10-08 及更早）。
+- 新增：启动（**根上下文 refresh 完成之后**，`ApplicationListener<ContextRefreshedEvent>`）把**早于「启动时间 − 60s 宽限期」**的 `PENDING` 批量置为 **`ABANDONED`**（`AuditLogEntity.OperationStatus` 新增；判定上等同"未批准"，`findPendingBySessionId` 只取 PENDING ⇒ 不再出现在恢复弹窗里；批准会得到明确的"已失效"提示）。
+- 开关：`agent.tool-loop.sweep-stale-confirms-on-start`（默认 true）。
+- 实测：启动后 3 条历史孤儿 → `ABANDONED`（`PENDING` 归零）；宽限期生效（重启够快时，重启前 30s 内新建的行**保持 PENDING** 未被误伤）；`ABANDONED` 行不再被 `GET /confirm/pending` 返回。
+- ⚠️ **集群注意（已在代码/文档写明）**：审计表是共享的，某节点重启会作废**其他节点**尚未答复的待确认 —— 那些等待线程会按"未批准"收场（操作不执行，用户重做即可）。不希望如此就把开关置 false。
+
+### 11.3 顺带修掉的既有缺陷
+
+- **操作级（legacy）确认路径拿错 token**：原代码先 `UUID.randomUUID()` 生成 token 再调 `createPendingEntry(...)` 并**丢掉返回值** ⇒ 等待时永远查不到该审计行，`waitForConfirmation` 首个轮询即把"已批准"判成"拒绝"（该路径的确认从来没生效过）。改为**用落库返回的 token**；拿不到 token 时 fail-closed（不执行并明确报错）。
+- **`AuditLogService.createPendingEntry` 的日志**同样把 token 明文打出来 → 已脱敏。
+
+### 11.4 本轮验证
+
+- 全量护栏 **46 套 / 2021 项 / 0 失败**（`TestPermissionLiveContext` 15→24：按会话限额/跨会话互不影响/提示语/脱敏；`TestWriteConfirmGateCoverage` 56→63：授权与归属 lint、按会话分名额、启动清理链路 lint）。
+- 真实回合回归：新会话（标准档）→ 触发 `move_doc` 确认 → 弹窗 6 个作用域选项照常 → 点「拒绝」→ 模型如实汇报"操作被用户拒绝"、未执行（**证明按会话分名额的改动没有破坏确认门**）。
+- 测试数据全部清理：伪造审计行已删、测试会话已删；测试期间**零文件改动**。
+
+### 11.5 仍未做（挂起）
+
+- **D10 选项 B（不占线程的挂起）**：完整解需工具执行链可挂起/可恢复（`ToolUseLoop`/`ToolRegistry` 支持暂停点），改动面大，仍留后续专项。本轮只做"按会话分名额 + 孤儿失效化"两条缓解。
+- **D6 计划先行**（P2）。
+- 启动清理日志的可见性：本机 dev 环境启动期 `log.info` 未落到 `docsys*.log`（原因未确认），故**以数据库状态作为该功能的验收依据**（代码同时走 SLF4J 与项目日志两路，正常运行环境下应可查）。
+
+

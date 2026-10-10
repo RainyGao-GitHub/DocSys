@@ -15,7 +15,15 @@ public class AuditLogEntity {
         APPROVED,
         REJECTED,
         COMPLETED,
-        FAILED
+        FAILED,
+        /**
+         * 已作废：等待确认时进程结束（重启/崩溃），**没有任何线程还在等它**。
+         *
+         * <p>由启动时的遗留清理写入（见 {@code AuditLogService.abandonStalePendingOnStartup}）：
+         * 这些行不再是 PENDING ⇒ 不会出现在恢复弹窗里，也不会被误当成"还能批准"，
+         * 从而避免"点了批准却什么都没发生"的静默失败。判定上等同**未批准**。</p>
+         */
+        ABANDONED
     }
 
     private Long id;

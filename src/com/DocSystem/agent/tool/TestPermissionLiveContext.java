@@ -201,6 +201,48 @@ public class TestPermissionLiveContext {
         check("D10：上限 <=0 → 不限制", unlimitedOk);
         AuditWriteConfirmGate.setMaxPendingConfirms(8);
 
+        // 2026-10-10 追加：**按会话分名额**（防止一个会话占满全局名额，把别人的写操作全锁死）
+        AuditWriteConfirmGate.setMaxPendingConfirms(8);
+        AuditWriteConfirmGate.setMaxPendingConfirmsPerSession(2);
+        boolean sa1 = AuditWriteConfirmGate.tryAcquirePendingSlot("SESS-A");
+        boolean sa2 = AuditWriteConfirmGate.tryAcquirePendingSlot("SESS-A");
+        boolean sa3 = AuditWriteConfirmGate.tryAcquirePendingSlot("SESS-A");
+        check("按会话上限：同会话占满 2 个后第 3 个被拒", sa1 && sa2 && !sa3,
+                "a1=" + sa1 + " a2=" + sa2 + " a3=" + sa3);
+        boolean sb1 = AuditWriteConfirmGate.tryAcquirePendingSlot("SESS-B");
+        check("★ 关键（原全局上限的互踩缺陷）：A 会话占满后，**B 会话照常能占用**", sb1);
+        check("按会话计数正确", AuditWriteConfirmGate.pendingConfirms("SESS-A") == 2
+                && AuditWriteConfirmGate.pendingConfirms("SESS-B") == 1,
+                "A=" + AuditWriteConfirmGate.pendingConfirms("SESS-A")
+                        + " B=" + AuditWriteConfirmGate.pendingConfirms("SESS-B"));
+        String busyMine = AuditWriteConfirmGate.pendingBusyMessage("SESS-A");
+        check("提示语区分'本会话已满'（指向自己的待确认）", busyMine.contains("本会话已有 2 个"), busyMine);
+        AuditWriteConfirmGate.releasePendingSlot("SESS-B");
+        AuditWriteConfirmGate.releasePendingSlot("SESS-A");
+        AuditWriteConfirmGate.releasePendingSlot("SESS-A");
+        check("释放后归零（含按会话计数）", AuditWriteConfirmGate.pendingConfirms() == 0
+                && AuditWriteConfirmGate.pendingConfirms("SESS-A") == 0);
+
+        // 全局名额被占满时，提示语要讲明"可能来自其他会话/用户"（否则排查困难）
+        AuditWriteConfirmGate.setMaxPendingConfirms(1);
+        AuditWriteConfirmGate.setMaxPendingConfirmsPerSession(0);   // 只留全局约束
+        AuditWriteConfirmGate.tryAcquirePendingSlot("SESS-C");
+        boolean other = AuditWriteConfirmGate.tryAcquirePendingSlot("SESS-D");
+        check("全局上限仍然生效（跨会话合计）", !other);
+        String busyGlobal = AuditWriteConfirmGate.pendingBusyMessage("SESS-D");
+        check("全局已满的提示语讲明可能来自其他会话/用户",
+                busyGlobal.contains("其他会话/用户"), busyGlobal);
+        AuditWriteConfirmGate.releasePendingSlot("SESS-C");
+        AuditWriteConfirmGate.setMaxPendingConfirmsPerSession(2);
+        AuditWriteConfirmGate.setMaxPendingConfirms(8);
+
+        // 日志脱敏：token / jsessionid 不该明文进日志
+        check("日志脱敏：maskToken 只留前 8 位", "12345678***".equals(
+                AuditWriteConfirmGate.maskToken("12345678-9abc-def0")));
+        check("日志脱敏：短串整体打码、null 安全",
+                "***".equals(AuditWriteConfirmGate.maskToken("short"))
+                        && "".equals(AuditWriteConfirmGate.maskToken(null)));
+
         // 注册表把"忙"原样回给调用方（提示先处理待确认，而不是静默失败/自动放行）
         List<String> gateCalls = new ArrayList<String>();
         ToolRegistry reg = newRegistry(gateCalls);

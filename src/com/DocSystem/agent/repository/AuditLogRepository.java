@@ -38,6 +38,22 @@ public interface AuditLogRepository {
             @Param("completedAt") LocalDateTime completedAt,
             @Param("result") String result);
 
+    /**
+     * 把**启动前遗留**的 PENDING 行批量置为作废（{@code ABANDONED}）。
+     *
+     * <p>为什么需要：等待确认的状态在**进程内存线程**里，重启后线程消失但审计行仍是 PENDING
+     * ⇒ 恢复弹窗会把它重新弹出来，用户点"批准"只改数据库、操作不会执行（静默失败）。
+     * 启动时作废它们，让 UI 不再展示"其实没人等"的确认。</p>
+     *
+     * @param cutoff      只作废此时间之前创建的行（宽限期，避免误伤重启瞬间刚创建的行）
+     * @param completedAt 终态时间
+     * @param result      终态说明（写进 result_message）
+     * @return 受影响行数
+     */
+    int markPendingAbandonedBefore(@Param("cutoff") LocalDateTime cutoff,
+                                   @Param("completedAt") LocalDateTime completedAt,
+                                   @Param("result") String result);
+
     int deleteOldLogs(@Param("cutoff") LocalDateTime cutoff);
 
     int insert(AuditLogEntity log);

@@ -59,6 +59,15 @@
         WHERE confirm_token = #{confirmToken}
     </update>
 
+    <!-- 启动时的遗留清理：把重启前遗留的 PENDING 置为 ABANDONED（判定上等同未批准）。
+         ⚠️ 集群注意：审计表是共享的，某个节点重启会作废**其他节点**尚未答复的待确认
+         （它们仍在等，但行的状态已变 ⇒ 等待线程会按"未批准"收场，操作不执行、用户重做即可）。 -->
+    <update id="markPendingAbandonedBefore">
+        UPDATE audit_logs
+        SET status = 'ABANDONED', completed_at = #{completedAt}, result_message = #{result}
+        WHERE status = 'PENDING' AND created_at &lt; #{cutoff}
+    </update>
+
     <delete id="deleteOldLogs">
         DELETE FROM audit_logs WHERE status IN ('COMPLETED','FAILED') AND created_at &lt; #{cutoff}
     </delete>

@@ -34,7 +34,7 @@
   关键实现：**模式/规则从"每请求快照"改为实时供应器**（`ToolRegistry.permissionContextSupplier`，标准档也认会话规则）；弹窗内给出**按工具/目录/仓库**的作用域授权 + 「切到自动模式并继续」；等待**默认无限、到点不做任何决定**，并新增 `GET /agent/confirm/pending`（按对话会话 id **与** jsessionid 双查）让**刷新/断网后待确认能恢复**；`/stream` 结果**先落库再推送**。
   证据：全量护栏 **46 套 / 2005 项 / 0 失败**；页面 E2E V1~V10 全通过（真实回合实测"同一轮第 2 次 `move_doc` 不再弹"、刷新后弹窗自动恢复、`delete_repos` 无任何放宽入口）；验证期额外修掉 8 个"不做就达不到验收"的问题（目录授权对移动/复制无效、实况 SSE 丢目录、查错会话 id、**授权与批准并行的竞态**等，详见方案 §10.2）。测试数据已清理、**零文件改动**。
   ⚠️ 未改的两条既有裁定：**绝对保护（`delete_repos`）任何档位都要问**；**会话规则只到本会话**。
-  ⏭ **已提交主仓库 `e32c0f038`**（2026-10-10，24 个文件：实现 + 护栏 + 文档）；工作树已干净。后续可收尾归档（本卡移入 `DevAgentControl/已完成/`、本文件换卡）。
+  ⏭ **一轮已提交主仓库 `e32c0f038`**（2026-10-10，24 个文件：实现 + 护栏 + 文档）。**二轮加固（用户裁定"①+②"）已实现并验收、待提交**：① `POST /agent/confirm` 补登录+归属校验（实测改前免登录可达控制器）、`/confirm/pending` 的 sessionId 校验归属、日志 token 脱敏、审计记批准者；② 挂起上限**按会话分名额**（`max-pending-confirms-per-session`=2）+ **重启后遗留 PENDING 失效化**（`sweep-stale-confirms-on-start`=true → `ABANDONED`）；护栏 46 套 / **2021 项** / 0 失败。详见工作卡进展 §10 与方案 §11。提交后即可收尾归档（本卡移入 `DevAgentControl/已完成/`、本文件换卡）。
 
 - 上一任务 = 仓库设置「允许操作隐藏文件和系统文件」选项，已收尾归档（2026-10-10）：工作卡 `DevAgentControl/已完成/CURRENT_STATE_仓库隐藏文件操作控制.md`，方案 `devDocs/仓库隐藏文件与系统文件操作控制方案.md`（§6 六项裁定 / §10 实施记录与验证结果）。
   已完成：仓库级选项（默认不允许）—— 隐藏/系统条目**不出现在列表**（含全文索引）且**拦下**改名/移动/复制/删除/下载/预览编辑/Agent 写入，勾选后恢复原行为；存储 = 仓库目录下 `data/hiddenFileSetting/hiddenFileConfig.txt`（照抄 `encryptType`，**零数据库改动**、无缓存、仅超管可改）；落点 = `FileUtil` 判定 + `BaseFunction` 守卫 + `BaseController`/`DocController` 全族 + websocket `BussinessController` + 前端 6 页。提交：主仓库 `f782bcb0b`、websocket 仓库 `413a7674`。

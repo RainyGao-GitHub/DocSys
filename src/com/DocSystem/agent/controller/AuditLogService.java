@@ -8,6 +8,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,8 @@ import java.util.*;
  *   content, fileContent, fileData, body, credential
  */
 @Service
-public class AuditLogService {
+public class AuditLogService
+        implements org.springframework.context.ApplicationListener<org.springframework.context.event.ContextRefreshedEvent> {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLogService.class);
 
@@ -64,6 +66,62 @@ public class AuditLogService {
 
     @Autowired
     private AuditLogRepository auditLogRepository;
+
+    /** 启动清理的宽限期（秒）：只作废早于「启动时间 − 该值」的行，避免误伤刚创建的行 */
+    private static final long ABANDON_GRACE_SECONDS = 60;
+
+    /** 同一 JVM 只扫一次（root 与 mvc 两个上下文都会发 ContextRefreshedEvent） */
+    private static final java.util.concurrent.atomic.AtomicBoolean STALE_SWEPT =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    /** 启动时是否作废"重启前遗留的待确认"（集群环境下可关掉，见 mapper 注释） */
+    @Value("${agent.tool-loop.sweep-stale-confirms-on-start:true}")
+    private boolean sweepStaleConfirmsOnStart = true;
+
+    /**
+     * 启动清理入口：**根上下文 refresh 完成之后**才跑（不用 `@PostConstruct`——那时上下文还在
+     * 装配、启动早期的日志也不可靠）。{@link #STALE_SWEPT} 保证整个 JVM 只跑一次。
+     */
+    @Override
+    public void onApplicationEvent(org.springframework.context.event.ContextRefreshedEvent event) {
+        abandonStalePendingOnStartup();
+    }
+
+    /**
+     * 把重启前遗留的 {@code PENDING} 置为 {@code ABANDONED}。
+     *
+     * <p>为什么必须有：等待确认的状态活在**进程内存线程**里，重启后线程没了，但审计行还是
+     * `PENDING` ⇒ D11 的恢复弹窗会把它重新弹出来、用户点"批准"只改了数据库，**操作却不会执行**
+     * （静默失败）。作废后它不再是待确认：UI 不展示，批准也只得到"已失效"的明确提示。</p>
+     *
+     * <p>集群注意：审计表共享，节点重启会作废其他节点尚未答复的待确认（那些等待会按"未批准"
+     * 收场、不执行，用户重做即可）；如不希望这样，把参数置 false。</p>
+     */
+    public void abandonStalePendingOnStartup() {
+        if (!sweepStaleConfirmsOnStart) {
+            log.info("Skip abandoning stale PENDING confirmations "
+                    + "(agent.tool-loop.sweep-stale-confirms-on-start=false)");
+            return;
+        }
+        if (!STALE_SWEPT.compareAndSet(false, true) || auditLogRepository == null) {
+            return;
+        }
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            int n = auditLogRepository.markPendingAbandonedBefore(
+                    now.minusSeconds(ABANDON_GRACE_SECONDS), now,
+                    "服务重启导致本次确认失效（操作未执行）；请重新发起该操作");
+            if (n > 0) {
+                // 同时走 SLF4J（DocSys 日志文件/控制台）与项目日志（系统日志），便于运维排查
+                log.info("Abandoned {} stale PENDING confirmation(s) on startup "
+                        + "(PENDING->ABANDONED, none executed)", n);
+                com.DocSystem.common.Log.info("[Permission][PENDING] 启动清理：作废 " + n
+                        + " 条重启前遗留的待确认（PENDING→ABANDONED，操作未执行）");
+            }
+        } catch (Exception e) {
+            log.warn("abandonStalePendingOnStartup failed: {}", e.getMessage());
+        }
+    }
 
     /**
      * Determine if a skill ID is a write operation that requires auditing.
@@ -235,7 +293,9 @@ public class AuditLogService {
 
         entry.setCreatedAt(LocalDateTime.now());
         auditLogRepository.insert(entry);
-        log.info("Audit log created: operation={}, userId={}, confirmToken={}", operation, userId, confirmToken);
+        // token 等于"一次批准权"→ 日志只留前 8 位（原来把完整 token 明文打进日志）
+        log.info("Audit log created: operation={}, userId={}, confirmToken={}", operation, userId,
+                com.DocSystem.agent.tool.AuditWriteConfirmGate.maskToken(confirmToken));
         return confirmToken;
     }
 

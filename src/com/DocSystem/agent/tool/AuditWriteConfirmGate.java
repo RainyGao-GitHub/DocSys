@@ -45,9 +45,22 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
      */
     private static volatile int maxPendingConfirms = 8;
 
+    /**
+     * **单个会话**的同时挂起上限（默认 2）。{@code <=0} → 不限制。
+     *
+     * <p>为什么要有：全局上限是"所有人的合计"，若不按会话分名额，一个用户（可能只是离开电脑、
+     * 按 D5 慢慢答）就能占满全部名额，**其他人的写操作会全部被拒**，且提示语看起来与本人无关，
+     * 排查困难。分名额后，一个会话最多占 {@code maxPendingConfirmsPerSession} 个。</p>
+     */
+    private static volatile int maxPendingConfirmsPerSession = 2;
+
     /** 当前挂起数（诊断/日志用） */
     private static final java.util.concurrent.atomic.AtomicInteger PENDING_COUNT =
             new java.util.concurrent.atomic.AtomicInteger();
+
+    /** 各会话当前挂起数（诊断/按会话限额用）；值降到 0 即移除，避免长期堆积 */
+    private static final java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicInteger>
+            PENDING_BY_SESSION = new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
      * 无确认通道（{@code NOOP}，即没有任何界面能答复）时的兜底等待秒数：
@@ -61,27 +74,114 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
         maxPendingConfirms = max;
     }
 
+    /** 设置**单会话**挂起上限（{@code <=0} → 不限制） */
+    public static void setMaxPendingConfirmsPerSession(int max) {
+        maxPendingConfirmsPerSession = max;
+    }
+
     /** 当前挂起数（护栏/诊断用） */
     public static int pendingConfirms() {
         return PENDING_COUNT.get();
     }
 
+    /** 某会话当前挂起数（护栏/诊断用） */
+    public static int pendingConfirms(String sessionKey) {
+        String key = normalizeSessionKey(sessionKey);
+        if (key == null) {
+            return 0;
+        }
+        java.util.concurrent.atomic.AtomicInteger n = PENDING_BY_SESSION.get(key);
+        return n == null ? 0 : n.get();
+    }
+
     /**
-     * 尝试占用一个"挂起位"（供其它确认流程复用同一全局上限，如操作级确认）。
+     * 尝试占用一个"挂起位"（只受全局上限约束；供其它确认流程复用，如操作级确认）。
      *
      * @return true = 已占用（调用方**必须**在 finally 里 {@link #releasePendingSlot()}）
      */
     public static boolean tryAcquirePendingSlot() {
+        return tryAcquirePendingSlot(null);
+    }
+
+    /**
+     * 尝试占用一个"挂起位"（同时受全局上限与**该会话**上限约束）。
+     *
+     * @param sessionKey 会话标识（jsessionid 等）；null/空白 = 只受全局上限
+     * @return true = 已占用（调用方**必须**在 finally 里 {@link #releasePendingSlot(String)}，且传同一个 key）
+     */
+    public static boolean tryAcquirePendingSlot(String sessionKey) {
+        String key = normalizeSessionKey(sessionKey);
         if (maxPendingConfirms > 0 && PENDING_COUNT.get() >= maxPendingConfirms) {
             return false;
+        }
+        if (key != null && maxPendingConfirmsPerSession > 0) {
+            java.util.concurrent.atomic.AtomicInteger n = PENDING_BY_SESSION.computeIfAbsent(
+                    key, k -> new java.util.concurrent.atomic.AtomicInteger());
+            while (true) {
+                int cur = n.get();
+                if (cur >= maxPendingConfirmsPerSession) {
+                    return false;
+                }
+                if (n.compareAndSet(cur, cur + 1)) {
+                    break;
+                }
+            }
         }
         PENDING_COUNT.incrementAndGet();
         return true;
     }
 
-    /** 释放"挂起位" */
+    /** 释放"挂起位"（无会话维度时用；与 {@link #tryAcquirePendingSlot()} 配对） */
     public static void releasePendingSlot() {
-        PENDING_COUNT.decrementAndGet();
+        releasePendingSlot(null);
+    }
+
+    /** 释放"挂起位"（必须与 {@link #tryAcquirePendingSlot(String)} 传同一个 key） */
+    public static void releasePendingSlot(String sessionKey) {
+        String key = normalizeSessionKey(sessionKey);
+        if (key != null) {
+            java.util.concurrent.atomic.AtomicInteger n = PENDING_BY_SESSION.get(key);
+            if (n != null && n.decrementAndGet() <= 0) {
+                PENDING_BY_SESSION.remove(key, n);
+            }
+        }
+        if (PENDING_COUNT.get() > 0) {
+            PENDING_COUNT.decrementAndGet();
+        }
+    }
+
+    /**
+     * 拿不到挂起位时给用户看的原因（区分"本会话已满"与"全局已满"，后者要讲明可能来自其他人）。
+     */
+    public static String pendingBusyMessage(String sessionKey) {
+        String key = normalizeSessionKey(sessionKey);
+        int mine = pendingConfirms(key);
+        if (key != null && maxPendingConfirmsPerSession > 0 && mine >= maxPendingConfirmsPerSession) {
+            return "本会话已有 " + mine + " 个写操作在等待你的确认（单会话上限 "
+                    + maxPendingConfirmsPerSession + " 个）。请先批准或拒绝它们，再继续执行新的写操作。";
+        }
+        return "系统当前共有 " + PENDING_COUNT.get() + " 个写操作在等待确认（全局上限 "
+                + maxPendingConfirms + " 个，**可能来自其他会话/用户**）。请稍后重试；"
+                + "若是你自己的待确认，可刷新页面后在弹窗里处理。";
+    }
+
+    /** 会话 key 规范化：空白 → null（表示不区分会话） */
+    private static String normalizeSessionKey(String sessionKey) {
+        if (sessionKey == null || sessionKey.trim().isEmpty()) {
+            return null;
+        }
+        return sessionKey.trim();
+    }
+
+    /** 日志里的敏感标识（confirmToken / jsessionid 都算"一次权限"）打码：只留前 8 位 */
+    public static String maskToken(String confirmToken) {
+        if (confirmToken == null || confirmToken.isEmpty()) {
+            return "";
+        }
+        if (confirmToken.length() <= 8) {
+            return "***";
+        }
+        return confirmToken.substring(0, 8) + "***";
     }
 
     public AuditWriteConfirmGate(AuditLogService auditLogService, String userId, String sessionId,
@@ -107,18 +207,18 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
         }
 
         // D10「上限保护」：挂起数已达上限 → **拒绝开始新的等待**（不排队、不自动放行）
-        if (!tryAcquirePendingSlot()) {
-            log.error("Too many pending write confirmations ({}/{}) — refusing to wait for '{}'",
-                    PENDING_COUNT.get(), maxPendingConfirms, toolName);
-            throw new ConfirmGateBusyException(
-                    "当前已有 " + PENDING_COUNT.get() + " 个写操作在等待你的确认（上限 "
-                    + maxPendingConfirms + " 个）。请先在会话里批准或拒绝这些待确认操作，"
-                    + "再继续执行新的写操作。");
+        // 2026-10-10 追加：按会话分名额，避免一个会话占满全局名额把别人的写操作全锁死
+        if (!tryAcquirePendingSlot(sessionId)) {
+            log.error("Too many pending write confirmations (session={} global={}/{}, perSession={}/{}) "
+                            + "— refusing to wait for '{}'",
+                    maskToken(sessionId), PENDING_COUNT.get(), maxPendingConfirms,
+                    pendingConfirms(sessionId), maxPendingConfirmsPerSession, toolName);
+            throw new ConfirmGateBusyException(pendingBusyMessage(sessionId));
         }
         try {
             return waitForUserDecision(toolName, args);
         } finally {
-            releasePendingSlot();
+            releasePendingSlot(sessionId);
         }
     }
 
@@ -151,11 +251,12 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
         try {
             confirmEventSink.onConfirmRequired(toolName, confirmToken, message, args);
         } catch (Exception e) {
-            log.warn("Confirm event push failed for '{}' (token still in log): {}", toolName, e.getMessage());
+            log.warn("Confirm event push failed for '{}': {}", toolName, e.getMessage());
         }
-        log.warn("Write operation '{}' requires confirmation. params=[{}] confirmToken={} — approve via POST /agent/confirm "
-                + "{\"confirmToken\":\"...\",\"action\":\"approve\"} within {}s",
-                toolName, summary, confirmToken, timeoutSeconds);
+        // token 等于"一次批准权"→ 日志只留前 8 位（前端是从 SSE 拿 token 的，不需要日志明文）
+        log.warn("Write operation '{}' requires confirmation. params=[{}] confirmToken={} — approve via "
+                        + "POST /agent/confirm {\"confirmToken\":\"...\",\"action\":\"approve\"} within {}s",
+                toolName, summary, maskToken(confirmToken), timeoutSeconds);
 
         // 3. 轮询等待批准
         return waitForApproval(confirmToken, timeoutSeconds);
@@ -232,7 +333,7 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
         if (!hasChannel && effectiveTimeout <= 0) {
             effectiveTimeout = NOOP_FALLBACK_TIMEOUT_SECONDS;
             log.warn("No confirm channel for {} — using {}s fallback wait instead of unlimited",
-                    confirmToken, effectiveTimeout);
+                    maskToken(confirmToken), effectiveTimeout);
         }
         boolean unlimited = effectiveTimeout <= 0;
         long deadline = unlimited ? Long.MAX_VALUE : System.currentTimeMillis() + effectiveTimeout * 1000L;
@@ -246,20 +347,21 @@ public class AuditWriteConfirmGate implements WriteConfirmGate {
                     return false;
                 }
                 if (!"PENDING".equals(status)) {
-                    // 已离开 PENDING → 由终态决定：APPROVED=true，其余(REJECTED/TIMEOUT)=false
+                    // 已离开 PENDING → 由终态决定：APPROVED=true，其余(REJECTED/ABANDONED/…)=false
                     boolean approved = "APPROVED".equals(status);
                     log.info("Write operation {} (status={}): {}", approved ? "approved" : "rejected",
-                            status, confirmToken);
+                            status, maskToken(confirmToken));
                     return approved;
                 }
                 if (!unlimited && System.currentTimeMillis() >= deadline) {
                     if (!hasChannel) {
-                        log.warn("Write operation confirmation TIMEOUT (no confirm channel): {}", confirmToken);
+                        log.warn("Write operation confirmation TIMEOUT (no confirm channel): {}",
+                                maskToken(confirmToken));
                         return false;
                     }
                     if (!deadlineWarned) {
                         log.warn("Write operation confirmation still PENDING after {}s ({}); keep waiting — "
-                                + "never auto approve/reject (D5)", effectiveTimeout, confirmToken);
+                                + "never auto approve/reject (D5)", effectiveTimeout, maskToken(confirmToken));
                         deadlineWarned = true;
                     }
                     unlimited = true;   // 有界面：到点后不再设限，继续等用户答复
