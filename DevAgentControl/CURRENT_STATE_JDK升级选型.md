@@ -35,7 +35,7 @@
 **平台裁定（2026-10-11）**：2.02.88 发 **Windows x64 / Linux x64 / 麒麟 x64 / Mac Intel / Mac Apple Silicon / 麒麟·Linux ARM64**（**鸿蒙**不支持，无 JVM）。
 运行时 = **Win / Linux x64 / 麒麟 x64 用 GraalVM CE 21.2.0**；**Mac（Intel→Temurin 8 x64；Apple Silicon→Zulu 8 aarch64）与 麒麟·Linux ARM64（Temurin 8 aarch64）用 stock JDK8 + 随包 21.2.0 GraalJS jar** ⇒ **全平台统一 GraalJS 21.2.0**（JS 行为一致；差异只剩 JVM 性能，stock 上 ~3.2 s vs GraalVM ~1.3 s）。
 原因：GraalVM java8 无 Mac/ARM 的 21.2.0 版，而 **21.0.0.2 的 GraalJS 21.0.0 在 xlsx 上与 21.2.0 行为不一致**（本机实测 cell 内容不同=5）→ 为保证跨平台一致，改用 stock JDK8 + 同一份 21.2.0 jar。
-⚠️ **ARM/Mac 待确认**：`lwjgl/freetype` 有 arm64/macos-arm64 natives ✅；但 **javacpp 系（opencv/tesseract/leptonica/openblas）缺 macos 版、Linux 缺 arm64** → 相关功能（若有使用）在 Mac/ARM 不可用。
+⚠️ **ARM/Mac 原生库审计（2026-10-11 完成）**：`lwjgl/freetype` 有 arm64/macos-arm64 ✅（**核心 Office 编辑/转换可用**）；`opencv/tesseract/leptonica/openblas` **代码零引用（未使用）** → 无影响；受影响的仅两个非核心功能 —— **"压缩包内查看"（`sevenzipjbinding` 无 arm64 → Apple Silicon / Linux ARM64 不可用；Mac Intel ✅）** 与 **"视频预览转码"（`ffmpeg` 无 macos → Mac 不可用，优雅降级）**。详见 `devDocs/跨平台运行时打包方案.md` §5-3。
 复验数据与方案：`devDocs/跨平台运行时打包方案.md`（§8 复验结果 / §9 裁定）。
 
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
