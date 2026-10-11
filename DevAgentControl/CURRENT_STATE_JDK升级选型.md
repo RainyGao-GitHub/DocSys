@@ -39,6 +39,13 @@
 复验数据与方案：`devDocs/跨平台运行时打包方案.md`（§8 复验结果 / §9 裁定 / §10 app 级预演）。
 **app 级预演（2026-10-11）**：dev Tomcat 临时切 stock JDK8（8u162）→ 真实 UI 保存 3 文件（`.docx` ✅ / `.pptx` ✅ / `.xlsx` ❌=既有 AutoFilter `Qf` 缺陷），引擎=graaljs → **stock JDK8 配方应用级可行**；预演后已把 dev 运行时切回 GraalVM 21.2.0。
 
+**★ 安装包结构裁定（用户 2026-10-11）：方案 B「通用 payload + 按 OS 外壳」** —— 起因：用户咨询"是否值得把 MySQL 从 `docs` 里拿掉以简化跨平台打包"。
+- **现状实测**：`docs` 共 **1280 MB** = `tomcat` 1064 MB（含 `java/jre` 472 MB）+ **`mysql` 216 MB（17%）** + 顶层脚本；顶层 11 个脚本**全是 `.bat` + `sleep.vbs`（无 `.sh`）**；**两个原生件 `{JRE × MySQL}`** 才是"必须按 OS 分别打包"的根因，其余 ~600 MB payload 全平台通用。
+- **关键事实**：**出厂默认库就是 SQLite**（`src/jdbc.properties` = `db.type=sqlite` / `jdbc:sqlite:${catalina.home}/DocSystem.db`）；**MySQL 不参与默认启动路径**（`start.bat` 只起 monitor+docsys，`mysql_start.bat` 才启 `mysqld`）；切库是纯配置（`docsys_start.bat` 用 `docSys.ini\jdbc.properties` 覆盖 classes 那份）；**driver 是纯 Java 且已随 WAR**（`mysql-connector-java-8.0.15.jar` 2.04 MB / `sqlite-jdbc-3.41.2.2.jar` 12.26 MB）→ **数据库选择与打包无关**，这正是用户"后续要支持其他数据库"的落点（加库 = 多一个 jar + 一个 `db.type` 值，不必重打包）。
+- **裁定**：`docs` = **平台无关 payload（无 JRE、无 MySQL）** + **按 OS 外壳（JRE + 平台脚本）**；**默认 SQLite 开箱即用**；**MySQL 降为可选下载件**。⇒ 维护面从 `{JRE × MySQL}` 降为 `{JRE}`。**注意语义：交付仍是每平台一个包，简化的是"准备过程"。**
+- **由此新增待办（方案 B 的必要组成，属仓库外 installer 脚本范畴）**：B-1 补 Linux/Mac 顶层 `.sh` 脚本；B-2 Linux/Mac 包改 `.tar.gz`（zip 丢可执行位/CRLF）；B-3 MySQL 可选件按 OS 单独打（symlink 可用解引用参数，但 `mysqld` 二进制本就按 OS 不同）；B-4 确认出货默认 `jdbc.properties`=SQLite 及 MySQL 启用 UX；B-5 `docsys_stop.bat` 按 `*\tomcat\java\jre\bin\java.exe` 杀进程，换 JRE 目录后需同步（`.sh` 版同理）。
+- 详见 `devDocs/跨平台运行时打包方案.md` **§11**。
+
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
 
 用户裁定：**删除**已删实现的内部单测 + 5 个不可救文件。按可复现口径执行：
