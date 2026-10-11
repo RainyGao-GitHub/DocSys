@@ -46,6 +46,15 @@
 - **由此新增待办（方案 B 的必要组成，属仓库外 installer 脚本范畴）**：B-1 补 Linux/Mac 顶层 `.sh` 脚本；B-2 Linux/Mac 包改 `.tar.gz`（zip 丢可执行位/CRLF）；B-3 MySQL 可选件按 OS 单独打（symlink 可用解引用参数，但 `mysqld` 二进制本就按 OS 不同）；B-4 确认出货默认 `jdbc.properties`=SQLite 及 MySQL 启用 UX；B-5 `docsys_stop.bat` 按 `*\tomcat\java\jre\bin\java.exe` 杀进程，换 JRE 目录后需同步（`.sh` 版同理）。
 - 详见 `devDocs/跨平台运行时打包方案.md` **§11**。
 
+**★ Windows 侧跨平台打包可行性（2026-10-11，实测，方案文档 §12）** —— 用户实际需求：**不想再登 Linux 打包**，希望 Windows 上脚本化生成各平台包。
+- **结论：可行，且可完全脚本化。** 三个"Linux 专属"阻塞点全部实测有解。
+- **根因坐实**（现有包实测）：`docsys-linux-2.02.87.tar.gz` 有 **10 个符号链接**，其中 **8 个是 `mysql/lib/*.so`** → 正是"MySQL link 文件在 Windows 解压不正常"的来源；`docsys-mac` 包 **0 符号链接、0 MySQL**（Mac 已是方案 B 形态）；包内 `.sh` 一律 `-rwxr-xr-x`。
+- **① 可执行位**：Git for Windows 规则 = **文件以 `#!` 开头即 755**（实测 `a.sh`→755 / `b.sh`(无 shebang)→644 / `c.txt`→755）；**Git 自带 GNU tar 1.35 如实写入 `-rwxr-xr-x`**，本仓库 14 个 `.sh` **全有 shebang** → 直接可用。⚠️ **Windows 内置 `tar.exe`（bsdtar 3.8.8）与 7-Zip 19.00 不可用**（只写 Windows 属性，bsdtar 给出 `-rw-rw-rw-` 且无 `--mode`）。
+- **② 符号链接**：**不解压**即可 —— **Python `tarfile` 逐 member 转写实测完全保真**（`jdk-8u461-linux-aarch64.tar.gz`：入 `1 dir/365 files/2 symlinks` → 出同；mode `755/444/777` 与 linkname 全对，**不落盘**）。WSL 也可（本机 Ubuntu 2：GNU tar 1.35 + Python 3.12.3），但 ⚠️ **`/mnt/d`(DrvFs) 上 `chmod` 不落盘**（Windows 属性仍只有 `Archive`）→ WSL 路线须先拷进 ext4。
+- **③ CRLF**：无问题（`core.autocrlf=false`、无 `.gitattributes`，14 个 `.sh` 实测 CRLF=0）。
+- **推荐**：Python 单文件打包器（payload 逐 member 强制 mode + JRE 归档逐 member 加前缀移植）→ 纯 Windows、无 WSL/无管理员权限依赖；与方案 B 互补（去掉 MySQL 后 payload **符号链接归零**，唯一携带者是 JRE 且从不落盘）。自检：`tar -tzvf` 断言 `.sh` 为 `-rwxr-xr-x`。
+- 事实补充：`docsysStartScripts` 属**主仓库的 submodule**（`WebRoot/web/sales`，gitdir 指向 `.git/modules/WebRoot/web/sales`）；该 submodule 当前有**未提交改动**（`M docsysStartScripts/Windows/*.bat` ×3 + 未跟踪 `docsys_start_hidden.bat`）——用户的 B-1 成果，注意别丢。`C:\docsysRel` 下的发布脚本（`PrepareWinPackage.bat`/`buildDocSystem.bat`/`Windows发布流程.txt`/`发布步骤.txt`）**全是 0 字节空占位**。
+
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
 
 用户裁定：**删除**已删实现的内部单测 + 5 个不可救文件。按可复现口径执行：
