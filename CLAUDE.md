@@ -29,10 +29,16 @@
 
 ## 当前任务
 
-- **Office 字体库自动检测与生成** —— 用户 2026-10-10 提出：**新安装 / 在线升级后**，Office 编辑所需的**字体库**必须由管理员手动执行「管理后台 → 系统管理 → Office 编辑器 → **重置字体库**」；管理员一旦忘记，用户会在 Office 编辑时撞上"字体库不存在"，才回头找管理员重置。希望改成**自动检测 + 自动生成**。
+- **GraalJS 迁移 · 阶段 2：JDK 17 + Tomcat 9** —— **2026-10-11 由用户重新启用工作卡 `DevAgentControl/CURRENT_STATE_JDK升级选型.md`（本卡）**。
+  阶段 1（JDK 8 + GraalVM CE 21.2 + GraalJS 替代 Nashorn）**已完成并三层验证通过**；**下一步 = 阶段 2**：换 **形态 A：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + 计划 §6.2 全量影响清单**（D1/D2/D4 已裁定）。入口清单见本卡 `## 下一步`，不得动的项见本卡 `## 挂起`。
+  参考计划：`src/com/DocSystem/websocket/office/docs/GraalJS替代Nashorn评估计划.md`（§6.1 选型 / §6.2 影响清单 / §6.3 迁移方案 / §6.4 实施记录）。
+  ⚠️ 生效约束：缺省即 `graaljs` ⇒ **运行时必须是 GraalVM（或 classpath 上有 GraalJS）**；换回 stock JDK 8 时须显式 `-Ddocsys.office.jsEngine=nashorn`。C 阶段（删 nashorn 分支）**已裁定暂不做**。阶段 2 动作大，**先与用户确认具体子项再动**。
+  前置卡 `CURRENT_STATE_war打包.md` 已收尾（`DevAgentControl/已完成/`）。
+
+- 上一任务（**暂停，未收尾**，切到上面的 JDK 卡）= **Office 字体库自动检测与生成** —— 用户 2026-10-10 提出：**新安装 / 在线升级后**，Office 编辑所需的**字体库**必须由管理员手动执行「管理后台 → 系统管理 → Office 编辑器 → **重置字体库**」；管理员一旦忘记，用户会在 Office 编辑时撞上"字体库不存在"，才回头找管理员重置。希望改成**自动检测 + 自动生成**。
   约束与参照：历史上曾有自动生成机制，但挂在**系统启动初始化**流程里，失败时甚至导致**整个初始化无法完成**（影响面更大）⇒ **不能放回启动路径**；用户希望参照「**首次安装创建超级管理员**」那种**由前端发起**、失败也不影响系统本身的模式。
-  要求：**先调研 + 出方案，用户确认后再开工**。工作卡 `DevAgentControl/CURRENT_STATE_Office字体库自动生成.md`（本卡），方案 `devDocs/Office字体库自动生成方案.md`（成文后为准）。
-  前序相关：`DevAgentControl/CURRENT_STATE_freetype移植.md`（挂起卡，字体相关，未获裁定不动）；`DevAgentControl/CURRENT_STATE_JDK升级选型.md`（挂起卡）。
+  要求：**先调研 + 出方案，用户确认后再开工**。工作卡 `DevAgentControl/CURRENT_STATE_Office字体库自动生成.md`，方案 `devDocs/Office字体库自动生成方案.md`（成文后为准）。
+  前序相关：`DevAgentControl/CURRENT_STATE_freetype移植.md`（挂起卡，字体相关，未获裁定不动）。
 
 - 上一任务 = Agent 写操作确认弹窗可脱身（已收尾归档 2026-10-10）：工作卡 `DevAgentControl/已完成/CURRENT_STATE_Agent确认弹窗脱困.md`，方案（§9 裁定 / §10 实施记录 / §11 二轮加固）`devDocs/Agent确认疲劳与模式切换方案.md`，业界调研 `devDocs/Agent审批机制业界调研（一手来源）.md`。提交：主仓库 `cc3ed294d`（一轮：标准档记住授权 + 运行中切档实时生效）、`be8c38f8a`（二轮：确认接口补授权 + 挂起上限按会话分名额 + 重启后遗留待确认失效化）。
 
