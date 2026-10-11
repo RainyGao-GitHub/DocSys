@@ -55,6 +55,16 @@
 - **推荐**：Python 单文件打包器（payload 逐 member 强制 mode + JRE 归档逐 member 加前缀移植）→ 纯 Windows、无 WSL/无管理员权限依赖；与方案 B 互补（去掉 MySQL 后 payload **符号链接归零**，唯一携带者是 JRE 且从不落盘）。自检：`tar -tzvf` 断言 `.sh` 为 `-rwxr-xr-x`。
 - 事实补充：`docsysStartScripts` 属**主仓库的 submodule**（`WebRoot/web/sales`，gitdir 指向 `.git/modules/WebRoot/web/sales`）；该 submodule 当前有**未提交改动**（`M docsysStartScripts/Windows/*.bat` ×3 + 未跟踪 `docsys_start_hidden.bat`）——用户的 B-1 成果，注意别丢。`C:\docsysRel` 下的发布脚本（`PrepareWinPackage.bat`/`buildDocSystem.bat`/`Windows发布流程.txt`/`发布步骤.txt`）**全是 0 字节空占位**。
 
+**★ Windows 侧打包器已实现并实测通过（2026-10-11，方案文档 §13）** —— 用户裁定「要，写 Python 单文件打包器，放仓库外 `C:\docsysRel\`」。
+- **产物**：`C:\docsysRel\build_release.py`（802 行，仅标准库）→ 输出 `C:\docsysRel\dist\docsys-<platform>-<version>.tar.gz|zip`。命令：`--list` / `--only X` / `--check-only` / `--compare <参考包>`。平台表已内置 6 个（linux / kirin-x64 / kirin-aarch64 / mac / mac-arm64 / win）。
+- **实现要点**：每个成员**显式写 mode**（目录 755 / `*.sh` 755 / 其余 644）；运行时归档**绝不解压**、用 `tarfile` 逐 member 转写（mode/符号链接/硬链接保真）并**补齐祖先目录**；非 Windows 包剔除 `tomcat/Java` 与 **Windows 版 mysql**、丢弃顶层 `.bat/.vbs`、`tomcat/{work,temp,logs}`+`logs`+`tmp` **保留目录但丢内容**。
+- **实测**：`docsys-mac` 1008.0 MB / 41 s、`docsys-kirin` 1004.7 MB / 41 s，**自检均 PASS**；**kirin 2 个符号链接原样保留**（`Java/jre/jre/lib/aarch64/server/libjsig.so -> ../libjsig.so`、`man/ja -> ja_JP.UTF-8`，路径与参考包一致）。
+- **与现有 Linux 构建包逐条比对**：mac 29488 vs 29484、麒麟 29370 vs 29366，均 **+25 / −21**，且**每一条都已归因**：+25 = 2 个 Tomcat 自带文档 + **18 个 office 编辑器 2.02.88 新增的 Windows 孪生文件** + 2 张图片与 1 个俄文示例（**正确 UTF-8 名**，参考包是乱码版）；−21 = 14 个 `tomcat/work/**`（JSP 缓存）+ 4 个 `tomcat/temp` 残留（**有意清理**）+ 3 个乱码名。
+- **重要结论 1（office 混装包）**：payload 的 office-editor **同时含 ELF 与 PE**（`FileConverter/bin/{docbuilder,x2t}`、`tools/{allfontsgen,allthemesgen}` = ELF；`converter.exe` 78MB / `docservice.exe` 82MB / `metrics.exe` 31MB = PE），而**既有 mac/麒麟 包同样带着那 3 个 PE** ⇒ 他们的流程**不裁** Windows 二进制，`bin` 下 `.dll/.exe` 差异属**编辑器版本差异** ⇒ 打包器**默认不裁剪**（测试期开启过，会连带删掉参考包保留的 `converter.exe` 等，故关闭）。
+- **重要结论 2（字体库）**：payload 内**没有**字体库生成物（`sdkjs/common/AllFonts.js`、`server/FileConverter/bin/{AllFonts.js,font_selection.bin,fonts.log}`、`fonts/` 全不存在）⇒ **`CleanOfficeFonts.bat` 的排除要求在 payload 里已满足**。
+- **重要发现 3（乱码）**：既有 Linux/mac 包中 3 个非 ASCII 文件名是**乱码**（CP437 字符实为 GBK 字节）；而仓库 / dev 部署树 / payload / `git ls-files` **四处都是正确 UTF-8**（`AI智能体.png`、`AI接入.jpeg`、`Изменение настроек таблиц по умолчанию.docx`）⇒ **他们现有 Linux 打包链路会破坏所有非 ASCII 文件名**，Windows 侧打包反而修好了；`AI智能体.png` 是 UI 引用图片，在 Linux/mac 上可能 404 —— 建议核实。
+- **仍待补**：GraalVM CE 21.2.0 **Linux x64** tar.gz（`docsys-linux`/`kirin-x64` 需要）、Zulu 8 **macosx_aarch64**（`mac-arm64` 需要）、GraalVM **Windows** zip（`docsys-win` 有 optional 兜底）；**待裁定**：是否裁掉非 Windows 包里的 PE（≈190 MB+）；**需确认**：payload（`C:\docsysRel\docsys-Win-Release\docsys`）的应用部分是否就是 2.02.88 的部署结果。
+
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
 
 用户裁定：**删除**已删实现的内部单测 + 5 个不可救文件。按可复现口径执行：
