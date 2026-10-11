@@ -29,8 +29,8 @@
 
 ## 当前任务
 
-- **GraalJS 迁移 · 阶段 2：JDK 17 + Tomcat 9** —— **2026-10-11 由用户重新启用工作卡 `DevAgentControl/CURRENT_STATE_JDK升级选型.md`（本卡）**。
-  阶段 1（JDK 8 + GraalVM CE 21.2 + GraalJS 替代 Nashorn）**已完成并三层验证通过**；**下一步 = 阶段 2**：换 **形态 A：Oracle GraalVM for JDK 17 + Tomcat 9.0.x + 计划 §6.2 全量影响清单**（D1/D2/D4 已裁定）。入口清单见本卡 `## 下一步`，不得动的项见本卡 `## 挂起`。
+- **MxsDoc 运行时「跨平台打包」（2.02.88）＋ JDK 升级（2.02.89）** —— **2026-10-11 由用户重新启用工作卡 `DevAgentControl/CURRENT_STATE_JDK升级选型.md`（本卡）**。
+  阶段 1（JDK 8 + GraalVM CE 21.2 + GraalJS 替代 Nashorn）**已完成并三层验证通过**。**用户 2026-10-11 版本计划：先做 2.02.88 —— 其首要任务 = 跨平台打包（"JRE 改用 GraalVM"），且本版允许放弃部分平台支持；阶段 2（JDK 17 + Tomcat 9，计划 §6.2 全量清单，D1/D2/D4 已裁定）推迟到 2.02.89**。入口清单见本卡 `## 下一步`，不得动的项见本卡 `## 挂起`。
   参考计划：`src/com/DocSystem/websocket/office/docs/GraalJS替代Nashorn评估计划.md`（§6.1 选型 / §6.2 影响清单 / §6.3 迁移方案 / §6.4 实施记录）。
   ⚠️ 生效约束：缺省即 `graaljs` ⇒ **运行时必须是 GraalVM（或 classpath 上有 GraalJS）**；换回 stock JDK 8 时须显式 `-Ddocsys.office.jsEngine=nashorn`。C 阶段（删 nashorn 分支）**已裁定暂不做**。阶段 2 动作大，**先与用户确认具体子项再动**。
   前置卡 `CURRENT_STATE_war打包.md` 已收尾（`DevAgentControl/已完成/`）。
