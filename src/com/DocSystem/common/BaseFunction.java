@@ -6200,6 +6200,22 @@ public class BaseFunction{
 
 	    String hostWithPort = subStrs2[0];
 	    
+	    if(hostWithPort.startsWith("["))	//IPv6地址形如 [::1]:8080
+	    {
+	    	int end = hostWithPort.indexOf(']');
+	    	if(end > 0)
+	    	{
+	    		urlInfo.host = hostWithPort.substring(1, end);
+	    		String rest = hostWithPort.substring(end + 1);
+	    		if(rest.startsWith(":"))
+	    		{
+	    			urlInfo.port = rest.substring(1);
+	    		}
+	    		Log.printObject("getUrlInfoFromUrl() urlInfo:", urlInfo);
+	    		return urlInfo;
+	    	}
+	    }
+	    
 	    String subStrs3[] = hostWithPort.split(":");
 	    if(subStrs3.length < 2)
 	    {

@@ -855,7 +855,7 @@ function getDocShareLink(reposId, docShare, IpAddress)
 	
 	var protocol = window.location.protocol + '//';
  	var host = window.location.hostname; //域名不带端口       	 		
- 	if(host == "localhost" && IpAddress && IpAddress != "")
+ 	if(_isLocalHostName(host) && IpAddress && IpAddress != "")
  	{
  		host = 	IpAddress;
  	}
@@ -863,11 +863,28 @@ function getDocShareLink(reposId, docShare, IpAddress)
  	var port = window.location.port;
  	if(port && port != "")
  	{
- 		host += ":" + port;
+ 		host = _formatHostForUrl(host) + ":" + port;
  	}
  		
- 	var url = protocol + host + href;
+ 	var url = protocol + _formatHostForUrl(host) + href;
  	return url;
+}
+
+// 判断host是否为本机地址（localhost/127.x/::1/0.0.0.0），用于把分享链接中的本机地址替换成服务器IP
+function _isLocalHostName(host)
+{
+	if(!host) { return false; }
+	var h = host;
+	if(h.charAt(0) == "[" && h.charAt(h.length - 1) == "]") { h = h.substring(1, h.length - 1); }
+	return h == "localhost" || h == "0.0.0.0" || h == "::1" || h.indexOf("127.") == 0;
+}
+
+// 将主机地址格式化为可用于URL的host：IPv6字面量需要用方括号包裹
+function _formatHostForUrl(host)
+{
+	if(!host || host.charAt(0) == "[" || host.indexOf(":") < 0) { return host; }
+	if(/^[0-9a-fA-F:]+$/.test(host)) { return "[" + host + "]"; }
+	return host;
 }
 
 function buildDocDownloadLink(downloadDocInfo, urlStyle)

@@ -7256,7 +7256,7 @@ public class DocController extends BaseController{
 		List<DocShare> list = reposService.getDocShareList(qDocShare);
 		if(list != null && list.size() > 0)
 		{
-			String IpAddress = IPUtil.getIpAddress();
+			String IpAddress = IPUtil.getIpAddressForLink();
 			HashMap<Integer, Repos> ReposInfoHashMap = getReposInfoHashMap();
 			for(int i=0; i< list.size(); i++)
 			{
