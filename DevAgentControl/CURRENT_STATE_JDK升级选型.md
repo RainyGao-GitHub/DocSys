@@ -32,7 +32,11 @@
 **★ 版本计划（用户 2026-10-11）**：当前产品 = **8.7**；待发布 = **2.02.88**（改动多，含"**JRE 改用 GraalVM**"）。**阶段 2（JDK 17 + Tomcat 9）推迟到 2.02.89**。
 因此 **2.02.88 的首要任务 = 跨平台打包**（在各目标 OS 上落实 GraalVM java8 运行时的可得性），且**本版允许放弃对部分平台的支持**。
 关键事实（2026-10-11 核实）：GraalVM CE **java8** 只有 **Linux x64 + Windows x64**（21.2.0 起）；**macOS 只有 Intel x64**（止于 **21.0.0.2**，且比已复验的 21.2.0 旧）；**Linux/macOS aarch64（含 Apple Silicon、麒麟 ARM）从来没有** java8 版；**鸿蒙无 JVM**。
-**平台裁定（2026-10-11）**：2.02.88 发 **Windows x64 / Linux x64 / 麒麟 x64 / Mac Intel**；运行时 = **Win/Linux/麒麟 用 GraalVM CE 21.2.0**，**Mac Intel 用 stock JDK8 + 随包 21.2.0 GraalJS jar**。原因：GraalVM java8 无 Mac 的 21.2.0 版，而 **21.0.0.2 的 GraalJS 21.0.0 在 xlsx 上与 21.2.0 行为不一致**（本机实测：cell 内容不同=5）→ 为保证跨平台一致，Mac 弃用 21.0.0.2。复验数据与方案：`devDocs/跨平台运行时打包方案.md`（§8 复验结果 / §9 裁定）。**放弃 Apple Silicon / ARM64 / 鸿蒙**（注：Mac 的 stock-JDK8 路线已绕开 GraalVM 平台限制，Apple Silicon/ARM64 理论上可支持 —— 待用户裁定）。
+**平台裁定（2026-10-11）**：2.02.88 发 **Windows x64 / Linux x64 / 麒麟 x64 / Mac Intel / Mac Apple Silicon / 麒麟·Linux ARM64**（**鸿蒙**不支持，无 JVM）。
+运行时 = **Win / Linux x64 / 麒麟 x64 用 GraalVM CE 21.2.0**；**Mac（Intel→Temurin 8 x64；Apple Silicon→Zulu 8 aarch64）与 麒麟·Linux ARM64（Temurin 8 aarch64）用 stock JDK8 + 随包 21.2.0 GraalJS jar** ⇒ **全平台统一 GraalJS 21.2.0**（JS 行为一致；差异只剩 JVM 性能，stock 上 ~3.2 s vs GraalVM ~1.3 s）。
+原因：GraalVM java8 无 Mac/ARM 的 21.2.0 版，而 **21.0.0.2 的 GraalJS 21.0.0 在 xlsx 上与 21.2.0 行为不一致**（本机实测 cell 内容不同=5）→ 为保证跨平台一致，改用 stock JDK8 + 同一份 21.2.0 jar。
+⚠️ **ARM/Mac 待确认**：`lwjgl/freetype` 有 arm64/macos-arm64 natives ✅；但 **javacpp 系（opencv/tesseract/leptonica/openblas）缺 macos 版、Linux 缺 arm64** → 相关功能（若有使用）在 Mac/ARM 不可用。
+复验数据与方案：`devDocs/跨平台运行时打包方案.md`（§8 复验结果 / §9 裁定）。
 
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
 
