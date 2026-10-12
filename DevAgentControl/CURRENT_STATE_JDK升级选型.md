@@ -68,6 +68,15 @@
 - **重要发现 3（乱码）**：既有 Linux/mac 包中 3 个非 ASCII 文件名是**乱码**（CP437 字符实为 GBK 字节）；而仓库 / dev 部署树 / payload / `git ls-files` **四处都是正确 UTF-8**（`AI智能体.png`、`AI接入.jpeg`、`Изменение настроек таблиц по умолчанию.docx`）⇒ **他们现有 Linux 打包链路会破坏所有非 ASCII 文件名**，Windows 侧打包反而修好了；`AI智能体.png` 是 UI 引用图片，在 Linux/mac 上可能 404 —— 建议核实。
 - **仍待补**：GraalVM CE 21.2.0 **Linux x64** tar.gz（`docsys-linux`/`kirin-x64` 需要）、Zulu 8 **macosx_aarch64**（`mac-arm64` 需要）、GraalVM **Windows** zip（`docsys-win` 有 optional 兜底）；**待裁定**：是否裁掉非 Windows 包里的 PE（≈190 MB+）；**需确认**：payload（`C:\docsysRel\docsys-Win-Release\docsys`）的应用部分是否就是 2.02.88 的部署结果。
 
+**★ 实机冒烟包已产出（2026-10-12，方案文档 §14）** —— 经用户 2026-10-11 裁定「先按现状（不裁）打好包让我实机冒烟，之后再回头调」，10-11 夜间执行被用户中断，10-12 续做完成。
+- **三个产物全部 PASS**：`docsys-mac-2.02.88.tar.gz` 29500 条目 / **1008.0 MB**；`docsys-kirin-2.02.88.tar.gz` 29382 / **1004.7 MB**（**2 个符号链接保真**）；`docsys-win-2.02.88.zip` 29498 / **1076.8 MB**。
+- **Windows 包结构等价验证**：vs 现有 `docsys-win-2.02.87.zip`（29617 条目）**仅新包有 6 / 仅参考包有 144**；144 全是 `tomcat/logs/catalina.*.log`（旧运行日志，按"运行期产物不入包"有意清掉）；+6 = 新的 3 个启动脚本（`ConvertTo{Community,Personal}.bat`、`docsys_start_hidden.bat`）+ 名字正确的 2 张图片与 1 个俄文文档。
+- ⚠️ **Windows 运行时不是 GraalVM（必须处理）**：payload 与 `docsys-WRE` 的 `tomcat/Java/jre` 实测**都是 Oracle JRE `1.8.0_162`**（240 文件 / 189.3 MB，`SOURCE` 含 `nashorn`、无 `graal-js`）；目标运行时 GraalVM CE 21.2.0 java8（`1.8.0_302`，含 `graal-js`/`truffle`/`jvmci` + `languages/`，359 文件 / 472.3 MB）**目前只在 dev 目录** `C:\TomcatForDocSysDev\docsys\tomcat\java\jre`。⇒ 把 `graalvm-ce-java8-windows-amd64-21.2.0.zip` 放进 `C:\docsysRel\jre\` 后重跑 `--only docsys-win` 即得正确包（脚本自动取归档内 `jre/` + 补 `release`）。
+- **乱码根因已定位**：`Linux/PrepareLinuxPackage.sh` 里的 `unzip DocSystem.war` 在非 UTF-8 locale 下会把中文/俄文文件名转码坏（典型 `unzip` 编码问题）→ 修法 `unzip -O UTF-8` / `LANG=…UTF-8` / `jar xf`；**Windows 侧打包不经过这一步，天然正确**。
+- **修掉一个真 bug**：`docsys-win` 分支 `KeyError('label')`（第 660 行应为 `platform["label"]`，只在"可选运行时缺失"这条分支触发，故 mac/kirin 从未暴露）；两份脚本已同步。
+- **教训**：构建被打断会留下**截断归档**（本次 kirin 残留 769.2 MB / 11818 条目 / `tar` 退出码 1，正常应为 1004.7 MB / 29382 条目）→ 校验用 `tar -tzf | wc -l` 或 `--check-only`。
+- 交付说明：打包器主用 `C:\docsysRel\build_release.py`，副本 `WebRoot/web/sales/docsysReleaseScripts/build_release.py`（sales submodule，**未提交**，连同用户自己的 3 个 `.bat` 改动一起留给用户）。
+
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
 
 用户裁定：**删除**已删实现的内部单测 + 5 个不可救文件。按可复现口径执行：
