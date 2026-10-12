@@ -232,12 +232,25 @@
 
 | # | 议题 | 选项 | 影响 |
 |---|---|---|---|
-| D1 | **是否有 Apple Developer 账号（$99/年）** | 有 / 没有 / 以后再说 | **决定用户体验的根本**：有 ⇒ 双击即装；没有 ⇒ 用户必须"系统设置 → 隐私与安全性 → 仍要打开"（Sequoia+ 无右键打开这条路），个人用户/非技术客户门槛高 |
+| D1 | **是否有 Apple Developer 账号（$99/年）** | ✅ **已裁定（2026-10-12）：暂无账号，先做「不签名」版本，由用户手动放行** | 流水线大幅简化（无证书 / 无 entitlements / 换 JRE 不用重签），但**用户体验与客服成本成为主要风险** ⇒ 需查实「未签名时用户确切看到什么」并准备一页安装说明（见 §10.1） |
 | D2 | **目标架构** | 双架构单包（~86 MB）/ 两个包 / 只 x64（27 后失效）/ 只 arm64（弃 Intel） | 体积、流水线数量、用户体验 |
 | D3 | **分发形态** | `.dmg` 内含 `.pkg`（最像 SFX）/ 纯 `.pkg` / `.dmg` 内含 `.app`（拖拽，最省事但不"安装"） | 是否要"双击即装"、是否要装到 `/Applications` |
 | D4 | **控制台技术路线** | 移植 C++（取决于 UI 栈）/ 重写（Qt / SwiftUI / Tauri / Electron / JavaFX） | 工作量最大的变量，**等 §2** |
 | D5 | **进程管理形态** | LaunchAgent（崩溃自恢复、GUI 退出仍在）/ GUI 直接 spawn | 可靠性与实现量 |
 | D6 | **卸载** | macOS 无官方卸载 ⇒ 是否提供卸载脚本/App（对标 Windows `Uninstaller`） | 交付完整性 |
+
+### 10.1 未签名路径待查实（已派下钻调研）
+
+用户 2026-10-12 裁定「先做不签名版」后，风险集中到以下几点，**在结论回来前不要定形态**：
+
+1. 未签名 **flat `.pkg`** 双击是"拒绝"还是"提示但可继续"？`仍要打开` 对 pkg 是否有效？
+2. 未签名 `.app` 从 `.dmg` 拖到 `/Applications` 后首次双击的提示；**quarantine 是否随拖拽保留**。
+3. `com.apple.quarantine` 由哪些下载方式设置（Safari / Chrome / 邮件 / 网盘 / `curl`）。
+4. **最关键**：Gatekeeper 是否只检查"带 quarantine 的文件"、只由 LaunchServices 触发？**`launchd` 拉起的未签名 `java`（内嵌 JRE，可能继承 quarantine）会不会被拦** ⇒ 是否需要额外 `xattr -dr com.apple.quarantine <安装目录>`。
+5. `SMAppService.register()` 是否要求有效签名；退路「App 自己写 `~/Library/LaunchAgents` + `launchctl bootstrap`」在未签名/非沙盒下是否可用。
+6. 未签名场景的形态排序（`.dmg`+`.app` 拖拽 / 未签名 `.pkg` / `.dmg` 内放 `.command` 安装脚本）与各自需写进说明的步骤。
+7. 一页安装说明（**macOS ≤14 与 15+ 两档**，因右键打开在 15+ 失效）。
+8. 未签名且无 Hardened Runtime 时，JIT 是否需要 `allow-jit` entitlement（预期**不需要**，待证实）。
 
 ---
 

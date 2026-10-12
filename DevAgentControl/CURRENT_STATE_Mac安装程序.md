@@ -55,14 +55,20 @@
   - **文件布局**：`.app` 签名后**不可写**（TN2206）⇒ SQLite/上传/CATALINA_BASE 必须放 `~/Library/Application Support/<bundle-id>/`，由 App **首次运行时**自建（**不要**靠 pkg `postinstall` 给登录用户建 `~/Library`）。
   - **打开系统**：`open http://127.0.0.1:<port>`（务必带 scheme）；内嵌只能用 `WKWebView`（`SFSafariViewController` 在 macOS 不可用），ATS × loopback 需 belt-and-braces 且**必须实机实测**。
 - ✅ 已产出 [`devDocs/Mac安装程序调研.md`](../devDocs/Mac安装程序调研.md)（§1 Windows 现状 / §2+§9 代码侧 **待补** / §3~§8 macOS 侧完整 / §10 待裁定 D1~D6 / §11 不确定项 / §12 来源）。
-- ⏳ **代码测绘那路（`explore` agent `6208c6f8`）结论未回** —— 决定 §2「C++ 控制台可复用性」与 D4「技术路线」。**未回前不要下结论、不要动 `mxsdoc-console` 任何文件。**
-- ⏭ 待办：explore 回来后补文档 §2/§9 → 用 `ask_user` 逐条确认 D1~D6（尤其 **D1 是否有 Apple 开发者账号** 与 **D4 技术路线**）→ 出实施方案。
+- ⏳ **两路后台调研均在跑（结论未回前不要下结论、不要动 `mxsdoc-console` 任何文件）**：
+  1. `explore`（agent `6208c6f8`）：测绘 `mxsdoc-console`（UI 栈 / 启停与监控 / 打开系统 / SFX 机制 / Windows 硬依赖 / 可复用性）⇒ 决定 D4「技术路线」。
+  2. `research`（agent `14f1f277`，**第二轮下钻**）：未签名路径（见「已裁定」）。
+- ⏭ 待办：两路回来后补文档 §2/§9 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
 
 ## 生效约束
 
 - `D:\Dev\mxsdoc-console` 是**独立 git 仓库**，改动要单独提交；**本轮为只读调研，不要改它的任何文件**。
 - 未获用户裁定前**不动代码**（先出调研与方案）。
 - 调研结论落到 `devDocs/`，并按里程碑更新本卡。
+
+## 已裁定
+
+- ✅ **D1（2026-10-12，用户裁定）**：**暂无 Apple Developer 账号 ⇒ 先做「不签名」版本**，用户手动放行。⇒ 流水线不含证书 / entitlements / 公证 / staple；**换 JRE 不必重签**。代价：用户体验与客服成本成为主要风险 ⇒ 已派下钻调研（未签名时用户确切看到什么、Gatekeeper 是否拦 launchd 拉起的 `java`、形态排序、一页安装说明），结论落 `devDocs/Mac安装程序调研.md` §10.1。
 
 ## 待用户裁定（等调研结论出来再逐条问，先记录）
 
