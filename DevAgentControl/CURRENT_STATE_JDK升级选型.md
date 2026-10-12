@@ -53,7 +53,7 @@
 - **② 符号链接**：**不解压**即可 —— **Python `tarfile` 逐 member 转写实测完全保真**（`jdk-8u461-linux-aarch64.tar.gz`：入 `1 dir/365 files/2 symlinks` → 出同；mode `755/444/777` 与 linkname 全对，**不落盘**）。WSL 也可（本机 Ubuntu 2：GNU tar 1.35 + Python 3.12.3），但 ⚠️ **`/mnt/d`(DrvFs) 上 `chmod` 不落盘**（Windows 属性仍只有 `Archive`）→ WSL 路线须先拷进 ext4。
 - **③ CRLF**：无问题（`core.autocrlf=false`、无 `.gitattributes`，14 个 `.sh` 实测 CRLF=0）。
 - **推荐**：Python 单文件打包器（payload 逐 member 强制 mode + JRE 归档逐 member 加前缀移植）→ 纯 Windows、无 WSL/无管理员权限依赖；与方案 B 互补（去掉 MySQL 后 payload **符号链接归零**，唯一携带者是 JRE 且从不落盘）。自检：`tar -tzvf` 断言 `.sh` 为 `-rwxr-xr-x`。
-- 事实补充：`docsysStartScripts` 属**主仓库的 submodule**（`WebRoot/web/sales`，gitdir 指向 `.git/modules/WebRoot/web/sales`）；该 submodule 当前有**未提交改动**（`M docsysStartScripts/Windows/*.bat` ×3 + 未跟踪 `docsys_start_hidden.bat`）——用户的 B-1 成果，注意别丢。`C:\docsysRel` 下的发布脚本（`PrepareWinPackage.bat`/`buildDocSystem.bat`/`Windows发布流程.txt`/`发布步骤.txt`）**全是 0 字节空占位**。
+- 事实补充：`docsysStartScripts` 属**主仓库的 submodule**（`WebRoot/web/sales`，gitdir 指向 `.git/modules/WebRoot/web/sales`）；该 submodule 当前有**未提交改动**（`M docsysStartScripts/Windows/*.bat` ×3 + 未跟踪 `docsys_start_hidden.bat`）——用户的 B-1 成果，注意别丢。~~`C:\docsysRel` 下的发布脚本全是 0 字节空占位~~ —— **2026-10-12 更正：该说法有误**，那个"0"是显示时按 MB 四舍五入的假象；实测 `buildDocSystem.bat`(4226 B)/`EncodeDocSystem.bat`(964 B) 等均为真文件且与仓库 HEAD 同源 ⇒ **它们是实际运行位置的副本，仓库改了脚本必须同步复制到 `C:\docsysRel\`**。
 
 **★ Windows 侧打包器已实现并实测通过（2026-10-11，方案文档 §13）** —— 用户裁定「要，写 Python 单文件打包器，放仓库外 `C:\docsysRel\`」。
 - **产物**：`C:\docsysRel\build_release.py`（802 行，仅标准库）→ 输出 `C:\docsysRel\dist\docsys-<platform>-<version>.tar.gz|zip`。命令：`--list` / `--only X` / `--check-only` / `--compare <参考包>`。平台表已内置 6 个（linux / kirin-x64 / kirin-aarch64 / mac / mac-arm64 / win）。
@@ -85,6 +85,10 @@
 - **发现**：注意事项 #2 提到的 **`buildMxsDocJar.bat` 在 `C:\docsysRel` 与仓库里都搜不到** → 该补救步骤目前**无法执行**；建议在 `buildDocSystem.bat` 的 `move` 之前补 `if not exist "%CURRENT_DIR%\mxsdoc\com\DocSystem" mkdir "%CURRENT_DIR%\mxsdoc\com\DocSystem"`，即可彻底免除"必须保留 `mxsdoc`"约束。`mxsdoc\` 现有 13160 文件（含 `com\DocSystem\websocket`），且位于 `docsys\` **之外** ✅。
 - **待确认**：步骤 4 的 `DocSystem.zip` 是**根级散文件**还是含 `DocSystem\` 目录（影响客户解压落点）。
 - **退役旧目录的前置条件**：先把 `docsys-Linux-Release\{mac-JDK8\jre-mac.tar.gz, 麒麟aarch64-JDK8\jdk-8u461-linux-aarch64.tar.gz}` 搬进 `ForReleaseBuild\jre\`，再删旧目录（打包器当前仍在旧路径找到它们）。
+- **`mxsdoc` 约束已解除（2026-10-12，用户裁定"解掉"）**：① `buildDocSystem.bat` 在 `move` 前加一行 `if not exist "%CURRENT_DIR%\mxsdoc\com\DocSystem" mkdir "%CURRENT_DIR%\mxsdoc\com\DocSystem"` ⇒ **不再需要保留 `mxsdoc`**；② **新增** `docsysReleaseScripts/buildMxsDocJar.bat`（独立补救：mkdir 守卫 + 搬运 + 打 `mxsdoc.jar` + 装进 `WEB-INF\lib`，并**兼容"classes 已在 mxsdoc、只差打 jar"的中间态**；用与 `buildDocSystem.bat` 相同的 `docsys-WDK\...\jdk\bin\jar.exe`，已确认存在）。
+- **A/B 沙箱验证**（`mxsdoc` **故意不存在**，仿真 `DocSystem\{classes,classes-encoded,lib}` + `docsys-WDK` junction）：**A = 仓库 HEAD 原脚本 ❌**（`"...\websocket" still exist, mxsdoc.jar build Failed!`，`lib\mxsdoc.jar` 未生成 → 复现了用户担心的失败）；**B = 打补丁脚本 ✅**；**C = 独立补救脚本 ✅**（产物为真 zip，含 `META-INF/MANIFEST.MF` + `com/`）。两份脚本已同步到**实际运行位置** `C:\docsysRel\`（与仓库副本 SHA256 一致；已全目录搜索确认无其它副本）；沙箱已清理（junction 用 `rd` 只删链接，`docsys-WDK` 完好）。行尾统一为仓库约定 **CRLF / 无 BOM / 纯 ASCII**。
+- ⚠️ **更正**：文档里"`C:\docsysRel` 下发布脚本全是 0 字节空占位"的旧说法**已推翻**（那是按 MB 四舍五入的显示假象）；实测 `buildDocSystem.bat` 4226 B、`EncodeDocSystem.bat` 964 B，且与仓库 HEAD **同源** ⇒ **它们是实际运行位置的副本，仓库改了脚本必须同步复制到 `C:\docsysRel\`**。
+- **sales submodule 待提交清单（留给用户）**：`M docsysReleaseScripts/buildDocSystem.bat`（我的 mkdir 补丁）、`?? docsysReleaseScripts/buildMxsDocJar.bat`（新增）、`?? docsysReleaseScripts/build_release.py`（打包器副本）、`M docsysStartScripts/Windows/{docsys_restart,docsys_start,docsys_stop}.bat`（用户自己的）、`?? docsysStartScripts/Windows/docsys_start_hidden.bat`（用户自己的）。
 
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
 
