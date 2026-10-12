@@ -239,18 +239,109 @@
 | D5 | **进程管理形态** | LaunchAgent（崩溃自恢复、GUI 退出仍在）/ GUI 直接 spawn | 可靠性与实现量 |
 | D6 | **卸载** | macOS 无官方卸载 ⇒ 是否提供卸载脚本/App（对标 Windows `Uninstaller`） | 交付完整性 |
 
-### 10.1 未签名路径待查实（已派下钻调研）
+### 10.1 未签名路径：查实结论（2026-10-12，第二轮下钻调研）
 
-用户 2026-10-12 裁定「先做不签名版」后，风险集中到以下几点，**在结论回来前不要定形态**：
+**① 未签名 `.pkg` 双击不是"静默硬拒"，而且用户的放行手段对 pkg 同样有效**
 
-1. 未签名 **flat `.pkg`** 双击是"拒绝"还是"提示但可继续"？`仍要打开` 对 pkg 是否有效？
-2. 未签名 `.app` 从 `.dmg` 拖到 `/Applications` 后首次双击的提示；**quarantine 是否随拖拽保留**。
-3. `com.apple.quarantine` 由哪些下载方式设置（Safari / Chrome / 邮件 / 网盘 / `curl`）。
-4. **最关键**：Gatekeeper 是否只检查"带 quarantine 的文件"、只由 LaunchServices 触发？**`launchd` 拉起的未签名 `java`（内嵌 JRE，可能继承 quarantine）会不会被拦** ⇒ 是否需要额外 `xattr -dr com.apple.quarantine <安装目录>`。
-5. `SMAppService.register()` 是否要求有效签名；退路「App 自己写 `~/Library/LaunchAgents` + `launchctl bootstrap`」在未签名/非沙盒下是否可用。
-6. 未签名场景的形态排序（`.dmg`+`.app` 拖拽 / 未签名 `.pkg` / `.dmg` 内放 `.command` 安装脚本）与各自需写进说明的步骤。
-7. 一页安装说明（**macOS ≤14 与 15+ 两档**，因右键打开在 15+ 失效）。
-8. 未签名且无 Hardened Runtime 时，JIT 是否需要 `allow-jit` entitlement（预期**不需要**，待证实）。
+- `.pkg` 受 Gatekeeper 管辖（*Apple Platform Security* "Gatekeeper and runtime protection in macOS" 原文把 "an app, a plug-in, or **an installer package**" 一并列入检查范围）**[A]**。
+- 但覆盖手段覆盖**安装**：*Safely open apps on your Mac*（support 102445）的 "Open Anyway" 流程原话是 "confirm your intent to **open or install** the app"（"install" 是 Apple 用词），且 Apple 的 pkg 安装帮助页把包警告**直接导向**该文 **[A]**。
+  ⇒ **`系统设置 → 隐私与安全性 → 仍要打开` 对 `.pkg` 有效**（按钮约 1 小时内有效）。
+- ⚠️ **未签名 pkg 的确切弹窗文案、"右键 pkg → 打开"是否有效**：**Apple 无任何出处**（无截图、无表述）**[TZ]** ⇒ 不要把这些写成"Apple 官方说法"，且客户更容易困惑。
+
+**② 未签名 `.app`：拖拽**保留** quarantine —— 「拖过去就好了」是误解**
+
+- 放行路径：**≤ macOS 14** 右键 → 打开 可用（会被记为例外）；**macOS 15+** 只剩「系统设置 → 仍要打开」。
+- **不要在 `.dmg` 里直接双击运行**：可能触发 **App Translocation**（路径随机化到只读位置）；TN2206 原话 "**Don't launch your app from inside the .dmg.** Drag the app to /Applications and launch it from there." **[A]** ⇒ 会破坏 Tomcat/JRE 的绝对路径假设。
+- **quarantine 随拖拽保留**（TN2206 间接证据 + Apple 论坛用户 `xattr -l` 实测显示 `/Applications` 里的 app 仍带 `com.apple.quarantine: 0183;…;Safari;…`）**[A-间接]/[C]**。
+
+**③ quarantine 由"下载方 App"设置，且**解压工具**决定是否传播（⇒ 这是分发格式的杠杆）**
+
+| 方式 | 是否带 quarantine | 来源 |
+|---|---|---|
+| 浏览器下载、Mail / Messages、AirDrop | **会** | TN2206、Platform Security **[A]** |
+| **`curl` / `scp`** | **不会**（Apple DTS 原话："Unix-y networking tools, like `curl` and `scp`, don't quarantine the files they download."） | **[A-forum]** |
+| **`tar` / `unzip` 解压** | **不把 quarantine 传播到解出的文件** | 同上 **[A-forum]** |
+| **Finder「归档实用工具」双击解压** | **会传播** | 同上 **[A-forum]** |
+| `ditto` | 默认 `--qtn`（**保留** quarantine） | **[A-mirror]** |
+
+⇒ **客户"浏览器下载 + Finder 双击解压"= 全树带 quarantine**；`tar` 解压则不带。这条直接决定了 §10.2 的兜底步骤。
+
+**④【最关键】未签名时 Gatekeeper 会不会拦 `launchd` 拉起的 `java`？→ 会（中高置信）**
+
+- Gatekeeper 的触发条件 = **带 quarantine** + **首次被打开**（TN2206 已亲验原文："Gatekeeper only checks quarantined files the first time they're opened."）**[A]**。
+- **但 `launchd` 另有自己的判定**：`launchd` 用 `posix_spawn`（**不经 LaunchServices**），却会向系统策略 oracle 查询 —— `syspolicyd(8)` 原话 "serves as a **general oracle** that other system components may use to determine the system policy's verdict" **[A-mirror]**。实测错误（macOS 13 登录项案例）：
+  `155: Refusing to execute/trust quarantined program/file`；同案例里 `launchctl bootstrap` 一个**带 quarantine 的 plist** 也失败 **[C]**。
+- **quarantine 会传播到内嵌的嵌套程序**：Apple DTS（Quinn）实测 app 与其 `Contents/MacOS/<exe>` **都**带 quarantine，并称 "That's normal, at least on modern systems." **[A-forum]** ⇒ 我们内嵌的 `.../jre/bin/java`、`lib/libjli.dylib` **很可能各自都带**。
+- **用户点了「仍要打开」≠ 清除了属性**：同一实测显示属性**仍在**，只是 flag 位变化（`0183;…` → `01c3;…`）**[A-forum]**。
+- ⇒ **「App 成功放行了，但 Tomcat 起不来」是真实且很可能发生的失败模式**。两条应对：
+  - **(a) 兜底清属性**：`xattr -dr com.apple.quarantine "<安装目录>"`（`xattr(1)`：`-d` 删除、`-r` 递归）**[A-mirror]** —— 但它**不是 Apple 支持的分发/用户途径**（Apple DTS 只作为调试建议），需写进安装说明的排障段。
+  - **(b) 让 App 首启自愈**：App 被用户批准后以普通进程调 `removexattr` 清理**自身**嵌套文件 —— **这是我方建议，未实测**。前提是 App 经**拖拽**装到**用户可写**的 `/Applications`（属主是用户）；若经 `.pkg` 以 `root:wheel` 安装则不可写。
+- ⚠️ 反向的社区共识（**未在 14/15 验证**）：**GUI 用 `NSTask`/`posix_spawn` 直接起 `java`（不经 launchd）不应触发 LaunchServices 层的 Gatekeeper 检查** ⇒ 若成立，未签名版**可以完全不需要客户跑任何命令**（把 LaunchAgent 从最小版里拿掉）。**这条必须实测（见 §10.3）。**
+
+**⑤ `SMAppService` 在未签名下不可用；退路可用且无签名前提**
+
+- `SMAppService.register()` **要求有效签名**：错误常量 `kSMErrorInvalidSignature` —— "The app's code signature doesn't meet the requirements to perform the operation."；未签名实测报 `-67054 = errSecCSUnsigned` **[A]+[C]** ⇒ **未签名版必须放弃 SMAppService 路线**。
+- 退路 **`~/Library/LaunchAgents` + `launchctl bootstrap gui/$UID`**：`launchctl(1)`（镜像）**只要求属主与权限**（在 `$HOME/Library/LaunchAgents` 时属主须为**加载它的用户**、且**禁组与其他用户可写**），**全文不提签名/公证/quarantine 前提**；`launchd.plist(5)` 的 `Program` 也只需绝对路径 **[A-mirror]**。Apple 文档还明确承认"可执行文件未签名"的 legacy helper 情形 **[A]**。
+  ⇒ **未签名、非沙盒 App 可以自己写 plist 到 `~/Library/LaunchAgents` 并 `launchctl bootstrap`**。
+- **两个前提**：① plist 自身不能带 quarantine（运行时写的自然满足）；② `Program`（未签名 `java`）不能带 quarantine —— 否则回到 ④ 的 155 错误 **[C]**。
+- 顺带澄清：**「SMAppService 必须把 App 放 `/Applications`」是误解** —— Apple 官方样例装到 `/Library/Application Support/<Developer>/` 也能 register **[A]**。
+
+**⑥ 形态排序（未签名场景，客户为个人用户 / 非技术 / 无 IT / 无法远程协助）**
+
+1. **`.dmg` 内含 `.app`（拖拽安装）—— 首选**。理由：Apple 官方文档覆盖最完整（mh40616 **逐版本**给出放行步骤，用户"照做即可"）；用户只需"拖 → 双击 → 去系统设置点一下"；安装本身**不需要管理员密码**。
+2. **未签名 `.pkg`（装到 `/Applications`）—— 次选**。优点：双击即装、定位精确、"仍要打开"对 pkg 有效。缺点：pkg 的**右键放行与弹窗文案 Apple 均无出处**，15+ 下用户更易困惑；且以 `root:wheel` 安装 ⇒ **App 无法自愈清 quarantine**（见 ④b）。
+3. **`.dmg` + `.command` 安装脚本 —— 不能自动绕开 Gatekeeper**：被 quarantine 的 `.command` 首次双击**同样被门控**（社区实测 `bad-path: /bin/bash: bad interpreter: Operation not permitted`）—— 要跑脚本得先放行脚本（鸡生蛋）。Apple **没有**把它定义为"规避 Gatekeeper"（App Review Guidelines 全文无 Gatekeeper / quarantine / `xattr` 字样 **[A]**），但立场**负面**：macOS 15+ 绕过 Gatekeeper **会被记为安全事件**并推送给第三方安全产品（Platform Security "Protecting against malware"）**[A]**，官方也明说 "**You should not override security settings**" **[A]** ⇒ **不要把它宣传成"正常安装方式"**。
+
+**⑦ 一页安装说明草稿**：见 §10.2。
+
+**⑧ 未签名 + 无 Hardened Runtime ⇒ 不需要任何 entitlements（我们的理解成立，且有 Apple 原文）**
+
+- **已亲验原文**（*Porting just-in-time compilers to Apple silicon*）：
+  > "The `com.apple.security.cs.allow-jit` entitlement is **required only when an app adopts the Hardened Runtime capability**. If you don't adopt this capability, **you don't need the entitlement to use the `MAP_JIT` flag**."
+- **更彻底**：**未签名二进制根本带不了 entitlements**（entitlements 存在**代码签名**里）⇒ 未签名版不存在 entitlement 配置环节。
+- **Apple Silicon 补充**（已亲验原文）："**Apple silicon enables memory protection for all apps, regardless of whether they adopt the Hardened Runtime.**" ⇒ AS 上即使未硬化/未签名，W^X 也强制生效 ⇒ JVM 必须走 `MAP_JIT`（但**无需 entitlement**）；Intel 未硬化时 W^X 不强制。
+- **Rosetta**："Rosetta can translate most Intel-based apps, **including apps that contain just-in-time (JIT) compilers**." ⇒ x64 JRE 在 AS 上经 Rosetta 也能 JIT。
+
+### 10.2 一页安装说明（草稿，给客户）
+
+> 三件事：**① 先把 App 拖到「应用程序」；② 首次打开被系统拦，去「系统设置」放行；③ 若服务起不来，跑一条命令清标记。**
+
+**🅰 macOS 13 Ventura / 14 Sonoma 及更早**
+
+1. 双击下载的 `.dmg`。
+2. 把 App 图标**拖到「应用程序」** —— **不要**在 dmg 窗口里直接双击运行。
+3. 「访达 → 应用程序」里**首次**双击 App → 出现"无法验证开发者/无法打开"。
+4. **右键（或 Control+点击）图标 → 打开 → 再点「打开」**（系统会记为例外，之后可正常双击）；备选：**系统设置 → 隐私与安全性 → 仍要打开**（点击后约 1 小时内有效）。
+
+**🅱 macOS 15 Sequoia / 26 Tahoe / 27（右键路径已失效）**
+
+1. 双击 `.dmg`。
+2. 把 App **拖到「应用程序」** —— **不要**在 dmg 里运行。
+3. 双击 App → 出现"Apple 无法验证此 App" → 点**完成/好**（**没有**"打开"按钮）。
+4. **系统设置 → 隐私与安全性** → 滚到**安全性** → 点**「仍要打开」** → 输入登录密码 → 点**打开**。
+   ⚠️ 该按钮**只在刚尝试打开后约 1 小时内出现**；没看到就**再双击一次 App** 回来。
+5. 再次双击 App → 这次出现带「**打开**」的确认框 → 点**打开**。
+
+**排障（两档通用）— 若 Tomcat / 服务起不来**
+
+打开「终端」，粘贴（路径换成实际安装位置）：
+```
+xattr -dr com.apple.quarantine /Applications/<YourApp>.app
+```
+再重开 App。（原因：内嵌 JRE/Tomcat 的二进制若带 `com.apple.quarantine`，`launchd` 会以 `155: Refusing to execute/trust quarantined program/file` 拒绝启动 —— 见 §10.1 ④。）
+
+**写说明时要避免**：不要让客户关 Gatekeeper / 跑 `spctl --global-disable`（Apple 官方立场是"不应覆盖安全设置"）；**不要承诺"拖过去就好了"**（quarantine 会保留）。
+
+### 10.3 定稿前必须真机实测的 5 步（**未做完不要定形态**）
+
+在 **macOS 14 与 macOS 15 各一台**上跑：
+
+1. 把含「未签名 `.app` + 内嵌 JRE」的包装成 zip / dmg，用**浏览器**下载后 `xattr -p com.apple.quarantine` 检查 `Contents/.../jre/bin/java`、`lib/libjli.dylib` **是否各自带 quarantine**。
+2. 用户按要求放行后，**复查 xattr 与 flag 位**是否变化（预期仍在）。
+3. 注册 LaunchAgent 指向该 `java`，`launchctl bootstrap`，用 `log stream --predicate 'process == "launchd"'` 看**是否报 155**。
+4. `xattr -dr com.apple.quarantine` 后重试，确认能起来。
+5. **另测**：GUI 用 `posix_spawn` / `NSTask` 直接起该 `java`（**不经 launchd**）**是否被拦** —— 若不被拦，未签名版可取消 LaunchAgent、客户零命令。
+6. 附带确认：**`.dmg` 内的 `.pkg` 是自带 quarantine 还是仅 `.dmg` 带**（未验证，直接影响要不要走 pkg 路线）。
 
 ---
 
@@ -266,6 +357,12 @@
 8. **[TZ] Time Machine 是否覆盖 `~/Library/Application Support`**：无 macOS 专页明文。
 9. **调研环境限制**：`developer.apple.com` 在本机 `web_fetch` 被 DNS 拦（改用 `curl` 抓 Apple 的 `…page.md`/`…json` 端点取原文）；搜索引擎返回验证码、`github-mcp` 传输错误 ⇒ **社区侧（Stack Overflow / Apple 论坛）的一手交叉验证受限**。
 10. **`--deep` 的 Apple 论坛帖（thread 129980）** 正文被反爬挡住，仅确认标题/URL（但 man page 与 TN2206 已足够定论）。
+11. **`launchd` 的 quarantine 判定 Apple 从未文档化**（§10.1 ④ 的结论基于 `syspolicyd` 的 "general oracle" 表述 **[A]** + 真实 `155` 错误 **[C]**）⇒ **这是整个未签名方案能否落地的关键，必须真机实测（§10.3）**。
+12. **未签名 `.pkg`** 的确切弹窗文案、"右键 pkg → 打开"是否有效、`spctl --assess --type install` 的拒绝串 —— **均无 Apple 出处**。
+13. **Apple 无逐应用的 quarantine 清单**（Dropbox / OneDrive / 网盘客户端等未知）；quarantine 属性的 **flag 位语义是私有头文件**（`quarantine.h`），无公开规范。
+14. 「**拖拽保留 quarantine**」与「未签名 App `register()` 的报错串」的直接证据主要来自 **Apple 论坛用户贴**（非 Apple 官方文档）。
+15. 「**App 首启自清 quarantine**」（§10.1 ④b）是**我方建议，未实测**。
+16. **`.dmg` 内的 `.pkg` 是自带 quarantine 还是仅 `.dmg` 带** —— 未验证，**直接影响要不要走 pkg 路线**。
 
 ---
 

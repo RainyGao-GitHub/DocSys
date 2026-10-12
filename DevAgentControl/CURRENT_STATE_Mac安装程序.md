@@ -54,11 +54,21 @@
   - **进程管理**：推荐 **每用户 LaunchAgent**（`KeepAlive` 崩溃自恢复 + GUI 退出后仍在 + 无需管理员），GUI 用 `launchctl bootstrap/bootout/kickstart` 或 `SMAppService.agent` 驱动；"就绪"判据用 **HTTP 轮询**（`launchctl print` 输出 Apple 明说不是 API）。
   - **文件布局**：`.app` 签名后**不可写**（TN2206）⇒ SQLite/上传/CATALINA_BASE 必须放 `~/Library/Application Support/<bundle-id>/`，由 App **首次运行时**自建（**不要**靠 pkg `postinstall` 给登录用户建 `~/Library`）。
   - **打开系统**：`open http://127.0.0.1:<port>`（务必带 scheme）；内嵌只能用 `WKWebView`（`SFSafariViewController` 在 macOS 不可用），ATS × loopback 需 belt-and-braces 且**必须实机实测**。
-- ✅ 已产出 [`devDocs/Mac安装程序调研.md`](../devDocs/Mac安装程序调研.md)（§1 Windows 现状 / §2+§9 代码侧 **待补** / §3~§8 macOS 侧完整 / §10 待裁定 D1~D6 / §11 不确定项 / §12 来源）。
-- ⏳ **两路后台调研均在跑（结论未回前不要下结论、不要动 `mxsdoc-console` 任何文件）**：
-  1. `explore`（agent `6208c6f8`）：测绘 `mxsdoc-console`（UI 栈 / 启停与监控 / 打开系统 / SFX 机制 / Windows 硬依赖 / 可复用性）⇒ 决定 D4「技术路线」。
-  2. `research`（agent `14f1f277`，**第二轮下钻**）：未签名路径（见「已裁定」）。
-- ⏭ 待办：两路回来后补文档 §2/§9 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
+- ✅ **macOS 侧调研已完成（两轮）**：
+  - 第一轮（agent `14f1f277` turn 0，680s）：分发形态 / 签名公证 / 架构 / 进程管理 / 文件布局 / 打开系统 ⇒ 文档 §3~§8。
+  - 第二轮（同一 agent turn 1，下钻「未签名路径」）⇒ 文档 §10.1~§10.3。**关键结论**：
+    - 未签名 `.pkg` 双击**不是静默硬拒**，"仍要打开"对 pkg 有效（Apple 用词覆盖 "open **or install**"）；但 pkg 的右键放行与弹窗文案**无 Apple 出处**。
+    - **拖拽 `.app` 会保留 quarantine**（"拖过去就好了"是误解）；**不要在 dmg 里直接运行**（App Translocation）。
+    - **quarantine 由下载方设置、由解压工具决定是否传播**：浏览器/Finder 解压 = 全树带；**`curl`/`scp` 不打标、`tar`/`unzip` 不传播** ⇒ 这是分发格式杠杆。
+    - ⚠️ **最关键**：**`launchd` 会拒绝执行带 quarantine 的程序**（`155: Refusing to execute/trust quarantined program/file`），而 quarantine 会传播到内嵌 JRE，且"点仍要打开"**不清除属性** ⇒ **「App 放行了但 Tomcat 起不来」是真实失败模式**。反过来说，**GUI 直接 `posix_spawn` 起 `java`（不经 launchd）按社区共识不受影响**（**未验证**）。
+    - **`SMAppService` 未签名不可用**（`kSMErrorInvalidSignature`）⇒ 退路是 `~/Library/LaunchAgents` + `launchctl bootstrap`（**无签名前提**）。
+    - **形态首选 `.dmg` 内含 `.app`（拖拽）**；`.command` 脚本**不能绕开 Gatekeeper**（鸡生蛋），且 macOS 15+ 绕过 Gatekeeper **会被记为安全事件** ⇒ 不要宣传成"正常安装方式"。
+    - **未签名 + 无 Hardened Runtime ⇒ 零 entitlements**（Apple 原文亲验："allow-jit **required only when an app adopts the Hardened Runtime**"）。
+    - 已产出**一页安装说明草稿**（≤14 / 15+ 两档）+ **真机实测 6 步清单**（§10.3，**未做完不要定形态**）。
+- ⚠️ **代码测绘第一路失败**（`explore` agent `6208c6f8`，跑了 4093s、0 产出 —— 模型传输错误 `unexpected EOF during handshake`，非任务失败）⇒ **已重新派第二路**（`explore` agent `0fc3d235`，范围收窄为 8 个具体问题 + 要求 600 行内精简报告）。
+- ⏳ **第二路测绘结论未回** —— 决定 §2「C++ 控制台可复用性」与 D4「技术路线」。**未回前不要动 `mxsdoc-console` 任何文件。**
+- ❗**尚缺的关键前提**：**没有 Mac 真机 ⇒ §10.3 的实测无法进行**，而未签名方案的形态（是否必须带 `xattr` 排障步骤、要不要用 LaunchAgent）**取决于该实测**。需问用户是否具备 macOS 14/15 真机。
+- ⏭ 待办：测绘回来后补文档 §2/§9 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
 
 ## 生效约束
 
@@ -68,7 +78,8 @@
 
 ## 已裁定
 
-- ✅ **D1（2026-10-12，用户裁定）**：**暂无 Apple Developer 账号 ⇒ 先做「不签名」版本**，用户手动放行。⇒ 流水线不含证书 / entitlements / 公证 / staple；**换 JRE 不必重签**。代价：用户体验与客服成本成为主要风险 ⇒ 已派下钻调研（未签名时用户确切看到什么、Gatekeeper 是否拦 launchd 拉起的 `java`、形态排序、一页安装说明），结论落 `devDocs/Mac安装程序调研.md` §10.1。
+- ✅ **D1（2026-10-12，用户裁定）**：**暂无 Apple Developer 账号 ⇒ 先做「不签名」版本**，用户手动放行。⇒ 流水线不含证书 / entitlements / 公证 / staple；**换 JRE 不必重签**；**零 entitlements 也是正确做法**（Apple 原文：`allow-jit` 仅在采用 Hardened Runtime 时才需要；未签名二进制根本带不了 entitlements）。
+- ⚠️ **D1 的代价已查实（文档 §10.1）**：最大风险不是"用户要点几下放行"，而是 **quarantine 传播到内嵌 JRE 后被 `launchd` 拒绝执行（`155`）** ⇒ 出现"App 装好了但 Tomcat 起不来"的失败模式。因 Apple 未文档化该判定，**必须真机实测（§10.3）后才能定形态**。
 
 ## 待用户裁定（等调研结论出来再逐条问，先记录）
 
