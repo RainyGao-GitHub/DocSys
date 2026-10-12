@@ -77,6 +77,15 @@
 - **教训**：构建被打断会留下**截断归档**（本次 kirin 残留 769.2 MB / 11818 条目 / `tar` 退出码 1，正常应为 1004.7 MB / 29382 条目）→ 校验用 `tar -tzf | wc -l` 或 `--check-only`。
 - 交付说明：打包器主用 `C:\docsysRel\build_release.py`，副本 `WebRoot/web/sales/docsysReleaseScripts/build_release.py`（sales submodule，**未提交**，连同用户自己的 3 个 `.bat` 改动一起留给用户）。
 
+**★ 发布流程规范化（2026-10-12，方案文档 §15）** —— 用户设计了发布流程（① 编译带版本名 WAR ② 解压 `DocSystem/` ③ `EncodeDocSystem.bat` → `buildDocSystem.bat` ④ 压缩 zip 归档到版本目录 ⑤ 骨架+`DocSystem/` 放进 `docsys` 跑 `build_release.py` ⑥ 校验产物），要我评审可行性并定「打包用的 `docsys/` 放哪」。
+- **评审结论：可行** ✅。骨架实测 = `C:\docsysRel\docsys-WRE\docsys`（**648 文件 / 415.2 MB**，`tomcat\webapps` **为空**、`tomcat\Java\jre`(Oracle 162) 与 `mysql\`(Windows 版) 都在、顶层 6 个社区版 `.bat`）→「骨架 + 放入 `DocSystem/`」成立。
+- **目录裁定（推荐并已落地）**：单建 **`C:\docsysRel\ForReleaseBuild\`**，内含 `docsys\`(payload) + `jre\`(各平台运行时) + `dist\`(产物)。理由：① `docsysRel\` 里混着 `mxsdoc`/`docsys-WDK`/`proguard6.2.2`/`DocSystem-*.war`，发布源树放这里**易被误操作污染**；② 自包含、可整目录删掉重建；③ 打包器已把 `docsys` 加入索引跳过名单（否则每次为找运行时归档都要遍历 payload 的数万文件）。**已创建三目录并把骨架复制进 `ForReleaseBuild\docsys`**（648 文件 / 415.2 MB，9 秒）。
+- **打包器 5 处调整**：① 默认路径改 `ForReleaseBuild\{docsys,jre,dist}`（旧 JRE 搜索路径保留，历史归档仍可被找到）；② **顶层启动脚本一律以 `docsysStartScripts\<平台>` 为准**——payload 顶层脚本不再入包（骨架的社区版 `restart.bat`/`startWithLog.bat` 不会混进商业版包），其它顶层非脚本文件会**告警列出**；③ **Windows 运行时改必填**（不再静默沿用 Oracle 162）；④ **payload 预检** `tomcat\webapps\DocSystem\WEB-INF\web.xml`（防漏做步骤 2~5），`--list` 显示就绪状态；⑤ 索引跳过 `docsys`/`mxsdoc`。
+- **验证**：新代码 + 旧 staging 作 payload 重打 mac = **29500 条目 / 1008.0 MB / PASS，与旧产物完全一致（无回归）**；默认 payload（未放 DocSystem）打包被预检拦截（退出码 2）；`--only docsys-win` 因缺 GraalVM zip 被必填拦截（退出码 3，打印文件名+URL+sha256）。两份脚本哈希一致。
+- **发现**：注意事项 #2 提到的 **`buildMxsDocJar.bat` 在 `C:\docsysRel` 与仓库里都搜不到** → 该补救步骤目前**无法执行**；建议在 `buildDocSystem.bat` 的 `move` 之前补 `if not exist "%CURRENT_DIR%\mxsdoc\com\DocSystem" mkdir "%CURRENT_DIR%\mxsdoc\com\DocSystem"`，即可彻底免除"必须保留 `mxsdoc`"约束。`mxsdoc\` 现有 13160 文件（含 `com\DocSystem\websocket`），且位于 `docsys\` **之外** ✅。
+- **待确认**：步骤 4 的 `DocSystem.zip` 是**根级散文件**还是含 `DocSystem\` 目录（影响客户解压落点）。
+- **退役旧目录的前置条件**：先把 `docsys-Linux-Release\{mac-JDK8\jre-mac.tar.gz, 麒麟aarch64-JDK8\jdk-8u461-linux-aarch64.tar.gz}` 搬进 `ForReleaseBuild\jre\`，再删旧目录（打包器当前仍在旧路径找到它们）。
+
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
 
 用户裁定：**删除**已删实现的内部单测 + 5 个不可救文件。按可复现口径执行：
