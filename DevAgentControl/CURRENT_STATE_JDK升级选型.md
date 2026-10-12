@@ -56,7 +56,7 @@
 - 事实补充：`docsysStartScripts` 属**主仓库的 submodule**（`WebRoot/web/sales`，gitdir 指向 `.git/modules/WebRoot/web/sales`）；该 submodule 当前有**未提交改动**（`M docsysStartScripts/Windows/*.bat` ×3 + 未跟踪 `docsys_start_hidden.bat`）——用户的 B-1 成果，注意别丢。~~`C:\docsysRel` 下的发布脚本全是 0 字节空占位~~ —— **2026-10-12 更正：该说法有误**，那个"0"是显示时按 MB 四舍五入的假象；实测 `buildDocSystem.bat`(4226 B)/`EncodeDocSystem.bat`(964 B) 等均为真文件且与仓库 HEAD 同源 ⇒ **它们是实际运行位置的副本，仓库改了脚本必须同步复制到 `C:\docsysRel\`**。
 
 **★ Windows 侧打包器已实现并实测通过（2026-10-11，方案文档 §13）** —— 用户裁定「要，写 Python 单文件打包器，放仓库外 `C:\docsysRel\`」。
-- **产物**：`C:\docsysRel\build_release.py`（802 行，仅标准库）→ 输出 `C:\docsysRel\dist\docsys-<platform>-<version>.tar.gz|zip`。命令：`--list` / `--only X` / `--check-only` / `--compare <参考包>`。平台表已内置 6 个（linux / kirin-x64 / kirin-aarch64 / mac / mac-arm64 / win）。
+- **产物**：`C:\docsysRel\build_release.py`（仅标准库）→ 输出 `C:\docsysRel\dist\docsys-<platform>-<version>.tar.gz|zip`。（⚠️ **路径已于 2026-10-12 变更**：默认输出目录改为 `C:\docsysRel\ForReleaseBuild\dist`，旧 `C:\docsysRel\dist` 已整体删除，见本节末「产物目录归一」。）命令：`--list` / `--only X` / `--check-only` / `--compare <参考包>`。平台表已内置 6 个（linux / kirin-x64 / kirin-aarch64 / mac / mac-arm64 / win）。
 - **实现要点**：每个成员**显式写 mode**（目录 755 / `*.sh` 755 / 其余 644）；运行时归档**绝不解压**、用 `tarfile` 逐 member 转写（mode/符号链接/硬链接保真）并**补齐祖先目录**；非 Windows 包剔除 `tomcat/Java` 与 **Windows 版 mysql**、丢弃顶层 `.bat/.vbs`、`tomcat/{work,temp,logs}`+`logs`+`tmp` **保留目录但丢内容**。
 - **实测**：`docsys-mac` 1008.0 MB / 41 s、`docsys-kirin` 1004.7 MB / 41 s，**自检均 PASS**；**kirin 2 个符号链接原样保留**（`Java/jre/jre/lib/aarch64/server/libjsig.so -> ../libjsig.so`、`man/ja -> ja_JP.UTF-8`，路径与参考包一致）。
 - **与现有 Linux 构建包逐条比对**：mac 29488 vs 29484、麒麟 29370 vs 29366，均 **+25 / −21**，且**每一条都已归因**：+25 = 2 个 Tomcat 自带文档 + **18 个 office 编辑器 2.02.88 新增的 Windows 孪生文件** + 2 张图片与 1 个俄文示例（**正确 UTF-8 名**，参考包是乱码版）；−21 = 14 个 `tomcat/work/**`（JSP 缓存）+ 4 个 `tomcat/temp` 残留（**有意清理**）+ 3 个乱码名。
@@ -107,6 +107,7 @@
 - **修复后两项自检全 PASS**：linux 577 条目 / 577 唯一 / 36 符号链接/**悬空 0** / 202.6 MB；win 440 条目 / 157.6 MB（运行时 355 文件）。`jre/release` 都在：`1.8.0_302 / GRAALVM_VERSION=21.2.0`（linux `OS_NAME=Linux`、win `OS_NAME=Windows`）。
 - **顺带确认**：根级 JDK `src.zip` 确实被丢弃 ✅；`jre/lib/**/*.src.zip`（GraalVM 各组件源码包，合计 9.5 MB）**保留**（属发行版内容）—— 我先前一次检查用 `endswith("src.zip")` 误报成"没丢"，已澄清。
 - **搜索列表精简 + 目录清理（2026-10-12）**：用户确认可删 `C:\docsysRel\jre` —— 实测**完全空**（0 条目）→ **已删除**；打包器 `JRE_SEARCH_DIRS` 同步精简为 `[ForReleaseBuild\jre, C:\docsysRel]`（移除该已删目录 + 3 个已搬空的 `docsys-Linux-Release\{,mac-JDK8,麒麟aarch64-JDK8}`）。不存在的目录本来就会被安全跳过（`except OSError: return`），故**行为不变**——精简后**回归重打 linux + win 双双 PASS、退出码 0**（576/439 条目，符号链接 36/悬空 0）。顺手删掉 `C:\docsysRel\__pycache__`（上次会话把打包器当模块 import 留下的 `build_release.cpython-314.pyc`）。⇒ **`docsys-Linux-Release` 整棵目录现在都可以退役**（两个子目录已空）。
+- **产物目录归一（2026-10-12，用户裁定"直接删掉、不留档"）**：`C:\docsysRel\dist`（旧默认输出目录；3 个包 = 修复前打包器 + 旧 payload，其中 win 包运行时还是 Oracle JRE）**已整体删除**，释放 **3,089.5 MB**。⇒ **产物只落在 `ForReleaseBuild\dist`**。⚠️ 该目录里现存的 `docsys-mac-2.02.88.tar.gz`（10-12 11:45，§15.3 的"无回归"验证产物）**同样是修复前产物**，等用户发话再删。方案文档 §13.1/§14 已同步（§14 改为"产物已删除、仅留档"）。
 - **两点影响（下个会话必读）**：① **§14 那三份产物是修复前的打包器打的** —— mac/kirin 功能不受影响（`take=None`+`also=[]`，只是可能带重复条目），**`docsys-win` 必须重打**（现在 GraalVM Windows zip 已就位）；② **去重会改变条目数** ⇒ §13.3/§14 的"与参考包逐条一致"口径**不再逐条成立**（`--compare` 的少量 −N 是被去重的重复成员，不是丢文件），**以后以"自检 PASS + 关键路径断言"为准**。
 
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
