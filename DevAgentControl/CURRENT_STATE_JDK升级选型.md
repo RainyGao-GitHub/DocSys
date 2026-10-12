@@ -90,6 +90,15 @@
 - ⚠️ **更正**：文档里"`C:\docsysRel` 下发布脚本全是 0 字节空占位"的旧说法**已推翻**（那是按 MB 四舍五入的显示假象）；实测 `buildDocSystem.bat` 4226 B、`EncodeDocSystem.bat` 964 B，且与仓库 HEAD **同源** ⇒ **它们是实际运行位置的副本，仓库改了脚本必须同步复制到 `C:\docsysRel\`**。
 - **sales submodule 待提交清单（留给用户）**：`M docsysReleaseScripts/buildDocSystem.bat`（我的 mkdir 补丁）、`?? docsysReleaseScripts/buildMxsDocJar.bat`（新增）、`?? docsysReleaseScripts/build_release.py`（打包器副本）、`M docsysStartScripts/Windows/{docsys_restart,docsys_start,docsys_stop}.bat`（用户自己的）、`?? docsysStartScripts/Windows/docsys_start_hidden.bat`（用户自己的）。
 
+**★ 运行时归档已全部就位 + `--list` 崩溃修复（2026-10-12，方案文档 §13.8 / §13.9）** —— 用户表示同意"把两份现有归档搬进 `ForReleaseBuild\jre\`、下载缺的三份、再跑 `--list` 确认"这个收尾计划，已执行完。
+- **6 平台运行时 100% 就绪**（`--list` 六个平台全 `✓`）。`ForReleaseBuild\jre\` 现有 5 份归档：`graalvm-ce-java8-linux-amd64-21.2.0.tar.gz`（298,577,044 B）、`graalvm-ce-java8-windows-amd64-21.2.0.zip`（250,229,469 B）、`zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64.tar.gz`（103,714,410 B）、`jre-mac.tar.gz`（108,236,681 B）、`jdk-8u461-linux-aarch64.tar.gz`（75,457,440 B）。
+- **三份缺失件已下载并校验**：GraalVM linux / win 两份 sha256 **与 §3 记录的官方值完全一致**；Zulu mac aarch64 的 sha256 与 **Azul 官方 metadata API 的 `sha256_hash`**（`58bb3c08…c3bb21b`）一致（其 CDN 不提供 `.sha256`）。⚠️ 取 Zulu 时**别用** metadata 返回列表里的 `-ca-fx-jdk8…` 变体（含 JavaFX），要 `-ca-jdk8…`。
+- **归档内平台指纹（实测，读 `release` 文件）**：linux `1.8.0_302 / Linux / amd64 / GRAALVM_VERSION=21.2.0`、win `1.8.0_302 / Windows / amd64 / 21.2.0`、zulu `IMPLEMENTOR=Azul Systems, Inc. / Zulu8.96.0.205-CA-macos-aarch64 / 1.8.0_504 / aarch64`、jre-mac `IMPLEMENTOR=Eclipse Adoptium / 1.8.0_492 / Darwin / x86_64`（**正是裁定的 Temurin 8 x64** ✅）、jdk-8u461 `1.8.0_461 / Linux / aarch64`。
+- **符号链接安全性扫描（本次新做的检查，防客户机断链）**：GraalVM linux 40 个链接 / jdk-8u461 2 个 / 其余 0 个；**"只取 `jre/` 子树"后越界链接数 = 0** ✅（GraalVM 那 4 个 `NOT-IN-jre` 都在顶层 `bin/`，本就不复制；`jre/bin/{js,lli,polyglot}` 的链接目标全部落在 `jre/` 内）。另实测确认 **GraalVM 归档 `jre/` 下没有 `release`，只有顶层 `<top>/release`**，与打包器 `also=["release"]`（从归档**根级**补文件）的语义吻合 ✅。
+- **打包器缺陷 3（已修）**：`--list` 在中文 Windows 控制台（`chcp 936`）**必崩** —— `UnicodeEncodeError: 'gbk' codec can't encode character '\u2717'`（脚本用 `✓/✗/⚠️/▶` 作状态标记，这些码位不在 cp936 内），而且**恰好在"payload 未就绪"这条必经路径上复发**。修法：`log()` 出口加 `_safe_text()` —— 能整体编码就**原样返回**（Linux/UTF-8 行为不变），编不出才**逐字符**降级（`✓→OK`、`✗→!!`、`⚠→!`、`▶→>`、`U+FE0F→""`）；**刻意不用 `sys.stdout.reconfigure(encoding="utf-8")`**（那会让中文 Windows 下的中文输出全变乱码）。验证：GBK 控制台退出码 **0**；UTF-8 控制台 `✓/✗` 原样显示且路径正确；全脚本只有 `log()` 一处 `print`（无绕过）。两份脚本同步后 SHA256 `5ef50199ef452000eda03aa16da0633a9dcc50028370b95643ae53021eb1347e`。
+- **现在的唯一缺口**：payload 缺 `tomcat\webapps\DocSystem`（`--list` 显示 payload `✗ 缺 webapps/DocSystem`）⇒ 按 §15.2 步骤 1~5 放入即可开打。**`docsys-Linux-Release` 现在可以随时退役**（两份归档已搬走，删掉不影响打包）。
+- **仍未裁定**：① 是否恢复"按平台裁剪"（现状**不裁**：Windows 包多带 125.4 MB、Linux/Mac 多带 87.7 MB）；② 步骤 4 的 `DocSystem.zip` 是根级散文件还是含 `DocSystem\` 目录；③ 放入 payload 的 `DocSystem` 是否确实是 2.02.88 的部署结果。
+
 **✅ 已完成（2026-10-07，用户裁定"删除"）：删除 107 个不可编译测试文件**
 
 用户裁定：**删除**已删实现的内部单测 + 5 个不可救文件。按可复现口径执行：
