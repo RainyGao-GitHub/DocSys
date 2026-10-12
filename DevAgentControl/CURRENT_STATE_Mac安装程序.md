@@ -67,7 +67,10 @@
     - 已产出**一页安装说明草稿**（≤14 / 15+ 两档）+ **真机实测 6 步清单**（§10.3，**未做完不要定形态**）。
 - ⚠️ **代码测绘第一路失败**（`explore` agent `6208c6f8`，跑了 4093s、0 产出 —— 模型传输错误 `unexpected EOF during handshake`，非任务失败）⇒ **已重新派第二路**（`explore` agent `0fc3d235`，范围收窄为 8 个具体问题 + 要求 600 行内精简报告）。
 - ⏳ **第二路测绘结论未回** —— 决定 §2「C++ 控制台可复用性」与 D4「技术路线」。**未回前不要动 `mxsdoc-console` 任何文件。**
-- ❗**尚缺的关键前提**：**没有 Mac 真机 ⇒ §10.3 的实测无法进行**，而未签名方案的形态（是否必须带 `xattr` 排障步骤、要不要用 LaunchAgent）**取决于该实测**。需问用户是否具备 macOS 14/15 真机。
+- ❗**尚缺的关键前提**：**没有 Mac 真机 ⇒ §10.3 的实测无法进行**，而未签名方案的形态（是否必须带 `xattr` 排障步骤、要不要用 LaunchAgent）**取决于该实测**。
+- ✅ **用户 2026-10-12 告知：Intel Mac 与 Apple Silicon Mac 都有，可以测** ⇒ 实测可做。
+- ✅ **已交付实测脚本**：`WebRoot/web/sales/docsysReleaseScripts/macQuarantineTest.sh`（sales 提交 `978e4af`）。干了什么：环境信息 → JRE 签名/公证状态（`codesign`/`spctl`）→ 基线执行 → 手工给 jre 树打 quarantine → Terminal 直 exec → **LaunchAgent（launchd）拉起看是否报 `155`** → `xattr -d -r` 清除后重试 → 小结与结论映射 → 附「Safari 真实下载是否传播 quarantine」半自动步骤。临时 agent 退出自动清理。`bash -n` 通过。
+- ⏭ **下一步（等用户回填脚本输出）**：据第 5/6 节结果定形态 —— 若 launchd 被拦且清属性恢复 ⇒ 必须「首启自清 quarantine」或让客户跑 `xattr`；若 launchd 正常 ⇒ 可放心用 LaunchAgent、客户零命令。
 - ⏭ 待办：测绘回来后补文档 §2/§9 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
 
 ## 生效约束

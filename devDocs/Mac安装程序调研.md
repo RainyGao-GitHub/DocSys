@@ -332,7 +332,14 @@ xattr -dr com.apple.quarantine /Applications/<YourApp>.app
 
 **写说明时要避免**：不要让客户关 Gatekeeper / 跑 `spctl --global-disable`（Apple 官方立场是"不应覆盖安全设置"）；**不要承诺"拖过去就好了"**（quarantine 会保留）。
 
-### 10.3 定稿前必须真机实测的 5 步（**未做完不要定形态**）
+### 10.3 定稿前必须真机实测（**未做完不要定形态**）
+
+> **已提供实测脚本**：[`WebRoot/web/sales/docsysReleaseScripts/macQuarantineTest.sh`](../WebRoot/web/sales/docsysReleaseScripts/macQuarantineTest.sh)
+> 用法（macOS 14 / macOS 15 各跑一次，Intel 与 Apple Silicon 都建议跑）：
+> ```
+> bash macQuarantineTest.sh /路径/到/解压后的/docsys
+> ```
+> 脚本会打印环境、**JRE 自身的签名/公证状态**、基线执行、**手工打 quarantine**、Terminal 直exec、**LaunchAgent（launchd）执行**、**清属性后重试**，并自动清理临时 agent。核心要看的是第 5/6 节（是否出现 `155: Refusing to execute/trust quarantined program/file`）。
 
 在 **macOS 14 与 macOS 15 各一台**上跑：
 
