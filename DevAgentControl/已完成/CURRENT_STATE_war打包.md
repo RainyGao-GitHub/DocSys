@@ -127,6 +127,11 @@ robocopy D:\Dev\DocSys\WebRoot $stage /E /NFL /NDL /NJH /NJS /NP `
 - 因 Eclipse 会重编，`WebRoot/WEB-INF/classes` 会是"ECJ 产物为主、夹带 javac 单文件产物"的混合；**发布打包前建议先让 Eclipse 编完（Refresh / `Ctrl+B`）再跑 `Docs\scripts\BuildWar.bat`**，使包内 class 出自同一编译器。
 - 改**签名/接口**时 CLI 不重编依赖方：Eclipse 自动构建会在下次刷新时补上；若急着用 CLI 验证，需连依赖一起编。
 
+## 2026-10-14 用户实测通过（Linux）✅
+
+- **用户报：Linux 系统下测试 OK，本次 `BuildWar.bat` 产物"没有任何问题"**（2026-10-14 11:33）。被测包 = `C:\TomcatForDocSysDev\dist\DocSystem.war`，**41,963 条目 / 1,014,080,835 B（967.0 MB）/ SHA256 `917ACF21D1A5E6D6179E00BB0B0E4536862D80318EB3E45DF10CC148547830F9`**（2026-10-14 08:42 构建）⇒ **命令行打包路线（`Docs/scripts/BuildWar.bat`）可正式作为发布输入**，后续按既定步骤（清理 → 混淆 → 打包/`PrepareLinuxPackage.sh`）走。
+- **仍未定位**：10-07 那份 war 在 Linux 升级后"无法启动"的原因（用户未提供启动日志）。**war 内容差异这条线已排除** —— 10-13 实测与用户 Eclipse 导出包**共有 41,962 条目 CRC 全等、only-in-A 0**。若日后复现，优先取 `catalina.out` / `docsys.log` 启动段。
+
 ## 待定 / 未做
 - **未做真实部署验证**：没把 war 丢进一个干净 Tomcat 跑起来（dev 用的是 junction 部署，不是 war）。
 - **已固化成脚本（2026-10-13）**：`C:\TomcatForDocSysDev\BuildWar.bat`（工作区外，不入版本控制）。等价于上面的「暂存 + jar」命令，但带**双重自检**（暂存目录与 war 各查一遍禁用项）与暂存自动清理；`/verify` 只列出「会打包 / 会排除」的内容而不产出 war，`/o:<dir>` 换输出目录，`/k` 保留暂存目录，`/p` 双击运行时暂停。脚本头部写有 **Eclipse 一键调用**配置（Run → External Tools → Program，`cmd.exe /c C:\TomcatForDocSysDev\BuildWar.bat`）——**起因**：Eclipse 自带的 WAR 导出**无法排除文件**（已在本机安装 `C:\安装程序\eclipse-jee-oxygen-2-win32-x86_64`（4.7.2）上验证：WTP 部署装配模型 `org.eclipse.wst.common.modulecore` 的 `wb-resource` 只有 `source-path`/`deploy-path` 两个属性，整插件无任何 exclude 相关代码，导出向导亦无此选项）。**已完整跑通**（2026-10-13）：42,823 条目 / 1,015,746,379 B（968.7 MB）/ SHA256 `A3A1CD2D2602F2E58C9D3B607C7C1A48DF3C5619139536102858B71B77E7DC13`，**覆盖**了上面 10-07 那份（旧档 962.7 MB / `A41B1388…` 已不存在）。排除集逐项核对（robocopy `/L` 清单与全量文件做差集）= 552 `fonts/` + 20 `fonts_thumbnail*` + 3 `.git` + 8 `.gitignore` + 2 `AllFonts.js` + 1 `font_selection.bin` + 1 `fonts.log` = **587 个文件，无多无少**；`web\static\fonts`（其他组件的字体目录，6 文件）与 `office-editor\core-fonts`（215 文件，输入字体）**保留**（`/XD` 必须用绝对路径，否则 `fonts` 会误伤）。
