@@ -221,7 +221,7 @@
 **已经确定可复用的部分**（来自 [`跨平台运行时打包方案.md`](./跨平台运行时打包方案.md)）：
 
 - `build_release.py` 可产出 `docsys-mac-<ver>.tar.gz`（Intel）与 `docsys-mac-arm64-<ver>.tar.gz`（Apple Silicon），内容 = 骨架 payload + `webapps/DocSystem` + 对应 JRE（落到 `tomcat/Java/jre/`）+ 脚本覆盖层。
-- **Mac 的启停脚本已经在仓库里且可追溯**：`WebRoot\web\sales\docsysStartScripts\Linux\` 的 **14 个 `.sh`**（`docsys_start.sh` / `docsys_stop.sh` / `docsys_restart.sh` / `start.sh` / `stop.sh` / `restart.sh` / `monitor_start.sh` / `monitor_stop.sh` / `tomcat_start.sh` / `tomcat_stop.sh` / `mysql_start.sh` / `mysql_stop.sh` / `docsys_upgrade.sh` / `gen_fonts.sh`），**与 2.02.87 发行包 14/14 逐字节一致** ⇒ **Mac 控制台不必自己拼 Tomcat 启动命令行**，直接驱动这套脚本即可，与命令行口径天然一致。
+- **Mac 的启停脚本已经在仓库里且可追溯**：`WebRoot\web\sales\docsysStartScripts\Linux\` 的 **13 个 `.sh`**（`docsys_start.sh` / `docsys_stop.sh` / `docsys_restart.sh` / `start.sh` / `stop.sh` / `restart.sh` / `monitor_start.sh` / `monitor_stop.sh` / `tomcat_start.sh` / `tomcat_stop.sh` / `mysql_start.sh` / `mysql_stop.sh` / `docsys_upgrade.sh`；`gen_fonts.sh` **已于 2026-10-14 删除**）⇒ **Mac 控制台不必自己拼 Tomcat 启动命令行**，直接驱动这套脚本即可，与命令行口径天然一致。**注意**：2026-10-13 之前该目录与 2.02.87 发行包 **14/14 逐字节一致**；现在 `docsys_start.sh` / `tomcat_start.sh` **已去掉启动期字体库生成**（用户 2026-10-14 裁定，见 [`Office字体库自动生成方案.md`](./Office字体库自动生成方案.md) §1.4），而 mac 包与 Linux 包**共用这一个目录**（`build_release.py` 里 5 个平台都取 `scripts="Linux"`）⇒ **不要再用"与旧包逐字节一致"作为前提**。
 - `.sh` 的可执行位**由 `build_release.py` 显式写进 tar 头**（不依赖构建机文件系统）。
 
 **待补问题**（测绘回来后填）：安装包如何消费 `docsys-mac-*.tar.gz`？控制台是**随包分发**还是**独立分发**？签名/公证在流水线里放在哪一步（JRE 一旦被 `build_release.py` 换过就必须重签 → **签名应在打包之后**）？

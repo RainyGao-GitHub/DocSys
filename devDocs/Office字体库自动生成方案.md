@@ -71,6 +71,12 @@
 
 ⇒ **现状死代码（全仓库无调用者，已核实）**：`Channel.initOfficeEditorFonts`（[Channel.java:241](../src/com/DocSystem/common/channels/Channel.java:241)）、`BusinessChannel.initOfficeEditorFonts`（[BusinessChannel.java:2247](../src/com/DocSystem/websocket/BusinessChannel.java:2247)）、`OfficeBase.initOfficeEditorFonts`（:142）。本方案建议**复用**它作为自动生成的执行入口（见 D8）。
 
+⇒ **2026-10-14 收尾（用户裁定）**：**Linux/mac 的启停脚本里也去掉了启动期生成** —— `docsys_start.sh` 的 `if [ -d ${FONTS_DIR} ] … do generate fonts` 条件生成块、`tomcat_start.sh` 的无条件生成调用（`documentserver-generate-allfonts.sh`）已删除，`gen_fonts.sh` 整个删除（与 Windows 侧早先 `3d0fdba 【优化】删除gen_fonts.bat` 的做法一致；脚本在 `WebRoot/web/sales` **独立 git 仓库**，且该目录同时供 mac 与 kirin 包使用）。**但四行 `chmod 777` 必须保留**：发布包里**无扩展名**的 native 二进制（`x2t` / `allfontsgen` / `allthemesgen`）权限是 **644**（`build_release.py` 只把 `.sh` 写成 755，其余一律 644），而应用侧生成（[OfficeBase.java:332](../src/com/DocSystem/websocket/OfficeBase.java:332) `generateFontsOnlyOffice` → `documentserver-generate-allfonts.sh` → `allfontsgen`）与运行期文档转换都要执行它们 ⇒ **启动期只做权限修复，不做生成**。至此**启动路径上不存在任何字体库生成入口**，生成只由应用侧（自动生成 + 手动「重置字体库」）负责。
+
+⇒ **2026-10-14 追加（用户裁定）：主题生成一并去掉**。理由（用户）：主题生成目前多数情况下本就失败，且失败不影响 Office 使用。改动落在 **`WebRoot\web\static\office-editor`（又一个独立 git 仓库）** 的 `bin/documentserver-generate-allfonts.sh`（−22 行）与 `.bat`（−20 行）：删掉 3 段 `allthemesgen` 调用及其 "Generating presentation themes" 提示与收尾 `echo Done`；两个 Linux 启动脚本里 `allthemesgen` 的那行 `chmod` 也删掉。因为该仓库就是「在线安装 Office」（`onlineInstallOffice.do` 拉取）的源 ⇒ **推送后新装/重装也不会再跑主题生成**；`allthemesgen` 二进制本身仍留在 payload 里（未删文件）。
+
+**实证（WSL2，2026-10-14 17:0x）**：把改后的脚本灌进 WSL 里已解包的副本、带上 `LD_LIBRARY_PATH=$OE/libs/Linux` 直接执行 —— **1 秒跑完、只调用 `allfontsgen`**，产出 `sdkjs/common/AllFonts.js`(90 KB) + `server/FileConverter/bin/AllFonts.js`(99 KB) + `font_selection.bin`(30 KB) ✓，**无任何 `allthemesgen` 调用**。顺带证实两件"载荷必需"的事：① `LD_LIBRARY_PATH=…/office-editor/libs/Linux` 不设时 `allfontsgen` 会 `error while loading shared libraries: libgraphics.so` 直接失败；② 脚本里 `chown -R ds:ds` 在**没有 `ds` 用户**的环境会报 `invalid user`（脚本无 `set -e` ⇒ 无害，属上游 OnlyOffice 残留）。
+
 ### 1.5 可复用的现成机制（不用新造轮子）
 
 | 机制 | 位置 | 说明 |
