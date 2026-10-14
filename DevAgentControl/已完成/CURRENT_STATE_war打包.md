@@ -111,6 +111,22 @@ robocopy D:\Dev\DocSys\WebRoot $stage /E /NFL /NDL /NJH /NJS /NP `
 
 ⚠️ 遗留（待用户点头）：`CLAUDE.md` 里「清理清单以 `C:\TomcatForDocSysDev\CleanOfficeFonts.bat` 为准」已过期，应改成 `Docs/scripts/CleanOfficeFonts.bat`。提交需两段：先在 `Docs/` 里 commit+push，再在主仓库提交子模块指针（当前 `Docs` 子模块状态：`?? scripts/`）。
 
+## 2026-10-14 "Eclipse 会不会重复编译"的研究结论（用户裁定：不做任何配置改动）
+
+**起因**：用户发现"由 CLI 编译过的源文件，在 Eclipse 里 Refresh 后仍会被再次编译"。研究后**用户最终裁定：不必为避免重复编译做任何配置 —— 保留 Eclipse 的 Build Automatically 即可**。理由：ECJ（compliance 1.8）与 CLI 的 `javac` 1.8 产出的类语义等价，重编一次无副作用；且 **Eclipse 的增量构建会顺带重编依赖方**，正好补上 CLI 单文件编译的短板 ⇒ 两条编译链互为交叉验证，比"只留一条"更稳。
+
+**机制（本机 Eclipse 4.7.2 实测）**：
+
+- Eclipse 的 Java 构建**不比较输出目录 `.class` 的时间戳**；按「资源增量（刷新时磁盘属性 vs 内存快照）+ JDT 自身构建状态」判断，故外部改动（CLI javac / 外部编辑器 / git）的 `.java` 在刷新后必然被判为 changed 而重编译。**没有"采纳外部编译结果"的开关** —— 这是设计行为，不是判定错误。
+- 易误解的开关：`org.eclipse.jdt.core.builder.recreateModifiedClassFileInOutputFolder`（界面标签 **"Rebuild class files modified by others"**，`Java > Compiler > Building`）—— 只覆盖"输出目录里的 class 被外部改/删、而源码未变"的情形，**对上述场景无效**；另有 `org.eclipse.jdt.core.builder.cleanOutputFolder`（"Scrub output folders when cleaning projects"）控制 `Project > Clean` 是否清空输出目录（清空 ⇒ 全量重编译）。
+- 构建状态：`D:\EclipseProject\EclipseWorkspaceForDocSys\.metadata\.plugins\org.eclipse.core.resources\.projects\DocSystem\org.eclipse.jdt.core\`（该工程另有 `.markers` 71 MB、`.indexes`）；项目与工作区 JDT 均 `compliance/source/target=1.8`。
+
+**实践注意（现状，不改配置）**：
+
+- 我（agent）仍按项目不变量用 CLI `javac -d WebRoot/WEB-INF/classes` 编译改动；Eclipse 开着自动构建时会把这些改动再编一遍 —— 正常且无害。
+- 因 Eclipse 会重编，`WebRoot/WEB-INF/classes` 会是"ECJ 产物为主、夹带 javac 单文件产物"的混合；**发布打包前建议先让 Eclipse 编完（Refresh / `Ctrl+B`）再跑 `Docs\scripts\BuildWar.bat`**，使包内 class 出自同一编译器。
+- 改**签名/接口**时 CLI 不重编依赖方：Eclipse 自动构建会在下次刷新时补上；若急着用 CLI 验证，需连依赖一起编。
+
 ## 待定 / 未做
 - **未做真实部署验证**：没把 war 丢进一个干净 Tomcat 跑起来（dev 用的是 junction 部署，不是 war）。
 - **已固化成脚本（2026-10-13）**：`C:\TomcatForDocSysDev\BuildWar.bat`（工作区外，不入版本控制）。等价于上面的「暂存 + jar」命令，但带**双重自检**（暂存目录与 war 各查一遍禁用项）与暂存自动清理；`/verify` 只列出「会打包 / 会排除」的内容而不产出 war，`/o:<dir>` 换输出目录，`/k` 保留暂存目录，`/p` 双击运行时暂停。脚本头部写有 **Eclipse 一键调用**配置（Run → External Tools → Program，`cmd.exe /c C:\TomcatForDocSysDev\BuildWar.bat`）——**起因**：Eclipse 自带的 WAR 导出**无法排除文件**（已在本机安装 `C:\安装程序\eclipse-jee-oxygen-2-win32-x86_64`（4.7.2）上验证：WTP 部署装配模型 `org.eclipse.wst.common.modulecore` 的 `wb-resource` 只有 `source-path`/`deploy-path` 两个属性，整插件无任何 exclude 相关代码，导出向导亦无此选项）。**已完整跑通**（2026-10-13）：42,823 条目 / 1,015,746,379 B（968.7 MB）/ SHA256 `A3A1CD2D2602F2E58C9D3B607C7C1A48DF3C5619139536102858B71B77E7DC13`，**覆盖**了上面 10-07 那份（旧档 962.7 MB / `A41B1388…` 已不存在）。排除集逐项核对（robocopy `/L` 清单与全量文件做差集）= 552 `fonts/` + 20 `fonts_thumbnail*` + 3 `.git` + 8 `.gitignore` + 2 `AllFonts.js` + 1 `font_selection.bin` + 1 `fonts.log` = **587 个文件，无多无少**；`web\static\fonts`（其他组件的字体目录，6 文件）与 `office-editor\core-fonts`（215 文件，输入字体）**保留**（`/XD` 必须用绝对路径，否则 `fonts` 会误伤）。
