@@ -16,7 +16,7 @@ Office 字体库（office-editor 的 AllFonts 字体库）在新安装 / 在线�
 ## References
 
 - `devDocs/Office字体库自动生成方案.md` —— 本任务方案（现状事实 §1 / 设计 §2 / 裁定项 §3 / 开工清单 §4 / 验收项 §5）
-- `C:\TomcatForDocSysDev\CleanOfficeFonts.bat` —— 字体库产物清单的**权威说明**（发布包会删这些：两个 `AllFonts.js`、`font_selection.bin`、`fonts.log`、`fonts/`、`fonts_thumbnail*`；**不删**输入 `core-fonts/`）
+- `Docs/scripts/CleanOfficeFonts.bat` —— 字体库产物清单的**权威说明**（发布包会删这些：两个 `AllFonts.js`、`font_selection.bin`、`fonts.log`、`fonts/`、`fonts_thumbnail*`；**不删**输入 `core-fonts/`）。2026-10-14 起权威副本在**仓库内** `Docs/scripts/`（`Docs` 子模块）；打包脚本同目录 `Docs/scripts/BuildWar.bat`；仓库外 `C:\TomcatForDocSysDev\CleanOfficeFonts.bat` 已改为指路桩。
 - **websocket 仓库**：`BussinessController.java`（`generateOfficeFonts.do:5760`、`onlineInstallOffice.do:5689`、`installOffice.do:6000`）、`OfficeBase.java`（`initOfficeEditorFonts:142`、`isAllFontsReady:257`、`deleteAllFontsFiles:290`、`checkAndGenerateFonts:303`）、`BussinessBase.java:66`（`channel = ChannelFactory.getByChannelName("businessChannel")`）
 - **office 仓库**：`office/fontengine/CApplicationFontsWorker.java:284,339`（生成/跳过判定）、`office/FontGenerator/FontGenerator.java:15`、`office/docs/CppToJava常见问题与解决方案.md:639-662`（字体库排查经验）
 - **主仓库**：`WebRoot/web/js/OfficeEditorLoader.js:61-96`（Web 端编辑器唯一咽喉 → `POST /Manage/getOfficeEditorConfig.do`）、`WebRoot/manager/main.js:5695-5815`（重置字体库前端流程）、`WebRoot/manager/tmpl/systemOfficeEditor.html:38`、`src/com/DocSystem/controller/ManageController.java:189,1430`、`src/com/DocSystem/controller/BaseController.java:26363`（`createLongTermTask`）、`src/com/DocSystem/common/entity/LongTermTask.java`
@@ -36,6 +36,7 @@ Office 字体库（office-editor 的 AllFonts 字体库）在新安装 / 在线�
 8. **鉴权注意**：`MyInterceptor` 对任何带 `X-Requested-With: XMLHttpRequest` 的请求直接放行 ⇒ 新接口必须**自校验**登录（不能依赖拦截器）。
 9. **集群为 per-node**：字体库产物与 `officeDisabled`（`BaseFunction:197`）都在本机/本 JVM；检测与生成只对处理该请求的节点有效（与现状「重置字体库」一致）。
 10. **未确认**：用户看到的"字体库不存在"精确文案来源未定位（应在 office-editor 前端压缩产物/404 之后），本方案不依赖它。
+11. **dev 环境拓扑与字体库位置（2026-10-13 确认，仅记录事实，不引起改动）**：dev Tomcat（`C:\TomcatForDocSysDev\docsys\tomcat`，8100，自带 JRE）的 webapp `/DocSystem` 是 **Junction → `D:\Dev\DocSys\WebRoot`**（指南方式 A）⇒ **工作区的 `web/static/office-editor` 就是运行环境的 office-editor 目录本身**，字体库产物必然落在工作区，不存在"另一份运行环境副本"；独立发布实例（`C:\docsysRel\docsys-Win-Release\docsys-win-2.02.87\...\webapps\DocSystem\web\static\office-editor`）各自另有一份。消费方：**浏览器端** 7 个 `web-apps/apps/*/embed/index.html` 与 `api/documents/cache-scripts.html` 以 `<script src=".../sdkjs/common/AllFonts.js">` 加载字体目录（`sdkjs/*/sdk-all.js` 读 `__fonts_infos`/`__fonts_files`，`fonts/` 由 `AscCommon.QJ.dOg("fonts/", …)` 按相对路径取）、`Images/fonts_thumbnail*` 供字体选择器预览；**服务端** `OfficeBase.getOfficeEditorPath():6848`（= `docSysWebPath + "web/static/office-editor/"`）、`FileConverter.java:51`（读 `bin/AllFonts.js`）、`CDocBuilder_Private.java:198`（读 `font_selection.bin`）、`fonts.log`（变更检测凭据）；`MyInterceptor.java:76` 把该目录列入静态白名单。**用户 2026-10-13 裁定：不删除现有字体库产物**（想避免"生成物落在工作区"只能改 dev 为方式 B 复制部署，代价是改动需重新同步）。同日晚追加：**Eclipse 自带的 WAR 导出无法排除文件**（本机 Eclipse 4.7.2 验证：`org.eclipse.wst.common.modulecore` 的 `wb-resource` 只有 `source-path`/`deploy-path`，无 exclude 机制）⇒ 已固化 `C:\TomcatForDocSysDev\BuildWar.bat`（robocopy 暂存排除 + jar，双重自检；Eclipse 里配 External Tool 一键打包），细节与实测数据见 `已完成/CURRENT_STATE_war打包.md`。
 
 ## 生效约束
 
@@ -88,5 +89,5 @@ Office 字体库（office-editor 的 AllFonts 字体库）在新安装 / 在线�
 - `WebRoot/manager/main.js`、`WebRoot/manager/tmpl/systemOfficeEditor.html`、`systemOfficeEditor_en.html`
 - **websocket 仓库**：`src/com/DocSystem/websocket/OfficeBase.java`、`BussinessController.java`
 - **office 仓库**：`docs/CppToJava常见问题与解决方案.md`
-- 工作区外（不入版本控制）：`C:\TomcatForDocSysDev\CleanOfficeFonts.bat`
+- 发布脚本（2026-10-14 起在**仓库内** `Docs` 子模块）：`Docs/scripts/CleanOfficeFonts.bat`（清理清单权威）、`Docs/scripts/BuildWar.bat`（打包）、`Docs/scripts/CompareWar.py`（包内容对比）、`Docs/scripts/README.md`（发布链路）；仓库外 `C:\TomcatForDocSysDev\{CleanOfficeFonts,BuildWar}.bat` 已改为指路/转发桩
 - 已编译的 class 已写入 `WebRoot/WEB-INF/classes`（该目录被 gitignore，不入库）

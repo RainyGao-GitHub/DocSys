@@ -13,6 +13,7 @@
 ### 1.1 字体库是什么：产物清单、输入、就绪判据
 
 发布清理脚本 [CleanOfficeFonts.bat](<C:/TomcatForDocSysDev/CleanOfficeFonts.bat>) 是产物清单的权威说明（它删的就是"会被打进 war、且必须在目标机器上重新生成"的东西）：
+> ⚠️ 2026-10-14 更新：权威副本已移入仓库 `Docs/scripts/CleanOfficeFonts.bat`（`Docs` 子模块，与打包脚本 `Docs/scripts/BuildWar.bat`、对比工具 `Docs/scripts/CompareWar.py` 同目录，见 `Docs/scripts/README.md`）；仓库外 `C:\TomcatForDocSysDev\CleanOfficeFonts.bat` 改为指路桩，仅保留兼容。
 
 | # | 产物（相对 `web/static/office-editor/`） | 作用 | dev 现状 |
 |---|---|---|---|
