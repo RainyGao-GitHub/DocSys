@@ -96,7 +96,19 @@
 - **风险**：**Qt 5.12.2 已 EOL 且不支持 Apple Silicon 原生**（arm64 支持需 5.15.2 / 6.2+）；Qt 授权形态需你们确认；升 Qt 会牵连 Windows 侧最低系统版本（现为 `WindowsTargetPlatformVersion 7.0/8.1`）。⇒ 好消息：**Qt 前端与 Tomcat/JRE 是两个进程，架构不必一致**。
 - **建议路线**：先做 **C 最小可用版**（原生窗口 + 托盘 + 直接调 `docsysStartScripts\Linux\*.sh` + PID 文件判状态 + `open http://127.0.0.1:<port>`），再往 A（移植 Qt）/ B（原生重写）收敛。
 - **硬约束**：`docsys` **不能放进 `.app`**（签名后不可写）⇒ `.app` 与 `docsys/` 并列进 `.dmg`；`build_release.py` 目前**不含控制台**，若要"一键出安装包"需再加组装 `.dmg` 的一步。
-- ✅ **只读约束已遵守**：`mxsdoc-console` 仓库未留任何新增/修改文件（中途误把需求文档提取产物写进过 `Docs\`，已移出到 `%TEMP%`）。 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
+- ✅ **只读约束已遵守**：`mxsdoc-console` 仓库未留任何新增/修改文件（中途误把需求文档提取产物写进过 `Docs\`，已移出到 `%TEMP%`）。
+
+## ⚠️ Mac 版的产品级缺口（2026-10-15 查实，**待用户确认影响面**）
+
+**office 原生件没有 macOS 版本**：payload（与 2.02.87 mac 包一致）里 `office-editor/libs/` **只有 `Linux/`**、
+`server/FileConverter/bin/` 是 **`x2t`(ELF) + `x2t.exe` 并存**、`server/tools/` 是 `allfontsgen`(ELF)+`.exe`；
+实测 2.02.87 mac 包里的 `x2t`/`allfontsgen`/`docbuilder` **magic 都是 `\x7fELF`（Linux 可执行）**；`libs` 只有 `Linux`；
+`server/run-mac.command` 存在但**没有配套 mac 二进制**。
+⇒ mac 上 exec 这些 ELF / JNI 加载 `lib*.so` 的路径**必然失败**；启动脚本里的 `LD_LIBRARY_PATH`（mac 应为 `DYLD_LIBRARY_PATH`）也不生效。
+⇒ **但先不下"Mac 版不能做"的结论**：DocSys 已把大量 office 逻辑移植成纯 Java（office 模块文档："Office ↔ bin 转换全部是纯 Java 完成，不调用 `x2t.exe`"）；
+若覆盖完整，这些 ELF/`.so` 可能只是**上游残留**。
+⇒ **待确认**：① office 编辑/转换在 mac 上是否曾经可用；② Java 移植是否已覆盖 `libdoctrenderer.so`/`libkernel.so`/`libgraphics.so` 这些 JNI 依赖；③ 字体库生成（`allfontsgen`）现在的触发方在 mac 上会不会走到 ELF。
+**影响**：若不支持 ⇒ Mac 版要么**明确砍掉相关功能**（写进安装说明），要么需要**一套 macOS 原生构建**（成本量级与控制台完全不同）。详见 [`devDocs/Mac安装程序调研.md`](../devDocs/Mac安装程序调研.md) §10.7。 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
 
 ## 生效约束
 

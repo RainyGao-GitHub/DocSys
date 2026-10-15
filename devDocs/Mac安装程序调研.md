@@ -512,6 +512,38 @@ Gatekeeper 对**嵌套二进制**的判定可能与"对未签名 app"不同，�
 "Tomcat 实际用的是顶层 `bin/java`、建议把第 2 个参数指向它"；macOS < 13 时提示本机结论不代表 14/15。
 **提交**：sales `c8ef45c`。
 
+### 10.7 ⚠️ Mac 版的产品级缺口：office 原生件**没有 macOS 版本**（2026-10-15 查实，**待确认影响面**）
+
+**测得的事实（payload 与历史 mac 包一致）**：
+
+| 位置 | 内容 |
+|---|---|
+| `<docsys>\tomcat\webapps\DocSystem\web\static\office-editor\libs\` | **只有 `Linux/`**（14 个 `.so`：`libdoctrenderer.so` 20.55 MB、`libicudata.so.58` 25 MB、`libkernel.so`、`libgraphics.so`、`libPdfReader.so`、`libPdfWriter.so` …）；**没有 `Mac/`、没有 `Windows/`** |
+| `…\server\FileConverter\bin\` | **`x2t`(54.85 MB, ELF) 与 `x2t.exe`(39.36 MB) 并存**；`docbuilder` + `docbuilder.exe`；外加 Windows 侧 `doctrenderer.dll`/`kernel.dll`/`graphics.dll`/`icudt58.dll` 等 |
+| `…\server\tools\` | `allfontsgen`(ELF) + `allfontsgen.exe`；`allthemesgen`(ELF) + `allthemesgen.exe` |
+| `…\bin\` | `documentserver-*.sh` 与 `.bat` 并存 |
+| `…\server\run-mac.command` | **存在**（上游 OnlyOffice 的 mac 脚本），但**没有配套的 mac 二进制** |
+| **2.02.87 的 mac 包** | `office-editor/libs/` **只有 `Linux`**（15 条）；`x2t`/`allfontsgen`/`docbuilder` 实测 magic = `\x7fELF` ⇒ **是 Linux 可执行文件** |
+
+⇒ **结论**：随包分发的 office 原生组件是 **Linux + Windows 两份，没有任何 macOS 原生件**（既无 `.dylib` 也无 Mach-O）。
+⇒ 因此在 mac 上：
+- `docsys_start.sh` / `tomcat_start.sh` 里的 `export LD_LIBRARY_PATH=…/libs/Linux` **不生效**（macOS 用 `DYLD_LIBRARY_PATH`），`chmod 777 …/x2t` 也毫无意义（ELF 在 mac 上无法执行）。
+- 任何 exec `x2t`/`allfontsgen`/`docbuilder` 或 JNI 加载 `lib*.so` 的路径，在 mac 上**必然失败**。
+
+**为什么还不下"Mac 版不能做"的结论**：DocSys 已把大量 office 逻辑**移植成纯 Java**（office 模块自己的文档里写着
+"Office ↔ bin 转换全部是纯 Java 完成，不调用 `x2t.exe` 外部进程"）。若整条链路（含 doctrenderer/渲染）
+都已被 Java 取代，那么这些 ELF/`.so` 只是**上游残留**，Mac 版不受影响。
+
+**待你确认（你比我清楚）**：
+
+1. **office 在线编辑 / 文档转换在 mac 上是否曾经可用？**（2.02.87 的 mac 包就是这个形态，说明至少那一版是这么发的）
+2. DocSys 的 Java 移植是否已覆盖**全部**原先依赖原生件的路径？—— 特别是 `libdoctrenderer.so`（20.55 MB，文档渲染引擎）与
+   `libkernel.so`/`libgraphics.so`（Office 内核/图形）现在是"仍被 JNI 加载"还是"已被 Java 取代"？
+3. **字体库生成**（`allfontsgen`，已于 2026-10-14 从启动脚本移除、改为按需/应用侧触发）现在由谁触发？在 mac 上会不会走到 ELF 上？
+
+**这条的影响面**：若不支持，则 Mac 版要么**明确砍掉相关功能**（并在安装说明里写清），要么需要**一套 macOS 原生构建**
+（`x2t`/`allfontsgen`/`lib*.dylib`）—— 后者依赖上游 OnlyOffice 的 mac 构建能力，成本量级与控制台完全不同。
+
 ## 11. 不确定 / 待实测项
 
 1. **[TZ] Rosetta 时间线两条 Apple 新闻冲突**：`?id=w5ngl9k2`(2026-09-01) 说"支持到 macOS 27"；`?id=k1mtkt1k`(2026-09-09) 说 "macOS 26 is the final release supporting Intel Mac **and Rosetta**"。**以专门文章为准**，冲突未消解。
