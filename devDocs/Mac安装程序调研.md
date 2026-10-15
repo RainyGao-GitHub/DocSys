@@ -352,6 +352,50 @@ xattr -dr com.apple.quarantine /Applications/<YourApp>.app
 
 ---
 
+### 10.4 真机实测记录
+
+**2026-10-12 · Intel Mac · macOS 12.7.4（`arch=x86_64`，无 `proc_translated` 这个 sysctl）**，
+用的是 `docsys-mac-2.02.88.tar.gz` 自带的运行时（路径 `…/tomcat/Java/jre/jre/bin/java`，
+原因见 §10.5 —— **不是缺陷**）。
+
+| 步骤 | 结果 |
+|---|---|
+| 0 环境 | macOS 12.7.4 ✅（注意：不是 13/14/15，结论不能直接外推） |
+| 1 签名状态 | **这份运行时是 Eclipse Foundation 用 Developer ID 正规签名的**：`bin/java`、`lib/server/libjvm.dylib` 均为 `Authority=Developer ID Application: Eclipse Foundation, Inc. (JCDTMS22B4)`，带 `flags=0x10000(runtime)`（Hardened Runtime）与 `Timestamp`。`spctl -a -t exec -vv` 输出 `rejected (the code is valid but does not seem to be an app)` —— **"the code is valid"**，即签名有效，只是它不是 app bundle |
+| 2 基线（无 quarantine） | `java -version` → `1.8.0_492` Temurin ✅ |
+| 3 手工打 quarantine | **部分成功**：`bin/java` 等**可写文件被打上**（`0181;6A000000;Safari;…`）；**12 个只读文件（444）写不进去**（`LICENSE`/`ASSEMBLY_EXCEPTION`/`lib/cmm/*.pf`/`currency.data` 等）。⇒ 真实"下载+Finder 解压"时同理，**关键是"会被 exec 的可执行体"会带上属性** |
+| 4 Terminal 直接 exec（带 quarantine） | `java -version` **正常输出** ⇒ Terminal 这条路径没被拦（此处用户看到一个"是否允许运行 Java"的弹窗，**出现在哪一步待确认**，见下） |
+| 5 **LaunchAgent（launchd）拉起** | ❌ **没跑成**：脚本在 `set -u` 下 `local tag=… logd=…` 崩溃（`tag: unbound variable`，已修，见 §10.6） |
+| 6 清属性后重试 | ❌ 同上未跑到 |
+
+⚠️ **§5 才是关键问题**（launchd 会不会报 `155: Refusing to execute/trust quarantined program/file`）——
+**目前仍无答案**，需要修好后重跑。
+
+**待确认**：用户提到"有弹窗提示我是否允许运行 Java"。需要知道它出现在**哪一步**：
+- 若在**第 1/2 步** ⇒ 那是 Gatekeeper 对"已签名但**未公证**"的 Mach-O 的首次执行检查；
+- 若在**第 4 步**（打完 quarantine 之后）⇒ 说明 quarantine 确实门控执行、且**用户可以手动放行**（这本身很有价值）。
+
+**一条对"未签名交付"有利的连带事实**：我们内嵌的运行时是**厂商用 Developer ID 正规签名 + Hardened Runtime** 的
+（Temurin/Adoptium；Azul 同源）。也就是说我们的 `.app` 虽然"未签名"，内部却含**已签名**的嵌套代码 ⇒
+Gatekeeper 对**嵌套二进制**的判定可能与"对未签名 app"不同，这会影响到 §10.1 ④ 的强度，**待 §5 实测**。
+（是否**已公证**（notarized）目前无法从这些输出判定 —— `spctl` 对非 app 的二进制只回 "does not seem to be an app"。）
+
+### 10.5 为什么路径是 `…/Java/jre/jre/bin/java`（不是缺陷）
+
+见 [`跨平台运行时打包方案.md`](./跨平台运行时打包方案.md) **§13.14** 的完整查证。一句话：
+**mac 平台有意发 JDK 归档**（`image_type=jdk`），`Java/jre/` 里装的是 **JDK 的 Home**，
+所以 `bin/java` 与我们看到的那层嵌套 `jre/` **都在**，`JAVA_HOME` 能解析，包能起来。
+2.02.87 的"真 JRE"形态是旧打包流程的产物，不是标准。
+
+### 10.6 实测脚本已修（2026-10-12）
+
+`macQuarantineTest.sh` 在 macOS 12.7.4 上于第 5 节崩溃（`set -u` + `local a=… b=$a` 同行展开），
+导致最关键的第 5/6 节根本没执行。已修（拆成两行），并顺带：
+样例路径 `lib/libjli.dylib` 在 JDK8 里实际位于 `lib/jli/`（改用 `find` 动态定位）；
+打印"运行时形态（JDK Home/JRE）""是否存在嵌套 `jre/`"并在 JDK Home 时提示
+"Tomcat 实际用的是顶层 `bin/java`、建议把第 2 个参数指向它"；macOS < 13 时提示本机结论不代表 14/15。
+**提交**：sales `c8ef45c`。
+
 ## 11. 不确定 / 待实测项
 
 1. **[TZ] Rosetta 时间线两条 Apple 新闻冲突**：`?id=w5ngl9k2`(2026-09-01) 说"支持到 macOS 27"；`?id=k1mtkt1k`(2026-09-09) 说 "macOS 26 is the final release supporting Intel Mac **and Rosetta**"。**以专门文章为准**，冲突未消解。

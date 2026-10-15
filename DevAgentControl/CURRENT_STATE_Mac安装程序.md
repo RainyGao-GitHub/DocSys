@@ -69,8 +69,14 @@
 - ⏳ **第二路测绘结论未回** —— 决定 §2「C++ 控制台可复用性」与 D4「技术路线」。**未回前不要动 `mxsdoc-console` 任何文件。**
 - ❗**尚缺的关键前提**：**没有 Mac 真机 ⇒ §10.3 的实测无法进行**，而未签名方案的形态（是否必须带 `xattr` 排障步骤、要不要用 LaunchAgent）**取决于该实测**。
 - ✅ **用户 2026-10-12 告知：Intel Mac 与 Apple Silicon Mac 都有，可以测** ⇒ 实测可做。
-- ✅ **已交付实测脚本**：`WebRoot/web/sales/docsysReleaseScripts/macQuarantineTest.sh`（sales 提交 `978e4af`）。干了什么：环境信息 → JRE 签名/公证状态（`codesign`/`spctl`）→ 基线执行 → 手工给 jre 树打 quarantine → Terminal 直 exec → **LaunchAgent（launchd）拉起看是否报 `155`** → `xattr -d -r` 清除后重试 → 小结与结论映射 → 附「Safari 真实下载是否传播 quarantine」半自动步骤。临时 agent 退出自动清理。`bash -n` 通过。
-- ⏭ **下一步（等用户回填脚本输出）**：据第 5/6 节结果定形态 —— 若 launchd 被拦且清属性恢复 ⇒ 必须「首启自清 quarantine」或让客户跑 `xattr`；若 launchd 正常 ⇒ 可放心用 LaunchAgent、客户零命令。
+- ✅ **真机实测第一轮（Intel Mac / macOS 12.7.4）已完成，结果见文档 §10.4**：
+  - 运行时是 **Eclipse Foundation Developer ID 正规签名 + Hardened Runtime**（`spctl`: "the code is valid but does not seem to be an app"）—— 对"未签名交付"是**有利**信息（内部是已签名代码）。
+  - 手工打 quarantine：可写文件（含 `bin/java`）**能打上**；12 个只读文件（444）打不上。
+  - **Terminal 直接 exec 带 quarantine 的 java 正常**（用户此时见到"是否允许运行 Java"弹窗，**出现在哪一步待确认**）。
+  - **`launchd` 那条关键路径未跑成** —— 脚本 `set -u` 崩溃（已修）。
+- ✅ **脚本已修**（sales `c8ef45c`）：崩溃点拆行；补运行时形态/嵌套 `jre` 判读与 macOS 版本提示。**待用户重跑取第 5/6 节结果。**
+- ✅ **顺带查实一件"疑似缺陷"但结论是"不是缺陷"**：mac 包运行时位于 `Java/jre/jre/bin/java` 是**有意为的 JDK 归档**（`image_type=jdk`）造成，`Java/jre/bin/java` 存在、包能起来；与 2.02.87 的"真 JRE"形态只是历史差异（详见打包文档 §13.14）。**我一度误判为回归，已在文档中更正。**
+- ✅ **真缺陷（已修）**：打包器自检的"Java 启动器"只查"任意 `*/java`"，运行时而错位也能 PASS ⇒ 已加固为必须存在 `docsys/tomcat/Java/jre/bin/java[.exe]`（sales `29a2fd8`，含负例/正例/历史包三重验证）。
 - ⏭ 待办：测绘回来后补文档 §2/§9 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
 
 ## 生效约束
