@@ -26,10 +26,93 @@
 
 ---
 
-## 2. 代码侧可复用性（⏳ 测绘中）
+## 2. 代码侧测绘结论（2026-10-15，直接查阅源码）
 
-> 由后台 explore 测绘，结论回来后填本节与 §9。当前已知的**唯一确定事实**：技术栈是 **C++ / MSVC**，因此直接拿到 macOS 上编译**不可能**（`.sln`/`.vcxproj`、MSVC 运行时、Win32 API）。
-> 是否「**可移植**」取决于 `MxsdocConsole` 的 UI 层用的是 **MFC / WTL / Win32 自绘**（= 必须重写 UI）还是 **Qt / 自绘 + 跨平台抽象层**（= 有可复用空间）。测绘项另含：启停与状态监控的实现、SFX 的落地机制、Windows 硬依赖清单（注册表 / SCM / 托盘 / 快捷方式 / `%ProgramData%`）。
+> ⚠️ 两次派出的后台测绘代理都因**模型传输错误**（`unexpected EOF during handshake`）零产出失败，本节由我**直接查阅源码**得出，证据均为 `文件:行号`。
+> **一条结论**：macOS 版**不需要**移植 SFX/打包器/卸载器（它们是 MFC + Windows 概念）；**需要移植的是两个 Qt 程序** —— 控制台 `MxsdocConsole` 与安装器 UI `MxsdocSetup`，且控制台里有约 10 处 Win32 依赖需要替换。
+
+### 2.1 逐工程技术栈（证据来自各 `.vcxproj`）
+
+| 工程 | 规模 | UI 技术栈 | macOS 上要做什么 |
+|---|---|---|---|
+| `MxsdocConsole` | 46 文件 / **4653 行** | **Qt 5.12.2**（`QtInstall=5.12.2_msvc2017`；`QtModules=core;xml;gui;widgets;concurrent`） | **移植**（有 Qt 基础，但要换掉 Win32 部分 + 升级 Qt，见 §2.5） |
+| `MxsdocSetup`（安装器 UI） | 20 / **2838** | **Qt 5.12.2**（`core;gui;widgets`） | **mac 上大概率不需要**（mac 的"安装"= `.dmg` 拖进 `/Applications`，见 §9） |
+| `MxsdocPack`（打包器） | 14 / 2265 | **MFC**（`UseOfMfc=Dynamic`） | **不需要**（构建期 Windows 工具） |
+| `MxsdocSfx` / `MxsdocSfx_MFC_APP` | 19 / 1874 | **MFC** | **不需要**（mac 无"自解压安装器"这回事） |
+| `MxsdocSfxLib` | 5 / 585 | 库 | 不需要 |
+| `Uninstaller` | 9 / 958 | **MFC** | **不需要移植**，但 mac 侧要另做卸载（macOS 无官方卸载机制，见 §10.1 ⑥） |
+| `MxsUtils` | 19 / **1443** | 库（注册表/服务/进程/端口/路径/字符串） | **逻辑可参考，但实现多为 Win32**（§2.3） |
+| `MxsDocService` | 7 / 833 | 无 UI | 不需要（Windows 服务形态） |
+| `common` | 8 / 916 | 库（`FilesystemTools`/`Version`/`VersionProfile`） | 逻辑可参考 |
+| `CppProperties` | 8 / 422 | 无 UI | — |
+| 合计（除 `3rd-Party`/`include`） | ≈ **16.8k 行** | | |
+
+⇒ **"要动"的代码量约 4.6k 行（控制台）+ 2.8k 行（安装器，可能整块省掉）**，不是 17k 行全都要重写。
+
+### 2.2 控制台的架构与"跨平台程度"
+
+**已经是 Qt 跨平台部件、可以直接复用**：
+
+| 能力 | 实现 | 证据 |
+|---|---|---|
+| 托盘图标 + 双击 | `QSystemTrayIcon` | `MxsdocConsole.h:6`、`MxsdocConsole.cpp:219,235,479` |
+| "打开系统"打开浏览器 | **`QDesktopServices::openUrl(QUrl(mxsdoc_url))`** | `ItemMxsDoc.cpp:1504`、`MxsdocConsole.cpp:386,393,399` |
+| 配置读写（INI） | `QSettings(..., IniFormat)`（`mxsconsole.conf` / `mxsdoc.ini`） | `ItemMxsDoc.cpp:601,678`、`ItemMysql.cpp:68,277` |
+| 侦测"状态文件"变化 | **`QFileSystemWatcher`**（`m_pFileWatchDirWebApps` / `m_pFileWatchDirDocSysIni` / `m_pFileWatchFileDocSysIniState`） | `ItemMxsDoc.cpp:156-158,280,341` |
+| 线程/异步 | `QThread`、`QFutureWatcher<int>` | `ItemMxsDoc.h:159-163,166` |
+| Qt 资源 | `MxsdocConsole.qrc` | 目录清单 |
+
+**必须替换的 Windows 专有部分**（这是移植的主要工作量）：
+
+| # | 现在怎么做 | 证据 | macOS 怎么做 |
+|---|---|---|---|
+| 1 | **启动 Tomcat**：拼 `MXSDOC_SERVER_START_CMD` 模板（`JRE_HOME` + `CATALINA_HOME`×7 + action），再 `CreateProcess(NULL, args, …, CREATE_NEW_CONSOLE, …)`；用 `STARTUPINFO.hStdOutput` 把子进程输出接进**管道**再由 `DocSysLogPipeReader` 读 | `ItemMxsDoc.cpp:805-830`、`ItemMxsDoc.cpp:150,833`、`ItemMysql.cpp:145`（MySQL 同） | 改用 **`QProcess`**（代码里其实已写好在 `#if 0` 里，被弃用了）或 `posix_spawn`；**启动脚本应改为调仓库里现成的 `docsys_start.sh` / `tomcat_start.sh`**（与命令行口径天然一致）；子进程输出直接**重定向到文件**再 tail（比管道简单） |
+| 2 | **端口占用检测**：`GetTcpTable` / `GetUdpTable`（`iphlpapi` + `Ws2_32`） | `NetPortHelper.cpp` 全文 | `lsof -iTCP -sTCP:LISTEN` / `netstat` / 或直接 `QTcpSocket` 试连；`GetValidTcpPorts` 的随机挑端口逻辑可原样保留 |
+| 3 | **进程是否存在**：`CheckProcessExistByNameAndPath(PROC_TOMCAT, JRE_HOME)`（按进程名 + 可执行文件路径匹配） | `ItemMxsDoc.cpp:708`、`ItemMysql.cpp:107`、`main.cpp:41` | `kill(pid, 0)` / `pgrep -f` / 由启动脚本写 **PID 文件**再读（更可靠） |
+| 4 | **自启动**：注册表 / 计划任务 | `MxsUtils\RegistryHelper.cpp`、`MxsdocSetup\InstallWorker.cpp` | `~/Library/LaunchAgents/*.plist`（未签名可用；`SMAppService` 需签名，见 §10.1 ⑤） |
+| 5 | **无边框自绘窗口**（最小化/最大化/关闭按钮 + 拖动） | `FramelessDialog.{h,cpp}`、`FramelessWidget.{h,cpp}`、`TitleBar.{h,cpp}` | mac 用原生标题栏（更简单、更"像 mac"）或重写；**这是 UI 侧最花时间的一块** |
+| 6 | 子进程监控 `CMonitorChildProc`（持有 `HANDLE`） | `MonitorChildProc.cpp`、`ItemMxsDoc.h:78` | 用 `QProcess` 的 `finished` 信号 / PID 轮询 |
+| 7 | 路径与脚本：`\\bin\\catalina.bat`、`\\docsys\\tomcat\\logs\\`、`\\` 拼接 | `ItemMxsDoc.cpp:777`、`DocSysLogReader.cpp:38,107-108` | 全改 `/`；脚本改 `catalina.sh`；日志目录改为可写位置（见 §7） |
+| 8 | Windows 资源 `Resource.rc` / `.aps` / `resource.h` | 目录清单 | mac 用 `.icns` + `Info.plist`（`.qrc` 本身跨平台） |
+| 9 | 服务形态 `MxsDocService` + `ServiceHelper`（SCM） | `MxsUtils\ServiceHelper.cpp` | 不需要；用 LaunchAgent 或直接 GUI 管理 |
+
+**其他可复用的业务逻辑**（与平台无关，可直接照搬思路）：
+- **升级流程**：检查 `tomcat/webapps/docSys.ini/upgrade/DocSystem` → 备份 `webapps/DocSystem` → 替换 → 拷回用户 `jdbc.properties`（`ItemMxsDoc.cpp:428,445,500,630-638`）
+- **端口改写**：改 `tomcat/conf/server.xml` 与 MySQL 配置（`ItemMysql.cpp:357`）
+- **日志查看**：读 `tomcat/logs/catalina.<日期>.log` 与 `localhost_access_log.<日期>.txt`（`DocSysLogReader.cpp:38-108`）
+
+### 2.3 Windows 硬依赖清单（`MxsUtils` 是重灾区）
+
+| 文件 | 行数 | 依赖 |
+|---|---|---|
+| `RegistryHelper.cpp` | 8815 B | 注册表（自启动、安装路径、卸载信息） |
+| `ProcessHelper.cpp` | 6469 B | `CreateProcess` / `OpenProcess` / 进程枚举 |
+| `NetPortHelper.cpp` | 7070 B | `GetTcpTable`/`GetUdpTable`（`iphlpapi`） |
+| `ServiceHelper.cpp` | 2971 B | SCM（`OpenSCManager`/`CreateService`） |
+| `PathHelper.cpp` | 3347 B | `ShellExecute` / `GetModuleFileName` / `SHGetFolderPath` |
+| `MxsUtils\pch.h`、`MxsdocConsole\stdafx.h`、`WorkerConfig.cpp` | — | `#include <Windows.h>` |
+
+### 2.4 规模与工作量粗判（**粗估，仅用于比较方案**）
+
+- **必须重写/替换**：控制台里的 9 类 Win32 依赖 + 无边框窗口；约 **4.6k 行里 1/3 需要动**，其余 Qt 部件与业务逻辑可保留。
+- **可以整块不做**：`MxsdocPack`(2.3k) + `MxsdocSfx`(1.9k) + `MxsdocSfxLib`(0.6k) + `Uninstaller`(1.0k) + `MxsDocService`(0.8k) ≈ **6.6k 行不用碰**；`MxsdocSetup`(2.8k) 视是否做 mac 安装器而定（**建议不做**，见 §9）。
+- ⇒ 真正的新增工作量集中在 **控制台的 mac 化 + 打包/分发**，而不是"重写一整套"。
+
+### 2.5 风险：Qt 5.12 与 Apple Silicon（**这条会影响路线选择**）
+
+1. **Qt 5.12.2 是 2018 年版本、已 EOL**；**Qt 对 macOS arm64 的原生支持从 5.15.2 / 6.2 起** ⇒ 若要让控制台在 Apple Silicon 上**原生**跑，**必须升级 Qt**（5.15.x 或 6.x）。
+2. 各工程写着 `WindowsTargetPlatformVersion` = **7.0 / 8.1 / 10.0.17763.0**（7.0 说明当前还兼容很老的 Windows）⇒ 升 Qt 会**牵连 Windows 侧的最低系统版本与构建工具链**，属于跨平台决策，不只是 Mac 的事。
+3. **许可**：Qt 开源版（LGPLv3/GPL）与商业授权对闭源商业分发的约束不同（尤其动态链接/可替换性、Qt 6 LTS 授权）⇒ **需你们确认现有 Qt 授权形态**（我无法从代码判定）。
+4. 好消息：**Qt 前端与 Tomcat/JRE 是两个独立进程** ⇒ 架构不必一致（Qt 可以 arm64、Tomcat 也可 arm64；不存在 §5 的"同进程不能混架构"限制）。
+5. 另一条路：**不让 Qt 界面进 mac**（用原生 SwiftUI/Tauri 重写控制台 UI），则完全绕开 Qt 授权与版本问题 —— 代价是 UI 全重写、但控制台 UI 本身很简单（托盘 + 一主窗口 + 几个菜单）。
+
+### 2.6 顺带查到的需求基线
+
+`Docs\MxsDoc控制台程序需求文档_需求更新.docx`（2022-03-13，Rainy）给出的功能基线 —— **mac 版应按此裁剪**：
+安装（选目录/选端口 8100、检测端口占用、是否随系统启动、是否用 MySQL 3307）→ 主界面（最小化/最大化/关闭进托盘/下拉菜单：关于、意见反馈、联系我们、设置、日志、启动、停止、退出）→ 检测 tomcat/mysql 状态 → 启动成功显示"打开系统"→ 停止/退出时停 tomcat（与已勾选的 mysql）。
+文中两条**明确的"延后/额外工作量"**：① "根据 MxsDoc 写入状态文件更新状态指示"标为**延后**；② 软件卸载、全新安装程序标为**额外开发**。
+
+> ⚠️ 提醒：本节的 docx 是我为了检索而解压提取的，**提取产物已移出该仓库**（该仓库本轮只读，未留下任何新增/修改文件）。
 
 ---
 
@@ -216,7 +299,26 @@
 
 ---
 
-## 9. 与现有发布链的衔接（⏳ 待补，取决于 §2 测绘）
+## 9. 与现有发布链的衔接 / 三条实现路线
+
+### 9.1 mac 侧"控制台 + 安装程序"的等价物
+
+| Windows 侧 | mac 侧 | 说明 |
+|---|---|---|
+| `MxsdocPack` + `MxsdocSfx` + `MxsdocSetup`（MFC + Qt，≈5.7k 行） | **`.dmg` 内含 `.app`（拖拽安装）** | mac 没有 SFX 这回事；"安装"就是拖进 `/Applications`。**因此 `MxsdocSetup`（2838 行 Qt）大概率整块不用做** |
+| 安装器的 4 件事 | ① 选安装目录 → 固定为拖到 `/Applications`；② 选端口 8100 → **控制台首次运行引导**写 `server.xml`；③ 写自启动 → `~/Library/LaunchAgents/*.plist`；④ 桌面快捷方式 → **mac 无此概念** | 需求文档（§2.6）里这些都要重新落到 mac 的手法上 |
+| `MxsdocConsole`（4653 行 Qt） | **要移植的那个程序** | 见 §9.2 |
+| `Uninstaller`（MFC） | mac 侧另做（**macOS 无官方卸载**，§10.1 ⑥） | 可做成 `.app` 内一个"卸载"菜单项 |
+
+### 9.2 三条实现路线
+
+| 路线 | 做法 | 能保留什么 | 要新增/改动什么 | 代价与风险 |
+|---|---|---|---|---|
+| **A 移植现有 Qt 控制台** | 升 Qt → 逐个替换 §2.2 那 9 类 Win32 依赖 → `macdeployqt` 打成 `.app` → 与 `docsys` 一起进 `.dmg` | 全部 UI 代码、`QSystemTrayIcon`/`QDesktopServices`/`QSettings`/`QFileSystemWatcher`、升级/端口/日志等业务逻辑 | 9 处平台分支 + 无边框窗口 + **构建系统从 `.vcxproj` 换成 qmake/CMake** | **Qt 5.12 不支持 Apple Silicon 原生（须升到 5.15.2/6.2+）**、Qt 授权需确认、升级会牵连 Windows 侧最低系统版本、mac 上 Qt 的打包与签名 |
+| **B 用原生技术重写控制台 UI** | SwiftUI / Qt6 / Tauri 等重写控制台，**业务规则按 §2.6 需求基线照搬** | 需求基线与业务规则（不复用 C++ UI 代码） | 控制台 UI 全部新写（托盘 + 主窗口 + 菜单 + 状态指示 + 日志查看） | UI 全部是新代码；但**绕开 Qt 授权与版本问题**，mac 体验最好（原生标题栏、原生菜单栏） |
+| **C 最小可用版（建议先做）** | 不做自绘无边框 UI、不做安装器：**系统原生窗口 + 托盘**；启动**直接调 `docsys_start.sh`/`tomcat_start.sh`**；状态用 **PID 文件 + `QFileSystemWatcher`**；"打开系统"用 `open http://127.0.0.1:<port>`（或 `QDesktopServices::openUrl`） | 需求基线里最关键的 5 件事：启停、状态指示、"打开系统"、日志目录、设置端口 | 只写"够用"的 UI | 界面不如 Windows 版花哨（没有自绘标题栏），**但不影响功能**；**最快能在 mac 上跑起来**，也最快能顺带把 §10.3 的 quarantine 实测做完 |
+
+### 9.3 与 `build_release.py` 的衔接（已确定的部分）
 
 **已经确定可复用的部分**（来自 [`跨平台运行时打包方案.md`](./跨平台运行时打包方案.md)）：
 
@@ -224,7 +326,21 @@
 - **Mac 的启停脚本已经在仓库里且可追溯**：`WebRoot\web\sales\docsysStartScripts\Linux\` 的 **13 个 `.sh`**（`docsys_start.sh` / `docsys_stop.sh` / `docsys_restart.sh` / `start.sh` / `stop.sh` / `restart.sh` / `monitor_start.sh` / `monitor_stop.sh` / `tomcat_start.sh` / `tomcat_stop.sh` / `mysql_start.sh` / `mysql_stop.sh` / `docsys_upgrade.sh`；`gen_fonts.sh` **已于 2026-10-14 删除**）⇒ **Mac 控制台不必自己拼 Tomcat 启动命令行**，直接驱动这套脚本即可，与命令行口径天然一致。**注意**：2026-10-13 之前该目录与 2.02.87 发行包 **14/14 逐字节一致**；现在 `docsys_start.sh` / `tomcat_start.sh` **已去掉启动期字体库生成**（用户 2026-10-14 裁定，见 [`Office字体库自动生成方案.md`](./Office字体库自动生成方案.md) §1.4），而 mac 包与 Linux 包**共用这一个目录**（`build_release.py` 里 5 个平台都取 `scripts="Linux"`）⇒ **不要再用"与旧包逐字节一致"作为前提**。
 - `.sh` 的可执行位**由 `build_release.py` 显式写进 tar 头**（不依赖构建机文件系统）。
 
-**待补问题**（测绘回来后填）：安装包如何消费 `docsys-mac-*.tar.gz`？控制台是**随包分发**还是**独立分发**？签名/公证在流水线里放在哪一步（JRE 一旦被 `build_release.py` 换过就必须重签 → **签名应在打包之后**）？
+**两条硬约束（无论走哪条路）**：
+
+1. **`docsys` 不能放进 `.app` 里**：`.app` 签名后不可写（§7），而 docsys 要写 SQLite 库/日志/`work`。
+   ⇒ 正确摆法是 **`.app` 与 `docsys/` 并列**放进 `.dmg` 一起拖拽；运行期数据写
+   `~/Library/Application Support/<bundle-id>/`（`CATALINA_HOME` 指向只读的内置 Tomcat，`CATALINA_BASE` 指向可写目录）。
+2. 当前 `build_release.py` 只产出 `docsys-mac-<ver>.tar.gz` / `docsys-mac-arm64-<ver>.tar.gz`，**不含控制台**。
+   若要"一键出安装包"，需要再加一步：把控制台 `.app` 与解压后的 `docsys` 组装成 `.dmg`。
+   若将来启用签名/公证，**必须排在 `build_release.py` 之后**（换 JRE 会破坏签名链，见 §4.2/§4.3）。
+
+### 9.4 建议路径
+
+**先做 C**（最快在 mac 上跑起来、顺带把 §10.3 的 quarantine 实测做完、也能给客户一个能用的版本），
+再按需要往 **A**（省力、但背 Qt 的版本与授权）或 **B**（干净、但 UI 全重写）收敛。
+不建议一上来就做 **A 的完整移植** —— 它把"Qt 升级 + Win32 替换 + 构建系统迁移 + mac 打包签名"四件事捆在一起，
+任何一件卡住都会拖住整个 Mac 交付。
 
 ---
 

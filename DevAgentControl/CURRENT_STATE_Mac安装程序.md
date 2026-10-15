@@ -77,7 +77,26 @@
 - ✅ **脚本已修**（sales `c8ef45c`）：崩溃点拆行；补运行时形态/嵌套 `jre` 判读与 macOS 版本提示。**待用户重跑取第 5/6 节结果。**
 - ✅ **顺带查实一件"疑似缺陷"但结论是"不是缺陷"**：mac 包运行时位于 `Java/jre/jre/bin/java` 是**有意为的 JDK 归档**（`image_type=jdk`）造成，`Java/jre/bin/java` 存在、包能起来；与 2.02.87 的"真 JRE"形态只是历史差异（详见打包文档 §13.14）。**我一度误判为回归，已在文档中更正。**
 - ✅ **真缺陷（已修）**：打包器自检的"Java 启动器"只查"任意 `*/java`"，运行时而错位也能 PASS ⇒ 已加固为必须存在 `docsys/tomcat/Java/jre/bin/java[.exe]`（sales `29a2fd8`，含负例/正例/历史包三重验证）。
-- ⏭ 待办：测绘回来后补文档 §2/§9 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
+- ⏭ 待办：**代码侧测绘已改为「我直接查阅源码」并完成（2026-10-15，见下方小节）** ——
+
+## 代码侧测绘结论（2026-10-15，已落文档 §2 + §9）
+
+⚠️ **两路后台测绘代理都因模型传输错误（`unexpected EOF during handshake`）零产出失败**（`6208c6f8`、`0fc3d235`）⇒ **改为我直接查阅源码**得出，证据为 `文件:行号`，已写入 `devDocs/Mac安装程序调研.md` §2。
+
+| 工程 | 规模 | UI 栈（`.vcxproj` 证据） | mac 上 |
+|---|---|---|---|
+| `MxsdocConsole`（控制台） | 46 文件 / **4653 行** | **Qt 5.12.2**（`QtModules=core;xml;gui;widgets;concurrent`） | **要移植** |
+| `MxsdocSetup`（安装器 UI） | 20 / 2838 | **Qt 5.12.2** | **大概率整块不用做**（mac 安装 = 拖进 `/Applications`） |
+| `MxsdocPack` / `MxsdocSfx` / `MxsdocSfxLib` / `Uninstaller` | ≈5.7k 行 | **MFC** | **不需要**（Windows 概念） |
+| `MxsUtils`（注册表/服务/进程/端口/路径） | 19 / 1443 | 无 UI，多为 Win32 | 逻辑可参考、实现要换 |
+| `MxsDocService` / `common` / `CppProperties` | ≈2.2k | 无 UI | 参考 |
+
+- **控制台已有可复用的跨平台部件**：`QSystemTrayIcon`（托盘）、`QDesktopServices::openUrl`（"打开系统"，`ItemMxsDoc.cpp:1504`）、`QSettings`(INI)、**`QFileSystemWatcher`（监视状态文件，`ItemMxsDoc.cpp:156-158`）**、`QThread`。
+- **必须替换的 9 类 Win32 依赖**：`CreateProcess`+`CREATE_NEW_CONSOLE`+管道读日志（`ItemMxsDoc.cpp:805-830`、`ItemMysql.cpp:145`）、`GetTcpTable/GetUdpTable`（`NetPortHelper.cpp` 全文）、`CheckProcessExistByNameAndPath`（`ItemMxsDoc.cpp:708`）、注册表（`RegistryHelper.cpp`）、`FramelessDialog/Widget`+`TitleBar`、`CMonitorChildProc`、`\` 路径与 `catalina.bat`（`ItemMxsDoc.cpp:777`）、`Resource.rc`、SCM（`ServiceHelper.cpp`）。
+- **风险**：**Qt 5.12.2 已 EOL 且不支持 Apple Silicon 原生**（arm64 支持需 5.15.2 / 6.2+）；Qt 授权形态需你们确认；升 Qt 会牵连 Windows 侧最低系统版本（现为 `WindowsTargetPlatformVersion 7.0/8.1`）。⇒ 好消息：**Qt 前端与 Tomcat/JRE 是两个进程，架构不必一致**。
+- **建议路线**：先做 **C 最小可用版**（原生窗口 + 托盘 + 直接调 `docsysStartScripts\Linux\*.sh` + PID 文件判状态 + `open http://127.0.0.1:<port>`），再往 A（移植 Qt）/ B（原生重写）收敛。
+- **硬约束**：`docsys` **不能放进 `.app`**（签名后不可写）⇒ `.app` 与 `docsys/` 并列进 `.dmg`；`build_release.py` 目前**不含控制台**，若要"一键出安装包"需再加组装 `.dmg` 的一步。
+- ✅ **只读约束已遵守**：`mxsdoc-console` 仓库未留任何新增/修改文件（中途误把需求文档提取产物写进过 `Docs\`，已移出到 `%TEMP%`）。 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
 
 ## 生效约束
 
