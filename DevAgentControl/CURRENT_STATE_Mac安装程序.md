@@ -98,17 +98,22 @@
 - **硬约束**：`docsys` **不能放进 `.app`**（签名后不可写）⇒ `.app` 与 `docsys/` 并列进 `.dmg`；`build_release.py` 目前**不含控制台**，若要"一键出安装包"需再加组装 `.dmg` 的一步。
 - ✅ **只读约束已遵守**：`mxsdoc-console` 仓库未留任何新增/修改文件（中途误把需求文档提取产物写进过 `Docs\`，已移出到 `%TEMP%`）。
 
-## ⚠️ Mac 版的产品级缺口（2026-10-15 查实，**待用户确认影响面**）
+## ✅ Mac 版产品级排查：office 原生件问题已关闭（2026-10-15）
 
-**office 原生件没有 macOS 版本**：payload（与 2.02.87 mac 包一致）里 `office-editor/libs/` **只有 `Linux/`**、
+**曾怀疑是产品级缺口**：payload（与 2.02.87 mac 包一致）里 `office-editor/libs/` **只有 `Linux/`**、
 `server/FileConverter/bin/` 是 **`x2t`(ELF) + `x2t.exe` 并存**、`server/tools/` 是 `allfontsgen`(ELF)+`.exe`；
-实测 2.02.87 mac 包里的 `x2t`/`allfontsgen`/`docbuilder` **magic 都是 `\x7fELF`（Linux 可执行）**；`libs` 只有 `Linux`；
-`server/run-mac.command` 存在但**没有配套 mac 二进制**。
-⇒ mac 上 exec 这些 ELF / JNI 加载 `lib*.so` 的路径**必然失败**；启动脚本里的 `LD_LIBRARY_PATH`（mac 应为 `DYLD_LIBRARY_PATH`）也不生效。
-⇒ **但先不下"Mac 版不能做"的结论**：DocSys 已把大量 office 逻辑移植成纯 Java（office 模块文档："Office ↔ bin 转换全部是纯 Java 完成，不调用 `x2t.exe`"）；
-若覆盖完整，这些 ELF/`.so` 可能只是**上游残留**。
-⇒ **待确认**：① office 编辑/转换在 mac 上是否曾经可用；② Java 移植是否已覆盖 `libdoctrenderer.so`/`libkernel.so`/`libgraphics.so` 这些 JNI 依赖；③ 字体库生成（`allfontsgen`）现在的触发方在 mac 上会不会走到 ELF。
-**影响**：若不支持 ⇒ Mac 版要么**明确砍掉相关功能**（写进安装说明），要么需要**一套 macOS 原生构建**（成本量级与控制台完全不同）。详见 [`devDocs/Mac安装程序调研.md`](../devDocs/Mac安装程序调研.md) §10.7。 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
+实测 2.02.87 mac 包里 `x2t`/`allfontsgen`/`docbuilder` 的 magic **都是 `\x7fELF`（Linux 可执行）**；`libs` 只有 `Linux`。
+
+**✅ 用户 2026-10-15 澄清 ⇒ 不是缺口**：MxsDoc 的 Office 编辑是 **Java 实现**的，mac 下**不使用** OnlyOffice 的 `x2t`；
+**只要 JRE 正常就能工作**，且 **office 在线编辑用户已实测验证过**。⇒ 那些 ELF/`.so`/`.dll` 是上游残留，不影响 Mac 版。
+（启动脚本里的 `LD_LIBRARY_PATH=…/libs/Linux` 与 `chmod 777 …/x2t` 在 mac 上**无效但无害**。）
+
+**顺带得到两条可行动结论**：
+1. **体积优化机会（待裁定，勿与本次交付捆一起）**：既然 mac 不用这些原生件，则 `x2t` 54.85 MB + `x2t.exe` 39.36 MB +
+   `libs/Linux` ≈74 MB + Windows `.dll`s ≈44 MB ≈ **单平台 200 MB 未压缩死重**；是否在非 Windows 包排除需先确认没有 Java 路径会碰它们。
+2. **用户当前在 mac 上的实际用法**："**需要在终端里允许 start 脚本来启动 MxsDoc**" ⇒ 这正是 §10.1 ④ 的 Gatekeeper 门控；
+   **控制台要消除的就是这个摩擦**，而"脚本带 quarantine 时能否被拉起、需要什么放行动作"正是 §10.3 要实测的。
+   详见 [`devDocs/Mac安装程序调研.md`](../devDocs/Mac安装程序调研.md) §10.7。 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
 
 ## 生效约束
 

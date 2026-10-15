@@ -512,7 +512,7 @@ Gatekeeper 对**嵌套二进制**的判定可能与"对未签名 app"不同，�
 "Tomcat 实际用的是顶层 `bin/java`、建议把第 2 个参数指向它"；macOS < 13 时提示本机结论不代表 14/15。
 **提交**：sales `c8ef45c`。
 
-### 10.7 ⚠️ Mac 版的产品级缺口：office 原生件**没有 macOS 版本**（2026-10-15 查实，**待确认影响面**）
+### 10.7 office 原生件无 macOS 版本 —— 已确认**不是**缺口（2026-10-15）
 
 **测得的事实（payload 与历史 mac 包一致）**：
 
@@ -530,19 +530,30 @@ Gatekeeper 对**嵌套二进制**的判定可能与"对未签名 app"不同，�
 - `docsys_start.sh` / `tomcat_start.sh` 里的 `export LD_LIBRARY_PATH=…/libs/Linux` **不生效**（macOS 用 `DYLD_LIBRARY_PATH`），`chmod 777 …/x2t` 也毫无意义（ELF 在 mac 上无法执行）。
 - 任何 exec `x2t`/`allfontsgen`/`docbuilder` 或 JNI 加载 `lib*.so` 的路径，在 mac 上**必然失败**。
 
-**为什么还不下"Mac 版不能做"的结论**：DocSys 已把大量 office 逻辑**移植成纯 Java**（office 模块自己的文档里写着
-"Office ↔ bin 转换全部是纯 Java 完成，不调用 `x2t.exe` 外部进程"）。若整条链路（含 doctrenderer/渲染）
-都已被 Java 取代，那么这些 ELF/`.so` 只是**上游残留**，Mac 版不受影响。
+**✅ 结论（用户 2026-10-15 澄清）：不是缺口。**
 
-**待你确认（你比我清楚）**：
+> 原话要点：**"MxsDoc 的 Office 编辑是基于 Java 实现的（Mac 系统下不会考虑用 OnlyOffice 的 x2t 程序），
+> 所以只要 JRE 正常就可以正常工作，不需要考虑这个问题；Office 在线编辑之前我已经验证过的，
+> 只是需要在终端里允许 start 脚本来启动 MxsDoc。"**
 
-1. **office 在线编辑 / 文档转换在 mac 上是否曾经可用？**（2.02.87 的 mac 包就是这个形态，说明至少那一版是这么发的）
-2. DocSys 的 Java 移植是否已覆盖**全部**原先依赖原生件的路径？—— 特别是 `libdoctrenderer.so`（20.55 MB，文档渲染引擎）与
-   `libkernel.so`/`libgraphics.so`（Office 内核/图形）现在是"仍被 JNI 加载"还是"已被 Java 取代"？
-3. **字体库生成**（`allfontsgen`，已于 2026-10-14 从启动脚本移除、改为按需/应用侧触发）现在由谁触发？在 mac 上会不会走到 ELF 上？
+⇒ 即：
 
-**这条的影响面**：若不支持，则 Mac 版要么**明确砍掉相关功能**（并在安装说明里写清），要么需要**一套 macOS 原生构建**
-（`x2t`/`allfontsgen`/`lib*.dylib`）—— 后者依赖上游 OnlyOffice 的 mac 构建能力，成本量级与控制台完全不同。
+1. **office 在线编辑在 mac 上可用，且已被用户实测验证过**；依赖只有 **JRE 正常**。
+2. 上表那些 ELF / `.so` / `.dll` 对 mac **不使用** ⇒ 是上游 OnlyOffice 的**残留**，不影响 Mac 版。
+3. 启动脚本里 `LD_LIBRARY_PATH=…/libs/Linux`、`chmod 777 …/x2t` 在 mac 上**无效**，但也**无害**
+   （mac 上应改用 `DYLD_LIBRARY_PATH` 的说法不成立，因为根本不需要它们）。
+
+**仍然用得上的一条信息（体积优化机会，**待裁定**）**：既然 mac 不用这些原生件，那它们在 mac 包里就是**死重**。
+按 payload 实测的未压缩体积粗算：`x2t` 54.85 MB + `x2t.exe` 39.36 MB + `libs/Linux` ≈74 MB +
+`server/FileConverter/bin` 的 Windows `.dll`s ≈44 MB + `allfontsgen`/`allthemesgen`/`docbuilder` 若干 MB
+⇒ **单平台约 200 MB 未压缩**（压缩后估计几十 MB，与当初 mysql 的情形类似）。
+是否在非 Windows 包中排除 `office-editor/libs` 与 `x2t.exe`/`*.dll`，**需要先确认没有任何 Java 代码路径会碰它们**（尤其 `libdoctrenderer.so`）—— 建议列为独立议题，不要与本次 Mac 交付捆在一起。
+
+**另有一条与本任务直接相关的关键事实（用户原话里的后半句）**：
+> "**只是需要在终端里允许 start 脚本来启动 MxsDoc**"
+
+⇒ 现在 mac 上的实际用法就是**在终端里跑启动脚本、并手动放行**（这正是 §10.1 ④ 的 Gatekeeper 门控 + §10.2 的放行流程）。
+**控制台要消除的就是这个摩擦**；而"脚本被 quarantine 后能否被拉起/需要什么放行动作"正是 §10.3 要实测的东西。
 
 ## 11. 不确定 / 待实测项
 
