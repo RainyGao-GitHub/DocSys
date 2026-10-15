@@ -481,15 +481,28 @@ xattr -dr com.apple.quarantine /Applications/<YourApp>.app
 | 2 基线（无 quarantine） | `java -version` → `1.8.0_492` Temurin ✅ |
 | 3 手工打 quarantine | **部分成功**：`bin/java` 等**可写文件被打上**（`0181;6A000000;Safari;…`）；**12 个只读文件（444）写不进去**（`LICENSE`/`ASSEMBLY_EXCEPTION`/`lib/cmm/*.pf`/`currency.data` 等）。⇒ 真实"下载+Finder 解压"时同理，**关键是"会被 exec 的可执行体"会带上属性** |
 | 4 Terminal 直接 exec（带 quarantine） | `java -version` **正常输出** ⇒ Terminal 这条路径没被拦（此处用户看到一个"是否允许运行 Java"的弹窗，**出现在哪一步待确认**，见下） |
-| 5 **LaunchAgent（launchd）拉起** | ❌ **没跑成**：脚本在 `set -u` 下 `local tag=… logd=…` 崩溃（`tag: unbound variable`，已修，见 §10.6） |
-| 6 清属性后重试 | ❌ 同上未跑到 |
+| 5 **LaunchAgent（launchd）拉起** | ✅ **第二轮跑通：正常执行**。`launchctl bootstrap` 退出码 **0**、`launchctl print` 里 `last exit code = 0`、agent 的 stderr 有完整 `openjdk version "1.8.0_492"`… ⇒ **没有 `155`、没有 quarantine 线索** |
+| 6 清属性后重试（对照组） | ✅ 同样正常（`bootstrap = 0`、`last exit code = 0`、stderr 有版本输出） |
 
-⚠️ **§5 才是关键问题**（launchd 会不会报 `155: Refusing to execute/trust quarantined program/file`）——
-**目前仍无答案**，需要修好后重跑。
+> 第一次未跑成是脚本 bug（`set -u` 下 `local tag=… logd=…` 崩溃），已修（§10.6）；上表为修好后的第二轮结果。
+
+✅ **关键问题已有答案（第二轮，见上表第 5/6 行）**：在 macOS 12.7.4 + 这份 Developer ID 签名的 JRE 上，
+**launchd 正常拉起了带 quarantine 的 `java`** —— 既没有 `155: Refusing to execute/trust`，也没有拦截线索。
+⇒ §10.1 ④ 设想的最坏情形（"App 放行了但 Tomcat 起不来"）**在本机不成立**。
+
+⚠️ 但仍有两处**未被这次实测覆盖**，不能就此宣称"完全没问题"：
+
+1. **脚本路径**：本次测的是 `java`（一个 Developer ID 签名的 Mach-O）。用户实际遇到的摩擦是
+   "**需要在终端里允许 start 脚本来启动 MxsDoc**" —— 门控很可能出在**脚本**（`#!/bin/sh` 文本文件 + quarantine）上。
+   ⇒ 已在实测脚本里新增 **§7**：给一个临时脚本打 quarantine，分别用普通进程与 launchd 拉起，看是否被拦。
+2. **macOS 版本**：本机是 **12.7.4**；Apple 从 **15 Sequoia 起移除了"右键打开"**，且 launchd 的 quarantine 判定从未文档化
+   ⇒ **需要在 macOS 14/15 上复跑**（Apple Silicon 那台系统较新，建议用它补跑）。
 
 **待确认**：用户提到"有弹窗提示我是否允许运行 Java"。需要知道它出现在**哪一步**：
 - 若在**第 1/2 步** ⇒ 那是 Gatekeeper 对"已签名但**未公证**"的 Mach-O 的首次执行检查；
 - 若在**第 4 步**（打完 quarantine 之后）⇒ 说明 quarantine 确实门控执行、且**用户可以手动放行**（这本身很有价值）。
+- 第二轮实测时（脚本已修）**未再提到弹窗**，推测是**首次**执行才提示 —— 这与"用户手动放行过一次、之后不再提示"的经验一致；
+  待第三轮（含新增的脚本 quarantine 用例）确认弹窗究竟发生在哪一步。
 
 **一条对"未签名交付"有利的连带事实**：我们内嵌的运行时是**厂商用 Developer ID 正规签名 + Hardened Runtime** 的
 （Temurin/Adoptium；Azul 同源）。也就是说我们的 `.app` 虽然"未签名"，内部却含**已签名**的嵌套代码 ⇒
@@ -554,6 +567,30 @@ Gatekeeper 对**嵌套二进制**的判定可能与"对未签名 app"不同，�
 
 ⇒ 现在 mac 上的实际用法就是**在终端里跑启动脚本、并手动放行**（这正是 §10.1 ④ 的 Gatekeeper 门控 + §10.2 的放行流程）。
 **控制台要消除的就是这个摩擦**；而"脚本被 quarantine 后能否被拉起/需要什么放行动作"正是 §10.3 要实测的东西。
+
+### 10.8 实测结论与后续（2026-10-15）
+
+**结论 1（关键）：quarantine 不阻止 launchd 拉起 java** —— 见 §10.4 第二轮实测（macOS 12.7.4 / Intel）：
+`launchctl bootstrap` = 0、`last exit code = 0`、stderr 有完整 `openjdk version` 输出、launchd 日志无 `155`/`quarantine`；
+清属性后的对照组同样正常。⇒ **§10.1 ④ 设想的最坏情形在本机不成立**。
+
+**结论 2：真正会门控的是"脚本"这条路径**（用户原话："需要在终端里允许 start 脚本来启动 MxsDoc"），
+以及**首次**从浏览器下载/解压时的放行。⇒ 控制台采用**低成本防御**：启动前自动清一次 `com.apple.quarantine`。
+
+**结论 3：两处仍未被覆盖** —— ① 脚本自身带 quarantine 的情形（实测脚本已新增 §7 用例，待跑）；
+② macOS 14/15（Apple 15 起移除右键打开、launchd 判定未文档化）⇒ 建议在 Apple Silicon 那台补跑。
+
+**已开始实现（路线 C，M1+M2 均已写码）**：新目录 `D:\Dev\mxsdoc-console-mac`（**独立 git 仓库**，首次提交 `77c240d`）。
+
+| 文件 | 作用 |
+|---|---|
+| `Sources/Core.swift` | 定位 docsys、启停（调 `start.sh`/`stop.sh`，含 `monitor` 看门狗）、状态（`nc` + `pgrep`）、清 quarantine、LaunchAgent 自启、`selftest` |
+| `Sources/GUI.swift` | 菜单栏图标 + 主窗口（状态、启动/停止/打开系统、菜单、退出三选一） |
+| `Sources/main.swift` | CLI 分发（同一二进制既是 GUI 也是 CLI，便于远程排障） |
+| `build.sh` | 按 x86_64 与 arm64 各编一次再 `lipo` 合并为 **universal**；arm64 失败时退化单架构；`--cli-only` 可在 GUI 编译出错时先验证核心 |
+| `Info.plist` | `LSUIElement=true`（纯菜单栏 app）、`LSMinimumSystemVersion=12.0` |
+
+⚠️ **尚未在真机编译验证**（开发环境是 Windows，无法编译 mac 产物）⇒ 待用户在 Mac 上 `bash build.sh` 后回填结果。
 
 ## 11. 不确定 / 待实测项
 

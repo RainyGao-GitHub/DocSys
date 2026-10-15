@@ -98,6 +98,29 @@
 - **硬约束**：`docsys` **不能放进 `.app`**（签名后不可写）⇒ `.app` 与 `docsys/` 并列进 `.dmg`；`build_release.py` 目前**不含控制台**，若要"一键出安装包"需再加组装 `.dmg` 的一步。
 - ✅ **只读约束已遵守**：`mxsdoc-console` 仓库未留任何新增/修改文件（中途误把需求文档提取产物写进过 `Docs\`，已移出到 `%TEMP%`）。
 
+## ✅ 实测结果（2026-10-15 第二轮，Intel Mac / macOS 12.7.4）
+
+**关键问题有答案了：`launchd` 拉起了带 quarantine 的 `java` —— 正常执行。**
+
+| 检查项 | 结果 |
+|---|---|
+| `launchctl bootstrap` | 退出码 **0** |
+| `launchctl print` | `last exit code = 0`；`state = not running`（正常，因为程序跑完就退了） |
+| agent 的 stderr | 完整 `openjdk version "1.8.0_492"` / Temurin / 64-Bit Server VM |
+| launchd 日志里 `quarantine` / `155` | **无任何线索** |
+| 清属性后的对照组（§6） | 同样 `bootstrap = 0`、`last exit code = 0`、stderr 有版本输出 |
+| §3 打标 | **可执行体都带上了**（`java`、`jre/lib/jli/libjli.dylib`、`jre/lib/server/libjvm.dylib`、`jre/Contents/MacOS/libjli.dylib`）；12 个只读文件（444）写不进去 |
+| §1 签名 | Eclipse Foundation Developer ID + `flags=0x10000(runtime)`（Hardened Runtime）+ 时间戳；`spctl` = "the code is valid but does not seem to be an app" |
+
+⇒ **§10.1 ④ 设想的最坏情形（"App 放行了但 Tomcat 起不来"）在 macOS 12.7.4 上不成立。**
+
+**但仍有 2 处未被覆盖**：① **脚本自身**带 quarantine（用户实际摩擦是"需要在终端里允许 start 脚本"）——
+实测脚本已新增 **§7** 用例（临时脚本 `qprobe.sh` 打标 → 普通进程 / launchd 分别拉起），**待跑**；
+② **macOS 14/15**（Apple 15 起移除右键打开、launchd 判定未文档化）——**需在 Apple Silicon 那台补跑**。
+
+**已按路线 C 开始实现（M1+M2 均已写码）**：见 [`devDocs/Mac控制台最小可用版方案.md`](../devDocs/Mac控制台最小可用版方案.md) §9；
+源码在**新目录 `D:\Dev\mxsdoc-console-mac`**（独立 git 仓库，首提交 `77c240d`）。⚠️ **尚未在真机编译验证**。
+
 ## ✅ Mac 版产品级排查：office 原生件问题已关闭（2026-10-15）
 
 **曾怀疑是产品级缺口**：payload（与 2.02.87 mac 包一致）里 `office-editor/libs/` **只有 `Linux/`**、

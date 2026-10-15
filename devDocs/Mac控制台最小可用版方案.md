@@ -118,11 +118,22 @@ docsys/                     # 解压自 docsys-mac-<版本>.tar.gz
 - 代码放哪：建议在 `D:\Dev\mxsdoc-console` 之外**新建一个独立仓库/目录**（例如 `D:\Dev\mxsdoc-console-mac`），
   避免把 Swift 代码混进那个 Windows C++ 仓库；等你定（见 §8 D8）。
 
-## 8. 待确认
+## 8. 前提与待确认
 
-| # | 议题 | 建议 |
+| # | 议题 | 状态 |
 |---|---|---|
-| **D7** | Mac 上有没有 **Xcode Command Line Tools**（`xcode-select -p`）？没有要先装（`xcode-select --install`） | 前置条件，必须先确认 |
-| D8 | app 名称与 bundle id；以及代码放哪个仓库/目录 | `MxsDoc 控制台.app` + `com.mxsdoc.console`；代码建议新目录 `mxsdoc-console-mac` |
-| D9 | 本轮是否纳入 MySQL 管理 | **不纳入**（mac 包不含 MySQL；用户可自行放入） |
-| D10 | quarantine 自愈是否默认开启 | **默认开启**（等 §10.3 实测结论再定是否保留） |
+| **D7** | Mac 上有没有 **Xcode Command Line Tools**（`swiftc`） | ✅ **已确认有**（`xcode-select -p` 有输出） |
+| **D8** | app 名称与 bundle id；代码放哪 | ✅ 已定：`MxsDoc 控制台.app` + `com.mxsdoc.console`；代码落在**新目录 `D:\Dev\mxsdoc-console-mac`**（独立 git 仓库，首提交 `77c240d`）——与 Windows 侧 C++ 仓库 `mxsdoc-console` 并列。若你希望放进别的仓库，改起来是纯搬文件 |
+| D9 | 本轮是否纳入 MySQL 管理 | **暂不纳入**（mac 包不含 MySQL；用户可自行放入，脚本保留） |
+| D10 | quarantine 自愈是否默认开启 | ✅ **默认开启**（低成本防御；实测已证明 launchd 拉 java 不受影响，但脚本路径的门控仍未测完） |
+
+## 9. 实现状态（2026-10-15）
+
+| 里程碑 | 状态 | 说明 |
+|---|---|---|
+| **M1 骨架 + CLI** | ✅ 已写码 | `Sources/Core.swift` + `Sources/main.swift`：定位 docsys、`start`/`stop`/`restart`/`status`/`open`/`logs`/`port`/`autostart`/`selftest`、清 quarantine、LaunchAgent |
+| **M2 GUI** | ✅ 已写码 | `Sources/GUI.swift`：菜单栏图标 + 主窗口 + 菜单 + 退出三选一（停止并退出 / 仅退出 / 取消） |
+| M3 设置 | ❌ 未做 | `port` 目前只写控制台配置，**尚未改写 `tomcat/conf/server.xml`**；开机启动的界面开关也还没做 |
+| M4 打包（`.dmg`） | ❌ 未做 | 需把 `MxsDoc 控制台.app` 与 `docsys/` 组装成 `.dmg`（或扩 `build_release.py` 一个入口） |
+| M5 安装说明定稿 | 草稿 | 见调研文档 §10.2（≤14 / 15+ 两档） |
+| ⚠️ **真机编译验证** | **待做** | 开发环境是 Windows，**无法本地编译 mac 产物** ⇒ 待用户 `bash build.sh` 后按 §7 的协作方式回填 |
