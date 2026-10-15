@@ -106,6 +106,12 @@
 
 ## 已裁定
 
+- ✅ **D4（2026-10-15，用户裁定）**：Mac 控制台走 **路线 C「最小可用版」** —— 原生窗口 + 托盘；启动直接调
+  `docsysStartScripts\Linux\*.sh`；状态用 PID 文件（+ `QFileSystemWatcher` 的 mac 等价物）；
+  「打开系统」用 `open http://127.0.0.1:<port>`；**不做**自绘无边框 UI、**不做**安装器 UI、**不做**升级、**不做** MySQL。
+  ⇒ 实施方案已建：[`devDocs/Mac控制台最小可用版方案.md`](../devDocs/Mac控制台最小可用版方案.md)
+  （技术选型 Swift+AppKit / 自建 `build.sh` / **universal 二进制**；**CLI 双形态** `--selftest/--start/--stop/…`
+  以便我无法在 Windows 编译时靠你回填输出来收敛；M1~M5 里程碑与验收标准；待确认 D7~D10）。
 - ✅ **D1（2026-10-12，用户裁定）**：**暂无 Apple Developer 账号 ⇒ 先做「不签名」版本**，用户手动放行。⇒ 流水线不含证书 / entitlements / 公证 / staple；**换 JRE 不必重签**；**零 entitlements 也是正确做法**（Apple 原文：`allow-jit` 仅在采用 Hardened Runtime 时才需要；未签名二进制根本带不了 entitlements）。
 - ⚠️ **D1 的代价已查实（文档 §10.1）**：最大风险不是"用户要点几下放行"，而是 **quarantine 传播到内嵌 JRE 后被 `launchd` 拒绝执行（`155`）** ⇒ 出现"App 装好了但 Tomcat 起不来"的失败模式。因 Apple 未文档化该判定，**必须真机实测（§10.3）后才能定形态**。
 
