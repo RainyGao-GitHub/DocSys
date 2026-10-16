@@ -43,8 +43,32 @@
 - **§13.9 运行时**：Mac Intel = Temurin 8 x64（`jre-mac.tar.gz`）；Apple Silicon = Zulu 8 aarch64（`zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64.tar.gz`）。⇒ **两个架构的 JRE 都不是 universal**。
 - **§13.13**：payload 里现有那份 `webapps\DocSystem` 实测是 **2.02.87**，别整棵拷 `docsys-Win-Release\docsys`；预检只查 `web.xml` 是否存在、**查不出版本**。
 - 打包器：`build_release.py`（仓库内 `WebRoot\web\sales\docsysReleaseScripts\` + 运行副本 `C:\docsysRel\`），可产出 `docsys-mac-<ver>.tar.gz` 与 `docsys-mac-arm64-<ver>.tar.gz`。
+- 📁 **Mac 控制台（路线 C）代码**：`D:\Dev\mxsdoc-console-mac`（**独立 git 仓库**，首提交 `77c240d`）
+  —— `Sources/{Core,GUI,main}.swift` + `build.sh` + `Info.plist` + `README.md`；
+  **M1（核心+CLI）与 M2（菜单栏 GUI）均已写码，尚未在真机编译验证**。
+- 📄 方案文档：`devDocs/Mac控制台最小可用版方案.md`（路线 C 的技术选型、目录布局、逐里程碑验收标准、协作方式）
+- 📄 调研文档：`devDocs/Mac安装程序调研.md`（§2 代码测绘 / §3~§8 macOS 侧结论 / §9 三条路线 / §10 实测与裁定 / §10.7 office 疑点已关闭 / §10.8 实测结论）
+- 🧪 实测脚本：`WebRoot\web\sales\docsysReleaseScripts\macQuarantineTest.sh`（sales 提交 `4742283`）
+  —— 含 §7「脚本自身带 quarantine」用例，**待用户重跑回填**
 
-## 当前进展（2026-10-12）
+## 当前进展
+
+### ⏭ 下一步（立即，按优先级）
+
+1. **【等用户】Mac 上编译 + 跑通 M1/M2**：`cd D:\Dev\mxsdoc-console-mac` 拷到 Mac → `bash build.sh`
+   （GUI 报错就先 `bash build.sh --cli-only`）→ `./dist/mxsconsole selftest` → 把输出/报错贴回来。
+   ⇒ 我这边**无法编译 mac 产物**（Windows 无 Swift 工具链），第一轮有编译错误属正常。
+2. **【等用户】重跑实测脚本**（已修 bug + 新增 §7 用例）：
+   `bash macQuarantineTest.sh ~/MxsDoc ~/MxsDoc/docsys/tomcat/Java/jre/bin/java`
+   ⇒ 要看的是 **§7「脚本自身带 quarantine」**（用户实际摩擦点）与 §4/§5 的自动判定。
+3. **【待做】M3 设置**：改写 `tomcat/conf/server.xml` 的端口（`port` 目前只写控制台配置）+ 界面上的开机启动开关。
+4. **【待做】M4 打包**：把 `MxsDoc 控制台.app` 与 `docsys/` 组装成 `.dmg`（或给 `build_release.py` 加一个入口）。
+5. **【待做】M5**：一页安装说明定稿（草稿在调研文档 §10.2，≤14 / 15+ 两档）。
+6. **【建议】在 macOS 14/15 上补跑实测**（Apple 15 起移除右键打开；launchd 的 quarantine 判定未文档化，
+   现有结论只覆盖 macOS 12.7.4）。
+7. **【待裁定，可缓】** D2 目标架构 / D3 分发形态 / D5 进程管理形态 / D6 卸载方式 —— 见文末「待用户裁定」。
+8. **【独立议题，勿与本次交付捆一起】** mac 包里 office 原生件（`x2t`/`.dll`/`libs/Linux`）≈200 MB 未压缩死重，
+   确认无人引用后可考虑排除（调研文档 §10.7）。
 
 - ✅ `D:\Dev\mxsdoc-console` **顶层结构侦察**（上表）：C++/MSVC、10 个工程、安装程序走 **SFX**。
 - ✅ **macOS 侧调研已完成**（后台 research agent `14f1f277`，680s；结论已落文档）：
