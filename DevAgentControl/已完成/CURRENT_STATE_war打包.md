@@ -157,6 +157,40 @@ robocopy D:\Dev\DocSys\WebRoot $stage /E /NFL /NDL /NJH /NJS /NP `
   - **实证（WSL2）**：带 `LD_LIBRARY_PATH=$OE/libs/Linux` 直接跑改后的脚本 —— **1 s 完成、只调 `allfontsgen`**，产出 `sdkjs/common/AllFonts.js`(90 KB) + `server/FileConverter/bin/AllFonts.js`(99 KB) + `font_selection.bin`(30 KB) ✓，无 `allthemesgen`。顺带证实：不设 `LD_LIBRARY_PATH` 时 `allfontsgen` 会 `libgraphics.so: cannot open shared object file` 失败 ⇒ 启动脚本那行 `export LD_LIBRARY_PATH` 也是**载荷必需**；`chown -R ds:ds` 在无 `ds` 用户时报 `invalid user`，无害（上游残留，脚本无 `set -e`）。
   - ⚠️ **提交注意**：该仓库存在 **27 项既有未提交改动**，全是运行期生成的字体产物（`sdkjs/common/AllFonts.js`、`Images/fonts_thumbnail*.png`、`server/FileConverter/bin/{AllFonts.js,font_selection.bin,fonts.log}`，以及未跟踪的 `fonts/`、`*.png.bin`、`sdkjs/cell/sdk-all.cache`）⇒ **不要 `git add -A`**，只提交 `bin/documentserver-generate-allfonts.{sh,bat}`。
 
+## 2026-10-16 Eclipse 路线补齐：新增 `CleanWar.bat`（war 就地清理）+ 两条路线排除集对齐 ✅
+
+**起因**：用户仍常改完代码直接在 Eclipse 里「Export > WAR file」出包（Eclipse 导出无法排除文件），问「能否有个脚本把 war 里不需要的内容去掉、或 `CleanOfficeFonts.bat` 是否已经能干这事」。**结论：`CleanOfficeFonts.bat` 不能** —— 它只认已解包的发布包目录（`<脚本目录>\docsys\tomcat\webapps\DocSystem`），无法作用在 `.war` 文件上。故新增 `Docs/scripts/CleanWar.bat` + `CleanWar.ps1`。
+
+**新增 `CleanWar.bat`（+ `CleanWar.ps1`，war 就地清理）**
+- 用法 `CleanWar.bat <warFile> [/o:<outWar>] [/b] [/n] [/y] [/p]`：默认就地清理；`/o:` 另存（输入包不动）；`/b` 保留清理前副本为 `<目标>.dirty`；`/n` 干跑；`/y` 免确认。
+- 做法：war 即 zip，用 `System.IO.Compression` 在 zip 层级删条目 —— **不解包、不重压缩**，保留条目逐字节原样；实测 1.86 GB / 50,105 条目删 8,322 条约 **9 秒**。
+- 删除清单与 `BuildWar.bat` 同一套（字体库产物 + office 开发资料 + `tmp\` + `*.java` + `.git`/`.gitignore` + `WEB-INF\classes` 根部探针 class）。
+- 安全：删除在目标旁的临时副本上做；**四重自检全过才替换原包** —— ① 副本无禁用项 ② 条目数 = 原数 − 删除数 ③ 每个保留条目 名字+大小+CRC 与清理前逐一相等 ④ `jar tf` 可读（找不到 jar.exe 则警告跳过）。任一步不过 → 原包不动、临时副本删除、退出码 1。
+
+**排除集对齐（本轮两个新增项）**
+1. `BuildWar.bat` `/XD` 增加 `...\websocket\office\{docs,devDocs,test}`（10-13 已裁定"发布包不该带"的开发资料；Eclipse 的 WTP 导出会从 src 拖进来，JDT 也会把 devDocs/test 拷进输出目录）；
+2. **`tmp\`**（`WebRoot\tmp\0\docsys.lic` = dev 实例运行期写的 license 缓存，主仓库 `.gitignore:11` 忽略 `/WebRoot/tmp`）：本轮量对时发现 **10-16 的新构建带上了它**，而 10-13 Eclipse 包与 10-14 受测包里都没有 ⇒ 属运行期产物、不该发布；`BuildWar.bat` `/XD` + `CleanWar.ps1` + `CleanOfficeFonts.bat` 三处同步排除/清理。
+verify / stage / war 三段自检模式串同步加 `websocket\office\{docs,devDocs,test}` 与 `docsys.lic`。
+
+**验证（真实产物，2026-10-16）**
+- 输入用户 10-13 导出的完整 Eclipse 包 `C:\docsysRel\DocSystem-2.02.88.war`（1.86 GB / 50,105 条目）→ 删 **8,322 条**（字体库 577 + office 开发资料 7,738 + `.gitignore` 7），产出 **965.7 MB / 41,783 条目**：
+  - 与原始包 CompareWar：only-in-B = 8,322（恰为删除集），41,783 个保留条目 **CRC 全等**；`--hash` 逐字节复核 **0 差异**；非 ASCII 名 UTF-8 标志保持；`jar tf` 正常。
+- 两路线收敛（对齐后**全新构建**，输出到临时目录、未动 `C:\TomcatForDocSysDev\dist` 的受测产物）：新 CLI 包（清掉 tmp 后 41,782 条目）vs 清理后的 Eclipse 包（41,783）：**41,772 条完全一致、我方独有 0**；剩余差异全部可归因于 **10-13 之后的源码改动** —— `gen_fonts.sh`（10-14 已删）仅 Eclipse 包有、8 个文件大小不同（SalesBase/SalesController class、build_release.py、macQuarantineTest.sh、docsys_start.sh、tomcat_start.sh、documentserver-generate-allfonts.{bat,sh}）、`docSysConfig.properties` 内容不同、`META-INF/MANIFEST.MF` 文案不同。
+- `BuildWar.bat /verify`：会打包 **39,862** 文件（较 10-14 的 40,041 少 179 = devDocs 58 + test 120 + `tmp\0\docsys.lic` 1）、禁用项 0、`web\static\fonts`(6) 与 `core-fonts`(215) 保留。
+- 边界用例：已干净的包 → "Nothing to clean"（rc 0）；文件不存在 / 非 DocSystem zip → 拒绝（rc 1）；`/o:` 时输入包字节数不变；同一输入两次清理**输出逐字节一致**（清理可复现；"war 逐字节不可复现"那条限制只针对 `jar` 重新构建）；`CleanOfficeFonts.bat` 假发布树功能测试 14 删 / 7 保全对（含新 `tmp\` 计数行）。
+
+**踩坑记录（都写进脚本注释了）**
+- **cmd 的 `shift` 会连 `%0` 一起移动** ⇒ 参数解析循环里 `shift` 之后 `%~dp0` / `%~nx0` 都不再指向脚本自身（本次实测拼出 `-File "D:\CleanWar.ps1"` 报"不存在"、用法提示打印成 `Usage: y ...`）。修法：开头先 `set "SCRIPT_DIR=%~dp0"` + `set "SCRIPT_NAME=%~nx0"`（`BuildWar.bat`/`CleanOfficeFonts.bat` 原来只存了 `SCRIPT_DIR`，`%~nx0` 没存，用法提示一直是错的，本次一并修）。
+- **带空格的引号参数会拆掉解析循环**：`/o:"C:\out dir\x.war"` 这种参数，`%~1` 只剥掉包住整个参数的引号，内层引号会留下 ⇒ `if "%~1"==""`（循环守卫）与 `"!A!"=="!A2!"` 这类比较在空格处被 cmd 拆开报"此时不应有 …"。修法：进解析前先做**去引号副本**（`set A=%~1` + `set A=!A:"=!`）再做所有比较；`BuildWar.bat` 的 `/s:`、`/o:` 同步加固（现在都接受带空格的引号路径）。
+- **未定义变量不展开替换形式**：`set A=` 会把 A unset，而 cmd 对**未定义**变量不展开 `!A:"=!`（原样保留）⇒ 空参数被当作非空、越过循环守卫走到 badopt。修法：判空改用 `if not defined A goto argsdone`。
+- **别在 Git Bash 里直接跑 `BuildWar.bat`**：bat 里多处 `find /c /v ""` 会解析到 MSYS 的 `find.exe`，它把 `/c` 当 C 盘开始递归全盘扫描（表现为"卡住不动"）。Eclipse / cmd / 资源管理器跑正常；Git Bash 里跑需先给干净 PATH（本次测试用 wrapper cmd 解决）。
+
+**留给用户**
+- 未动 `C:\TomcatForDocSysDev\dist\DocSystem.war`（10-14 已测的发布输入）：下次正式出包重跑 `BuildWar.bat` 即带新排除集；Eclipse 出的包改用 `CleanWar.bat` 正名。
+- `Docs/scripts/README.md` 已同步（文件表新增 CleanWar 行、路线 B 改为 CleanWar、"排除清单三份副本要同步"注意事项）。
+- 未提交：`Docs/scripts/{BuildWar.bat,CleanOfficeFonts.bat,README.md}` 改动 + 新增 `{CleanWar.bat,CleanWar.ps1}`（`Docs` 是子模块，提交两段走）。
+- 验证产物在 `C:\docsysRel\_warcheck\`：`test-full.war`（清理后的 Eclipse 包）、`dist\DocSystem.war`（对齐后的命令行构建，已清 tmp）——可自行 CompareWar 复核，不需要可直接删。
+
 ## 待定 / 未做
 - **未做真实部署验证**：没把 war 丢进一个干净 Tomcat 跑起来（dev 用的是 junction 部署，不是 war）。
 - **已固化成脚本（2026-10-13）**：`C:\TomcatForDocSysDev\BuildWar.bat`（工作区外，不入版本控制）。等价于上面的「暂存 + jar」命令，但带**双重自检**（暂存目录与 war 各查一遍禁用项）与暂存自动清理；`/verify` 只列出「会打包 / 会排除」的内容而不产出 war，`/o:<dir>` 换输出目录，`/k` 保留暂存目录，`/p` 双击运行时暂停。脚本头部写有 **Eclipse 一键调用**配置（Run → External Tools → Program，`cmd.exe /c C:\TomcatForDocSysDev\BuildWar.bat`）——**起因**：Eclipse 自带的 WAR 导出**无法排除文件**（已在本机安装 `C:\安装程序\eclipse-jee-oxygen-2-win32-x86_64`（4.7.2）上验证：WTP 部署装配模型 `org.eclipse.wst.common.modulecore` 的 `wb-resource` 只有 `source-path`/`deploy-path` 两个属性，整插件无任何 exclude 相关代码，导出向导亦无此选项）。**已完整跑通**（2026-10-13）：42,823 条目 / 1,015,746,379 B（968.7 MB）/ SHA256 `A3A1CD2D2602F2E58C9D3B607C7C1A48DF3C5619139536102858B71B77E7DC13`，**覆盖**了上面 10-07 那份（旧档 962.7 MB / `A41B1388…` 已不存在）。排除集逐项核对（robocopy `/L` 清单与全量文件做差集）= 552 `fonts/` + 20 `fonts_thumbnail*` + 3 `.git` + 8 `.gitignore` + 2 `AllFonts.js` + 1 `font_selection.bin` + 1 `fonts.log` = **587 个文件，无多无少**；`web\static\fonts`（其他组件的字体目录，6 文件）与 `office-editor\core-fonts`（215 文件，输入字体）**保留**（`/XD` 必须用绝对路径，否则 `fonts` 会误伤）。
