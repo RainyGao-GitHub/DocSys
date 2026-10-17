@@ -157,6 +157,13 @@ robocopy D:\Dev\DocSys\WebRoot $stage /E /NFL /NDL /NJH /NJS /NP `
   - **实证（WSL2）**：带 `LD_LIBRARY_PATH=$OE/libs/Linux` 直接跑改后的脚本 —— **1 s 完成、只调 `allfontsgen`**，产出 `sdkjs/common/AllFonts.js`(90 KB) + `server/FileConverter/bin/AllFonts.js`(99 KB) + `font_selection.bin`(30 KB) ✓，无 `allthemesgen`。顺带证实：不设 `LD_LIBRARY_PATH` 时 `allfontsgen` 会 `libgraphics.so: cannot open shared object file` 失败 ⇒ 启动脚本那行 `export LD_LIBRARY_PATH` 也是**载荷必需**；`chown -R ds:ds` 在无 `ds` 用户时报 `invalid user`，无害（上游残留，脚本无 `set -e`）。
   - ⚠️ **提交注意**：该仓库存在 **27 项既有未提交改动**，全是运行期生成的字体产物（`sdkjs/common/AllFonts.js`、`Images/fonts_thumbnail*.png`、`server/FileConverter/bin/{AllFonts.js,font_selection.bin,fonts.log}`，以及未跟踪的 `fonts/`、`*.png.bin`、`sdkjs/cell/sdk-all.cache`）⇒ **不要 `git add -A`**，只提交 `bin/documentserver-generate-allfonts.{sh,bat}`。
 
+## 2026-10-17 补充：`sdk-all.cache` 加入 war 排除清单 ✅
+
+- **起因**：部署 publish 化调研时发现 war 里带着 3 个 `sdkjs/{cell,slide,word}/sdk-all.cache`（浏览器侧编辑器运行期缓存，office-editor 子模块的**未跟踪**文件，`sdkjs/cell/sdk-all.cache` 8 MB）——此前 BuildWar/CleanWar/CleanOfficeFonts 都没排。
+- **三处同步**：`BuildWar.bat`（`/XF` + 3 段自检模式串）、`CleanWar.ps1`（`Get-Category` 新 category「editor cache」）、`CleanOfficeFonts.bat`（`/S` 递归删 + 计数行）。
+- **回归**：`BuildWar /verify` → 39,859 文件（恰好多排 3 个 cache）、禁用 0；CleanOfficeFonts 假发布树 5 删/3 保通过。已构建的 `C:\docsysRel\_warcheck\dist\DocSystem.war` 里还有这 3 条（下次构建自动去掉，无需重打）。
+- 部署侧的 publish 化（防工作区再被运行期产物污染）另见 `DevAgentControl/CURRENT_STATE_开发部署publish化.md`。
+
 ## 2026-10-16 Eclipse 路线补齐：新增 `CleanWar.bat`（war 就地清理）+ 两条路线排除集对齐 ✅
 
 **起因**：用户仍常改完代码直接在 Eclipse 里「Export > WAR file」出包（Eclipse 导出无法排除文件），问「能否有个脚本把 war 里不需要的内容去掉、或 `CleanOfficeFonts.bat` 是否已经能干这事」。**结论：`CleanOfficeFonts.bat` 不能** —— 它只认已解包的发布包目录（`<脚本目录>\docsys\tomcat\webapps\DocSystem`），无法作用在 `.war` 文件上。故新增 `Docs/scripts/CleanWar.bat` + `CleanWar.ps1`。

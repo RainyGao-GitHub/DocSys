@@ -23,7 +23,9 @@
 >
 > **因此 webapp 的实际路径必须包含 `/DocSystem` 这段。** 若用 `conf\Catalina\localhost\DocSystem.xml` 直接把 `D:\Dev\DocSys\WebRoot` 挂为 `/DocSystem`（路径里没有 `/DocSystem` 字样），会出现两类问题：docSys.ini 退化为**相对进程工作目录**的 `docSys.ini/`（读不到 llmConfig → 前端提示"系统未设置AI模型"、AI 图标不显示）；日志目录推导为 `D:\Dev` 下（目录不存在时触发 Log 递归 → 全站 500，见 6-5）。**故推荐方式 A（Junction），不要用裸 Context 描述符挂载。**
 
-### 方式 A（推荐）：Junction 目录联接挂载工作区
+### 方式 A（历史方案，保留作回滚路径）：Junction 目录联接挂载工作区
+
+> ⚠️ **2026-10-17 起被方式 C 取代**：联接会把运行期生成物（字体库 773 MB、`tmp\` license 缓存、`sdk-all.cache`、被应用改写的 `docSysConfig.properties`）全部写进工作区，污染版本库、拖慢 Eclipse 导出 war。新部署请用方式 C；本机若已迁移，此联接已不存在。回滚到本方式：停服 → 删除 `webapps\DocSystem` 目录 → 按下述命令重建联接。
 
 用目录联接（junction）让 `webapps\DocSystem` 指向工作区：Tomcat 按标准目录应用部署，所有路径推导回到标准位置；且工作区改动即时生效（静态文件刷新即生效、类文件重启生效）。
 
@@ -54,6 +56,42 @@ robocopy "D:\Dev\DocSys\WebRoot" "C:\TomcatForDocSysDev\docsys\tomcat\webapps\Do
 
 - 与方式 A 布局相同（同样满足"路径含 `/DocSystem`"），`docSys.ini` 要求也相同；区别只是复制而非联接。
 - 大改动 / 需要隔离环境时使用；复制耗时（400MB+）且每次改动都要重新同步。
+
+### 方式 C（推荐，2026-10-17 起）：复制部署 + `PublishDev.bat` 增量发布
+
+参照 Eclipse 的 publish 模型：`webapps\DocSystem` 是**真实目录**（不再是联接），由 `Docs\scripts\PublishDev.bat` 从工作区复制并增量维护。运行期生成物只存在于运行空间，**工作区不再被污染**；Eclipse 导出的 war 也回到 ~1 GB 干净内容、无需事后清理。
+
+- **初始化**（一次性，需停服；若当前是方式 A 的联接，加 `/replace-junction` 一并移除——脚本会校验联接指向工作区后才删）：
+
+```powershell
+cmd /c "D:\Dev\DocSys\Docs\scripts\PublishDev.bat /init /replace-junction"
+```
+
+  初始化会把工作区里**现有的字体库一并带过去**（首次启动无需 10-30 分钟重建）。完成后应清理工作区里的生成物（office-editor 子模块）：
+
+```bash
+cd WebRoot/web/static/office-editor
+# 恢复被生成物覆盖的跟踪文件
+git checkout -- sdkjs/common/AllFonts.js "sdkjs/common/Images/fonts_thumbnail*.png" \
+  server/FileConverter/bin/AllFonts.js server/FileConverter/bin/font_selection.bin server/FileConverter/bin/fonts.log
+# 删除未跟踪的生成物（注意：不要 git add -A，bin/documentserver-generate-allfonts.{bat,sh} 的有意改动保留）
+git clean -f fonts sdkjs/cell/sdk-all.cache sdkjs/slide/sdk-all.cache sdkjs/word/sdk-all.cache "sdkjs/common/Images/fonts_thumbnail*.png.bin"
+cd ../..
+rm -rf WebRoot/tmp WebRoot/uploads
+```
+
+- **日常发布**：
+
+| 改动 | 命令 |
+| --- | --- |
+| 前端（html/js/css） | `Docs\scripts\PublishDev.bat`，浏览器 Ctrl+F5 |
+| Java（Eclipse build 后） | `Docs\scripts\PublishDev.bat /r`（发布 + 无窗口重启 dev Tomcat） |
+
+- 语义要点：`robocopy /MIR /XO`——只拷有变化的文件、工作区删掉的文件会从运行空间删除（避免旧 class 残留）；**运行空间里较新的文件不被覆盖**（应用保存设置时改写的 `WEB-INF\classes\docSysConfig.properties` 因此受保护，工作区模板改了要生效用 `/force`）。运行期产物（`office-editor\fonts\`、两个 `AllFonts.js`、`font_selection.bin`、`fonts.log`、`fonts_thumbnail*`、`sdk-all.cache`、`tmp\`、`uploads\`）**永不触碰**。参考耗时：全量扫描约 5 秒，日常增量秒级。
+- 辅助：`/dry` 只列不动；`/audit` 列运行空间里"排除清单之外"的未知文件（应用将来新增运行期写入点时，靠它发现并补清单）；`/p` 双击运行时结束暂停。
+- 守卫：目标是联接/符号链接时拒绝 publish（`/MIR` 会穿透联接写回源码）；运行空间缺 `DEPLOYED-BY-PUBLISH.txt` 标记时拒绝 publish（防止误镜像到别的目录）；`/init` 只接受空目录/不存在/已有 webapp 的目录。
+- 注意：`WEB-INF\lib` 下的 jar 在 Tomcat 运行时可能被锁，改了 lib 先停服再 publish；改 Java 仍需重启（`/r` 已封装）。
+- 回滚到方式 A：停服 → `rmdir /s /q webapps\DocSystem` → 按方式 A 重建联接。
 
 ## 3. 启动 Tomcat
 
@@ -145,9 +183,10 @@ Get-CimInstance Win32_Process -Filter "Name='java.exe' OR Name='javaw.exe'" |
 
 ### 5.1 只改前端（html/js/css）
 
-1. 确保 dev Tomcat 已启动（方式 A）。
+1. 确保 dev Tomcat 已启动（方式 C）。
 2. 直接改 `D:\Dev\DocSys\WebRoot\web\...` 下的文件。
-3. 浏览器刷新（必要时 Ctrl+F5 强制刷新）。**无需重启 Tomcat。**
+3. 运行 `Docs\scripts\PublishDev.bat`（秒级），浏览器刷新（必要时 Ctrl+F5 强制刷新）。**无需重启 Tomcat。**
+   （方式 A 联接时代"改动即时生效"；方式 C 是复制部署，多一步 publish。）
 
 ### 5.2 改 Java
 
@@ -157,7 +196,7 @@ Get-CimInstance Win32_Process -Filter "Name='java.exe' OR Name='javaw.exe'" |
 & "C:\docsysRel\docsys-WDK\docsys\tomcat\Java\jdk\bin\javac" -encoding UTF-8 -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/lib/*" -d WebRoot/WEB-INF/classes <源文件...>
 ```
 
-2. 重启 dev Tomcat 使新类生效（目录部署/联接部署不会自动重载类）。
+2. 运行 `Docs\scripts\PublishDev.bat /r`（发布 + 重启 dev Tomcat，使新类生效）。
 
 ### 5.3 验证清单（打开页面）
 
@@ -185,6 +224,8 @@ Get-CimInstance Win32_Process -Filter "Name='java.exe' OR Name='javaw.exe'" |
 8. **query 参数中文解码与 Tomcat 版本强耦合（整包发布下成立）**：Tomcat 7.0.56 默认 `URIEncoding=ISO-8859-1`（Connector 未显式配置），所以 `new String(x.getBytes("ISO8859-1"),"UTF-8")` 这类补丁（`DocController`/`BaseFunction`/`AgentController` 等 ~30 处）是**必要且正确**的。已核对三处 `conf/server.xml` 内容一致（dev、Windows 包 `docsys-Win-Release`、Linux 包 `docsys-linux-2.02.86.tar.gz`）：**均未配置** `URIEncoding` / `useBodyEncodingForURI`。⚠️ 若把 `DocSystem-*.war` 单独部署进用户自备的 Tomcat 8.5+/9+（默认 UTF-8），或给 Connector 加 `URIEncoding="UTF-8"`，这些补丁会把中文打成 `????`（JDK8 实测：`"中".getBytes("ISO8859-1")` → `0x3F`，不可逆）。结论：保持整包同发布即为自洽；**新增功能不要用 query 传中文，一律走 POST body**（如 `POST /agent/stream`）。
 
 ## 7. 变更记录
+
+- **2026-10-17（五）**：新增**方式 C（复制部署 + PublishDev 增量发布，推荐）**，方式 A（junction）降为回滚路径。动机：联接把运行期生成物写进工作区（office-editor 子模块 27 项脏、字体库 773 MB、`tmp\0\docsys.lic`、`sdk-all.cache`×3），污染版本库、拖慢 Eclipse 导出 war（1.86 GB → 应为 ~1 GB）。`Docs\scripts\PublishDev.bat`：`/init`（全量，可 `/replace-junction` 移除旧联接、带上现有字体库）+ 无参增量（`/MIR /XO`：拷变化/删工作区已删文件；字体库、`tmp`、`uploads`、`sdk-all.cache`、运行空间较新的 `docSysConfig.properties` 永不触碰）+ `/r`（发布后重启）+ `/dry` `/audit` `/force`。安全守卫：拒绝向联接 publish、缺 `DEPLOYED-BY-PUBLISH.txt` 标记拒绝 publish、`/init` 校验联接指向后才删。5.1/5.2 日常流程同步改为 publish 制。**本机尚未执行迁移**（等停服窗口）：`PublishDev.bat /init /replace-junction` → 清理工作区生成物（office-editor 子模块 checkout 恢复 + clean 未跟踪生成物 + 删 `WebRoot\tmp`）→ 启动验证。同日 `sdk-all.cache` 加入 war 排除清单（BuildWar/CleanWar/CleanOfficeFonts 三处，`/verify` 回归通过 39,859 文件/禁用 0）。
 
 - **2026-09-30（三）**：① `docsys_restart.bat` 不再 `start docsys_start.bat`（那个新窗口每次都会残留）→ 改为 `Start-Process -WindowStyle Hidden` 调`docsys_start_hidden.bat`，新增 `/f`（前台留在当前控制台）与 `docsys_stop.bat /q`（不问按键）；新增 `docsys_start_hidden.bat`（无窗口启动 + 控制台输出重定向到 `logs\docsys_console.log`）。仓库源头（`docsysStartScripts/Windows`）与 dev 目录已同步，实测：可见 cmd 窗口 0 个、HTTP 200、控制台日志含 `Server startup in 31086 ms`。② 文档按本轮踩坑补：启动耗时 33s~10min 的判据（不要再把“慢”当“卡死”反复重启）、`127.0.0.1` vs `localhost`、`docSysInit` 触发时机、管理接口 E2E 的 authCode/`msgInfo` 口径。
 
