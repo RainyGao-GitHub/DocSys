@@ -131,7 +131,7 @@ docsys/                     # 解压自 docsys-mac-<版本>.tar.gz
 
 | 里程碑 | 状态 | 说明 |
 |---|---|---|
-| **M1 骨架 + CLI** | ✅ 已写码 + **编译通过** | `Sources/Core.swift` + `Sources/main.swift`：定位 docsys、`start`/`stop`/`restart`/`status`/`open`/`logs`/`port`/`autostart`/`selftest`、清 quarantine、LaunchAgent |
+| **M1 骨架 + CLI** | ✅ 已写码 + **编译通过** + **`selftest` 真机通过** | `Sources/Core.swift` + `Sources/main.swift`：定位 docsys、`start`/`stop`/`restart`/`status`/`open`/`logs`/`port`/`autostart`/`selftest`、清 quarantine、LaunchAgent；**端到端启停仍待验证** |
 | **M2 GUI** | ✅ 已写码 + **编译通过** | `Sources/GUI.swift`：菜单栏图标 + 主窗口 + 菜单 + 退出三选一（停止并退出 / 仅退出 / 取消） |
 | M3 设置 | ❌ 未做 | `port` 目前只写控制台配置，**尚未改写 `tomcat/conf/server.xml`**；开机启动的界面开关也还没做 |
 | M4 打包（`.dmg`） | ❌ 未做 | 需把 `MxsDoc 控制台.app` 与 `docsys/` 组装成 `.dmg`（或扩 `build_release.py` 一个入口） |
@@ -159,3 +159,39 @@ a few minutes, but it should only happen once for this combination of compiler a
   定位 docsys 是否命中；`start.sh` 是否被正确拉起（工作目录 / `nohup` 重定向）；
   `pgrep -f <docsys>/tomcat` 与 `nc -z` 判状态是否准确；清 quarantine 是否生效；
   `open http://127.0.0.1:<port>` 是否正常；GUI 的菜单栏图标与按钮是否按预期工作。
+
+### ✅ 真机 selftest 结果与据此做的加固（2026-10-18）
+
+用户在同一台 **Intel Mac / macOS 12.7.4** 上跑 `./dist/mxsconsole selftest`，**主流程全部命中**：
+
+| 检查项 | 实测输出 | 判读 |
+|---|---|---|
+| macOS | `Version 12.7.4 (Build 21H1123)` | 符合预期 |
+| 架构 | `x86_64` | Intel Mac（`proc_translated` 在这一代本就无此 oid） |
+| 容器目录 | `…/dist`（CLI 直接跑） | 符合预期 |
+| docsys 定位 | `/Users/kakuka/MxsDoc/docsys` | ✅ 命中（候选表第 6 项 `~/MxsDoc/docsys`） |
+| 启动脚本 | `start.sh=true docsys_start.sh=true stop.sh=true` | ✅ 三个都在 |
+| java 启动器 | 存在 `…/tomcat/Java/jre/bin/java` | ✅ 与 §13.14「JDK 归档形态」一致 |
+| quarantine | `(无)` | ✅ |
+| 运行中 pid / 端口 | `(无)` / `8100 LISTEN=false 可连接=false` | ✅ 未运行状态判读正确 |
+| 开机启动 | 未安装 | ✅ |
+| Xcode CLT | `/Library/Developer/CommandLineTools` | ✅ |
+
+**发现 1 个显示缺陷（已修）**：`proc_translated=sysctl: unknown oid 'sysctl.proc_translated'` ——
+`shell()` 把 stderr 一起收进 stdout，而代码只判断"字符串是否为空"，于是把 sysctl 的**报错文本**当成了取值。
+⇒ 改为**看退出码**：非 0 显示 `不适用`（Intel Mac 上该 oid 本来就不存在）。
+
+**同时补了几处"下一次启停就会踩到"的真实缺口**（`D:\Dev\mxsdoc-console-mac`，`Sources/Core.swift`）：
+
+| 加固 | 为什么 |
+|---|---|
+| `start` 改用 `nohup /bin/sh ./start.sh`（不再依赖脚本自身 `+x`） | 从 dmg 之外途径搬动文件会丢权限，`./start.sh` 直接 `permission denied` |
+| 启动前 `ensureScriptsExecutable`：把 `<docsys>/*.sh` 缺的 `+x` 补齐并记日志 | 脚本链内部是 `$CURRENT_DIR/xxx.sh` 互相调用，缺一个就在半路静默失败 |
+| 启动前 `ensureTmpDir`：缺 `tmp/` 就建 | `monitor_start.sh` 要写 `tmp/monitor.pid`，写不进去 ⇒ `stop.sh` 杀不掉看门狗，它会一直每 120 秒轮询 trigger 文件 |
+| `stop` 额外按 `tmp/monitor.pid` 兜底停看门狗（并校验 pid 的 cmdline 含 `monitor_start.sh`，防 pid 复用） | `pgrep -f <docsys>/tomcat` 抓不到看门狗（它的命令行不含 `tomcat`） |
+| 探测端口改为**以 `tomcat/conf/server.xml` 的 `<Connector port>` 为准**，配置 `PORT=` 只作兜底 | 配置写 8100、实际监听别的端口时，状态会永远显示"已停止"、`start` 会白等 180 秒 |
+| `start` 时端口已被监听 ⇒ 视为已在运行并跳过 | 避免起第二个 Tomcat 撞端口 |
+| `start` 超时后**自动打印 `console.log` 末 20 行** | 一次贴回即可定位，不必再让用户去翻文件 |
+| `selftest` 新增：脚本 `+x` 状态、`catalina.sh`、`tmp/`、`server.xml` 实际端口、**直接跑一次内嵌 `java -version`** | 后者能一次性证明"JRE 架构对 + 没被 Gatekeeper 拦"，是"App 放行了但 Tomcat 起不来"的最快判据 |
+
+> 这些改动**尚未在 Mac 上重新编译**（我在 Windows 上无法编译）。下一步：`bash build.sh` → `selftest`（对照上表）→ `start` / `status` / `open` / `stop`。

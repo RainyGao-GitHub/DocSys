@@ -43,9 +43,10 @@
 - **§13.9 运行时**：Mac Intel = Temurin 8 x64（`jre-mac.tar.gz`）；Apple Silicon = Zulu 8 aarch64（`zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64.tar.gz`）。⇒ **两个架构的 JRE 都不是 universal**。
 - **§13.13**：payload 里现有那份 `webapps\DocSystem` 实测是 **2.02.87**，别整棵拷 `docsys-Win-Release\docsys`；预检只查 `web.xml` 是否存在、**查不出版本**。
 - 打包器：`build_release.py`（仓库内 `WebRoot\web\sales\docsysReleaseScripts\` + 运行副本 `C:\docsysRel\`），可产出 `docsys-mac-<ver>.tar.gz` 与 `docsys-mac-arm64-<ver>.tar.gz`。
-- 📁 **Mac 控制台（路线 C）代码**：`D:\Dev\mxsdoc-console-mac`（**独立 git 仓库**，首提交 `77c240d`）
+- 📁 **Mac 控制台（路线 C）代码**：`D:\Dev\mxsdoc-console-mac`（**独立 git 仓库**，`origin` = gitee；
+  最新 `fc1d136`，版本号 0.1.1）
   —— `Sources/{Core,GUI,main}.swift` + `build.sh` + `Info.plist` + `README.md`；
-  **M1（核心+CLI）与 M2（菜单栏 GUI）均已写码，尚未在真机编译验证**。
+  **M1（核心+CLI）与 M2（菜单栏 GUI）已写码 + 真机编译通过 + `selftest` 通过；端到端启停与 GUI 待验证**。
 - 📄 方案文档：`devDocs/Mac控制台最小可用版方案.md`（路线 C 的技术选型、目录布局、逐里程碑验收标准、协作方式）
 - 📄 调研文档：`devDocs/Mac安装程序调研.md`（§2 代码测绘 / §3~§8 macOS 侧结论 / §9 三条路线 / §10 实测与裁定 / §10.7 office 疑点已关闭 / §10.8 实测结论）
 - 🧪 实测脚本：`WebRoot\web\sales\docsysReleaseScripts\macQuarantineTest.sh`（sales 提交 `4742283`）
@@ -57,11 +58,16 @@
 
 0. ✅ **已完成（2026-10-18）**：用户在 Intel Mac（macOS 12.7.4）上 `bash build.sh` **编译通过**
    （x86_64 + arm64 → `lipo` 合并 universal；M1/M2 无编译错误）。**注意：编译通过 ≠ 功能验证**。
-1. **【等用户】跑 `selftest` 并回填**：`./dist/mxsconsole selftest`（**这是当前最优先的一步**，
-   它能一次性暴露：docsys 定位是否命中、启动脚本与 java 启动器是否存在、quarantine 状态、
-   端口占用、LaunchAgent 状态、`console.log` 末 20 行）。
+1. ✅ **已完成（2026-10-18）**：用户跑 `./dist/mxsconsole selftest`，**主流程全部命中**
+   （docsys 定位 `/Users/kakuka/MxsDoc/docsys`、三个脚本在、`Java/jre/bin/java` 存在、quarantine 无、
+   pid 无、`8100` 未监听、开机启动未装、CLT 已装）。**暴露 1 个显示缺陷 + 据此补了 7 处加固，见下方
+   「✅ selftest 结果与加固」小节。**
+1b. **【等用户，⚠️ 必须先重新编译】** 在 Mac 上 `git pull`（代码已推送到 gitee：`fc1d136`）
+   → `bash build.sh` → `./dist/mxsconsole selftest`。**自检第一行应是 `v0.1.1`**（若还是 `v0.1.0`
+   说明跑的是旧 `dist/`）。对照新表格逐行确认（尤其新增的 `脚本 +x` / `server.xml` 实际端口 / `java 可运行`）。
 2. **【等用户】端到端启停验证**：`start` → `status` → `open` → `stop`，并把
-   `~/Library/Logs/com.mxsdoc.console/console.log` 一起回填（重点看 `start.sh` 是否真把 Tomcat 拉起来）。
+   `~/Library/Logs/com.mxsdoc.console/console.log` 一起回填（重点看 `start.sh` 是否真把 Tomcat 拉起来；
+   失败时 `start` 现在会自动打印日志末 20 行，直接连输出一起贴即可）。
 3. **【等用户】试 GUI**：`open "dist/MxsDoc 控制台.app"` —— 看菜单栏图标、状态刷新、三个按钮。
 4. **【等用户】重跑实测脚本**（已修 bug + 新增 §7「脚本自身带 quarantine」用例）：
    `bash macQuarantineTest.sh ~/MxsDoc ~/MxsDoc/docsys/tomcat/Java/jre/bin/java`
@@ -177,6 +183,34 @@ docsys 定位是否命中、`start.sh` 是否被正确拉起（工作目录 / `n
 `pgrep -f <docsys>/tomcat` 与 `nc -z` 判断是否准确、清 quarantine 是否生效、
 `open http://127.0.0.1:<port>` 是否正常、GUI 菜单栏与按钮行为。
 详见 [`devDocs/Mac控制台最小可用版方案.md`](../devDocs/Mac控制台最小可用版方案.md) §9。
+
+## ✅ selftest 结果与据此做的加固（2026-10-18）
+
+用户 `./dist/mxsconsole selftest` 输出（Intel Mac / macOS 12.7.4）：**主流程全部命中** ——
+macOS `12.7.4 (21H1123)`、`x86_64`、容器目录 `…/dist`、
+docsys `=/Users/kakuka/MxsDoc/docsys`（候选表第 6 项 `~/MxsDoc/docsys` 命中）、
+`start.sh/docsys_start.sh/stop.sh=true`、`java 启动器 存在 …/tomcat/Java/jre/bin/java`、
+`quarantine (无)`、`运行中 pid (无)`、`8100 LISTEN=false 可连接=false`、`开机启动 未安装`、CLT 已装。
+
+**1 个显示缺陷（已修）**：`proc_translated=sysctl: unknown oid 'sysctl.proc_translated'`
+—— `shell()` 把 stderr 并进了 stdout，代码只判"非空"，于是把报错文本当成了取值。
+⇒ 改为看**退出码**，非 0 显示 `不适用`（Intel Mac 本就没有该 oid）。
+
+**本轮加固（`D:\Dev\mxsdoc-console-mac`，`Sources/Core.swift`，均已改码、未编译）**：
+
+| 加固 | 触发的真实故障 |
+|---|---|
+| `start` 用 `nohup /bin/sh ./start.sh` 执行 | 脚本丢 `+x` 时 `./start.sh` 直接 permission denied |
+| `ensureScriptsExecutable`：缺则 `chmod a+x` `<docsys>/*.sh` | 脚本链内部 `$CURRENT_DIR/xxx.sh` 互调，缺一个半路静默失败 |
+| `ensureTmpDir`：缺 `tmp/` 自动建 | 看门狗写不了 `tmp/monitor.pid` ⇒ `stop.sh` 杀不掉它（每 120s 轮询 trigger） |
+| `stop` 按 `tmp/monitor.pid` 兜底（校验 cmdline 含 `monitor_start.sh` 防 pid 复用） | `pgrep -f <docsys>/tomcat` 抓不到看门狗 |
+| 探测端口**以 `tomcat/conf/server.xml` 的 `<Connector port>` 为准**，`PORT=` 仅兜底 | 配置与实际端口不一致 ⇒ 状态永远"已停止"、`start` 白等 180s |
+| `start` 时端口已监听 ⇒ 视为已在运行并跳过 | 避免起第二个 Tomcat 撞端口 |
+| `start` 超时自动打印 `console.log` 末 20 行 | 一次贴回即可定位 |
+| `selftest` 新增：脚本 `+x`、`catalina.sh`、`tmp/`、`server.xml` 实际端口、**跑一次内嵌 `java -version`** | 后者一次证明"JRE 架构对 + 没被 Gatekeeper 拦"，是"App 放行了但 Tomcat 起不来"的最快判据 |
+
+⚠️ **未编译验证**（我在 Windows 上编不了 Swift）⇒ 用户需先 `git pull` + `bash build.sh` 再跑 `selftest`/`start`。
+📦 **提交**：`D:\Dev\mxsdoc-console-mac` `fc1d136`（已推送到 gitee `origin/master`，版本号 0.1.1）。
 
 ## 生效约束
 
