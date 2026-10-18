@@ -131,9 +131,31 @@ docsys/                     # 解压自 docsys-mac-<版本>.tar.gz
 
 | 里程碑 | 状态 | 说明 |
 |---|---|---|
-| **M1 骨架 + CLI** | ✅ 已写码 | `Sources/Core.swift` + `Sources/main.swift`：定位 docsys、`start`/`stop`/`restart`/`status`/`open`/`logs`/`port`/`autostart`/`selftest`、清 quarantine、LaunchAgent |
-| **M2 GUI** | ✅ 已写码 | `Sources/GUI.swift`：菜单栏图标 + 主窗口 + 菜单 + 退出三选一（停止并退出 / 仅退出 / 取消） |
+| **M1 骨架 + CLI** | ✅ 已写码 + **编译通过** | `Sources/Core.swift` + `Sources/main.swift`：定位 docsys、`start`/`stop`/`restart`/`status`/`open`/`logs`/`port`/`autostart`/`selftest`、清 quarantine、LaunchAgent |
+| **M2 GUI** | ✅ 已写码 + **编译通过** | `Sources/GUI.swift`：菜单栏图标 + 主窗口 + 菜单 + 退出三选一（停止并退出 / 仅退出 / 取消） |
 | M3 设置 | ❌ 未做 | `port` 目前只写控制台配置，**尚未改写 `tomcat/conf/server.xml`**；开机启动的界面开关也还没做 |
 | M4 打包（`.dmg`） | ❌ 未做 | 需把 `MxsDoc 控制台.app` 与 `docsys/` 组装成 `.dmg`（或扩 `build_release.py` 一个入口） |
 | M5 安装说明定稿 | 草稿 | 见调研文档 §10.2（≤14 / 15+ 两档） |
-| ⚠️ **真机编译验证** | **待做** | 开发环境是 Windows，**无法本地编译 mac 产物** ⇒ 待用户 `bash build.sh` 后按 §7 的协作方式回填 |
+
+### ✅ 真机编译结果（2026-10-18，Intel Mac / macOS 12.7.4）
+
+用户执行 `bash build.sh` **成功**：
+
+```
+▶ 编译 x86_64（Intel）…
+<unknown>:0: remark: did not find a prebuilt standard library for target
+'x86_64-apple-macos' compatible with this Swift compiler; building it may take
+a few minutes, but it should only happen once for this combination of compiler and target
+▶ 编译 arm64（Apple Silicon）…
+已合并为 universal 二进制
+✓ 完成
+    GUI ：dist/MxsDoc 控制台.app
+    CLI ：dist/mxsconsole
+```
+
+- **x86_64 与 arm64 都编译通过**，`lipo` 合并 universal 成功 ⇒ M1/M2 的 Swift 代码**无编译错误**。
+- 那条 `remark: did not find a prebuilt standard library … building it may take a few minutes` 是**正常提示**（本机 CLT 的 Swift 版本对该 target 需现编一次标准库），**不是错误**。
+- ⚠️ **编译通过 ≠ 功能验证**：**尚未跑 `selftest`，尚未实际启停 docsys**。以下仍未验证：
+  定位 docsys 是否命中；`start.sh` 是否被正确拉起（工作目录 / `nohup` 重定向）；
+  `pgrep -f <docsys>/tomcat` 与 `nc -z` 判状态是否准确；清 quarantine 是否生效；
+  `open http://127.0.0.1:<port>` 是否正常；GUI 的菜单栏图标与按钮是否按预期工作。

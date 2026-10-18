@@ -55,20 +55,24 @@
 
 ### ⏭ 下一步（立即，按优先级）
 
-1. **【等用户】Mac 上编译 + 跑通 M1/M2**：`cd D:\Dev\mxsdoc-console-mac` 拷到 Mac → `bash build.sh`
-   （GUI 报错就先 `bash build.sh --cli-only`）→ `./dist/mxsconsole selftest` → 把输出/报错贴回来。
-   ⇒ 我这边**无法编译 mac 产物**（Windows 无 Swift 工具链），第一轮有编译错误属正常。
-2. **【等用户】重跑实测脚本**（已修 bug + 新增 §7 用例）：
+0. ✅ **已完成（2026-10-18）**：用户在 Intel Mac（macOS 12.7.4）上 `bash build.sh` **编译通过**
+   （x86_64 + arm64 → `lipo` 合并 universal；M1/M2 无编译错误）。**注意：编译通过 ≠ 功能验证**。
+1. **【等用户】跑 `selftest` 并回填**：`./dist/mxsconsole selftest`（**这是当前最优先的一步**，
+   它能一次性暴露：docsys 定位是否命中、启动脚本与 java 启动器是否存在、quarantine 状态、
+   端口占用、LaunchAgent 状态、`console.log` 末 20 行）。
+2. **【等用户】端到端启停验证**：`start` → `status` → `open` → `stop`，并把
+   `~/Library/Logs/com.mxsdoc.console/console.log` 一起回填（重点看 `start.sh` 是否真把 Tomcat 拉起来）。
+3. **【等用户】试 GUI**：`open "dist/MxsDoc 控制台.app"` —— 看菜单栏图标、状态刷新、三个按钮。
+4. **【等用户】重跑实测脚本**（已修 bug + 新增 §7「脚本自身带 quarantine」用例）：
    `bash macQuarantineTest.sh ~/MxsDoc ~/MxsDoc/docsys/tomcat/Java/jre/bin/java`
-   ⇒ 要看的是 **§7「脚本自身带 quarantine」**（用户实际摩擦点）与 §4/§5 的自动判定。
-3. **【待做】M3 设置**：改写 `tomcat/conf/server.xml` 的端口（`port` 目前只写控制台配置）+ 界面上的开机启动开关。
-4. **【待做】M4 打包**：把 `MxsDoc 控制台.app` 与 `docsys/` 组装成 `.dmg`（或给 `build_release.py` 加一个入口）。
-5. **【待做】M5**：一页安装说明定稿（草稿在调研文档 §10.2，≤14 / 15+ 两档）。
-6. **【建议】在 macOS 14/15 上补跑实测**（Apple 15 起移除右键打开；launchd 的 quarantine 判定未文档化，
+5. **【待做】M3 设置**：改写 `tomcat/conf/server.xml` 的端口（`port` 目前只写控制台配置）+ 界面上的开机启动开关。
+6. **【待做】M4 打包**：把 `MxsDoc 控制台.app` 与 `docsys/` 组装成 `.dmg`（或给 `build_release.py` 加一个入口）。
+7. **【待做】M5**：一页安装说明定稿（草稿在调研文档 §10.2，≤14 / 15+ 两档）。
+8. **【建议】在 macOS 14/15 上补跑**（Apple 15 起移除右键打开；launchd 的 quarantine 判定未文档化，
    现有结论只覆盖 macOS 12.7.4）。
-7. **【待裁定，可缓】** D2 目标架构 / D3 分发形态 / D5 进程管理形态 / D6 卸载方式 —— 见文末「待用户裁定」。
-8. **【独立议题，勿与本次交付捆一起】** mac 包里 office 原生件（`x2t`/`.dll`/`libs/Linux`）≈200 MB 未压缩死重，
-   确认无人引用后可考虑排除（调研文档 §10.7）。
+9. **【待裁定，可缓】** D2 目标架构 / D3 分发形态 / D5 进程管理形态 / D6 卸载方式 —— 见文末「待用户裁定」。
+10. **【独立议题，勿与本次交付捆一起】** mac 包里 office 原生件（`x2t`/`.dll`/`libs/Linux`）≈200 MB 未压缩死重，
+    确认无人引用后可考虑排除（调研文档 §10.7）。
 
 - ✅ `D:\Dev\mxsdoc-console` **顶层结构侦察**（上表）：C++/MSVC、10 个工程、安装程序走 **SFX**。
 - ✅ **macOS 侧调研已完成**（后台 research agent `14f1f277`，680s；结论已落文档）：
@@ -161,6 +165,18 @@
 2. **用户当前在 mac 上的实际用法**："**需要在终端里允许 start 脚本来启动 MxsDoc**" ⇒ 这正是 §10.1 ④ 的 Gatekeeper 门控；
    **控制台要消除的就是这个摩擦**，而"脚本带 quarantine 时能否被拉起、需要什么放行动作"正是 §10.3 要实测的。
    详见 [`devDocs/Mac安装程序调研.md`](../devDocs/Mac安装程序调研.md) §10.7。 → 用 `ask_user` 逐条确认 D2~D6 → 出实施方案。
+
+## ✅ 真机编译结果（2026-10-18）
+
+用户在 **Intel Mac / macOS 12.7.4** 上 `bash build.sh` **编译通过**：
+x86_64 与 arm64 都编过，`lipo` 合并 universal 成功，产出 `dist/MxsDoc 控制台.app` 与 `dist/mxsconsole`。
+（那条 `remark: did not find a prebuilt standard library …` 是本机 CLT 现编一次标准库的**正常提示，不是错误**。）
+
+⚠️ **编译通过 ≠ 功能验证**：**尚未跑 `selftest`、尚未实际启停 docsys**。待验证项：
+docsys 定位是否命中、`start.sh` 是否被正确拉起（工作目录 / `nohup` 重定向）、
+`pgrep -f <docsys>/tomcat` 与 `nc -z` 判断是否准确、清 quarantine 是否生效、
+`open http://127.0.0.1:<port>` 是否正常、GUI 菜单栏与按钮行为。
+详见 [`devDocs/Mac控制台最小可用版方案.md`](../devDocs/Mac控制台最小可用版方案.md) §9。
 
 ## 生效约束
 

@@ -29,11 +29,19 @@
 
 ## 当前任务
 
-- **MxsDoc 运行时「跨平台打包」（2.02.88）＋ JDK 升级（2.02.89）** —— **2026-10-11 由用户重新启用工作卡 `DevAgentControl/CURRENT_STATE_JDK升级选型.md`（本卡）**。
-  阶段 1（JDK 8 + GraalVM CE 21.2 + GraalJS 替代 Nashorn）**已完成并三层验证通过**。**用户 2026-10-11 版本计划：先做 2.02.88 —— 其首要任务 = 跨平台打包（"JRE 改用 GraalVM"），且本版允许放弃部分平台支持；阶段 2（JDK 17 + Tomcat 9，计划 §6.2 全量清单，D1/D2/D4 已裁定）推迟到 2.02.89**。入口清单见本卡 `## 下一步`，不得动的项见本卡 `## 挂起`。
-  参考计划：`src/com/DocSystem/websocket/office/docs/GraalJS替代Nashorn评估计划.md`（§6.1 选型 / §6.2 影响清单 / §6.3 迁移方案 / §6.4 实施记录）。
-  ⚠️ 生效约束：缺省即 `graaljs` ⇒ **运行时必须是 GraalVM（或 classpath 上有 GraalJS）**；换回 stock JDK 8 时须显式 `-Ddocsys.office.jsEngine=nashorn`。C 阶段（删 nashorn 分支）**已裁定暂不做**。阶段 2 动作大，**先与用户确认具体子项再动**。
-  前置卡 `CURRENT_STATE_war打包.md` 已收尾（`DevAgentControl/已完成/`）。
+- **Mac 版「控制台 + 安装程序」（路线 C 最小可用版）** —— **2026-10-18 由用户明确指定**，工作卡 `DevAgentControl/CURRENT_STATE_Mac安装程序.md`（**本卡**）。
+  缘由：Windows 侧已有「MxsDoc 控制台 + SFX 安装程序」（独立仓库 `D:\Dev\mxsdoc-console`，C++/Qt/MFC），用户要为 macOS 做等价物。
+  **已裁定**：D1 **暂无 Apple 开发者账号 ⇒ 先做不签名版本**（用户手动放行）；D4 **走路线 C「最小可用版」**（原生窗口 + 菜单栏，启动直接调 docsys 自带的 `.sh`，不做自绘无边框 UI / 安装器 UI / 升级 / MySQL 管理）。
+  方案与调研：`devDocs/Mac控制台最小可用版方案.md`（选型、目录布局、M1~M5 验收标准）、`devDocs/Mac安装程序调研.md`（§2 代码测绘 / §3~§8 macOS 侧 / §9 三条路线 / §10 实测与裁定）。
+  代码：**`D:\Dev\mxsdoc-console-mac`（独立 git 仓库，分支 `master`）** —— `Sources/{Core,GUI,main}.swift` + `build.sh` + `Info.plist` + `README.md`。
+  ⚠️ **开发环境是 Windows ⇒ 无法编译/运行任何 mac 产物**；编译与实测必须由用户在 Mac 上做并回填输出（控制台内置 `mxsconsole selftest` 专为此设计）。
+  当前状态：**M1（核心+CLI）与 M2（菜单栏 GUI）已写码，且用户已在 Intel Mac（macOS 12.7.4）上 `bash build.sh` 编译通过（x86_64 + arm64 → lipo 合并 universal）**；**尚未跑 `selftest`、尚未实际启停验证**。M3/M4/M5 未做。下一步见本卡 `## 下一步（立即，按优先级）`。
+  关联：Mac 包由 `build_release.py` 产出（`docsys-mac-*.tar.gz`），打包链细节见 `devDocs/跨平台运行时打包方案.md`；实测脚本 `WebRoot/web/sales/docsysReleaseScripts/macQuarantineTest.sh`（sales 仓库）。
+
+- 上一任务（**暂停，未收尾**，2026-10-12 起）= **MxsDoc 运行时「跨平台打包」（2.02.88）＋ JDK 升级（2.02.89）** —— 工作卡 `DevAgentControl/CURRENT_STATE_JDK升级选型.md`（该卡已标记暂停）。
+  阶段 1（JDK 8 + GraalVM CE 21.2 + GraalJS 替代 Nashorn）**已完成并三层验证通过**。用户 2026-10-11 版本计划：先做 2.02.88（首要任务 = 跨平台打包，"JRE 改用 GraalVM"，本版允许放弃部分平台）；阶段 2（JDK 17 + Tomcat 9）推迟到 2.02.89。
+  **剩余为用户侧动作**：准备 2.02.88 WAR → 转商业版 → 放进 `C:\docsysRel\ForReleaseBuild\docsys\tomcat\webapps\` → 跑 `build_release.py` 一次出 6 平台包（Mac 包即上面 Mac 任务的前置输入）。
+  ⚠️ 生效约束：缺省即 `graaljs` ⇒ **运行时必须是 GraalVM（或 classpath 上有 GraalJS）**；换回 stock JDK 8 时须显式 `-Ddocsys.office.jsEngine=nashorn`。
 
 - 上一任务（**暂停，未收尾**，切到上面的 JDK 卡）= **Office 字体库自动检测与生成** —— 用户 2026-10-10 提出：**新安装 / 在线升级后**，Office 编辑所需的**字体库**必须由管理员手动执行「管理后台 → 系统管理 → Office 编辑器 → **重置字体库**」；管理员一旦忘记，用户会在 Office 编辑时撞上"字体库不存在"，才回头找管理员重置。希望改成**自动检测 + 自动生成**。
   约束与参照：历史上曾有自动生成机制，但挂在**系统启动初始化**流程里，失败时甚至导致**整个初始化无法完成**（影响面更大）⇒ **不能放回启动路径**；用户希望参照「**首次安装创建超级管理员**」那种**由前端发起**、失败也不影响系统本身的模式。
