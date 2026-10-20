@@ -5708,17 +5708,25 @@ public class BaseFunction{
     }
     
 	
-	//获取Tomcat的安装路径
+	//获取Tomcat的安装路径（以运行时为准，不再从 docSysConfig.properties 读取）
     public String getTomcatPath() {
-    	//get Tomcat Path From Config File
-    	String path = null;
-        path = ReadProperties.read("docSysConfig.properties", "tomcatPath");
-        if(path != null && !path.isEmpty())
-        {
-        	return Path.localDirPathFormat(path, OSType);
-        }
+    	//优先使用 Tomcat 运行时的 catalina.base，其次 catalina.home
+    	String path = System.getProperty("catalina.base");
+    	if(path == null || path.isEmpty())
+    	{
+    		path = System.getProperty("catalina.home");
+    	}
+    	if(path != null && !path.isEmpty())
+    	{
+    		File tomcatDir = new File(path);
+    		if(tomcatDir.exists() && tomcatDir.isDirectory())
+    		{
+    			return Path.localDirPathFormat(path, OSType);
+    		}
+    		Log.info("getTomcatPath() catalina path is invalid: " + path);
+    	}
 
-        //tomcat目录
+        //回退：webapp 上两级（webapps/DocSystem -> tomcat）
         path = Path.getParentPath(docSysWebPath, 2, OSType);
         return path;
     }

@@ -145,72 +145,7 @@ var systemInfo = {
 		openOfficePath:"",
 };
 
-function enableSystemInfoSet(){
-	$("#btnEnableSystemInfoSet").hide();
-	$("#btnCancelSystemInfoSet").show();
-	$("#btnSaveSystemInfoSet").show();
-	$("#tomcatPath").val(systemInfo.tomcatPath);
-	
-	$("#tomcatPath").attr('disabled',false);
-}
-
-function cancelSystemInfoSet(){
-	$("#btnEnableSystemInfoSet").show();
-	$("#btnCancelSystemInfoSet").hide();
-	$("#btnSaveSystemInfoSet").hide();
-	//revert the value
-	$("#tomcatPath").attr('disabled',true);
-	$("#tomcatPath").val(systemInfo.tomcatPath);
-}
-
-function saveSystemInfoSet(){
-	$("#btnEnableSystemInfoSet").show();
-	$("#btnCancelSystemInfoSet").hide();
-	$("#btnSaveSystemInfoSet").hide();
-	//revert the value
-	$("#tomcatPath").attr('disabled',true);
-
-	var tomcatPath = $("#tomcatPath").val();
-	updateSystemInfo(tomcatPath);
-}
-
-function updateSystemInfo(tomcatPath, openOfficePath){
-	$.ajax({
-        url : "/DocSystem/Manage/setSystemInfo.do",
-        type : "post",
-        dataType : "json",
-        data : {
-        	authCode: authCode,
-        	tomcatPath: tomcatPath,
-        },
-        success : function (ret) {
-            if( "ok" == ret.status )
-            {	        		
-        		systemInfo.tomcatPath = tomcatPath;
-            }
-            else 
-            {
-                console.log(ret.msgInfo);
-            	showErrorMessage({
-            		id: "idAlertDialog",	
-            		title: _Lang("提示"),
-            		okbtn: _Lang("确定"),
-            		msg: _Lang("更新数据库配置信息失败", " : ", ret.msgInfo),
-        		});
-        		$("#tomcatPath").val(systemInfo.tomcatPath);
-	        }
-        },
-        error : function () {
-        	showErrorMessage({
-        		id: "idAlertDialog",	
-        		title: _Lang("提示"),
-        		okbtn: _Lang("确定"),
-        		msg: _Lang("更新数据库配置信息失败", " : ", "服务器异常"),
-    		});
-    		$("#tomcatPath").val(systemInfo.tomcatPath);
-        }
-    });
-}
+// tomcatPath 由服务端按运行时 catalina.base/home 推导，安装页只读展示，不再允许修改
 
 function sysConfigPageInit(){
 	console.log("sysConfigPageInit");
@@ -292,7 +227,6 @@ function doRestartTomcat(tomcatPath)
         dataType : "json",
         data : {
         	authCode: authCode,
-        	tomcatPath: tomcatPath,
         },
         success : function (ret) {
             if( "ok" == ret.status )

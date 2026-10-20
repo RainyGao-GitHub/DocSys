@@ -1847,7 +1847,6 @@ public class ManageController extends BaseController{
 	/********** 设置系统数据库配置 ***************/
 	@RequestMapping("/setSystemInfo.do")
 	public void setSystemInfo(String authCode, 
-			String tomcatPath, 
 			String javaHome,
 			String openOfficePath, 
 			String officeEditorApi,
@@ -1871,7 +1870,7 @@ public class ManageController extends BaseController{
 	{
 		Log.infoHead("****************** setSystemInfo.do ***********************");
 
-		Log.debug("setSystemInfo() tomcatPath:" + tomcatPath + " javaHome:" + javaHome 
+		Log.debug("setSystemInfo() javaHome:" + javaHome 
 				+ " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi 
 				+ " defaultReposStorePath:" + defaultReposStorePath 
 				+ " systemLogStorePath:" + systemLogStorePath 
@@ -1895,8 +1894,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(tomcatPath == null && 
-			javaHome == null &&
+		if(javaHome == null &&
 			openOfficePath == null &&
 			officeEditorApi == null &&
 			defaultReposStorePath == null &&
@@ -1940,10 +1938,6 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(tomcatPath != null)
-		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "tomcatPath", tomcatPath);
-		}
 		if(javaHome != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "javaHome", javaHome);
@@ -2943,7 +2937,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping("/restartServer.do")
-	public void restartServer(String authCode, String tomcatPath, String javaHome,
+	public void restartServer(String authCode, String javaHome,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
 		Log.infoHead("****************** restartServer.do ***********************");

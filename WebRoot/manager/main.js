@@ -1905,7 +1905,7 @@ var systemInfo = {
 /****************  系统管理各子页公共逻辑  ******************/
 
 //「系统设置」页保留的字段（其余配置已拆到各自的子页面维护）
-var SYSTEM_INFO_FIELDS = ["tomcatPath", "javaHome", "defaultReposStorePath", "indexDBStorePath", "agentSkillStorePath", "salesDataStorePath", "systemLogStorePath", "maxThreadCount"];
+var SYSTEM_INFO_FIELDS = ["javaHome", "defaultReposStorePath", "indexDBStorePath", "agentSkillStorePath", "salesDataStorePath", "systemLogStorePath", "maxThreadCount"];
 
 //「系统设置」页支持「目录树选择」的存储位置字段（与页面上的「选择…」按钮一一对应）
 var STORE_PATH_FIELDS = ["defaultReposStorePath", "indexDBStorePath", "agentSkillStorePath", "salesDataStorePath", "systemLogStorePath"];
@@ -2075,7 +2075,6 @@ function saveSystemInfoSet(){
 
 	//只提交「系统设置」页仍保留的字段（其余配置已拆到各自的子页维护，详见 postSystemInfo 注释）
 	var data = {
-		tomcatPath: $("#tomcatPath").val() || "",
 		javaHome: $("#javaHome").val() || "",
 		defaultReposStorePath: $("#defaultReposStorePath").val() || "",
 		systemLogStorePath: $("#systemLogStorePath").val() || "",
@@ -2095,7 +2094,7 @@ function saveSystemInfoSet(){
 //注意：本函数已无调用方——「系统设置」页改为按页白名单提交（见 postSystemInfo）。
 //保留仅作历史参考，不要在新代码里调用：它会把页面上不存在的字段以空串提交，
 //而 setSystemInfo.do 对字符串参数是「空串=改成空」，可能清掉别的页面负责的配置。
-function updateSystemInfo(tomcatPath, 
+function updateSystemInfo(
 		javaHome, 
 		openOfficePath, 
 		officeEditorApi, 
@@ -2121,7 +2120,6 @@ function updateSystemInfo(tomcatPath,
         type : "post",
         dataType : "json",
         data : {
-        	tomcatPath: tomcatPath,
         	javaHome: javaHome,
         	openOfficePath: openOfficePath,
         	officeEditorApi: officeEditorApi,
@@ -2145,7 +2143,6 @@ function updateSystemInfo(tomcatPath,
         	console.log("setSystemInfo ret:",ret);
             if( "ok" == ret.status )
             {	        		
-        		systemInfo.tomcatPath = tomcatPath;
         		systemInfo.javaHome = javaHome;
         		systemInfo.openOfficePath = openOfficePath;
         		systemInfo.officeEditorApi = officeEditorApi;
@@ -3552,7 +3549,6 @@ function doRestartTomcat(tomcatPath, javaHome)
         type : "post",
         dataType : "json",
         data : {
-        	tomcatPath: tomcatPath,
         	javaHome: javaHome,
         },
         success : function (ret) {
