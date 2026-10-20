@@ -78,6 +78,10 @@ DocSys 是**多 git 仓库**，office 相关共**五条**提交路径：
 
 提交归属：核心代码/文档 → `git -C src/com/DocSystem/websocket/office`；测试 → `git -C src/com/DocSystem/websocket/office/test`；jar → `git -C WebRoot/WEB-INF/lib`。此处只描述结构；**是否开工前先提交、提交哪些，由工作卡决定**。
 
+## 验证要求（不变量，务必遵守）
+
+- 除非用户明确说明不需要，任何改动都必须**重启实际服务并做端到端实测**（真实页面/接口请求，覆盖正常与异常分支）；仅 `javac` 编译通过、静态检查通过都**不算完成**。
+
 ## 编译输出目录（不变量，务必遵守）
 
 `.class` **一律输出到 `D:/Dev/DocSys/WebRoot/WEB-INF/classes`**（相对工程根 `WebRoot/WEB-INF/classes`），**绝不落在源码树 `src/...` 里**。命令行编译必须带 `-d WebRoot/WEB-INF/classes`；这是 Eclipse 工程本身的输出目录，与 IDE auto-build 共享同一份 `.class`。
