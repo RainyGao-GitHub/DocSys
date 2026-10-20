@@ -153,3 +153,7 @@
   - `WebRoot/web/project.js` / `WebRoot/manager/main.js`（初始化调用 + 守卫）
   - `DevAgentControl/CURRENT_STATE_用户使用统计修复.md`（本卡）、`CLAUDE.md`（指针）
 - 编译产物（不入库）：`WebRoot/WEB-INF/classes/com/DocSystem/{controller/DocController,controller/UserController,common/BaseFunction}.class`
+
+## 后续调整
+
+- **2026-10-20（issue IKLLSQ）**：完全无登录/活动/时长的空行不再展示；有活动但窗口内没有重新登录的用户仍保留（避免重新引入 P1 的跨窗口丢用户问题）。

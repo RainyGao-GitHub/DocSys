@@ -8627,7 +8627,8 @@ public class DocController extends BaseController{
 
 		Map<String, UserUsageStats> statsMap = new HashMap<String, UserUsageStats>();
 
-		//以系统用户表为基底：从未登录/从未活动的用户也要出现在统计里（不再整条丢弃）
+		//以系统用户表为基底：保证窗口内没有重新登录、但有活动的用户也能出现；
+		//完全没有登录/活动/时长的用户最终在结果里过滤掉
 		List<User> allUsers = userService.geAllUsers();
 		if(allUsers != null)
 		{
@@ -8722,9 +8723,8 @@ public class DocController extends BaseController{
 		List<UserUsageStats> resultList = new ArrayList<UserUsageStats>();
 		for(UserUsageStats stats : statsMap.values())
 		{
-			//「未登录来源」在窗口内没有任何活动就不出行，避免空行噪声
-			if(USAGE_OTHER_USER.equals(stats.userName)
-					&& stats.loginCount == 0 && stats.uploadCount == 0
+			//没有任何登录、活动或时长的用户不出行，避免从未使用系统的空行
+			if(stats.loginCount == 0 && stats.uploadCount == 0
 					&& stats.downloadCount == 0 && stats.editCount == 0
 					&& stats.loginDuration <= 0)
 			{
