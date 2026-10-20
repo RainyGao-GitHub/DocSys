@@ -5693,21 +5693,6 @@ public class BaseFunction{
 		return docSysIniPath + "license/";
 	}
 	
-	//获取JavaHome
-    public String getJavaHome() {
-    	String path = null;
-        path = ReadProperties.read("docSysConfig.properties", "javaHome");
-        if(path != null && !path.isEmpty())
-        {
-        	return Path.localDirPathFormat(path, OSType);
-        }
-        
-        //tomcat目录
-        path = Path.getParentPath(docSysWebPath, 2, OSType) + "Java/jdk/";
-        return path;
-    }
-    
-	
 	//获取Tomcat的安装路径（以运行时为准，不再从 docSysConfig.properties 读取）
     public String getTomcatPath() {
     	//优先使用 Tomcat 运行时的 catalina.base，其次 catalina.home

@@ -1446,7 +1446,6 @@ public class ManageController extends BaseController{
 		}
 		
 		String tomcatPath = getTomcatPath();
-		String javaHome = getJavaHome();
 		String officeEditorApi = Path.getOfficeEditorApi();
 		String ldapConfig = getLdapConfig();
 		String allowedNetworkConfig = getAllowedNetworkConfig();
@@ -1463,7 +1462,6 @@ public class ManageController extends BaseController{
 		
 		config.put("version", version);
 		config.put("tomcatPath", tomcatPath);
-		config.put("javaHome", javaHome);
 		config.put("ldapConfig", ldapConfig);
 		config.put("allowedNetworkConfig", allowedNetworkConfig);
 		config.put("llmConfig", llmConfig);
@@ -1847,7 +1845,6 @@ public class ManageController extends BaseController{
 	/********** 设置系统数据库配置 ***************/
 	@RequestMapping("/setSystemInfo.do")
 	public void setSystemInfo(String authCode, 
-			String javaHome,
 			String openOfficePath, 
 			String officeEditorApi,
 			String defaultReposStorePath,
@@ -1870,8 +1867,7 @@ public class ManageController extends BaseController{
 	{
 		Log.infoHead("****************** setSystemInfo.do ***********************");
 
-		Log.debug("setSystemInfo() javaHome:" + javaHome 
-				+ " openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi 
+		Log.debug("setSystemInfo() openOfficePath:" + openOfficePath + " officeEditorApi:" + officeEditorApi 
 				+ " defaultReposStorePath:" + defaultReposStorePath 
 				+ " systemLogStorePath:" + systemLogStorePath 
 				+ " indexDBStorePath:" + indexDBStorePath 
@@ -1894,8 +1890,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(javaHome == null &&
-			openOfficePath == null &&
+		if(openOfficePath == null &&
 			officeEditorApi == null &&
 			defaultReposStorePath == null &&
 			systemLogStorePath == null &&
@@ -1938,10 +1933,6 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		if(javaHome != null)
-		{
-			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "javaHome", javaHome);
-		}
 		if(openOfficePath != null)
 		{
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "openOfficePath", openOfficePath);
@@ -2937,7 +2928,7 @@ public class ManageController extends BaseController{
 	}
 	
 	@RequestMapping("/restartServer.do")
-	public void restartServer(String authCode, String javaHome,
+	public void restartServer(String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response) throws Exception
 	{
 		Log.infoHead("****************** restartServer.do ***********************");

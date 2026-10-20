@@ -1884,7 +1884,6 @@ function startImportDBData(file, dbType, dbUrl, dbUser, dbPwd)
 var systemInfo = {
 		version: "",
 		tomcatPath: "",
-		javaHome: "",
 		openOfficePath:"",
 		officeEditorApi:"",
 		defaultReposStorePath:"",
@@ -1905,7 +1904,7 @@ var systemInfo = {
 /****************  系统管理各子页公共逻辑  ******************/
 
 //「系统设置」页保留的字段（其余配置已拆到各自的子页面维护）
-var SYSTEM_INFO_FIELDS = ["javaHome", "defaultReposStorePath", "indexDBStorePath", "agentSkillStorePath", "salesDataStorePath", "systemLogStorePath", "maxThreadCount"];
+var SYSTEM_INFO_FIELDS = ["defaultReposStorePath", "indexDBStorePath", "agentSkillStorePath", "salesDataStorePath", "systemLogStorePath", "maxThreadCount"];
 
 //「系统设置」页支持「目录树选择」的存储位置字段（与页面上的「选择…」按钮一一对应）
 var STORE_PATH_FIELDS = ["defaultReposStorePath", "indexDBStorePath", "agentSkillStorePath", "salesDataStorePath", "systemLogStorePath"];
@@ -2058,7 +2057,6 @@ function cancelSystemInfoSet(){
 
 	//revert the value
 	$("#tomcatPath").val(systemInfo.tomcatPath || "");
-	$("#javaHome").val(systemInfo.javaHome || "");
 	$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath || "");
 	$("#systemLogStorePath").val(systemInfo.systemLogStorePath || "");
 	$("#indexDBStorePath").val(systemInfo.indexDBStorePath || "");
@@ -2075,7 +2073,6 @@ function saveSystemInfoSet(){
 
 	//只提交「系统设置」页仍保留的字段（其余配置已拆到各自的子页维护，详见 postSystemInfo 注释）
 	var data = {
-		javaHome: $("#javaHome").val() || "",
 		defaultReposStorePath: $("#defaultReposStorePath").val() || "",
 		systemLogStorePath: $("#systemLogStorePath").val() || "",
 		indexDBStorePath: $("#indexDBStorePath").val() || "",
@@ -2095,7 +2092,6 @@ function saveSystemInfoSet(){
 //保留仅作历史参考，不要在新代码里调用：它会把页面上不存在的字段以空串提交，
 //而 setSystemInfo.do 对字符串参数是「空串=改成空」，可能清掉别的页面负责的配置。
 function updateSystemInfo(
-		javaHome, 
 		openOfficePath, 
 		officeEditorApi, 
 		defaultReposStorePath, 
@@ -2120,7 +2116,6 @@ function updateSystemInfo(
         type : "post",
         dataType : "json",
         data : {
-        	javaHome: javaHome,
         	openOfficePath: openOfficePath,
         	officeEditorApi: officeEditorApi,
         	defaultReposStorePath: defaultReposStorePath,
@@ -2143,7 +2138,6 @@ function updateSystemInfo(
         	console.log("setSystemInfo ret:",ret);
             if( "ok" == ret.status )
             {	        		
-        		systemInfo.javaHome = javaHome;
         		systemInfo.openOfficePath = openOfficePath;
         		systemInfo.officeEditorApi = officeEditorApi;
         		systemInfo.defaultReposStorePath = defaultReposStorePath;
@@ -2170,7 +2164,6 @@ function updateSystemInfo(
                 showErrorMessage(_Lang("更新失败", ":", ret.msgInfo));
         		//restore the setting
         		$("#tomcatPath").val(systemInfo.tomcatPath);
-        		$("#javaHome").val(systemInfo.javaHome);
         		$("#openOfficePath").val(systemInfo.openOfficePath);
         		$("#officeEditorApi").val(systemInfo.officeEditorApi);
         		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
@@ -2206,7 +2199,6 @@ function updateSystemInfo(
         	showErrorMessage(_Lang("更新失败", ":", "服务器异常"));
     		//restore the setting
     		$("#tomcatPath").val(systemInfo.tomcatPath);
-    		$("#javaHome").val(systemInfo.javaHome);
     		$("#openOfficePath").val(systemInfo.openOfficePath);
     		$("#officeEditorApi").val(systemInfo.officeEditorApi);
     		$("#defaultReposStorePath").val(systemInfo.defaultReposStorePath);
@@ -3530,8 +3522,7 @@ function restartTomcat(){
 	    	//showErrorMessage("点击了确定");
 			//开始上传
 			var tomcatPath = $("#tomcatPath").val();
-			var javaHome = $("#javaHome").val();
-			doRestartTomcat(tomcatPath, javaHome);
+			doRestartTomcat(tomcatPath);
 	    	return true;   //close dialog
     	},function()
     	{
@@ -3541,15 +3532,14 @@ function restartTomcat(){
     );
 }
 
-function doRestartTomcat(tomcatPath, javaHome)
+function doRestartTomcat(tomcatPath)
 {
-	console.log("doRestartTomcat tomcatPath:" + tomcatPath + " javaHome:" + javaHome);
+	console.log("doRestartTomcat tomcatPath:" + tomcatPath);
 	$.ajax({
         url : "/DocSystem/Manage/restartServer.do",
         type : "post",
         dataType : "json",
         data : {
-        	javaHome: javaHome,
         },
         success : function (ret) {
             if( "ok" == ret.status )

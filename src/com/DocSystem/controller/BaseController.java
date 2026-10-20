@@ -20325,84 +20325,8 @@ public class BaseController  extends BaseFunction{
         return run(restartCmd, null, null) != null;
     }
     
-	public static boolean restartTomcat(String tomcatPath, String javaHome) {              
-    	String stopScriptPath = generateTomcatStopScript(tomcatPath, javaHome);
-    	if(stopScriptPath == null)
-		{
-			Log.debug("restartTomcat() generateTomcatStopScript failed");
-			return false;
-		}
-    	String startScriptPath = generateTomcatStartScript(tomcatPath, javaHome);
-    	if(startScriptPath == null)
-		{
-			Log.debug("restartTomcat() generateTomcatStartScript failed");
-			return false;
-		}
-		
-    	Log.debug("restartTomcat() stopScriptPath:" + stopScriptPath);
-    	Log.debug("restartTomcat() startScriptPath:" + startScriptPath);
-    	
-        String stopCmd = buildScriptRunCmd(stopScriptPath);
-        String startCmd = buildScriptRunCmd(startScriptPath);
-        
-        run(stopCmd, null, null);
-        return run(startCmd, null, null) != null;
-    }
-    
-    private static String generateTomcatStopScript(String tomcatPath, String javaHome) {
-		tomcatPath = Path.localDirPathFormat(tomcatPath, OSType);
-		if(javaHome == null)
-        {
-        	javaHome = tomcatPath + "Java/jre1.8.0_162/";
-        }
-        javaHome = Path.localDirPathFormat(javaHome, OSType);
-    	
-        //对tomcatPath和javaHome进行格式转换
-        String tomcatPathForReplace = tomcatPath.substring(0,tomcatPath.length()-1).replace("/", File.separator);
-        String javaHomePathForReplace = javaHome.substring(0,javaHome.length()-1).replace("/", File.separator);
-    	
-    	String scriptName = "tomcat_stop.sh";
-        if (isWinOS()) {
-        	scriptName = "tomcat_stop.bat";
-        }
-
-        String ScriptTemplatePath = docSysWebPath + "WEB-INF/classes/script/"; //脚本模板
-    	String content = FileUtil.readDocContentFromFile(ScriptTemplatePath, scriptName);
-		content = content.replace("tomcatPath", tomcatPathForReplace);
-		content = content.replace("javaHome", javaHomePathForReplace);
-		if(FileUtil.saveDocContentToFile(content, tomcatPath, scriptName,  null) == true)	//自动生成脚本使用本地默认的格式
-		{
-			return tomcatPath + scriptName;
-		}
-		Log.debug("generateTomcatStopScript() FileUtil.saveDocContentToFile failed");
-    	return null;
-	}
-    
-    private static String generateTomcatStartScript(String tomcatPath, String javaHome) {
-		tomcatPath = Path.localDirPathFormat(tomcatPath, OSType);
-        javaHome = Path.localDirPathFormat(javaHome, OSType);
-    	
-        //对tomcatPath和javaHome进行格式转换
-        String tomcatPathForReplace = tomcatPath.substring(0,tomcatPath.length()-1).replace("/", File.separator);
-        String javaHomePathForReplace = javaHome.substring(0,javaHome.length()-1).replace("/", File.separator);
-    	
-    	String scriptName = "tomcat_start.sh";
-    	if (isWinOS()) {
-        	scriptName = "tomcat_start.bat";
-        }
-
-        String ScriptTemplatePath = docSysWebPath + "WEB-INF/classes/script/"; //脚本模板
-    	String content = FileUtil.readDocContentFromFile(ScriptTemplatePath, scriptName);  //自动检测编码格式
-		content = content.replace("tomcatPath", tomcatPathForReplace);
-		content = content.replace("javaHome", javaHomePathForReplace);
-		if(FileUtil.saveDocContentToFile(content, tomcatPath, scriptName, null) == true)
-		{
-			return tomcatPath + scriptName;
-		}
-		Log.debug("generateTomcatStartScript() FileUtil.saveDocContentToFile failed");
-    	return null;
-	}
-
+	// 已移除基于路径参数的重启脚本生成实现：当前重启由 monitor trigger 负责
+	
 	protected static String buildScriptRunCmd(String shellScriptPath) {
         String cmd = null;
         if (isWinOS()) {
