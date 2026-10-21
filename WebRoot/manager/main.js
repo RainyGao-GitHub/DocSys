@@ -4262,6 +4262,7 @@ var SystemUpgrade = (function () {
 	var _firstFile;
 	var _status = 0; //0: init 1:uploading 2:upload-success 3:systemUpgradePrepare 4:systemUpgradePrepare-success 5: systemUpgradeInProgress
 	var _taskId;
+	var _canceled = false;	//用户已取消：阻止迟到的上传/轮询回调继续启动升级
 	
 	//初始化上传控件
 	var SystemUpgradeFileUpload;
@@ -4358,11 +4359,19 @@ var SystemUpgrade = (function () {
       		{
       			uploadEndInfo = "[" + _Lang("系统升级") + "] " + _Lang("上传失败") + "(" + _LangStats(totalNum, successNum) + ")";
       			$(".reuploadAllBtn").show();
+      			//上传失败后允许直接关闭，不再依赖 stopAllUpload 的 stopFlag
+      			gStatus = 0;
+      			_status = 0;
+      			_taskId = null;
       		}
       		else
       		{
       			$(".reuploadAllBtn").hide();
-    			startUpgradeSystem(_firstFile);
+      			if(!_canceled)
+      			{
+      				_status = 2;
+    				startUpgradeSystem(_firstFile);
+      			}
       		}
       		$(".upload-list-title").text(uploadEndInfo);   		
       		
@@ -4405,6 +4414,14 @@ var SystemUpgrade = (function () {
 	
 	function start(files, firstFile){
 		_firstFile = firstFile;
+		_canceled = false;
+		_status = 1;
+		_taskId = null;
+		if(_upgradePollingTimer != null)
+		{
+			clearTimeout(_upgradePollingTimer);
+			_upgradePollingTimer = null;
+		}
 		
 		var parentPath = "";
 	  	var parentId = 0;
@@ -4417,7 +4434,13 @@ var SystemUpgrade = (function () {
 	
 	function startSystemUpgradePrepareTask(taskId, delayTime)
 	{
+		if(_canceled)
+		{
+			stopSystemUpgradePrepareTask(taskId);
+			return;
+		}
 		_taskId = taskId;
+		_status = 3;
 		console.log("startSystemUpgradePrepareTask() taskId:" + taskId + " delayTime:" + delayTime);
 		var nextDelayTime = delayTime; //每次增加5s
 		if(nextDelayTime < 60000) //最长1分钟
@@ -4444,6 +4467,10 @@ var SystemUpgrade = (function () {
             },
             success : function (ret) {
         	   console.log("doQuerySystemUpgradePrepareTask() ret:",ret);
+        	   if(_canceled)
+        	   {
+        		   return;
+        	   }
                if( "ok" == ret.status )
                {
             	   var task = ret.data;
@@ -4451,18 +4478,27 @@ var SystemUpgrade = (function () {
             	   {
 	           			console.log("SystemUpgradePrepareSuccessHandler() 升级准备工作已完成，等待升级");
 	           			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " +  _Lang("开始升级，请稍候..."));
+	           			_status = 4;
 	           			gStatus = 0;
 	           			// 切换到阶段2：系统即将重启，改为定时轮询 getSystemVersion 确认升级结果
 	           			var oldVersion = $('#systemVersion').val() || "";
 	           			startPollVersionAfterRestart(oldVersion, 5000); //5秒后开始查询
            	        	return;
             	   }
+           	       if(task.status != null && task.status < 0)
+           	       {
+           	    	   console.log("系统升级准备失败:" + task.info);
+           	    	   $(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级失败", ":", task.info || ""));
+           	    	   prepareFailed();
+           	    	   return;
+           	       }
            	       startSystemUpgradePrepareTask(task.id, nextDelayTime);
                }
                else	//后台报错
                {
             	   	console.log("系统升级失败:" + ret.msgInfo);
 					$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级失败", ":", ret.msgInfo));
+					prepareFailed();
                }
             },
             error : function () {	//后台异常
@@ -4470,7 +4506,12 @@ var SystemUpgrade = (function () {
         	   	//由于准备完成(status=200)后monitor.sh会立即重启服务器，存在"服务器已开始重启、
         	   	//但前端尚未轮询到status=200"的竞态，此时不能判为失败，应切到阶段2按版本轮询确认升级结果。
         	   	console.log("doQuerySystemUpgradePrepareTask() 服务器不可达，可能已开始重启，切换到版本轮询");
+        	   	if(_canceled)
+        	   	{
+        	   		return;
+        	   	}
 				var oldVersion = $('#systemVersion').val() || "";
+				_status = 5;
 				gStatus = 0;
 				startPollVersionAfterRestart(oldVersion, 5000); //5秒后开始查询
             }
@@ -4484,6 +4525,11 @@ var SystemUpgrade = (function () {
 
 	function startPollVersionAfterRestart(oldVersion, delayTime)
 	{
+		if(_canceled)
+		{
+			return;
+		}
+		_status = 5;
 		console.log("startPollVersionAfterRestart() oldVersion:" + oldVersion + " delayTime:" + delayTime);
 		var nextDelayTime = delayTime; //每次增加5s
 		if(nextDelayTime < 60000) //最长1分钟
@@ -4507,6 +4553,10 @@ var SystemUpgrade = (function () {
 			dataType : "json",
 			success : function (ret) {
 				console.log("doPollVersionAfterRestart() ret:", ret);
+				if(_canceled)
+				{
+					return;
+				}
 				if("ok" == ret.status)
 				{
 					var newVersion = ret.data;
@@ -4525,6 +4575,10 @@ var SystemUpgrade = (function () {
 			error : function () {
 				//系统重启中，接口暂时不可访问(连接拒绝/404/超时等)，继续等待
 				console.log("doPollVersionAfterRestart() 系统重启中，接口暂不可用，继续等待...");
+				if(_canceled)
+				{
+					return;
+				}
 				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("系统重启中，请稍候..."));
 				startPollVersionAfterRestart(oldVersion, nextDelayTime);
 			}
@@ -4532,19 +4586,38 @@ var SystemUpgrade = (function () {
 	}
 	// ---- 阶段2 end ----
 
+	function close(){
+		if(_upgradePollingTimer != null)
+		{
+			clearTimeout(_upgradePollingTimer);
+			_upgradePollingTimer = null;
+		}
+		//先退出界面：即使后端取消失败/上传库 stopFlag 已置位，也不能把用户困在遮罩里
+		$(".el-upload-list").hide();
+		gStatus = 0;
+		_status = 0;
+		_taskId = null;
+		_canceled = true;
+	}
+
+	function prepareFailed(){
+		_status = 0;
+		_taskId = null;
+		gStatus = 0;
+	}
+
 	function stop(){
-    	if (_upgradePollingTimer != null) {
-    		clearTimeout(_upgradePollingTimer);
-    		_upgradePollingTimer = null;
-    	}
-    	if(_status < 2)	//上传中
-    	{
-    		SystemUpgradeFileUpload.stopAllUpload();
-    	}
-    	else
-    	{
-    		stopSystemUpgradePrepareTask(_taskId);
-    	}
+		var taskId = _taskId;
+		var stage = _status;
+		close();
+		if(taskId != null && stage < 4)
+		{
+			stopSystemUpgradePrepareTask(taskId);
+		}
+		else if(stage < 2)
+		{
+			SystemUpgradeFileUpload.stopAllUpload();
+		}
 	}
 	
 	function stopSystemUpgradePrepareTask(taskId)
@@ -4564,13 +4637,13 @@ var SystemUpgrade = (function () {
                {    
 	           		console.log("stopSystemUpgradePrepareTask() 升级任务已取消");
 	           		$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级任务已取消"));
-	           		gStatus = 0;
                }
                else
                {
             	   	console.log("stopSystemUpgradePrepareTask() 升级任务取消失败:" + ret.msgInfo);
             	   	showErrorMessage("升级任务取消失败:" + ret.msgInfo);
                }
+               //UI 已在 stop()/close() 中退出，这里不再改状态，避免旧回调误伤新升级
             },
             error : function () {	//后台异常
         	   	console.log("stopSystemUpgradePrepareTask() 系统升级失败:服务器异常");
@@ -4583,23 +4656,29 @@ var SystemUpgrade = (function () {
 	SystemUpgradeFileUploadInit();
 	
 	//开放给外部的调用接口
-    return {
-    	start: function(files, firstFile){
-    		start(files, firstFile);
-        },
-        stop: function(){
-        	stop();
-        },
-        stopUpload: function(index){
-        	stopUpload(index);
-        },
-        reuploadFailDocs: function(index){
-        	reuploadFailDocs(index);
-        },
-        startSystemUpgradePrepareTask: function(taskId, delayTime){
-        	startSystemUpgradePrepareTask(taskId, delayTime);
-        },
-    };
+	    return {
+	    	start: function(files, firstFile){
+	    		start(files, firstFile);
+	        },
+	        stop: function(){
+	        	stop();
+	        },
+	        close: function(){
+	        	close();
+	        },
+	        prepareFailed: function(){
+	        	prepareFailed();
+	        },
+	        stopUpload: function(index){
+	        	stopUpload(index);
+	        },
+	        reuploadFailDocs: function(index){
+	        	reuploadFailDocs(index);
+	        },
+	        startSystemUpgradePrepareTask: function(taskId, delayTime){
+	        	startSystemUpgradePrepareTask(taskId, delayTime);
+	        },
+	    };
 })();
 
 function startUpgradeSystem(file)
@@ -4625,16 +4704,18 @@ function startUpgradeSystem(file)
 				//上传失败
 				console.log("升级失败：" + ret.msgInfo);
 				//showErrorMessage("升级失败:" + ret.msgInfo);
-				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级失败", ":", ret.msgInfo));
+					$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级失败", ":", ret.msgInfo));
+					gStatus = 0;
+					SystemUpgrade.prepareFailed();
+					return;
+	             }
+	        },
+	        error : function () {
+				$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级失败", ":", "服务器异常"));
+	        	//showErrorMessage("升级失败: 服务器异常");
 				gStatus = 0;
-				return;
-             }
-        },
-        error : function () {
-			$(".upload-list-title").text("[" + _Lang("系统升级") + "] " + _Lang("升级失败", ":", "服务器异常"));
-        	//showErrorMessage("升级失败: 服务器异常");
-			gStatus = 0;
-        }
+				SystemUpgrade.prepareFailed();
+	        }
     });
 }
 
@@ -4642,7 +4723,7 @@ function stopUpgradeSystem()
 {
 	if(gStatus == 0)
 	{
-		$(".el-upload-list").hide();
+		SystemUpgrade.close();
 		return;
 	}
 
@@ -4654,8 +4735,9 @@ function stopUpgradeSystem()
         qubtn: _Lang("继续"),
     },function(){
     	SystemUpgrade.stop();
+    	return true;
     },function(){
-        //alert('点击了取消！');
+        return true;
     });
 }
 
