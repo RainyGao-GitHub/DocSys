@@ -30,7 +30,7 @@
 			title: _Lang('添加系统管理员'),
 			msg: _Lang("页面正在加载，请稍等") + "...",
 			foot: false,
-			big: false
+			big: true
 		}, null);
 	}
 	

@@ -391,29 +391,33 @@ public class Path {
 	//获取默认的仓库根路径
 	public static String getDefaultReposRootPath(Integer OSType) {
 		String path = ReadProperties.read("docSysConfig.properties", "defaultReposStorePath");
+		if(path != null && !path.isEmpty())
+		{
+			return localDirPathFormat(path, OSType);
+		}
+		String dataRoot = getMxsDocDataRoot(OSType);
+		if(dataRoot != null)
+		{
+			return dataRoot + DataRootService.DIR_REPOS + "/";
+		}
 		if(OS.isWinOS(OSType))
 		{
-			if(path == null || path.isEmpty())
-			{
-				path = "C:/DocSysReposes/";
-			}
-			else
-			{
-				path = localDirPathFormat(path, OSType);
-			}
+			path = "C:/DocSysReposes/";
 	    }	
 		else
 		{
-			if(path == null || path.isEmpty())
-			{
-				path = "/DocSysReposes/";
-			}
-			else
-			{
-				path = localDirPathFormat(path, OSType);
-			}
+			path = "/DocSysReposes/";
 		}	    
 		return path;
+	}
+
+	private static String getMxsDocDataRoot(Integer OSType) {
+		String path = ReadProperties.read("docSysConfig.properties", DataRootService.KEY_DATA_ROOT);
+		if(path == null || path.isEmpty())
+		{
+			return null;
+		}
+		return localDirPathFormat(path, OSType);
 	}
 	
 	//获取MxsDoc数据存储路径（Data目录用于存放userImg/IndexLib）
@@ -423,6 +427,11 @@ public class Path {
         if(path != null && !path.isEmpty())
         {
         	return Path.localDirPathFormat(path, OSType);
+        }
+        String dataRoot = getMxsDocDataRoot(OSType);
+        if(dataRoot != null)
+        {
+        	return dataRoot + DataRootService.DIR_DB + "/";
         }
 
         switch(OSType)
@@ -459,6 +468,11 @@ public class Path {
         {
         	return Path.localDirPathFormat(path, OSType);
         }
+        String dataRoot = getMxsDocDataRoot(OSType);
+        if(dataRoot != null)
+        {
+        	return dataRoot + DataRootService.DIR_SALES + "/";
+        }
 
         switch(OSType)
         {
@@ -481,6 +495,11 @@ public class Path {
         if(path != null && !path.isEmpty())
         {
         	return Path.localDirPathFormat(path, OSType);
+        }
+        String dataRoot = getMxsDocDataRoot(OSType);
+        if(dataRoot != null)
+        {
+        	return dataRoot + DataRootService.DIR_LOG + "/" + DataRootService.DIR_LOG_SUB + "/";
         }
 
         switch(OSType)

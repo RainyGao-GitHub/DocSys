@@ -61,6 +61,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.DocSystem.common.BaseFunction;
+import com.DocSystem.common.DataRootService;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.LogFileUtil;
@@ -2995,8 +2996,57 @@ public class ManageController extends BaseController{
 	}
 	
 
+	@RequestMapping("/getDataRootCandidates.do")
+	public void getDataRootCandidates(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getDataRootCandidates.do ***********************");
+		ReturnAjax rt = new ReturnAjax();
+		if(dataRootAccessCheck(session, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject data = DataRootService.getCandidates(OSType, DataRootService.getCurrentPaths());
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
+	@RequestMapping("/validateDataRoot.do")
+	public void validateDataRoot(String dataRoot, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** validateDataRoot.do ***********************");
+		Log.info("validateDataRoot dataRoot:" + dataRoot);
+		ReturnAjax rt = new ReturnAjax();
+		if(dataRootAccessCheck(session, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject result = DataRootService.validateRoot(dataRoot, OSType, docSysWebPath, true);
+		rt.setData(result);
+		writeJson(rt, response);
+	}
+
+	private boolean dataRootAccessCheck(HttpSession session, ReturnAjax rt)
+	{
+		//首次初始化时还没有超级管理员；初始化完成后只允许超管查看，避免匿名扫描目录
+		if(isFirstAdminUserExists() == false)
+		{
+			return true;
+		}
+		User login = (User) session.getAttribute("login_user");
+		if(login != null && login.getType() != null && login.getType() >= 2)
+		{
+			return true;
+		}
+		docSysErrorLog("系统已初始化，只有超级管理员可以查看数据目录", rt);
+		return false;
+	}
+
 	@RequestMapping(value="addFirstAdminUser")
-	public void addFirstAdminUser(User user, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	public void addFirstAdminUser(User user, String dataRoot, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** addFirstAdminUser.do ***********************");
 
@@ -3038,6 +3088,36 @@ public class ManageController extends BaseController{
 			return;			
 		}
 		
+		String dataRootToUse = dataRoot;
+		if(dataRootToUse == null || dataRootToUse.trim().isEmpty())
+		{
+			//兼容旧缓存页面：未传 dataRoot 时由服务端自动选推荐根
+			JSONObject scan = DataRootService.getCandidates(OSType, DataRootService.getCurrentPaths());
+			dataRootToUse = scan.getString("recommended");
+		}
+		if(dataRootToUse == null || dataRootToUse.trim().isEmpty())
+		{
+			docSysErrorLog("无法自动选择数据根目录，请刷新页面重新选择！", rt);
+			writeJson(rt, response);
+			addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		JSONObject dataRootCheck = DataRootService.validateRoot(dataRootToUse, OSType, docSysWebPath, true);
+		if(dataRootCheck.getBooleanValue("valid") == false)
+		{
+			String error = dataRootCheck.getString("error");
+			docSysErrorLog(error == null || error.isEmpty() ? "数据根目录校验失败！" : error, rt);
+			writeJson(rt, response);
+			addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		if(applyDataRoot(dataRootCheck, rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "失败", null, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+		
 		user.setCreateType(UserCreateType_FirstUser);	//用户为首次添加
 		user.setType(2); //系统管理员
 		//set createTime
@@ -3056,6 +3136,77 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 		addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "成功", null, null, null, buildSystemLogDetailContent(rt));				
 		return;
+	}
+
+	private boolean applyDataRoot(JSONObject validation, ReturnAjax rt)
+	{
+		String root = validation.getString("root");
+		JSONObject paths = validation.getJSONObject("paths");
+		if(root == null || root.isEmpty() || paths == null)
+		{
+			rt.setError("数据根目录信息不完整！");
+			return false;
+		}
+
+		for(String key : paths.keySet())
+		{
+			String path = paths.getString(key);
+			File dir = new File(path);
+			if(dir.exists())
+			{
+				if(dir.isDirectory() == false)
+				{
+					rt.setError("数据目录不是文件夹：" + path);
+					return false;
+				}
+			}
+			else if(dir.mkdirs() == false)
+			{
+				rt.setError("创建数据目录失败：" + path);
+				return false;
+			}
+		}
+
+		if(checkAndAddDocSysIniDir())
+		{
+			rt.setError("系统初始化目录创建失败！");
+			return false;
+		}
+
+		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
+		String tmpDocSystemConfigPath = docSysIniPath;
+		String configFileName = "docSysConfig.properties";
+		if(FileUtil.copyFile(docSystemConfigPath + configFileName, tmpDocSystemConfigPath + configFileName, true) == false)
+		{
+			rt.setError("创建临时配置文件失败！");
+			return false;
+		}
+		if(ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, DataRootService.KEY_DATA_ROOT, root) == false)
+		{
+			rt.setError("保存数据根目录失败！");
+			return false;
+		}
+		for(String key : paths.keySet())
+		{
+			if(ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, key, paths.getString(key)) == false)
+			{
+				rt.setError("保存数据目录配置失败：" + key);
+				return false;
+			}
+		}
+		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)
+		{
+			rt.setError("保存系统配置文件失败！");
+			return false;
+		}
+
+		initDocSysDataPath();
+		if(docSysDataPath == null)
+		{
+			rt.setError("初始化数据目录失败！");
+			return false;
+		}
+		return true;
 	}
 
 	@RequestMapping(value="addUser")
