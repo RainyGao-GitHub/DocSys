@@ -2394,6 +2394,9 @@ function zTreeBeforeAsync(treeId, treeNode) {
 
 function zTreeOnAsyncSuccess(event, treeId, treeNode, msg) {
 	console.log("zTreeOnAsyncSuccess treeId:" + treeId);
+
+	//补加异步加载在途期间新建的节点（修复新建后目录树有时不显示的竞态）
+	flushPendingAddTreeNodes(treeNode);
 }
 
 //This function was used to get the rightClick treeNode,it will be used for contextjs
@@ -2801,6 +2804,29 @@ function getNodePath(treeNode)
 	return path;
 }
 
+//新增节点挂起队列：新建成功时若父目录的子节点异步加载正在在途，先挂起，等加载完成后再补加
+var pendingAddTreeNodes = [];
+
+//异步加载完成后，补加加载期间新建的节点（在途响应的后台查询发生在新建落库之前，响应中不会包含新节点）
+function flushPendingAddTreeNodes(treeNode)
+{
+	if(!treeNode || treeNode == null)
+	{
+		return;
+	}
+
+	for(var i = pendingAddTreeNodes.length - 1; i >= 0; i--)
+	{
+		var node = pendingAddTreeNodes[i];
+		if(node.pid == treeNode.id)
+		{
+			pendingAddTreeNodes.splice(i, 1);
+			console.log("flushPendingAddTreeNodes() node:", node);
+			addTreeNode(node);
+		}
+	}
+}
+
 //该接口是为了避免新增Node时触发的异步加载导致出现多个Node
 function addTreeNode(node)
 {
@@ -2828,18 +2854,36 @@ function addTreeNode(node)
 	else
 	{
 		parentNode = getNodeById(pId);
-		if(parentNode == null || parentNode.open == false)
+		if(parentNode == null)
 		{
+			//父节点未加载进树：无需处理，父节点首次展开时会拉到新节点
 			console.log("addTreeNode() parentNode is null or not exists");
+			return;
+		}
+
+		//父节点的子节点异步加载正在在途：此时新节点会被丢弃且在途响应不含它，
+		//故挂起，等zTreeOnAsyncSuccess后再补加（修复新建后目录树有时不显示的竞态）
+		if(parentNode.isAjaxing == true)
+		{
+			console.log("addTreeNode() parentNode is async loading, pend the node");
+			pendingAddTreeNodes.push(node);
+			return;
+		}
+
+		//父节点从未加载过：无需手工添加，首次展开时会从后台重新拉取子节点
+		if(parentNode.zAsync != true && !(parentNode.children && parentNode.children.length > 0))
+		{
+			console.log("addTreeNode() parentNode is not loaded yet, it will be loaded on expand");
 			return;
 		}
 	}
 
 	//Add zTree Node
-	//parentNode处于展开状态时，需要手动addTreeNode以保证与后台同步，否则只要触发异步加载即可
-	if(parentNode == null || parentNode.open == true)
+	//走到这里说明父节点是根节点或已加载过（无论当前展开/折叠）：直接本地addNodes保证与后台同步，
+	//折叠状态下添加、展开后自然显示（修复父目录展开过又折叠时新建节点不显示的问题）
+	if(parentNode == null || parentNode.zAsync == true || (parentNode.children && parentNode.children.length > 0))
 	{
-		console.log("addTreeNode() parentNode is open");
+		console.log("addTreeNode() parentNode is loaded, add the node");
 		//add the treeNode
 		var treeObj = $.fn.zTree.getZTreeObj("doctree");
 		var treeNode = getNodeByNodeId(node.docId);
@@ -2874,14 +2918,10 @@ function addTreeNode(node)
 
       		newNodes = treeObj.addNodes(parentNode, newNode);
 		}
-	}
-	else
-	{
-		console.log("addTreeNode() parentNode is closed, do not addTreeNode");
-
-		//open the parentNode
-		//var treeObj = $.fn.zTree.getZTreeObj("doctree");
-		//treeObj.expandNode(parentNode, true, false, true);
+		else
+		{
+			console.log("addTreeNode() treeNode already exists, skip");
+		}
 	}
 }
 

@@ -29,14 +29,16 @@
 
 ## 当前任务
 
-- **Mac 版「控制台 + 安装程序」（路线 C 最小可用版）** —— **2026-10-18 由用户明确指定**，工作卡 `DevAgentControl/CURRENT_STATE_Mac安装程序.md`（**本卡**）。
-  缘由：Windows 侧已有「MxsDoc 控制台 + SFX 安装程序」（独立仓库 `D:\Dev\mxsdoc-console`，C++/Qt/MFC），用户要为 macOS 做等价物。
-  **已裁定**：D1 **暂无 Apple 开发者账号 ⇒ 先做不签名版本**（用户手动放行）；D4 **走路线 C「最小可用版」**（原生窗口 + 菜单栏，启动直接调 docsys 自带的 `.sh`，不做自绘无边框 UI / 安装器 UI / 升级 / MySQL 管理）。
-  方案与调研：`devDocs/Mac控制台最小可用版方案.md`（选型、目录布局、M1~M5 验收标准）、`devDocs/Mac安装程序调研.md`（§2 代码测绘 / §3~§8 macOS 侧 / §9 三条路线 / §10 实测与裁定）。
-  代码：**`D:\Dev\mxsdoc-console-mac`（独立 git 仓库，分支 `master`）** —— `Sources/{Core,GUI,main}.swift` + `build.sh` + `Info.plist` + `README.md`。
-  ⚠️ **开发环境是 Windows ⇒ 无法编译/运行任何 mac 产物**；编译与实测必须由用户在 Mac 上做并回填输出（控制台内置 `mxsconsole selftest` 专为此设计）。
-  当前状态：**M1（核心+CLI）与 M2（菜单栏 GUI）已写码，且用户已在 Intel Mac（macOS 12.7.4）上 `bash build.sh` 编译通过（x86_64 + arm64 → lipo 合并 universal）**；**尚未跑 `selftest`、尚未实际启停验证**。M3/M4/M5 未做。下一步见本卡 `## 下一步（立即，按优先级）`。
-  关联：Mac 包由 `build_release.py` 产出（`docsys-mac-*.tar.gz`），打包链细节见 `devDocs/跨平台运行时打包方案.md`；实测脚本 `WebRoot/web/sales/docsysReleaseScripts/macQuarantineTest.sh`（sales 仓库）。
+- **Bug 分析：新建文件/目录成功后有时不出现在目录树** —— **2026-10-23 由用户明确指定**，工作卡 `DevAgentControl/CURRENT_STATE_新建文件目录树不显示.md`（**本卡**）。
+  现象：project 页新建文件或目录成功时"有时候"不出现在左侧目录树。
+  **根因已实证（2026-10-23，E2E 复现）**：①父目录首次展开的 getSubDocList.do 在途时新建——变体A `addTreeNode` 因 `open==false` 提前 return；
+  变体B（双击展开）zTree `addNodes`→`asyncNode` 因 `isAjaxing` 静默丢弃回调；②P0：展开过又折叠的目录（zAsync=true）中新建同样提前 return 且再展开不重拉。
+  在途响应的后台查询早于新建落库 → 不含新节点 → 节点永久丢失，F5 恢复。
+  **修复已实施（2026-10-23，用户裁定"挂起-补加"方案）**：`project.js` 单文件——`pendingAddTreeNodes` 队列 + `flushPendingAddTreeNodes`（挂 `zTreeOnAsyncSuccess`），
+  `addTreeNode` 改三分支（不在树/在途挂起/未加载跳过，其余含折叠已加载一律本地补加）。E2E 回归 7 场景全 PASS，已 publish 到 dev 8100。
+  **当前阶段 = 等用户验收后提交**（未 commit；注意浏览器缓存旧 project.js，验收需 Ctrl+F5）。
+
+- 上一任务（**暂停，未收尾**，2026-10-18 起，2026-10-23 切换）= **Mac 版「控制台 + 安装程序」（路线 C 最小可用版）** —— 工作卡 `DevAgentControl/CURRENT_STATE_Mac安装程序.md`（进展/裁定留在卡内：M1/M2 已编译通过，selftest 与启停验证未做，M3~M5 未做）。
 
 - 上一任务（**暂停，未收尾**，2026-10-12 起）= **MxsDoc 运行时「跨平台打包」（2.02.88）＋ JDK 升级（2.02.89）** —— 工作卡 `DevAgentControl/CURRENT_STATE_JDK升级选型.md`（该卡已标记暂停）。
   阶段 1（JDK 8 + GraalVM CE 21.2 + GraalJS 替代 Nashorn）**已完成并三层验证通过**。用户 2026-10-11 版本计划：先做 2.02.88（首要任务 = 跨平台打包，"JRE 改用 GraalVM"，本版允许放弃部分平台）；阶段 2（JDK 17 + Tomcat 9）推迟到 2.02.89。
