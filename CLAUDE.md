@@ -29,14 +29,11 @@
 
 ## 当前任务
 
-- **Bug 分析：新建文件/目录成功后有时不出现在目录树** —— **2026-10-23 由用户明确指定**，工作卡 `DevAgentControl/CURRENT_STATE_新建文件目录树不显示.md`（**本卡**）。
-  现象：project 页新建文件或目录成功时"有时候"不出现在左侧目录树。
-  **根因已实证（2026-10-23，E2E 复现）**：①父目录首次展开的 getSubDocList.do 在途时新建——变体A `addTreeNode` 因 `open==false` 提前 return；
-  变体B（双击展开）zTree `addNodes`→`asyncNode` 因 `isAjaxing` 静默丢弃回调；②P0：展开过又折叠的目录（zAsync=true）中新建同样提前 return 且再展开不重拉。
-  在途响应的后台查询早于新建落库 → 不含新节点 → 节点永久丢失，F5 恢复。
-  **修复已实施（2026-10-23，用户裁定"挂起-补加"方案）**：`project.js` 单文件——`pendingAddTreeNodes` 队列 + `flushPendingAddTreeNodes`（挂 `zTreeOnAsyncSuccess`），
-  `addTreeNode` 改三分支（不在树/在途挂起/未加载跳过，其余含折叠已加载一律本地补加）。E2E 回归 7 场景全 PASS，已 publish 到 dev 8100。
-  **当前阶段 = 等用户验收后提交**（未 commit；注意浏览器缓存旧 project.js，验收需 Ctrl+F5）。
+- 上一任务 = **新建文件/目录后目录树有时不显示**（已收尾归档 2026-10-23）：工作卡 `DevAgentControl/已完成/CURRENT_STATE_新建文件目录树不显示.md`。
+  根因 = zTree 异步加载在途竞态（新节点被跳过/静默丢弃，陈旧响应落地后 zAsync 短路不再请求）+ 展开过又折叠目录的必现分支；
+  修复 = "挂起-补加"（`pendingAddTreeNodes` 队列 + `zTreeOnAsyncSuccess` 后 flush，`addTreeNode` 三分支），E2E 回归 7 场景全 PASS。
+  提交：主仓库 `c664fe22b`（BugFix，用户提交）；配套 `project.html`/`project_en.html` 的 project.js 引用加 `?v=20261023`（防浏览器旧缓存，普通 F5 即生效）。
+  ⚠️ **纪律：今后每次改 project.js 必须同步 bump 两处 html 的版本号**，否则旧缓存问题复发（静态 js 无 Cache-Control，走启发式缓存；全量治理见挂起卡 `CURRENT_STATE_前端静态资源缓存.md`）。
 
 - 上一任务（**暂停，未收尾**，2026-10-18 起，2026-10-23 切换）= **Mac 版「控制台 + 安装程序」（路线 C 最小可用版）** —— 工作卡 `DevAgentControl/CURRENT_STATE_Mac安装程序.md`（进展/裁定留在卡内：M1/M2 已编译通过，selftest 与启停验证未做，M3~M5 未做）。
 
