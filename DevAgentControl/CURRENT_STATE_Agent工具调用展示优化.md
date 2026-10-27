@@ -168,6 +168,60 @@ processSteps+liveText（intermediate/toolCalls 不再维护，仅旧数据降级
 - 「＋新会话」与「立即发消息」在同一瞬间会触发页面既有异步竞态（messages 被清空、流写入孤儿索引）——
   人工操作不会踩到；自动化要先点＋等 1s 再发。
 - IAB 后台标签页 rAF 节流：测流式中间态必须前台可见。
+- **dev Tomcat 重启会丢 JSESSIONID**：agent 页会弹本地登录框（Admin/Admin），重新登录即可；
+  症状是 /agent/* 全部 302→tologin.do→404，**别误判成模块挂了**（catalina 里 libfreenect2 多版本 jar 的
+  `Invalid byte tag 19` 告警是历史噪声，与本任务无关）。
+
+### S2 实施内容（2026-10-27，后端两文件，未提交）
+
+- `agent/controller/AgentController.java`：
+  - `StreamingLoopOutcome` 增 `processStepsJson` 字段（三参构造）；
+  - 新增 `private static final class ProcessTimeline`（与前端 processSteps 同构的累积器）：
+    onReasoning/onText 入 buffer（onText 先 flushReasoning）；onToolCall 双 flush 后 push 工具步
+    （args 截 4000）；onToolResult 回填最后同名 running 步（summary 300/error 200/approval）；
+    onRetry 全清；`finish()` 只收尾 reasoning、**丢弃尾随正文**（= 最终回答，assistant 行已有），
+    序列化 `{"v":1,"steps":[...]}`；
+  - StreamSink 五个回调接线（与 SSE 同值）；`truncateForCard` 改 static；
+  - SSE ToolLoop 落库点传 `outcome.processStepsJson`。
+- `agent/session/ConversationHistoryService.java`：新增 5 参 `saveExchange`（user→reasoning[→process]→assistant，
+  process 行 = 前端回放专用，loadSessionHistory/isAiChat 只取 user/assistant 不回灌）；旧 4 参重载委托（传 null）。
+- 编译（WDK JDK8 `-g -encoding UTF-8`，classpath 需带 `WebRoot/WEB-INF/classes`）→ `PublishDev.bat` → dev 重启，全链路通。
+
+### S2 实测证据（2026-10-27，dev=TomcatForDocSysDev，重启后需重新登录）
+
+1. **落库行序**：新会话一轮工具对话后 `GET /agent/sessions/{id}/messages` 回
+   `user(1)→reasoning(2,1190字)→process(3,10035字)→assistant(4,911字)`；reasoning 行过渡期照写 ✓。
+2. **process JSON 结构**：`v:1`、27 步、kinds=`reasoning,text,list_repos:success,reasoning,text,list_docs×22,reasoning`；
+   tool tc 六字段齐（args/summary/approval/name/error/status）；args/summary 截断生效；
+   **尾步=reasoning 无尾随 text**（最终回答只在 assistant 行，无重复）；tool 后接 reasoning（交错保真）✓。
+3. **续接不污染**：同会话第二轮追问"仓库总数多少"，回答正确引用第一轮统计（"21 个，vid 1~22 无 15"）
+   ——模型上下文只含 user/assistant，process/reasoning 行未回灌 ✓；两轮行序均正常。
+4. **旧会话降级**：pre-S2 会话（e6f97500）行结构 user,reasoning,assistant 无 process 行；
+   切换到它页面 14 条消息全部正常角色、4 个 reasoning-only 容器、0 卡片、无怪气泡无报错 ✓
+   （S1 版 loadSessionMessages 的 process 行跳过防御同时得到验证）。
+5. **isAiChat 直连路径**：代码未动（4 参重载传 null），无回归风险（未单独行为测试）。
+
+### S3 实施内容（2026-10-27，前端 1 文件，未提交）
+
+- `WebRoot/web/agent/index.html` 新增 `parseProcessSteps(content)`：解析 `{"v":1,"steps":[...]}` →
+  前端 processSteps，**防御性归一化**（未知 kind/缺 tc/空 text 丢弃该步；残留 running 按 failed 展示）；
+  解析失败返回 null → 走降级。
+- `loadSessionMessages` 改造：`pendingSteps` 与 `pendingReasoning` 并行累积；assistant 消息**优先用
+  pendingSteps 建 processSteps**，无 steps 才用 pendingReasoning 填 reasoning（降级，避免同一段思考显示两遍）；
+  两者用完即清。
+- 发布：PublishDev.bat（静态文件，无需重启）。
+
+### S3 实测证据（2026-10-27，dev，浏览器）
+
+1. **Bug 端到端修复（用户原始诉求）**：新会话跑一轮（list_repos+list_docs 2 卡）→ **刷新页面** →
+   容器摘要"⚙️ 处理过程 · 2 步工具调用已完成"、卡片 2 张（名称一致）、reasoning 在、卡片收起、
+   点击展开有 args+结果。**刷新前 2 卡 = 刷新后 2 卡** ✓
+2. **回放交错保真**：22 步工具会话回放 → 27 步容器，顺序 =
+   think→text→list_repos→think→text→list_docs×22→think，与 S1 流式期间完全同构 ✓
+3. **纯思考轮次**：无工具调用的轮次 → 1 步（think）容器、0 卡、无怪摘要 ✓
+4. **pre-S2 旧会话降级**：e6f97500（仅 user/reasoning/assistant 行）→ 14 条消息正常角色、
+   4 个 reasoning-only 容器、0 卡片、无怪气泡 ✓
+5. **卡片交互（回放态）**：点击展开/再次收起正常，args/result 均在 ✓
 
 ## 阶段计划（S2~S4 细节）
 
@@ -189,10 +243,11 @@ processSteps+liveText（intermediate/toolCalls 不再维护，仅旧数据降级
 
 ## 下一步
 
-1. **等用户 S1 实测验收**（验收点：流式时序交错 / 卡片结束收起 / 点击展开 / 生成中展开的卡不被刷掉 /
-   确认弹窗路径；重开页面回放暂无卡片属预期，S3 修）。
-2. 验收通过 → **S2 后端实施**（见上阶段计划：StreamSink 累积时间线 + saveExchange 落 process 行 +
-   编译发布重启 + API 实测）→ 通知用户验收 → **S3 前端回放** → 验收 → **S4 全量回归收尾**。
+1. ~~S1 验收~~ **✅ 用户已验收并提交 `f59e2e4af`**。
+2. ~~S2 后端持久化~~ **✅ 用户已验收并提交 `99d03175c`**。
+3. ~~S3 前端回放~~ **✅ 已实施并实测通过（2026-10-27）——等用户验收**。
+4. **S4 收尾**（用户验收 S3 后）：全量回归（确认弹窗批准路径 / 中断 / 多轮 / 预算到顶）+ 版本参数结论
+   已在 S1 落实（无需加）+ 工作卡收尾归档 + 汇报。
 
 **版本参数结论（S1 时已查明）**：agent/index.html 的外链只有 `styles.css`/`marked.min.js`/
 `mermaid.min.js`/`base64.js`，本次改动全部在内联 `<style>`/`<script>` 里，**外链一个都不动 ⇒ 无需加 ?v=**

@@ -387,13 +387,119 @@ public class AgentController {
         }
     }
 
-    /** 流式工具推理的产物：响应 + 全程累积的 reasoning（T7.3 持久化用） */
+    /** 流式工具推理的产物：响应 + 全程累积的 reasoning（T7.3 持久化用）+ 过程时间线 JSON（S2 持久化用） */
     private static class StreamingLoopOutcome {
         final AgentResponse response;
         final String reasoning;
-        StreamingLoopOutcome(AgentResponse response, String reasoning) {
+        final String processStepsJson;
+        StreamingLoopOutcome(AgentResponse response, String reasoning, String processStepsJson) {
             this.response = response;
             this.reasoning = reasoning != null ? reasoning : "";
+            this.processStepsJson = processStepsJson;
+        }
+    }
+
+    /**
+     * S2：流式过程时间线累积器 —— 与前端 processSteps 完全同构（reasoning 分段 / 中间文本 / 工具步），
+     * 序列化为 {@code {"v":1,"steps":[...]}} 落 role='process' 行，回放时前端按序重建交错展示。
+     * 语义与前端时间线一致：正文只在 onToolCall 时收步（剥 <tool_call> XML）；循环结束时尾随正文不收步
+     * （那是最终回答，已由 assistant 行落库，避免回放重复）；onRetry 全清。
+     */
+    private static final class ProcessTimeline {
+        private static final java.util.regex.Pattern TOOL_CALL_XML =
+                java.util.regex.Pattern.compile("<tool_call>[\\s\\S]*?</tool_call>",
+                        java.util.regex.Pattern.CASE_INSENSITIVE);
+        private final java.util.List<com.alibaba.fastjson.JSONObject> steps = new java.util.ArrayList<>();
+        private final StringBuilder reasonBuf = new StringBuilder();
+        private final StringBuilder textBuf = new StringBuilder();
+
+        void onReasoning(String chunk) {
+            if (chunk != null && !chunk.isEmpty()) {
+                reasonBuf.append(chunk);
+            }
+        }
+
+        void onText(String chunk) {
+            if (chunk == null || chunk.isEmpty()) {
+                return;
+            }
+            flushReasoning();
+            textBuf.append(chunk);
+        }
+
+        void onToolCall(String name, String argsJson) {
+            flushReasoning();
+            flushText();
+            com.alibaba.fastjson.JSONObject tc = new com.alibaba.fastjson.JSONObject();
+            tc.put("name", name != null ? name : "");
+            tc.put("args", argsJson != null ? truncateForCard(argsJson, 4000) : null);
+            tc.put("status", "running");
+            tc.put("summary", "");
+            tc.put("error", "");
+            com.alibaba.fastjson.JSONObject step = new com.alibaba.fastjson.JSONObject();
+            step.put("kind", "tool");
+            step.put("tc", tc);
+            steps.add(step);
+        }
+
+        /** 回填最后一个同名 running 工具步（与前端 tool_result 回填规则一致） */
+        void onToolResult(String name, boolean success, String summary, String error, String approval) {
+            for (int i = steps.size() - 1; i >= 0; i--) {
+                if (!"tool".equals(steps.get(i).getString("kind"))) {
+                    continue;
+                }
+                com.alibaba.fastjson.JSONObject tc = steps.get(i).getJSONObject("tc");
+                if (tc != null && "running".equals(tc.getString("status"))
+                        && java.util.Objects.equals(tc.getString("name"), name)) {
+                    tc.put("status", success ? "success" : "failed");
+                    tc.put("summary", summary != null ? summary : "");
+                    tc.put("error", error != null ? error : "");
+                    tc.put("approval", approval != null ? approval : "");
+                    return;
+                }
+            }
+        }
+
+        void onRetry() {
+            steps.clear();
+            reasonBuf.setLength(0);
+            textBuf.setLength(0);
+        }
+
+        /** 循环结束：收尾最后一段 reasoning（展示用）；尾随正文丢弃（= 最终回答，assistant 行已有） */
+        String finish() {
+            flushReasoning();
+            textBuf.setLength(0);
+            if (steps.isEmpty()) {
+                return null;
+            }
+            com.alibaba.fastjson.JSONObject wrapper = new com.alibaba.fastjson.JSONObject();
+            wrapper.put("v", 1);
+            wrapper.put("steps", steps);
+            return wrapper.toJSONString();
+        }
+
+        private void flushReasoning() {
+            if (reasonBuf.length() > 0) {
+                com.alibaba.fastjson.JSONObject step = new com.alibaba.fastjson.JSONObject();
+                step.put("kind", "reasoning");
+                step.put("text", reasonBuf.toString());
+                steps.add(step);
+                reasonBuf.setLength(0);
+            }
+        }
+
+        private void flushText() {
+            if (textBuf.length() > 0) {
+                String stripped = TOOL_CALL_XML.matcher(textBuf.toString()).replaceAll("");
+                if (!stripped.trim().isEmpty()) {
+                    com.alibaba.fastjson.JSONObject step = new com.alibaba.fastjson.JSONObject();
+                    step.put("kind", "text");
+                    step.put("text", stripped);
+                    steps.add(step);
+                }
+                textBuf.setLength(0);
+            }
         }
     }
 
@@ -407,7 +513,7 @@ public class AgentController {
     }
 
     /** 截断工具卡片展示文本（结果摘要过长时） */
-    private String truncateForCard(String s, int maxLen) {
+    private static String truncateForCard(String s, int maxLen) {
         if (s == null) return "";
         if (s.length() <= maxLen) return s;
         return s.substring(0, maxLen) + "…";
@@ -432,6 +538,7 @@ public class AgentController {
             info.agentSessionId = sessionId;
 
             final StringBuilder reasoningAccum = new StringBuilder();
+            final ProcessTimeline processTimeline = new ProcessTimeline();
 
             // SSE 确认推送器：写工具需要确认时推 confirm 事件给前端
             // P2：带 args 的重载附带「作用域授权」所需的结构化信息（vid/path/风险），
@@ -490,15 +597,18 @@ public class AgentController {
                         @Override
                         public void onReasoning(String chunk) {
                             reasoningAccum.append(chunk);
+                            processTimeline.onReasoning(chunk);
                             sendSse(emitter, "{\"type\":\"reasoning\",\"content\":" + escapeJson(chunk) + "}");
                         }
                         @Override
                         public void onText(String chunk) {
+                            processTimeline.onText(chunk);
                             sendSse(emitter, "{\"type\":\"text\",\"content\":" + escapeJson(chunk) + "}");
                         }
                         @Override
                         public void onToolCall(com.DocSystem.agent.tool.ToolCall call) {
                             String args = call.arguments != null ? call.arguments.toJSONString() : "{}";
+                            processTimeline.onToolCall(call.name, args);
                             sendSse(emitter, "{\"type\":\"tool_call\",\"name\":" + escapeJson(call.name) +
                                     ",\"arguments\":" + args + "}");
                         }
@@ -512,23 +622,25 @@ public class AgentController {
                                     300);
                             String err = result.success ? null
                                     : (result.error != null ? truncateForCard(result.error, 200) : "执行失败");
+                            String approval = com.DocSystem.agent.permission.PermissionTrace.approvalLabel(
+                                    com.DocSystem.agent.permission.PermissionTrace.last());
+                            processTimeline.onToolResult(call.name, result.success, summary, err, approval);
                             sendSse(emitter, "{\"type\":\"tool_result\",\"name\":" + escapeJson(call.name) +
                                     ",\"success\":" + result.success +
                                     ",\"summary\":" + escapeJson(summary) +
-                                    ",\"approval\":" + escapeJson(
-                                            com.DocSystem.agent.permission.PermissionTrace.approvalLabel(
-                                                    com.DocSystem.agent.permission.PermissionTrace.last())) +
+                                    ",\"approval\":" + escapeJson(approval) +
                                     ",\"error\":" + (err != null ? escapeJson(err) : "null") + "}");
                         }
                         @Override
                         public void onRetry() {
+                            processTimeline.onRetry();
                             sendSse(emitter, "{\"type\":\"retry\"}");
                         }
                     };
 
             AgentResponse resp = mainAgent.runToolUseLoopStreaming(
                     command, context, execClient, resolvedLlm, info, sink, sessionId, streamSink);
-            return new StreamingLoopOutcome(resp, reasoningAccum.toString());
+            return new StreamingLoopOutcome(resp, reasoningAccum.toString(), processTimeline.finish());
         } catch (Exception e) {
             log.error("runToolLoopStreamingWithSse failed", e);
             return null;
@@ -1805,11 +1917,12 @@ public class AgentController {
                                         ? JSON.toJSONString(toolResp.getMetadata()) : "{}";
                                 sendSse(emitter, "{\"type\":\"done\",\"fullContent\":" + escapeJson(responseText) +
                                         ",\"meta\":" + meta + "}");
-                                // T5.2a 会话历史持久化（T7.3 含 reasoning）
+                                // T5.2a 会话历史持久化（T7.3 含 reasoning；S2 含过程时间线）
                                 if (conversationHistoryService != null) {
                                     conversationHistoryService.saveExchange(
                                             sessionId != null ? sessionId : capturedJsessionid,
-                                            focusCommand, responseText, outcome.reasoning);
+                                            focusCommand, responseText, outcome.reasoning,
+                                            outcome.processStepsJson);
                                 }
                                 emitter.complete();
                                 return;

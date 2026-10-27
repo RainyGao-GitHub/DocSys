@@ -4306,7 +4306,44 @@
         renderSessions();
     }
 
-    /** 加载指定会话的历史消息（T7.3：reasoning 消息合并到其后的 assistant，灰色小字回看展示） */
+    /**
+     * S3：解析后端 role='process' 行（{"v":1,"steps":[...]}）→ 前端 processSteps 数组。
+     * 只保留渲染所需字段并做防御性归一化（缺 tc/未知 kind/字段类型不对 → 丢弃该步）；
+     * 解析失败返回 null（调用方降级到 reasoning 整块展示）。
+     */
+    function parseProcessSteps(content) {
+        if (!content) return null;
+        var payload;
+        try { payload = (typeof content === 'string') ? JSON.parse(content) : content; }
+        catch (e) { return null; }
+        if (!payload || !payload.steps || !payload.steps.length) return null;
+        var steps = [];
+        for (var i = 0; i < payload.steps.length; i++) {
+            var s = payload.steps[i];
+            if (!s || typeof s !== 'object') continue;
+            if (s.kind === 'reasoning' || s.kind === 'text') {
+                if (typeof s.text !== 'string' || !s.text) continue;
+                steps.push({ kind: s.kind, text: s.text });
+            } else if (s.kind === 'tool' && s.tc && typeof s.tc === 'object') {
+                steps.push({
+                    kind: 'tool',
+                    tc: {
+                        name: s.tc.name || '',
+                        args: (s.tc.args != null) ? s.tc.args : null,
+                        // 落库时正常都是终态；残留 running（异常中断）按 failed 展示更如实
+                        status: (s.tc.status === 'success' || s.tc.status === 'failed') ? s.tc.status : 'failed',
+                        summary: s.tc.summary || '',
+                        error: s.tc.error || '',
+                        approval: s.tc.approval || ''
+                    }
+                });
+            }
+        }
+        return steps.length ? steps : null;
+    }
+
+    /** 加载指定会话的历史消息（T7.3：reasoning 消息合并到其后的 assistant，灰色小字回看展示；
+     *  S3：process 行 → processSteps 时间线，回放即得与流式同构的交错展示，优先于 reasoning 行） */
     async function loadSessionMessages(sessionId) {
         loadAttachmentsForSession();   // P2：切会话时恢复该会话的附件 chips
         // 已选 @ 对象 / 操作不随会话切换变化（2026-09-18 规则：保留到用户主动点 × 删除）
@@ -4314,14 +4351,17 @@
         if (!data || !data.data) return;
         var msgs = [];
         var pendingReasoning = '';
+        var pendingSteps = null;
         (data.data || []).forEach(function(m) {
             if (m.role === 'reasoning') {
                 // reasoning 只展示用（灰色小字），回放剥离不回灌模型（后端 loadSessionHistory 已排除）
+                // 有 process 行时它只作降级兜底，避免同一段思考显示两遍
                 pendingReasoning += (m.content || '');
                 return;
             }
             if (m.role === 'process') {
-                // 2026-10-27 S2 起后端会落「过程时间线」行；S3 接管回放重建前先跳过，避免渲染成怪气泡
+                // S2 起后端每轮落「过程时间线」行；解析成功则优先用它重建容器（含工具卡片）
+                pendingSteps = parseProcessSteps(m.content);
                 return;
             }
             var entry = {
@@ -4335,9 +4375,15 @@
             // P1：服务端从注入块反解出的关注对象/操作（历史回显用，刷新后 chips 不丢）
             if (m.focus && m.focus.length) entry.focus = m.focus;
             if (m.operation) entry.operation = m.operation;
-            if (m.role === 'assistant' && pendingReasoning) {
-                entry.reasoning = pendingReasoning;
+            if (m.role === 'assistant') {
+                if (pendingSteps) {
+                    entry.processSteps = pendingSteps;
+                } else if (pendingReasoning) {
+                    // 降级：旧会话无 process 行 → reasoning 整块（无工具卡片，与 S1 前一致）
+                    entry.reasoning = pendingReasoning;
+                }
                 pendingReasoning = '';
+                pendingSteps = null;
             }
             msgs.push(entry);
         });

@@ -53,6 +53,23 @@ public class ConversationHistoryService {
      */
     public void saveExchange(String sessionId, String userMessage, String assistantMessage,
                              String reasoning) {
+        saveExchange(sessionId, userMessage, assistantMessage, reasoning, null);
+    }
+
+    /**
+     * 保存一轮问答（user + reasoning[可选] + process[可选] + assistant），并更新会话标题/活跃时间。
+     *
+     * <p>S2 过程时间线持久化：processStepsJson 以 role="process" 行落库，content 为
+     * {@code {"v":1,"steps":[...]}}（与前端 processSteps 同构：reasoning 分段/中间文本/工具步交错），
+     * 仅供前端回放重建「处理过程」容器使用；loadSessionHistory / isAiChat 续接只取 user/assistant，
+     * process 行不回灌模型上下文。</p>
+     *
+     * <p>reasoning 行过渡期继续写（旧版前端页面兼容；新前端优先用 process 行重建，无 process 行时降级）。</p>
+     *
+     * @param processStepsJson 过程时间线 JSON（可为 null/空 → 不落库）
+     */
+    public void saveExchange(String sessionId, String userMessage, String assistantMessage,
+                             String reasoning, String processStepsJson) {
         if (sessionId == null || sessionId.isEmpty() || userMessage == null) {
             return;
         }
@@ -60,6 +77,9 @@ public class ConversationHistoryService {
             appendMessage(sessionId, "user", userMessage);
             if (reasoning != null && !reasoning.isEmpty()) {
                 appendMessage(sessionId, "reasoning", reasoning);
+            }
+            if (processStepsJson != null && !processStepsJson.isEmpty()) {
+                appendMessage(sessionId, "process", processStepsJson);
             }
             if (assistantMessage != null && !assistantMessage.isEmpty()) {
                 appendMessage(sessionId, "assistant", assistantMessage);
