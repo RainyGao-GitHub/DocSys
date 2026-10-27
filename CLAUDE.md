@@ -29,9 +29,17 @@
 
 ## 当前任务
 
-- **Agent 工具调用展示优化 + 工具调用详情持久化 Bug** —— **2026-10-27 由用户明确指定**，工作卡 `DevAgentControl/CURRENT_STATE_Agent工具调用展示优化.md`（**本卡**）。
-  任务：①工具调用详情卡片按真实时序插入"决定调用工具的位置"、完成后收起只显示标题（点击展开）；②修复"重开 Agent 页面工具调用详情消失"。
-  **状态：调研、Bug 分析与用户裁定均已完成（卡内「用户裁定」节，2026-10-27：容器内交错展示 / 完整时间线持久化（A+B 合流）/ reasoning 行过渡保留 / agent 页 js 引用加 ?v=），未改代码**。用户指示**换新 session 正式开工**，方案已定稿无需再问。
+- **暂无当前任务**——等待用户指定。`DevAgentControl/` 下未归档的其余 `CURRENT_STATE*.md` 均为挂起/暂停卡，
+  未获用户明确裁定前不要动代码。
+
+- 上一任务 = **Agent 工具调用展示优化 + 工具调用详情持久化 Bug**（已收尾归档 2026-10-27）：工作卡
+  `DevAgentControl/已完成/CURRENT_STATE_Agent工具调用展示优化.md`，提交 `f59e2e4af`（S1 前端）+ `47bd45327`（S2 后端持久化 + S3 前端回放，用户 --amend 合并）。
+  S1 = processSteps 时间线模型 + 容器内交错渲染 + 工具卡片 `<details>` 自折叠（running 展开/结束收起/点击展开/增量刷新保留展开态）；
+  S2 = SSE StreamSink 累积时间线 → `agent_session_messages` 增 `role='process'` 行（`{"v":1,"steps":[...]}`，reasoning 行过渡期照写，续接只取 user/assistant 不污染）；
+  S3 = `loadSessionMessages` 解析 process 行重建 processSteps（优先于 reasoning 行，旧会话降级 reasoning 整块）。
+  E2E 全过：交错/收起/展开保留/running/刷新回放/旧会话降级/续接不污染/确认批准与拒绝/中断/多轮。
+  两处既有行为已记录：①SSE 中断 = 前端停止接收、服务端继续跑完并落库；②IAB/后台标签页 rAF 节流（测流式中间态须前台）。
+  ⚠️ 沿用教训：**dev 只用 TomcatForDocSysDev，MxsDoc 是正式实例绝不碰**（详见下方「验证要求」）。
 
 - 上一任务 = **新建文件/目录后目录树有时不显示**（已收尾归档 2026-10-23）：工作卡 `DevAgentControl/已完成/CURRENT_STATE_新建文件目录树不显示.md`。
   根因 = zTree 异步加载在途竞态（新节点被跳过/静默丢弃，陈旧响应落地后 zAsync 短路不再请求）+ 展开过又折叠目录的必现分支；
