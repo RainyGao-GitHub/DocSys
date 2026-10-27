@@ -683,12 +683,11 @@
             word-break: break-word;
         }
 
-        /* 工具进度卡片（T7.2.2） */
-        .tool-card {
+        /* 工具进度卡片（T7.2.2；2026-10-27 改 <details> 自折叠：running 展开、结束收起、点击展开） */
+        details.tool-card {
             border: 1px solid #e3e3e8;
             border-radius: 10px;
             background: #fff;
-            padding: 8px 12px;
             font-size: 12px;
             line-height: 1.5;
         }
@@ -697,10 +696,27 @@
         .tool-card.failed { border-color: #f3b4b4; background: #fff7f7; }
 
         .tool-card-header {
+            cursor: pointer;
+            list-style: none;
             display: flex;
             align-items: center;
             gap: 6px;
+            padding: 8px 12px;
+            user-select: none;
         }
+        .tool-card-header::-webkit-details-marker { display: none; }
+        .tool-card-header::before {
+            content: '▸';
+            display: inline-block;
+            transition: transform 0.15s;
+            color: #999;
+            font-size: 11px;
+        }
+        details.tool-card[open] > .tool-card-header::before { transform: rotate(90deg); }
+        .tool-card-body {
+            padding: 0 12px 8px;
+        }
+        .tool-card-body:empty { display: none; }
         .tool-card-icon { font-size: 13px; }
         .tool-card-name {
             font-family: Consolas, Menlo, monospace;
@@ -3660,8 +3676,8 @@
         }
     }
 
-    /** T7.2.2 工具进度卡片渲染 */
-    function renderToolCard(tc) {
+    /** T7.2.2 工具进度卡片渲染（2026-10-27 改 <details> 自折叠：running 展开、结束收起、点击展开） */
+    function renderToolCard(tc, stepIndex) {
         if (!tc) return '';
         var statusIcon = tc.status === 'running' ? '⏳' : (tc.status === 'failed' ? '❌' : '✅');
         var statusClass = tc.status === 'running' ? 'running' : (tc.status === 'failed' ? 'failed' : 'success');
@@ -3671,18 +3687,54 @@
             try { argsHtml = escapeHtml(typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args)); }
             catch (e) { argsHtml = ''; }
         }
-        var html = '<div class="tool-card ' + statusClass + '">';
-        html += '<div class="tool-card-header"><span class="tool-card-icon">' + statusIcon + '</span>';
+        var idxAttr = (stepIndex != null) ? ' data-step-index="' + stepIndex + '"' : '';
+        var html = '<details class="tool-card ' + statusClass + '"' + idxAttr
+                 + (tc.status === 'running' ? ' open' : '') + '>';
+        html += '<summary class="tool-card-header"><span class="tool-card-icon">' + statusIcon + '</span>';
         html += '<span class="tool-card-name">' + escapeHtml(tc.name || '') + '</span>';
-        html += '<span class="tool-card-status">' + statusLabel + '</span></div>';
+        html += '<span class="tool-card-status">' + statusLabel + '</span></summary>';
+        html += '<div class="tool-card-body">';
         if (argsHtml) html += '<div class="tool-card-args">' + argsHtml + '</div>';
         if (tc.status !== 'running' && (tc.summary || tc.error)) {
             html += '<div class="tool-card-result">'
                  + (tc.approval ? '<span class="tool-card-approval">' + escapeHtml(tc.approval) + '</span>' : '')
                  + escapeHtml(tc.status === 'failed' ? (tc.error || '执行失败') : tc.summary) + '</div>';
         }
-        html += '</div>';
+        html += '</div></details>';
         return html;
+    }
+
+    /** 2026-10-27 过程时间线：追加一段过程文本（与最后一步同 kind 则合并，否则新开一步） */
+    function appendProcessStep(msg, kind, text) {
+        if (!text) return;
+        var steps = msg.processSteps || (msg.processSteps = []);
+        var last = steps.length ? steps[steps.length - 1] : null;
+        if (last && last.kind === kind) {
+            last.text = (last.text || '') + text;
+        } else {
+            steps.push({ kind: kind, text: text });
+        }
+    }
+
+    /** 2026-10-27 增量替换 process 容器时保留工具卡片展开态：只记「已结束且展开」的卡
+     *  （running 卡的展开是默认行为不算用户选择；running→finished 过渡按裁定收起），
+     *  替换后按 data-step-index 回放到新节点上 */
+    function preserveToolCardOpenState(oldEl, newEl) {
+        if (!oldEl || !newEl) return;
+        var openIdx = {};
+        oldEl.querySelectorAll('details.tool-card').forEach(function(c) {
+            if (c.hasAttribute('open') && c.className.indexOf('running') === -1) {
+                var idx = c.getAttribute('data-step-index');
+                if (idx != null && idx !== '') openIdx[idx] = true;
+            }
+        });
+        var keys = Object.keys(openIdx);
+        if (!keys.length) return;
+        newEl.querySelectorAll('details.tool-card').forEach(function(c) {
+            if (c.className.indexOf('running') === -1 && openIdx[c.getAttribute('data-step-index')]) {
+                c.setAttribute('open', '');
+            }
+        });
     }
 
     /** 从工具调用轮文本中剥离 <tool_call>...</tool_call> XML 标记（前端收进处理容器时用） */
@@ -4043,31 +4095,59 @@
         return html ? '<div class="focus-chips" style="margin-bottom:6px;">' + html + '</div>' : '';
     }
 
-    /** T7.2.3 构建处理过程容器 HTML（reasoning + 中间文本 + 工具卡片，可折叠） */
+    /** T7.2.3 构建处理过程容器 HTML（可折叠）。
+     *  2026-10-27：优先按 processSteps 时间线交错输出（工具卡片出现在「决定调用工具」的位置）；
+     *  旧消息（历史会话回放）无 steps → 降级为「reasoning 整块 + 中间文本 + 工具卡片堆尾」。 */
     function buildProcessContainerHtml(msg) {
-        if (msg.role !== 'assistant'
-                || (!msg.reasoning
-                    && !(msg.intermediate && msg.intermediate.length)
-                    && !(msg.toolCalls && msg.toolCalls.length))) {
+        if (msg.role !== 'assistant') return '';
+        var steps = (msg.processSteps && msg.processSteps.length) ? msg.processSteps : null;
+        if (steps) {
+            var toolCount = 0;
+            var bodyHtml = '';
+            for (var i = 0; i < steps.length; i++) {
+                var s = steps[i];
+                if (s.kind === 'reasoning') {
+                    if (s.text) bodyHtml += '<div class="reasoning-text">' + escapeHtml(s.text) + '</div>';
+                } else if (s.kind === 'text') {
+                    if (s.text && s.text.trim()) {
+                        bodyHtml += '<div class="intermediate-text">' + escapeHtml(s.text) + '</div>';
+                    }
+                } else if (s.kind === 'tool') {
+                    toolCount++;
+                    bodyHtml += renderToolCard(s.tc, i);
+                }
+            }
+            if (!bodyHtml) return '';
+            var html = '<details class="process-container"' + (msg.isGenerating ? ' open' : '') + '>';
+            html += '<summary class="process-summary">⚙️ 处理过程' +
+                    (toolCount ? ' · ' + toolCount + ' 步工具调用' : '') +
+                    '<span class="process-status">' + (msg.isGenerating ? '处理中…' : '已完成') + '</span></summary>';
+            html += '<div class="process-body">' + bodyHtml + '</div></details>';
+            return html;
+        }
+        // 旧数据降级：无时间线（历史会话 / 旧字段）
+        if (!msg.reasoning
+                && !(msg.intermediate && msg.intermediate.length)
+                && !(msg.toolCalls && msg.toolCalls.length)) {
             return '';
         }
-        var toolCount = (msg.toolCalls || []).length;
-        var html = '<details class="process-container"' + (msg.isGenerating ? ' open' : '') + '>';
-        html += '<summary class="process-summary">⚙️ 处理过程' +
-                (toolCount ? ' · ' + toolCount + ' 步工具调用' : '') +
+        var toolCount2 = (msg.toolCalls || []).length;
+        var html2 = '<details class="process-container"' + (msg.isGenerating ? ' open' : '') + '>';
+        html2 += '<summary class="process-summary">⚙️ 处理过程' +
+                (toolCount2 ? ' · ' + toolCount2 + ' 步工具调用' : '') +
                 '<span class="process-status">' + (msg.isGenerating ? '处理中…' : '已完成') + '</span></summary>';
-        html += '<div class="process-body">';
+        html2 += '<div class="process-body">';
         if (msg.reasoning) {
-            html += '<div class="reasoning-text">' + escapeHtml(msg.reasoning) + '</div>';
+            html2 += '<div class="reasoning-text">' + escapeHtml(msg.reasoning) + '</div>';
         }
         (msg.intermediate || []).forEach(function(t) {
-            if (t && t.trim()) html += '<div class="intermediate-text">' + escapeHtml(t) + '</div>';
+            if (t && t.trim()) html2 += '<div class="intermediate-text">' + escapeHtml(t) + '</div>';
         });
         (msg.toolCalls || []).forEach(function(tc) {
-            html += renderToolCard(tc);
+            html2 += renderToolCard(tc);
         });
-        html += '</div></details>';
-        return html;
+        html2 += '</div></details>';
+        return html2;
     }
 
     /** T7.2.1 生成中轻量渲染：纯文本转义 + 换行（不重跑 markdown/mermaid，流式不卡顿） */
@@ -4112,6 +4192,8 @@
                 if (!msg.isGenerating && processEl.hasAttribute('open')) {
                     newProcessEl.setAttribute('open', '');
                 }
+                // 2026-10-27 工具卡片自折叠：保留用户手动展开的「已结束」卡片展开态
+                preserveToolCardOpenState(processEl, newProcessEl);
                 processEl.parentNode.replaceChild(newProcessEl, processEl);
             } else {
                 // 插到 message-body 之前
@@ -4236,6 +4318,10 @@
             if (m.role === 'reasoning') {
                 // reasoning 只展示用（灰色小字），回放剥离不回灌模型（后端 loadSessionHistory 已排除）
                 pendingReasoning += (m.content || '');
+                return;
+            }
+            if (m.role === 'process') {
+                // 2026-10-27 S2 起后端会落「过程时间线」行；S3 接管回放重建前先跳过，避免渲染成怪气泡
                 return;
             }
             var entry = {
@@ -4371,12 +4457,15 @@
         // 只有用户点 chip 的 × 才移除（send 这里不做任何状态变更）
         renderMessages();
 
-        // Create assistant message placeholder（T7.2：新增 liveText/reasoning/toolCalls 等流式状态字段）
+        // Create assistant message placeholder（T7.2：新增 liveText/reasoning/processSteps 等流式状态字段；
+        // 2026-10-27 过程时间线 processSteps：reasoning/text/tool 按真实到达顺序交错记录，
+        // intermediate/toolCalls 仅旧数据降级渲染用，流式期间不再维护）
         state.messages.push({
             role: 'assistant',
             content: '',
             liveText: '',
             reasoning: '',
+            processSteps: [],
             intermediate: [],
             toolCalls: [],
             time: formatTime(),
@@ -4470,34 +4559,40 @@
                             // 增量更新当前消息节点（节流），不重建全列表
                             scheduleStreamingUpdate(assistantIndex);
                         } else if (event.type === 'reasoning') {
-                            msg.reasoning = (msg.reasoning || '') + event.content;
+                            appendProcessStep(msg, 'reasoning', event.content);
                             scheduleStreamingUpdate(assistantIndex);
                         } else if (event.type === 'notice') {
                             // P1：服务端提示（如关注对象被剔除）
                             showMessage(event.message || '', 'info');
                         } else if (event.type === 'tool_call') {
-                            // 当前轮文本收进处理容器（剥离 XML），新建工具卡片
+                            // 当前轮文本收进时间线（剥 <tool_call> XML），在「决定调用工具」的位置新建工具步骤
                             var stripped = stripToolCallXml(msg.liveText || '');
                             if (stripped && stripped.trim()) {
-                                msg.intermediate.push(stripped);
+                                appendProcessStep(msg, 'text', stripped);
                             }
                             msg.liveText = '';
-                            msg.toolCalls.push({
-                                name: event.name || '',
-                                args: event.arguments || null,
-                                status: 'running',
-                                summary: '',
-                                error: ''
+                            msg.processSteps.push({
+                                kind: 'tool',
+                                tc: {
+                                    name: event.name || '',
+                                    args: event.arguments || null,
+                                    status: 'running',
+                                    summary: '',
+                                    error: ''
+                                }
                             });
                             scheduleStreamingUpdate(assistantIndex);
                         } else if (event.type === 'tool_result') {
-                            // 更新同名最后一张运行中卡片
-                            for (var ti = msg.toolCalls.length - 1; ti >= 0; ti--) {
-                                if (msg.toolCalls[ti].name === event.name && msg.toolCalls[ti].status === 'running') {
-                                    msg.toolCalls[ti].status = event.success ? 'success' : 'failed';
-                                    msg.toolCalls[ti].summary = event.summary || '';
-                                    msg.toolCalls[ti].error = event.error || '';
-                                    msg.toolCalls[ti].approval = event.approval || '';   // P2：批准来源
+                            // 回填最后一张同名 running 工具步骤
+                            var steps = msg.processSteps || [];
+                            for (var ti = steps.length - 1; ti >= 0; ti--) {
+                                var st = steps[ti];
+                                if (st.kind === 'tool' && st.tc
+                                        && st.tc.name === event.name && st.tc.status === 'running') {
+                                    st.tc.status = event.success ? 'success' : 'failed';
+                                    st.tc.summary = event.summary || '';
+                                    st.tc.error = event.error || '';
+                                    st.tc.approval = event.approval || '';   // P2：批准来源
                                     break;
                                 }
                             }
@@ -4508,6 +4603,7 @@
                             // 失败重试：清空当前消息的流式过程内容，重新开始
                             msg.liveText = '';
                             msg.reasoning = '';
+                            msg.processSteps = [];
                             msg.intermediate = [];
                             msg.toolCalls = [];
                             fullContent = '';
