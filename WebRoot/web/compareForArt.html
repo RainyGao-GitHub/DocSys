@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+	<title>文件对比</title>
+	<script type="text/javascript" src="lang/ch.js"></script>
+	<script src="static/artDialog/lib/jquery-1.10.2.js" type="text/javascript"></script>
+	<script type="text/javascript" src="js/common.js"></script>
+	<script type="text/javascript" src="js/base64.js"></script>
+	<link rel="stylesheet" href="static/CodeMirror5/lib/codemirror.css?v=20261028">
+	<link rel="stylesheet" href="static/CodeMirror5/addon/merge/merge.css?v=20261028">
+	<style type="text/css">
+		html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Microsoft YaHei", Arial, sans-serif; }
+		#compareToolBar {
+			height: 40px; line-height: 40px; padding: 0 12px; box-sizing: border-box;
+			border-bottom: 1px solid #e3e3e8; background: #fafafc;
+			display: flex; align-items: center; gap: 8px;
+		}
+		.compare-btn {
+			display: inline-block; height: 26px; line-height: 26px; padding: 0 10px;
+			border: 1px solid #d8d8e0; border-radius: 4px; background: #fff;
+			font-size: 12px; color: #555; cursor: pointer; user-select: none;
+		}
+		.compare-btn:hover { background: #f0f0f4; }
+		.compare-btn-on { background: #e8f0fe; border-color: #1976d2; color: #1976d2; }
+		#compareStats { font-size: 12px; color: #888; margin-left: 8px; }
+		#compareHeaderRow {
+			display: flex; border-bottom: 1px solid #e3e3e8; background: #f6f6fa;
+		}
+		.compare-title {
+			flex: 1; padding: 6px 12px; font-size: 13px; color: #333;
+			white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+		}
+		.compare-title + .compare-title { border-left: 1px solid #e3e3e8; }
+		.compare-title .tag {
+			font-size: 11px; color: #fff; background: #1976d2; border-radius: 3px;
+			padding: 1px 5px; margin-right: 6px;
+		}
+		#compareContainer { position: absolute; top: 76px; bottom: 0; left: 0; right: 0; }
+		#compareMsg { position: absolute; top: 76px; bottom: 0; left: 0; right: 0; display: none; }
+		.compare-tip {
+			margin: 60px auto; max-width: 70%; text-align: center;
+			color: #666; font-size: 14px; line-height: 2;
+			border: 1px dashed #d8d8e0; border-radius: 8px; padding: 24px; background: #fafafc;
+			white-space: pre-wrap; word-break: break-all;
+		}
+		.CodeMirror { height: 100%; font-family: Consolas, Menlo, monospace; font-size: 13px; }
+		.CodeMirror-merge { height: 100%; }
+		.CodeMirror-merge-pane { height: 100%; }
+	</style>
+</head>
+<body style="height: 100%;">
+	<div id="compareToolBar">
+		<span class="compare-btn compare-btn-on" id="btnCollapse">折叠相同段</span>
+		<span class="compare-btn" id="btnIgnoreWs">忽略空白差异</span>
+		<span id="compareStats"></span>
+		<span style="flex:1"></span>
+		<span class="compare-btn" id="btnClose">关闭</span>
+	</div>
+	<div id="compareHeaderRow">
+		<div class="compare-title" id="compareLeftTitle"><span class="tag">左 · 基准</span></div>
+		<div class="compare-title" id="compareRightTitle"><span class="tag">右 · 对比</span></div>
+	</div>
+	<div id="compareContainer"></div>
+	<div id="compareMsg"></div>
+
+	<script type="text/javascript" src="static/CodeMirror5/lib/codemirror.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/javascript/javascript.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/xml/xml.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/css/css.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/htmlmixed/htmlmixed.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/clike/clike.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/python/python.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/sql/sql.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/markdown/markdown.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/shell/shell.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/yaml/yaml.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/properties/properties.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/go/go.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/php/php.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/mode/ruby/ruby.min.js?v=20261028"></script>
+	<script type="text/javascript" src="static/diff-match-patch/diff_match_patch.js?v=20261028"></script>
+	<script type="text/javascript" src="static/CodeMirror5/addon/merge/merge.min.js?v=20261028"></script>
+	<script type="text/javascript" src="js/DocCompare.js?v=20261028"></script>
+	<script type="text/javascript">
+		$(document).ready(function () {
+			DocCompare.init({
+				noParam: '缺少对比参数（请从文件右键菜单发起对比）',
+				loading: '正在获取两侧文件内容…',
+				loadFailLeft: '左侧文件内容获取失败',
+				loadFailRight: '右侧文件内容获取失败',
+				tooLargeLeft: '左侧文件过大，超出对比上限',
+				tooLargeRight: '右侧文件过大，超出对比上限',
+				officePending: 'Office/PDF 文件对比（并排打开查看器）将在下一版本提供\n当前版本支持文本、代码等纯文本类文件的差异对比',
+				binaryUnsupported: '该类型文件暂不支持对比\n支持：文本/代码文件（Office 并排预览将在下一版本提供）',
+				identical: '无差异',
+				chunksUnit: '处变更'
+			});
+		});
+	</script>
+</body>
+</html>

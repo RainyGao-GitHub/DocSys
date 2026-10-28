@@ -2119,6 +2119,131 @@ function showDocHistory(node, historyType)
 	$("." + historyDialogId + " .aui-footer").parent().remove();
 }
 
+/********************* 文件对比接口（文件对比功能 M1，方案 devDocs/文件对比功能方案.md） *************/
+var gComparePendingDoc = null;	//两步式对比：已选为「左侧基准」的文件（compareRef）
+
+function buildCompareRef(node)
+{
+	if(node == null || node.type != 1)
+	{
+		return null;
+	}
+	return {
+		vid: gReposInfo.id,
+		docId: node.docId != undefined ? node.docId : node.id,
+		path: node.path || "",
+		name: node.name,
+		size: node.size,
+		docType: 1,	//RealDoc
+		shareId: gShareId,
+	};
+}
+
+//两步式第一步：把当前文件选为对比「左侧基准」
+function selectCompareDoc(node)
+{
+	if(node == null || node.type != 1)
+	{
+		showErrorMessage({
+    		id: "idAlertDialog",
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择需要对比的文件") + "!",
+    	});
+		return;
+	}
+	gComparePendingDoc = buildCompareRef(node);
+	qiao.bs.msg({
+		msg: _Lang("已选择") + " [" + node.name + "] " + _Lang("作为对比基准，请再右键另一个文件选择「对比 → 与已选文件对比」"),
+		type: "info",
+		time: 4000,
+	});
+}
+
+//两步式第二步：与已选基准对比（选同一个文件时提示重选）
+function doCompareWithSelectedDoc(node)
+{
+	if(node == null || node.type != 1)
+	{
+		showErrorMessage({
+    		id: "idAlertDialog",
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("请选择需要对比的文件") + "!",
+    	});
+		return;
+	}
+	if(gComparePendingDoc == null)
+	{
+		qiao.bs.msg({
+			msg: _Lang("请先右键一个文件选择「对比 → 选为对比文件」"),
+			type: "info",
+			time: 3000,
+		});
+		return;
+	}
+	var rightRef = buildCompareRef(node);
+	if(rightRef.docId != null && rightRef.docId == gComparePendingDoc.docId && rightRef.vid == gComparePendingDoc.vid)
+	{
+		qiao.bs.msg({
+			msg: _Lang("两次选择的是同一个文件，请另选一个文件"),
+			type: "danger",
+			time: 3000,
+		});
+		return;
+	}
+	openCompareWindow(gComparePendingDoc, rightRef);
+	gComparePendingDoc = null;
+}
+
+function cancelCompareSelection()
+{
+	if(gComparePendingDoc != null)
+	{
+		gComparePendingDoc = null;
+		qiao.bs.msg({ msg: _Lang("已取消对比选择"), type: "info", time: 2000 });
+	}
+	else
+	{
+		qiao.bs.msg({ msg: _Lang("当前没有已选择的对比文件"), type: "info", time: 2000 });
+	}
+}
+
+//打开对比窗口（artDialog + compareForArt iframe；参数双通道：artDialog data + sessionStorage——
+//后者供 M3 agent 产物链接/新窗口场景复用，且避免长路径撑爆 URL）
+function openCompareWindow(leftRef, rightRef)
+{
+	console.log("openCompareWindow() left:", leftRef, " right:", rightRef);
+	var pair = { left: leftRef, right: rightRef };
+	try{
+		sessionStorage.setItem("docsys_compare_pair", JSON.stringify(pair));
+	}catch(e){
+		console.warn("openCompareWindow sessionStorage failed:", e);
+	}
+
+	var compareDialogId = "ArtDialogCompare_" + new Date().getTime();
+	var compareDialogData = pair;
+	var width = getArtDialogInitWidth();
+	var d = new artDialog({
+		id: compareDialogId,
+		title: _Lang("文件对比"),
+		content: '<iframe frameborder="0" name="' + compareDialogId + '" src="compareForArt' + langExt + '.html?dialogId=' + compareDialogId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		msg: _Lang('页面正在加载，请稍侯') + '...',
+		foot: false,
+		big: true,
+		padding: 0,
+		width: width,
+		height: Math.min(getArtDialogMaxHeight() * 0.9, 900),
+		resize: true,
+		drag: true,
+		data: compareDialogData,
+	});
+	if(window.artDialogList === undefined) {
+		window.artDialogList = {};
+	}
+	window.artDialogList[compareDialogId] = d;
+}
+
 /********************* 文件编辑接口 *********************************************/
 function lockDoc(node, lockType)
 {
@@ -5369,6 +5494,24 @@ function contextMenuInit()
 		      		showDocHistory(curRightClickedTreeNode,0);
 				}
 		},
+		{text: _Lang('对比'), subMenu: [
+				{text: _Lang('选为对比文件'), action: function(e){
+							e.preventDefault();
+							selectCompareDoc(curRightClickedTreeNode);
+						}
+				},
+				{text: _Lang('与已选文件对比'), action: function(e){
+							e.preventDefault();
+							doCompareWithSelectedDoc(curRightClickedTreeNode);
+						}
+				},
+				{text: _Lang('取消对比选择'), action: function(e){
+							e.preventDefault();
+							cancelCompareSelection();
+						}
+				},
+			]
+		},
 		{divider: true},
 		{text: _Lang('回收站'), action: function(e){
 					e.preventDefault();
@@ -5831,7 +5974,25 @@ function contextMenuInit()
 					e.preventDefault();
 					showDocHistory(curRightClickedDocListNode,0);
 				}
-			},	
+			},
+			{text: _Lang('对比'), subMenu: [
+					{text: _Lang('选为对比文件'), action: function(e){
+								e.preventDefault();
+								selectCompareDoc(curRightClickedDocListNode);
+							}
+					},
+					{text: _Lang('与已选文件对比'), action: function(e){
+								e.preventDefault();
+								doCompareWithSelectedDoc(curRightClickedDocListNode);
+							}
+					},
+					{text: _Lang('取消对比选择'), action: function(e){
+								e.preventDefault();
+								cancelCompareSelection();
+							}
+					},
+				]
+			},
 			{divider: true},
 			{text: _Lang('回收站'), action: function(e){
 						e.preventDefault();
@@ -6083,6 +6244,24 @@ function contextMenuInit()
 					showDocHistory(curRightClickedDocListNode,0);
 				}
 			},
+			{text: _Lang('对比'), subMenu: [
+					{text: _Lang('选为对比文件'), action: function(e){
+								e.preventDefault();
+								selectCompareDoc(curRightClickedDocListNode);
+							}
+					},
+					{text: _Lang('与已选文件对比'), action: function(e){
+								e.preventDefault();
+								doCompareWithSelectedDoc(curRightClickedDocListNode);
+							}
+					},
+					{text: _Lang('取消对比选择'), action: function(e){
+								e.preventDefault();
+								cancelCompareSelection();
+							}
+					},
+				]
+			},
 			{divider: true},
 			{text: _Lang('回收站'), action: function(e){
 						e.preventDefault();
@@ -6241,6 +6420,24 @@ function contextMenuInit()
 						e.preventDefault();
 						shareDoc(gDocInfo);
 					}
+			},
+			{text: _Lang('对比'), subMenu: [
+					{text: _Lang('选为对比文件'), action: function(e){
+								e.preventDefault();
+								selectCompareDoc(gDocInfo);
+							}
+					},
+					{text: _Lang('与已选文件对比'), action: function(e){
+								e.preventDefault();
+								doCompareWithSelectedDoc(gDocInfo);
+							}
+					},
+					{text: _Lang('取消对比选择'), action: function(e){
+								e.preventDefault();
+								cancelCompareSelection();
+							}
+					},
+				]
 			},
 			{divider: true},
 			{text: _Lang('删除'), action: function(e){
