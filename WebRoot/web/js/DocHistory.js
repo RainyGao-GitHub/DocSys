@@ -71,19 +71,6 @@
 			};
 		}
 
-		function buildCurrentCompareRef()
-		{
-			return {
-				vid: reposId,
-				docId: docId,
-				path: parentPath,
-				name: docName,
-				docType: 1,
-				versionLabel: _Lang("当前版本"),
-				shareId: gShareId,
-			};
-		}
-
 		function getCheckedCompareIndexes()
 		{
 			var checked = [];
@@ -117,13 +104,13 @@
 
 		function updateCompareBarState()
 		{
+			//2026-10-28 用户裁定：「与当前版本对比」改由历史详情页的「对比」承担（本版 vs 上一版），
+			//工具条只保留「对比选中的两个版本」
 			var n = getCheckedCompareIndexes().length;
 			var btn2 = $("#compareSelectedBtn");
-			var btn1 = $("#compareWithCurrentBtn");
-			if(btn2.length > 0 && btn1.length > 0)
+			if(btn2.length > 0)
 			{
 				btn2.prop("disabled", n != 2);
-				btn1.prop("disabled", n != 1);
 			}
 		}
 
@@ -143,24 +130,6 @@
 			}
 			//左 = 基准 = 较旧版本（列表下方），右 = 较新版本
 			host.openCompareWindow(buildHistoryCompareRef(checked[1]), buildHistoryCompareRef(checked[0]));
-		}
-
-		function compareHistoryWithCurrent()
-		{
-			var checked = getCheckedCompareIndexes();
-			if(checked.length != 1)
-			{
-				showErrorMessage(_Lang("请勾选一个版本再与当前版本对比"));
-				return;
-			}
-			var host = getCompareHost();
-			if(host == null)
-			{
-				showErrorMessage(_Lang("当前页面不支持打开对比窗口"));
-				return;
-			}
-			//左 = 基准 = 勾选的历史版本，右 = 当前版本
-			host.openCompareWindow(buildHistoryCompareRef(checked[0]), buildCurrentCompareRef());
 		}
 		//==================== 文件对比 END ====================
 		
@@ -197,12 +166,25 @@
 		{
 			var commitId = $("#commitId" + index).attr("value");
 			var version = $("#commitId" + index).text();
-		   	console.log("showHistoryDetail() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);			
+		   	console.log("showHistoryDetail() commitId:" +commitId  + " reposId:" + reposId  + " docId:"+ docId + " parentPath:" + parentPath + " docName:" + docName + " historyType:" + historyType);
+
+			//M2 对比：详情页「对比」= 本次改动前后（本版 vs 上一版），父版本取列表中更旧一行（index+1）
+			var parentCommitId = null;
+			var parentVersionLabel = null;
+			var parentCommitEl = $("#commitId" + (index + 1));
+			if(parentCommitEl.length > 0)
+			{
+				parentCommitId = parentCommitEl.attr("value");
+				parentVersionLabel = parentCommitEl.text();
+			}
 
 			var title = _Lang("历史详情") + " [" + version + "]";
 			var historyDetailDialogId = "ArtDialogHistoryDetail_" + historyType + "_" + docId + "_" + commitId + "_" + new Date().getTime();
 			var historyDetailDialogData = {
 				commitId: commitId,
+				versionLabel: version,
+				parentCommitId: parentCommitId,
+				parentVersionLabel: parentVersionLabel,
 				vid: reposId,
 				docId: docId,
 				parentPath: parentPath,
@@ -1114,9 +1096,6 @@
 	        },
 	        compareSelectedHistory: function(){
 	        	compareSelectedHistory();
-	        },
-	        compareWithCurrent: function(){
-	        	compareHistoryWithCurrent();
 	        }
 	    };
 	})();

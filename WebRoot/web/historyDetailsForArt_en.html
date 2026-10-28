@@ -26,7 +26,7 @@
 	<script type="text/javascript" src="js/common.js"></script>
 	<script type="text/javascript" src="js/base64.js"></script>
 	<script type="text/javascript" src="js/DocSys.js"></script>
-	<script type="text/javascript" src="js/DocHistoryDetail.js"></script>
+	<script type="text/javascript" src="js/DocHistoryDetail.js?v=20261028e"></script>
 	<style type="text/css">
 		html, body {
 			height: 100%;
@@ -95,7 +95,7 @@
 
 			var historyDetailDialogData = artDialogInstance.config.data;
 			gShareId = historyDetailDialogData.shareId;
-			DocHistoryDetail.historyDetailsPageInit(historyDetailDialogData.commitId, historyDetailDialogData.vid, historyDetailDialogData.docId, historyDetailDialogData.parentPath, historyDetailDialogData.docName, historyDetailDialogData.historyType);
+			DocHistoryDetail.historyDetailsPageInit(historyDetailDialogData.commitId, historyDetailDialogData.vid, historyDetailDialogData.docId, historyDetailDialogData.parentPath, historyDetailDialogData.docName, historyDetailDialogData.historyType, historyDetailDialogData.versionLabel, historyDetailDialogData.parentCommitId, historyDetailDialogData.parentVersionLabel);
 		}
 
 		$(document).ready(function () {

@@ -8,25 +8,97 @@
 		var docName = "";
 		var docPath = "";
 		var historyType = 0;
-		
+		var versionLabel = "";		//本次提交的版本标签（对比窗口标题用）
+		var parentCommitId = null;	//上一版（改动前）commitId——详情页「对比」看本次改动前后
+		var parentVersionLabel = "";
+
 		var changeItems = [];
-		
-		function historyDetailsPageInit(Input_commitId, Input_vid, Input_docId, Input_path, Input_name, Input_historyType)
+
+		function historyDetailsPageInit(Input_commitId, Input_vid, Input_docId, Input_path, Input_name, Input_historyType, Input_versionLabel, Input_parentCommitId, Input_parentVersionLabel)
 		{
 			console.log("historyDetailsPageInit commitId:" + Input_commitId + " reposId:" + Input_vid + " docId:" + Input_docId + " path:" + Input_path + " name:" + Input_name + " historyType:" + Input_historyType);
 			commitId = Input_commitId;
 			reposId = Input_vid;
 			docId = Input_docId;
-			parentPath = Input_path;	
+			parentPath = Input_path;
 			docName = Input_name;
 			docPath = Input_path + Input_name;
 			historyType = Input_historyType;
-			
+			versionLabel = Input_versionLabel || "";
+			parentCommitId = Input_parentCommitId || null;
+			parentVersionLabel = Input_parentVersionLabel || "";
+
 			if(docId == undefined)
 			{
 				docId = 0;
 			}
-			showHistoryDetailList(commitId, reposId, docId, parentPath, docName, historyType);	
+			showHistoryDetailList(commitId, reposId, docId, parentPath, docName, historyType);
+		}
+
+		//M2 对比：向上查找打开对比窗口的宿主（详情 iframe 的 parent 是历史页 iframe，再上是 project 页）
+		function getCompareHost()
+		{
+			var w = window;
+			for(var i = 0; i < 4 && w; i++)
+			{
+				if(w.openCompareWindow) return w;
+				if(w === w.parent) break;
+				w = w.parent;
+			}
+			if(window.opener && window.opener.openCompareWindow) return window.opener;
+			return null;
+		}
+
+		//M2 对比：本次改动前后 = 该条目在上一版 vs 本版的内容
+		//（移动/复制条目：左侧取 srcEntryPath；新增/删除条目：对侧为空内容，展示全增/全删）
+		function compareHistory(index)
+		{
+			var changeItem = changeItems[index];
+			if(changeItem == null)
+			{
+				return;
+			}
+			if(parentCommitId == null)
+			{
+				showErrorMessage(_Lang("没有更早的版本，无法对比本次改动"));
+				return;
+			}
+			var host = getCompareHost();
+			if(host == null)
+			{
+				showErrorMessage(_Lang("当前页面不支持打开对比窗口"));
+				return;
+			}
+
+			var afterDoc = buildBasicDoc(changeItem.entryPath, "");
+			var beforeEntryPath = changeItem.entryPath;
+			if(changeItem.changeType == 4 || changeItem.changeType == 5)
+			{
+				beforeEntryPath = changeItem.srcEntryPath || changeItem.entryPath;	//移动/复制：改动前在源位置
+			}
+			var beforeDoc = buildBasicDoc(beforeEntryPath, "");
+
+			var left = {
+				vid: reposId,
+				path: beforeDoc.path,
+				name: beforeDoc.name,
+				docType: 1,
+				commitId: parentCommitId,
+				historyType: historyType,
+				versionLabel: parentVersionLabel,
+				shareId: gShareId,
+			};
+			var right = {
+				vid: reposId,
+				path: afterDoc.path,
+				name: afterDoc.name,
+				docType: 1,
+				commitId: commitId,
+				historyType: historyType,
+				versionLabel: versionLabel,
+				shareId: gShareId,
+			};
+			host.openCompareWindow(left, right);
 		}
 
 		function getCurrentHistoryDetailArtDialog()
@@ -424,9 +496,10 @@
 						changeContent = "			<a id='docPath"+i+"' href='javascript:void(0)'>"+entryPath+ " from " + srcEntryPath + "</a>";
 					}
 					
-					var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.viewHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px;width:80px;'>" + _Lang("查看") + "</a>";
-					var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px;width:80px;'>" + _Lang("下载") + "</a>";
-					var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.showRevertConfirm("+i+ ")' class='mybtn-primary' style='width:80px;'>" + _Lang("恢复") + "</a>";
+				var opBtn0 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.compareHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px;width:80px;'>" + _Lang("对比") + "</a>";
+				var opBtn1 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.viewHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px;width:80px;'>" + _Lang("查看") + "</a>";
+				var opBtn2 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.downloadHistory("+i+ ")' class='mybtn-primary' style='margin-bottom:20px;width:80px;'>" + _Lang("下载") + "</a>";
+				var opBtn3 = "		<a href='javascript:void(0)' onclick='DocHistoryDetail.showRevertConfirm("+i+ ")' class='mybtn-primary' style='width:80px;'>" + _Lang("恢复") + "</a>";
 					
 					var se = "<li>" 
 						+"	<i class='cell changeType w10'>"
@@ -439,11 +512,12 @@
 						+ 			changeContent
 						+"		</span>"
 						+"	</i>"
-						+"	<i class='cell operation w10'>"
-						+ 		opBtn1 
-						+ 		opBtn2 
-						+ 		opBtn3 
-						+"	</i>"
+					+"	<i class='cell operation w10'>"
+					+ 		opBtn0
+					+ 		opBtn1
+					+ 		opBtn2
+					+ 		opBtn3
+					+"	</i>"
 						+"</li>";
 					
 					$("#historyDetails").append(se);
@@ -471,11 +545,16 @@
 		
 		//开放给外部的调用接口
 	    return {
-	    	historyDetailsPageInit: function(vid, docId, pid, path, name, type){
-	    		historyDetailsPageInit(vid, docId, pid, path, name, type);
+	    	historyDetailsPageInit: function(){
+	    		//透传全部参数（M2 对比新增 versionLabel/parentCommitId/parentVersionLabel——
+	    		//旧包装只转发 6 参曾把 parentCommitId 截掉，实测踩坑 2026-10-28）
+	    		historyDetailsPageInit.apply(null, arguments);
 	        },
 	        viewHistory: function(index){
 	        	viewHistory(index);
+	        },
+	        compareHistory: function(index){
+	        	compareHistory(index);
 	        },
 	        downloadHistory: function(index){
 	        	downloadHistory(index);

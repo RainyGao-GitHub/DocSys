@@ -67,7 +67,33 @@
 6. ⚠️ 已知边界：zTree 多选残留（如从搜索态切回）会让计数包含旧节点——普通点击会复位；如需更强清理可在
    showDocList 里调 resetListMultiSelect（暂未加，避免动既有流程）。
 
-### M2 实施与实测（2026-10-28，dev，已发布待用户验收）
+### M2 交互优化：详情页「对比」（2026-10-28 晚，用户裁定后实施，已发布待验收）
+
+**用户裁定**：「与当前版本对比」入口不合适——改为**历史详情页**加「对比」按钮，查看**该次提交改动前后**
+（本版 vs 上一版）。
+
+**实施**：
+- `DocHistory.showHistoryDetail`：dialog data 增 `versionLabel / parentCommitId / parentVersionLabel`
+  （父版本 = 历史列表 index+1 行；最旧行无父 → null）。
+- `DocHistoryDetail.js`：init 签名扩至 9 参；每条目行新增「对比」按钮 → `compareHistory(index)`：
+  左=改动前（**移动/复制条目取 `srcEntryPath`**；新增/删除条目对侧为空=全增/全删展示）、右=改动后；
+  host 用 parent 链向上找 `openCompareWindow`（详情 iframe→历史 iframe→project，实测 hostAt=2）。
+- 工具条「与当前版本对比」**移除**（html×2 + JS 相关函数清理），只保留「对比选中的两个版本」。
+- 版本：DocHistory.js → `?v=20261028c`；DocHistoryDetail.js 引用从无版本 → `?v=20261028e`。
+
+**实测**（2026-10-28 晚，hello.txt 三版本）：
+1. 行0（最新）详情 → 对比 → **左=@前1版(hello v1)、右=@最新(hello v2)、统计 +3/-2·4 处** ✓
+2. 最旧行（前2版）详情 → 对比 → 提示「没有更早的版本，无法对比本次改动」、不开窗 ✓
+3. 工具条只剩一个对比按钮 ✓
+
+⚠️ **实施中踩的隐蔽坑（已修）**：`DocHistoryDetail` 的**导出包装函数**是旧 6 参签名，把页面传入的
+9 参截断成 6 参转发——parentCommitId 静默丢失（症状：按钮点了只弹"没有更早的版本"）。
+用 `arguments.length` 诊断日志定位（len=6 实锤），导出包装改 `apply(null, arguments)` 透传。
+**通用教训：改内部函数签名时必须同步检查模块导出包装层。**
+
+（未实测项：移动/复制条目的 srcEntryPath 分支——无现成数据；逻辑一行，留待真实场景。）
+
+### M2 最初版实测记录（2026-10-28，勾选机制部分仍有效）
 
 **实施**（`js/DocHistory.js` + `historyLogsForArt.html/_en.html` + `js/DocCompare.js`）：
 - 历史页顶部新增对比工具条（`historyCompareBar`）：「对比选中的两个版本」「与当前版本对比（勾选 1 个）」；
@@ -143,9 +169,8 @@
 
 ## 下一步
 
-1. **等用户验收 M2**（验收点：hello.txt 历史页勾两版对比 / 勾 1 个与当前对比 / 勾 3 个被拒 / 按钮联动；
-   dev 上现成素材 agent-test/hello.txt 已有 3 个版本）。⚠️ 注意 apply_changes 那对文件的历史版本
-   受上述既有数据问题影响会显示 0B/无差异（不是 M2 的问题）。
+1. **等用户验收「详情页对比」优化**（验收点：hello.txt 历史页 → 某行「详情」→ 条目「对比」→
+   左=上一版右=本版；最旧版本提示无更早版本；历史页工具条只剩「对比选中的两个版本」）。
 2. 验收通过 → **M3 AI 对比工具与链接**（compare_docs 工具 + AgentProductLink compare 产物 + agent 页
    链接打开对比窗口）→ 实测验收 → **M4 Office 并排+打磨+全量回归收尾**。
 3. 待用户裁定：是否为「历史索引指向缺失版本目录」另立排查卡（后端数据一致性）。
