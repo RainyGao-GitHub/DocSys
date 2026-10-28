@@ -41,9 +41,31 @@
 
 ## 当前进展（如实）
 
-- ✅ 2026-10-28：调研与方案成文（见上）；用户六项裁定（CM5 merge / 两方 / 只读 / 摘要+链接 /
-  Office 并排（M4）/ M1→M4 分阶段）。
-- ✅ 2026-10-28：**M1 实施完成并实测通过（dev 浏览器），等用户验收后进 M2**。
+- ✅ 2026-10-28：调研与方案成文；用户六项裁定（CM5 merge / 两方 / 只读 / 摘要+链接 / Office 并排（M4）/ M1→M4）。
+- ✅ 2026-10-28：**M1 实施完成并实测通过，用户已验收并提交 `75815a34d`**。
+- ✅ 2026-10-28：**用户裁定交互简化**（原话归纳）：不用两步式子菜单——**选中两个文件（Ctrl 多选）→ 右键「对比」直接开窗**；
+  选 1 个提示需选两个、>2 个提示只支持两个。**已实施并实测通过，等用户验收**。
+
+### 交互简化实施（2026-10-28，project.js，未提交）
+
+- 删除两步式（gComparePendingDoc/selectCompareDoc/doCompareWithSelectedDoc/cancelCompareSelection）。
+- 新增 `compareSelectedDocs()`：以 **zTree 多选为唯一事实源**（getSelectedNodes 过滤 type==1）；
+  <2 → 提示「请先选中两个文件（Ctrl+点击 多选）」；>2 → 「目前只支持两个文件对比」；==2 → openCompareWindow（先选=左基准）。
+- **文件列表新增 Ctrl 增量选中**（原列表只单选，多选只在目录树）：`docListOnMouseDown` ctrl 分支 →
+  `listCtrlSelectDoc`（zTree selectNode(node,true) + 列表高亮 #e8f0fe + 置 gListCtrlSelecting）；
+  `DocListOnClick` 开头：ctrl 点击跳过单选/预览；普通点击 `resetListMultiSelect()`（清高亮+清 zTree 多选，恢复单选语义）。
+- 4 处右键「对比」子菜单 → 单项「对比」（#tree、#secondList×2、#docPreview，同一 compareSelectedDocs）。
+- project.js 版本 bump → `?v=20261028c`。
+
+### 交互简化实测（2026-10-28，dev 浏览器）
+
+1. 列表 Ctrl 点两个（test.md + JS调用测试.xlsx，高亮 2 行）→ 右键对比 → 窗口开、左 test.md 右 xlsx、Office 占位 ✓
+2. 树选 test.md + agent-test/hello.txt（跨目录）→ 右键对比 → 双栏 diff 窗、统计「+0/-1·1 处变更」✓
+3. 只选 1 个 → 提示「请先选中两个文件（Ctrl+点击 多选）再进行对比!」✓
+4. 意外复现 >2（残留旧选中）→ 提示「目前只支持两个文件对比」✓
+5. 普通单击 → 多选高亮清零、zTree 恢复单选 ✓
+6. ⚠️ 已知边界：zTree 多选残留（如从搜索态切回）会让计数包含旧节点——普通点击会复位；如需更强清理可在
+   showDocList 里调 resetListMultiSelect（暂未加，避免动既有流程）。
 
 ### M1 实施内容（未提交）
 
@@ -84,8 +106,7 @@
 
 ## 下一步
 
-1. **等用户 M1 验收**（验收点：右键两步对比两文件、双栏差异高亮与统计、折叠/忽略空白开关、
-   Office 占位提示、防呆提示、中英文界面）。
+1. **等用户验收「交互简化」**（Ctrl 选两个 → 右键对比；1 个/>2 个提示；列表 Ctrl 多选与普通点击复位）。
 2. 验收通过 → **M2 历史版本对比**（DocHistory.js 行复选选两版 + 「与当前对比」入口 → compareRef 带
    commitId/historyType/versionLabel → 实测验收）→ M3 AI 工具与链接 → M4 Office 并排+打磨+全量回归。
 

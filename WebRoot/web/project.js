@@ -2119,8 +2119,10 @@ function showDocHistory(node, historyType)
 	$("." + historyDialogId + " .aui-footer").parent().remove();
 }
 
-/********************* 文件对比接口（文件对比功能 M1，方案 devDocs/文件对比功能方案.md） *************/
-var gComparePendingDoc = null;	//两步式对比：已选为「左侧基准」的文件（compareRef）
+/********************* 文件对比接口（文件对比功能 M1；2026-10-28 用户裁定简化交互：
+ * 选中两个文件（Ctrl+点击多选，目录树原生支持、文件列表已同步支持）→ 右键「对比」直接开窗；
+ * 少于两个提示选择，多于两个提示仅支持两个——不再用两步式子菜单） *************/
+var gListCtrlSelecting = null;	//列表 Ctrl 多选进行中：本次点击的 docId（用于让 DocListOnClick 跳过单选逻辑）
 
 function buildCompareRef(node)
 {
@@ -2139,74 +2141,74 @@ function buildCompareRef(node)
 	};
 }
 
-//两步式第一步：把当前文件选为对比「左侧基准」
-function selectCompareDoc(node)
+//取当前选中（zTree 多选为唯一事实源：树的 Ctrl/Shift 多选 + 列表 Ctrl 多选都落到这里）
+function getSelectedFileNodes()
 {
-	if(node == null || node.type != 1)
+	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+	if(!treeObj) return [];
+	var selectedNodes = treeObj.getSelectedNodes();
+	var files = [];
+	for(var i = 0; i < selectedNodes.length; i++)
+	{
+		if(selectedNodes[i].type == 1)
+		{
+			files.push(selectedNodes[i]);
+		}
+	}
+	return files;
+}
+
+function compareSelectedDocs()
+{
+	var files = getSelectedFileNodes();
+	if(files.length < 2)
 	{
 		showErrorMessage({
     		id: "idAlertDialog",
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("请选择需要对比的文件") + "!",
+    		msg: _Lang("请先选中两个文件（Ctrl+点击 多选）再进行对比") + "!",
     	});
 		return;
 	}
-	gComparePendingDoc = buildCompareRef(node);
-	qiao.bs.msg({
-		msg: _Lang("已选择") + " [" + node.name + "] " + _Lang("作为对比基准，请再右键另一个文件选择「对比 → 与已选文件对比」"),
-		type: "info",
-		time: 4000,
-	});
-}
-
-//两步式第二步：与已选基准对比（选同一个文件时提示重选）
-function doCompareWithSelectedDoc(node)
-{
-	if(node == null || node.type != 1)
+	if(files.length > 2)
 	{
 		showErrorMessage({
     		id: "idAlertDialog",
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("请选择需要对比的文件") + "!",
+    		msg: _Lang("目前只支持两个文件对比，请只选中两个文件") + "!",
     	});
 		return;
 	}
-	if(gComparePendingDoc == null)
-	{
-		qiao.bs.msg({
-			msg: _Lang("请先右键一个文件选择「对比 → 选为对比文件」"),
-			type: "info",
-			time: 3000,
-		});
-		return;
-	}
-	var rightRef = buildCompareRef(node);
-	if(rightRef.docId != null && rightRef.docId == gComparePendingDoc.docId && rightRef.vid == gComparePendingDoc.vid)
-	{
-		qiao.bs.msg({
-			msg: _Lang("两次选择的是同一个文件，请另选一个文件"),
-			type: "danger",
-			time: 3000,
-		});
-		return;
-	}
-	openCompareWindow(gComparePendingDoc, rightRef);
-	gComparePendingDoc = null;
+	openCompareWindow(buildCompareRef(files[0]), buildCompareRef(files[1]));
 }
 
-function cancelCompareSelection()
+//文件列表 Ctrl 增量选中：同步到 zTree 多选并高亮，抑制本次单击的单选/预览副作用
+function listCtrlSelectDoc(obj, docId)
 {
-	if(gComparePendingDoc != null)
+	var treeObj = $.fn.zTree.getZTreeObj("doctree");
+	if(treeObj && docId)
 	{
-		gComparePendingDoc = null;
-		qiao.bs.msg({ msg: _Lang("已取消对比选择"), type: "info", time: 2000 });
+		var treeNode = treeObj.getNodeByParam("id", docId);
+		if(treeNode)
+		{
+			if(treeNode.type == 1)	//仅文件参与多选（目录维持原单击行为）
+			{
+				treeObj.selectNode(treeNode, true);	//增量选中
+				$(obj).closest('li').css('background-color', '#e8f0fe');
+				gListCtrlSelecting = String(docId);
+				return;
+			}
+		}
 	}
-	else
-	{
-		qiao.bs.msg({ msg: _Lang("当前没有已选择的对比文件"), type: "info", time: 2000 });
-	}
+	//失败时退回普通单击
+	gListCtrlSelecting = null;
+}
+
+function clearListCtrlHighlights()
+{
+	$('#secondList li').css('background-color', '');
 }
 
 //打开对比窗口（artDialog + compareForArt iframe；参数双通道：artDialog data + sessionStorage——
@@ -3459,12 +3461,46 @@ function docListOnMouseDown(obj,ev)
 
 	curRightClickedDocListNode = node;
  	console.log("docListOnMouseDown on doc:",curRightClickedDocListNode);
+
+	//Ctrl+点击：文件列表增量多选（文件对比入口用）——同步 zTree 多选并高亮，随后的 DocListOnClick 会跳过单选/预览
+	if(ev && ev.ctrlKey)
+	{
+		listCtrlSelectDoc(obj, docId);
+	}
+}
+
+//清空文件列表多选高亮与 zTree 多选（普通单击恢复单选语义时用）
+function resetListMultiSelect()
+{
+	gListCtrlSelecting = null;
+	clearListCtrlHighlights();
+	try{
+		var treeObj = $.fn.zTree.getZTreeObj("doctree");
+		if(treeObj)
+		{
+			var sel = treeObj.getSelectedNodes();
+			for(var i = 0; i < sel.length; i++)
+			{
+				treeObj.cancelSelectedNode(sel[i]);
+			}
+		}
+	}catch(e){}
 }
 
 function DocListOnClick(obj)
 {
 	var docListNode = $(obj).parents('li');
 	var docId = docListNode.attr('dataId');
+
+	//Ctrl 多选中的这一次点击：已由 docListOnMouseDown 同步选中，跳过单选/预览
+	if(gListCtrlSelecting !== null && gListCtrlSelecting === String(docId))
+	{
+		gListCtrlSelecting = null;
+		return;
+	}
+	//普通单击：恢复单选语义（清多选高亮与 zTree 多选，后续 zTreeSelectDoc 会重新单选本文件）
+	resetListMultiSelect();
+
  	var pid = docListNode.attr('dataPid');
  	var path = docListNode.attr('dataPath');
  	var name = docListNode.attr('dataName');
@@ -5494,23 +5530,10 @@ function contextMenuInit()
 		      		showDocHistory(curRightClickedTreeNode,0);
 				}
 		},
-		{text: _Lang('对比'), subMenu: [
-				{text: _Lang('选为对比文件'), action: function(e){
-							e.preventDefault();
-							selectCompareDoc(curRightClickedTreeNode);
-						}
-				},
-				{text: _Lang('与已选文件对比'), action: function(e){
-							e.preventDefault();
-							doCompareWithSelectedDoc(curRightClickedTreeNode);
-						}
-				},
-				{text: _Lang('取消对比选择'), action: function(e){
-							e.preventDefault();
-							cancelCompareSelection();
-						}
-				},
-			]
+		{text: _Lang('对比'), action: function(e){
+					e.preventDefault();
+					compareSelectedDocs();
+				}
 		},
 		{divider: true},
 		{text: _Lang('回收站'), action: function(e){
@@ -5975,23 +5998,10 @@ function contextMenuInit()
 					showDocHistory(curRightClickedDocListNode,0);
 				}
 			},
-			{text: _Lang('对比'), subMenu: [
-					{text: _Lang('选为对比文件'), action: function(e){
-								e.preventDefault();
-								selectCompareDoc(curRightClickedDocListNode);
-							}
-					},
-					{text: _Lang('与已选文件对比'), action: function(e){
-								e.preventDefault();
-								doCompareWithSelectedDoc(curRightClickedDocListNode);
-							}
-					},
-					{text: _Lang('取消对比选择'), action: function(e){
-								e.preventDefault();
-								cancelCompareSelection();
-							}
-					},
-				]
+			{text: _Lang('对比'), action: function(e){
+						e.preventDefault();
+						compareSelectedDocs();
+					}
 			},
 			{divider: true},
 			{text: _Lang('回收站'), action: function(e){
@@ -6244,23 +6254,10 @@ function contextMenuInit()
 					showDocHistory(curRightClickedDocListNode,0);
 				}
 			},
-			{text: _Lang('对比'), subMenu: [
-					{text: _Lang('选为对比文件'), action: function(e){
-								e.preventDefault();
-								selectCompareDoc(curRightClickedDocListNode);
-							}
-					},
-					{text: _Lang('与已选文件对比'), action: function(e){
-								e.preventDefault();
-								doCompareWithSelectedDoc(curRightClickedDocListNode);
-							}
-					},
-					{text: _Lang('取消对比选择'), action: function(e){
-								e.preventDefault();
-								cancelCompareSelection();
-							}
-					},
-				]
+			{text: _Lang('对比'), action: function(e){
+						e.preventDefault();
+						compareSelectedDocs();
+					}
 			},
 			{divider: true},
 			{text: _Lang('回收站'), action: function(e){
@@ -6421,23 +6418,10 @@ function contextMenuInit()
 						shareDoc(gDocInfo);
 					}
 			},
-			{text: _Lang('对比'), subMenu: [
-					{text: _Lang('选为对比文件'), action: function(e){
-								e.preventDefault();
-								selectCompareDoc(gDocInfo);
-							}
-					},
-					{text: _Lang('与已选文件对比'), action: function(e){
-								e.preventDefault();
-								doCompareWithSelectedDoc(gDocInfo);
-							}
-					},
-					{text: _Lang('取消对比选择'), action: function(e){
-								e.preventDefault();
-								cancelCompareSelection();
-							}
-					},
-				]
+			{text: _Lang('对比'), action: function(e){
+						e.preventDefault();
+						compareSelectedDocs();
+					}
 			},
 			{divider: true},
 			{text: _Lang('删除'), action: function(e){
