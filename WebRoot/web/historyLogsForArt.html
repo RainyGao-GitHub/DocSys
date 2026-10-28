@@ -39,7 +39,7 @@
 	<script type="text/javascript" src="js/base64.js"></script>
 	<script type="text/javascript" src="js/DocSys.js"></script>
 	<script type="text/javascript" src="js/DocHistoryDetail.js"></script>
-	<script type="text/javascript" src="js/DocHistory.js"></script>
+	<script type="text/javascript" src="js/DocHistory.js?v=20261028b"></script>
 	<style type="text/css">
 		html, body {
 			height: 100%;
@@ -77,9 +77,15 @@
 		<div class="manual-right">
 			<div class="manual-article">
 				<div class="article-body editor-content" id="history" style="min-height: 650px">
+					<div id="historyCompareBar" style="display:none; padding: 4px 10px; margin-bottom: 4px; border-bottom: 1px solid #e0e0e0;">
+						<span style="font-size:13px; color:#666;">勾选版本对比：</span>
+						<button type="button" id="compareSelectedBtn" class="btn btn-primary btn-sm" style="margin-left:8px;" disabled onclick="DocHistory.compareSelectedHistory();">对比选中的两个版本</button>
+						<button type="button" id="compareWithCurrentBtn" class="btn btn-default btn-sm" style="margin-left:8px;" disabled onclick="DocHistory.compareWithCurrent();">与当前版本对比（勾选 1 个）</button>
+					</div>
 					<div class="panel-body eventset-list">
 						<li class="eventset-tit" style="margin-top: 0px;">
-							<i class="cell commitId w10">历史标签</i>
+						<i class="cell" style="width:4%;"></i>
+						<i class="cell commitId w10">历史标签</i>
 							<i class="cell commitMsg w30">提交信息</i>
 							<i class="cell commitUser w13">提交人</i>
 							<i class="cell commitTime w10">提交时间</i>

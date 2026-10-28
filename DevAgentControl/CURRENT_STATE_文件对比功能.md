@@ -67,7 +67,34 @@
 6. ⚠️ 已知边界：zTree 多选残留（如从搜索态切回）会让计数包含旧节点——普通点击会复位；如需更强清理可在
    showDocList 里调 resetListMultiSelect（暂未加，避免动既有流程）。
 
-### Bug 修复：折叠相同段无效（2026-10-28，用户报告：apply_changes…md ⟷ …-1.md）
+### M2 实施与实测（2026-10-28，dev，已发布待用户验收）
+
+**实施**（`js/DocHistory.js` + `historyLogsForArt.html/_en.html` + `js/DocCompare.js`）：
+- 历史页顶部新增对比工具条（`historyCompareBar`）：「对比选中的两个版本」「与当前版本对比（勾选 1 个）」；
+  historyType **0/2/3 显示**，1（VDoc）/4（回收站）不显示。
+- 行首复选框（`historyCk{i}`）：勾 3 个拒绝并提示；按钮联动 = 勾 1 启用「与当前」、勾 2 启用「两版对比」。
+- 选中两版：**列表自上而下=新→旧，index 大（旧）= 左基准**；与当前：左=历史版（带 versionLabel @版本N）、
+  右=当前（无 commitId，label @当前版本）。经 `window.parent.openCompareWindow(...)`（opener 兜底）。
+- `DocCompare.fetchText`：带 commitId 时附 `needDeletedEntry:1`（历史版本可能是当时已删除的文件）。
+- 版本参数：DocHistory.js 引用从无版本 → `?v=20261028b`；DocCompare.js → `?v=20261028g`（两历史页/两对比页）。
+
+**实测**：
+1. hello.txt 现场造两版（ace 编辑保存 v1/v2）→ 历史页 3 个版本 → 勾 2 个 → 对比窗口：
+   **左=@前1版(hello v1, 23B)、右=@最新(hello v2, 42B)**、统计 +3/-2·4 处、内容真实来自历史版本 ✓
+2. 勾 1 个 → 「与当前版本对比」→ 左=@前1版(v1)、右=@当前版本(v2)、统计同上 ✓
+3. 勾第 3 个被拒绝（保持 2 个）✓；按钮联动（勾1/勾2 互斥启用）✓
+4. 修复实施中一个导出名字错误（`compareWithCurrent`→实现为 `compareHistoryWithCurrent`）。
+
+### ⚠️ 发现的既有后端数据问题（非 M2 范围，待用户裁定是否另立卡）
+
+`apply_changes代码逻辑分析.md` 的历史索引（CommitEntry）指向版本目录 `2026-10-28/20261028201220/`，
+但磁盘 `1_DISK_RReposes/2026-10-28/` 下只有 `20261028201313/`（且只含 -1.md）→
+`getDocContent.do` 历史分支 checkout 不到文件，**返回 ok+空内容**（前端显示 0B/无差异）。
+时间线：用户 2026-10-28 20:12-20:13 间上传 -1.md/移动 .md 产生提交，commitId(20:12:20) 与
+实际目录(20:13:13) 差 53 秒——疑似「索引记录时刻 ≠ 版本目录落盘时刻」或移动操作未落版本文件。
+**影响**：此类"索引有记录但目录缺失"的历史版本，对比/取内容均为空（既有行为，M2 之前就如此）。
+
+### Bug 修复：折叠相同段无效（2026-10-28，用户报告：apply_changes…md ⟷ …-1.md；已验收 359d51c8f）
 
 - **根因 = 换行符差异**：`.md` 为 CRLF（829 处）、`-1.md` 为纯 LF——逐行 diff 把 830 行全部判异
   （统计 +831/-829 的假象），**无相同段可折叠**（折叠本身工作正常）。
@@ -116,10 +143,12 @@
 
 ## 下一步
 
-1. **等用户验收「交互简化 + 折叠修复」**（Ctrl 选两个 → 右键对比；1 个/>2 个提示；列表 Ctrl 多选与
-   普通点击复位；换行符归一化后折叠相同段/统计正常）。DocCompare.js 当前版本 `?v=20261028f`。
-2. 验收通过 → **M2 历史版本对比**（DocHistory.js 行复选选两版 + 「与当前对比」入口 → compareRef 带
-   commitId/historyType/versionLabel → 实测验收）→ M3 AI 工具与链接 → M4 Office 并排+打磨+全量回归。
+1. **等用户验收 M2**（验收点：hello.txt 历史页勾两版对比 / 勾 1 个与当前对比 / 勾 3 个被拒 / 按钮联动；
+   dev 上现成素材 agent-test/hello.txt 已有 3 个版本）。⚠️ 注意 apply_changes 那对文件的历史版本
+   受上述既有数据问题影响会显示 0B/无差异（不是 M2 的问题）。
+2. 验收通过 → **M3 AI 对比工具与链接**（compare_docs 工具 + AgentProductLink compare 产物 + agent 页
+   链接打开对比窗口）→ 实测验收 → **M4 Office 并排+打磨+全量回归收尾**。
+3. 待用户裁定：是否为「历史索引指向缺失版本目录」另立排查卡（后端数据一致性）。
 
 ## 生效约束
 

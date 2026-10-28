@@ -17,17 +17,152 @@
 			reposId = Input_vid;
 			docId = Input_docId;
 			pid = Input_pid;
-			parentPath = Input_path;	
+			parentPath = Input_path;
 			docName = Input_name;
 			docPath = Input_path + Input_name;
 			historyType = Input_historyType;
-			
+
 			if(docId == undefined)
 			{
 				docId = 0;
 			}
-			showHistoryLogList(reposId, docId, pid, parentPath, docName, historyType);	
+			initCompareBar();
+			showHistoryLogList(reposId, docId, pid, parentPath, docName, historyType);
 		}
+
+		//==================== 文件对比（M2：历史版本对比）====================
+		//工具条：勾 1 个版本 → 「与当前版本对比」可用；勾 2 个 → 「对比选中的两个版本」可用
+		function initCompareBar()
+		{
+			//版本管理(0)/本地备份(2)/异地备份(3) 提供对比；VDoc历史(1)/回收站(4) 不提供
+			var compareBar = $("#historyCompareBar");
+			if(compareBar.length == 0) return;
+			if(historyType != 0 && historyType != 2 && historyType != 3)
+			{
+				compareBar.hide();
+				return;
+			}
+			compareBar.show();
+			updateCompareBarState();
+		}
+
+		function getCompareHost()
+		{
+			//对比窗口的打开函数在 project.html（artDialog 父页面）；兼容独立打开的场景
+			if(window.parent && window.parent.openCompareWindow) return window.parent;
+			if(window.opener && window.opener.openCompareWindow) return window.opener;
+			return null;
+		}
+
+		function buildHistoryCompareRef(index)
+		{
+			var commitId = $("#commitId" + index).attr("value");
+			var versionLabel = $("#commitId" + index).text();
+			return {
+				vid: reposId,
+				docId: docId,
+				path: parentPath,
+				name: docName,
+				docType: 1,
+				commitId: commitId,
+				historyType: historyType,
+				versionLabel: versionLabel,
+				shareId: gShareId,
+			};
+		}
+
+		function buildCurrentCompareRef()
+		{
+			return {
+				vid: reposId,
+				docId: docId,
+				path: parentPath,
+				name: docName,
+				docType: 1,
+				versionLabel: _Lang("当前版本"),
+				shareId: gShareId,
+			};
+		}
+
+		function getCheckedCompareIndexes()
+		{
+			var checked = [];
+			$("input[id^='historyCk']").each(function(){
+				if(this.checked)
+				{
+					var idx = parseInt(this.id.substring("historyCk".length));
+					if(!isNaN(idx)) checked.push(idx);
+				}
+			});
+			//列表自上而下 = 新 → 旧：排序后 index 大的更旧
+			checked.sort(function(a, b){ return a - b; });
+			return checked;
+		}
+
+		function onCompareCheck(el, ev)
+		{
+			if(ev && ev.stopPropagation) ev.stopPropagation();
+			if(el.checked)
+			{
+				var checked = getCheckedCompareIndexes();
+				if(checked.length > 2)
+				{
+					el.checked = false;
+					showErrorMessage(_Lang("最多选择两个版本进行对比"));
+					return;
+				}
+			}
+			updateCompareBarState();
+		}
+
+		function updateCompareBarState()
+		{
+			var n = getCheckedCompareIndexes().length;
+			var btn2 = $("#compareSelectedBtn");
+			var btn1 = $("#compareWithCurrentBtn");
+			if(btn2.length > 0 && btn1.length > 0)
+			{
+				btn2.prop("disabled", n != 2);
+				btn1.prop("disabled", n != 1);
+			}
+		}
+
+		function compareSelectedHistory()
+		{
+			var checked = getCheckedCompareIndexes();
+			if(checked.length != 2)
+			{
+				showErrorMessage(_Lang("请勾选两个版本进行对比"));
+				return;
+			}
+			var host = getCompareHost();
+			if(host == null)
+			{
+				showErrorMessage(_Lang("当前页面不支持打开对比窗口"));
+				return;
+			}
+			//左 = 基准 = 较旧版本（列表下方），右 = 较新版本
+			host.openCompareWindow(buildHistoryCompareRef(checked[1]), buildHistoryCompareRef(checked[0]));
+		}
+
+		function compareHistoryWithCurrent()
+		{
+			var checked = getCheckedCompareIndexes();
+			if(checked.length != 1)
+			{
+				showErrorMessage(_Lang("请勾选一个版本再与当前版本对比"));
+				return;
+			}
+			var host = getCompareHost();
+			if(host == null)
+			{
+				showErrorMessage(_Lang("当前页面不支持打开对比窗口"));
+				return;
+			}
+			//左 = 基准 = 勾选的历史版本，右 = 当前版本
+			host.openCompareWindow(buildHistoryCompareRef(checked[0]), buildCurrentCompareRef());
+		}
+		//==================== 文件对比 END ====================
 		
 		function loadMoreHistory()
 		{
@@ -896,7 +1031,17 @@
 						break;
 					}
 					
+					//M2 对比复选：版本管理(0)/备份(2/3) 的行首加勾选框
+					var compareCk = "";
+					if(historyType == 0 || historyType == 2 || historyType == 3)
+					{
+						compareCk = "<i class='cell' style='width:4%;'>"
+							+"	<input type='checkbox' id='historyCk" + i + "' onclick='DocHistory.onCompareCheck(this, event)'>"
+							+"</i>";
+					}
+
 					var se = "<li id='historyItem" + i + "'>"
+						+	compareCk
 						+"	<i class='cell commitId w10'>"
 						+"		<span class='name  breakAll'>"
 						+"			<a id='commitId"+i+"' value='" +commitId+ "' href='javascript:void(0)'>"+version+"</a>"
@@ -963,6 +1108,15 @@
 	        showDeleteConfirm: function(index)
 			{
 	        	showDeleteConfirm(index);
-			}	
+			},
+	        onCompareCheck: function(el, ev){
+	        	onCompareCheck(el, ev);
+	        },
+	        compareSelectedHistory: function(){
+	        	compareSelectedHistory();
+	        },
+	        compareWithCurrent: function(){
+	        	compareHistoryWithCurrent();
+	        }
 	    };
 	})();

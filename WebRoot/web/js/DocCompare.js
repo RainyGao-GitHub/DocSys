@@ -99,7 +99,10 @@ var DocCompare = (function () {
             name: ref.name,
             docType: ref.docType || 1
         };
-        if (ref.commitId) data.commitId = ref.commitId;
+        if (ref.commitId) {
+            data.commitId = ref.commitId;
+            data.needDeletedEntry = 1;   //历史版本可能是当时已被删除的文件（后端按此放行内容读取）
+        }
         if (ref.historyType != null) data.historyType = ref.historyType;
         if (ref.shareId) data.shareId = ref.shareId;
         if (ref.authCode) data.authCode = ref.authCode;
