@@ -38,8 +38,8 @@ import com.alibaba.fastjson.JSONObject;
  */
 public class AgentProductLink {
 
-    /** 会产生"可打开产物"的工具（白名单，用户 2026-09-23 裁定） */
-    public static final String[] PRODUCT_TOOLS = {"write_office", "edit_office", "write_file"};
+    /** 会产生"可打开产物"的工具（白名单，用户 2026-09-23 裁定；2026-10-28 M3 增 compare_docs） */
+    public static final String[] PRODUCT_TOOLS = {"write_office", "edit_office", "write_file", "compare_docs"};
 
     /** 标记前后缀（前端 index.html 用同一对常量解析） */
     public static final String MARK_START = "[[ds-products]]";
@@ -59,8 +59,10 @@ public class AgentProductLink {
         public String name = "";
         /** 可选：docId（拿不到时前端用 path+name 也能打开） */
         public Long docId;
-        /** new=新建 / modified=修改（回执文案用） */
+        /** new=新建 / modified=修改 / compare=文件对比（回执文案用） */
         public String action = "new";
+        /** compare 产物专用：两侧文件定位 {left:{vid,path,name,docType}, right:{...}}（其余 action 为 null） */
+        public JSONObject pair;
 
         /** 去重键（同一文件被改两次只留一条） */
         public String key() {
@@ -77,6 +79,9 @@ public class AgentProductLink {
                 o.put("docId", docId);
             }
             o.put("action", action == null ? "new" : action);
+            if (pair != null) {
+                o.put("pair", pair);
+            }
             return o;
         }
 
@@ -94,6 +99,10 @@ public class AgentProductLink {
             p.name = name.trim();
             p.docId = o.getLong("docId");
             p.action = o.getString("action");
+            JSONObject pairObj = o.getJSONObject("pair");
+            if (pairObj != null && pairObj.getJSONObject("left") != null && pairObj.getJSONObject("right") != null) {
+                p.pair = pairObj;
+            }
             return p;
         }
     }
@@ -126,6 +135,44 @@ public class AgentProductLink {
         p.docId = docId;
         p.action = action == null ? "new" : action;
         return p;
+    }
+
+    /**
+     * M3：compare_docs 工具的对比产物（action=compare，pair 携带两侧文件定位，
+     * 前端点击打开对比窗口；name 用于链接展示，形如 "a.md ⟷ b.md"）。
+     */
+    public static Product compareOf(Integer vidA, String pathA, String nameA,
+                                    Integer vidB, String pathB, String nameB) {
+        if (vidA == null || vidB == null || nameA == null || nameB == null) {
+            return null;
+        }
+        JSONObject left = new JSONObject();
+        left.put("vid", vidA);
+        left.put("path", normalize(pathA));
+        left.put("name", nameA);
+        left.put("docType", 1);
+        JSONObject right = new JSONObject();
+        right.put("vid", vidB);
+        right.put("path", normalize(pathB));
+        right.put("name", nameB);
+        right.put("docType", 1);
+        JSONObject pair = new JSONObject();
+        pair.put("left", left);
+        pair.put("right", right);
+        Product p = new Product();
+        p.vid = vidA;
+        p.path = "";
+        p.name = nameA + " ⟷ " + nameB;
+        p.action = "compare";
+        p.pair = pair;
+        return p;
+    }
+
+    private static String normalize(String path) {
+        if (path == null) {
+            return "";
+        }
+        return com.DocSystem.agent.tool.DocSysToolFactory.normalizeDocPath(path);
     }
 
     /** 从响应 data 里取 docId（拿不到就 null；打开文件其实只需 vid/path/name） */

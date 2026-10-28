@@ -67,7 +67,35 @@
 6. ⚠️ 已知边界：zTree 多选残留（如从搜索态切回）会让计数包含旧节点——普通点击会复位；如需更强清理可在
    showDocList 里调 resetListMultiSelect（暂未加，避免动既有流程）。
 
-### M2 交互优化：详情页「对比」（2026-10-28 晚，用户裁定后实施，已发布待验收）
+### M3 实施与实测（2026-10-28 晚，dev，已发布待用户验收）
+
+**实施**（后端两文件 + agent/index.html，已编译发布重启）：
+- `DocSysToolFactory.compareDocs(client)`：新只读工具 `compare_docs`（参数 vidA/pathA/nameA + vidB/pathB/nameB，
+  必填 vid+name；跨仓库支持）。执行：`client.getDoc`×2 取文本（`extractDocTextOrNull`）→
+  `compareTextSummary`（**换行符归一化**（与前端一致）→ 行集合差异 +N/-M → `appendDiffSamples`
+  朴素对齐扫描前 3 处差异样本，>50 万行跳过样本）→ `ToolResult.ok(summary, AgentProductLink.compareOf(...))`。
+  注册进 `createReadOnlyRegistry`。
+- `AgentProductLink`：PRODUCT_TOOLS 增 compare_docs；`Product` 增 `pair` 字段（{left:{vid,path,name,docType},
+  right:{...}}，toJson/fromJson 同步）；新增 `compareOf(...)` 工厂。
+- `agent/index.html`：`extractProducts` 带 pair；`renderProductLinks` compare 分支渲染「⇄ A ⟷ B」链接
+  （pair 经 encodeURIComponent 存 data-pair）；点击委托识别 `data-compare` → `openComparePair(pair)`：
+  同源父窗口有 `openCompareWindow`（project 内嵌场景）复用之，否则写 sessionStorage
+  （键 `docsys_compare_pair`，与 project.js 一致）+ `window.open('compareForArt.html?from=agent')`
+  （新窗口继承 sessionStorage 快照；DocCompare 无 dialogId 时自动读该键）。
+
+**实测**（2026-10-28 晚，dev agent 页真实 LLM 会话）：
+1. 发「对比 agent-test/hello.txt 和 根目录 test.md」→ 模型调用 `compare_docs:success`（另带 2 次 get_doc 定位），
+   回答含差异摘要（A=5行 vs B=1行、B 相对 A 新增约 1 行删除约 5 行）✓
+2. 回答末尾渲染产物链接「⇄ hello.txt ⟷ test.md」，data-pair 携带两侧定位 ✓
+3. 点击链接 → sessionStorage 写入 → compareForArt 直开渲染：左=agent-test/hello.txt(42B, "hello v2")、
+   右=test.md(10B, "# Markdown")、统计 +1/-4·2 处、7 行删除标记 ✓
+   （自动化里 window.open 被弹窗拦截——合成点击无用户手势；真实用户点击有手势不受影响，
+   sessionStorage 通道已同 tab 导航等效验证。）
+4. 兼容：旧产物 new/modified 走原分支不受影响；测试会话已删。
+
+**版本参数**：无新增外链引用（agent 页改动全在内联脚本；compareForArt 引用未变）。
+
+### M2 交互优化：详情页「对比」（2026-10-28 晚，用户裁定后实施，已验收提交 b991b71cc）
 
 **用户裁定**：「与当前版本对比」入口不合适——改为**历史详情页**加「对比」按钮，查看**该次提交改动前后**
 （本版 vs 上一版）。
@@ -169,10 +197,9 @@
 
 ## 下一步
 
-1. **等用户验收「详情页对比」优化**（验收点：hello.txt 历史页 → 某行「详情」→ 条目「对比」→
-   左=上一版右=本版；最旧版本提示无更早版本；历史页工具条只剩「对比选中的两个版本」）。
-2. 验收通过 → **M3 AI 对比工具与链接**（compare_docs 工具 + AgentProductLink compare 产物 + agent 页
-   链接打开对比窗口）→ 实测验收 → **M4 Office 并排+打磨+全量回归收尾**。
+1. **等用户验收 M3**（验收点：agent 页发"对比 A 和 B"→ 回答带差异摘要 + 末尾「⇄ A ⟷ B」链接 →
+   点击打开对比窗口）。
+2. 验收通过 → **M4 Office 并排模式（双 office.html iframe）+ 对齐连接线打磨 + 全量回归 → 收尾归档**。
 3. 待用户裁定：是否为「历史索引指向缺失版本目录」另立排查卡（后端数据一致性）。
 
 ## 生效约束

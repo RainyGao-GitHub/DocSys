@@ -3608,13 +3608,17 @@
                 for (var i = 0; i < arr.length; i++) {
                     var it = arr[i];
                     if (it && it.name) {
-                        items.push({
+                        var item = {
                             vid: it.vid,
                             path: it.path || '',
                             name: it.name,
                             docId: it.docId || null,
                             action: it.action || 'new'
-                        });
+                        };
+                        if (it.action === 'compare' && it.pair && it.pair.left && it.pair.right) {
+                            item.pair = it.pair;   // M3 对比产物：两侧文件定位
+                        }
+                        items.push(item);
                     }
                 }
             } catch (e) { /* 坏标记：忽略（最多不显示链接）*/ }
@@ -3630,6 +3634,15 @@
         var html = '<div class="ds-products"><span class="ds-products-label">本轮产物</span>';
         for (var i = 0; i < items.length; i++) {
             var it = items[i];
+            if (it.action === 'compare' && it.pair) {
+                // M3 对比产物：图标 +「A ⟷ B 对比」链接（pair 编码进 data-pair）
+                var tip = '对比：' + it.pair.left.name + ' ⟷ ' + it.pair.right.name + '（点击打开对比窗口）';
+                html += '<a class="ds-product" href="javascript:void(0)" title="' + escapeHtml(tip) + '"'
+                     + ' data-compare="1"'
+                     + ' data-pair="' + escapeHtml(encodeURIComponent(JSON.stringify(it.pair))) + '">'
+                     + '<span class="ds-product-name">⇄ ' + escapeHtml(it.pair.left.name) + ' ⟷ ' + escapeHtml(it.pair.right.name) + '</span></a>';
+                continue;
+            }
             var tip = (it.action === 'modified' ? '已修改：' : '已新建：') + it.name + '（点击打开）';
             html += '<a class="ds-product" href="javascript:void(0)" title="' + escapeHtml(tip) + '"'
                  + ' data-vid="' + escapeHtml(String(it.vid == null ? '' : it.vid)) + '"'
@@ -3674,6 +3687,26 @@
             console.warn('openProductInParent failed, fallback to new window', e);
             return false;
         }
+    }
+
+    /** M3 对比产物：打开对比窗口。同源父窗口（project 页内嵌 agent）有 openCompareWindow 则复用；
+     *  否则写 sessionStorage（键与 project.js 一致）后开新窗口——新窗口继承 sessionStorage 快照，
+     *  compareForArt 无 dialogId 时自动读该键兜底（DocCompare.loadPair 双通道）。 */
+    function openComparePair(pair) {
+        if (!pair || !pair.left || !pair.right) return;
+        try {
+            var p = window.parent;
+            if (p && p !== window && typeof p.openCompareWindow === 'function') {
+                p.openCompareWindow(pair.left, pair.right);
+                return;
+            }
+        } catch (e) { /* 跨域保险 */ }
+        try {
+            sessionStorage.setItem('docsys_compare_pair', JSON.stringify(pair));
+        } catch (e) {
+            console.warn('openComparePair sessionStorage failed', e);
+        }
+        window.open('/DocSystem/web/compareForArt.html?from=agent');
     }
 
     /** T7.2.2 工具进度卡片渲染（2026-10-27 改 <details> 自折叠：running 展开、结束收起、点击展开） */
@@ -6099,6 +6132,15 @@
         var productEl = (t && t.closest) ? t.closest('.ds-product') : null;
         if (productEl) {
             e.preventDefault();
+            if (productEl.getAttribute('data-compare') === '1') {
+                var pairRaw = productEl.getAttribute('data-pair') || '';
+                try {
+                    openComparePair(JSON.parse(decodeURIComponent(pairRaw)));
+                } catch (err) {
+                    console.warn('compare pair parse failed', err);
+                }
+                return;
+            }
             openProduct({
                 vid: productEl.getAttribute('data-vid'),
                 path: productEl.getAttribute('data-path') || '',

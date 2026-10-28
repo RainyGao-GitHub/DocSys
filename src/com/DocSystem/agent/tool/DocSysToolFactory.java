@@ -43,6 +43,7 @@ public class DocSysToolFactory {
         reg.register(listDocs(client));
         reg.register(getDoc(client));
         reg.register(getDocHistory(client));
+        reg.register(compareDocs(client));
         reg.register(searchFiles(client));
         reg.register(grepFiles(client));
         // P4 下线（2026-09-19）：rag_chat（与 Agent 自身推理 + search/grep/get_doc 重叠）、
@@ -255,6 +256,170 @@ public class DocSysToolFactory {
                         args.getInteger("maxLogNum"), args.getString("commitId")))))
                 .parameters(schema)
                 .build();
+    }
+
+    /** M3 文件对比（devDocs/文件对比功能方案.md 场景3）：差异摘要给模型 + compare 产物链接给前端 */
+    public static ToolDefinition compareDocs(DocSysClient client) {
+        JSONObject props = props(
+                intProp("vidA", "左侧（基准）文件的仓库ID（必填）"),
+                strProp("pathA", "左侧文件所在目录的相对路径（可选，根目录传空串）"),
+                strProp("nameA", "左侧文件名（必填，来自 list_docs 的 name 列）"),
+                intProp("vidB", "右侧文件的仓库ID（必填）"),
+                strProp("pathB", "右侧文件所在目录的相对路径（可选，根目录传空串）"),
+                strProp("nameB", "右侧文件名（必填）"));
+        JSONObject schema = objSchema(props, new String[]{"vidA", "nameA", "vidB", "nameB"});
+        return ToolDefinition.builder("compare_docs",
+                "对比两个文本文件的内容差异（A=左侧基准，B=右侧）。返回差异摘要：双方行数、"
+                + "B 侧新增/删除行数与前几处差异样本；回答末尾会附带可点击的对比窗口链接（双栏差异高亮）。"
+                + "支持文本/代码/Markdown 与 Office 提取文本（与 get_doc 同样的提取规则）；两个文件可以在不同仓库。"
+                + "注意：换行符差异（CRLF/LF）已被忽略，不算内容差异。",
+                args -> {
+                    Integer vidA = args.getInteger("vidA");
+                    Integer vidB = args.getInteger("vidB");
+                    String pathA = normalizeDocPath(args.getString("pathA"));
+                    String pathB = normalizeDocPath(args.getString("pathB"));
+                    String nameA = args.getString("nameA");
+                    String nameB = args.getString("nameB");
+                    java.util.Map<String, Object> respA = null;
+                    java.util.Map<String, Object> respB = null;
+                    try {
+                        respA = client.getDoc(vidA, null, pathA.isEmpty() ? null : pathA, nameA);
+                        respB = client.getDoc(vidB, null, pathB.isEmpty() ? null : pathB, nameB);
+                    } catch (Exception e) {
+                        return ToolResult.ok("compare_docs 执行失败：" + e.getMessage());
+                    }
+                    String textA = extractDocTextOrNull(respA);
+                    String textB = extractDocTextOrNull(respB);
+                    if (textA == null) {
+                        return ToolResult.ok("左侧文件无文本可读：" + docTargetText(vidA, pathA, nameA) + "\n"
+                                + (respA != null && !"ok".equals(String.valueOf(respA.get("status")))
+                                        ? fmt(respA)
+                                        : "（非文本文件或不存在；Office/PDF 之外的格式不支持提取）"));
+                    }
+                    if (textB == null) {
+                        return ToolResult.ok("右侧文件无文本可读：" + docTargetText(vidB, pathB, nameB) + "\n"
+                                + (respB != null && !"ok".equals(String.valueOf(respB.get("status")))
+                                        ? fmt(respB)
+                                        : "（非文本文件或不存在；Office/PDF 之外的格式不支持提取）"));
+                    }
+                    return ToolResult.ok(compareTextSummary(docTargetText(vidA, pathA, nameA), textA,
+                                    docTargetText(vidB, pathB, nameB), textB),
+                            AgentProductLink.compareOf(vidA, pathA, nameA, vidB, pathB, nameB));
+                })
+                .parameters(schema)
+                .build();
+    }
+
+    /** get_doc 响应里的正文提取：ok 且有 docText 则返回文本；否则 null（不可读/无文本表示） */
+    static String extractDocTextOrNull(java.util.Map<String, Object> resp) {
+        if (resp == null || !"ok".equals(String.valueOf(resp.get("status")))) {
+            return null;
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof Map)) {
+            return null;
+        }
+        Object t = ((Map<?, ?>) data).get("docText");
+        return t == null ? null : String.valueOf(t);
+    }
+
+    /** 行级差异摘要（M3）：行集合差异给 +N/-M，朴素对齐扫描给前 3 处差异样本 */
+    static String compareTextSummary(String labelA, String textA, String labelB, String textB) {
+        String na = textA.replace("\r\n", "\n");
+        String nb = textB.replace("\r\n", "\n");
+        String[] la = na.split("\n", -1);
+        String[] lb = nb.split("\n", -1);
+        java.util.Map<String, Integer> cnt = new java.util.HashMap<>();
+        for (String l : la) {
+            cnt.merge(l, 1, Integer::sum);
+        }
+        for (String l : lb) {
+            cnt.merge(l, -1, Integer::sum);
+        }
+        int del = 0;
+        int add = 0;
+        for (int v : cnt.values()) {
+            if (v > 0) {
+                del += v;
+            } else {
+                add += -v;
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("对比完成（A=左基准，B=右）：\n");
+        sb.append("  A：").append(labelA).append("（").append(la.length).append(" 行）\n");
+        sb.append("  B：").append(labelB).append("（").append(lb.length).append(" 行）\n");
+        if (add == 0 && del == 0) {
+            sb.append("  两个文件内容完全一致（换行符差异已忽略）。");
+            return sb.toString();
+        }
+        sb.append("  差异：B 相对 A 新增约 ").append(add).append(" 行、删除约 ").append(del).append(" 行");
+        sb.append("（按行集合估算，不含位置移动）。\n");
+        appendDiffSamples(sb, la, lb);
+        sb.append("详细的双栏差异高亮请点击回答末尾的对比链接查看。");
+        return sb.toString();
+    }
+
+    /** 前 3 处差异样本：朴素对齐扫描（200 行窗口内找重新对齐点），每块左右各展示至多 2 行 */
+    private static void appendDiffSamples(StringBuilder sb, String[] la, String[] lb) {
+        if (la.length + lb.length > 500000) {
+            return;
+        }
+        int i = 0;
+        int j = 0;
+        int blocks = 0;
+        while (i < la.length && j < lb.length && blocks < 3) {
+            if (la[i].equals(lb[j])) {
+                i++;
+                j++;
+                continue;
+            }
+            int ka = -1;
+            int kb = -1;
+            for (int k = 0; k < 200 && i + k < la.length; k++) {
+                if (la[i + k].equals(lb[j])) {
+                    ka = k;
+                    break;
+                }
+            }
+            for (int k = 0; k < 200 && j + k < lb.length; k++) {
+                if (lb[j + k].equals(la[i])) {
+                    kb = k;
+                    break;
+                }
+            }
+            int stepA = ka < 0 ? Integer.MAX_VALUE : ka;
+            int stepB = kb < 0 ? Integer.MAX_VALUE : kb;
+            if (stepA == Integer.MAX_VALUE && stepB == Integer.MAX_VALUE) {
+                stepA = la.length - i;
+                stepB = lb.length - j;
+            }
+            sb.append("  差异 ").append(blocks + 1).append("（约 A 第 ").append(i + 1).append(" 行）：\n");
+            if (stepA <= stepB) {
+                int n = Math.min(Math.max(stepA, 1), 2);
+                for (int k = 0; k < n && i + k < la.length; k++) {
+                    sb.append("    - ").append(shortText(la[i + k], 60)).append('\n');
+                }
+                int nB = stepB == Integer.MAX_VALUE ? 0 : Math.min(stepB, 2);
+                for (int k = 0; k < nB && j + k < lb.length; k++) {
+                    sb.append("    + ").append(shortText(lb[j + k], 60)).append('\n');
+                }
+                i += Math.max(stepA, 1);
+                j += Math.max(stepB == Integer.MAX_VALUE ? 0 : stepB, 1);
+            } else {
+                int nA = stepA == Integer.MAX_VALUE ? 0 : Math.min(stepA, 2);
+                for (int k = 0; k < nA && i + k < la.length; k++) {
+                    sb.append("    - ").append(shortText(la[i + k], 60)).append('\n');
+                }
+                int n = Math.min(Math.max(stepB, 1), 2);
+                for (int k = 0; k < n && j + k < lb.length; k++) {
+                    sb.append("    + ").append(shortText(lb[j + k], 60)).append('\n');
+                }
+                i += Math.max(stepA == Integer.MAX_VALUE ? 0 : stepA, 1);
+                j += Math.max(stepB, 1);
+            }
+            blocks++;
+        }
     }
 
     /** R9 Agent 专用索引搜索（T1：/Doc/agentSearchDoc.do mode=index） */
