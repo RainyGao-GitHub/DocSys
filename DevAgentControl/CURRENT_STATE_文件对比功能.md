@@ -67,6 +67,16 @@
 6. ⚠️ 已知边界：zTree 多选残留（如从搜索态切回）会让计数包含旧节点——普通点击会复位；如需更强清理可在
    showDocList 里调 resetListMultiSelect（暂未加，避免动既有流程）。
 
+### Bug 修复：折叠相同段无效（2026-10-28，用户报告：apply_changes…md ⟷ …-1.md）
+
+- **根因 = 换行符差异**：`.md` 为 CRLF（829 处）、`-1.md` 为纯 LF——逐行 diff 把 830 行全部判异
+  （统计 +831/-829 的假象），**无相同段可折叠**（折叠本身工作正常）。
+- **修复**：`fetchText` 归一化 `\r\n → \n` 后再进 diff/显示（业界默认行为，VS Code/Beyond Compare 同款）。
+  修复后实测同一对：统计 `+9 / -7 · 5 处变更`、折叠 widget 4 个、5 个删除块、开关往返稳定。
+- ⚠️ **教训两条**（已入踩坑备忘）：①**改 compareForArt 引用的任何资源必须同步 bump 其 `?v=`**
+  （本次中途误判"折叠还有独立 bug"，实为 iframe 缓存旧 JS）；②自动化排查时若上一个对比窗口未关，
+  读到的是**旧窗口 iframe** 的状态——复测前先关旧窗再开新窗。
+
 ### M1 实施内容（未提交）
 
 - **vendor**：`WebRoot/web/static/CodeMirror5/`（5.65.19：lib + addon/merge + 14 个常用 mode + LICENSE，MIT）
@@ -106,7 +116,8 @@
 
 ## 下一步
 
-1. **等用户验收「交互简化」**（Ctrl 选两个 → 右键对比；1 个/>2 个提示；列表 Ctrl 多选与普通点击复位）。
+1. **等用户验收「交互简化 + 折叠修复」**（Ctrl 选两个 → 右键对比；1 个/>2 个提示；列表 Ctrl 多选与
+   普通点击复位；换行符归一化后折叠相同段/统计正常）。DocCompare.js 当前版本 `?v=20261028f`。
 2. 验收通过 → **M2 历史版本对比**（DocHistory.js 行复选选两版 + 「与当前对比」入口 → compareRef 带
    commitId/historyType/versionLabel → 实测验收）→ M3 AI 工具与链接 → M4 Office 并排+打磨+全量回归。
 

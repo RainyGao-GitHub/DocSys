@@ -83,6 +83,13 @@ var DocCompare = (function () {
 
     // ---------- 内容获取（照 DocSys.js getDocTextBasic 的 ok+文本 协议，自带极简版避免整页依赖） ----------
 
+    /** 换行符归一化：CRLF → LF。逐字节比较会把「整份 CRLF 文件 vs 整份 LF 文件」判成全部不同
+     *  （实测 2026-10-28：同源 md 因 EOL 不同显示 +831/-829、无相同段可折叠），
+     *  业界 diff 工具默认忽略 EOL 差异，此处对齐该行为 */
+    function normalizeEol(s) {
+        return s.replace(/\r\n/g, '\n');
+    }
+
     function fetchText(ref, callback) {
         // 注意：commitId 必须真缺省（不能传空串）——后端以 commitId==null 区分当前/历史版本，
         // 传 "" 会走历史分支并在版本号解析处 500（实测 2026-10-28）
@@ -103,7 +110,7 @@ var DocCompare = (function () {
             data: data,
             success: function (ret) {
                 if (ret && ret.substring(0, 2) === "ok") {
-                    callback(null, ret.substring(2));
+                    callback(null, normalizeEol(ret.substring(2)));
                 } else {
                     callback(refLabel(ref) + ' : ' + (ret || "empty response"));
                 }
