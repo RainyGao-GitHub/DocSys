@@ -51,10 +51,13 @@
 		.dir-table { flex: 1; overflow: auto; font-size: 13px; }
 		.dir-row { display: flex; align-items: center; padding: 5px 14px; border-bottom: 1px solid #f0f0f4; }
 		.dir-row.dir-head { position: sticky; top: 0; background: #f6f6fa; color: #888; font-size: 12px; z-index: 1; }
-		.dir-row.dir-drill { cursor: pointer; }
-		.dir-row.dir-drill:hover { background: #eef4ff; }
+		.dir-row.dir-toggle { cursor: pointer; }
+		.dir-row.dir-toggle:hover { background: #eef4ff; }
 		.dir-st { width: 30px; }
-		.dir-rel { flex: 1; font-family: Consolas, Menlo, monospace; color: #333; word-break: break-all; }
+		.dir-twist { width: 22px; flex: none; text-align: center; color: #555; }
+		.dir-name { flex: 1; min-width: 0; font-family: Consolas, Menlo, monospace; color: #333; word-break: break-all; }
+		.dir-name + .dir-name { border-left: 1px solid #f0f0f4; }
+		.dir-dim { color: #c8c8d0; }
 		.dir-stat { width: 180px; text-align: right; color: #666; font-size: 12px; }
 		.dir-more { padding: 8px 14px; color: #b8860b; font-size: 12px; }
 		.dir-breadcrumb { padding: 6px 12px; background: #f6f6fa; border-bottom: 1px solid #e3e3e8; font-size: 13px; }
@@ -95,7 +98,7 @@
 	<script type="text/javascript" src="static/CodeMirror5/mode/ruby/ruby.min.js?v=20261028"></script>
 	<script type="text/javascript" src="static/diff-match-patch/diff_match_patch.js?v=20261028"></script>
 	<script type="text/javascript" src="static/CodeMirror5/addon/merge/merge.min.js?v=20261028"></script>
-	<script type="text/javascript" src="js/DocCompare.js?v=20261029c"></script>
+	<script type="text/javascript" src="js/DocCompare.js?v=20261031b"></script>
 	<script type="text/javascript">
 		$(document).ready(function () {
 			DocCompare.init(window.COMPARE_LANG = {
@@ -117,6 +120,7 @@
 				contentCapHit: 'Text file pairs exceed the content-compare cap; the rest are size-only',
 				dirTruncated: 'Directory exceeds the entry cap; result is incomplete',
 				backToDir: 'Back to directory compare',
+				colLeft: 'Left · Base', colRight: 'Right · Compare', dirSubDiff: 'Differences inside (click to expand)', dirAllSame: 'Identical inside',
 
 identical: 'Identical',
 				chunksUnit: 'changed chunks'

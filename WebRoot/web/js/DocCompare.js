@@ -438,19 +438,69 @@ var DocCompare = (function () {
         };
     }
 
-    function dirRowFilter(r) {
+    /** 平铺 rows → 两侧合并的树（目录对无平铺行，靠子树汇总得出差异态） */
+    function buildDirTree() {
+        var all = {}, k;
+        for (k in dirState.treeL) all[k] = 1;
+        for (k in dirState.treeR) all[k] = 1;
+        var rowByRel = {};
+        (dirState.rows || []).forEach(function (r) { rowByRel[r.rel] = r; });
+
+        var nodes = {}, roots = [];
+        var keys = Object.keys(all).sort();   //父路径是子路径前缀，排序保证父先建
+        for (var i = 0; i < keys.length; i++) {
+            var rel = keys[i];
+            var ea = dirState.treeL[rel], eb = dirState.treeR[rel];
+            var segs = rel.split('/');
+            var parentRel = segs.slice(0, -1).join('/');
+            var row = rowByRel[rel] || null;
+            var node = {
+                name: segs[segs.length - 1], rel: rel, type: (ea || eb).type,
+                side: (ea && eb) ? 0 : (ea ? -1 : 1),      // 0 两侧 / -1 仅左 / 1 仅右
+                cls: row ? row.cls : null,                  // 目录对 cls=null → 由子树汇总
+                stat: row ? (row.stat || row.note || '') : '',
+                drill: !!(row && row.cls === 'differ' && row.type === 1 && row.stat),
+                children: [], open: false, subDiff: false
+            };
+            nodes[rel] = node;
+            var parent = parentRel ? nodes[parentRel] : null;
+            if (parent) parent.children.push(node); else roots.push(node);
+        }
+        var rollup = function (n) {
+            if (n.type !== 2) return n.cls !== 'same';
+            var diff = (n.cls !== null && n.cls !== 'same');   // 仅一侧的目录本身就是差异
+            for (var j = 0; j < n.children.length; j++) { if (rollup(n.children[j])) diff = true; }
+            n.subDiff = diff;
+            return diff;
+        };
+        roots.forEach(rollup);
+        dirState.nodes = nodes;
+        dirState.roots = roots;
+    }
+
+    /** 展示态：目录对按子树汇总（🟡内部有差异 / ⚪内部一致），其余按自身四类 */
+    function dirDisplayCls(n) {
+        return n.cls || (n.subDiff ? 'differ' : 'same');
+    }
+
+    function nodeMatches(n) {
         if (dirState.filter === 'all') return true;
-        if (dirState.filter === 'diff') return r.cls !== 'same';
-        return r.cls === dirState.filter;
+        var c = dirDisplayCls(n);
+        return dirState.filter === 'diff' ? c !== 'same' : c === dirState.filter;
+    }
+
+    function subtreeMatches(n) {
+        if (nodeMatches(n)) return true;
+        for (var i = 0; i < n.children.length; i++) { if (subtreeMatches(n.children[i])) return true; }
+        return false;
     }
 
     function renderDirList() {
-        var rows = (dirState.rows || []).slice().sort(function (a, b) {
-            var order = { 'differ': 0, 'only-left': 1, 'only-right': 2, 'same': 3 };
-            return (order[a.cls] || 9) - (order[b.cls] || 9) || a.rel.localeCompare(b.rel);
-        });
+        if (!dirState.roots) buildDirTree();
+
+        // 统计口径不变：按平铺 rows（文件 + 仅单侧的目录）计四类
         var nOnlyL = 0, nOnlyR = 0, nDiff = 0, nSame = 0;
-        rows.forEach(function (r) {
+        (dirState.rows || []).forEach(function (r) {
             if (r.cls === 'only-left') nOnlyL++;
             else if (r.cls === 'only-right') nOnlyR++;
             else if (r.cls === 'differ') nDiff++;
@@ -476,20 +526,15 @@ var DocCompare = (function () {
         filters.forEach(function (f) {
             html += '<span class="compare-btn dir-filter' + (dirState.filter === f.id ? ' compare-btn-on' : '') + '" data-filter="' + f.id + '">' + f.label + '</span>';
         });
-        html += '</div><div class="dir-table"><div class="dir-row dir-head"><span class="dir-st"></span><span class="dir-rel">Path</span><span class="dir-stat">Diff</span></div>';
-        var shown = 0;
-        rows.forEach(function (r) {
-            if (!dirRowFilter(r)) return;
-            if (shown++ >= 300) return;   //渲染上限（数据统计不受影响）
-            var icon = r.cls === 'differ' ? '🟡' : (r.cls === 'only-left' ? '🔴' : (r.cls === 'only-right' ? '🟢' : '⚪'));
-            var drill = r.cls === 'differ' && r.type === 1 && r.stat;   //内容差异的文本文件可下钻
-            html += '<div class="dir-row' + (drill ? ' dir-drill' : '') + '" data-rel="' + escapeHtml(r.rel) + '" data-drill="' + (drill ? 1 : 0) + '">' +
-                '<span class="dir-st">' + icon + '</span>' +
-                '<span class="dir-rel">' + (r.type === 2 ? '[目录] ' : '') + escapeHtml(r.rel) + '</span>' +
-                '<span class="dir-stat">' + escapeHtml(r.stat || r.note || '') + '</span></div>';
-        });
+        html += '</div><div class="dir-table">';
+        html += '<div class="dir-row dir-head"><span class="dir-twist"></span><span class="dir-st"></span>' +
+            '<span class="dir-name">' + escapeHtml(L.colLeft) + '</span>' +
+            '<span class="dir-name">' + escapeHtml(L.colRight) + '</span>' +
+            '<span class="dir-stat">Diff</span></div>';
+        var cap = { shown: 0, hit: false };
+        html += emitTreeRows(dirState.roots, 0, cap);
         html += '</div>';
-        if (shown >= 300) html += '<div class="dir-more">… ' + L.tooManyRows + '</div>';
+        if (cap.hit) html += '<div class="dir-more">… ' + L.tooManyRows + '</div>';
         if (dirState.contentCap) html += '<div class="dir-more">⚠ ' + L.contentCapHit + ' (' + DIR_CONTENT_PAIR_LIMIT + ')</div>';
         if (dirState.truncatedL || dirState.truncatedR) html += '<div class="dir-more">⚠ ' + L.dirTruncated + ' (' + DIR_ENTRY_LIMIT + ')</div>';
         html += '</div>';
@@ -501,9 +546,47 @@ var DocCompare = (function () {
             dirState.filter = $(this).data('filter');
             renderDirList();
         });
-        container.off('click', '.dir-drill').on('click', '.dir-drill', function () {
-            drillDownFile($(this).data('rel'));
+        container.off('click', '.dir-trow').on('click', '.dir-trow', function () {
+            var rel = $(this).data('rel');
+            if ($(this).data('drill')) { drillDownFile(rel); return; }
+            var n = dirState.nodes[rel];
+            if (n) { n.open = !n.open; renderDirList(); }
         });
+    }
+
+    /** 树形行输出（懒展开：目录默认收起、只带子树差异标记；筛选态强制展开匹配路径） */
+    function emitTreeRows(list, depth, cap) {
+        var sorted = list.slice().sort(function (a, b) {
+            return (b.type === 2 ? 1 : 0) - (a.type === 2 ? 1 : 0) || a.name.localeCompare(b.name);
+        });
+        var html = '';
+        for (var i = 0; i < sorted.length; i++) {
+            var n = sorted[i];
+            if (!subtreeMatches(n)) continue;
+            if (cap.shown >= 300) { cap.hit = true; return html; }   //渲染上限（数据统计不受影响）
+            cap.shown++;
+            var c = dirDisplayCls(n);
+            var dot = c === 'differ' ? '🟡' : (c === 'only-left' ? '🔴' : (c === 'only-right' ? '🟢' : '⚪'));
+            var isDir = n.type === 2;
+            var hasKids = isDir && n.children.length > 0;
+            var expanded = !!n.open;   //展开完全由用户控制：默认收起只看标记，筛选也只筛不展开
+            var tip = (isDir && !n.cls) ? (n.subDiff ? L.dirSubDiff : L.dirAllSame) : (n.stat || '');
+            var twist = hasKids ? '<span class="dir-twist">' + (expanded ? '▾' : '▸') + '</span>' : '<span class="dir-twist"></span>';
+            var pad = 'padding-left:' + (8 + depth * 18) + 'px;';
+            var icon = isDir ? '📁 ' : '';
+            var nameL = n.side <= 0 ? icon + escapeHtml(n.name) : '<span class="dir-dim">—</span>';
+            var nameR = n.side >= 0 ? icon + escapeHtml(n.name) : '<span class="dir-dim">—</span>';
+            var clickable = n.drill || hasKids;
+            html += '<div class="dir-row dir-trow' + (clickable ? ' dir-toggle' : '') + '"' +
+                ' data-rel="' + escapeHtml(n.rel) + '" data-drill="' + (n.drill ? 1 : 0) + '" title="' + escapeHtml(tip) + '">' +
+                twist +
+                '<span class="dir-st">' + dot + '</span>' +
+                '<span class="dir-name" style="' + pad + '">' + nameL + '</span>' +
+                '<span class="dir-name" style="' + pad + '">' + nameR + '</span>' +
+                '<span class="dir-stat">' + escapeHtml(n.stat || '') + '</span></div>';
+            if (hasKids && expanded) html += emitTreeRows(n.children, depth + 1, cap);
+        }
+        return html;
     }
 
     /** 下钻：进入某对内容差异文本文件的差异视图（复用文件对比渲染），面包屑返回 */
@@ -581,7 +664,8 @@ var DocCompare = (function () {
             typeMismatch: '类型不同（一侧文件一侧目录）', sameSizeOnly: '大小相同（未比对内容）',
             sizeDiff: '大小不同', readFail: '读取失败', tooManyRows: '条目过多，仅显示前 300 行（可筛选或缩小范围）',
             contentCapHit: '文本文件对数超出内容比对上限，超出部分仅按大小判定', dirTruncated: '目录较大超出条目上限，结果不完整',
-            backToDir: '返回目录对比'
+            backToDir: '返回目录对比',
+            colLeft: '左 · 基准', colRight: '右 · 对比', dirSubDiff: '内部有差异（点击展开）', dirAllSame: '内部完全一致'
         };
         for (var k in defaults) { if (L[k] === undefined) L[k] = defaults[k]; }
         $('#btnCollapse').off('click').on('click', toggleCollapse);
