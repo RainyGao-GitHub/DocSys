@@ -210,6 +210,40 @@ var DocCompare = (function () {
         }
     }
 
+    // ---------- M4：Office/PDF 并排查看（只读对照，不做内容级 diff） ----------
+
+    /** 组 office.html 查看地址（参数协议同 DocSys.buildRequestParamStrForDoc；历史版本透传 commitId） */
+    function officeUrl(ref) {
+        var p = ['reposId=' + ref.vid];
+        if (ref.docId) p.push('docId=' + ref.docId);
+        if (ref.path) p.push('path=' + base64_encode(ref.path));
+        p.push('name=' + base64_encode(ref.name || ''));
+        if (ref.docType) p.push('docType=' + base64_encode(String(ref.docType)));
+        if (ref.commitId) {
+            p.push('isHistory=1', 'commitId=' + ref.commitId);
+            if (ref.historyType) p.push('historyType=' + ref.historyType);
+            p.push('needDeletedEntry=1');
+        }
+        if (ref.shareId) p.push('shareId=' + ref.shareId);
+        if (ref.authCode) p.push('authCode=' + ref.authCode);
+        p.push('editEn=0');   //对比场景只读
+        return 'office.html?' + p.join('&');
+    }
+
+    function renderOfficeCompare() {
+        buildTitles();
+        // 折叠/忽略空白是文本 diff 专用，Office 并排模式隐藏
+        $('#btnCollapse').hide();
+        $('#btnIgnoreWs').hide();
+        $('#compareStats').text(L.officeSideBySide || '');
+        $('#compareMsg').hide();
+        $('#compareContainer').show().html(
+            '<div class="office-compare">' +
+            '<iframe class="office-frame" src="' + officeUrl(pair.left) + '" allowfullscreen="true"></iframe>' +
+            '<iframe class="office-frame office-frame-r" src="' + officeUrl(pair.right) + '" allowfullscreen="true"></iframe>' +
+            '</div>');
+    }
+
     // ---------- 主流程 ----------
 
     function run() {
@@ -228,9 +262,13 @@ var DocCompare = (function () {
             return;
         }
 
-        // Office / 二进制分流（M1：Office 为占位提示，M4 换并排查看器）
+        // M4：Office/PDF 并排查看器（两侧同为 Office 才并排；混合类型给提示）
         if (isOfficeDoc(pair.left) || isOfficeDoc(pair.right)) {
-            showMsg('<div class="compare-tip">' + L.officePending + '</div>');
+            if (isOfficeDoc(pair.left) && isOfficeDoc(pair.right)) {
+                renderOfficeCompare();
+                return;
+            }
+            showMsg('<div class="compare-tip">' + L.officeMixed + '</div>');
             buildTitles();
             return;
         }
@@ -459,7 +497,7 @@ var DocCompare = (function () {
                 side: (ea && eb) ? 0 : (ea ? -1 : 1),      // 0 两侧 / -1 仅左 / 1 仅右
                 cls: row ? row.cls : null,                  // 目录对 cls=null → 由子树汇总
                 stat: row ? (row.stat || row.note || '') : '',
-                drill: !!(row && row.cls === 'differ' && row.type === 1 && row.stat),
+                drill: !!(row && row.cls === 'differ' && row.type === 1 && (row.stat || isOfficeDoc({ name: rel }))),   //文本对或有差异的 Office 对可下钻
                 children: [], open: false, subDiff: false
             };
             nodes[rel] = node;
@@ -596,9 +634,15 @@ var DocCompare = (function () {
         buildTitles();
         var bc = '<div class="dir-breadcrumb"><a href="javascript:void(0)" id="dirBackLink">« ' + L.backToDir + '</a> · ' + escapeHtml(relPath) + '</div>';
         $('#compareContainer').before(bc);
+        // M4：Office 文件对下钻 → 并排查看器（只读）
+        if (isOfficeDoc(pair.left) || isOfficeDoc(pair.right)) {
+            renderOfficeCompare();
+            $('#dirBackLink').off('click').on('click', backToDirList);
+            return;
+        }
         $('#btnCollapse').show();
         $('#btnIgnoreWs').show();
-        // 复用文件主流程（文本分支；Office 等在此不可达——只有文本对才可下钻）
+        // 复用文件主流程（文本分支）
         showMsg('<div class="compare-tip">' + L.loading + '</div>');
         var pending = 2;
         texts = {};
@@ -666,7 +710,8 @@ var DocCompare = (function () {
             sizeDiff: '大小不同', readFail: '读取失败', tooManyRows: '条目过多，仅显示前 300 行（可筛选或缩小范围）',
             contentCapHit: '文本文件对数超出内容比对上限，超出部分仅按大小判定', dirTruncated: '目录较大超出条目上限，结果不完整',
             backToDir: '返回目录对比',
-            colLeft: '左 · 基准', colRight: '右 · 对比', dirSubDiff: '内部有差异（点击展开）', dirAllSame: '内部完全一致'
+            colLeft: '左 · 基准', colRight: '右 · 对比', dirSubDiff: '内部有差异（点击展开）', dirAllSame: '内部完全一致',
+            officeMixed: '暂不支持 Office 与非 Office 文件对比（两侧需同为 Office/PDF）', officeSideBySide: '并排预览 · 只读'
         };
         for (var k in defaults) { if (L[k] === undefined) L[k] = defaults[k]; }
         $('#btnCollapse').off('click').on('click', toggleCollapse);
