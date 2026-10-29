@@ -300,13 +300,39 @@ kind:"dir" 的链接暂走文件对比（getDocContent 对目录返回空）—�
 - 纯二进制（图片/压缩包）拒绝提示：同类分支（Office 已实测占位路径）。
 - 对齐连接线（connect:'align' 的 SVG）：视觉核验提及 gap 存在但未明确连线——留 M4 打磨一并看。
 
+### M4 Office 并排模式 + 对齐连接线（2026-10-29，dev 已发布待验收）
+
+**Office 并排查看器**（两侧同为 Office/PDF → 对比窗内双 office.html iframe 并排只读；混合 Office+非Office 给提示）：
+- `officeUrl(ref)`：按 `DocSys.buildRequestParamStrForDoc` 同款协议组参（reposId/docId/path/name/docType
+  均 b64；**历史版本透传 isHistory=1&commitId&historyType&needDeletedEntry=1**；editEn=0 只读）。
+- `renderOfficeCompare()`：整行隐藏"折叠/忽略空白"按钮，stats 显示"并排预览 · 只读"，左右各 50% iframe。
+- **目录树下钻扩展**：Office 差异对（doc/docx/… 后缀）行也可下钻 → 并排视图+面包屑，返回恢复树。
+- 触发路径全覆盖：两文件对比 / 历史详情页对比（@前1版 ⟷ @最新 两 commitId）/ 树内下钻。
+
+**对齐连接线修复**：M1 起用的 `connect:'align'` 实为"只对齐窗格不画线"（merge.min.js 源码实证：
+`"align" != connect` 才创建 SVG）→ 改 `connect: true`，双栏中间现绘制 diff 连接曲线（实测 3 条，
+配合折叠相同段曲线短而清晰）。
+
+**实测**（2026-10-29，dev，真实 UI 全流程）：
+- base.docx ⟷ 写入功能测试.docx → 双 office 查看器渲染文档内容 ✓（用户亦已自测通过）
+- cmp-tree 树内 报告.docx（🟡+41/-19）下钻 → 并排 + 面包屑 + 返回恢复树 ✓
+- 软件测试报告模板.docx 历史详情页「对比」→ 左 @前1版(commitId 179034603324)/右 @最新(179034603551)，
+  两侧 office.html 均带 isHistory=1&commitId&editEn=0，加载对应历史版本 ✓
+- apply_changes md 对 → +9/-7·5 处变更 + 连接曲线 ✓（31e 全链）
+- 版本链 bump 至 `20261031e`（DocCompare.js ?v= / iframe _v= / project.js ?v= 三层）。
+
+**环境事故与用户裁定（2026-10-29）**：Office 查看器首测卡死整个渲染进程（evaluate 全挂起）——
+用户裁定：**字体库未重置所致（环境问题）+ 以后 Office 编辑相关问题不调研、直接上报**（已记入
+CLAUDE.md「验证要求」）。调研中顺带发现 OfficeEditor.js 对 127.0.0.1+外部 Office 模式 alert 阻断（既有
+行为，不处理）。
+
 ## 下一步
 
-1. ~~M5.3 树形目录对比~~ **2026-10-29 用户已验收**（强刷后正常；此前看不到树形是旧页面内存里的
-   project.js 打开旧 iframe 地址所致——教训：部署后入口页面必须刷新）。测试目录 cmp-tree-a/b
-   暂留仓库根，M4 全量回归还要用，归档前再删。
-2. **M4 Office 并排模式（双 office.html iframe，历史版本参数有 viewVDocHistory 先例）+
-   对齐连接线打磨 + 全量回归 → 收尾归档**（等用户开工指令）。
+1. **等用户验收 M4**（刷新 project 页，版本链 20261031e）：①Office 两文件对比（如 02-测试文件 里
+   base.docx ⟷ 写入功能测试.docx）②Office 文件历史详情页「对比」③目录树内 Office 行下钻
+   ④文本对比看双栏中间新增的连接曲线。
+2. M4 验收通过 → **收尾归档**：删测试目录 cmp-tree-a/b（用户要求留到回归完）、工作卡移入
+   DevAgentControl/已完成/。
 3. 待用户裁定：是否为「历史索引指向缺失版本目录」另立排查卡（后端数据一致性）。
 
 ## 生效约束

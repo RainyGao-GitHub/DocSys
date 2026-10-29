@@ -94,6 +94,7 @@ DocSys 是**多 git 仓库**，office 相关共**五条**提交路径：
 
 - 除非用户明确说明不需要，任何改动都必须**重启实际服务并做端到端实测**（真实页面/接口请求，覆盖正常与异常分支）；仅 `javac` 编译通过、静态检查通过都**不算完成**。
 - ⚠️ **开发实例 = `C:\TomcatForDocSysDev`（发布用 `Docs/scripts/PublishDev.bat`，重启 `C:\TomcatForDocSysDev\docsys\docsys_restart.bat`）**。**`C:\MxsDoc` 是正式实例：绝对不要对它做任何开发/测试/重启/改文件**（2026-10-27 用户明确裁定；"8100 正在监听"不能作为实例归属的依据，两个实例都配 8100）。
+- ⚠️ **Office 编辑/预览（office.html、OfficeEditor/OfficeEditorLoader）出问题不要去调研**：直接把现象报告用户，由用户处理（2026-10-29 用户明确裁定——Office 编辑代码正常情况下不可能有问题，真有问题也是大工程，用户来解决）。环境先例：字体库未就绪会让 office 查看器卡死整个渲染进程（`ensureOfficeFontsReady` 自动生成字体，等一次就好）；`OfficeEditor.js` 对 localhost/127.0.0.1 + 外部 Office 服务模式会 alert 阻断。
 
 ## 编译输出目录（不变量，务必遵守）
 

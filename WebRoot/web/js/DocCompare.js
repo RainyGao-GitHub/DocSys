@@ -184,7 +184,7 @@ var DocCompare = (function () {
             revertButtons: false,                // 只读对比（用户裁定 C）
             allowEditingOriginals: false,
             readOnly: true,
-            connect: 'align',
+            connect: true,                     //画 diff 连接曲线（'align' 只对齐窗格不画线，merge.min.js 源码实证）
             highlightDifferences: true,
             collapseIdentical: opts.collapse ? { margin: 3 } : false,
             ignoreWhitespace: opts.ignoreWs,
