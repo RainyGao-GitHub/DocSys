@@ -554,7 +554,7 @@ var DocCompare = (function () {
         });
     }
 
-    /** 树形行输出（懒展开：目录默认收起、只带子树差异标记；筛选态强制展开匹配路径） */
+    /** 树形行输出（懒展开：目录默认收起、只带子树差异标记；展开完全由用户点击控制） */
     function emitTreeRows(list, depth, cap) {
         var sorted = list.slice().sort(function (a, b) {
             return (b.type === 2 ? 1 : 0) - (a.type === 2 ? 1 : 0) || a.name.localeCompare(b.name);
@@ -572,17 +572,18 @@ var DocCompare = (function () {
             var expanded = !!n.open;   //展开完全由用户控制：默认收起只看标记，筛选也只筛不展开
             var tip = (isDir && !n.cls) ? (n.subDiff ? L.dirSubDiff : L.dirAllSame) : (n.stat || '');
             var twist = hasKids ? '<span class="dir-twist">' + (expanded ? '▾' : '▸') + '</span>' : '<span class="dir-twist"></span>';
-            var pad = 'padding-left:' + (8 + depth * 18) + 'px;';
+            var pad = 'padding-left:' + (14 + depth * 22) + 'px;';   //整行随层级缩进（箭头+状态点+双栏一起右移），层级感直观
             var icon = isDir ? '📁 ' : '';
             var nameL = n.side <= 0 ? icon + escapeHtml(n.name) : '<span class="dir-dim">—</span>';
             var nameR = n.side >= 0 ? icon + escapeHtml(n.name) : '<span class="dir-dim">—</span>';
             var clickable = n.drill || hasKids;
             html += '<div class="dir-row dir-trow' + (clickable ? ' dir-toggle' : '') + '"' +
+                ' style="' + pad + '"' +
                 ' data-rel="' + escapeHtml(n.rel) + '" data-drill="' + (n.drill ? 1 : 0) + '" title="' + escapeHtml(tip) + '">' +
                 twist +
                 '<span class="dir-st">' + dot + '</span>' +
-                '<span class="dir-name" style="' + pad + '">' + nameL + '</span>' +
-                '<span class="dir-name" style="' + pad + '">' + nameR + '</span>' +
+                '<span class="dir-name">' + nameL + '</span>' +
+                '<span class="dir-name">' + nameR + '</span>' +
                 '<span class="dir-stat">' + escapeHtml(n.stat || '') + '</span></div>';
             if (hasKids && expanded) html += emitTreeRows(n.children, depth + 1, cap);
         }
