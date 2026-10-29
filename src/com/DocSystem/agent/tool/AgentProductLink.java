@@ -168,6 +168,19 @@ public class AgentProductLink {
         return p;
     }
 
+    /** M5 目录对比产物：pair 两侧带 kind=dir（前端 M5.2 识别打开目录对比视图） */
+    public static Product compareOfDir(Integer vidA, String pathA, String nameA,
+                                       Integer vidB, String pathB, String nameB) {
+        Product p = compareOf(vidA, pathA, nameA, vidB, pathB, nameB);
+        if (p == null) {
+            return null;
+        }
+        p.name = nameA + "/ ⟷ " + nameB + "/";
+        p.pair.getJSONObject("left").put("kind", "dir");
+        p.pair.getJSONObject("right").put("kind", "dir");
+        return p;
+    }
+
     private static String normalize(String path) {
         if (path == null) {
             return "";

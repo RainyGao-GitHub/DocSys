@@ -95,6 +95,75 @@
 
 **版本参数**：无新增外链引用（agent 页改动全在内联脚本；compareForArt 引用未变）。
 
+### M5.1 实施与实测（2026-10-28 晚，后端目录对比，dev 已发布待验收）
+
+**背景**：用户 2026-10-28 裁定——目录对比做成 M5 且要可视化界面（先于 M4）；方案见
+`devDocs/文件对比功能方案.md` §11。分两段：M5.1 后端目录 diff + AI 链路（本节）→ M5.2 前端目录视图。
+
+**实施**（`DocSysToolFactory.java` + `AgentProductLink.java`）：
+- `compare_docs` **自动分流**：getDoc 的 `data.type`（1=文件/2=目录）判定（实测发现 getSubDocList
+  对"文件当目录查"会误导性返回 ok+1 条，不能用列表探测）；文件与目录混合 → 明确提示不支持。
+- 目录分支 `compareDirsSummary`：BFS 递归 `getSubDocList` 收集两侧树（上限：条目 1000/深度 8/文本
+  内容对 100，超限截断并如实标注）→ 四类清单（仅A/仅B/内容不同/相同；目录对不单列，空目录差异由
+  onlyX 体现；类型不匹配标注）→ 文本文件逐对 `lineSetDiff`（EOL 归一化行集合差异）给 +N/-M；
+  非文本按大小判（"大小相同，未比对内容"如实标注）→ 摘要（统计 + 每类前 8 样本）。
+- `AgentProductLink.compareOfDir`：pair 两侧加 `kind:"dir"`（M5.2 前端识别）。
+- 工具描述更新（文件/目录双语义）。
+
+**实测**（2026-10-28 晚，dev，磁盘造 cmp-a/cmp-b 已知差异目录 → agent 真实对话）：
+- 模型调 `compare_docs:success` 目录分支，摘要四类**与造数完全一致**：仅A有 2（only-a.txt、sub/inner.txt）、
+  仅B有 2（only-b.txt、sub/inner2.txt）、内容不同 1（diff.txt +3/-2）、相同 1（same.txt）✓
+- 模型基于摘要进一步解读（读两边 diff.txt 内容讲差异语义）——LLM 解读层的预期行为 ✓
+- 产物链接「⇄ cmp-a ⟷ cmp-b」pair 带 kind:"dir" ✓
+- 测试目录（磁盘直放）与会话已清理。
+
+**M5.1 未测项**：条目/内容对超限的截断提示（造大目录成本高，逻辑简单）；混合类型提示（分支直给文案）。
+**注意**：磁盘直放文件绕过 DocSys 元数据（仅测试用法，产物正常）；M5.2 前端目录视图点击
+kind:"dir" 的链接暂走文件对比（getDocContent 对目录返回空）——M5.2 接管。
+
+### M5.2 实施与实测（2026-10-29，前端目录对比视图，dev 已发布待验收）
+
+**实施**（DocCompare.js + compareForArt.html×2 + project.js + agent/index.html）：
+- `DocCompare.run` 按 `pair.*.kind=='dir'` 分流目录模式（混合类型提示；agent 的 compareOfDir 与
+  project.js 的 buildCompareRef 都带 kind）。
+- **目录视图**：前端 BFS 递归 `getSubDocList.do` 拉两侧树（并发≤6；上限与后端一致：条目 1000/深度 8/
+  文本对 100，超限如实标注）→ 四类清单（规则同 M5.1）→ 表格渲染（🟡不同/🔴仅左/🟢仅右/⚪相同 +
+  文本文件 +N/-M；默认筛选"有差异"，五档筛选；渲染上限 300 行）。
+- **下钻**：点"内容不同"的文本文件行 → 复用文件 diff 视图（MergeView）+ 面包屑「« 返回目录对比」返回。
+- **入口放行**：buildCompareRef 放行目录（kind 字段）；compareSelectedDocs 同类型校验（混合提示）；
+  列表 Ctrl 多选放行目录。
+- 版本：DocCompare.js `?v=20261029c`；project.js `?v=20261030`（2026-10-29 随语法修复 bump）；
+  **对比窗 iframe src 加 `&_v=20261030`**（openCompareWindow 与 agent openComparePair 两处——
+  compareForArt.html 无自版本参数的历史包袱，靠引用方带版本，改它必须同步 bump 这两处）。
+
+**实测**（2026-10-29，dev，cmp-a/cmp-b 已知差异目录）：
+- Ctrl 双选两目录 → 右键对比 → 目录清单：**仅左侧 2 · 仅右侧 2 · 内容不同 1 · 相同 1**（与数据一致），
+  默认"有差异"视图 5 行、diff.txt 显示 +3/-2 ✓
+- 下钻 diff.txt → 文件双栏 diff（v1/v2、+3/-2·4 处）+ 面包屑 ✓；返回目录视图恢复 ✓；筛选"相同"仅显 same.txt ✓
+- （agent kind:dir 链接与右键入口走同一 DocCompare 通道；agent 端到端留给用户验收一并验证）
+
+### ⚠️ "缓存玄学"复盘 + 真 Bug：compareForArt 启动脚本语法错误（2026-10-29 修复，用户报告触发）
+
+**用户实测目录对比回报窗口空白**（截图：标题停在静态「左·基准/右·对比」、工具栏按钮在、主体空白）。
+真正根因：**compareForArt.html 与 _en.html 的内联 lang 脚本里 `mixedUnsupported` 字符串混入裸换行**
+（python heredoc 转义坑，本该 `\n`）→ SyntaxError → 整个 `<script>` 解析失败 → `DocCompare.init()`
+从未执行 → 只剩静态 HTML。**之前记的"IAB 忽略 query 的缓存层"结论有误**——当时 iframe 流程空白
+而 `DocCompare.init(null)` 手动驱动正常，正是同一语法错误的表现（手动驱动绕过了启动脚本），
+误判为缓存；js 带 ?v"一直正常"是因为 js 文件本身没语法错误。
+
+**修复**：两 html 裸换行 → `\n`（提取内联脚本 `node --check` 双双通过）；按版本纪律 bump
+`&_v=20261029→20261030`（project.js + agent/index.html 两处）、`project.js?v=20261029b→20261030`
+（project.html/_en.html 两处）；6 个文件发布 dev。
+
+**修复后真实浏览器（IAB）端到端回归全通过**：
+- 目录对比：04-合同协议 ⟷ 99-杂项 → 统计「仅左侧 1 · 仅右侧 1 · 内容不同 0 · 相同 0」+ 五档筛选 +
+  清单表（🔴/🟢 行）、标题=真实目录名、折叠/忽略空白按钮正确隐藏、iframe src 带 `_v=20261030` ✓
+- 文件对比：apply_changes代码逻辑分析.md ⟷ …-1.md → 双栏 MergeView、+9/-7 · 5 处变更 ✓
+- （期间无任何强刷，正常刷新即可——"缓存层"不存在，见上）
+
+**教训**：①改 html 内联脚本必须整体语法校验（提取+node --check），不能只查引用的 js；
+②"手动驱动正常"≠"真实入口正常"，自动化验收必须走真实 UI 路径（本轮 IAB 真实右键流程暴露了它）。
+
 ### M2 交互优化：详情页「对比」（2026-10-28 晚，用户裁定后实施，已验收提交 b991b71cc）
 
 **用户裁定**：「与当前版本对比」入口不合适——改为**历史详情页**加「对比」按钮，查看**该次提交改动前后**
@@ -197,8 +266,9 @@
 
 ## 下一步
 
-1. **等用户验收 M3**（验收点：agent 页发"对比 A 和 B"→ 回答带差异摘要 + 末尾「⇄ A ⟷ B」链接 →
-   点击打开对比窗口）。
+1. **等用户验收 M5.2（+顺带 M3/M5.1 未正式验收部分）**：仓库页 Ctrl 选两个目录 → 右键「对比」→
+   差异清单/下钻/筛选；agent 问「对比目录 X 和 Y」→ 摘要 + 链接点开目录视图。
+   （2026-10-29 语法错误修复后无需强刷，正常刷新 project 页即可；版本参数已 bump `_v=20261030`）
 2. 验收通过 → **M4 Office 并排模式（双 office.html iframe）+ 对齐连接线打磨 + 全量回归 → 收尾归档**。
 3. 待用户裁定：是否为「历史索引指向缺失版本目录」另立排查卡（后端数据一致性）。
 

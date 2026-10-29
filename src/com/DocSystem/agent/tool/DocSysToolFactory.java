@@ -269,10 +269,12 @@ public class DocSysToolFactory {
                 strProp("nameB", "右侧文件名（必填）"));
         JSONObject schema = objSchema(props, new String[]{"vidA", "nameA", "vidB", "nameB"});
         return ToolDefinition.builder("compare_docs",
-                "对比两个文本文件的内容差异（A=左侧基准，B=右侧）。返回差异摘要：双方行数、"
+                "对比两个文件或两个目录。文件：返回内容差异摘要（双方行数、B 侧新增/删除行数与前几处差异样本）；"
                 + "B 侧新增/删除行数与前几处差异样本；回答末尾会附带可点击的对比窗口链接（双栏差异高亮）。"
-                + "支持文本/代码/Markdown 与 Office 提取文本（与 get_doc 同样的提取规则）；两个文件可以在不同仓库。"
-                + "注意：换行符差异（CRLF/LF）已被忽略，不算内容差异。",
+                + "目录：返回结构差异（仅A有/仅B有/内容不同/相同 四类清单与统计，文本文件给 +N/-M，"
+                + "非文本按大小判定），适合对比两个版本目录、两个资料库的差异。"
+                + "文件内容支持文本/代码/Markdown 与 Office 提取文本（与 get_doc 同规则）；两侧可在不同仓库；"
+                + "换行符差异（CRLF/LF）已被忽略。回答末尾会附带可点击的对比链接。",
                 args -> {
                     Integer vidA = args.getInteger("vidA");
                     Integer vidB = args.getInteger("vidB");
@@ -280,27 +282,51 @@ public class DocSysToolFactory {
                     String pathB = normalizeDocPath(args.getString("pathB"));
                     String nameA = args.getString("nameA");
                     String nameB = args.getString("nameB");
-                    java.util.Map<String, Object> respA = null;
-                    java.util.Map<String, Object> respB = null;
+                    java.util.Map<String, Object> respA;
+                    java.util.Map<String, Object> respB;
                     try {
                         respA = client.getDoc(vidA, null, pathA.isEmpty() ? null : pathA, nameA);
                         respB = client.getDoc(vidB, null, pathB.isEmpty() ? null : pathB, nameB);
                     } catch (Exception e) {
                         return ToolResult.ok("compare_docs 执行失败：" + e.getMessage());
                     }
+                    // M5 分流：getDoc 的 data.type（1=文件 2=目录）——文件/目录自动判定
+                    Integer typeA = docTypeOf(respA);
+                    Integer typeB = docTypeOf(respB);
+                    if (typeA == null) {
+                        return ToolResult.ok("左侧对象不存在或不可访问：" + docTargetText(vidA, pathA, nameA) + "\n"
+                                + (respA != null && !"ok".equals(String.valueOf(respA.get("status"))) ? fmt(respA) : ""));
+                    }
+                    if (typeB == null) {
+                        return ToolResult.ok("右侧对象不存在或不可访问：" + docTargetText(vidB, pathB, nameB) + "\n"
+                                + (respB != null && !"ok".equals(String.valueOf(respB.get("status"))) ? fmt(respB) : ""));
+                    }
+                    boolean dirA = typeA.intValue() == 2;
+                    boolean dirB = typeB.intValue() == 2;
+                    if (dirA || dirB) {
+                        if (!dirA || !dirB) {
+                            return ToolResult.ok("暂不支持文件与目录混合对比：A 是" + (dirA ? "目录" : "文件")
+                                    + "、B 是" + (dirB ? "目录" : "文件") + "。请两侧同为文件或同为目录。");
+                        }
+                        String dirSummary;
+                        try {
+                            dirSummary = compareDirsSummary(client, vidA, pathA, nameA, vidB, pathB, nameB);
+                        } catch (Exception e) {
+                            return ToolResult.ok("目录对比执行失败：" + e.getMessage());
+                        }
+                        return ToolResult.ok(dirSummary,
+                                AgentProductLink.compareOfDir(vidA, pathA, nameA, vidB, pathB, nameB));
+                    }
+                    // 文件分支（M3 原逻辑）
                     String textA = extractDocTextOrNull(respA);
                     String textB = extractDocTextOrNull(respB);
                     if (textA == null) {
                         return ToolResult.ok("左侧文件无文本可读：" + docTargetText(vidA, pathA, nameA) + "\n"
-                                + (respA != null && !"ok".equals(String.valueOf(respA.get("status")))
-                                        ? fmt(respA)
-                                        : "（非文本文件或不存在；Office/PDF 之外的格式不支持提取）"));
+                                + "（非文本文件；Office/PDF 之外的格式不支持提取，二进制请直接说明无法对比内容）");
                     }
                     if (textB == null) {
                         return ToolResult.ok("右侧文件无文本可读：" + docTargetText(vidB, pathB, nameB) + "\n"
-                                + (respB != null && !"ok".equals(String.valueOf(respB.get("status")))
-                                        ? fmt(respB)
-                                        : "（非文本文件或不存在；Office/PDF 之外的格式不支持提取）"));
+                                + "（非文本文件；Office/PDF 之外的格式不支持提取，二进制请直接说明无法对比内容）");
                     }
                     return ToolResult.ok(compareTextSummary(docTargetText(vidA, pathA, nameA), textA,
                                     docTargetText(vidB, pathB, nameB), textB),
@@ -308,6 +334,238 @@ public class DocSysToolFactory {
                 })
                 .parameters(schema)
                 .build();
+    }
+
+    /** get_doc 响应的 data.type：1=文件 / 2=目录；取不到（不存在/失败）→ null */
+    static Integer docTypeOf(java.util.Map<String, Object> resp) {
+        if (resp == null || !"ok".equals(String.valueOf(resp.get("status")))) {
+            return null;
+        }
+        Object data = resp.get("data");
+        if (!(data instanceof Map)) {
+            return null;
+        }
+        return intOf(((Map<?, ?>) data).get("type"));
+    }
+
+    // ==================== M5 目录对比 ====================
+
+    /** 目录树收集上限（单侧条目数，含文件与目录；超出截断并在摘要标注） */
+    private static final int DIR_ENTRY_LIMIT = 1000;
+    /** 文本内容逐对比对的对数上限（超出部分只按大小判定） */
+    private static final int DIR_CONTENT_PAIR_LIMIT = 100;
+    /** 目录递归深度上限（根为第 1 层） */
+    private static final int DIR_DEPTH_LIMIT = 8;
+
+    private static class DirEntry {
+        int type;       // 1=文件 2=目录
+        long size;
+    }
+
+    /** 递归收集目录树（BFS，逐层 getSubDocList）：relPath（相对根，含目录前缀）→ 条目 */
+    private static java.util.Map<String, DirEntry> collectDirTree(DocSysClient client, int vid, String rootPath,
+                                                                  boolean[] truncated) {
+        java.util.Map<String, DirEntry> map = new java.util.LinkedHashMap<>();
+        java.util.ArrayDeque<String> queue = new java.util.ArrayDeque<>();
+        queue.add(rootPath == null ? "" : rootPath);
+        int depth = 0;
+        while (!queue.isEmpty() && depth < DIR_DEPTH_LIMIT) {
+            int levelSize = queue.size();
+            for (int n = 0; n < levelSize; n++) {
+                String dir = queue.poll();
+                java.util.Map<String, Object> resp;
+                try {
+                    resp = client.getDocList(vid, null, null, dir == null || dir.isEmpty() ? null : dir);
+                } catch (Exception e) {
+                    continue;
+                }
+                if (resp == null || !"ok".equals(String.valueOf(resp.get("status")))) {
+                    continue;
+                }
+                Object data = resp.get("data");
+                if (!(data instanceof List)) {
+                    continue;
+                }
+                for (Object o : (List<?>) data) {
+                    if (!(o instanceof Map)) {
+                        continue;
+                    }
+                    Map<?, ?> d = (Map<?, ?>) o;
+                    String name = str(d.get("name"));
+                    if (name == null || name.isEmpty()) {
+                        continue;
+                    }
+                    String parentPath = str(d.get("path"));
+                    if (parentPath == null) {
+                        parentPath = "";
+                    }
+                    String rel;
+                    if (parentPath.length() >= (rootPath == null ? 0 : rootPath.length())
+                            && parentPath.startsWith(rootPath == null ? "" : rootPath)) {
+                        rel = parentPath.substring(rootPath == null ? 0 : rootPath.length()) + name;
+                    } else {
+                        rel = name;    // 兜底（理论上不会走到）
+                    }
+                    DirEntry e = new DirEntry();
+                    Integer t = intOf(d.get("type"));
+                    e.type = t == null ? 1 : t.intValue();
+                    Long sz = longOf(d.get("size"));
+                    e.size = sz == null ? 0 : sz.longValue();
+                    if (map.size() < DIR_ENTRY_LIMIT) {
+                        map.put(rel, e);
+                    } else {
+                        truncated[0] = true;
+                    }
+                    if (e.type == 2 && map.size() < DIR_ENTRY_LIMIT) {
+                        String child = (parentPath.isEmpty() ? "" : parentPath) + name + "/";
+                        queue.add(child);
+                    }
+                }
+            }
+            depth++;
+            if (map.size() >= DIR_ENTRY_LIMIT) {
+                truncated[0] = true;
+                break;
+            }
+        }
+        return map;
+    }
+
+    /** 行集合差异：{B相对A新增行数, 删除行数}（EOL 归一化，用于目录内同名文本文件的快速判定） */
+    static int[] lineSetDiff(String textA, String textB) {
+        String[] la = textA.replace("\r\n", "\n").split("\n", -1);
+        String[] lb = textB.replace("\r\n", "\n").split("\n", -1);
+        java.util.Map<String, Integer> cnt = new java.util.HashMap<>();
+        for (String l : la) {
+            cnt.merge(l, 1, Integer::sum);
+        }
+        for (String l : lb) {
+            cnt.merge(l, -1, Integer::sum);
+        }
+        int add = 0;
+        int del = 0;
+        for (int v : cnt.values()) {
+            if (v > 0) {
+                del += v;
+            } else {
+                add += -v;
+            }
+        }
+        return new int[]{add, del};
+    }
+
+    /** M5 目录对比摘要：四类清单（仅A/仅B/内容不同/相同）+ 统计 + 样本 */
+    static String compareDirsSummary(DocSysClient client,
+                                     Integer vidA, String pathA, String nameA,
+                                     Integer vidB, String pathB, String nameB) throws Exception {
+        String rootA = (pathA == null ? "" : pathA) + nameA + "/";
+        String rootB = (pathB == null ? "" : pathB) + nameB + "/";
+        boolean[] truncA = {false};
+        boolean[] truncB = {false};
+        java.util.Map<String, DirEntry> treeA = collectDirTree(client, vidA, rootA, truncA);
+        java.util.Map<String, DirEntry> treeB = collectDirTree(client, vidB, rootB, truncB);
+
+        java.util.TreeSet<String> all = new java.util.TreeSet<>();
+        all.addAll(treeA.keySet());
+        all.addAll(treeB.keySet());
+
+        java.util.List<String> onlyLeft = new java.util.ArrayList<>();
+        java.util.List<String> onlyRight = new java.util.ArrayList<>();
+        java.util.List<String> differ = new java.util.ArrayList<>();
+        java.util.List<String> same = new java.util.ArrayList<>();
+        int contentPairs = 0;
+        boolean contentCapHit = false;
+
+        for (String rel : all) {
+            DirEntry ea = treeA.get(rel);
+            DirEntry eb = treeB.get(rel);
+            if (ea != null && eb == null) {
+                onlyLeft.add((ea.type == 2 ? "[目录] " : "") + rel);
+            } else if (eb != null && ea == null) {
+                onlyRight.add((eb.type == 2 ? "[目录] " : "") + rel);
+            } else if (ea.type == 2 && eb.type == 2) {
+                // 目录对：结构差异由其内容体现，空目录差异已在 onlyLeft/onlyRight 呈现
+            } else if (ea.type != eb.type) {
+                differ.add(rel + "（类型不同：一侧是文件一侧是目录）");
+            } else {
+                // 文件对
+                String suffix = com.DocSystem.common.FileUtil.getFileSuffix(rel);
+                boolean textLike = suffix.isEmpty() || com.DocSystem.common.FileUtil.isText(suffix)
+                        || com.DocSystem.common.FileUtil.isOffice(suffix) || com.DocSystem.common.FileUtil.isPdf(suffix);
+                if (textLike && contentPairs < DIR_CONTENT_PAIR_LIMIT) {
+                    contentPairs++;
+                    String ta = extractDocTextOrNull(client.getDoc(vidA, null, parentPathOf(rootA, rel), nameOf(rel)));
+                    String tb = extractDocTextOrNull(client.getDoc(vidB, null, parentPathOf(rootB, rel), nameOf(rel)));
+                    if (ta == null || tb == null) {
+                        if (ea.size == eb.size) {
+                            same.add(rel + "（大小相同，未比对内容）");
+                        } else {
+                            differ.add(rel + "（大小不同：" + ea.size + " vs " + eb.size + "）");
+                        }
+                    } else {
+                        int[] ad = lineSetDiff(ta, tb);
+                        if (ad[0] == 0 && ad[1] == 0) {
+                            same.add(rel);
+                        } else {
+                            differ.add(rel + "（+" + ad[0] + "/-" + ad[1] + " 行）");
+                        }
+                    }
+                } else {
+                    if (textLike) {
+                        contentCapHit = true;
+                    }
+                    if (ea.size == eb.size) {
+                        same.add(rel + "（大小相同，未比对内容）");
+                    } else {
+                        differ.add(rel + "（大小不同：" + ea.size + " vs " + eb.size + "）");
+                    }
+                }
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("目录对比完成（A=左基准，B=右）：\n");
+        sb.append("  A：").append(docTargetText(vidA, pathA, nameA + "/")).append("（").append(treeA.size()).append(" 项）\n");
+        sb.append("  B：").append(docTargetText(vidB, pathB, nameB + "/")).append("（").append(treeB.size()).append(" 项）\n");
+        sb.append("  结果：仅A有 ").append(onlyLeft.size()).append(" 项，仅B有 ").append(onlyRight.size())
+                .append(" 项，两边都有但内容不同 ").append(differ.size()).append(" 项，相同 ").append(same.size()).append(" 项。\n");
+        appendSampleList(sb, "仅A有（B 缺少）", onlyLeft, 8);
+        appendSampleList(sb, "仅B有（A 缺少）", onlyRight, 8);
+        appendSampleList(sb, "两边都有但内容不同", differ, 8);
+        if (truncA[0] || truncB[0]) {
+            sb.append("  ⚠️ 目录较大，超出条目上限（").append(DIR_ENTRY_LIMIT)
+                    .append("），以上结果不完整（建议缩小范围分目录对比）。\n");
+        }
+        if (contentCapHit) {
+            sb.append("  ⚠️ 文本文件对数超出内容比对上限（").append(DIR_CONTENT_PAIR_LIMIT)
+                    .append("），超出部分仅按大小判定。\n");
+        }
+        sb.append("完整清单与逐文件差异可点击回答末尾的对比链接查看。");
+        return sb.toString();
+    }
+
+    /** relPath（相对根，形如 "sub/a.md"）→ 所在目录全路径（rootPath + sub/） */
+    private static String parentPathOf(String rootPath, String rel) {
+        int i = rel.lastIndexOf('/');
+        String parent = i < 0 ? "" : rel.substring(0, i + 1);
+        String p = (rootPath == null ? "" : rootPath) + parent;
+        return p.isEmpty() ? null : p;
+    }
+
+    /** relPath → 文件名 */
+    private static String nameOf(String rel) {
+        int i = rel.lastIndexOf('/');
+        return i < 0 ? rel : rel.substring(i + 1);
+    }
+
+    private static void appendSampleList(StringBuilder sb, String title, java.util.List<String> list, int max) {
+        if (list.isEmpty()) {
+            return;
+        }
+        sb.append("  ").append(title).append("（共 ").append(list.size()).append("，列前 ").append(Math.min(max, list.size())).append("）：\n");
+        for (int i = 0; i < list.size() && i < max; i++) {
+            sb.append("    ").append(shortText(list.get(i), 80)).append('\n');
+        }
     }
 
     /** get_doc 响应里的正文提取：ok 且有 docText 则返回文本；否则 null（不可读/无文本表示） */

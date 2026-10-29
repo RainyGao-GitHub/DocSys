@@ -2126,7 +2126,7 @@ var gListCtrlSelecting = null;	//列表 Ctrl 多选进行中：本次点击的 d
 
 function buildCompareRef(node)
 {
-	if(node == null || node.type != 1)
+	if(node == null || (node.type != 1 && node.type != 2))	//M5.2：文件与目录都可参与对比
 	{
 		return null;
 	}
@@ -2137,6 +2137,7 @@ function buildCompareRef(node)
 		name: node.name,
 		size: node.size,
 		docType: 1,	//RealDoc
+		kind: node.type == 2 ? "dir" : "file",	//M5.2：对比窗口按此分流目录视图
 		shareId: gShareId,
 	};
 }
@@ -2150,7 +2151,7 @@ function getSelectedFileNodes()
 	var files = [];
 	for(var i = 0; i < selectedNodes.length; i++)
 	{
-		if(selectedNodes[i].type == 1)
+		if(selectedNodes[i].type == 1 || selectedNodes[i].type == 2)	//M5.2：目录也参与对比
 		{
 			files.push(selectedNodes[i]);
 		}
@@ -2167,7 +2168,7 @@ function compareSelectedDocs()
     		id: "idAlertDialog",
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("请先选中两个文件（Ctrl+点击 多选）再进行对比") + "!",
+    		msg: _Lang("请先选中两个对象（Ctrl+点击 多选）再进行对比") + "!",
     	});
 		return;
 	}
@@ -2177,7 +2178,18 @@ function compareSelectedDocs()
     		id: "idAlertDialog",
     		title: _Lang("提示"),
     		okbtn: _Lang("确定"),
-    		msg: _Lang("目前只支持两个文件对比，请只选中两个文件") + "!",
+    		msg: _Lang("目前只支持两个对象对比，请只选中两个（文件或目录）") + "!",
+    	});
+		return;
+	}
+	//M5.2：两侧须同为文件或同为目录（混合对比不支持）
+	if((files[0].type == 1 || files[0].type == 2) && files[0].type != files[1].type)
+	{
+		showErrorMessage({
+    		id: "idAlertDialog",
+    		title: _Lang("提示"),
+    		okbtn: _Lang("确定"),
+    		msg: _Lang("暂不支持文件与目录混合对比，请两侧同为文件或同为目录") + "!",
     	});
 		return;
 	}
@@ -2193,7 +2205,7 @@ function listCtrlSelectDoc(obj, docId)
 		var treeNode = treeObj.getNodeByParam("id", docId);
 		if(treeNode)
 		{
-			if(treeNode.type == 1)	//仅文件参与多选（目录维持原单击行为）
+			if(treeNode.type == 1 || treeNode.type == 2)	//M5.2：文件与目录都参与多选（对比入口）
 			{
 				treeObj.selectNode(treeNode, true);	//增量选中
 				$(obj).closest('li').css('background-color', '#e8f0fe');
@@ -2229,7 +2241,7 @@ function openCompareWindow(leftRef, rightRef)
 	var d = new artDialog({
 		id: compareDialogId,
 		title: _Lang("文件对比"),
-		content: '<iframe frameborder="0" name="' + compareDialogId + '" src="compareForArt' + langExt + '.html?dialogId=' + compareDialogId + '" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
+		content: '<iframe frameborder="0" name="' + compareDialogId + '" src="compareForArt' + langExt + '.html?dialogId=' + compareDialogId + '&_v=20261030" style="width: 100%; height: 100%; border: 0px;" allowtransparency="true" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-popups allow-scripts allow-modals allow-same-origin allow-downloads"></iframe>',
 		msg: _Lang('页面正在加载，请稍侯') + '...',
 		foot: false,
 		big: true,

@@ -46,6 +46,19 @@
 			white-space: pre-wrap; word-break: break-all;
 		}
 		.CodeMirror { height: 100%; font-family: Consolas, Menlo, monospace; font-size: 13px; }
+.dir-compare { position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; }
+		.dir-filterbar { padding: 8px 12px; border-bottom: 1px solid #e3e3e8; display: flex; gap: 6px; background: #fafafc; }
+		.dir-table { flex: 1; overflow: auto; font-size: 13px; }
+		.dir-row { display: flex; align-items: center; padding: 5px 14px; border-bottom: 1px solid #f0f0f4; }
+		.dir-row.dir-head { position: sticky; top: 0; background: #f6f6fa; color: #888; font-size: 12px; z-index: 1; }
+		.dir-row.dir-drill { cursor: pointer; }
+		.dir-row.dir-drill:hover { background: #eef4ff; }
+		.dir-st { width: 30px; }
+		.dir-rel { flex: 1; font-family: Consolas, Menlo, monospace; color: #333; word-break: break-all; }
+		.dir-stat { width: 180px; text-align: right; color: #666; font-size: 12px; }
+		.dir-more { padding: 8px 14px; color: #b8860b; font-size: 12px; }
+		.dir-breadcrumb { padding: 6px 12px; background: #f6f6fa; border-bottom: 1px solid #e3e3e8; font-size: 13px; }
+		.dir-breadcrumb a { color: #1976d2; text-decoration: none; }
 		.CodeMirror-merge { height: 100%; }
 		.CodeMirror-merge-pane { height: 100%; }
 	</style>
@@ -82,10 +95,10 @@
 	<script type="text/javascript" src="static/CodeMirror5/mode/ruby/ruby.min.js?v=20261028"></script>
 	<script type="text/javascript" src="static/diff-match-patch/diff_match_patch.js?v=20261028"></script>
 	<script type="text/javascript" src="static/CodeMirror5/addon/merge/merge.min.js?v=20261028"></script>
-	<script type="text/javascript" src="js/DocCompare.js?v=20261028g"></script>
+	<script type="text/javascript" src="js/DocCompare.js?v=20261029c"></script>
 	<script type="text/javascript">
 		$(document).ready(function () {
-			DocCompare.init({
+			DocCompare.init(window.COMPARE_LANG = {
 				noParam: '缺少对比参数（请从文件右键菜单发起对比）',
 				loading: '正在获取两侧文件内容…',
 				loadFailLeft: '左侧文件内容获取失败',
@@ -94,7 +107,18 @@
 				tooLargeRight: '右侧文件过大，超出对比上限',
 				officePending: 'Office/PDF 文件对比（并排打开查看器）将在下一版本提供\n当前版本支持文本、代码等纯文本类文件的差异对比',
 				binaryUnsupported: '该类型文件暂不支持对比\n支持：文本/代码文件（Office 并排预览将在下一版本提供）',
-				identical: '无差异',
+				mixedUnsupported: '暂不支持文件与目录混合对比\n请两侧同为文件或同为目录',
+				dirLoading: '正在扫描两侧目录并比对（大目录可能需要一点时间）…',
+				dirOnlyLeft: '仅左侧', dirOnlyRight: '仅右侧', dirDiffer: '内容不同', dirSame: '相同',
+				filterDiff: '有差异', filterOnlyLeft: '仅左侧', filterOnlyRight: '仅右侧', filterSame: '相同', filterAll: '全部',
+				typeMismatch: '类型不同（一侧文件一侧目录）', sameSizeOnly: '大小相同（未比对内容）',
+				sizeDiff: '大小不同', readFail: '读取失败',
+				tooManyRows: '条目过多，仅显示前 300 行（可筛选或缩小范围）',
+				contentCapHit: '文本文件对数超出内容比对上限，超出部分仅按大小判定',
+				dirTruncated: '目录较大超出条目上限，结果不完整',
+				backToDir: '返回目录对比',
+
+identical: '无差异',
 				chunksUnit: '处变更'
 			});
 		});

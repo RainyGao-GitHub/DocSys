@@ -46,6 +46,19 @@
 			white-space: pre-wrap; word-break: break-all;
 		}
 		.CodeMirror { height: 100%; font-family: Consolas, Menlo, monospace; font-size: 13px; }
+.dir-compare { position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; }
+		.dir-filterbar { padding: 8px 12px; border-bottom: 1px solid #e3e3e8; display: flex; gap: 6px; background: #fafafc; }
+		.dir-table { flex: 1; overflow: auto; font-size: 13px; }
+		.dir-row { display: flex; align-items: center; padding: 5px 14px; border-bottom: 1px solid #f0f0f4; }
+		.dir-row.dir-head { position: sticky; top: 0; background: #f6f6fa; color: #888; font-size: 12px; z-index: 1; }
+		.dir-row.dir-drill { cursor: pointer; }
+		.dir-row.dir-drill:hover { background: #eef4ff; }
+		.dir-st { width: 30px; }
+		.dir-rel { flex: 1; font-family: Consolas, Menlo, monospace; color: #333; word-break: break-all; }
+		.dir-stat { width: 180px; text-align: right; color: #666; font-size: 12px; }
+		.dir-more { padding: 8px 14px; color: #b8860b; font-size: 12px; }
+		.dir-breadcrumb { padding: 6px 12px; background: #f6f6fa; border-bottom: 1px solid #e3e3e8; font-size: 13px; }
+		.dir-breadcrumb a { color: #1976d2; text-decoration: none; }
 		.CodeMirror-merge { height: 100%; }
 		.CodeMirror-merge-pane { height: 100%; }
 	</style>
@@ -82,10 +95,10 @@
 	<script type="text/javascript" src="static/CodeMirror5/mode/ruby/ruby.min.js?v=20261028"></script>
 	<script type="text/javascript" src="static/diff-match-patch/diff_match_patch.js?v=20261028"></script>
 	<script type="text/javascript" src="static/CodeMirror5/addon/merge/merge.min.js?v=20261028"></script>
-	<script type="text/javascript" src="js/DocCompare.js?v=20261028g"></script>
+	<script type="text/javascript" src="js/DocCompare.js?v=20261029c"></script>
 	<script type="text/javascript">
 		$(document).ready(function () {
-			DocCompare.init({
+			DocCompare.init(window.COMPARE_LANG = {
 				noParam: 'Missing compare parameters (start a compare from the file context menu)',
 				loading: 'Loading contents of both files…',
 				loadFailLeft: 'Failed to load the left file',
@@ -94,7 +107,18 @@
 				tooLargeRight: 'The right file exceeds the compare size limit',
 				officePending: 'Compare for Office/PDF files (side-by-side viewers) will be provided in the next version.\nThe current version supports text and code files.',
 				binaryUnsupported: 'This file type is not supported for compare.\nSupported: text/code files (side-by-side preview for Office comes in the next version).',
-				identical: 'Identical',
+				mixedUnsupported: 'Mixing a file and a directory is not supported.\nBoth sides must be files or both directories.',
+				dirLoading: 'Scanning and comparing both directories (large folders may take a while)…',
+				dirOnlyLeft: 'Left only', dirOnlyRight: 'Right only', dirDiffer: 'Different', dirSame: 'Same',
+				filterDiff: 'Differences', filterOnlyLeft: 'Left only', filterOnlyRight: 'Right only', filterSame: 'Same', filterAll: 'All',
+				typeMismatch: 'Type mismatch (file vs directory)', sameSizeOnly: 'Same size (content not compared)',
+				sizeDiff: 'Size differs', readFail: 'Read failed',
+				tooManyRows: 'Too many rows, showing first 300 (filter or narrow the scope)',
+				contentCapHit: 'Text file pairs exceed the content-compare cap; the rest are size-only',
+				dirTruncated: 'Directory exceeds the entry cap; result is incomplete',
+				backToDir: 'Back to directory compare',
+
+identical: 'Identical',
 				chunksUnit: 'changed chunks'
 			});
 		});
