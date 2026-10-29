@@ -212,7 +212,8 @@ var DocCompare = (function () {
 
     // ---------- M4：Office/PDF 并排查看（只读对照，不做内容级 diff） ----------
 
-    /** 组 office.html 查看地址（参数协议同 DocSys.buildRequestParamStrForDoc；历史版本透传 commitId） */
+    /** 组 Office/PDF 查看地址（参数协议同 DocSys.buildRequestParamStrForDoc；历史版本透传 commitId）。
+     *  PDF 走 pdfViewer.html 只读模式（同 showPdfViewOnlyInNewPage 先例），其余 Office 走 office.html */
     function officeUrl(ref) {
         var p = ['reposId=' + ref.vid];
         if (ref.docId) p.push('docId=' + ref.docId);
@@ -227,7 +228,10 @@ var DocCompare = (function () {
         if (ref.shareId) p.push('shareId=' + ref.shareId);
         if (ref.authCode) p.push('authCode=' + ref.authCode);
         p.push('editEn=0');   //对比场景只读
-        return 'office.html?' + p.join('&');
+        var q = p.join('&');
+        return suffixOf(ref.name) === 'pdf'
+            ? 'pdfViewer.html?viewerMode=viewOnly&showPrint=0&showDownload=0&' + q
+            : 'office.html?' + q;
     }
 
     function renderOfficeCompare() {

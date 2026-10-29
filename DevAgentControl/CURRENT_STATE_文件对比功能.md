@@ -326,11 +326,18 @@ kind:"dir" 的链接暂走文件对比（getDocContent 对目录返回空）—�
 CLAUDE.md「验证要求」）。调研中顺带发现 OfficeEditor.js 对 127.0.0.1+外部 Office 模式 alert 阻断（既有
 行为，不处理）。
 
+**Bug 修复：PDF 被当 Word 打开（2026-10-29 用户报告）**：officeUrl 原先对所有 Office 后缀统一走
+office.html，PDF 打不开 → 按后缀分流：**pdf → `pdfViewer.html?viewerMode=viewOnly&showPrint=0&
+showDownload=0&…`**（同 `showPdfViewOnlyInNewPage` 先例），其余 Office 后缀仍走 office.html。实测
+output1111.pdf ⟷ 副本.pdf 直比：两侧 pdf.js viewer 各渲染 1 页 ✓（02-测试文件 新增 副本.pdf、
+cmp-tree 两侧加 文档.pdf 供回归）。版本链 bump `20261031f`。
+
 ## 下一步
 
-1. **等用户验收 M4**（刷新 project 页，版本链 20261031e）：①Office 两文件对比（如 02-测试文件 里
-   base.docx ⟷ 写入功能测试.docx）②Office 文件历史详情页「对比」③目录树内 Office 行下钻
-   ④文本对比看双栏中间新增的连接曲线。
+1. **等用户验收 M4**（刷新 project 页，版本链 20261031f）：①Office 两文件对比（如 02-测试文件 里
+   base.docx ⟷ 写入功能测试.docx）②PDF 两文件对比（output1111.pdf ⟷ 副本.pdf，走 pdfViewer）
+   ③Office 文件历史详情页「对比」④目录树内 Office/PDF 行下钻（报告.docx / 文档.pdf）
+   ⑤文本对比看双栏中间新增的连接曲线。
 2. M4 验收通过 → **收尾归档**：删测试目录 cmp-tree-a/b（用户要求留到回归完）、工作卡移入
    DevAgentControl/已完成/。
 3. 待用户裁定：是否为「历史索引指向缺失版本目录」另立排查卡（后端数据一致性）。
