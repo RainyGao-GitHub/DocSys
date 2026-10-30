@@ -4472,14 +4472,20 @@
         var input = document.getElementById('messageInput');
         var content = messageSlotText().trim();   // P1.6：正文取【消息】槽（不是当前可见的对象说明）
         if (!content) {
-            if (state.activeFocusKey) {
-                // 共用消息框后：用户可能把对象说明填了、正文没写。后端空 command 直接 400，
-                // 这里不能静默无反应 → 明确提示，并退回【消息】槽位让他写正文（说明已作为草稿留在 chip 上）
-                showMessage('请先在消息框里写本轮的要求（刚才填写的是对象说明，只在选中的对象上生效）', 'info');
-                closeFocusNote();
-                if (input) { try { input.focus(); } catch (e) { /* ignore */ } }
+            // 总结/对比/整理 + 已选 @ 对象/附件：操作即意图，自动补默认指令直接发送（后端空 command 会 400）
+            var autoPrompt = autoPromptIfReady();
+            if (autoPrompt) {
+                content = autoPrompt;
+            } else {
+                if (state.activeFocusKey) {
+                    // 共用消息框后：用户可能把对象说明填了、正文没写。后端空 command 直接 400，
+                    // 这里不能静默无反应 → 明确提示，并退回【消息】槽位让他写正文（说明已作为草稿留在 chip 上）
+                    showMessage('请先在消息框里写本轮的要求（刚才填写的是对象说明，只在选中的对象上生效）', 'info');
+                    closeFocusNote();
+                    if (input) { try { input.focus(); } catch (e) { /* ignore */ } }
+                }
+                return;
             }
-            return;
         }
 
         // If already generating, queue this message and return
@@ -4821,12 +4827,14 @@
     var MESSAGE_PLACEHOLDER = '输入消息、问题或命令；输入 @ 选择关注对象，输入 / 选择操作';
     var OPERATION_CATALOG = [
         { id: 'ask', label: '问答', desc: '基于所选资料回答问题', needsMaterials: true },
-        { id: 'summarize', label: '总结资料', desc: '汇总所选资料的要点', needsMaterials: true },
+        // emptyPrompt：免输入操作（总结/对比/整理）——操作本身已完整表达意图，
+        // 用户已选 @ 对象/附件时，不输入消息也允许直接发送（前端自动补默认指令）
+        { id: 'summarize', label: '总结资料', desc: '汇总所选资料的要点', needsMaterials: true, emptyPrompt: '请总结这些资料' },
         { id: 'generate_doc', label: '生成文档', desc: '依据所选资料在指定目录生成新文档', needsMaterials: true },
-        { id: 'organize', label: '整理归档', desc: '按规则移动/复制所选对象', needsMaterials: true },
+        { id: 'organize', label: '整理归档', desc: '按规则移动/复制所选对象', needsMaterials: true, emptyPrompt: '请整理归档这些对象' },
         // 查找：无范围时退化为仓库全局检索，仍有意义 → 不需要资料
         { id: 'find', label: '查找', desc: '在所选范围内检索文件或内容', needsMaterials: false },
-        { id: 'compare', label: '对比', desc: '对比多个文件或版本', needsMaterials: true }
+        { id: 'compare', label: '对比', desc: '对比多个文件或版本', needsMaterials: true, emptyPrompt: '请对比这些对象' }
     ];
 
     /** 该模式是否必须要有"资料"（@ 对象 / 附件）才有意义；未知 id（含历史 skill:xxx）→ false 不提示 */
@@ -4835,6 +4843,44 @@
             if (OPERATION_CATALOG[i].id === id) return !!OPERATION_CATALOG[i].needsMaterials;
         }
         return false;
+    }
+
+    /** 该操作的默认指令（仅 总结/对比/整理 配了 emptyPrompt；其余返回 null = 仍需用户输入消息）*/
+    function operationEmptyPrompt(id) {
+        for (var i = 0; i < OPERATION_CATALOG.length; i++) {
+            if (OPERATION_CATALOG[i].id === id) return OPERATION_CATALOG[i].emptyPrompt || null;
+        }
+        return null;
+    }
+
+    /** 本轮是否已有"资料"（@ 对象或附件）——免输入发送的前提 */
+    function hasRoundMaterials() {
+        return ((state.focus || []).length + (state.attachments || []).length) > 0;
+    }
+
+    /** 免输入直发条件成立时返回默认指令文案，否则 null */
+    function autoPromptIfReady() {
+        var op = state.operation;
+        if (!op || !op.id) return null;
+        var p = operationEmptyPrompt(op.id);
+        if (!p || !hasRoundMaterials()) return null;
+        return p;
+    }
+
+    /** 消息框占位文案：免输入条件成立时提示可直接发送 */
+    function messagePlaceholderText() {
+        var op = state.operation;
+        if (op && op.id && operationEmptyPrompt(op.id) && hasRoundMaterials()) {
+            return '「' + (op.label || op.id) + '」已就绪：直接点发送执行，或输入补充要求';
+        }
+        return MESSAGE_PLACEHOLDER;
+    }
+
+    /** 免输入条件变化（换操作/@ 对象/附件增删）后刷新占位文案（说明态不动，由 applyFocusSlot 管理）*/
+    function refreshMessagePlaceholder() {
+        var input = document.getElementById('messageInput');
+        if (!input || state.activeFocusKey) return;
+        input.placeholder = messagePlaceholderText();
     }
 
     function focusKey(it) {
@@ -5085,7 +5131,7 @@
             input.value = focusSlotText(FOCUS_MSG_SLOT);
             // 消息无长度上限：必须摘掉属性（写 maxLength=-1 会抛 IndexSizeError）
             input.removeAttribute('maxlength');
-            input.placeholder = MESSAGE_PLACEHOLDER;
+            input.placeholder = messagePlaceholderText();
         }
         autoResizeTextarea(input);
     }
@@ -5148,12 +5194,14 @@
         state.operation = { id: id, label: label || id };
         renderOperationChip();
         renderModeShortcuts();   // 提示区的快捷按钮同步高亮
+        refreshMessagePlaceholder();
     }
 
     function clearOperation() {
         state.operation = null;
         renderOperationChip();
         renderModeShortcuts();
+        refreshMessagePlaceholder();
     }
 
     function snapshotFocus() {
@@ -6481,6 +6529,7 @@
         var bar = document.getElementById('attachBar');
         var wrap = document.getElementById('attachChips');
         if (!bar || !wrap) return;
+        refreshMessagePlaceholder();   // 附件变化可能满足/失去免输入直发条件
         var list = state.attachments || [];
         var uploading = state.attachUploading;
         bar.style.display = (list.length || uploading) ? 'block' : 'none';
