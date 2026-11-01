@@ -9,3 +9,5 @@
 /src/com/DocSystem/sales
 /src/com/DocSystem/websocket
 /WebRoot/tmp
+# Gitee API 私人令牌（本地使用，绝不入库）
+DevAgentControl/.gitee_token

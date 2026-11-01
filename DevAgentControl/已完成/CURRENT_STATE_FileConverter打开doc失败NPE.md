@@ -1,10 +1,56 @@
-# FileConverter 打开 .doc 失败：移植残留 NPE 链（已定位并修复，待端到端验证）
+# FileConverter .doc 打开/保存移植残留 NPE 链（已完成，双端实测通过，已提交）
 
-状态：**修复完成（2026-10-30 第二轮 session），命令行全量样本验证通过；Eclipse 实例端到端验证待用户配合**
+状态：**✅ 全部完成（2026-10-30）**。阶段一（打开 .doc）+ 阶段二（编辑保存后损坏）均修复，
+用户 Eclipse 实测通过（打开正常；编辑→保存→再打开正常）。
+代码已由用户提交：`4b6b3eb9`【BugFix】doc文件打开NPE（阶段一 7 文件）+ `a2ba7aac`【BugFix】doc文件修改保存后无法打开（rowPrAfterBefore）。
 用户原话：OnlyOffice 引擎可以打开，FileConverter 不行；"从日志来看应该是 Java 移植的残留导致的"。
-（判断正确——共修复 5 类移植残留，其中 2 类为全局性转换错误，超出单个 NPE 范围。）
+（判断正确——两阶段共修复 6 类移植残留，其中 2 类为全局性转换错误，超出单个 NPE 范围。）
+用户已认可"whack-a-mole 逐个揪"的修复方式。**用户明确：保存时 doc 落成 docx 是正常设计，不要改这个行为。**
 
-## 一、根因结论（已实锤，推翻第一轮"officeArtContent 为 null"的初步怀疑）
+## 遗留（均不阻塞，后续撞到再立卡）
+
+1. 不应用 changes 的 bin→docx（bFromChanges=false）输出近乎空（13KB/正文 2 字符）——疑点待查。
+2. 页眉页脚内嵌 drawing 读取 `GetString3() m_lPos+len > m_lSize` 越界日志（ReadPermStart:4118 路径）。
+3. C 类"单参 GetNode + != null"展开全库约 143 处的专项整改（见 §二 C 类注记）。
+4. 测试 harness `test/TestDocNpeRepro.java`、`test/TestDocSaveNpe.java` 未提交（现场样本在 test/tmp/ 不入库）。
+5. 排查陷阱：`WebRoot/WEB-INF/classes/com/.../office/test/` 下若出现旧测试 class 会遮蔽 test/bin（已清理过一次）。
+
+## ⚡ 阶段二：编辑保存后文件损坏（2026-10-30 晚，第三轮）
+
+### 现象
+用户在仓库 1 放 123.doc（原始在仓库 8），FileConverter 引擎打开正常（阶段一修复生效）；
+编辑后关窗约 1 分钟触发后台保存 → 此后文件无法再打开。
+
+### 根因（第 6 个，§4.5 同款：C++ 内联对象成员 → Java null 引用）
+`OOXML/BinDocxRW/rowPrAfterBefore.java` `_init()` 里 `oAfterWidth = new docW()` 被注释 →
+两个构造路径 `Init("After")/Init("Before")`（Binary_tblPrReader:1543/1634）产出的 `oAfterWidth` 恒为 null。
+保存链路 bin+changes→docx 时 `ReadAfter/ReadBefore → ReadW(type, len, orowPrAfterBefore.oAfterWidth)`
+→ ReadW 内 `odocW.bType = true` 对 null putfield → NPE。
+（javap 行号表实锤：`line 952: 字节码13 = putfield docW.bType`。）
+此前未炸原因：doc→bin 方向不写 WAfter/WBefore 记录，**编辑器保存时会写**。
+C++ 原版 `docW oAfterWidth` 是值成员永远存在。
+
+### 致命放大器：错误被吞，残缺文件照常提交
+`BinaryFileReader.ReadFile:310` 把 ReadMainTable 的异常 **catch 后仅打日志**（"ReadMainTable threw"），
+转换继续 → 产出残缺 docx（33KB，正常应 84KB）→ saveDoc 落盘、提交版本 → 文件从此打不开。
+（保存 doc→docx 的格式回落 adjutedFormatTo:65 是正常设计，勿动。）
+
+### 修复
+`rowPrAfterBefore_init()`：`sName = ""`；`oAfterWidth = docW.Init()`（一行根修，C++ 语义对齐）。
+另：重编了 Binary_tblPrReader.java 刷新陈旧 class（其 class 与源码行号有 ~105 行漂移，说明部署 class 早于近期源码改动）。
+
+### 本地验证（TestDocSaveNpe，现场文件复制自 OfficeEdit/200310489673/1571509032）
+- bin+changes→docx：NPE 消失，输出 83,872 字节完整 docx（document.xml 1.7MB / 正文 15,161 字符，
+  用户编辑内容"修改测试20261030-2047"已在文中）✅
+- 保存的 docx → Editor.bin（重开路径）：896,524 字节，返回码 0 ✅
+- ⚠️ 既有独立问题（非本次引入，修复前后行为一致，均被 catch 不影响产出）：
+  ① 对照组"原始 bin 不应用 changes → docx"输出近乎空（13KB/正文 2 字符）——bFromChanges=false
+  路径的内容丢失疑点，待查；② 页眉页脚内嵌 drawing 读取时 `GetString3() m_lPos+len > m_lSize` 越界
+  （Binary_DocumentTableReader.ReadPermStart:4118 路径）。
+- 排查陷阱记录：`WebRoot/WEB-INF/classes/com/.../test/` 下发现过遮蔽 test/bin 的旧测试 class
+  （已删 TestDocNpeRepro.class）——跑测试若行为诡异先查这里。
+
+## 一、阶段一根因结论（已实锤，推翻第一轮"officeArtContent 为 null"的初步怀疑）
 
 **NPE 真凶是 `m_shapeId` 为 null，不是 officeArtContent。**
 
