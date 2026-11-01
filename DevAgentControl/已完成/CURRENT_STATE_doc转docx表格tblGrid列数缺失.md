@@ -1,6 +1,9 @@
 # doc 转 docx 表格 tblGrid 列数缺失（Java 版 3 列，C++/Word 均为 6 列）
 
-状态：**✅ 修复完成，用户 8100 实测通过（2026-11-01 19:36），待关 issue / 卡移已完成 / 主仓库提交**
+状态：**✅ 已闭环（2026-11-01）：修复提交 5b4a3174，用户 8100 实测通过，issue IKS1JU 已评论关闭**
+- 待办仅剩：本卡移入 `DevAgentControl/已完成/` + 主仓库提交卡片变更（随后续卡一并处理）
+- API 备忘：评论是 `POST /api/v5/repos/{owner}/{repo}/issues/{number}/comments`（repo 在路径里），
+  关闭是 `PATCH /api/v5/repos/{owner}/issues/{number}` 带 `repo`+`state=closed` 参数
 - **Gitee issue：https://gitee.com/RainyGao/DocSys/issues/IKS1JU**（open）
 - 修复提交（office 仓库）：`5b4a3174 【BugFix】doc转docx表格tblGrid列数缺失(HashMap→TreeMap)`
 - 问题等级：P2 → 已按 P2 修复闭环（自动化验证全绿）
