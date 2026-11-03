@@ -96,6 +96,14 @@ DocSys 是**多 git 仓库**，office 相关共**五条**提交路径：
 - ⚠️ **开发实例 = `C:\TomcatForDocSysDev`（发布用 `Docs/scripts/PublishDev.bat`，重启 `C:\TomcatForDocSysDev\docsys\docsys_restart.bat`）**。**`C:\MxsDoc` 是正式实例：绝对不要对它做任何开发/测试/重启/改文件**（2026-10-27 用户明确裁定；"8100 正在监听"不能作为实例归属的依据，两个实例都配 8100）。
 - ⚠️ **Office 编辑/预览（office.html、OfficeEditor/OfficeEditorLoader）出问题不要去调研**：直接把现象报告用户，由用户处理（2026-10-29 用户明确裁定——Office 编辑代码正常情况下不可能有问题，真有问题也是大工程，用户来解决）。环境先例：字体库未就绪会让 office 查看器卡死整个渲染进程（`ensureOfficeFontsReady` 自动生成字体，等一次就好）；`OfficeEditor.js` 对 localhost/127.0.0.1 + 外部 Office 服务模式会 alert 阻断。
 
+## 代码修复策略：测试覆盖决定修改方式（不变量，务必遵守）
+
+- **测试覆盖不到的代码，禁止用批量替换方式修复**（2026-11-02 用户裁定）。逻辑：无法用测试覆盖的改动点只能算"**可疑**"而非"确定有错"；批量替换会把可疑推断放大成大范围行为变化，可能触发更多潜在错误——回归绿了也不代表安全（回归覆盖不到 xlsx/pptx 等路径）。
+  - 正确姿势：聚焦到**具体故障文件**逐个精准修复，每处修复都有触发它的测试样本验证（先例：OLE 卡 5 处精准修复，`CURRENT_STATE_OLE对象与脏XML致doc无法打开.md`）。
+  - **唯一例外**：有明确证据证明"批量替换本身就是正确修复"时——典型是「机械移植时同一处机器生成错误被批量复制」的场景：VML 属性序列化丢空格卡（office 提交 `2f2219f7`），C++ 宏 `ComplexTypes_WriteAttribute` 展开为 `name="value" `（尾带空格）语义明确，Java 移植把 `+ "\" ";` 错成 `+ "\"";` 共 83 处，每一处都与 C++ 宏展开逐字对应（有 `DiagVmlToXml` 生成端自检 + 全量回归兜底）。
+  - 反例（已回退）：VarsCopy 模式 `this.m_oX.m_pPointer.copy(oSrc.m_oX.m_pPointer)`（全库 3025 行/778 文件）批量替换为共享赋值——语义上"应该"对，但测试覆盖不到，且共享赋值与 C++ 深拷贝存在语义差异，属于可疑推断的批量放大。
+- **关联教训：回退源码必须同步重编全部受影响 class**，否则 `WebRoot/WEB-INF/classes` 里残留的旧编译产物会造成假验证（先例：Trac 手册一度被批量版残留 class 假性"救活"，重编后才现出真实的 CHpsMeasure NPE）。
+
 ## 编译输出目录（不变量，务必遵守）
 
 `.class` **一律输出到 `D:/Dev/DocSys/WebRoot/WEB-INF/classes`**（相对工程根 `WebRoot/WEB-INF/classes`），**绝不落在源码树 `src/...` 里**。命令行编译必须带 `-d WebRoot/WEB-INF/classes`；这是 Eclipse 工程本身的输出目录，与 IDE auto-build 共享同一份 `.class`。
