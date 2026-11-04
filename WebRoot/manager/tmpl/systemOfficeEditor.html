@@ -47,6 +47,16 @@
                       <div style="color:#888;font-size:12px;">开启后：新安装/在线升级导致字体库缺失时，由前端自动检测并生成（首次约 10-30 分钟，期间无法使用Office）；自动生成失败一次后不再重试，改为提示管理员手动「重置字体库」。</div>
                     </td>
                   </tr>
+                  <tr>
+                    <td>字体库并入系统字体</td>
+                    <td>
+                      <select class="form-control" id="officeUseSystemFonts" disabled="disabled" style="width:220px;">
+                        <option value="1" {{if value.officeUseSystemFonts == 1}}selected="selected"{{/if}}>开启</option>
+                        <option value="0" {{if value.officeUseSystemFonts != 1}}selected="selected"{{/if}}>关闭</option>
+                      </select>
+                      <div style="color:#888;font-size:12px;">开启后：生成/重置字体库时会并入本机系统字体（如 C:\Windows\Fonts）；默认关闭（字体全集 = core-fonts，已预置全部Windows标准字体）。该设置在下次生成/重置字体库时生效。</div>
+                    </td>
+                  </tr>
                   </tbody>
                 </table>
 

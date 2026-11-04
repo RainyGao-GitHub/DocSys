@@ -646,6 +646,16 @@ public class Path {
 		}
 		return 1;
 	}
+
+	//获取「Office字体库是否并入本机系统字体」的配置（默认false=关闭：字体全集=core-fonts，core-fonts已预置全部Windows标准字体；见 devDocs/Office字体库预生成方案.md）
+	public static boolean getOfficeUseSystemFonts() {
+		String val = ReadProperties.read("docSysConfig.properties", "OfficeUseSystemFonts");
+		if(val == null || val.isEmpty())
+		{
+			return false; //默认关闭：保证预生成字体库与目标机重生成结果一致
+		}
+		return "1".equals(val) || "true".equalsIgnoreCase(val);
+	}
 	
 	public static Integer getLogLevel() {
 		String logLevelString = ReadProperties.read("docSysConfig.properties", "logLevel");

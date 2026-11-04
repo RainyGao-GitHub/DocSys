@@ -1473,6 +1473,7 @@ public class ManageController extends BaseController{
 		config.put("officeDisabled", officeDisabled);
 		config.put("isOnlyOfficeUsed", isOnlyOfficeUsed ? 1 : 0);
 		config.put("officeAutoGenerateFonts", Path.getOfficeAutoGenerateFonts() ? 1 : 0);
+		config.put("officeUseSystemFonts", Path.getOfficeUseSystemFonts() ? 1 : 0);
 		config.put("redisEn", redisEn);
 		config.put("redisUrl", redisUrl);
 		config.put("clusterServerUrl", clusterServerUrl);
@@ -1864,6 +1865,7 @@ public class ManageController extends BaseController{
 			String clusterServerUrl,
 			Integer isOnlyOfficeUsed,
 			Integer officeAutoGenerateFonts,
+			Integer officeUseSystemFonts,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
 		Log.infoHead("****************** setSystemInfo.do ***********************");
@@ -1880,7 +1882,8 @@ public class ManageController extends BaseController{
 				+ " logLevel:" + logLevel + " logFile:" + logFile
 				+ " redisEn:" + redisEn + " redisUrl:" + redisUrl + " clusterServerUrl:" + clusterServerUrl
 				+ " isOnlyOfficeUsed:" + isOnlyOfficeUsed
-				+ " officeAutoGenerateFonts:" + officeAutoGenerateFonts);
+				+ " officeAutoGenerateFonts:" + officeAutoGenerateFonts
+				+ " officeUseSystemFonts:" + officeUseSystemFonts);
 		
 		ReturnAjax rt = new ReturnAjax(new Date().getTime());
 		
@@ -1907,7 +1910,8 @@ public class ManageController extends BaseController{
 			redisUrl == null &&
 			clusterServerUrl == null &&
 			isOnlyOfficeUsed == null &&
-			officeAutoGenerateFonts == null)	
+			officeAutoGenerateFonts == null &&
+			officeUseSystemFonts == null)	
 		{
 			docSysErrorLog("没有参数改动，请重新设置！", rt);
 			writeJson(rt, response);			
@@ -2083,6 +2087,12 @@ public class ManageController extends BaseController{
 		{
 			//字体库缺失时是否允许前端自动生成（默认开启）；见 devDocs/Office字体库自动生成方案.md
 			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "OfficeAutoGenerateFonts", (officeAutoGenerateFonts == 1? "true" : "false"));
+		}
+		
+		if(officeUseSystemFonts != null)
+		{
+			//字体库是否并入本机系统字体（默认关闭：全集=core-fonts，已预置全部Windows标准字体）；见 devDocs/Office字体库预生成方案.md
+			ReadProperties.setValue(tmpDocSystemConfigPath + configFileName, "OfficeUseSystemFonts", (officeUseSystemFonts == 1? "true" : "false"));
 		}
 				
 		if(FileUtil.copyFile(tmpDocSystemConfigPath + configFileName, docSystemConfigPath + configFileName, true) == false)

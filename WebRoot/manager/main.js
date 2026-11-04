@@ -3422,7 +3422,7 @@ function saveSystemClusterSet(){
 }
 
 //Office编辑器（officeEditorApi / openOfficePath 是残留配置，系统已不再使用，不再提交）
-var SYSTEM_OFFICE_FIELDS = ["isOnlyOfficeUsed", "officeAutoGenerateFonts"];
+var SYSTEM_OFFICE_FIELDS = ["isOnlyOfficeUsed", "officeAutoGenerateFonts", "officeUseSystemFonts"];
 
 function showSystemOfficeEditor(){
 	showSystemInfoPage("systemOfficeEditor", function(){
@@ -3433,6 +3433,10 @@ function showSystemOfficeEditor(){
 		if(systemInfo.officeAutoGenerateFonts == undefined)
 		{
 			systemInfo.officeAutoGenerateFonts = 1;
+		}
+		if(systemInfo.officeUseSystemFonts == undefined)
+		{
+			systemInfo.officeUseSystemFonts = 0;
 		}
 	}, function(){
 		//渲染完成后才能取 DOM：刷新字体库状态（只读，生成中会自动轮询）
@@ -3449,14 +3453,16 @@ function cancelSystemOfficeEditorSet(){
 	//Office引擎改为下拉框：0=默认（系统自带转换器）、1=OnlyOffice
 	$("#isOnlyOfficeUsed").val(systemInfo.isOnlyOfficeUsed == 1? 1: 0);
 	$("#officeAutoGenerateFonts").val(systemInfo.officeAutoGenerateFonts == 0? 0: 1);
+	$("#officeUseSystemFonts").val(systemInfo.officeUseSystemFonts == 1? 1: 0);
 	setSystemPageEditMode("SystemOfficeEditor", SYSTEM_OFFICE_FIELDS, false);
 }
 
 function saveSystemOfficeEditorSet(){
 	var isOnlyOfficeUsed = parseInt($("#isOnlyOfficeUsed").val(), 10) == 1? 1: 0;
 	var officeAutoGenerateFonts = parseInt($("#officeAutoGenerateFonts").val(), 10) == 0? 0: 1;
+	var officeUseSystemFonts = parseInt($("#officeUseSystemFonts").val(), 10) == 1? 1: 0;
 	setSystemPageEditMode("SystemOfficeEditor", SYSTEM_OFFICE_FIELDS, false);
-	postSystemInfo({ isOnlyOfficeUsed: isOnlyOfficeUsed, officeAutoGenerateFonts: officeAutoGenerateFonts }, showSystemOfficeEditor);
+	postSystemInfo({ isOnlyOfficeUsed: isOnlyOfficeUsed, officeAutoGenerateFonts: officeAutoGenerateFonts, officeUseSystemFonts: officeUseSystemFonts }, showSystemOfficeEditor);
 }
 
 //字体库状态（只读展示，数据来自 /Bussiness/getOfficeFontsStatus.do；生成中时自动轮询刷新）
