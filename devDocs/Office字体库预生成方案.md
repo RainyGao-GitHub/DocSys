@@ -264,6 +264,14 @@ core-fonts 不在 bin 目录下，剥不到 ⇒ 需把它升级为**真正的 re
 - `C:\docsysRel\发布步骤.txt`：插入步骤 2.5 + 注意事项；`Docs/scripts/README.md`：表格行 + 流水线图更新。
 - `devDocs/参数存储策略与参数清单.md`：登记 `OfficeUseSystemFonts`。
 
+**build_release.py 集成（2026-11-05 追加，仓库 `WebRoot/web/sales/docsysReleaseScripts/` + `C:\docsysRel\` 双副本）**：
+
+- `--war` 一条龙流水线新增 **"1.5/5 预生成 Office 字体库"** 步骤（位于解压之后、删sales/混淆之前——即明文 classes 路径，与 D1 裁定一致）：`ensure_office_fonts()` = Fonts.zip 并入 core-fonts（`merge_fonts_zip()`，过滤 .fon/.dat、幂等）→ 产物缺失时调 FontGenerator CLI（classpath 自动探测 classes → lib/mxsdoc.jar 回退；Popen 流式回显关键行，全程日志 `war/GenOfficeFonts.log`）→ 复查 5 项产物 + web 字体计数。失败则**中止发布**（防止"以为预生成了其实没有"的包流出）。
+- 幂等复用分支（war 未变化直接复用已转换 DocSystem）同样兜底：产物缺失时自动补生成。
+- 新参数：`--fonts-zip <ZIP>`（默认按 `脚本目录/Fonts.zip → C:\docsysRel\Fonts.zip` 查找）、`--skip-fonts`（显式跳过，回退旧模式）、`--refonts`（产物已存在也强制重生成，配合 `--reconvert`）。
+- 手工放入 payload（未走 `--war`）的流程：打包前检测到字体库产物缺失会打警告（不阻断）并指引 `--war` 流水线 / GenOfficeFonts.bat。
+- 功能验证（dev 迷你包 + junction 指向真实 classes）：第 1 次"合并 1/过滤 2 → 生成 13 秒 → 就绪"；第 2 次"合并 0/已存在 1 → 产物就绪跳过"；`force=True` 重生成正常、回显收敛为阶段级行；`office_fonts_missing()` 检测 0 项。
+
 ### 7.3 验证结果（dev 机器，2026-11-04）
 
 | # | 项 | 结果 |
@@ -273,10 +281,11 @@ core-fonts 不在 bin 目录下，剥不到 ⇒ 需把它升级为**真正的 re
 | V5 | 跳过重生成 | ✅ 迁移后位置跑 `--force false`：日志 `FontFileList not changed and font_selection.bin exists, skip generation!!` |
 | 脚本 | dry-run + 真实端到端 | ✅ dry-run 全流程打印正确；真实跑（合成 MiniFonts.zip + junction 指向真实 classes）：合并过滤生效（merged:1 / 过滤 .fon+.dat:2）、幂等（二次跑 already existed:1）、生成成功、自检含相对路径抽查、缩略图生成 |
 | 回归 | 护栏测试 | ✅ `TestOfficeFontsAutoGenGuard` 21/21 通过（自动生成机制未被触碰） |
+| 集成 | build_release.py | ✅ `ensure_office_fonts()` 迷你包功能测试：合并+生成+就绪校验、二次幂等跳过、force 重生成、缺失检测（见 §7.2 追加小节） |
 
 ### 7.4 未验证项（留待首次真实发布）
 
 1. **全量 Fonts.zip（562 文件/~600 字体）的真实预生成**：耗时（估 30-60 分钟）、生成内存（脚本已设 `-Xmx2g`）、缩略图尺寸增长——首次发布时实跑并回填数据。
-2. 混淆后路径（classpath 回退 `mxsdoc.jar`）未实测（推荐流程是混淆前跑，回退仅是兜底）。
+2. 混淆后路径（classpath 回退 `mxsdoc.jar`）仍未实测（推荐流程是解压后/混淆前跑，回退仅是兜底；build_release.py 的幂等复用分支补生成走的就是该回退路径）。
 3. 目标机全链路（部署含预生成产物的包 → 打开含中文字体的 docx 转换正常）——发布后按 §5 V3/V4 验收。
 4. 管理后台新下拉行只做了静态核对（html/js 接线与 officeAutoGenerateFonts 完全同构），未做真机浏览器验证。
