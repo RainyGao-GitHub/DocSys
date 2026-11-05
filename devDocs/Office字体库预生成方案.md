@@ -289,3 +289,42 @@ core-fonts 不在 bin 目录下，剥不到 ⇒ 需把它升级为**真正的 re
 2. 混淆后路径（classpath 回退 `mxsdoc.jar`）仍未实测（推荐流程是解压后/混淆前跑，回退仅是兜底；build_release.py 的幂等复用分支补生成走的就是该回退路径）。
 3. 目标机全链路（部署含预生成产物的包 → 打开含中文字体的 docx 转换正常）——发布后按 §5 V3/V4 验收。
 4. 管理后台新下拉行只做了静态核对（html/js 接线与 officeAutoGenerateFonts 完全同构），未做真机浏览器验证。
+---
+
+## 8. 二期实施记录：单份字体数据（2026-11-05，D4 裁定后开工）
+
+> 裁定：① x2t 兼容用懒生成方案；② 参数不拆分（`OfficeUseSystemFonts` 维持"是否并入系统字体"单一含义，相对路径为结构性必然）；③ 发布默认删 core-fonts、留参数可保留。
+> 设计核心：**font_selection.bin / bin AllFonts.js 直接指向 fonts/ 副本**（`../../../fonts/NNN`），core-fonts 不随包发布，包内字体数据从 ~1.4GB 降到 ~620MB+缩略图（压缩后约 350-400MB/包）。
+
+### 8.1 落地清单
+
+**office 仓库**：
+
+- `common/BaseDefinition/NSBaseClass.java`：`readFontFile` 按魔数识别并自动还原 Web 字体混淆（前 32 字节异或，key 提取为共享常量 `WEB_FONT_KEY`；还原后仍非法则恢复原样）；新增 `readFontFileBytes`（字节版入口，materializer 复用）、`isKnownFontMagic`（ttf/otf/ttc/mac-ttf/woff/woff2）。扫描端（CFontList）与运行时（CFontStream）都经此入口，一处修改两端受益。
+- `fontengine/CApplicationFontsWorker_private.java`：`SaveWebFonts` ① 跳过"自己拷贝自己"（序号未变场景，Copy 会先截断目标）；② 异或前先查魔数——副本已是混淆态（拷贝源为 fonts/ 旧副本）时跳过，防二次混淆损坏；`SaveAllFontsJS` 在 SaveWebFonts 后把字体清单 `m_wsFontPath` 改写为 fonts/ 副本绝对路径（后续序列化相对化/优先级计算（文件大小不变）/缩略图（经 readFontFile 解混淆）自动跟上）；`write_fonts_files`（bin AllFonts.js）直接写副本序号路径。
+- `fontengine/CApplicationFontsWorker.java`：新增 `m_bPointSelectionToWebFonts`（默认 true，指向 fonts/ 副本模式）；`getFontFileList` 把 fonts/ 目录并入字体源（core-fonts 不在发布包时它是重生成与扩充的基线）；扫描列表按**内容指纹（大小+MD5，流式）去重**——指纹计算前按混淆规则还原前 32 字节，保证"明文源与混淆副本"同指纹（此 bug 曾导致每轮重生成 fonts/ 翻倍）；fonts.log 改记**最终纳入字体库的文件**（副本序号路径），与目标机扫描 fonts/ 的归一化结果匹配。
+- `fontengine/CX2TFontsMaterializer.java`（新增）：x2t.exe（C++ 闭源，读不了混淆文件）的明文物化——把主 selection 指向的字体解混淆拷贝到 `bin/x2tfonts/`（按大小跳过已拷贝的），重序列化 selection（列表+ranges，复用 CFontList.ToBuffer），并生成改写版 AllFonts.js（`__fonts_files` → 明文副本绝对路径、重嵌 `g_fonts_selection_bin`）。幂等（x2tfonts 的 selection 不早于主 selection 即复用），synchronized 防并发。
+- `graphics/NSFonts/NSFontsStatic.java`：`GetRelativePath` 跳过连续分隔符产生的空段（NSDirectory 拼接产生的 `fonts//000` 曾导致 fonts.log 归一化比对不等、跳过生成失效）。
+
+**websocket 仓库**：`OfficeBase.java` 三处 x2t 调用点（转bin/存回/转pdf）接入 `CX2TFontsMaterializer.ensure`——OnlyOffice 引擎模式下 m_sFontDir/m_sAllFontsPath 指向 x2tfonts/（首次调用物化，仅该模式、仅目标机磁盘多一份明文，不进包）。
+
+**发布脚本**（双副本同步）：`GenOfficeFonts.bat` 新增 `/keepcorefonts`（默认生成成功后删 staging core-fonts）；产物抽查兼容单份（`../../../fonts/`）与旧双份（`../../../core-fonts/`）两种布局；core-fonts 缺失但产物在时自动以 fonts/ 为源（重放场景）。`build_release.py` 新增 `drop_core_fonts()`（三个成功出口统一执行）与 `--keep-core-fonts`。
+
+### 8.2 验证结果（dev 机器，2026-11-05）
+
+| # | 场景 | 结果 |
+|---|---|---|
+| V1 | 生成指向 fonts/ | ✅ font_selection.bin / bin AllFonts.js / fonts.log 全为 `../../../fonts/NNN`；fonts/ 副本全部为混淆态（魔数非法）；web AllFonts.js 仍为编号 |
+| V2 | 服务端读取解混淆 | ✅ FromBuffer 加载后全部字体路径存在、GetStream 可打开；FreeType 真实解析成功（生成日志可见 `CFontFile_0_[...fonts//000]` 创建） |
+| V3 | 删 core-fonts 后跳过 | ✅ `--force false` → `skip generation!!`（fonts.log 与扫描归一化匹配；期间修复了指纹未解混淆、路径空段两个导致不匹配的 bug） |
+| V4 | fonts/ 单源重生成 | ✅ 序号稳定（000→000）、fonts.log 逐字节一致、fonts/ 无膨胀、无二次混淆，T2Test 17/17 再通过 |
+| V5 | 双源去重 | ✅ core-fonts+fonts/ 并存 / core-fonts 只放交集字体：去重后 fonts/ 文件数正确（同字体明文与混淆副本按内容合并） |
+| V6 | x2t 物化 | ✅ x2tfonts/ 产出 selection（可加载、全部字体存在可读）+ AllFonts.js（绝对路径改写+重嵌 base64）+ 明文副本（魔数全部合法）；幂等复用毫秒级 |
+| V7 | 回归 | ✅ `TestOfficeFontsAutoGenGuard` 21/21；bat/py 双脚本端到端（含 core-fonts 缺失重放场景、drop 幂等）通过 |
+
+### 8.3 已知边界 / 未验证项
+
+1. **Office引擎=OnlyOffice 的真实 x2t 转换**未实测（materializer 产物已验证可加载，但未跑真实 x2t.exe 转换链路）——用户回归测试时用 OnlyOffice 引擎打开/转换一次 Word 即可覆盖。
+2. 字体集变化时插入点之后的序号会移动（font_selection.bin/AllFonts.js/fonts/ 同次重写自洽；浏览器旧缓存属既有 R3 行为）。
+3. 重生成后序号收缩会在 fonts/ 留下无引用的孤儿文件（无危害，未做清理）。
+4. 全量 Fonts.zip（~600 字体）的真实预生成耗时/内存同 §7.4-1，首次发布实跑后回填。
