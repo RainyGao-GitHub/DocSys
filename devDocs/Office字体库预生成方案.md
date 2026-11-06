@@ -322,7 +322,22 @@ core-fonts 不在 bin 目录下，剥不到 ⇒ 需把它升级为**真正的 re
 | V6 | x2t 物化 | ✅ x2tfonts/ 产出 selection（可加载、全部字体存在可读）+ AllFonts.js（绝对路径改写+重嵌 base64）+ 明文副本（魔数全部合法）；幂等复用毫秒级 |
 | V7 | 回归 | ✅ `TestOfficeFontsAutoGenGuard` 21/21；bat/py 双脚本端到端（含 core-fonts 缺失重放场景、drop 幂等）通过 |
 
-### 8.3 已知边界 / 未验证项
+### 8.3 首次真实发布实测（2.02.90，2026-11-05）
+
+`python build_release.py --war C:\docsysRel\DocSystem-2.02.90.war` 一条龙全流程跑通，exit 0：
+
+| 阶段 | 实测 |
+|---|---|
+| CleanWar（Eclipse 导出 war 混入 10359 条 office 开发资料 + .git + 旧 font_selection.bin，共清 442MB） | 10.7 秒，四重自检通过 |
+| 解压 war（41847 条目） | 56 秒 |
+| Fonts.zip 并入 core-fonts | 369 拷贝 / 193 跳过(.fon/.dat) / 0 已存在 |
+| **字体库全量生成**（源 552 个字体文件：369 Windows + core-fonts 全集 183，含 ttc 多 face） | **1329 秒（22 分钟，缩略图占 19.3 分钟）**，fonts/ 552 个文件 |
+| 删 core-fonts + proguard + mxsdoc.jar | 转换合计 1696 秒 |
+| 6 平台包 | 全部产出 + 自检 PASS |
+| 包内抽查（tar 层） | fonts/ 552、core-fonts 0 残留、font_selection.bin 581 条全部 `../../../fonts/NNN`、缩略图 20、mxsdoc.jar 1 ✓ |
+| 包体积 | linux/kirin-x64 1530MB、win 1500MB、kirin 1381MB、mac 1384MB、mac-arm64 1379MB（含平台 JRE 与全量字体；单份方案生效——无 core-fonts 双份） |
+
+### 8.4 已知边界 / 未验证项
 
 1. **Office引擎=OnlyOffice 的真实 x2t 转换**未实测（materializer 产物已验证可加载，但未跑真实 x2t.exe 转换链路）——用户回归测试时用 OnlyOffice 引擎打开/转换一次 Word 即可覆盖。
 2. 字体集变化时插入点之后的序号会移动（font_selection.bin/AllFonts.js/fonts/ 同次重写自洽；浏览器旧缓存属既有 R3 行为）。
