@@ -1763,7 +1763,10 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId, authCode
 		//Folder do nothing
 		return;
 	}
-	
+
+	//第2层：检测上次协同编辑保存是否失败（有失败标记则先弹提示，确认后继续打开）
+	checkOfficeSaveFailedBeforeOpen(doc);
+
 	//copy do to docInfo
 	var docInfo = copyDocInfo(doc, shareId, authCode);
 	console.log("openDoc() docInfo:", docInfo);
@@ -3274,4 +3277,39 @@ function seperatePathAndName(entryPath, result)
 	return level;
 }
 
+//==================== Office保存失败第2层：打开文档前检测 ====================
+//异步检测：有失败标记则弹提示；不阻断打开流程（提示与打开并行，用户看完提示文档已就绪）
+function checkOfficeSaveFailedBeforeOpen(doc)
+{
+	//需要 docId + vid（vid 缺失时用当前仓库）
+	var vid = doc.vid ? doc.vid : (typeof gReposInfo != "undefined" && gReposInfo ? gReposInfo.id : null);
+	if(doc.docId == null || doc.docId <= 0 || vid == null)
+	{
+		return;
+	}
 
+	$.ajax({
+		url : "/DocSystem/Bussiness/checkOfficeSaveFailed.do",
+		type : "post",
+		dataType : "json",
+		data : {reposId: vid, docId: doc.docId, name: doc.name},
+		success : function (ret) {
+			if( "ok" == ret.status && ret.data != null )
+			{
+				var flag = ret.data;
+				var docName = flag.docName != null ? flag.docName : doc.name;
+				var serverTime = flag.serverTime != null ? flag.serverTime : "";
+				qiao.bs.alert({
+					id: "idSaveFailedOpenDialog",
+					title: _Lang("提示"),
+					okbtn: _Lang("知道了"),
+					msg: _Lang("文档", " ", docName, " ", "于", " ", serverTime, " ", "协同编辑保存失败，上次的编辑内容可能未保存成功，请检查！"),
+				});
+			}
+		},
+		error : function (ret) {
+			console.log("checkOfficeSaveFailedBeforeOpen() 服务器异常");
+		}
+	});
+}
+//==================== Office保存失败第2层 END ====================

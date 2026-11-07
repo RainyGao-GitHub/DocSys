@@ -6978,6 +6978,7 @@ function startSaveFailNoticePolling()
 		return;	//已在轮询，避免重复启动
 	}
 	saveFailNoticeTimer = setInterval(pollSaveFailNotices, SAVE_FAIL_NOTICE_INTERVAL);
+	pollSaveFailNotices();	//启动时立即查询一次，不必等满一个周期
 	console.log("startSaveFailNoticePolling() 已启动，间隔 " + SAVE_FAIL_NOTICE_INTERVAL + "ms");
 }
 
