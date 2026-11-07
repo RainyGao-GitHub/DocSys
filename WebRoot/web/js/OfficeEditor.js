@@ -99,6 +99,9 @@ var OfficeEditor = (function () {
 
 	function init()
 	{
+		//第2层：检测上次协同编辑保存是否失败（有失败标记则提示；三种打开模式共用 init）
+		checkOfficeSaveFailedBeforeOpen(docInfo);
+
 		console.log("officeEditorType:", officeEditorType);
 		isExternalOffice = officeEditorType == undefined? false : (officeEditorType == 1);
 		if(isExternalOffice == true)
@@ -599,3 +602,48 @@ var OfficeEditor = (function () {
         },
 	};
 })();
+
+//==================== Office保存失败第2层：打开文档前检测（三种打开模式共用） ====================
+//异步检测：有失败标记则用原生 alert 提示（本页面不依赖 bootstrapQ）；不阻断编辑器加载
+function checkOfficeSaveFailedBeforeOpen(doc)
+{
+	if(doc == null || doc.docId == null || doc.docId <= 0 || doc.vid == null)
+	{
+		return;
+	}
+
+	var vid = doc.vid;
+	$.ajax({
+		url : "/DocSystem/Bussiness/checkOfficeSaveFailed.do",
+		type : "post",
+		dataType : "json",
+		data : {reposId: vid, docId: doc.docId, name: doc.name},
+		success : function (ret) {
+			if( "ok" == ret.status && ret.data != null )
+			{
+				var flag = ret.data;
+				var docName = flag.docName != null ? flag.docName : doc.name;
+				var serverTime = flag.serverTime != null ? flag.serverTime : "";
+				var msgText = "文档 《" + docName + "》 ";
+				if(serverTime != "")
+				{
+					msgText += "于 " + serverTime + " ";
+				}
+				msgText += "协同编辑保存失败，上次的编辑内容可能未保存成功，请检查！";
+				//顶部滑入警告条（同 project 页新建成功样式），time 极大值=不自动收起，×可手动关
+				if(typeof bootstrapQ != "undefined" && bootstrapQ.msg)
+				{
+					bootstrapQ.msg({msg: msgText, type: "warning", time: 86400000});
+				}
+				else
+				{
+					alert(msgText);	//依赖缺失时兜底
+				}
+			}
+		},
+		error : function (ret) {
+			console.log("checkOfficeSaveFailedBeforeOpen() 服务器异常");
+		}
+	});
+}
+//==================== Office保存失败第2层 END ====================

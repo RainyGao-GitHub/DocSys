@@ -7042,27 +7042,41 @@ function showSaveFailNotices(notices)
 		var serverTime = notice.serverTime;
 		var vid = notice.vid;
 		var docId = notice.docId;
-		//逐条弹出（qiao.bs.alert 模态，用户确认一条看下一条）
-		qiao.bs.alert({
-			id: "idSaveFailNoticeDialog_" + i,
-			title: _Lang("保存失败通知"),
-			okbtn: _Lang("查看文档"),
-			msg: _Lang("文档", " ", docName, " ", "于", " ", serverTime, " ", "保存失败，你之前的编辑内容可能未保存成功，请重新打开该文档检查！"),
-		}, function(){
-			//跳转到该文档（复用文档直达URL格式）
-			var pathBase64 = notice.docPath != null ? base64_encode(notice.docPath) : "";
-			var nameBase64 = notice.docName != null ? base64_encode(notice.docName) : "";
-			var url = "project.html?vid=" + vid + "&doc=" + docId;
-			if(pathBase64 != "")
+		//顶部滑入黄色警告条（不自动收起，×手动关；点击文字跳转到该文档）
+		//多条约谈合并为一条（同一条警告条内换行展示），避免多条互相顶掉
+		if(typeof bootstrapQ != "undefined" && bootstrapQ.msg)
+		{
+			var msgText = _Lang("文档") + " 《" + docName + "》 " + _Lang("于") + " " + serverTime + " " + _Lang("保存失败，你之前的编辑内容可能未保存成功，请重新打开该文档检查！");
+			//多条通知时追加（bs.msg 的 #bsalert 常驻不删，直接往里 append）
+			var noticeMsg = $("<div>").text(msgText).css({cursor: "pointer", textDecoration: "underline"}).data("notice", notice).on("click", function(){
+				var n = $(this).data("notice");
+				var pathBase64 = n.docPath != null ? base64_encode(n.docPath) : "";
+				var nameBase64 = n.docName != null ? base64_encode(n.docName) : "";
+				var url = "project.html?vid=" + n.vid + "&doc=" + n.docId;
+				if(pathBase64 != "")
+				{
+					url += "&path=" + encodeURIComponent(pathBase64);
+				}
+				if(nameBase64 != "")
+				{
+					url += "&name=" + encodeURIComponent(nameBase64);
+				}
+				window.location.href = url;
+			});
+			if($("#bsalert").length > 0)
 			{
-				url += "&path=" + encodeURIComponent(pathBase64);
+				$("#bsalert").append(noticeMsg);
 			}
-			if(nameBase64 != "")
+			else
 			{
-				url += "&name=" + encodeURIComponent(nameBase64);
+				bootstrapQ.msg({msg: "", type: "warning", time: 86400000});
+				$("#bsalert").append(noticeMsg);
 			}
-			window.location.href = url;
-		});
+		}
+		else
+		{
+			showErrorMessage(_Lang("文档") + " 《" + docName + "》 " + _Lang("保存失败，请重新打开该文档检查！"));
+		}
 	}
 }
 //==================== Office保存失败通知轮询 END ====================
