@@ -3109,6 +3109,9 @@ function SysInit()
                 	ShowUserInfo(user);
                 	loginBtnCtrl(user);
 
+                	//启动Office保存失败通知轮询（登录后才开始）
+                	startSaveFailNoticePolling();
+
                 	//获取仓库信息（获取成功的话会调用getAndShowDoc和getInitMenu）
             		getReposInfo(gInitReposInfo.id,InitMenuAndDoc);
                 }
@@ -6963,3 +6966,102 @@ function showDocSharePanel(docShare, docName, url)
 		},
 	});
 }
+
+//==================== Office保存失败通知轮询（准实时方案） ====================
+var saveFailNoticeTimer = null;
+var SAVE_FAIL_NOTICE_INTERVAL = 60 * 1000;	//60秒轮询一次
+
+function startSaveFailNoticePolling()
+{
+	if(saveFailNoticeTimer != null)
+	{
+		return;	//已在轮询，避免重复启动
+	}
+	saveFailNoticeTimer = setInterval(pollSaveFailNotices, SAVE_FAIL_NOTICE_INTERVAL);
+	console.log("startSaveFailNoticePolling() 已启动，间隔 " + SAVE_FAIL_NOTICE_INTERVAL + "ms");
+}
+
+function stopSaveFailNoticePolling()
+{
+	if(saveFailNoticeTimer != null)
+	{
+		clearInterval(saveFailNoticeTimer);
+		saveFailNoticeTimer = null;
+		console.log("stopSaveFailNoticePolling() 已停止");
+	}
+}
+
+function pollSaveFailNotices()
+{
+	//未登录或登录信息丢失时不再轮询
+	if(login_user == null || login_user == "" || login_user == undefined)
+	{
+		return;
+	}
+
+	$.ajax({
+		url : "/DocSystem/Bussiness/getUserPendingNotices.do",
+		type : "post",
+		dataType : "json",
+		data : {},
+		success : function (ret) {
+			if( "ok" == ret.status )
+			{
+				var notices = ret.data;
+				if(notices != null && notices.length > 0)
+				{
+					showSaveFailNotices(notices);
+				}
+			}
+			else
+			{
+				//未登录（会话过期）则停止轮询
+				if(ret.errorCode == "NOT_LOGIN")
+				{
+					stopSaveFailNoticePolling();
+				}
+			}
+		},
+		error : function (ret) {
+			console.log("pollSaveFailNotices() 服务器异常");
+		}
+	});
+}
+
+function showSaveFailNotices(notices)
+{
+	for(var i = 0; i < notices.length; i++)
+	{
+		var notice = notices[i];
+		if(notice.type != "saveFail")
+		{
+			continue;
+		}
+		var docName = notice.docName;
+		var serverTime = notice.serverTime;
+		var vid = notice.vid;
+		var docId = notice.docId;
+		//逐条弹出（qiao.bs.alert 模态，用户确认一条看下一条）
+		qiao.bs.alert({
+			id: "idSaveFailNoticeDialog_" + i,
+			title: _Lang("保存失败通知"),
+			okbtn: _Lang("查看文档"),
+			msg: _Lang("文档", " ", docName, " ", "于", " ", serverTime, " ", "保存失败，你之前的编辑内容可能未保存成功，请重新打开该文档检查！"),
+		}, function(){
+			//跳转到该文档（复用文档直达URL格式）
+			var pathBase64 = notice.docPath != null ? base64_encode(notice.docPath) : "";
+			var nameBase64 = notice.docName != null ? base64_encode(notice.docName) : "";
+			var url = "project.html?vid=" + vid + "&doc=" + docId;
+			if(pathBase64 != "")
+			{
+				url += "&path=" + encodeURIComponent(pathBase64);
+			}
+			if(nameBase64 != "")
+			{
+				url += "&name=" + encodeURIComponent(nameBase64);
+			}
+			window.location.href = url;
+		});
+	}
+}
+//==================== Office保存失败通知轮询 END ====================
