@@ -29,7 +29,8 @@
 
 ## 当前任务
 
-- **Office 无法打开/保存文件逐个分析**（2026-11-07 用户指定继续）——方法论与环境速查见 **`DevAgentControl/OFFICE文件排查方法与经验.md`**（标准流程 DiagTiming→堆栈→x2t 交叉验证→精准修复；已修复清单；八大坑）。工作卡式文件：本方法文档 + 下方各历史卡。
+- **Office 无法打开/保存文件逐个分析**（2026-11-07 用户指定继续）——方法论与环境速查见 **`DevAgentControl/OFFICE文件排查方法与经验总结.md`**（标准流程 DiagTiming→堆栈→x2t 交叉验证→精准修复；已修复清单；十大坑）。工作卡式文件：本方法文档 + 下方各历史卡。
+  - 2026-11-11 完成一例：**2020年度企业基础信息表.doc**（MHT 假扩展名）——税局网站生成的 MHT（`Multipart/related` 首字母大写）挂 .doc 名；detectActualFormat 只认 PK↔OLE2 放行 → OLE2 读取失败。修复 = OfficeBase.detectActualFormat 加 MHT 分支 + isMultiPartsHtmlFormatFile 大小写不敏感化（C++ x2t 同样漏检，属上层增强，同 Word 23 假扩展名先例）。命令行 E2E-PASS；**遗留：Eclipse touch 两文件 + 重启 dev + 浏览器实测 + 提交（websocket/office/test 三仓库）**。详见方法文档 §一/§三/§五。
 
 - 上一任务 = **Office 保存失败三层通知**（已实现待最终验证提交，2026-11-07）：第1层 project 页轮询黄色警告条（getUserPendingNotices.do）+ 第2层 OfficeEditor.init 检测警告条（checkOfficeSaveFailed.do + saveFailed.flag）+ 后端 OfficeBase.recordSaveFailure。遗留：Eclipse touch 重编后端源码生效、提交（websocket 仓库 2 文件 + 主仓库 8 文件）。
 - 更早已完成并上线：Word 23 个（VML 空格/VarsCopy/detectActualFormat）、Excel XLS 11 处生成器缺陷、sdkjs lOe 补丁（d56a0149）、Linux themes.js 部署修复、fontDir 尾斜杠回归修复。详见方法文档 §一。

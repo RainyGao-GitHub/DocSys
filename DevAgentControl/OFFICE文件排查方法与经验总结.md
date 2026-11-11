@@ -13,6 +13,7 @@
 | Linux PPT 打开弹"无法保存" | 旧启动脚本调 allthemesgen 失败写空壳 themes.js | 部署修复（war 拷回 themes 目录）+ 换新启动脚本 | ✅ 已恢复 |
 | fontDir 丢斜杠（e6076535 回归） | 字体库预生成重构后 fontDir+"AllFonts.js" 丢分隔符 → config 找不到 → $ 未定义 → changes 全丢 | OfficeBase 三处 fontDir 补尾斜杠 | ✅ 已修复 |
 | 保存失败通知（第1/2层） | —— | OfficeBase recordSaveFailure + BussinessController 两个新接口 + project.js/OfficeEditor.js 黄色警告条 | ✅ 已实现（待最终验证+提交） |
+| MHT 假扩展名 .doc 无法打开（2020年度企业基础信息表.doc） | 文件实为税局网站生成的 MHT（头 `Content-Type: Multipart/related` **首字母大写**）挂 .doc 名：①上层 detectActualFormat 只认 PK↔OLE2 放行 → FormatFrom=DOC → OLE2 读取失败（ret=-2147216560，bin 不生成）；②FileConverter 的 isMultiPartsHtmlFormatFile indexOf 大小写敏感漏检（兜底 TXT 空壳）。C++ x2t 同样漏检（双参数模式产 56KB 无正文空壳） | OfficeBase.detectActualFormat 加 MHT 分支（前 512B 大小写不敏感双关键词 → "mht"，下游 getOfficeFileType/CanvasType("mht")=71/8193 现成）+ COfficeFileFormatChecker.isMultiPartsHtmlFormatFile 大小写不敏感化 | ✅ 命令行 E2E-PASS（2026-11-11，待 Eclipse touch/重启/浏览器实测/提交） |
 
 **家族规律**：绝大多数是"机械移植+人工修补"缺陷，三大模式：
 1. **VarsCopy/值成员未初始化**（C++ 值成员构造即有，Java 裸 new 全 null）
@@ -65,6 +66,7 @@ java -Xmx4g -Dfile.encoding=UTF-8 -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/l
 
 ## 三、本会话踩过的坑（防再踩）
 
+0. **服务端打开链 `checkFileFormat=false`**（OfficeBase.convertOfficeFileToBin 内显式关闭）：转换方向**完全**由 `detectActualFormat + getOfficeFileType/getOfficeCanvasType(ext)` 决定，FileConverter 内部 `isOfficeFile` 的内容检测改写**不参与打开链** ⇒ 一切「假扩展名」类问题必须修**上层 detectActualFormat**；只修 COfficeFileFormatChecker 对打开链无效（但可消除其他 checkFileFormat=true 路径的盲区，本例两处都修了）。
 1. **WebRoot/WEB-INF/classes 里的旧测试 class 优先于 test/bin**（DiagTiming 曾因此假复现）——测试前 `rm WebRoot/WEB-INF/classes/com/.../test/你的测试类.class`
 2. **Git Bash sed -i 会把 CRLF 全改 LF** 污染整文件 → 用 perl -pi（字节级保留）或 python hex 转义（`\x22\x5c`）替换；替换后必 git diff 验证只动了目标行
 3. **python 重写代码块时拼接偏移量错误**吃掉相邻代码（cessUser.do 事故）→ 大块重写后必 grep 相邻方法的注解完整性
@@ -73,6 +75,8 @@ java -Xmx4g -Dfile.encoding=UTF-8 -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/l
 6. **Eclipse 环境**：它用自己的 ECJ 构建+publish；我 javac 到工作区 classes 后，需用户在 Eclipse touch 源文件（触发 ECJ 重编）+ 重启 Tomcat 才真正生效
 7. **保存链 changes 数据在** `OfficeEdit/<docId>/<dockey>/orgChanges/`（保存失败时移入 ErrorChanges<时间>/ 归档）
 8. _Lang() 只支持 3 参（str1,connectStr,str2），多参调用被静默截断——多段文案直接用 + 拼接
+9. **x2t.exe 退出码不可靠**：连打印 usage 都返回 88，转换成败只能看产物文件是否生成；交叉验证优先用**双参数形式** `x2t <in> <out.bin> <fontDir>`（按扩展名定方向，已验证可用）——params.xml 形式在当前 7.0.1.37 版本下无输出无产物（原因未查，别再用）。
+10. **大小写敏感匹配是格式检测的常见盲区**：C++ `std::string::find`/Java `indexOf` 都敏感，而真实文件头大小写不定（本例 `Multipart/related`）。修法：两侧统一 toLowerCase（⚠️ 目标串也要小写——只转一侧反而把原本能匹配的弄坏，本例实测踩过）。
 
 ## 四、环境速查
 
@@ -87,7 +91,13 @@ java -Xmx4g -Dfile.encoding=UTF-8 -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/l
 
 1. 读本文件 + CLAUDE.md（会话恢复协议）
 2. 新的无法打开文件 → 按本文件 §二 标准流程逐个分析
-3. 上一 session 遗留待办：
+3. 2026-11-11 MHT 假扩展名修复（2020年度企业基础信息表.doc）遗留：
+   - 用户侧动作：Eclipse touch `OfficeBase.java` + `COfficeFileFormatChecker.java` → 重启 dev Tomcat → 浏览器打开该文件实测
+   - 提交：websocket 仓库 `OfficeBase.java`；office 仓库 `common/COfficeFileFormatChecker.java`；test 仓库 3 个诊断类（DiagMhtDetect/DiagMhtConvert/DiagMhtE2E，位于 test/，fixture 无新增）
+   - 回归 `verify_doc_pipeline.ps1 -Fast` 结果见会话记录（后台任务 exec_cf9a286e）
+   - 次要瑕疵（不扩科）：Java HtmlFile2 解析 MHT 时把 MIME 头几行（Mime-Version/boundary）也写进正文文本；C++ 同源代码，主体可用。用户若在意再单独立项
+   - 检测链顺序注意：isMultiPartsHtmlFormatFile 排在 isHtmlFormatFile 之后（C++ 原版序），未动
+4. 上一 session 遗留待办：
    - 保存失败通知（第1/2层）的最终验证与提交（清单见上一 session 末尾）
    - 可选项：Excel 保存"xlsx fallback 成功但报错"提示降噪、changesErrorHandler 降级加固、extractAllForZipFile 大小校验
    - OdfFileStatic.java:82 编译失败烙死的死类（独立隐患）
