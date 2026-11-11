@@ -29,9 +29,10 @@
 
 ## 当前任务
 
-- **文件对比功能（Gitee issue I54IJU）** —— **2026-10-28 由用户明确指定**，工作卡 `DevAgentControl/CURRENT_STATE_文件对比功能.md`（**本卡**）。
-  任务：三场景文件对比（选两文件 / 两历史版本 / AI 对比技能结果链接呈现）；用户提议 CodeMirror，要求调研是否有更好方案。
-  **状态：调研与方案已成文（`devDocs/文件对比功能方案.md`），等用户裁定方案文档 §9 A~F 后开工，未改任何代码。**
+- **Office 无法打开/保存文件逐个分析**（2026-11-07 用户指定继续）——方法论与环境速查见 **`DevAgentControl/OFFICE文件排查方法与经验.md`**（标准流程 DiagTiming→堆栈→x2t 交叉验证→精准修复；已修复清单；八大坑）。工作卡式文件：本方法文档 + 下方各历史卡。
+
+- 上一任务 = **Office 保存失败三层通知**（已实现待最终验证提交，2026-11-07）：第1层 project 页轮询黄色警告条（getUserPendingNotices.do）+ 第2层 OfficeEditor.init 检测警告条（checkOfficeSaveFailed.do + saveFailed.flag）+ 后端 OfficeBase.recordSaveFailure。遗留：Eclipse touch 重编后端源码生效、提交（websocket 仓库 2 文件 + 主仓库 8 文件）。
+- 更早已完成并上线：Word 23 个（VML 空格/VarsCopy/detectActualFormat）、Excel XLS 11 处生成器缺陷、sdkjs lOe 补丁（d56a0149）、Linux themes.js 部署修复、fontDir 尾斜杠回归修复。详见方法文档 §一。
 
 - 上一任务 = **Agent 工具调用展示优化 + 工具调用详情持久化 Bug**（已收尾归档 2026-10-27）：工作卡
   `DevAgentControl/已完成/CURRENT_STATE_Agent工具调用展示优化.md`，提交 `f59e2e4af`（S1 前端）+ `47bd45327`（S2 后端持久化 + S3 前端回放，用户 --amend 合并）。
