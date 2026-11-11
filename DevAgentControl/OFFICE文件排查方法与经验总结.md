@@ -14,6 +14,7 @@
 | fontDir 丢斜杠（e6076535 回归） | 字体库预生成重构后 fontDir+"AllFonts.js" 丢分隔符 → config 找不到 → $ 未定义 → changes 全丢 | OfficeBase 三处 fontDir 补尾斜杠 | ✅ 已修复 |
 | 保存失败通知（第1/2层） | —— | OfficeBase recordSaveFailure + BussinessController 两个新接口 + project.js/OfficeEditor.js 黄色警告条 | ✅ 已实现（待最终验证+提交） |
 | MHT 假扩展名 .doc 无法打开（2020年度企业基础信息表.doc） | 文件实为税局网站生成的 MHT（头 `Content-Type: Multipart/related` **首字母大写**）挂 .doc 名：①上层 detectActualFormat 只认 PK↔OLE2 放行 → FormatFrom=DOC → OLE2 读取失败（ret=-2147216560，bin 不生成）；②FileConverter 的 isMultiPartsHtmlFormatFile indexOf 大小写敏感漏检（兜底 TXT 空壳）。C++ x2t 同样漏检（双参数模式产 56KB 无正文空壳） | OfficeBase.detectActualFormat 加 MHT 分支（前 512B 大小写不敏感双关键词 → "mht"，下游 getOfficeFileType/CanvasType("mht")=71/8193 现成）+ COfficeFileFormatChecker.isMultiPartsHtmlFormatFile 大小写不敏感化 | ✅ 命令行 E2E-PASS（2026-11-11，待 Eclipse touch/重启/浏览器实测/提交） |
+| MHT 打开后 MIME 头混入正文 + 表格挤成窄竖条（同上文件，用户实测反馈） | ①CHtmlFile2_Private.mhtXhtml 又一处大小写敏感 indexOf("Content-Type: multipart/related") → 误走 htmlXhtml 兜底，`<html>` 前的 MIME 头全部变成正文文本（完整 MHT 解析器 HtmlToXhtml.mhtToXhtml 根本没被调用）；②表宽写出对任何正宽度硬编码 `w:type="pct"`（660px → 660/50=13.2% → 窄条；tcW 分支本来就正确区分 dxa/pct，tblW 分支没跟上）。两处 C++ 原版同错——该链上游从未走通所以从未暴露 | mhtXhtml 检测大小写不敏感化（1 行）；tblW 改为绝对宽度写 dxa（×10 封顶 31680，同 tcW 模式），百分比宽度维持 pct | ✅ E2E：MIME 残留=false、正文完整、tblW=6600 dxa+jc=center（2026-11-11，待实测/提交） |
 
 **家族规律**：绝大多数是"机械移植+人工修补"缺陷，三大模式：
 1. **VarsCopy/值成员未初始化**（C++ 值成员构造即有，Java 裸 new 全 null）
@@ -92,10 +93,12 @@ java -Xmx4g -Dfile.encoding=UTF-8 -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/l
 1. 读本文件 + CLAUDE.md（会话恢复协议）
 2. 新的无法打开文件 → 按本文件 §二 标准流程逐个分析
 3. 2026-11-11 MHT 假扩展名修复（2020年度企业基础信息表.doc）遗留：
-   - 用户侧动作：Eclipse touch `OfficeBase.java` + `COfficeFileFormatChecker.java` → 重启 dev Tomcat → 浏览器打开该文件实测
-   - 提交：websocket 仓库 `OfficeBase.java`；office 仓库 `common/COfficeFileFormatChecker.java`；test 仓库 3 个诊断类（DiagMhtDetect/DiagMhtConvert/DiagMhtE2E，位于 test/，fixture 无新增）
-   - 回归 `verify_doc_pipeline.ps1 -Fast` 结果见会话记录（后台任务 exec_cf9a286e）
-   - 次要瑕疵（不扩科）：Java HtmlFile2 解析 MHT 时把 MIME 头几行（Mime-Version/boundary）也写进正文文本；C++ 同源代码，主体可用。用户若在意再单独立项
+   - **第二轮（同日，用户实测反馈后）已完成**：MIME 头入正文（mhtXhtml 第三处大小写坑→htmlXhtml 兜底）+ 表格窄竖条（tblW 硬编码 pct；改绝对宽度写 dxa 同 tcW 模式）。E2E 全过（MIME 残留=false、tblW=6600 dxa、jc=center）
+   - 用户侧动作：Eclipse touch `OfficeBase.java` + `COfficeFileFormatChecker.java` + `CHtmlFile2_Private.java` → 重启 dev Tomcat → 浏览器打开该文件实测（对照 Word 直接打开效果）
+   - 提交：websocket 仓库 `OfficeBase.java`；office 仓库 `common/COfficeFileFormatChecker.java` + `HtmlFile2/CHtmlFile2_Private.java`；test 仓库 3 个诊断类（DiagMhtDetect/DiagMhtConvert/DiagMhtE2E，位于 test/，fixture 无新增）
+   - 第三处大小写坑提醒：**同一根因在三层各埋一处**（checker → detectActualFormat 检测层 → mhtXhtml 路由层），今后类似"内容路由"字符串匹配一律大小写不敏感
+   - tblW 修复的已知边界（无样本覆盖未动）：百分比宽度的 pct 数值语义（tcW/tblW 的 pct 分支写的都是 Point 值而非 ×50 的百分比单位值）、无宽度表的 else-if device-width 分支——遇到百分比宽度 HTML 样本再修
+   - 回归 `verify_doc_pipeline.ps1 -Fast`（第二轮跑于 exec_69881123；注意该回归不覆盖 HtmlFile2 路径，HtmlFile2 改动靠 E2E 驱动验证）
    - 检测链顺序注意：isMultiPartsHtmlFormatFile 排在 isHtmlFormatFile 之后（C++ 原版序），未动
 4. 上一 session 遗留待办：
    - 保存失败通知（第1/2层）的最终验证与提交（清单见上一 session 末尾）
