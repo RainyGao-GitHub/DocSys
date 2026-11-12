@@ -93,12 +93,13 @@ java -Xmx4g -Dfile.encoding=UTF-8 -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/l
 1. 读本文件 + CLAUDE.md（会话恢复协议）
 2. 新的无法打开文件 → 按本文件 §二 标准流程逐个分析
 3. 2026-11-11 MHT 假扩展名修复（2020年度企业基础信息表.doc）遗留：
-   - **第二轮（同日，用户实测反馈后）已完成**：MIME 头入正文（mhtXhtml 第三处大小写坑→htmlXhtml 兜底）+ 表格窄竖条（tblW 硬编码 pct；改绝对宽度写 dxa 同 tcW 模式）。E2E 全过（MIME 残留=false、tblW=6600 dxa、jc=center）
+   - **第二轮（同日，用户实测反馈后）已完成**：MIME 头入正文（mhtXhtml 第三处大小写坑→htmlXhtml 兜底）+ 表格窄竖条（tblW 硬编码 pct；改绝对宽度写 dxa 同 tcW 模式）。E2E 全过（MIME 残留=false、tblW=6600 dxa、jc=center）；用户实测 MIME 已解决
+   - **第三轮视觉差异已分流出新卡（2026-11-12 用户建）**：`CURRENT_STATE_MHT格式打开与Word本地打开不一致.md`（边框全丢/宽度系数/表3缺tblW 三个根因候选已定位；对比参照 word.docx）。文件已移至 `C:/DocSysReposes/1/data/rdata/Word文件MHT格式打开的格式和本地打开不同/`——DiagMht* 工具跑该文件时用新路径
    - 用户侧动作：Eclipse touch `OfficeBase.java` + `COfficeFileFormatChecker.java` + `CHtmlFile2_Private.java` → 重启 dev Tomcat → 浏览器打开该文件实测（对照 Word 直接打开效果）
    - 提交：websocket 仓库 `OfficeBase.java`；office 仓库 `common/COfficeFileFormatChecker.java` + `HtmlFile2/CHtmlFile2_Private.java`；test 仓库 3 个诊断类（DiagMhtDetect/DiagMhtConvert/DiagMhtE2E，位于 test/，fixture 无新增）
    - 第三处大小写坑提醒：**同一根因在三层各埋一处**（checker → detectActualFormat 检测层 → mhtXhtml 路由层），今后类似"内容路由"字符串匹配一律大小写不敏感
-   - tblW 修复的已知边界（无样本覆盖未动）：百分比宽度的 pct 数值语义（tcW/tblW 的 pct 分支写的都是 Point 值而非 ×50 的百分比单位值）、无宽度表的 else-if device-width 分支——遇到百分比宽度 HTML 样本再修
-   - 回归 `verify_doc_pipeline.ps1 -Fast`（第二轮跑于 exec_69881123；注意该回归不覆盖 HtmlFile2 路径，HtmlFile2 改动靠 E2E 驱动验证）
+   - tblW 修复的已知边界（无样本覆盖未动）：百分比宽度的 pct 数值语义（tcW/tblW 的 pct 分支写的都是 Point 值而非 ×50 的百分比单位值）、无宽度表的 else-if device-width 分支——遇到百分比宽度 HTML 样本再修（部分已并入新卡）
+   - 回归 `verify_doc_pipeline.ps1 -Fast` 两轮全绿（注意该回归不覆盖 HtmlFile2 路径，HtmlFile2 改动靠 E2E 驱动验证）
    - 检测链顺序注意：isMultiPartsHtmlFormatFile 排在 isHtmlFormatFile 之后（C++ 原版序），未动
 4. 上一 session 遗留待办：
    - 保存失败通知（第1/2层）的最终验证与提交（清单见上一 session 末尾）
