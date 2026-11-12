@@ -96,5 +96,33 @@ MxsDoc 打开 MHT 假扩展名文件后，与 Word 本地直接打开的**视觉
   - **关键佐证**：word.docx 参照自身经 docx→bin→docx（DiagTiming 65→8193→65）后 outset 也被 sdkjs 规整为 single sz=6——两条链在显示端（bin）完全等价，outset 差异只存在于下载/另存路径（我们中间 docx 保真 outset 更接近 Word）
   - 产物目录：`test/tmp/Diag2020MhtDoc/e2e5/`（bin+docx）、`wordref_bin/`（参照 bin 对照）；诊断类 `test/DiagBorderStyle.java`（样式层单点验证）
   - 回归 verify_doc_pipeline -Fast：**全绿 PASS**（2026-11-12，Step 1.6/1.7/2/3 全部 PASS，"验证通过"）
-- **遗留（用户侧）**：Eclipse touch `CBorder.java` + `CBorderSide.java` + `CHtmlFile2_Private.java` → 重启 dev Tomcat → 浏览器实测（对照 Word 本地打开）；提交（office 仓库 3 文件 + test 仓库 DiagBorderStyle）
-- 下一 session 起手：读本卡 + CLAUDE.md → 看回归结果 → 若绿则等用户实测反馈。
+- **遗留（用户侧）**：Eclipse touch `CBorder.java` + `CBorderSide.java` + `CHtmlFile2_Private.java` → 重启 dev Tomcat → 浏览器实测（对照 Word 本地打开）；提交（office 仓库 3 文件 + test 仓库 DiagBorderStyle）。**2026-11-12 用户已提交（代码已合入）**
+- 下一 session 起手：读本卡 + CLAUDE.md → 看 §七 差异定性 → 待用户裁定开工范围与行高基准。
+
+## 七、第三轮差异定性（2026-11-12 用户实测反馈 5 条；同日用户澄清后定稿，未修）
+
+**两条关键澄清（用户裁定）**：① word.docx 在 MxsDoc（OnlyOffice 前端渲染器）里显示正确、与 Word 打开基本一致 ⇒ **渲染器可信，一切显示差异 = 我们 bin 里的值不对**；② 修复标准 = 对齐 word.docx 经 bin 链后的值（不再以"Word 打开原 MHT"为基准）。结论：**5 条全部是我们没正确处理布局信息，无一是渲染机制差异**。
+
+| # | 反馈 | 定性 | 缺陷点（均已实测证实） |
+|---|---|---|---|
+| 1 | 标题字号不一致 | 我们缺换算 | `CDocumentStyle.SetRStyle`：R_Sz 直写 `m_oFont.GetSize()` 的 **pt 值**（18.0），缺 ×2（w:sz 单位=半磅，18pt→36）；且带 ".0" 小数非法（bin 链规整成 18=9pt）。实测：中间 docx `w:sz="18.0"`，参照=36 |
+| 2/3 | 两行没居中 | 我们断链 | HTML `td align="center"` → `CCompiledStyle.AddStyle` case "align" → `m_oDisplay.SetHAlign`（仅表级 tblPr jc 消费）；段落 `w:jc` 从 `m_oText.GetAlign()`（CSS text-align）取 → 恒空。td@align 与段落 jc 无桥接。实测参照 jc=center、我们全 None（含签章行 right） |
+| 4 | 字体不一致 | 我们硬编码 | `CXmlElement.ConvertRStyle` R_RFonts 分支：`wsFontFamily` **硬编码 "Times New Roman"**，取到的 `oItem.getValue()`（宋体）不用——所有文本字体全变 TNR。中间 docx 即如此（非 bin 链替换） |
+| 5 | 经办人行行高不一致、内容看不到 | **我们的坏值 line="0"** | 完整链条已实证：表 2 的 3 个段落样式（td-20/22/23）带 `<w:spacing w:line="0" w:lineRule="auto"/>`，来源 = `CDigit.ToDouble()` 对 Empty 返回 **0.0**（非空标记）→ `getFontLine` 的 null 检查失效 → 0×12=0；只有表 2 中招（m_oBorder 非空才走 getFontLine 分支，与用户抱怨精确到表级吻合——表 1/3 无 line=0）。**参照 word.docx 的 styles+document 完全无任何 spacing/line 设置**，显示正常 ⇒ 渲染器按 0 行高忠实渲染，源头是我们写了坏值。trHeight：参照也没有（Word 另存丢行高且用户认可其显示）⇒ **按对齐标准不补 td@height→trHeight** |
+
+附带发现（本轮不修，记录在案）：
+- `getLineHeight` 的换算系数可疑：None→×24、Percent→×0.24（lineRule=auto 时 w:line 单位=1/240 行，无单位 line-height:1.4 应≈336 而非 34）——本样本无 line-height 未触发，遇到再修
+- docDefaults=Arial 22 是老版 C++ 原版固有（对照 2023 原版 htmlfile2.cpp 299 行原文），参照 word.docx=Times New Roman（Word 另存结果）——是否对齐 docDefaults 属产品决策（参照 docDefaults=rFonts TNR+eastAsiaTheme，无 sz）
+- **修复方向（定稿，待用户指示开工）**：① R_Sz 写 `(int)(pt*2+0.5)`；② td/th 的 align 属性桥接到 text-align（或 wrP 取 jc 时 fallback HAlign）；③ R_RFonts 用实际字体名（写入 w:ascii/hAnsi/cs/eastAsia 四槽或至少 eastAsia）；④ getFontLine 对 Empty/≤0 的 font-size 返回空串（不写 w:line）；⑤ 不补 trHeight（对齐参照）
+
+## 八、第四轮修复实施（2026-11-12 用户指示开工，同日完成命令行验证）
+
+按 §七 清单全部落地（office 仓库 3 文件，已编译到 WebRoot/WEB-INF/classes）：
+1. `NSCSS/CDocumentStyle.java`：新增 `getFontSz`（CDigit Empty/≤0 不写；Pixel→pt×0.75、Percent→默认12pt 折算；`(int)(pt*2+0.5)` 输出半磅整数），`SetRStyle` 的 R_Sz 改用之；**删除 `getFontLine` 及 spacing 拼接里两个 m_oBorder 分支**（其一不可达死代码）——无显式 line-height 一律不写 w:line；顺带删除失去唯一调用方的 `fieldGetterToDouble`
+2. `common/html/CXmlElement.java`：`ConvertRStyle` R_RFonts 分支改用 `oItem.getValue()` 实际字体名写四槽（原硬编码 Times New Roman、取值不用）
+3. `HtmlFile2/CHtmlFile2_Private.java`：`GetSubClass` 属性收集后新增块级 align→`text-align:` 桥接（td/th/p/div/h1-h6；table/tr/tbody 不桥接——表位置语义/行级继承无样本），helper `isBlockAlignTag`
+
+**E2E 断言（e2e6，vs 参照 word.docx 逐项）**：标题 jc=center+sz=36+eastAsia=宋体 ✓；A类行/税款行 jc=center ✓；签章行/年月日行/监制行 jc=right ✓；谨声明 sz=26 ✓；`w:line="0"` 出现 0 次 ✓（表 2 内容恢复可见）；前轮成果保持：tblW=9900×3、tcW=2500 pct×2、tcBorders none sz4×33 + single sz6×6 ✓。E2E-PASS（MIME 残留=false、正文断言保持）。
+已知可接受偏差：监制行参照无 sz（Word 另存丢了 12pt 字号）而我们有 sz=24——按源样式写出是对的，差异属参照失真。
+- 回归 verify_doc_pipeline -Fast：**全绿 PASS**（2026-11-12，Step 1.6/1.7/2/3 全部 PASS，"验证通过"）
+- 遗留（用户侧）：Eclipse touch `CDocumentStyle.java` + `CXmlElement.java` + `CHtmlFile2_Private.java` → 重启 dev Tomcat → 浏览器实测；提交（office 仓库 3 文件）
