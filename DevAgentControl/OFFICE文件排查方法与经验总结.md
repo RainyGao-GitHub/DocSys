@@ -15,6 +15,8 @@
 | 保存失败通知（第1/2层） | —— | OfficeBase recordSaveFailure + BussinessController 两个新接口 + project.js/OfficeEditor.js 黄色警告条 | ✅ 已实现（待最终验证+提交） |
 | MHT 假扩展名 .doc 无法打开（2020年度企业基础信息表.doc） | 文件实为税局网站生成的 MHT（头 `Content-Type: Multipart/related` **首字母大写**）挂 .doc 名：①上层 detectActualFormat 只认 PK↔OLE2 放行 → FormatFrom=DOC → OLE2 读取失败（ret=-2147216560，bin 不生成）；②FileConverter 的 isMultiPartsHtmlFormatFile indexOf 大小写敏感漏检（兜底 TXT 空壳）。C++ x2t 同样漏检（双参数模式产 56KB 无正文空壳） | OfficeBase.detectActualFormat 加 MHT 分支（前 512B 大小写不敏感双关键词 → "mht"，下游 getOfficeFileType/CanvasType("mht")=71/8193 现成）+ COfficeFileFormatChecker.isMultiPartsHtmlFormatFile 大小写不敏感化 | ✅ 命令行 E2E-PASS（2026-11-11，待 Eclipse touch/重启/浏览器实测/提交） |
 | MHT 打开后 MIME 头混入正文 + 表格挤成窄竖条（同上文件，用户实测反馈） | ①CHtmlFile2_Private.mhtXhtml 又一处大小写敏感 indexOf("Content-Type: multipart/related") → 误走 htmlXhtml 兜底，`<html>` 前的 MIME 头全部变成正文文本（完整 MHT 解析器 HtmlToXhtml.mhtToXhtml 根本没被调用）；②表宽写出对任何正宽度硬编码 `w:type="pct"`（660px → 660/50=13.2% → 窄条；tcW 分支本来就正确区分 dxa/pct，tblW 分支没跟上）。两处 C++ 原版同错——该链上游从未走通所以从未暴露 | mhtXhtml 检测大小写不敏感化（1 行）；tblW 改为绝对宽度写 dxa（×10 封顶 31680，同 tcW 模式），百分比宽度维持 pct | ✅ E2E：MIME 残留=false、正文完整、tblW=6600 dxa+jc=center（2026-11-11，待实测/提交） |
+| MHT 表格视觉丢失 + 宽度偏窄 + 表2 缺 tblW（第三轮，2026-11-12） | 四层：①CBorder 四边方法短路 OR（官方 2024-05-23 已修，移植源带病）→ border="1" 只设 left.width、四边 style 全空；②readTable 不 EqualSides 分支 `insert(35, GetId())` 裸插非法 XML（原版即坏）→ bin 链丢 tblW、边框规整为 none；③HTML 属性无单位值落 UnitMeasure.None 被当 pt（应=px），×10 系数又错（应 pt×20，660px→9900 dxa）；④pct 语义错（50% 应写 2500=50×50，而非 deviceW/2 点数） | CBorder 四边去短路；CBorderSide outset 映射直通；GetSubClass 属性规范化（width/height 裸数字补 px、border N→"Npx outset"，N=0 只补 px）；tblW/tcW 按单位分派重写（pct×50 / dxa×20）；删 insert hack | ✅ 用户实测确认（2026-11-12 提交） |
+| MHT 文本层：字号减半/不居中/字体全变 Times New Roman/表2 内容被压扁（第四轮，2026-11-12 用户实测反馈 5 条） | ①R_Sz 直写 CDigit 的 pt 原值（"18.0"）缺 ×2（w:sz=半磅）；②td@align 只进 m_oDisplay.SetHAlign（表级 jc 消费），段落 jc 取 m_oText 的 text-align → 断链；③CXmlElement R_RFonts 硬编码 TNR、取到的字体名不用；④getFontLine 经 CDigit Empty→0.0 算出 w:line="0"，OnlyOffice 渲染器按 0 行高压扁内容（渲染器本身可信——word.docx 渲染正确，用户裁定） | CDocumentStyle.getFontSz（×2 半磅整数、px/%折算、空不写）+ 删 getFontLine 死分支（无 line-height 不写 w:line）；CXmlElement 用实际字体名写四槽；GetSubClass 块级 align→text-align 桥接（td/th/p/div/h1-h6） | ✅ 用户实测确认"效果非常好"（2026-11-12 提交） |
 
 **家族规律**：绝大多数是"机械移植+人工修补"缺陷，三大模式：
 1. **VarsCopy/值成员未初始化**（C++ 值成员构造即有，Java 裸 new 全 null）
@@ -92,15 +94,8 @@ java -Xmx4g -Dfile.encoding=UTF-8 -cp "WebRoot/WEB-INF/classes;WebRoot/WEB-INF/l
 
 1. 读本文件 + CLAUDE.md（会话恢复协议）
 2. 新的无法打开文件 → 按本文件 §二 标准流程逐个分析
-3. 2026-11-11 MHT 假扩展名修复（2020年度企业基础信息表.doc）遗留：
-   - **第二轮（同日，用户实测反馈后）已完成**：MIME 头入正文（mhtXhtml 第三处大小写坑→htmlXhtml 兜底）+ 表格窄竖条（tblW 硬编码 pct；改绝对宽度写 dxa 同 tcW 模式）。E2E 全过（MIME 残留=false、tblW=6600 dxa、jc=center）；用户实测 MIME 已解决
-   - **第三轮视觉差异已分流出新卡（2026-11-12 用户建）**：`CURRENT_STATE_MHT格式打开与Word本地打开不一致.md`（边框全丢/宽度系数/表3缺tblW 三个根因候选已定位；对比参照 word.docx）。文件已移至 `C:/DocSysReposes/1/data/rdata/Word文件MHT格式打开的格式和本地打开不同/`——DiagMht* 工具跑该文件时用新路径
-   - 用户侧动作：Eclipse touch `OfficeBase.java` + `COfficeFileFormatChecker.java` + `CHtmlFile2_Private.java` → 重启 dev Tomcat → 浏览器打开该文件实测（对照 Word 直接打开效果）
-   - 提交：websocket 仓库 `OfficeBase.java`；office 仓库 `common/COfficeFileFormatChecker.java` + `HtmlFile2/CHtmlFile2_Private.java`；test 仓库 3 个诊断类（DiagMhtDetect/DiagMhtConvert/DiagMhtE2E，位于 test/，fixture 无新增）
-   - 第三处大小写坑提醒：**同一根因在三层各埋一处**（checker → detectActualFormat 检测层 → mhtXhtml 路由层），今后类似"内容路由"字符串匹配一律大小写不敏感
-   - tblW 修复的已知边界（无样本覆盖未动）：百分比宽度的 pct 数值语义（tcW/tblW 的 pct 分支写的都是 Point 值而非 ×50 的百分比单位值）、无宽度表的 else-if device-width 分支——遇到百分比宽度 HTML 样本再修（部分已并入新卡）
-   - 回归 `verify_doc_pipeline.ps1 -Fast` 两轮全绿（注意该回归不覆盖 HtmlFile2 路径，HtmlFile2 改动靠 E2E 驱动验证）
-   - 检测链顺序注意：isMultiPartsHtmlFormatFile 排在 isHtmlFormatFile 之后（C++ 原版序），未动
+3. 2026-11-11 MHT 假扩展名修复（2020年度企业基础信息表.doc）**已全部收尾（2026-11-12 用户实测确认）**，四轮修复详录见 §一 最后三行与归档卡 `已完成/CURRENT_STATE_MHT格式打开与Word本地打开不一致.md`（含官方 core 仓库溯源结论：移植源=2023-06 `HtmlFile2/htmlfile2.cpp` 老代；CBorder 短路为官方 2024-05 已修的带病移植；normalizeHtmlAttrValue 属性语义层为双方都缺的全新补齐；老 readTable 已被官方重写丢弃）。**可复用方法**：①"渲染器可信"裁定——显示差异一律回溯到我们 bin 里的值，用 word.docx 参照经同一 bin 链（DiagTiming 65→8193→65）做结构对比断言；②HtmlFile2 的样式链三级排查：GetSubClass 属性收集 → CCompiledStyle.AddStyle 分派 → CDocumentStyle/CXmlElement 写出。
+4. 挂起的已知边界（MHT 卡遗留，遇到样本再修）：tr/tbody 的 align 行级继承未桥接；line-height 换算系数可疑（None→×24、Percent→×0.24，w:line 单位=1/240 行）；docDefaults=Arial 22（原版固有）vs 参照 Times New Roman——是否对齐属产品决策；td@height→trHeight 不做（对齐参照，Word 另存也丢）
 4. 上一 session 遗留待办：
    - 保存失败通知（第1/2层）的最终验证与提交（清单见上一 session 末尾）
    - 可选项：Excel 保存"xlsx fallback 成功但报错"提示降噪、changesErrorHandler 降级加固、extractAllForZipFile 大小校验
