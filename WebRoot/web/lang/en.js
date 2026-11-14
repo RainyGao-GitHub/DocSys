@@ -421,6 +421,7 @@ function lang(str)
 		"移动" : "Move",
 		"未知操作" : "Unknown Operation",
 		"下载" : "Download",
+		"打包下载" : "Download as ZIP",
 		"上传" : "Upload",
 		"预览" : "Preview",
 		"拉取" : "Pull",
@@ -551,6 +552,7 @@ function lang(str)
 		
 		//下载文件
 		"是否下载" : "Do you want to download",
+		"是否打包下载" : "Do you want to download as a ZIP package",
 		"请选择需要下载的文件" : "No any file or folder was selected to download",
 		"请选择需要下载的文件!" : "No any file or folder was selected to download !",
 		"下载还未结束，是否终止下载" : "Download not completed, do you want to cancel",

@@ -496,9 +496,9 @@ function openInLocalApp(node)
 }
 
 //文件下载接口
-function downloadDoc(treeNodes,needConfirm,downloadType)
+function downloadDoc(treeNodes,needConfirm,downloadType,compressFlag)
 {
-	console.log("downloadDoc downloadType:" + downloadType + " treeNodes:", treeNodes);
+	console.log("downloadDoc downloadType:" + downloadType + " compressFlag:" + compressFlag + " treeNodes:", treeNodes);
 	if(!treeNodes || treeNodes == null)
 	{
 		showErrorMessage({
@@ -529,22 +529,30 @@ function downloadDoc(treeNodes,needConfirm,downloadType)
   			downloadDispInfo = downloadDispInfo + _Lang("的备注");
 		}
 
+		var downloadActionName = _Lang("下载");
+		var downloadConfirmMsg = _Lang('是否下载') + ' ' + downloadDispInfo + ' ?';
+		if(compressFlag == true)
+		{
+			downloadActionName = _Lang("打包下载");
+			downloadConfirmMsg = _Lang('是否打包下载') + ' ' + downloadDispInfo + ' ?';
+		}
+
 		qiao.bs.confirm({
 	        id: 'downloadConfirm',
-	        msg: _Lang('是否下载') + ' ' + downloadDispInfo + ' ?',
+	        msg: downloadConfirmMsg,
 	        title: _Lang("确认"),
-	        okbtn: _Lang("下载"),
+	        okbtn: downloadActionName,
 	        qubtn: _Lang("取消"),
 	    },function(){
 	        //alert('点击了确定！');
-			DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType);
+			DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType,compressFlag);
 	    },function(){
 	        //alert('点击了取消！');
 	    });
 	}
 	else
 	{
-		DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType);
+		DocDownload.downloadDocs(treeNodes, null, gReposInfo.id,downloadType,compressFlag);
 	}
 }
 
@@ -5452,6 +5460,12 @@ function contextMenuInit()
 					e.preventDefault();
 					var treeNodes = getSelectedNodes();
 					downloadDoc(treeNodes,true,1);
+				}
+		},
+		{text: _Lang('打包下载'), action: function(e){
+					e.preventDefault();
+					var treeNodes = getSelectedNodes();
+					downloadDoc(treeNodes,true,1,true);
 				}
 		},
 		{text: _Lang('打印'), action: function(e){

@@ -101,7 +101,7 @@
 			//TODO: 如果是多个文件且compressFlag有设置，这个批次需要当作一个文件进行下载，上下文里需要传入的是需要下载的文件列表
 			if(fileNum > 1)
 			{
-				if(compressFlag === undefined || compressFlag == true)
+				if(compressFlag == true)
 				{
 					//Build Batch For compress download
 					Batch = buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
@@ -211,7 +211,7 @@
 			//TODO: 如果是多个文件且compressFlag有设置，这个批次需要当作一个文件进行下载，上下文里需要传入的是需要下载的文件列表
 			if(fileNum > 1)
 			{
-				if(compressFlag === undefined || compressFlag == true)
+				if(compressFlag == true)
 				{
 					//Build Batch For compress download
 					Batch = buildBatchForCompressDownload(treeNodes, dstParentNode, dstPath, dstPid, dstLevel, vid, downloadType);
@@ -1045,10 +1045,10 @@
 			var SubContextIndex = SubContext.index;
 			var blob = new Blob([fileContent], { type: 'application/octet-stream' });
 			var downloadUrl = window.URL.createObjectURL(blob);
-			
+
 			var a = document.createElement('a');
 			a.href = downloadUrl;
-			a.download = SubContext.name;
+			a.download = SubContext.targetName || SubContext.name;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
@@ -1088,6 +1088,17 @@
 		// 构建分片下载URL并启动分片下载
 		function startChunkedDownload(SubContext, vid, path, name, targetPath, targetName, deleteFlag, msgInfo)
 		{
+			//后台返回的targetName是URL-safe Base64编码的(仅用于下载URL传参, 不能直接用作保存文件名)
+			//打包下载(多个文件)和目录下载会被后台压缩成zip, 此时解码targetName作为保存文件名(带.zip后缀)
+			if(targetName && (SubContext.downloadList != null || SubContext.type == 2))
+			{
+				var decodedTargetName = Base64.urlsafe_decode(targetName);
+				if(decodedTargetName)
+				{
+					SubContext.targetName = decodedTargetName;
+				}
+			}
+
 			var encodedPath = encodeURI(path);
 			var encodedName = encodeURI(name);
 			var encodedTargetName = encodeURI(targetName);
@@ -1157,8 +1168,8 @@
 		
 		//开放给外部的调用接口
         return {
-            downloadDocs: function(treeNodes,dstParentNode,vid,downloadType){
-            	downloadDocs(treeNodes,dstParentNode,vid,downloadType);
+            downloadDocs: function(treeNodes,dstParentNode,vid,downloadType,compressFlag){
+            	downloadDocs(treeNodes,dstParentNode,vid,downloadType,compressFlag);
             },
             stopAllDownload: function(){
             	stopAllDownload();
