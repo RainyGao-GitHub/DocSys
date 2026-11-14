@@ -1085,6 +1085,22 @@
 			}
 		}
 		
+		// 解码后台返回的URL-safe Base64字符串
+		// 注意: 后台使用commons-codec编码时会去掉'='padding, 而Base64.urlsafe_decode需要padding才能正确处理尾部, 否则会多解出一个\u0000字符
+		function decodeBase64UrlSafe(str)
+		{
+			var remainder = str.length % 4;
+			if(remainder == 2)
+			{
+				str += "==";
+			}
+			else if(remainder == 3)
+			{
+				str += "=";
+			}
+			return Base64.urlsafe_decode(str);
+		}
+
 		// 构建分片下载URL并启动分片下载
 		function startChunkedDownload(SubContext, vid, path, name, targetPath, targetName, deleteFlag, msgInfo)
 		{
@@ -1092,7 +1108,7 @@
 			//打包下载(多个文件)和目录下载会被后台压缩成zip, 此时解码targetName作为保存文件名(带.zip后缀)
 			if(targetName && (SubContext.downloadList != null || SubContext.type == 2))
 			{
-				var decodedTargetName = Base64.urlsafe_decode(targetName);
+				var decodedTargetName = decodeBase64UrlSafe(targetName);
 				if(decodedTargetName)
 				{
 					SubContext.targetName = decodedTargetName;
