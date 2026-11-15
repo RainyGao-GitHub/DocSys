@@ -2405,6 +2405,29 @@ var ReposConfig = (function () {
 	 	}  
 	}
 
+	//打开服务器目录选择器（bootstrapQ 弹窗，选择成功后回填输入框，初始位置取输入框现值，失效自动回退盘符列表）
+	function selectServerPath(inputId)
+	{
+		console.log("selectServerPath() inputId:" + inputId);
+		var curPath = $("#" + inputId).val() || "";
+		bootstrapQ.dialog({
+			id: "serverDirSelector",
+			url: "serverDirSelector" + (typeof langExt !== "undefined" ? langExt : "") + ".html",
+			title: _Lang("选择服务器目录"),
+			msg: _Lang("页面正在加载，请稍等") + "...",
+			foot: false,
+			big: false,
+			callback: function(){
+				ServerDirSelector.pageInit({
+					path: curPath,
+					onSelect: function(path){
+						$("#" + inputId).val(path);
+					},
+				});
+			},
+		});
+	}
+
 	//开放给外部的调用接口
 	return {
 		addReposPageInit: function(callbackForAddReposSuccess, callbackForCancelAddRepos){
@@ -2493,12 +2516,16 @@ var ReposConfig = (function () {
 	    },  
 	    doAddRepos: function(){
 	    	doAddRepos();
-	    },  
+	    },
 	    cancelAddRepos: function(){
 	    	cancelAddRepos();
 	    },
 	    saveReposBasicSetting: function(){
 	    	saveReposBasicSetting();
+	    },
+	    //打开服务器目录选择器，选择后回填到指定输入框（inputId：repos-realDocPath / verCtrl-localSvnPath / verCtrl1-localSvnPath）
+	    selectServerPath: function(inputId){
+	    	selectServerPath(inputId);
 	    },
 	};
 })();

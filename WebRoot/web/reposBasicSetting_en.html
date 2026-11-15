@@ -45,7 +45,10 @@
 					</span> 
                	</label>
                	<div id="reposStorageRealDocPathConfig" style="display:none">
-					<input class="form-control" type="text" id="repos-realDocPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width: 100%"/>
+					<div style="white-space:nowrap;">
+						<input class="form-control" type="text" id="repos-realDocPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width:calc(100% - 50px); display:inline-block;"/>
+						<button type="button" class="btn btn-default" onclick="ReposConfig.selectServerPath('repos-realDocPath')" style="width:42px; display:inline-block; margin-left:4px;">...</button>
+					</div>
 				</div>
 				
 				<label style="margin-top:10px">Allow operations on hidden and system files
@@ -83,7 +86,10 @@
 		            <div id="verCtrl-verReposSetting" style="margin-left:20px">
 			            <div id="verCtrl-localVerRepos">
 				            <label>History Storage Path</label>
-				            <input class="form-control" type="text" id="verCtrl-localSvnPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width: 100%"/>
+				            <div style="white-space:nowrap;">
+				            	<input class="form-control" type="text" id="verCtrl-localSvnPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width:calc(100% - 50px); display:inline-block;"/>
+				            	<button type="button" class="btn btn-default" onclick="ReposConfig.selectServerPath('verCtrl-localSvnPath')" style="width:42px; display:inline-block; margin-left:4px;">...</button>
+				            </div>
 			            </div>
 			            <div id="verCtrl-remoteVerRepos">
 				            <label>History Repository Link</label>
@@ -110,7 +116,10 @@
 	            <div id="verCtrl1-verReposSetting">
 		            <div id="verCtrl1-localVerRepos">
 			            <label>History Storage Path</label>
-			            <input class="form-control" type="text" id="verCtrl1-localSvnPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width: 100%"/>
+			            <div style="white-space:nowrap;">
+			            	<input class="form-control" type="text" id="verCtrl1-localSvnPath"  placeholder="Keep empty if you want to use the default path"  value="" style="width:calc(100% - 50px); display:inline-block;"/>
+			            	<button type="button" class="btn btn-default" onclick="ReposConfig.selectServerPath('verCtrl1-localSvnPath')" style="width:42px; display:inline-block; margin-left:4px;">...</button>
+			            </div>
 		            </div>
 					<div id="verCtrl1-remoteVerRepos">
 			            <label>History Repository Link</label>

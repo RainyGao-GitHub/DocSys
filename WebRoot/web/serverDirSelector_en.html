@@ -1,0 +1,158 @@
+<div id="dialog-serverDirSelector" class="form-horizontal">
+	<div class="form-group">
+		<div style="margin-bottom:8px; white-space:nowrap;">
+			<input class="form-control" type="text" id="serverDirSelectorPath" placeholder="Type or paste a server path and press Enter to jump" style="width:calc(100% - 92px); display:inline-block;" onkeydown="if(event.keyCode == 13){ServerDirSelector.goInputPath();}">
+			<button type="button" class="btn btn-default" onclick="ServerDirSelector.goInputPath()" style="width:84px; display:inline-block; margin-left:4px;">Go</button>
+		</div>
+		<div style="margin-bottom:8px;">
+			<button type="button" class="btn btn-default" onclick="ServerDirSelector.goParentPath()" style="width:100%;height:34px;">Up</button>
+		</div>
+		<div id="serverDirSelectorList" style="height:320px; overflow-y:auto; border:1px solid #ddd; border-radius:4px; padding:4px;"></div>
+		<div id="serverDirSelectorTip" style="color:#999; font-size:12px; margin-top:6px;">Click to select, double-click to enter; if nothing is selected, OK will use the current directory</div>
+	</div>
+	<div class="modal-footer">
+		<div class="form-group">
+			<div class="col-sm-12 text-right">
+				<button type="button" class="btn btnPrimary" onclick="ServerDirSelector.doSelect();" style="width: 100px;height: 42px;">OK</button>
+				<button type="button" class="btn btnPrimary" onclick="ServerDirSelector.cancelSelect();" style="width: 100px;height: 42px;">Cancel</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+var ServerDirSelector = (function () {
+	var _config;
+	var _loaded = false;			//whether a dir list has been loaded successfully (used to fall back to drive list when the initial path is invalid)
+	var _currentPath = "";			//"" means the drive list view
+	var _parentPath = "";
+	var _selectedPath = null;		//subdir selected by click; null means the current directory
+
+	function pageInit(config)
+	{
+		console.log("ServerDirSelector pageInit() config:", config);
+		_config = config || {};
+		_loaded = false;
+		_selectedPath = null;
+		$("#serverDirSelectorPath").val(_config.path || "");
+		loadDirList(_config.path || "");
+	}
+
+	function loadDirList(path)
+	{
+		$.ajax({
+			url : "/DocSystem/Repos/getServerDirList.do",
+			type : "post",
+			dataType : "json",
+			data : { path : path },
+			success : function (ret) {
+				if("ok" == ret.status)
+				{
+					var data = ret.data || {};
+					_loaded = true;
+					_currentPath = data.currentPath || "";
+					_parentPath = data.parentPath || "";
+					_selectedPath = null;
+					$("#serverDirSelectorPath").val(_currentPath);
+					renderDirList(data.dirList || []);
+				}
+				else
+				{
+					showErrorMessage("Failed to get directories:" + ret.msgInfo);
+					if(_loaded == false)
+					{
+						//the initial path is invalid: fall back to the drive list
+						loadDirList("");
+					}
+				}
+			},
+			error : function () {
+				showErrorMessage("Failed to get directories: server error");
+			}
+		});
+	}
+
+	function renderDirList(dirList)
+	{
+		var container = $("#serverDirSelectorList");
+		container.empty();
+		if(dirList.length == 0)
+		{
+			container.append("<div style='color:#999;padding:8px;'>(no subdirectories)</div>");
+			return;
+		}
+		for(var i = 0; i < dirList.length; i++)
+		{
+			var dir = dirList[i];
+			var item = $("<div class='serverDirSelectorItem' path='" + encodeAttr(dir.path) + "' style='padding:6px 8px; cursor:pointer; border-radius:4px;'></div>");
+			item.append("<img src='images/file_icon/icon_others/folder.png' style='width:18px;height:18px; margin-right:6px; vertical-align:text-bottom;'></img>" + htmlEncode(dir.name));
+			item.on("click", function(){
+				$("#serverDirSelectorList .serverDirSelectorItem").css("background", "");
+				$(this).css("background", "#e6f2ff");
+				_selectedPath = $(this).attr("path");
+			});
+			item.on("dblclick", function(){
+				loadDirList($(this).attr("path"));
+			});
+			container.append(item);
+		}
+	}
+
+	function encodeAttr(s)
+	{
+		return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;");
+	}
+
+	function htmlEncode(s)
+	{
+		return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	}
+
+	function goInputPath()
+	{
+		var path = $.trim($("#serverDirSelectorPath").val());
+		loadDirList(path);
+	}
+
+	function goParentPath()
+	{
+		loadDirList(_parentPath);	//the parentPath of a drive root is "", which goes back to the drive list
+	}
+
+	function doSelect()
+	{
+		var path = _selectedPath || _currentPath;
+		_config.onSelect && _config.onSelect(path);
+		closeServerDirSelectorDialog();
+	}
+
+	function cancelSelect()
+	{
+		closeServerDirSelectorDialog();
+	}
+
+	function closeServerDirSelectorDialog()
+	{
+		closeBootstrapDialog("serverDirSelector");
+	}
+
+	//开放给外部的调用接口
+	return {
+		pageInit : function(config){
+			pageInit(config);
+		},
+		goInputPath : function(){
+			goInputPath();
+		},
+		goParentPath : function(){
+			goParentPath();
+		},
+		doSelect : function(){
+			doSelect();
+		},
+		cancelSelect : function(){
+			cancelSelect();
+		},
+	};
+})();
+</script>

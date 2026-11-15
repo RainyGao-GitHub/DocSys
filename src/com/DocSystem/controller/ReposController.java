@@ -426,6 +426,102 @@ public class ReposController extends BaseController{
 	}
 
 	/****************** get Repository List **************/
+	/********** 服务器目录列表（仓库存储位置/文件存储位置/版本仓库目录的选择器用） ***************/
+	@RequestMapping("/getServerDirList.do")
+	public void getServerDirList(String path, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getServerDirList.do ***********************");
+		ReturnAjax rt = new ReturnAjax();
+		User login_user = adminAccessCheck(null, "getServerDirList", session, rt);
+		if(login_user == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject data = new JSONObject();
+		List<JSONObject> dirList = new ArrayList<JSONObject>();
+
+		if(path == null || path.trim().isEmpty())
+		{
+			//path 为空：列出盘符根（Windows: C:/ D:/ ...；Linux/Mac: /）
+			data.put("currentPath", "");
+			data.put("parentPath", "");
+			File[] roots = File.listRoots();
+			if(roots != null)
+			{
+				for(File root : roots)
+				{
+					if(root == null || root.exists() == false)
+					{
+						continue;
+					}
+					String rootPath = Path.localDirPathFormat(root.getPath(), OSType);
+					JSONObject dir = new JSONObject();
+					dir.put("name", rootPath);
+					dir.put("path", rootPath);
+					dirList.add(dir);
+				}
+			}
+		}
+		else
+		{
+			String dirPath = Path.localDirPathFormat(path.trim(), OSType);
+			File dir = new File(dirPath);
+			if(dir.exists() == false || dir.isDirectory() == false)
+			{
+				rt.setError("目录不存在：" + dirPath);
+				writeJson(rt, response);
+				return;
+			}
+
+			data.put("currentPath", dirPath);
+			data.put("parentPath", getServerDirParentPath(dirPath));
+
+			File[] entries = dir.listFiles();
+			if(entries != null)
+			{
+				for(File entry : entries)
+				{
+					if(entry == null || entry.isDirectory() == false)
+					{
+						continue;	//只列目录不列文件（存储位置选择用不到文件）
+					}
+					JSONObject subDir = new JSONObject();
+					subDir.put("name", entry.getName());
+					subDir.put("path", dirPath + entry.getName() + "/");
+					dirList.add(subDir);
+				}
+			}
+			java.util.Collections.sort(dirList, new java.util.Comparator<JSONObject>() {
+				@Override
+				public int compare(JSONObject a, JSONObject b) {
+					return String.CASE_INSENSITIVE_ORDER.compare(a.getString("name"), b.getString("name"));
+				}
+			});
+		}
+
+		data.put("dirList", dirList);
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
+	//目录选择器的上一级路径：盘根（C:/ 或 /）的上一级返回 ""（前端回到盘符列表）
+	private String getServerDirParentPath(String dirPath)
+	{
+		if(dirPath == null || dirPath.length() <= 1)
+		{
+			return "";
+		}
+		String p = dirPath.endsWith("/") ? dirPath.substring(0, dirPath.length() - 1) : dirPath;
+		int idx = p.lastIndexOf('/');
+		if(idx < 0)
+		{
+			return "";
+		}
+		return p.substring(0, idx + 1);
+	}
+
 	@RequestMapping("/getReposList.do")
 	public void getReposList(HttpSession session,HttpServletRequest request,HttpServletResponse response){
 		Log.infoHead("****************** getReposList.do ***********************");
