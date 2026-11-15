@@ -131,6 +131,7 @@ import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
 import com.DocSystem.common.entity.CommitEntry;
 import com.DocSystem.common.entity.CommitLog;
+import com.DocSystem.common.entity.CompressExtractTask;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
@@ -23909,11 +23910,746 @@ public class BaseController  extends BaseFunction{
                 deleteDelayTime,
                 TimeUnit.SECONDS);
 	}
-	
+
+	/******************* 在线压缩与解压（CompressExtractTask） ******************/
+
+	//创建压缩/解压异步任务（taskId 由 userId-reposId-curTime 组成，天然去重防连点）
+	protected CompressExtractTask createCompressExtractTask(Integer type, Repos repos, Doc doc, ReposAccess reposAccess,
+			ReturnAjax rt)
+	{
+		long curTime = new Date().getTime();
+		Log.info("createCompressExtractTask() type:" + type + " curTime:" + curTime);
+
+		String taskId = reposAccess.getAccessUserId() + "-" + repos.getId() + "-" + curTime;
+		if(compressExtractTaskHashMap.get(taskId) != null)
+		{
+			Log.info("createCompressExtractTask() 任务 " + taskId + " 已存在");
+			rt.setError("任务 " + taskId + " 已存在，请稍后重试");
+			return null;
+		}
+
+		CompressExtractTask task = new CompressExtractTask();
+		task.id = taskId;
+		task.type = type;
+		task.createTime = curTime;
+		task.repos = repos;
+		task.doc = doc;
+		task.reposAccess = reposAccess;
+		task.status = 1;
+		task.info = (type == CompressExtractTask.type_extract) ? "解压准备中..." : "压缩准备中...";
+		compressExtractTaskHashMap.put(taskId, task);
+		return task;
+	}
+
+	//标准化仓库内目标目录路径：返回 "/a/b/" 形式，仓库根返回 "/"
+	protected String normalizeReposTargetPath(String targetPath)
+	{
+		if(targetPath == null)
+		{
+			return "/";
+		}
+		targetPath = targetPath.replace("\\", "/").trim();
+		if(targetPath.isEmpty() || targetPath.equals("/"))
+		{
+			return "/";
+		}
+		if(targetPath.startsWith("/") == false)
+		{
+			targetPath = "/" + targetPath;
+		}
+		if(targetPath.endsWith("/") == false)
+		{
+			targetPath = targetPath + "/";
+		}
+		return targetPath;
+	}
+
+	//本地绝对路径 = localRootPath + targetPath（仓库根时不重复拼接斜杠）
+	protected String getLocalPathForReposTargetPath(String localRootPath, String targetPath)
+	{
+		if(targetPath.equals("/"))
+		{
+			return localRootPath;
+		}
+		return localRootPath + targetPath;
+	}
+
+	//校验目标目录的新增权限（提取/压缩共用）
+	protected boolean checkTargetDirAddRight(Repos repos, User user, DocAuth authMask, String targetPath, ReturnAjax rt)
+	{
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		String path = targetPath.equals("/") ? "" : targetPath;
+		Doc dirDoc = buildBasicDoc(repos.getId(), null, null, reposPath, path, "", null, 2, true, localRootPath, localVRootPath, 0L, "");
+
+		DocAuth docAuth = getUserDocAuthWithMask(repos, user.getId(), dirDoc, authMask);
+		if(docAuth == null || docAuth.getAccess() == 0)
+		{
+			docSysErrorLog("您无权访问目标目录，请联系管理员", rt);
+			return false;
+		}
+		if(docAuth.getAddEn() == null || docAuth.getAddEn() != 1)
+		{
+			docSysErrorLog("您没有目标目录的新增权限，请联系管理员", rt);
+			return false;
+		}
+		return true;
+	}
+
+	//校验目标子目录名/压缩包名：不允许路径分隔符、盘符、..逃逸
+	protected boolean isValidTargetEntryName(String name, ReturnAjax rt)
+	{
+		if(name == null || name.isEmpty())
+		{
+			docSysErrorLog("名称不能为空", rt);
+			return false;
+		}
+		String normalized = name.replace("\\", "/").trim();
+		if(normalized.contains("/") || normalized.contains(":") || normalized.contains("*")
+			|| normalized.contains("?") || normalized.contains("\"") || normalized.contains("<")
+			|| normalized.contains(">") || normalized.contains("|") || normalized.equals(".") || normalized.equals(".."))
+		{
+			docSysErrorLog("名称不能包含路径分隔符或非法字符", rt);
+			return false;
+		}
+		return true;
+	}
+
+	//校验zip内条目路径（zipViewer entryList 入参）：不允许 ..、绝对路径、盘符
+	protected boolean isValidZipEntryName(String entry)
+	{
+		if(entry == null || entry.isEmpty())
+		{
+			return false;
+		}
+		String normalized = entry.replace("\\", "/");
+		if(normalized.startsWith("/") || normalized.contains(":") || normalized.contains(".."))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	//枚举zip顶层条目名（去重，忽略目录条目尾部斜杠），失败返回null
+	//注意：加密仓库需先传解密后的明文副本路径
+	protected List<String> getZipTopLevelEntryNames(String zipFilePath)
+	{
+		List<String> names = new ArrayList<String>();
+		ZipFile zipFile = null;
+		try
+		{
+			//encoding仅对未设置UTF-8标志(EFS)的条目生效，设置了的一律按UTF-8解码
+			zipFile = new ZipFile(zipFilePath, "gbk");
+			Enumeration<?> entries = zipFile.getEntries();
+			while(entries.hasMoreElements())
+			{
+				ZipEntry entry = (ZipEntry) entries.nextElement();
+				String entryName = entry.getName().replace("\\", "/");
+				if(entryName.endsWith("/"))
+				{
+					entryName = entryName.substring(0, entryName.length() - 1);
+				}
+				if(entryName.isEmpty())
+				{
+					continue;
+				}
+				String topName = entryName.contains("/") ? entryName.substring(0, entryName.indexOf('/')) : entryName;
+				if(topName.isEmpty() || topName.equals(".."))
+				{
+					continue;
+				}
+				if(names.contains(topName) == false)
+				{
+					names.add(topName);
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			Log.info("getZipTopLevelEntryNames() 读取zip条目失败:" + zipFilePath);
+			Log.info(e);
+			return null;
+		}
+		finally
+		{
+			if(zipFile != null)
+			{
+				try { zipFile.close(); } catch(Exception e) { Log.info(e); }
+			}
+		}
+		return names;
+	}
+
+	//提取冲突预检：返回与目标位置现有条目冲突的名字列表（null=无法预检）
+	protected List<String> getExtractConflictNames(Repos repos, CompressExtractTask task, String plainZipFilePath)
+	{
+		List<String> conflicts = new ArrayList<String>();
+		String localRootPath = Path.getReposRealPath(repos);
+		String targetLocalPath = getLocalPathForReposTargetPath(localRootPath, task.targetPath);
+
+		//子目录模式：只检查目标子目录名是否已被占用
+		if(task.targetName != null && task.targetName.isEmpty() == false)
+		{
+			File entry = new File(targetLocalPath, task.targetName);
+			if(entry.exists())
+			{
+				conflicts.add(task.targetName);
+			}
+			return conflicts;
+		}
+
+		//散落模式：解压结果顶层条目 vs 目标目录现有条目
+		List<String> topNames = null;
+		if(task.entryList != null && task.entryList.isEmpty() == false)
+		{
+			topNames = new ArrayList<String>();
+			for(String entry : task.entryList)
+			{
+				String normalized = entry.replace("\\", "/");
+				if(normalized.endsWith("/"))
+				{
+					normalized = normalized.substring(0, normalized.length() - 1);
+				}
+				if(normalized.isEmpty())
+				{
+					continue;
+				}
+				String topName = normalized.contains("/") ? normalized.substring(0, normalized.indexOf('/')) : normalized;
+				if(topNames.contains(topName) == false)
+				{
+					topNames.add(topName);
+				}
+			}
+		}
+		else
+		{
+			topNames = getZipTopLevelEntryNames(plainZipFilePath);
+		}
+
+		if(topNames == null)
+		{
+			return null;
+		}
+		for(String topName : topNames)
+		{
+			File entry = new File(targetLocalPath, topName);
+			if(entry.exists())
+			{
+				conflicts.add(topName);
+			}
+		}
+		return conflicts;
+	}
+
+	//条目是否被选中（entryList为空=全部选中；目录条目按前缀匹配整个子树）
+	protected boolean isZipEntrySelected(String entryName, List<String> entryList)
+	{
+		if(entryList == null || entryList.isEmpty())
+		{
+			return true;
+		}
+		for(String sel : entryList)
+		{
+			if(sel == null || sel.isEmpty())
+			{
+				continue;
+			}
+			String normalized = sel.replace("\\", "/");
+			if(normalized.endsWith("/"))
+			{
+				normalized = normalized.substring(0, normalized.length() - 1);
+			}
+			if(entryName.equals(normalized) || entryName.startsWith(normalized + "/"))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	//安全解压zip到目标目录：逐条目Zip Slip校验（规范路径必须落在目标目录内）+ entryList过滤
+	//返回true=解压出至少一个条目，false=失败或压缩包为空
+	protected boolean safeExtractZipFile(String zipFilePath, String targetDir, List<String> entryList, CompressExtractTask task)
+	{
+		ZipFile zipFile = null;
+		boolean hasEntry = false;
+		try
+		{
+			File targetDirFile = new File(targetDir);
+			if(targetDirFile.exists() == false)
+			{
+				targetDirFile.mkdirs();
+			}
+			String canonicalTargetDir = targetDirFile.getCanonicalPath() + File.separator;
+
+			//encoding仅对未设置UTF-8标志(EFS)的条目生效：DocSys产物(UTF-8带EFS)与外部GBK包都能正确解码
+			zipFile = new ZipFile(zipFilePath, "gbk");
+			Enumeration<?> entries = zipFile.getEntries();
+			byte[] buf = new byte[8192];
+			while(entries.hasMoreElements())
+			{
+				ZipEntry entry = (ZipEntry) entries.nextElement();
+				String entryName = entry.getName().replace("\\", "/");
+
+				if(isZipEntrySelected(entryName, entryList) == false)
+				{
+					continue;
+				}
+
+				//Zip Slip校验：落地路径不允许逃逸目标目录
+				File outFile = new File(targetDirFile, entryName);
+				if(outFile.getCanonicalPath().startsWith(canonicalTargetDir) == false)
+				{
+					Log.info("safeExtractZipFile() 非法zip条目(路径逃逸): [" + entryName + "]");
+					continue;
+				}
+
+				hasEntry = true;
+				if(entry.isDirectory())
+				{
+					outFile.mkdirs();
+					continue;
+				}
+				File parent = outFile.getParentFile();
+				if(parent != null && parent.exists() == false)
+				{
+					parent.mkdirs();
+				}
+
+				InputStream is = null;
+				OutputStream os = null;
+				try
+				{
+					is = zipFile.getInputStream(entry);
+					os = new BufferedOutputStream(new FileOutputStream(outFile), 8192);
+					int count = 0;
+					while((count = is.read(buf)) > -1)
+					{
+						os.write(buf, 0, count);
+					}
+				}
+				finally
+				{
+					if(os != null) { try { os.close(); } catch(Exception e) {} }
+					if(is != null) { try { is.close(); } catch(Exception e) {} }
+				}
+
+				if(task != null)
+				{
+					task.processedCount++;
+					if(task.processedCount % 100 == 0)
+					{
+						task.info = "文件解压中... 已解压 " + task.processedCount + " 个条目";
+					}
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			Log.info("safeExtractZipFile() 解压失败:" + zipFilePath);
+			Log.info(e);
+			return false;
+		}
+		finally
+		{
+			if(zipFile != null)
+			{
+				try { zipFile.close(); } catch(Exception e) { Log.info(e); }
+			}
+		}
+		return hasEntry;
+	}
+
+	//递归收集目录下所有文件（导入仓库只登记文件，目录由checkAndAddParentDoc创建，与目录上传语义一致）
+	protected void collectFilesRecursively(File dir, List<File> fileList)
+	{
+		File[] children = dir.listFiles();
+		if(children == null)
+		{
+			return;
+		}
+		for(File child : children)
+		{
+			if(child.isDirectory())
+			{
+				collectFilesRecursively(child, fileList);
+			}
+			else
+			{
+				fileList.add(child);
+			}
+		}
+	}
+
+	//执行解压任务：解压到用户tmp -> Zip Slip校验后的文件树逐个走saveDoc_FSM入库（FolderUploadAction批次协议，一次版本提交）
+	protected void executeExtractPrepareTask(CompressExtractTask task, String requestIP)
+	{
+		Repos repos = task.repos;
+		Doc zipDoc = task.doc;
+		ReposAccess reposAccess = task.reposAccess;
+		User user = reposAccess.getAccessUser();
+
+		String userTmpPath = Path.getReposTmpPathForDownload(repos, user);
+		String tmpWorkPath = userTmpPath + "extract-" + task.id + "/";
+		Long deleteDelayTime = 300L;	//失败5分钟后清理
+		FolderUploadAction folderUploadAction = null;
+
+		try
+		{
+			//加密仓库：先落地明文tmp副本（按lastModified缓存，与预览链一致）
+			task.info = "文件解压中...";
+			Doc plainZipDoc = decryptRootZipDoc(repos, zipDoc);
+			String plainZipFilePath = plainZipDoc.getLocalRootPath() + plainZipDoc.getPath() + plainZipDoc.getName();
+
+			boolean ret = false;
+			String compressFileType = FileUtil.getCompressFileType(zipDoc.getName());
+			if("zip".equals(compressFileType) || "war".equals(compressFileType))
+			{
+				ret = safeExtractZipFile(plainZipFilePath, tmpWorkPath, task.entryList, task);
+			}
+			else
+			{
+				if(task.entryList != null && task.entryList.isEmpty() == false)
+				{
+					task.status = 3;
+					task.info = "该压缩格式暂不支持部分提取";
+					addSystemLog(requestIP, user, "extractDocPrepare", "extractDocPrepare", "解压文件", task.id, "失败", repos, zipDoc, null, task.info);
+					addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpWorkPath);
+					return;
+				}
+				ret = extractZipFile(plainZipDoc.getLocalRootPath() + plainZipDoc.getPath(), plainZipDoc.getName(), tmpWorkPath);
+			}
+
+			if(ret == false)
+			{
+				task.status = 3;
+				task.info = "解压失败（压缩包为空、损坏或格式不支持）";
+				addSystemLog(requestIP, user, "extractDocPrepare", "extractDocPrepare", "解压文件", task.id, "失败", repos, zipDoc, null, task.info);
+				addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpWorkPath);
+				return;
+			}
+
+			//收集解压出的文件
+			List<File> fileList = new ArrayList<File>();
+			collectFilesRecursively(new File(tmpWorkPath), fileList);
+			if(fileList.isEmpty())
+			{
+				task.status = 3;
+				task.info = "压缩包中没有可提取的文件";
+				addSystemLog(requestIP, user, "extractDocPrepare", "extractDocPrepare", "解压文件", task.id, "失败", repos, zipDoc, null, task.info);
+				addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpWorkPath);
+				return;
+			}
+			task.totalCount = fileList.size();
+			task.processedCount = 0;
+
+			//导入仓库
+			task.info = "导入文件中... 已处理 0/" + task.totalCount;
+			folderUploadAction = importExtractedFilesToRepos(task, repos, user, requestIP, tmpWorkPath, fileList);
+			if(folderUploadAction == null)
+			{
+				task.status = 3;
+				addSystemLog(requestIP, user, "extractDocPrepare", "extractDocPrepare", "解压文件", task.id, "失败", repos, zipDoc, null, task.info);
+				addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpWorkPath);
+				return;
+			}
+
+			if(folderUploadAction.successCount == 0)
+			{
+				//全部导入失败（版本提交由folderUploadEndHander收尾）
+				task.status = 3;
+				task.info = "导入失败：" + (folderUploadAction.failCount) + " 个文件全部失败";
+				addSystemLog(requestIP, user, "extractDocPrepare", "extractDocPrepare", "解压文件", task.id, "失败", repos, zipDoc, null, task.info);
+				addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpWorkPath);
+				return;
+			}
+
+			task.status = 2;
+			task.info = "解压完成（共 " + folderUploadAction.successCount + " 个文件"
+					+ (folderUploadAction.failCount > 0 ? "，" + folderUploadAction.failCount + " 个失败" : "") + "）";
+			task.resultTargetPath = task.targetPath;
+			task.resultTargetName = task.targetName;
+			addSystemLog(requestIP, user, "extractDocPrepare", "extractDocPrepare", "解压文件", task.id, "成功", repos, zipDoc, null, task.info);
+			deleteDelayTime = 60L;	//成功1分钟后清理tmp
+		}
+		catch(Exception e)
+		{
+			Log.info("executeExtractPrepareTask() 异常");
+			Log.info(e);
+			//导入阶段异常时收尾批次（提交已成功的部分并解锁目录）
+			if(folderUploadAction != null && folderUploadAction.stopFlag == false)
+			{
+				folderUploadAction.totalCount = Math.max(folderUploadAction.totalCount, folderUploadAction.successCount + folderUploadAction.failCount);
+				folderUploadEndHander(folderUploadAction);
+			}
+			task.status = 3;
+			task.info = "解压异常:" + e.getMessage();
+			addSystemLog(requestIP, user, "extractDocPrepare", "extractDocPrepare", "解压文件", task.id, "失败", repos, zipDoc, null, task.info);
+		}
+
+		addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpWorkPath);
+	}
+
+	//将tmp解压产物导入仓库（目录上传批次协议：一批文件一次版本提交）
+	//返回创建的FolderUploadAction（异常时供上层收尾），失败返回null
+	private FolderUploadAction importExtractedFilesToRepos(CompressExtractTask task, Repos repos, User user, String requestIP,
+			String tmpWorkPath, List<File> fileList)
+	{
+		ReposAccess reposAccess = task.reposAccess;
+		String zipName = task.doc.getName();
+
+		//目标目录（仓库内路径）：targetPath + targetName，如 "/a/b/" + "pkg/"
+		String targetSubDir = (task.targetName == null || task.targetName.isEmpty()) ? "" : (task.targetName + "/");
+		String targetDirPath = task.targetPath + targetSubDir;
+		if(targetDirPath.equals("//"))
+		{
+			targetDirPath = "/";
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+
+		//目录本身落地（散落模式不需要）
+		if(targetSubDir.isEmpty() == false)
+		{
+			File targetDirFile = new File(getLocalPathForReposTargetPath(localRootPath, targetDirPath));
+			if(targetDirFile.exists() == false)
+			{
+				targetDirFile.mkdirs();
+			}
+		}
+
+		//创建FolderUploadAction（目录上传批次，锁定目标目录）
+		//目标目录可能被上一次批次的异步解锁短暂占用，失败时清掉失败占位并重试
+		String dirPathForAction = targetDirPath.equals("/") ? "/" : targetDirPath;
+		Doc dirDoc = buildBasicDoc(repos.getId(), null, null, reposPath, dirPathForAction, "", null, 2, true, localRootPath, localVRootPath, 0L, "");
+		String actionId = dirPathForAction + task.createTime;
+		FolderUploadAction action = null;
+		for(int i = 0; i < 10; i++)
+		{
+			ReturnAjax actionRt = new ReturnAjax();
+			action = checkAndCreateFolderUploadAction(actionId, requestIP, user, repos, dirDoc, "", "extractDocPrepare", "extractDocPrepare", "解压文件", task.id, actionRt);
+			if(action != null && action.isCriticalError)
+			{
+				Log.info("importExtractedFilesToRepos() 锁定目标目录失败(第" + (i+1) + "次):" + action.errorInfo);
+				task.info = "等待目标目录解锁...(" + action.errorInfo + ")";
+				//终态失败action先出队，避免同actionId重试永远拿到失败对象
+				if(action.stopFlag)
+				{
+					gFolderUploadActionHashMap.remove(actionId);
+				}
+				action = null;
+				try { Thread.sleep(3000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
+				continue;
+			}
+			break;
+		}
+		if(action == null)
+		{
+			Log.info("importExtractedFilesToRepos() 创建FolderUploadAction失败:" + actionId);
+			task.info = "目标目录锁定失败，请稍后重试";
+			return null;
+		}
+		action.commitMsg = "解压 [" + zipName + "] 到 [" + targetDirPath + "]";
+		action.info = action.commitMsg;
+		action.totalCount = fileList.size();
+
+		ActionContext context = buildBasicActionContext(requestIP, user, "extractDocPrepare", "extractDocPrepare", "解压文件", task.id, repos, null, null, action);
+		context.info = action.commitMsg;
+		context.commitMsg = action.commitMsg;
+		context.commitUser = user.getName();
+
+		String tmpWorkRoot = tmpWorkPath.endsWith("/") ? tmpWorkPath : (tmpWorkPath + "/");
+
+		for(File file : fileList)
+		{
+			//tmp内相对路径（如 "top/inner/file.txt"）
+			String relativePath = file.getAbsolutePath().replace("\\", "/").substring(tmpWorkRoot.length());
+			String parentRelDir = relativePath.contains("/") ? relativePath.substring(0, relativePath.lastIndexOf('/') + 1) : "";
+			String name = relativePath.substring(relativePath.lastIndexOf('/') + 1);
+			String docPath = targetDirPath + parentRelDir;
+			if(docPath.startsWith("//"))
+			{
+				docPath = docPath.substring(1);
+			}
+
+			Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, docPath, name, null, 1, true, localRootPath, localVRootPath, file.length(), "");
+			checkAndAddParentDoc(doc, null);
+
+			//批次心跳：防止长任务被3分钟超时判定终止
+			action.beatTime = new Date().getTime();
+			context.doc = doc;
+
+			String chunkParentPath = tmpWorkRoot + parentRelDir;
+			ReturnAjax fileRt = new ReturnAjax();
+			//chunkNum=1走单文件复制通道（SAVE_TYPE_ChunkedFile），无byte[]内存压力
+			int ret = saveDoc_FSM(repos, doc, SAVE_TYPE_ChunkedFile, null, null, null, 1, null, chunkParentPath,
+					action.commitMsg, user.getName(), user, fileRt, context);
+
+			//chunkIndex=0/chunkNum=1走单分片语义（deleteChunks要求chunkIndex非空）
+			uploadAfterHandler(ret == 0 ? 0 : 1, doc, name, 0, 1, chunkParentPath, reposAccess, context, fileRt);
+
+			task.processedCount++;
+			if(task.processedCount % 10 == 0 || task.processedCount == task.totalCount)
+			{
+				task.info = "导入文件中... 已处理 " + task.processedCount + "/" + task.totalCount;
+			}
+		}
+		//末个文件经uploadAfterHandler已自动触发folderUploadEndHander（一次版本提交+解锁+推送+索引重建）
+
+		return action;
+	}
+
+	//执行压缩任务：收集选中条目到tmp -> 压缩为zip -> zip入库
+	protected void executeCompressPrepareTask(CompressExtractTask task, String requestIP)
+	{
+		Repos repos = task.repos;
+		ReposAccess reposAccess = task.reposAccess;
+		User user = reposAccess.getAccessUser();
+		Doc zipDoc = task.doc;	//虚拟doc：path=targetPath name=zip名
+
+		String userTmpPath = Path.getReposTmpPathForDownload(repos, user);
+		String tmpParentPath = userTmpPath + "compress-" + task.id + "/";
+		String tmpWorkPath = tmpParentPath + "work/";
+		String zipFileName = task.targetName;
+		Long deleteDelayTime = 300L;	//失败5分钟后清理
+
+		try
+		{
+			//收集选中条目（逐个按下载权限拷贝到tmp，布局=各条目以自身名字置于work根）
+			task.info = "文件收集中...";
+			if(FileUtil.createDir(tmpWorkPath) == false)
+			{
+				task.status = 3;
+				task.info = "临时目录创建失败";
+				addSystemLog(requestIP, user, "compressDocPrepare", "compressDocPrepare", "压缩文件", task.id, "失败", repos, zipDoc, null, task.info);
+				addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpParentPath);
+				return;
+			}
+			for(Doc subDoc : task.docList)
+			{
+				copyAuthedFilesForDownload(tmpWorkPath, subDoc.getName(), repos, subDoc, reposAccess);
+			}
+
+			//统计收集结果
+			List<File> fileList = new ArrayList<File>();
+			collectFilesRecursively(new File(tmpWorkPath), fileList);
+			if(fileList.isEmpty())
+			{
+				task.status = 3;
+				task.info = "没有可压缩的文件（可能无下载权限或内容为空）";
+				addSystemLog(requestIP, user, "compressDocPrepare", "compressDocPrepare", "压缩文件", task.id, "失败", repos, zipDoc, null, task.info);
+				addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpParentPath);
+				return;
+			}
+			task.totalCount = fileList.size();
+			task.processedCount = 0;
+
+			//加密仓库：先解密tmp副本再压缩（与打包下载一致）
+			if(repos.encryptType != null && repos.encryptType != 0)
+			{
+				task.info = "文件解密中...";
+				decryptFileOrDir(repos, tmpParentPath, "work");
+			}
+
+			//压缩（zip根=各选中条目，单目录foo -> foo.zip内含foo/子树）
+			task.info = "压缩中... 共 " + task.totalCount + " 个文件";
+			if(doCompressDir(tmpParentPath, "work", tmpParentPath, zipFileName, null) == false)
+			{
+				task.status = 3;
+				task.info = "压缩失败";
+				addSystemLog(requestIP, user, "compressDocPrepare", "compressDocPrepare", "压缩文件", task.id, "失败", repos, zipDoc, null, task.info);
+				addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpParentPath);
+				return;
+			}
+
+			//zip入库（单文件，走标准saveDoc_FSM链路：权限外的版本提交/推送/日志全部现成）
+			task.info = "保存到仓库...";
+			File zipFile = new File(tmpParentPath, zipFileName);
+			String reposPath = Path.getReposPath(repos);
+			String localRootPath = Path.getReposRealPath(repos);
+			String localVRootPath = Path.getReposVirtualPath(repos);
+			String docPath = task.targetPath.equals("/") ? "" : task.targetPath;
+
+			Doc doc = buildBasicDoc(repos.getId(), null, null, reposPath, docPath, zipFileName, null, 1, true, localRootPath, localVRootPath, zipFile.length(), "");
+			checkAndAddParentDoc(doc, null);
+
+			ActionContext context = buildBasicActionContext(requestIP, user, "compressDocPrepare", "compressDocPrepare", "压缩文件", task.id, repos, doc, null, null);
+			context.info = "压缩 [" + zipFileName + "]";
+			context.commitMsg = "压缩 " + task.totalCount + " 个文件到 [" + task.targetPath + zipFileName + "]";
+			context.commitUser = user.getName();
+
+			ReturnAjax rt = new ReturnAjax();
+			int ret = saveDoc_FSM(repos, doc, SAVE_TYPE_ChunkedFile, null, null, null, 1, null, tmpParentPath,
+					context.commitMsg, user.getName(), user, rt, context);
+			if(ret == 0)
+			{
+				//saveDoc_FSM已通过rt携带失败原因
+				task.status = 3;
+				task.info = rt.getMsgInfo() == null ? "保存压缩包到仓库失败" : rt.getMsgInfo();
+				addSystemLog(requestIP, user, "compressDocPrepare", "compressDocPrepare", "压缩文件", task.id, "失败", repos, zipDoc, null, task.info);
+				addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpParentPath);
+				return;
+			}
+
+			task.status = 2;
+			task.info = "压缩完成（共 " + task.totalCount + " 个文件）";
+			task.resultTargetPath = task.targetPath;
+			task.resultTargetName = zipFileName;
+			addSystemLog(requestIP, user, "compressDocPrepare", "compressDocPrepare", "压缩文件", task.id, "成功", repos, zipDoc, null, task.info);
+			deleteDelayTime = 60L;	//成功1分钟后清理tmp
+		}
+		catch(Exception e)
+		{
+			Log.info("executeCompressPrepareTask() 异常");
+			Log.info(e);
+			task.status = 3;
+			task.info = "压缩异常:" + e.getMessage();
+			addSystemLog(requestIP, user, "compressDocPrepare", "compressDocPrepare", "压缩文件", task.id, "失败", repos, zipDoc, null, task.info);
+		}
+
+		addDelayTaskForCompressExtractTaskDelete(task, deleteDelayTime, tmpParentPath);
+	}
+
+	//延时清理压缩/解压任务与tmp目录
+	public void addDelayTaskForCompressExtractTaskDelete(CompressExtractTask task, Long deleteDelayTime, String tmpPath)
+	{
+		if(deleteDelayTime == null)
+		{
+			return;
+		}
+		Log.info("addDelayTaskForCompressExtractTaskDelete delayTime:" + deleteDelayTime + " 秒");
+
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+		executor.schedule(
+				new Runnable() {
+					String taskId = task.id;
+					String tmpDir = tmpPath;
+					@Override
+					public void run() {
+						try {
+							Log.info("******** CompressExtractTaskDeleteDelayTask [" + taskId + "] *****");
+							if(tmpDir != null && tmpDir.isEmpty() == false)
+							{
+								FileUtil.delDir(tmpDir);
+							}
+							compressExtractTaskHashMap.remove(taskId);
+						} catch(Exception e) {
+							Log.info("******** CompressExtractTaskDeleteDelayTask [" + taskId + "] 异常");
+							Log.info(e);
+						}
+					}
+				},
+				deleteDelayTime,
+				TimeUnit.SECONDS);
+	}
+
 	public void addDelayTaskForCompressFileDelete(String targetPath, String targetName, Long deleteDelayTime) {
 		if(deleteDelayTime == null)
 		{
-			Log.info("addDelayTaskForCompressFileDelete delayTime is null");			
+			Log.info("addDelayTaskForCompressFileDelete delayTime is null");
 			return;
 		}
 		Log.info("addDelayTaskForCompressFileDelete delayTime:" + deleteDelayTime + " 秒后开始删除！" );		
@@ -24543,17 +25279,19 @@ public class BaseController  extends BaseFunction{
 				
 				gFolderUploadActionHashMap.put(actionId, action);		
 				
-				action.info = "上传目录 [" + doc.getPath() + doc.getName() + "]";
-				DocLock docLock = lockDoc(doc, action.docLockType,  2*60*60*1000, accessUser, rt, false, action.info, EVENT.folderUpload);
-				if(docLock == null)
-				{
-					action.isCriticalError = true;
-					action.errorInfo = rt.getMsgInfo();
-					action.stopFlag = true;
-					action.stopTime = new Date().getTime();
-				}
-				
+			action.info = "上传目录 [" + doc.getPath() + doc.getName() + "]";
+			DocLock docLock = lockDoc(doc, action.docLockType,  2*60*60*1000, accessUser, rt, false, action.info, EVENT.folderUpload);
+			if(docLock == null)
+			{
+				action.isCriticalError = true;
+				action.errorInfo = rt.getMsgInfo();
+				action.stopFlag = true;
+				action.stopTime = new Date().getTime();
+			}
+			else
+			{
 				action.commitId = generateCommitId(repos, doc, docLock.createTime[action.docLockType]);
+			}
 				
 				//this thread is also responsible for delete action
 				startFolderUploadActionBeatCheckThread(action);

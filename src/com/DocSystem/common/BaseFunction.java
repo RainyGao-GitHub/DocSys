@@ -72,6 +72,7 @@ import com.DocSystem.common.entity.AuthCode;
 import com.DocSystem.common.entity.AutoTaskConfig;
 import com.DocSystem.common.entity.BackupConfig;
 import com.DocSystem.common.entity.BackupTask;
+import com.DocSystem.common.entity.CompressExtractTask;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.EncryptConfig;
 import com.DocSystem.common.entity.FtpConfig;
@@ -216,6 +217,9 @@ public class BaseFunction{
 
 	//目录下载压缩任务HashMap: 下载任务只会在用户登录的服务器上创建，因此不需要考虑集群
 	protected static ConcurrentHashMap<String, DownloadPrepareTask> downloadPrepareTaskHashMap = new ConcurrentHashMap<String, DownloadPrepareTask>();
+
+	//在线压缩与解压任务HashMap: 任务只会在用户登录的服务器上创建，因此不需要考虑集群
+	protected static ConcurrentHashMap<String, CompressExtractTask> compressExtractTaskHashMap = new ConcurrentHashMap<String, CompressExtractTask>();
 
 	//仓库全量备份任务HashMap: 全量备份任务只会在用户登录的服务器上创建，因此不需要考虑集群
 	protected static ConcurrentHashMap<String, ReposFullBackupTask> reposFullBackupTaskHashMap = new ConcurrentHashMap<String, ReposFullBackupTask>();

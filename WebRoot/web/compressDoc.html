@@ -1,0 +1,95 @@
+<div id="dialog-compress-doc" class="form-horizontal">
+	<div class="form-group">
+		<label class="col-sm-3 control-label">存储位置</label>
+		<div class="col-sm-8" style="padding-right:0;">
+			<input type="text" name="targetPath" class="form-control" maxlength="400" placeholder="仓库内目录路径">
+		</div>
+		<div class="col-sm-1">
+			<button id="btnCompressFileSelector" class="btn btn-default" type="button" onclick="CompressExtract.openCompressFileSelector()">...</button>
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-sm-3 control-label">压缩包名</label>
+		<div class="col-sm-9">
+			<input type="text" name="targetName" class="form-control" maxlength="200" placeholder="xxx.zip">
+		</div>
+	</div>
+	<div class="form-group" style="margin-left:20px; margin-right:20px; color:#999; font-size:12px;">
+		<span>提示：压缩类型为 zip；压缩包将保存到存储位置，同名压缩包会被询问是否覆盖。</span>
+	</div>
+	<div class="modal-footer">
+		<div class="form-group">
+			<div class="col-sm-12 text-right">
+				<button type="button" class="btn btnPrimary" onclick="CompressExtract.doCompressDoc();" style="width: 100px;height: 42px;">确定</button>
+				<button type="button" class="btn btnPrimary" onclick="CompressExtract.closeCompressDocDialog();" style="width: 100px;height: 42px;">取消</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript" src="js/CompressExtract.js"></script>
+<script type="text/javascript">
+	//压缩对话框上下文（打开时由 CompressExtract.openCompressDialog 写入 _ceCompressContext）
+	var _ceCompressContext = null;
+
+	CompressExtract.compressDocPageInit = function(context)
+	{
+		_ceCompressContext = context;
+		$("#dialog-compress-doc input[name='targetPath']").val(context.targetPath || "/");
+		$("#dialog-compress-doc input[name='targetName']").val(context.targetName || "");
+	};
+
+	CompressExtract.openCompressFileSelector = function()
+	{
+		var config = {
+			storageType : "repos",
+			reposId : _ceCompressContext.reposId,
+			doc : _ceCompressContext.doc || null,
+			onSelect : function(node){
+				var path = (node && node.path) || "";
+				if(node && node.name)
+				{
+					path += node.name + "/";
+				}
+				if(path == "")
+				{
+					path = "/";
+				}
+				$("#dialog-compress-doc input[name='targetPath']").val(path);
+			},
+		};
+		CompressExtract.showFileSelectorInBootstrapDialog(config);
+	};
+
+	CompressExtract.doCompressDoc = function()
+	{
+		if(!_ceCompressContext)
+		{
+			return;
+		}
+		var targetPath = $.trim($("#dialog-compress-doc input[name='targetPath']").val()) || "/";
+		var targetName = $.trim($("#dialog-compress-doc input[name='targetName']").val());
+		if(targetName == "")
+		{
+			qiao.bs.msg({msg : _Lang("请输入压缩包名"), type : "warning", time : 2000});
+			return;
+		}
+		CompressExtract.closeCompressDocDialog();
+
+		var ctx = _ceCompressContext;
+		_ceCompressContext = null;
+		CompressExtract.compressDocs({
+			reposId : ctx.reposId,
+			docList : ctx.docList,
+			targetPath : targetPath,
+			targetName : targetName,
+			title : _Lang("压缩") + " " + targetName,
+			onDone : ctx.onDone,
+		});
+	};
+
+	CompressExtract.closeCompressDocDialog = function()
+	{
+		closeBootstrapDialog("compressDoc");
+	};
+</script>

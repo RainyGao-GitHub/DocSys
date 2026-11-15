@@ -46,6 +46,7 @@ import com.DocSystem.common.VersionIgnoreConfig;
 import com.DocSystem.common.constants;
 import com.DocSystem.common.CommonAction.Action;
 import com.DocSystem.common.CommonAction.CommonAction;
+import com.DocSystem.common.entity.CompressExtractTask;
 import com.DocSystem.common.entity.DownloadPrepareTask;
 import com.DocSystem.common.entity.LargeFileScanTask;
 import com.DocSystem.common.entity.RemoteStorageConfig;
@@ -2921,6 +2922,407 @@ public class DocController extends BaseController{
 	
 	private DownloadPrepareTask getDownloadPrepareTaskById(String taskId) {
 		return downloadPrepareTaskHashMap.get(taskId);
+	}
+
+	/**************** 在线压缩与解压（extractDocPrepare / compressDocPrepare / queryCompressExtractTask） ******************/
+
+	/**************** extractDocPrepare ******************/
+	//targetPath: 仓库内目标目录（空或"/"=仓库根）
+	//targetName: 目标子目录名（空=条目直接散到targetPath，即zipViewer的"提取到当前位置"）
+	//entryList:  zip内条目相对路径JSON数组（空=全部提取；目录条目按前缀匹配整个子树）
+	//overwriteFlag: 0=有冲突返回conflict由前端确认 1=直接覆盖
+	//返回: msgData=5+data=task 轮询 | msgData="conflict"+data=冲突清单 | error
+	@RequestMapping("/extractDocPrepare.do")
+	public void extractDocPrepare(
+			String taskId,
+			Integer reposId, Long docId, Long pid, String path, String name, Integer level, Integer type,
+			String targetPath,
+			String targetName,
+			String entryList,
+			Integer overwriteFlag,
+			Integer shareId,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	{
+		Log.infoHead("************** extractDocPrepare [" + path + name + "] ****************");
+		Log.info("extractDocPrepare reposId:" + reposId + " docId:" + docId + " path:" + path + " name:" + name
+				+ " targetPath:" + targetPath + " targetName:" + targetName + " entryList:" + entryList
+				+ " overwriteFlag:" + overwriteFlag + " shareId:" + shareId);
+
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+
+		//分享页第一版不开放（分享场景无写权限语义）
+		if(shareId != null)
+		{
+			rt.setError("分享页不支持该操作");
+			writeJson(rt, response);
+			return;
+		}
+
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, path, name, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		User accessUser = reposAccess.getAccessUser();
+
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
+
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+
+		Doc doc = buildBasicDoc(reposId, docId, pid, reposPath, path, name, level, type, true, localRootPath, localVRootPath, null, null);
+
+		//压缩文件检查
+		if(FileUtil.getCompressFileType(name) == null)
+		{
+			rt.setError(name + " 不是压缩文件");
+			writeJson(rt, response);
+			return;
+		}
+
+		//隐藏/系统文件检查
+		if(checkHiddenFileAccess(repos, doc, rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, accessUser, "extractDocPrepare", "extractDocPrepare", "解压文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		//下载权限（读取压缩文件内容的权限）
+		if(checkUserDownloadRight(repos, accessUser.getId(), doc, reposAccess.getAuthMask(), rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, accessUser, "extractDocPrepare", "extractDocPrepare", "解压文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		if(checkUserAccessPwd(repos, doc, session, rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, accessUser, "extractDocPrepare", "extractDocPrepare", "解压文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		//目标路径与子目录名校验
+		targetPath = normalizeReposTargetPath(targetPath);
+		if(targetName != null && targetName.isEmpty() == false)
+		{
+			targetName = targetName.trim();
+			if(isValidTargetEntryName(targetName, rt) == false)
+			{
+				writeJson(rt, response);
+				return;
+			}
+		}
+		else
+		{
+			targetName = "";
+		}
+
+		//目标目录新增权限
+		if(checkTargetDirAddRight(repos, accessUser, reposAccess.getAuthMask(), targetPath, rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, accessUser, "extractDocPrepare", "extractDocPrepare", "解压文件", taskId, "失败", repos, doc, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		//entryList解析与校验（zip内相对路径，防逃逸）
+		List<String> entryNameList = null;
+		if(entryList != null && entryList.isEmpty() == false)
+		{
+			entryNameList = new ArrayList<String>();
+			try
+			{
+				JSONArray list = JSON.parseArray(entryList);
+				for(int i=0; i<list.size(); i++)
+				{
+					String entry = list.getString(i);
+					if(entry == null || entry.isEmpty())
+					{
+						continue;
+					}
+					if(isValidZipEntryName(entry) == false)
+					{
+						rt.setError("非法的条目路径:" + entry);
+						writeJson(rt, response);
+						return;
+					}
+					entryNameList.add(entry);
+				}
+			}
+			catch(Exception e)
+			{
+				rt.setError("entryList参数格式错误");
+				writeJson(rt, response);
+				return;
+			}
+			if(entryNameList.isEmpty())
+			{
+				entryNameList = null;
+			}
+		}
+
+		//非FSM（文件服务器前置）仓库：先把压缩文件拉到本地
+		if(isFSM(repos) == false && channel != null)
+		{
+			channel.remoteServerCheckOut(repos, doc, null, null, null, null, constants.PullType.pullRemoteChangedOrLocalChanged, false, null);
+		}
+
+		//冲突预检
+		if(overwriteFlag == null || overwriteFlag == 0)
+		{
+			Doc plainZipDoc = decryptRootZipDoc(repos, doc);	//加密仓库用明文副本预检
+			String plainZipFilePath = plainZipDoc.getLocalRootPath() + plainZipDoc.getPath() + plainZipDoc.getName();
+			//预检依赖任务字段，这里用一个临时任务对象承载参数
+			CompressExtractTask precheckTask = new CompressExtractTask();
+			precheckTask.targetPath = targetPath;
+			precheckTask.targetName = targetName;
+			precheckTask.entryList = entryNameList;
+			List<String> conflictNames = getExtractConflictNames(repos, precheckTask, plainZipFilePath);
+			if(conflictNames != null && conflictNames.isEmpty() == false)
+			{
+				JSONObject data = new JSONObject();
+				data.put("count", conflictNames.size());
+				data.put("names", conflictNames);
+				rt.setData(data);
+				rt.setMsgData("conflict");
+				writeJson(rt, response);
+				return;
+			}
+		}
+
+		//创建异步任务
+		CompressExtractTask task = createCompressExtractTask(CompressExtractTask.type_extract, repos, doc, reposAccess, rt);
+		if(task == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		task.srcPath = path;
+		task.srcName = name;
+		task.targetPath = targetPath;
+		task.targetName = targetName;
+		task.entryList = entryNameList;
+		task.overwriteFlag = (overwriteFlag == null) ? 0 : overwriteFlag;
+
+		rt.setData(task);
+		rt.setMsgData(5);	//任务执行中，前端轮询
+		writeJson(rt, response);
+
+		String requestIP = getRequestIpAddress(request);
+		new Thread(new Runnable() {
+			CompressExtractTask asyncTask = task;
+			public void run() {
+				Log.debug("extractDocPrepare() executeExtractPrepareTask in new thread");
+				executeExtractPrepareTask(asyncTask, requestIP);
+			}
+		}).start();
+	}
+
+	/**************** compressDocPrepare ******************/
+	//docList: 打包下载同构的JSON [{path,name,type,level}]
+	//targetPath: 仓库内目标目录；targetName: zip名（后端兜底补.zip后缀）
+	//返回: msgData=5+data=task 轮询 | msgData="conflict" | error
+	@RequestMapping("/compressDocPrepare.do")
+	public void compressDocPrepare(
+			String taskId,
+			Integer reposId,
+			String docList,
+			String targetPath,
+			String targetName,
+			Integer overwriteFlag,
+			Integer shareId,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	{
+		Log.infoHead("************** compressDocPrepare ****************");
+		Log.info("compressDocPrepare reposId:" + reposId + " docList:" + docList + " targetPath:" + targetPath
+				+ " targetName:" + targetName + " overwriteFlag:" + overwriteFlag + " shareId:" + shareId);
+
+		ReturnAjax rt = new ReturnAjax(new Date().getTime());
+
+		//分享页第一版不开放
+		if(shareId != null)
+		{
+			rt.setError("分享页不支持该操作");
+			writeJson(rt, response);
+			return;
+		}
+
+		if(docList == null || docList.isEmpty())
+		{
+			rt.setError("请选择要压缩的文件");
+			writeJson(rt, response);
+			return;
+		}
+
+		ReposAccess reposAccess = checkAndGetAccessInfo(null, session, request, response, reposId, null, null, true, rt);
+		if(reposAccess == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		User accessUser = reposAccess.getAccessUser();
+
+		Repos repos = getReposEx(reposId);
+		if(!reposCheck(repos, rt, response))
+		{
+			return;
+		}
+
+		//逐个检查下载权限/隐藏文件/访问密码（与打包下载一致）
+		List<Doc> subDocList = getDocListFromDownloadList(repos, docList);
+		if(subDocList == null || subDocList.isEmpty())
+		{
+			rt.setError("文件列表为空");
+			writeJson(rt, response);
+			return;
+		}
+		for(Doc subDoc: subDocList)
+		{
+			if(checkHiddenFileAccess(repos, subDoc, rt) == false)
+			{
+				writeJson(rt, response);
+				addSystemLog(request, accessUser, "compressDocPrepare", "compressDocPrepare", "压缩文件", taskId, "失败", repos, subDoc, null, buildSystemLogDetailContent(rt));
+				return;
+			}
+
+			if(checkUserDownloadRight(repos, accessUser.getId(), subDoc, reposAccess.getAuthMask(), rt) == false)
+			{
+				writeJson(rt, response);
+				addSystemLog(request, accessUser, "compressDocPrepare", "compressDocPrepare", "压缩文件", taskId, "失败", repos, subDoc, null, buildSystemLogDetailContent(rt));
+				return;
+			}
+
+			if(checkUserAccessPwd(repos, subDoc, session, rt) == false)
+			{
+				writeJson(rt, response);
+				addSystemLog(request, accessUser, "compressDocPrepare", "compressDocPrepare", "压缩文件", taskId, "失败", repos, subDoc, null, buildSystemLogDetailContent(rt));
+				return;
+			}
+		}
+
+		//目标路径与zip名校验
+		targetPath = normalizeReposTargetPath(targetPath);
+		if(isValidTargetEntryName(targetName, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		targetName = targetName.trim();
+		if(targetName.toLowerCase().endsWith(".zip") == false)
+		{
+			targetName = targetName + ".zip";
+		}
+
+		//目标目录新增权限
+		if(checkTargetDirAddRight(repos, accessUser, reposAccess.getAuthMask(), targetPath, rt) == false)
+		{
+			writeJson(rt, response);
+			addSystemLog(request, accessUser, "compressDocPrepare", "compressDocPrepare", "压缩文件", taskId, "失败", repos, null, null, buildSystemLogDetailContent(rt));
+			return;
+		}
+
+		//冲突预检：目标zip已存在
+		if(overwriteFlag == null || overwriteFlag == 0)
+		{
+			String localRootPath = Path.getReposRealPath(repos);
+			File targetZipFile = new File(getLocalPathForReposTargetPath(localRootPath, targetPath), targetName);
+			if(targetZipFile.exists())
+			{
+				List<String> conflictNames = new ArrayList<String>();
+				conflictNames.add(targetName);
+				JSONObject data = new JSONObject();
+				data.put("count", 1);
+				data.put("names", conflictNames);
+				rt.setData(data);
+				rt.setMsgData("conflict");
+				writeJson(rt, response);
+				return;
+			}
+		}
+
+		//创建异步任务（doc为虚拟doc，仅承载目标路径与zip名）
+		String reposPath = Path.getReposPath(repos);
+		String localRootPath = Path.getReposRealPath(repos);
+		String localVRootPath = Path.getReposVirtualPath(repos);
+		String docPath = targetPath.equals("/") ? "" : targetPath;
+		Doc zipDoc = buildBasicDoc(reposId, null, null, reposPath, docPath, targetName, null, 1, true, localRootPath, localVRootPath, 0L, "");
+
+		CompressExtractTask task = createCompressExtractTask(CompressExtractTask.type_compress, repos, zipDoc, reposAccess, rt);
+		if(task == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+		task.docList = subDocList;
+		task.targetPath = targetPath;
+		task.targetName = targetName;
+		task.overwriteFlag = (overwriteFlag == null) ? 0 : overwriteFlag;
+
+		rt.setData(task);
+		rt.setMsgData(5);
+		writeJson(rt, response);
+
+		String requestIP = getRequestIpAddress(request);
+		new Thread(new Runnable() {
+			CompressExtractTask asyncTask = task;
+			public void run() {
+				Log.debug("compressDocPrepare() executeCompressPrepareTask in new thread");
+				executeCompressPrepareTask(asyncTask, requestIP);
+			}
+		}).start();
+	}
+
+	/**************** queryCompressExtractTask ******************/
+	//返回: msgData=5+data=task 执行中 | status=ok+data={targetPath,targetName} 完成 | error 失败
+	@RequestMapping("/queryCompressExtractTask.do")
+	public void queryCompressExtractTask(
+			String taskId,
+			HttpServletResponse response,HttpServletRequest request,HttpSession session)
+	{
+		Log.infoHead("************** queryCompressExtractTask.do ****************");
+		Log.info("queryCompressExtractTask taskId:" + taskId);
+
+		ReturnAjax rt = new ReturnAjax();
+		CompressExtractTask task = compressExtractTaskHashMap.get(taskId);
+		if(task == null)
+		{
+			//可能任务已被取消或超时删除
+			rt.setError("任务 " + taskId + " 不存在或已过期");
+			writeJson(rt, response);
+			return;
+		}
+
+		switch(task.status)
+		{
+		case 1:	//执行中
+			rt.setData(task);
+			rt.setMsgData(5);
+			break;
+		case 2:	//成功
+			JSONObject data = new JSONObject();
+			data.put("targetPath", task.resultTargetPath);
+			data.put("targetName", task.resultTargetName);
+			rt.setData(data);
+			//任务信息已被前端取走，直接删除（tmp目录由延时任务清理）
+			compressExtractTaskHashMap.remove(task.id);
+			break;
+		case 3:	//失败
+			rt.setError(task.info);
+			break;
+		default:
+			rt.setError("未知任务状态");
+			break;
+		}
+
+		writeJson(rt, response);
 	}
 
 	/**************** download Doc ******************/

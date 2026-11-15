@@ -34,6 +34,7 @@
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/base64.js"></script>
     <script type="text/javascript" src="js/DocSys.js"></script>
+    <script type="text/javascript" src="js/CompressExtract.js"></script>
 
 
 	<!-- contextMenu -->
@@ -284,10 +285,28 @@
 	  		getDocFileLink(curRightClickedTreeNode, doDownloadDoc, showErrorMessage, "REST"); //要求获取RESTFUL风格的fileLink
 	  	}
 	  	
+	  	function zipExtractDocHere()
+	  	{
+	  		console.log("zipExtractDocHere:", curRightClickedTreeNode);
+	  		if(curRightClickedTreeNode && curRightClickedTreeNode != null)
+	  		{
+	  			CompressExtract.extractZipEntry(curRightClickedTreeNode, "here");
+	  		}
+	  	}
+
+	  	function zipExtractDocTo()
+	  	{
+	  		console.log("zipExtractDocTo:", curRightClickedTreeNode);
+	  		if(curRightClickedTreeNode && curRightClickedTreeNode != null)
+	  		{
+	  			CompressExtract.extractZipEntry(curRightClickedTreeNode, "dialog");
+	  		}
+	  	}
+
 	  	function zipShowDocDetail()
 	  	{
 	  		console.log("zipShowDocDetail:", curRightClickedTreeNode);
-	  		showDocDetail(curRightClickedTreeNode); 		
+	  		showDocDetail(curRightClickedTreeNode);
 	  	}
 		   	
 		function doDownloadDoc(fileLink)
@@ -328,6 +347,17 @@
 				{text: '下载', action: function(e){
 							e.preventDefault();
 							zipDownloadDoc();
+						}
+				},
+				{divider: true},
+				{text: '提取到当前位置', action: function(e){
+							e.preventDefault();
+							zipExtractDocHere();
+						}
+				},
+				{text: '提取到...', action: function(e){
+							e.preventDefault();
+							zipExtractDocTo();
 						}
 				},
 				{divider: true},

@@ -29,6 +29,7 @@
 
 ## 当前任务
 
+- **在线压缩与解压功能（提取 / 添加到压缩包）——开发完成，待用户真机回归**（2026-11-15 开工 session 完成 P0+P1 全部开发与三层验证）。工作卡 `DevAgentControl/CURRENT_STATE_在线压缩与解压.md`（进展/接口协议/验证记录/遗留项都在卡内）。已完成：后端三接口（extractDocPrepare/compressDocPrepare/queryCompressExtractTask + CompressExtractTask + FolderUploadAction 批次导入通道）自测 38 项全过（含 Zip Slip/加密仓库/一次版本提交）；前端 project.js 右键菜单 + 两对话框 + 冲突弹窗浏览器 E2E 全过；zipViewer 三变体右键提取 + 父页刷新全过。**剩余：§8 真机回归中用户参与项（只读用户浏览器实测/分享页菜单不显示/GBK 工具打包 zip/1000+ 大文件），用户验证后归档**。提交：主仓库 devInt（见 git log）。顺带修复既有缺陷：checkAndCreateFolderUploadAction 锁失败 NPE。
 - **Office 无法打开/保存文件逐个分析**（2026-11-07 用户指定继续）——方法论与环境速查见 **`DevAgentControl/OFFICE文件排查方法与经验总结.md`**（标准流程 DiagTiming→堆栈→x2t 交叉验证→精准修复；已修复清单；十大坑）。工作卡式文件：本方法文档 + 下方各历史卡。
   - 2026-11-11 完成一例：**2020年度企业基础信息表.doc**（MHT 假扩展名）——税局网站生成的 MHT（`Multipart/related` 首字母大写）挂 .doc 名；detectActualFormat 只认 PK↔OLE2 放行 → OLE2 读取失败。修复 = OfficeBase.detectActualFormat 加 MHT 分支 + isMultiPartsHtmlFormatFile 大小写不敏感化（C++ x2t 同样漏检，属上层增强，同 Word 23 假扩展名先例）。**第二轮（用户实测反馈 MIME 头入正文+表格窄竖条后同日完成）**：第三处大小写坑在 CHtmlFile2_Private.mhtXhtml（误走 htmlXhtml 兜底）+ tblW 硬编码 pct（改绝对宽度写 dxa 同 tcW 模式）；E2E：MIME 残留=false、tblW=6600 dxa；用户实测 MIME 已解决。**遗留：Eclipse touch 三文件（OfficeBase/COfficeFileFormatChecker/CHtmlFile2_Private）+ 重启 dev + 浏览器实测 + 提交（websocket/office/test 三仓库）**。详见方法文档 §一/§三/§五。
   - **衍生卡（已收尾归档 2026-11-12，用户实测"效果非常好"）**：`DevAgentControl/已完成/CURRENT_STATE_MHT格式打开与Word本地打开不一致.md` —— MHT 打开 vs Word 视觉差异四轮修复（表格层：边框/宽度/tblW；文本层：字号×2/align→jc 桥接/字体名/line=0）。可复用结论：渲染器可信裁定 + word.docx 经同一 bin 链做参照断言；官方溯源见方法文档 §五.3。提交：office 仓库 ff8324328/935056db4（用户）。

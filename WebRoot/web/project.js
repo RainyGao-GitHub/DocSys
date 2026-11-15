@@ -225,6 +225,27 @@ function getSelectedNodes()
 	return treeNodes;
 }
 
+//在线压缩与解压右键菜单显隐：提取=压缩文件且非分享页；压缩=有选中节点且非分享页
+function updateCompressExtractMenuDisplay()
+{
+	var showExtract = false;
+	var showCompress = false;
+	if(!gShareId)
+	{
+		if(CompressExtract.isCompressDoc(curRightClickedTreeNode))
+		{
+			showExtract = true;
+		}
+		var nodes = getSelectedNodes();
+		if(nodes && nodes.length > 0)
+		{
+			showCompress = true;
+		}
+	}
+	$('.dropdown-context li.menu-extract-doc').toggle(showExtract);
+	$('.dropdown-context li.menu-compress-doc').toggle(showCompress);
+}
+
 /**
  * Agent 上下文对象（点 AI 图标时自动「@」的对象）—— 供 Agent 页（同源 iframe）直取
  *
@@ -5468,6 +5489,55 @@ function contextMenuInit()
 					downloadDoc(treeNodes,true,1,true);
 				}
 		},
+		//在线压缩与解压：提取到同名子目录（方案B）/ 提取到...；仅压缩文件右键显示（显示逻辑见 updateCompressExtractMenuVisibility）
+		{text: _Lang('提取到同名目录'), cssClass: 'menu-extract-doc', action: function(e){
+					e.preventDefault();
+					CompressExtract.extractDocMenuAction(curRightClickedTreeNode);
+				}
+		},
+		{text: _Lang('提取到') + '...', cssClass: 'menu-extract-doc', action: function(e){
+					e.preventDefault();
+					var node = curRightClickedTreeNode;
+					if(node && CompressExtract.isCompressDoc(node))
+					{
+						CompressExtract.openExtractDialog({
+							reposId : gReposInfo.id,
+							path : node.path,
+							name : node.name,
+						}, {
+							targetPath : CompressExtract.getDirPath(node),
+							targetName : CompressExtract.getZipBaseName(node.name),
+							doc : node,
+						});
+					}
+				}
+		},
+		//添加到压缩包：直接压缩（包名=虚拟名规则）/ 弹窗指定位置与包名
+		{text: _Lang('快速压缩'), cssClass: 'menu-compress-doc', action: function(e){
+					e.preventDefault();
+					CompressExtract.compressDocsMenuAction(getSelectedNodes());
+				}
+		},
+		{text: _Lang('添加到压缩包') + '...', cssClass: 'menu-compress-doc', action: function(e){
+					e.preventDefault();
+					var treeNodes = getSelectedNodes();
+					if(treeNodes && treeNodes.length > 0)
+					{
+						var docList = [];
+						for(var i = 0; i < treeNodes.length; i++)
+						{
+							docList.push({path: treeNodes[i].path, name: treeNodes[i].name, type: (treeNodes[i].isParent === true ? 2 : 1)});
+						}
+						CompressExtract.openCompressDialog({
+							reposId : gReposInfo.id,
+							docList : docList,
+							targetPath : CompressExtract.getDirPath(treeNodes[0]),
+							targetName : CompressExtract.buildVirtualName(treeNodes) + ".zip",
+							doc : treeNodes[0],
+						});
+					}
+				}
+		},
 		{text: _Lang('打印'), action: function(e){
 					e.preventDefault();
 					var treeNodes = getSelectedNodes();
@@ -6620,6 +6690,7 @@ function contextMenuInit()
 
 	$(document).on('contextmenu', '#tree', function(){
 		updateSaveAsMenuDisplay(curRightClickedTreeNode);
+		updateCompressExtractMenuDisplay();
 	});
 
 	$(document).on('contextmenu', '#docPreview', function(){

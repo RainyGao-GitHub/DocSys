@@ -1,0 +1,89 @@
+<div id="dialog-extract-doc" class="form-horizontal">
+	<div class="form-group">
+		<label class="col-sm-3 control-label">Extract To</label>
+		<div class="col-sm-8" style="padding-right:0;">
+			<input type="text" name="targetPath" class="form-control" maxlength="400" placeholder="Target directory path in repos">
+		</div>
+		<div class="col-sm-1">
+			<button id="btnExtractFileSelector" class="btn btn-default" type="button" onclick="CompressExtract.openExtractFileSelector()">...</button>
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-sm-3 control-label">Sub Folder</label>
+		<div class="col-sm-9">
+			<input type="text" name="targetName" class="form-control" maxlength="200" placeholder="Leave blank to extract directly to the target location">
+		</div>
+	</div>
+	<div class="form-group" style="margin-left:20px; margin-right:20px; color:#999; font-size:12px;">
+		<span>Tip: By default it will be extracted into a sub folder named after the archive to keep files organized; leave the sub folder blank to extract with the original structure directly to the target location.</span>
+	</div>
+	<div class="modal-footer">
+		<div class="form-group">
+			<div class="col-sm-12 text-right">
+				<button type="button" class="btn btnPrimary" onclick="CompressExtract.doExtractDoc();" style="width: 100px;height: 42px;">OK</button>
+				<button type="button" class="btn btnPrimary" onclick="CompressExtract.closeExtractDocDialog();" style="width: 100px;height: 42px;">Cancel</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript" src="js/CompressExtract.js"></script>
+<script type="text/javascript">
+	var _ceExtractContext = null;
+
+	CompressExtract.extractDocPageInit = function(context)
+	{
+		_ceExtractContext = context;
+		$("#dialog-extract-doc input[name='targetPath']").val(context.targetPath || "/");
+		$("#dialog-extract-doc input[name='targetName']").val(context.targetName || "");
+	};
+
+	CompressExtract.openExtractFileSelector = function()
+	{
+		var config = {
+			storageType : "repos",
+			reposId : _ceExtractContext.zipInfo.reposId,
+			doc : _ceExtractContext.doc || null,
+			onSelect : function(node){
+				var path = (node && node.path) || "";
+				if(node && node.name)
+				{
+					path += node.name + "/";
+				}
+				if(path == "")
+				{
+					path = "/";
+				}
+				$("#dialog-extract-doc input[name='targetPath']").val(path);
+			},
+		};
+		CompressExtract.showFileSelectorInBootstrapDialog(config);
+	};
+
+	CompressExtract.doExtractDoc = function()
+	{
+		if(!_ceExtractContext)
+		{
+			return;
+		}
+		var targetPath = $.trim($("#dialog-extract-doc input[name='targetPath']").val()) || "/";
+		var targetName = $.trim($("#dialog-extract-doc input[name='targetName']").val());
+		CompressExtract.closeExtractDocDialog();
+
+		var ctx = _ceExtractContext;
+		_ceExtractContext = null;
+		CompressExtract.extractZipDoc(ctx.zipInfo, {
+			targetPath : targetPath,
+			targetName : targetName,
+			entryList : ctx.entryList,
+			shareId : ctx.shareId,
+			title : _Lang("提取") + " " + ctx.zipInfo.name,
+			onDone : ctx.onDone,
+		});
+	};
+
+	CompressExtract.closeExtractDocDialog = function()
+	{
+		closeBootstrapDialog("extractDoc");
+	};
+</script>
