@@ -5483,61 +5483,6 @@ function contextMenuInit()
 					downloadDoc(treeNodes,true,1);
 				}
 		},
-		{text: _Lang('打包下载'), action: function(e){
-					e.preventDefault();
-					var treeNodes = getSelectedNodes();
-					downloadDoc(treeNodes,true,1,true);
-				}
-		},
-		//在线压缩与解压：提取到同名子目录（方案B）/ 提取到...；仅压缩文件右键显示（显示逻辑见 updateCompressExtractMenuVisibility）
-		{text: _Lang('提取到同名目录'), cssClass: 'menu-extract-doc', action: function(e){
-					e.preventDefault();
-					CompressExtract.extractDocMenuAction(curRightClickedTreeNode);
-				}
-		},
-		{text: _Lang('提取到') + '...', cssClass: 'menu-extract-doc', action: function(e){
-					e.preventDefault();
-					var node = curRightClickedTreeNode;
-					if(node && CompressExtract.isCompressDoc(node))
-					{
-						CompressExtract.openExtractDialog({
-							reposId : gReposInfo.id,
-							path : node.path,
-							name : node.name,
-						}, {
-							targetPath : CompressExtract.getDirPath(node),
-							targetName : CompressExtract.getZipBaseName(node.name),
-							doc : node,
-						});
-					}
-				}
-		},
-		//添加到压缩包：直接压缩（包名=虚拟名规则）/ 弹窗指定位置与包名
-		{text: _Lang('快速压缩'), cssClass: 'menu-compress-doc', action: function(e){
-					e.preventDefault();
-					CompressExtract.compressDocsMenuAction(getSelectedNodes());
-				}
-		},
-		{text: _Lang('添加到压缩包') + '...', cssClass: 'menu-compress-doc', action: function(e){
-					e.preventDefault();
-					var treeNodes = getSelectedNodes();
-					if(treeNodes && treeNodes.length > 0)
-					{
-						var docList = [];
-						for(var i = 0; i < treeNodes.length; i++)
-						{
-							docList.push({path: treeNodes[i].path, name: treeNodes[i].name, type: (treeNodes[i].isParent === true ? 2 : 1)});
-						}
-						CompressExtract.openCompressDialog({
-							reposId : gReposInfo.id,
-							docList : docList,
-							targetPath : CompressExtract.getDirPath(treeNodes[0]),
-							targetName : CompressExtract.buildVirtualName(treeNodes) + ".zip",
-							doc : treeNodes[0],
-						});
-					}
-				}
-		},
 		{text: _Lang('打印'), action: function(e){
 					e.preventDefault();
 					var treeNodes = getSelectedNodes();
@@ -5632,6 +5577,63 @@ function contextMenuInit()
 		{text: _Lang('对比'), action: function(e){
 					e.preventDefault();
 					compareSelectedDocs();
+				}
+		},
+		{divider: true},
+		//打包下载与在线压缩解压（非高频操作，收纳于回收站前）
+		{text: _Lang('打包下载'), action: function(e){
+					e.preventDefault();
+					var treeNodes = getSelectedNodes();
+					downloadDoc(treeNodes,true,1,true);
+				}
+		},
+		//解压缩：直接解压到 zip所在目录/包名/（方案B）；提取到...：弹窗指定；仅压缩文件右键显示（显示逻辑见 updateCompressExtractMenuDisplay）
+		{text: _Lang('解压缩'), cssClass: 'menu-extract-doc', action: function(e){
+					e.preventDefault();
+					CompressExtract.extractDocMenuAction(curRightClickedTreeNode);
+				}
+		},
+		{text: _Lang('提取到') + '...', cssClass: 'menu-extract-doc', action: function(e){
+					e.preventDefault();
+					var node = curRightClickedTreeNode;
+					if(node && CompressExtract.isCompressDoc(node))
+					{
+						CompressExtract.openExtractDialog({
+							reposId : gReposInfo.id,
+							path : node.path,
+							name : node.name,
+						}, {
+							targetPath : CompressExtract.getDirPath(node),
+							targetName : CompressExtract.getZipBaseName(node.name),
+							doc : node,
+						});
+					}
+				}
+		},
+		//压缩：直接压缩到所在目录（包名=虚拟名规则）；添加到压缩包...：弹窗指定位置与包名
+		{text: _Lang('压缩'), cssClass: 'menu-compress-doc', action: function(e){
+					e.preventDefault();
+					CompressExtract.compressDocsMenuAction(getSelectedNodes());
+				}
+		},
+		{text: _Lang('添加到压缩包') + '...', cssClass: 'menu-compress-doc', action: function(e){
+					e.preventDefault();
+					var treeNodes = getSelectedNodes();
+					if(treeNodes && treeNodes.length > 0)
+					{
+						var docList = [];
+						for(var i = 0; i < treeNodes.length; i++)
+						{
+							docList.push({path: treeNodes[i].path, name: treeNodes[i].name, type: (treeNodes[i].isParent === true ? 2 : 1)});
+						}
+						CompressExtract.openCompressDialog({
+							reposId : gReposInfo.id,
+							docList : docList,
+							targetPath : CompressExtract.getDirPath(treeNodes[0]),
+							targetName : CompressExtract.buildVirtualName(treeNodes) + ".zip",
+							doc : treeNodes[0],
+						});
+					}
 				}
 		},
 		{divider: true},

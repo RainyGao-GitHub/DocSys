@@ -40,6 +40,10 @@
 
 ## 提交记录（主仓库 devInt）
 
+- `【优化】在线压缩与解压菜单交互`（2026-11-15，用户实测反馈后第二轮）：
+  - 菜单改名：提取到同名目录→**解压缩**、快速压缩→**压缩**（en.js 同步：Decompress/Compress）
+  - 菜单重排：**打包下载、解压缩、提取到...、压缩、添加到压缩包...** 五项从"下载"后移到**"回收站"前**，组前后加分割线（高频区只留 下载/打印/分享/全选/复制/剪切/粘贴/删除/重命名/远程存储/文件服务器/查看历史/对比）
+  - project.js ?v=20261115a；浏览器已验证：非 zip 右键隐藏解压缩/提取到...、zip 项存在、分组位置与分割线正确
 - `【新特性】在线压缩与解压`（2026-11-15，开工 session）：
   - 新增 `src/com/DocSystem/common/entity/CompressExtractTask.java`、`WebRoot/web/js/CompressExtract.js`、`WebRoot/web/extractDoc.html/_en`、`WebRoot/web/compressDoc.html/_en`
   - 改 `src/com/DocSystem/common/BaseFunction.java`（+compressExtractTaskHashMap）、`src/com/DocSystem/controller/BaseController.java`（压缩解压执行块 + **既有缺陷修复：checkAndCreateFolderUploadAction lockDoc 失败 NPE**）、`src/com/DocSystem/controller/DocController.java`（三接口）、`src/com/DocSystem/controller/MyInterceptor.java`（白名单+3）

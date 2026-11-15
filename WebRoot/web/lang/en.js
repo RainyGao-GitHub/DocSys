@@ -992,13 +992,12 @@ function lang(str)
 
 		//在线压缩与解压
 		"提取" : "Extract",
-		"提取到同名目录" : "Extract to sub folder",
+		"解压缩" : "Decompress",
 		"提取到" : "Extract to",
 		"提取到当前位置" : "Extract here",
 		"提取位置" : "Extract To",
 		"子目录名" : "Sub Folder",
 		"压缩" : "Compress",
-		"快速压缩" : "Quick Compress",
 		"添加到压缩包" : "Add to Archive",
 		"存储位置" : "Save To",
 		"压缩包名" : "Archive Name",
