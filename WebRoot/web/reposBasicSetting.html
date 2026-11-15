@@ -37,7 +37,12 @@
 			
             <div id="reposStorageConfig" style="margin-top:20px">
             	<label>仓库位置</label>
-				<input class="form-control" type="text" id="repos-path"  value="" style="width: 100%"></input>
+				<div class="input-group">
+					<input class="form-control" type="text" id="repos-path"  value=""/>
+					<span class="input-group-btn">
+						<button class="btn btn-default" type="button" onclick="ReposConfig.selectServerPath('repos-path')">...</button>
+					</span>
+				</div>
                	
                	<label style="margin-top:10px">文件存储位置
                		<span style="margin-left:20px">

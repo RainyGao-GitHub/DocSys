@@ -37,7 +37,12 @@
 			
 	        <div id="reposStorageConfig" style="margin-top:10px">
 				<label>Path</label>
-				<input class="form-control" type="text" id="repos-path"  value="" style="width: 100%" disabled="disabled"/>
+				<div class="input-group">
+					<input class="form-control" type="text" id="repos-path"  value="" disabled="disabled"/>
+					<span class="input-group-btn">
+						<button class="btn btn-default" type="button" onclick="ReposConfig.selectServerPath('repos-path')">...</button>
+					</span>
+				</div>
 			    
 			    <label style="margin-top:10px">Storage Path
 			    	<span style="margin-left:20px">
