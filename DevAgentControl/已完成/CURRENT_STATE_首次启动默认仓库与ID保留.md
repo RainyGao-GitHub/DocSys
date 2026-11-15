@@ -1,9 +1,9 @@
 # CURRENT_STATE_首次启动默认仓库与ID保留（我的桌面/我的下载 + 仓库ID 1-100 系统保留区）
 
-> 状态：**已实施，P0 自测全部通过（2026-11-15 本 session），待用户真机抽验后归档**
+> 状态：**✅ 已收尾归档（2026-11-15）——后端实施 + P0 自测全过 + 用户浏览器实测行为正常（同日）**
 > 需求来源：用户 2026-11-15 提出（原文见 §2）；同日二次确认（仓库1=第三方在线编辑）；§5 裁定已于开工时由用户落定（见 §5 裁定结果）
 > 涉及仓库：主仓库（无 office/websocket 改动；商业版 DocSysBussinessModules 未改动）
-> 实施日期：2026-11-15（本卡 §6 P0-后端 + P0-自测 完成并实测通过）
+> 实施与收尾：2026-11-15 单日完成（功能提交 `43f55a1f9` + 本卡归档提交）；dev 环境已恢复原状（DB MD5 与备份一致）
 
 ## 一句话
 
@@ -51,12 +51,13 @@ Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创�
 2. **dev 部署树 webapps/DocSystem/WEB-INF/classes 是 2026-11-03 的旧拷贝**，缺在线压缩功能的 CompressExtractTask.class 等新类；本任务部署新 BaseController 时触发 NoClassDefFoundError → DispatcherServlet 初始化失败。已做**先删后拷的全量同步**（12532 个 class，以源码树 Eclipse 输出为准），dev 现为最新一致状态。教训：**给 webapps 部署树部署新 class 前先确认其与源码树 classes 的一致性，不一致时全量同步而非增量拷贝**。
 3. Git Bash 下 curl 测接口：`-F "path=/"` 之类参数会被 MSYS 路径转换污染（`path=/` 变成 Git 安装路径），需 `MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"`，且此时 cookie 等本地文件参数也要用 Windows 路径。
 
-### 遗留（不阻塞归档，待条件具备）
-- [ ] Mac 真机验证（~/Desktop、~/Downloads）——需用户参与
+### 遗留（不阻塞，已归档）
+- [ ] Mac 真机验证（~/Desktop、~/Downloads）——待个人版 Mac 安装程序任务（挂起卡 `CURRENT_STATE_Mac安装程序.md`）推进时一并验证
 - [ ] Windows OneDrive 重定向机器验证（裁定为 user.home 方案，OneDrive 机器若 user.home/Desktop 为残留目录会指向残留目录——用户已接受该取舍）
 - [ ] MySQL 路径实测（ALTER TABLE AUTO_INCREMENT=101 为标准语句，无环境）
 - [ ] 回收站"恢复"操作实测（文件进回收站已验证；恢复是既有功能未动）
-- [ ] 第三方在线编辑回归（getDocInfoForRemoteDocumentEdit 需商业版授权环境，开源版已验仓库1存在）
+- [ ] 第三方在线编辑回归（getDocInfoForRemoteDocumentEdit 需商业版授权环境，开源版已验仓库1存在；测试页 WebRoot/web/test.html:818）
+- 用户浏览器实测（2026-11-15）：首启全流程 + 三仓库 + 桌面/下载 + 行为正常（用户原话"行为都正常"）
 
 ## 3. 调研结论（2026-11-15 核对，行号为当日 devInt 基线）
 
