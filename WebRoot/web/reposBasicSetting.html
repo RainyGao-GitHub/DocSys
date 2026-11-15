@@ -45,10 +45,12 @@
 					</span> 
                	</label>
                	<div id="reposStorageRealDocPathConfig" style="display:none">
-					<div style="white-space:nowrap;">
-						<input class="form-control" type="text" id="repos-realDocPath"  placeholder="如使用默认位置，请留空！"  value="" style="width:calc(100% - 50px); display:inline-block;"/>
-						<button type="button" class="btn btn-default" onclick="ReposConfig.selectServerPath('repos-realDocPath')" style="width:42px; display:inline-block; margin-left:4px;">...</button>
-					</div>
+					<div class="input-group">
+					<input class="form-control" type="text" id="repos-realDocPath"  placeholder="如使用默认位置，请留空！"  value=""/>
+					<span class="input-group-btn">
+						<button class="btn btn-default" type="button" onclick="ReposConfig.selectServerPath('repos-realDocPath')">...</button>
+					</span>
+				</div>
 				</div>
 				
 				<label style="margin-top:10px">允许操作隐藏文件和系统文件
@@ -86,10 +88,12 @@
 		            <div id="verCtrl-verReposSetting" style="margin-left:20px">
 			            <div id="verCtrl-localVerRepos">
 				            <label>版本仓库所在目录</label>
-				            <div style="white-space:nowrap;">
-				            	<input class="form-control" type="text" id="verCtrl-localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width:calc(100% - 50px); display:inline-block;"/>
-				            	<button type="button" class="btn btn-default" onclick="ReposConfig.selectServerPath('verCtrl-localSvnPath')" style="width:42px; display:inline-block; margin-left:4px;">...</button>
-				            </div>
+				            <div class="input-group">
+					<input class="form-control" type="text" id="verCtrl-localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value=""/>
+					<span class="input-group-btn">
+						<button class="btn btn-default" type="button" onclick="ReposConfig.selectServerPath('verCtrl-localSvnPath')">...</button>
+					</span>
+				</div>
 			            </div>
 			            <div id="verCtrl-remoteVerRepos">
 				            <label>版本仓库链接</label>
@@ -116,10 +120,12 @@
 	            <div id="verCtrl1-verReposSetting">
 		            <div id="verCtrl1-localVerRepos">
 			            <label>版本仓库所在目录</label>
-			            <div style="white-space:nowrap;">
-			            	<input class="form-control" type="text" id="verCtrl1-localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value="" style="width:calc(100% - 50px); display:inline-block;"/>
-			            	<button type="button" class="btn btn-default" onclick="ReposConfig.selectServerPath('verCtrl1-localSvnPath')" style="width:42px; display:inline-block; margin-left:4px;">...</button>
-			            </div>
+			            <div class="input-group">
+					<input class="form-control" type="text" id="verCtrl1-localSvnPath"  placeholder="如使用系统默认位置，请留空！"  value=""/>
+					<span class="input-group-btn">
+						<button class="btn btn-default" type="button" onclick="ReposConfig.selectServerPath('verCtrl1-localSvnPath')">...</button>
+					</span>
+				</div>
 		            </div>
 					<div id="verCtrl1-remoteVerRepos">
 			            <label>版本仓库链接</label>

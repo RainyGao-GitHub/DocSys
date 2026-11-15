@@ -426,7 +426,7 @@ public class ReposController extends BaseController{
 	}
 
 	/****************** get Repository List **************/
-	/********** 服务器目录列表（仓库存储位置/文件存储位置/版本仓库目录的选择器用） ***************/
+	/********** 服务器目录列表（仓库存储位置/文件存储位置/版本仓库目录的树形选择器用） ***************/
 	@RequestMapping("/getServerDirList.do")
 	public void getServerDirList(String path, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{
@@ -440,29 +440,33 @@ public class ReposController extends BaseController{
 		}
 
 		JSONObject data = new JSONObject();
-		List<JSONObject> dirList = new ArrayList<JSONObject>();
+		List<JSONObject> roots = new ArrayList<JSONObject>();
+		File[] rootFiles = File.listRoots();
+		if(rootFiles != null)
+		{
+			for(File root : rootFiles)
+			{
+				if(root == null || root.exists() == false)
+				{
+					continue;
+				}
+				String rootPath = Path.localDirPathFormat(root.getPath(), OSType);
+				JSONObject dir = new JSONObject();
+				dir.put("name", rootPath);
+				dir.put("path", rootPath);
+				roots.add(dir);
+			}
+		}
+		data.put("roots", roots);
 
+		List<JSONObject> dirList = new ArrayList<JSONObject>();
 		if(path == null || path.trim().isEmpty())
 		{
-			//path 为空：列出盘符根（Windows: C:/ D:/ ...；Linux/Mac: /）
+			//path 为空：树根即盘符列表（Windows: C:/ D:/ ...；Linux/Mac: /）
 			data.put("currentPath", "");
 			data.put("parentPath", "");
-			File[] roots = File.listRoots();
-			if(roots != null)
-			{
-				for(File root : roots)
-				{
-					if(root == null || root.exists() == false)
-					{
-						continue;
-					}
-					String rootPath = Path.localDirPathFormat(root.getPath(), OSType);
-					JSONObject dir = new JSONObject();
-					dir.put("name", rootPath);
-					dir.put("path", rootPath);
-					dirList.add(dir);
-				}
-			}
+			data.put("chain", new ArrayList<JSONObject>());
+			dirList = roots;
 		}
 		else
 		{
@@ -477,6 +481,8 @@ public class ReposController extends BaseController{
 
 			data.put("currentPath", dirPath);
 			data.put("parentPath", getServerDirParentPath(dirPath));
+			//从盘根到当前目录的祖先链（前端用它自动展开到初始位置）
+			data.put("chain", buildServerDirChain(dirPath));
 
 			File[] entries = dir.listFiles();
 			if(entries != null)
@@ -506,7 +512,7 @@ public class ReposController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	//目录选择器的上一级路径：盘根（C:/ 或 /）的上一级返回 ""（前端回到盘符列表）
+	//目录选择器的上一级路径：盘根（C:/ 或 /）的上一级返回 ""（对应盘符列表层）
 	private String getServerDirParentPath(String dirPath)
 	{
 		if(dirPath == null || dirPath.length() <= 1)
@@ -520,6 +526,32 @@ public class ReposController extends BaseController{
 			return "";
 		}
 		return p.substring(0, idx + 1);
+	}
+
+	//从盘根到 dirPath 的祖先链（含盘根与 dirPath 自身），如 C:/Users/65205/Desktop/ → [C:/, Users, 65205, Desktop]
+	private List<JSONObject> buildServerDirChain(String dirPath)
+	{
+		List<JSONObject> chain = new ArrayList<JSONObject>();
+		String cur = dirPath;
+		while(cur != null && cur.isEmpty() == false)
+		{
+			String name = cur;
+			int idx = cur.lastIndexOf('/', cur.length() - 2);	//跳过尾斜杠找上一级斜杠
+			if(idx >= 0)
+			{
+				name = cur.substring(idx + 1).replace("/", "");
+				if(name.isEmpty())
+				{
+					name = cur;	//盘根 C:/ 或 /
+				}
+			}
+			JSONObject node = new JSONObject();
+			node.put("name", name);
+			node.put("path", cur);
+			chain.add(0, node);
+			cur = getServerDirParentPath(cur);
+		}
+		return chain;
 	}
 
 	@RequestMapping("/getReposList.do")

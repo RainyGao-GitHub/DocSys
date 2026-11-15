@@ -1,20 +1,13 @@
 <div id="dialog-serverDirSelector" class="form-horizontal">
-	<div class="form-group">
-		<div style="margin-bottom:8px; white-space:nowrap;">
-			<input class="form-control" type="text" id="serverDirSelectorPath" placeholder="输入或粘贴服务器路径，回车可直接跳转" style="width:calc(100% - 92px); display:inline-block;" onkeydown="if(event.keyCode == 13){ServerDirSelector.goInputPath();}">
-			<button type="button" class="btn btn-default" onclick="ServerDirSelector.goInputPath()" style="width:84px; display:inline-block; margin-left:4px;">跳转</button>
-		</div>
-		<div style="margin-bottom:8px;">
-			<button type="button" class="btn btn-default" onclick="ServerDirSelector.goParentPath()" style="width:100%;height:34px;">上一级</button>
-		</div>
-		<div id="serverDirSelectorList" style="height:320px; overflow-y:auto; border:1px solid #ddd; border-radius:4px; padding:4px;"></div>
-		<div id="serverDirSelectorTip" style="color:#999; font-size:12px; margin-top:6px;">单击选中目录，双击进入；不选中时确定将使用当前所在目录</div>
-	</div>
+    <div class="form-group">
+    	<ul id="ztreeForServerDirSelector" class="ztree" style="height:380px; overflow-y:auto; margin-bottom: 10px;"></ul>
+    	<div style="color:#999; font-size:12px;">单击选中目录，双击直接确定；展开箭头可逐级浏览</div>
+    </div>
 	<div class="modal-footer">
-		<div class="form-group">
-			<div class="col-sm-12 text-right">
-				<button type="button" class="btn btnPrimary" onclick="ServerDirSelector.doSelect();" style="width: 100px;height: 42px;">确定</button>
-				<button type="button" class="btn btnPrimary" onclick="ServerDirSelector.cancelSelect();" style="width: 100px;height: 42px;">取消</button>
+	    <div class="form-group">
+		    <div class="col-sm-12 text-right">
+		        <button  type="button" class="btn btnPrimary" onclick="ServerDirSelector.doSelect();" style="width: 100px;height: 42px;">确定</button>
+		        <button  type="button" class="btn btnPrimary" onclick="ServerDirSelector.cancelSelect();" style="width: 100px;height: 42px;">取消</button>
 			</div>
 		</div>
 	</div>
@@ -23,46 +16,151 @@
 <script type="text/javascript">
 var ServerDirSelector = (function () {
 	var _config;
-	var _loaded = false;			//是否已成功加载过目录（用于初始路径失效时回退盘符列表）
-	var _currentPath = "";			//"" 表示盘符列表视图
-	var _parentPath = "";
-	var _selectedPath = null;		//单击选中的子目录；null 表示选当前所在目录
+	var _selectedNode;
+
+	function zTreeOnClick(event, treeId, treeNode)
+	{
+		console.log("ServerDirSelector zTreeOnClick:", treeNode);
+		_selectedNode = treeNode;
+	}
+
+	function zTreeOnDbClick(event, treeId, treeNode)
+	{
+		console.log("ServerDirSelector zTreeOnDbClick:", treeNode);
+		_selectedNode = treeNode;
+		doSelect();
+	}
+
+	//格式化为 zTree simpleData 节点（id/pId 用绝对路径，天然唯一）
+	function formatNode(dir, pId, isOpen)
+	{
+		return {
+			id : dir.path,
+			pId : pId,
+			name : dir.name,
+			path : dir.path,
+			isParent : true,	//目录一律可展开（无子目录时展开为空）
+			open : isOpen == true,
+		};
+	}
+
+	function asyncDataFilter(treeId, parentNode, responseData)
+	{
+		console.log("ServerDirSelector asyncDataFilter parent:", parentNode ? parentNode.path : "");
+		var data = responseData.data || {};
+		var dirList = data.dirList || [];
+		var nodes = [];
+		for(var i = 0; i < dirList.length; i++)
+		{
+			nodes.push(formatNode(dirList[i], parentNode ? parentNode.path : "root", false));
+		}
+		return nodes;
+	}
+
+	function zTreeInit(initData)
+	{
+		var data = initData.data || {};
+		var roots = data.roots || [];
+		var chain = data.chain || [];
+		var dirList = data.dirList || [];
+
+		//树根 = 盘符列表；若带初始路径则沿祖先链自动展开到目标目录并显示其子目录
+		var nodes = [];
+		for(var i = 0; i < roots.length; i++)
+		{
+			nodes.push(formatNode(roots[i], "root", false));
+		}
+		if(chain.length > 0)
+		{
+			//chain[0] 即盘符根，与 roots 中同路径节点是同一个（simpleData 的 id 不能重复）：直接在根节点上展开
+			var rootNode = null;
+			for(var k = 0; k < nodes.length; k++)
+			{
+				if(nodes[k].path == chain[0].path)
+				{
+					nodes[k].open = true;
+					rootNode = nodes[k];
+					break;
+				}
+			}
+			if(rootNode)
+			{
+				//沿祖先链逐级挂子节点（均展开），dirList 统一挂到最后一个链节点下
+				var lastPath = chain[0].path;
+				for(var i = 1; i < chain.length; i++)
+				{
+					nodes.push(formatNode(chain[i], lastPath, true));
+					lastPath = chain[i].path;
+				}
+				for(var j = 0; j < dirList.length; j++)
+				{
+					nodes.push(formatNode(dirList[j], lastPath, false));
+				}
+			}
+		}
+
+        var setting = {
+    	   	data: {
+           		simpleData: {
+               		enable: true,
+           		},
+           		keep: {
+           			leaf: true,
+           			parent: true,
+           		},
+    	   	},
+    		callback: {
+                onClick: zTreeOnClick,
+                onDblClick: zTreeOnDbClick,
+    		},
+    		async: {
+    			enable : true,
+    	        url : "/DocSystem/Repos/getServerDirList.do",
+    	        type : "post",
+    			autoParam : ["path"],
+    			dataFilter: asyncDataFilter,
+    		},
+    	};
+
+    	var zTree = $.fn.zTree.init($("#ztreeForServerDirSelector"), setting, nodes);
+
+    	//自动展开初始路径并选中目标目录
+    	if(chain.length > 0)
+    	{
+    		var targetNode = zTree.getNodeByParam("id", chain[chain.length - 1].path);
+    		if(targetNode)
+    		{
+    			zTree.selectNode(targetNode);
+    			_selectedNode = targetNode;
+    		}
+    	}
+	}
 
 	function pageInit(config)
 	{
 		console.log("ServerDirSelector pageInit() config:", config);
 		_config = config || {};
-		_loaded = false;
-		_selectedPath = null;
-		$("#serverDirSelectorPath").val(_config.path || "");
-		loadDirList(_config.path || "");
-	}
+		_selectedNode = null;
 
-	function loadDirList(path)
-	{
+		//初始路径取输入框现值（为空则从盘符列表开始）
 		$.ajax({
 			url : "/DocSystem/Repos/getServerDirList.do",
 			type : "post",
 			dataType : "json",
-			data : { path : path },
+			data : { path : _config.path || "" },
 			success : function (ret) {
 				if("ok" == ret.status)
 				{
-					var data = ret.data || {};
-					_loaded = true;
-					_currentPath = data.currentPath || "";
-					_parentPath = data.parentPath || "";
-					_selectedPath = null;
-					$("#serverDirSelectorPath").val(_currentPath);
-					renderDirList(data.dirList || []);
+					zTreeInit(ret);
 				}
 				else
 				{
 					showErrorMessage("获取目录失败:" + ret.msgInfo);
-					if(_loaded == false)
+					if(_config.path)
 					{
 						//初始路径无效：回退到盘符列表
-						loadDirList("");
+						_config.path = "";
+						pageInit(_config);
 					}
 				}
 			},
@@ -72,57 +170,14 @@ var ServerDirSelector = (function () {
 		});
 	}
 
-	function renderDirList(dirList)
-	{
-		var container = $("#serverDirSelectorList");
-		container.empty();
-		if(dirList.length == 0)
-		{
-			container.append("<div style='color:#999;padding:8px;'>（无子目录）</div>");
-			return;
-		}
-		for(var i = 0; i < dirList.length; i++)
-		{
-			var dir = dirList[i];
-			var item = $("<div class='serverDirSelectorItem' path='" + encodeAttr(dir.path) + "' style='padding:6px 8px; cursor:pointer; border-radius:4px;'></div>");
-			item.append("<img src='images/file_icon/icon_others/folder.png' style='width:18px;height:18px; margin-right:6px; vertical-align:text-bottom;'></img>" + htmlEncode(dir.name));
-			item.on("click", function(){
-				$("#serverDirSelectorList .serverDirSelectorItem").css("background", "");
-				$(this).css("background", "#e6f2ff");
-				_selectedPath = $(this).attr("path");
-			});
-			item.on("dblclick", function(){
-				loadDirList($(this).attr("path"));
-			});
-			container.append(item);
-		}
-	}
-
-	function encodeAttr(s)
-	{
-		return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;");
-	}
-
-	function htmlEncode(s)
-	{
-		return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-	}
-
-	function goInputPath()
-	{
-		var path = $.trim($("#serverDirSelectorPath").val());
-		loadDirList(path);
-	}
-
-	function goParentPath()
-	{
-		loadDirList(_parentPath);	//盘根的 parentPath 为 ""，自然回到盘符列表
-	}
-
 	function doSelect()
 	{
-		var path = _selectedPath || _currentPath;
-		_config.onSelect && _config.onSelect(path);
+		if(_selectedNode == null)
+		{
+			qiao.bs.msg({msg : _Lang("请选择目录"), type : "warning", time : 2000});
+			return;
+		}
+		_config.onSelect && _config.onSelect(_selectedNode.path);
 		closeServerDirSelectorDialog();
 	}
 
@@ -138,19 +193,13 @@ var ServerDirSelector = (function () {
 
 	//开放给外部的调用接口
 	return {
-		pageInit : function(config){
+		pageInit: function(config){
 			pageInit(config);
 		},
-		goInputPath : function(){
-			goInputPath();
-		},
-		goParentPath : function(){
-			goParentPath();
-		},
-		doSelect : function(){
+		doSelect: function(){
 			doSelect();
 		},
-		cancelSelect : function(){
+		cancelSelect: function(){
 			cancelSelect();
 		},
 	};
