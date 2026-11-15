@@ -1,20 +1,20 @@
 # CURRENT_STATE_首次启动默认仓库与ID保留（我的桌面/我的下载 + 仓库ID 1-100 系统保留区）
 
-> 状态：**方案设计完成，含 6 个待裁定项，用户换新 session 开工**（2026-11-15 建立；需求与裁定疑问由用户当日提出，调研结论为同日实测核对）
-> 需求来源：用户 2026-11-15 提出（原文见 §2），本卡为唯一工作卡
+> 状态：**方案设计完成（含 2026-11-15 二次确认修正：仓库1=第三方在线编辑默认仓库，ID 分配已调整），待用户裁定 §5 后新 session 开工**
+> 需求来源：用户 2026-11-15 提出（原文见 §2）；同日用户纠正"仓库1特殊用途"的具体所指（第三方服务 fileLink 拉取场景），§3.2/§4.B/§5 已按二次确认修正
 > 涉及仓库：主仓库（无 office/websocket 改动；商业版 DocSysBussinessModules 仅调研未改动）
 > ⚠️ 开工 session 第一步：先向用户确认 §5 裁定项（有推荐默认值，可快速过）
 
 ## 一句话
 
-Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创建两个默认仓库——**我的桌面**、**我的下载**，分别指向当前用户的桌面/下载目录（REAL_DOC_PATH 机制），为个人版"首启即用"铺路；同时把**仓库 ID 1-100 设为系统保留区**，用户自建仓库从 101 起。
+Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创建三个系统仓库——**ID1 协同编辑临时仓库**（第三方在线编辑 fileLink 拉取落点，对应 `reposIdForRemoteDocumentEdit=1` 默认值）、**ID2 我的桌面**、**ID3 我的下载**（REAL_DOC_PATH 指向用户桌面/下载目录），为个人版"首启即用"铺路；同时把**仓库 ID 1-100 设为系统保留区**，用户自建仓库从 101 起。
 
 ## 2. 需求原文整理
 
 - 系统第一次启动 = 需要创建第一个超级管理员的时候（addFirstAdminUser 流程）。
 - 对 Windows 和 Mac：默认创建两个仓库「我的桌面」「我的下载」，指向当前用户的桌面和下载目录。
 - 目的：个人版铺垫——个人用户第一次启动后即可直接工作。
-- 用户未决问题：**仓库 ID**——印象中仓库 1 有特殊用途（协同编辑的临时存储仓库），考虑**将 100 及以内的仓库 ID 用作系统用途，后续用户创建的仓库默认从 101 开始**，是否可行？（§3.2 调研结论：可行，且比用户担心的更干净）
+- 用户未决问题：**仓库 ID**——仓库 1 有特殊用途（**MxsDoc 作为第三方服务时，外部系统提供文件 URL，需拉取到本地仓库（默认即仓库 1）才能提供协同编辑**——2026-11-15 用户二次澄清，§3.2 已确认），考虑**将 100 及以内的仓库 ID 用作系统用途，后续用户创建的仓库默认从 101 开始**，是否可行？（结论：可行；且 ID 1 必须让给协同编辑用途，默认仓库从 ID 2 起）
 
 ## 3. 调研结论（2026-11-15 核对，行号为当日 devInt 基线）
 
@@ -26,11 +26,13 @@ Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创�
 | 插入支持显式 ID | ReposMapper.xml:351（id="add"） | `useGeneratedKeys` + `<if test="id != null"> ID, </if>`——**指定 ID 用指定值，不指定才自增**。系统仓库固定 ID 零障碍 |
 | dev 库验证 | DocSystem.db sqlite_sequence | 无 repos 记录，证实无 AUTOINCREMENT；dev 库现役 ID 已到 24（升级库不迁移，见 §4.A） |
 
-### 3.2 低 ID 系统占用 —— **结论：无代码冲突，"仓库1特殊用途"未获代码证实**
-- 主仓库 + 商业版（DocSysBussinessModules）全量 grep：**无任何 `vid==1`/`reposId==1`/`getRepos(1)` 硬编码**；无"系统仓库/默认仓库/临时仓库"代码概念。
-- 协同编辑的临时文件走 docSysIniPath/系统 tmp 目录（officeEditCache 等），**不是仓库**；用户记忆中的"仓库1=协同编辑临时存储"在当前代码不存在（可能是早期产品惯例）。
-- dev 库仓库 1 = 普通测试仓库，无特殊性。
-- **⇒ 预留 1-100 是纯产品命名空间决策，技术上完全可行**；将来任何系统功能需要仓库时可用固定低 ID 创建。
+### 3.2 低 ID 系统占用 —— **结论（2026-11-15 二次确认后修正）：仓库 1 确有系统用途，用户的记忆正确**
+- **`reposIdForRemoteDocumentEdit = 1`（BaseFunction.java:206）**：第三方在线编辑服务（RemoteDocumentEdit）的默认仓库。
+  - 场景：MxsDoc 作为第三方服务时，外部系统调 `getDocInfoForRemoteDocumentEdit.do`（BussinessController.java:4609，商业版接口、需授权证书）传 `fileLink`（文件URL）+ `saveFileLink`（保存回传URL）+ `fileName` + `fileKey` → 系统把文件**从 URL 下载到仓库 1**（`getReposEx(reposIdForRemoteDocumentEdit)`，4642 行）→ 提供在线协同编辑 → 保存时 `RemoteDocumentEditSave`（BaseController.java:9285，判定条件=仓库ID==该值 且 doc.path 前缀匹配）回传到 saveFileLink。
+  - **该配置当前无任何赋值/加载代码**（全仓库仅定义处一处赋值；ManageController/SysConfigController/前端设置页均无配置入口——代码注释"可以在管理后台进行配置"**实际未实现**）→ 默认值 1 是唯一生效值，**仓库 1 不存在则第三方在线编辑服务直接不可用**（reposCheck 失败）。
+- 主仓库 + 商业版其余代码无其他低 ID 硬编码；协同编辑自身的临时文件（officeEditCache 等）走系统 tmp，不是仓库。
+- dev 库仓库 1 = 普通测试仓库（本机未启第三方服务）。
+- **⇒ 预留 1-100 可行性不变，且仓库 1 应显式保留给 RemoteDocumentEdit**：首启若让"我的桌面"占用 ID 1，第三方编辑的文件会被拉取散落到真实桌面目录（桌面仓库 REAL_DOC_PATH 指向真实桌面）——**严重冲突，原方案 §4.B 的 ID 分配必须调整**（见修正后方案）。
 
 ### 3.3 首个超管创建流程（默认仓库的挂点）
 | 环节 | 位置 | 说明 |
@@ -61,19 +63,20 @@ Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创�
 - **旧库升级：零迁移**（现役系统 ID 已在用，重排是灾难；保留区只对全新安装生效，升级系统 addRepos 行为完全不变）。
 - 不采用的备选：addRepos 显式算 ID 并 floor 到 101——每次插入查 max 有并发竞态（syncLockForRepos 按 name 锁不覆盖），改动面大收益小。
 
-### B. 默认仓库定义（系统仓库，显式固定 ID）
-| 字段 | 我的桌面 | 我的下载 |
-|---|---|---|
-| ID | **1** | **2** |
-| REAL_DOC_PATH | 探测的桌面目录 | 探测的下载目录 |
-| NAME | 我的桌面 | 我的下载 |
-| TYPE/VER_CTRL | 1（FSM）/ 0（无版本管理） | 同左 |
-| PATH（仓库数据目录） | getDefaultReposRootPath() | 同左（数据在 `<root>/1/`、`<root>/2/`） |
-| OWNER | 首个超管 | 同左 |
-| 回收站/全文索引 | 待裁定 §5.2/§5.3 | 同左 |
+### B. 默认仓库定义（系统仓库，显式固定 ID；**2026-11-15 修正 ID 分配：ID1 留给协同编辑服务**）
+| 字段 | 协同编辑临时仓库 | 我的桌面 | 我的下载 |
+|---|---|---|---|
+| ID | **1**（对应 reposIdForRemoteDocumentEdit 默认值） | **2** | **3** |
+| NAME | 协同编辑临时仓库（名字待裁定 §5.1b） | 我的桌面 | 我的下载 |
+| REAL_DOC_PATH | **空**（用仓库数据目录，绝不指向用户目录） | 探测的桌面目录 | 探测的下载目录 |
+| TYPE/VER_CTRL | 1（FSM）/ 0 | 同左 | 同左 |
+| PATH（仓库数据目录） | getDefaultReposRootPath()（`<root>/1/`） | 同左（`<root>/2/`） | 同左（`<root>/3/`） |
+| OWNER | 首个超管 | 同左 | 同左 |
+| 回收站/全文索引 | 不开/不开 | 待裁定 §5.2/§5.3 | 同左 |
 
+- **ID1 专用仓库的意义**：`reposIdForRemoteDocumentEdit` 默认值 1 保持不动（改默认值会引入兼容风险且该配置无后台入口），首启显式创建 ID=1 仓库即让第三方在线编辑服务开箱即用（文件按 fileKey/fileName 组织在该仓库内，RemoteDocumentEditSave 的回传判定自然成立）；开源版无该授权也无副作用（就是普通仓库）。**不创建它的话**（若裁定 §5.1a 选否），ID 1 也必须空置，且"我的桌面/下载"仍从 ID 2 起。
 - 走内部 service 直插（reposService.addRepos 设显式 ID——Mapper 已支持），**不走 addRepos HTTP 接口**（该接口拒绝普通用户且带超管权限检查，绕开以免语义混淆；复用 checkReposInfoForAdd 做路径冲突校验）。
-- 探测失败（目录不存在/不可写/非 Win/Mac 平台）→ **跳过该仓库 + 系统日志记录原因**，首启不失败。
+- 探测失败（目录不存在/不可写/非 Win/Mac 平台）→ **跳过该仓库 + 系统日志记录原因**，首启不失败（协同编辑临时仓库无目录探测依赖，Win/Mac/Linux 均创建）。
 
 ### C. 创建时机与幂等
 - 挂点：addFirstAdminUser 的 addUser 成功后调用 `createDefaultReposForFirstUser(user)`。
@@ -97,12 +100,15 @@ getUserStandardDir(dirType /*Desktop|Downloads*/, osType):
 
 ## 5. 待用户裁定（新 session 开工前确认，均有推荐默认值）
 
-1. **默认仓库固定 ID=1/2？**（推荐：是——系统仓库语义、存储路径可预测、与保留区叙事一致）
+1. **ID 分配**（2026-11-15 修正后）：
+   - 1a. **首启显式创建 ID=1「协同编辑临时仓库」**（REAL_DOC_PATH 空、指向仓库数据目录，第三方在线编辑开箱即用）？（推荐：**是**）
+   - 1b. 若创建，仓库名叫什么？（推荐：「协同编辑临时仓库」；备选「在线编辑缓存」）
+   - 1c. 我的桌面=ID 2、我的下载=ID 3（推荐）；或其他分配？
 2. **桌面/下载仓库默认开回收站？**（推荐：开——技术上不污染桌面（回收站在仓库数据目录），误删可恢复；注意语义=删除桌面文件会把它从真实桌面移走）
 3. **默认开全文索引？**（推荐：关——桌面/下载文件多且杂，首启即建索引体感差，用户可后开）
 4. **Windows OneDrive 重定向：注册表权威路径优先？**（推荐：是，reg query 失败退化 user.home）
 5. **保留区上限 100 还是更大？**（用户提 100，默认遵从；改也只是一行）
-6. **Linux 首启行为 = 不创建默认仓库？**（用户需求只提 Win/Mac；推荐 Linux 不创建，仅日志说明）
+6. **Linux 首启行为 = 只创建 ID1 协同编辑仓库、不创建桌面/下载？**（用户需求只提 Win/Mac；推荐 Linux 仅建 ID1，桌面/下载跳过+日志）
 
 ## 6. 实施顺序（新 session 按此开工，每完成一段更新本卡进展）
 
@@ -114,9 +120,10 @@ getUserStandardDir(dirType /*Desktop|Downloads*/, osType):
 ## 7. 验证清单
 
 **新装首启（Windows，dev 实例模拟）**
-- [ ] 建超管后自动出现 ID=1 我的桌面（REAL_DOC_PATH=真实桌面）、ID=2 我的下载
+- [ ] 建超管后自动出现 ID=1 协同编辑临时仓库（REAL_DOC_PATH 空）、ID=2 我的桌面（REAL_DOC_PATH=真实桌面）、ID=3 我的下载
+- [ ] **第三方编辑回归**：调 `getDocInfoForRemoteDocumentEdit.do`（test.html:818 有现成测试页）→ 文件落在 ID=1 仓库内、不落桌面；保存回传判定成立（需商业版授权环境，开源版至少验证 getReposEx(1) 仓库存在）
 - [ ] 桌面/下载文件在仓库中可见、上传直接落到真实目录、下载/重命名/删除正常
-- [ ] 之后用户自建仓库 ID=101（不是 3）
+- [ ] 之后用户自建仓库 ID=101（不是 4）
 - [ ] 删除自建仓库 101 后再建 → 仍 ≥101（SQLite AUTOINCREMENT 不回退）
 - [ ] OneDrive 重定向机器：桌面仓库指向 OneDrive\Desktop（若裁定 §5.4=注册表优先）
 - [ ] 回收站（若开）：删除桌面文件 → 从桌面消失、仓库回收站可恢复
@@ -138,6 +145,7 @@ getUserStandardDir(dirType /*Desktop|Downloads*/, osType):
 ## 8. 会话交接（开工 session 必读锚点）
 
 - 本卡 §3 调研结论行号：ReposMapper.xml:351（add 支持显式ID）、BaseController.java:18326（SQLite DDL）、ManageController.java:3058（addFirstAdminUser 挂点 3138-3146）、Path.java:531（getReposRealPath）/995（回收站位置）、DataRootService.java:572（getDefaultRoots 工具先例）、BaseFunction.java:2802（initOSType）。
+- **仓库1系统占用（二次确认结论）**：`reposIdForRemoteDocumentEdit=1`（BaseFunction.java:206，第三方在线编辑 RemoteDocumentEdit 默认仓库；入口 BussinessController.java:4609 `getDocInfoForRemoteDocumentEdit.do` 从 fileLink 拉文件到该仓库；保存回传判定 BaseController.java:9285）。该配置**无后台配置入口（未实现）**，默认值 1 唯一生效 → 仓库 1 必须存在第三方编辑才可用。现成第三方编辑测试页：WebRoot/web/test.html:818。
 - 相关既有机制：REAL_DOC_PATH 先例=dev 库 ID2「我的桌面」→ C:/Users/65205/Desktop/（长期在用）。
 - 纪律：javac 带 `-g`；dev 只用 TomcatForDocSysDev（8100）；测试用"备份→清空→恢复"脚本，绝不清了不恢复。
 - 相关挂起卡：`CURRENT_STATE_Mac安装程序.md`（个人版安装形态相关，未获裁定不动）。
