@@ -18151,6 +18151,19 @@ public class BaseController  extends BaseFunction{
     		initDBTable("sys_config", statement, type);
     		initDBTable("user", statement, type);
     		initDBTable("user_group", statement, type);
+
+    		//仓库ID 1-100 为系统保留区（首启默认仓库用低ID，用户自建仓库从101开始）
+    		//新装库一次性推进自增序列；升级重建走 resetDBTable 不经过此处，旧库零迁移
+    		if(type.equals("sqlite"))
+    		{
+    			//repos 表以 AUTOINCREMENT 建表，sqlite_sequence 已随建表生成
+	    		statement.execute("DELETE FROM sqlite_sequence WHERE name='repos'");
+	    		statement.execute("INSERT INTO sqlite_sequence(name, seq) VALUES('repos', 100)");
+    		}
+    		else
+    		{
+	    		statement.execute("ALTER TABLE `repos` AUTO_INCREMENT = 101");
+    		}
             ret = true;
         } catch (Exception e) {
             Log.debug("initDBTables 数据库表初始化发生异常");
@@ -18326,7 +18339,8 @@ public class BaseController  extends BaseFunction{
     		sqlCmd = "CREATE TABLE `repos` (\n";
     		if(type.equals("sqlite"))
 			{
-	    		sqlCmd += "  `ID` integer primary key,\n";				
+    			//autoincrement: 序列只增不回退（删除最大ID行后ID不被复用），配合 initDBTables 的系统保留区序列推进
+	    		sqlCmd += "  `ID` integer primary key autoincrement,\n";
 			}
 			else
 			{

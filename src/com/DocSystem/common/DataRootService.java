@@ -607,6 +607,38 @@ public class DataRootService {
         }
     }
 
+    /**
+     * 探测当前用户的标准目录（Desktop/Downloads），用于首启默认仓库「我的桌面/我的下载」。
+     * 与 getDefaultRoots 同风格：user.home 拼接 + 规范化 + 存在/可写校验；
+     * 仅支持 Windows/Mac（Linux 服务器场景无此语义），失败返回 null，调用方跳过创建。
+     */
+    public static String getUserStandardDir(String dirName, int osType) {
+        if(dirName == null || dirName.trim().isEmpty()) {
+            return null;
+        }
+        if(OS.isWinOS(osType) == false && osType != OS.MacOS) {
+            return null;
+        }
+        String userHome = System.getProperty("user.home");
+        if(userHome == null || userHome.trim().isEmpty()) {
+            return null;
+        }
+        String dir = normalizeRoot(userHome + "/" + dirName.trim(), osType);
+        if(dir == null) {
+            return null;
+        }
+        File file = new File(dir);
+        if(file.isDirectory() == false) {
+            Log.debug("DataRootService.getUserStandardDir() " + dir + " 不存在");
+            return null;
+        }
+        if(testWritable(file) == false) {
+            Log.debug("DataRootService.getUserStandardDir() " + dir + " 不可写");
+            return null;
+        }
+        return dir;
+    }
+
     /** 扫描固定基座下的 DocSysReposes（不跟随符号链接） */
     private static Set<String> scanExistingRoots(int osType, boolean[] partial) {
         LinkedHashSet<String> roots = new LinkedHashSet<String>();

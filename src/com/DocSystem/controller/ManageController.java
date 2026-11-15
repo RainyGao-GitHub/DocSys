@@ -80,6 +80,8 @@ import com.DocSystem.common.entity.LDAPConfig;
 import com.DocSystem.common.entity.SystemLDAPConfig;
 import com.DocSystem.common.entity.SystemLLMConfig;
 import com.DocSystem.common.entity.LongTermTask;
+import com.DocSystem.common.entity.BackupTask;
+import com.DocSystem.common.entity.GenericTask;
 import com.DocSystem.commonService.mail.MailConfig;
 import com.DocSystem.commonService.mail.MailAliyunConfig;
 import com.DocSystem.commonService.mail.MailConfigForm;
@@ -3143,9 +3145,141 @@ public class ManageController extends BaseController{
 			return;
 		}
 		
-		writeJson(rt, response);
+		//insertSelective 不回填自增ID，补查新用户ID（默认仓库的 OWNER 与授权记录依赖它）
+		User qUser = new User();
+		qUser.setName(user.getName());
+		qUser.setType(2);
+		List<User> newUserList = userService.getUserListByUserInfo(qUser);
+		if(newUserList != null && newUserList.size() > 0)
+		{
+			user.setId(newUserList.get(0).getId());
+		}
+		
+		//首次启动：自动创建系统默认仓库（ID1 协同编辑服务仓库/ID2 我的桌面/ID3 我的下载），失败不影响首启
+		createDefaultReposForFirstUser(user, request);
+		
+		writeJson(rt, response);	
 		addSystemLog(request, systemUser, "addFirstAdminUser", "addFirstAdminUser", "新增系统管理员", null, "成功", null, null, null, buildSystemLogDetailContent(rt));				
 		return;
+	}
+
+	//首次启动时为首个超管创建系统默认仓库：
+	//ID1 协同编辑服务仓库（reposIdForRemoteDocumentEdit 默认值，第三方在线编辑的文件拉取落点，全平台创建）
+	//ID2 我的桌面 / ID3 我的下载（REAL_DOC_PATH 指向当前用户桌面/下载目录，仅 Windows/Mac，探测失败跳过）
+	private void createDefaultReposForFirstUser(User user, HttpServletRequest request)
+	{
+		//幂等防御：仅全新系统（repos 表为空）才创建，防止升级或异常场景误触发
+		List<Repos> reposList = reposService.getAllReposList();
+		if(reposList != null && reposList.size() > 0)
+		{
+			Log.info("createDefaultReposForFirstUser() 检测到已有仓库，跳过默认仓库创建");
+			return;
+		}
+		
+		addDefaultSystemRepos(1, "协同编辑服务仓库", null, user, request);
+		
+		String desktopDir = DataRootService.getUserStandardDir("Desktop", OSType);
+		if(desktopDir != null)
+		{
+			addDefaultSystemRepos(2, "我的桌面", desktopDir, user, request);
+		}
+		else
+		{
+			logDefaultReposSkip("我的桌面", "未探测到可用的桌面目录", user, request);
+		}
+		
+		String downloadsDir = DataRootService.getUserStandardDir("Downloads", OSType);
+		if(downloadsDir != null)
+		{
+			addDefaultSystemRepos(3, "我的下载", downloadsDir, user, request);
+		}
+		else
+		{
+			logDefaultReposSkip("我的下载", "未探测到可用的下载目录", user, request);
+		}
+	}
+	
+	//创建系统默认仓库（显式固定ID，走内部流程复用 addRepos 的初始化步骤，不经 addRepos HTTP 接口的权限检查）
+	private void addDefaultSystemRepos(int reposId, String name, String realDocPath, User user, HttpServletRequest request)
+	{
+		ReturnAjax rt = new ReturnAjax();
+		String logInfo = "默认仓库[" + name + " ID:" + reposId + "]";
+		
+		Repos repos = new Repos();
+		repos.setId(reposId);	//系统仓库显式固定ID（ReposMapper.add 支持指定ID插入）
+		repos.setName(name);
+		repos.setInfo("系统默认仓库");
+		repos.setType(1);	//FSM
+		repos.setPath(Path.getDefaultReposRootPath(OSType));
+		repos.setRealDocPath(realDocPath);
+		repos.setVerCtrl(0);	//不启用版本管理
+		repos.setIsRemote(0);
+		repos.setVerCtrl1(0);
+		repos.setIsRemote1(0);
+		repos.setOwner(user.getId());
+		repos.setCreateTime(new Date().getTime());
+		
+		//复用 addRepos 的冲突校验（仓库存储目录/文件存储目录占用检查）
+		if(checkReposInfoForAdd(repos, rt) == false)
+		{
+			logDefaultReposSkip(name, rt.getMsgInfo(), user, request);
+			return;
+		}
+		
+		if(reposService.addRepos(repos) == 0)
+		{
+			logDefaultReposSkip(name, "新增仓库记录失败", user, request);
+			return;
+		}
+		
+		//初始化仓库（沿用 addRepos 流程的关键步骤，失败则回滚删除，不影响首启）
+		initReposData(repos);
+		if(createReposLocalDir(repos, rt) == false)
+		{
+			deleteRepos(repos);
+			logDefaultReposSkip(name, "创建仓库目录失败：" + rt.getMsgInfo(), user, request);
+			return;
+		}
+		setReposHistoryFormat(repos, false);	//设置历史版本使用新格式（MxsDoc自定义格式）
+		if(initVerRepos(repos, true, rt) == false || initVerRepos(repos, false, rt) == false)
+		{
+			deleteRepos(repos);
+			logDefaultReposSkip(name, "初始化版本仓库失败：" + rt.getMsgInfo(), user, request);
+			return;
+		}
+		
+		//默认关闭全文索引（textSearch.conf 缺失时系统重启会按 enable:1 兜底开启，故必须显式写入关闭配置）
+		String textSearchConfig = "{\"enable\":0}";
+		FileUtil.saveDocContentToFile(textSearchConfig, Path.getReposTextSearchConfigPath(repos), "textSearch.conf", "UTF-8");
+		initReposTextSearchConfig(repos, textSearchConfig);
+		
+		//我的桌面/我的下载默认开启回收站（回收站位于仓库数据目录，不污染真实目录）
+		if(realDocPath != null && realDocPath.isEmpty() == false)
+		{
+			String recycleBinConfig = "{\"enable\":1}";
+			FileUtil.saveDocContentToFile(recycleBinConfig, Path.getReposRecycleBinConfigPath(repos), "recycleBin.conf", "UTF-8");
+			initReposRecycleBinConfig(repos, recycleBinConfig);
+		}
+		
+		//初始化版本管理忽略配置
+		initReposVersionIgnoreConfig(repos);
+		
+		//每个仓库都必须有备份/同步任务状态HashMap（无论是否有自动任务）
+		reposLocalBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
+		reposRemoteBackupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<String, BackupTask>());
+		reposSyncupTaskHashMap.put(repos.getId(), new ConcurrentHashMap<Long, GenericTask>());
+		
+		//将首个超管设为仓库管理员并授予全部权限
+		InitReposAuthInfo(repos, user, rt);
+		
+		Log.info("createDefaultReposForFirstUser() " + logInfo + " 创建成功 realDocPath:" + realDocPath);
+		addSystemLog(request, user, "addFirstAdminUser", "addFirstAdminUser", "创建默认仓库", null, "成功", repos, null, null, logInfo + " 创建成功");
+	}
+	
+	private void logDefaultReposSkip(String name, String reason, User user, HttpServletRequest request)
+	{
+		Log.info("createDefaultReposForFirstUser() 默认仓库[" + name + "] 跳过：" + reason);
+		addSystemLog(request, user, "addFirstAdminUser", "addFirstAdminUser", "创建默认仓库", null, "跳过", null, null, null, "默认仓库[" + name + "] 跳过：" + reason);
 	}
 
 	private boolean applyDataRoot(JSONObject validation, ReturnAjax rt)

@@ -1,20 +1,62 @@
 # CURRENT_STATE_首次启动默认仓库与ID保留（我的桌面/我的下载 + 仓库ID 1-100 系统保留区）
 
-> 状态：**方案设计完成（含 2026-11-15 二次确认修正：仓库1=第三方在线编辑默认仓库，ID 分配已调整），待用户裁定 §5 后新 session 开工**
-> 需求来源：用户 2026-11-15 提出（原文见 §2）；同日用户纠正"仓库1特殊用途"的具体所指（第三方服务 fileLink 拉取场景），§3.2/§4.B/§5 已按二次确认修正
-> 涉及仓库：主仓库（无 office/websocket 改动；商业版 DocSysBussinessModules 仅调研未改动）
-> ⚠️ 开工 session 第一步：先向用户确认 §5 裁定项（有推荐默认值，可快速过）
+> 状态：**已实施，P0 自测全部通过（2026-11-15 本 session），待用户真机抽验后归档**
+> 需求来源：用户 2026-11-15 提出（原文见 §2）；同日二次确认（仓库1=第三方在线编辑）；§5 裁定已于开工时由用户落定（见 §5 裁定结果）
+> 涉及仓库：主仓库（无 office/websocket 改动；商业版 DocSysBussinessModules 未改动）
+> 实施日期：2026-11-15（本卡 §6 P0-后端 + P0-自测 完成并实测通过）
 
 ## 一句话
 
-Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创建三个系统仓库——**ID1 协同编辑服务仓库**（第三方在线编辑 fileLink 拉取落点，对应 `reposIdForRemoteDocumentEdit=1` 默认值）、**ID2 我的桌面**、**ID3 我的下载**（REAL_DOC_PATH 指向用户桌面/下载目录），为个人版"首启即用"铺路；同时把**仓库 ID 1-100 设为系统保留区**，用户自建仓库从 101 起。
+Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创建三个系统仓库——**ID1 协同编辑服务仓库**（第三方在线编辑 fileLink 拉取落点，对应 `reposIdForRemoteDocumentEdit=1` 默认值）、**ID2 我的桌面**、**ID3 我的下载**（REAL_DOC_PATH 指向用户桌面/下载目录），为个人版"首启即用"铺路；同时把**仓库 ID 1-100 设为系统保留区**，新装库用户自建仓库从 101 起。
 
 ## 2. 需求原文整理
 
 - 系统第一次启动 = 需要创建第一个超级管理员的时候（addFirstAdminUser 流程）。
 - 对 Windows 和 Mac：默认创建两个仓库「我的桌面」「我的下载」，指向当前用户的桌面和下载目录。
 - 目的：个人版铺垫——个人用户第一次启动后即可直接工作。
-- 用户未决问题：**仓库 ID**——仓库 1 有特殊用途（**MxsDoc 作为第三方服务时，外部系统提供文件 URL，需拉取到本地仓库（默认即仓库 1）才能提供协同编辑**——2026-11-15 用户二次澄清，§3.2 已确认），考虑**将 100 及以内的仓库 ID 用作系统用途，后续用户创建的仓库默认从 101 开始**，是否可行？（结论：可行；且 ID 1 必须让给协同编辑用途，默认仓库从 ID 2 起）
+- 仓库 ID：仓库 1 留给第三方在线编辑（RemoteDocumentEdit 默认仓库），100 及以内系统保留，用户自建从 101 开始。
+
+## 5. 裁定结果（2026-11-15 开工时用户落定）
+
+1. **ID 分配**：创建 ID1 协同编辑服务仓库 + ID2 我的桌面 + ID3 我的下载；**不加 deleteRepos 删除守卫**（用户明确选择：三仓库都建，但 deleteRepos 不做任何特殊拦截——ID1 误删导致第三方编辑失效的风险用户自担）。
+2. **桌面/下载仓库**：开回收站、关全文索引。
+3. **目录探测**：**只考虑 Windows 和 Mac**；桌面/下载目录获取方法**参考 addFirstAdminUser 流程中数据存储根目录的获取方法**（即 user.home 拼接 + 规范化 + 校验，不读注册表）。
+4. **保留区上限**：100。
+5. Linux：不创建桌面/下载（getUserStandardDir 对非 Win/Mac 返回 null → 跳过+日志；ID1 服务仓库仍创建）。
+
+## 9. 实施记录（2026-11-15）
+
+### 改动清单
+| 文件 | 改动 |
+|---|---|
+| common/DataRootService.java | 新增 `getUserStandardDir(dirName, osType)`：仅 Win/Mac，user.home + "/" + dirName → normalizeRoot → 存在+可写校验（复用 testWritable），失败返回 null；与 getDefaultRoots 同风格 |
+| controller/ManageController.java | ① addFirstAdminUser：addUser 成功后**补查新用户 ID**（insertSelective 无 useGeneratedKeys 不回填，不补查则 OWNER/授权 USER_ID 落 NULL——自测第一轮抓到的真 bug）→ 调 `createDefaultReposForFirstUser(user, request)`；② 新增 createDefaultReposForFirstUser：repos 表非空即整体跳过（幂等防御）+ 逐仓库 addDefaultSystemRepos / logDefaultReposSkip；③ addDefaultSystemRepos：显式固定 ID（Mapper 支持指定 ID 插入）、TYPE=1 FSM、verCtrl/verCtrl1=0、复用 checkReposInfoForAdd 冲突校验、initReposData/createReposLocalDir/setReposHistoryFormat/initVerRepos×2（失败 deleteRepos 回滚）、**显式写 textSearch.conf={"enable":0}**（缺失时系统重启按 enable:1 兜底开启，必须显式关闭）、桌面/下载写 recycleBin.conf={"enable":1}、initReposVersionIgnoreConfig、备份/同步任务 HashMap、InitReposAuthInfo 授权首个超管；结果写 Log.info + addSystemLog（成功/跳过均记） |
+| controller/BaseController.java | ① initDBTable case "repos" SQLite DDL 改 `integer primary key autoincrement`（序列只增不回退）；② initDBTables（**仅全新建库路径**，升级重建走 resetDBTable 不经过此处）建表后推进序列：SQLite `DELETE+INSERT INTO sqlite_sequence(name,seq) VALUES('repos',100)`；MySQL `ALTER TABLE repos AUTO_INCREMENT=101` |
+
+### P0 自测结果（dev 实例 8100，备份→删库模拟全新安装→全流程→恢复，全部通过）
+- [x] 全新建库：docSysInit 后 repos DDL=autoincrement、sqlite_sequence=('repos',100)
+- [x] addFirstAdminUser（dataRoot=测试目录）后自动出现 ID1 协同编辑服务仓库（REAL_DOC_PATH 空）/ID2 我的桌面（→C:/Users/65205/Desktop/）/ID3 我的下载（→C:/Users/65205/Downloads/），OWNER=1、repos_auth/doc_auth 授权 USER_ID=1 全对（第一轮发现 OWNER/USER_ID 为 NULL，修复补查用户 ID 后第二轮通过）
+- [x] 三仓库 textSearch.conf={"enable":0}；ID2/3 recycleBin.conf={"enable":1}；ID1 无 recycleBin.conf（默认关）
+- [x] 我的桌面显示 60 项真实桌面文件；上传 firstboot_upload_test.txt 落到真实桌面（内容正确）
+- [x] 删除该文件 → 从桌面消失 → 进 `DocSysReposes/2/RecycleBin/<ts>_<docId>/`（仓库数据目录回收站，不污染桌面）
+- [x] 我的下载显示 21 项真实下载目录文件
+- [x] 自建仓库 → ID=**101**；删除 101 再建 → ID=**102**（AUTOINCREMENT 不回退不复用）
+- [x] 幂等：已有超管再调 addFirstAdminUser → "系统管理员已存在!"拒绝
+- [x] 防御：清空 user 表构造"repos 非空无超管" → 新超管创建成功但**跳过仓库创建**（日志"检测到已有仓库，跳过默认仓库创建"，repos 数不变）
+- [x] 恢复：DocSystem.db MD5 与备份一致、docSysConfig.properties/version 还原、测试 dataRoot 清理、dev 重启正常（repos=22、user=5、状态 ok）
+- [x] createDefaultReposForFirstUser 三条成功日志齐全（协同编辑服务仓库/我的桌面/我的下载）
+
+### 自测附带发现（重要）
+1. **userService.addUser 用 insertSelective 不回填自增 ID**——addFirstAdminUser 后 user.getId()==null（已有代码的既有事实，本次以补查方式在调用侧规避，未动 mapper）。
+2. **dev 部署树 webapps/DocSystem/WEB-INF/classes 是 2026-11-03 的旧拷贝**，缺在线压缩功能的 CompressExtractTask.class 等新类；本任务部署新 BaseController 时触发 NoClassDefFoundError → DispatcherServlet 初始化失败。已做**先删后拷的全量同步**（12532 个 class，以源码树 Eclipse 输出为准），dev 现为最新一致状态。教训：**给 webapps 部署树部署新 class 前先确认其与源码树 classes 的一致性，不一致时全量同步而非增量拷贝**。
+3. Git Bash 下 curl 测接口：`-F "path=/"` 之类参数会被 MSYS 路径转换污染（`path=/` 变成 Git 安装路径），需 `MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*"`，且此时 cookie 等本地文件参数也要用 Windows 路径。
+
+### 遗留（不阻塞归档，待条件具备）
+- [ ] Mac 真机验证（~/Desktop、~/Downloads）——需用户参与
+- [ ] Windows OneDrive 重定向机器验证（裁定为 user.home 方案，OneDrive 机器若 user.home/Desktop 为残留目录会指向残留目录——用户已接受该取舍）
+- [ ] MySQL 路径实测（ALTER TABLE AUTO_INCREMENT=101 为标准语句，无环境）
+- [ ] 回收站"恢复"操作实测（文件进回收站已验证；恢复是既有功能未动）
+- [ ] 第三方在线编辑回归（getDocInfoForRemoteDocumentEdit 需商业版授权环境，开源版已验仓库1存在）
 
 ## 3. 调研结论（2026-11-15 核对，行号为当日 devInt 基线）
 
