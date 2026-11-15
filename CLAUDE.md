@@ -29,7 +29,7 @@
 
 ## 当前任务
 
-- **下一任务（方案设计完成，待新 session 开工）**：**首次启动默认创建系统仓库（ID1 协同编辑临时仓库 + 我的桌面/我的下载）+ 仓库ID保留区间 1-100**（个人版铺垫）——工作卡 `DevAgentControl/CURRENT_STATE_首次启动默认仓库与ID保留.md`（2026-11-15 建立 + 同日二次确认修正：**仓库1=第三方在线编辑 RemoteDocumentEdit 默认仓库**（`reposIdForRemoteDocumentEdit=1`，BaseFunction.java:206，无后台配置入口），ID 分配调整为 1=协同编辑临时仓库/2=我的桌面/3=我的下载；ID 保留需 SQLite DDL 加 AUTOINCREMENT + 序列推到 100；挂点 addFirstAdminUser）。**新 session 开工第一步：确认卡 §5 裁定项（含 ID1 专用仓库创建与否、命名），然后按卡 §6 实施；自测走"备份→清空→恢复"脚本，绝不动 dev 现役库不恢复。**
+- **下一任务（方案设计完成，待新 session 开工）**：**首次启动默认创建系统仓库（ID1 协同编辑服务仓库 + 我的桌面/我的下载）+ 仓库ID保留区间 1-100**（个人版铺垫）——工作卡 `DevAgentControl/CURRENT_STATE_首次启动默认仓库与ID保留.md`（2026-11-15 建立 + 同日二次确认修正：**仓库1=第三方在线编辑 RemoteDocumentEdit 默认仓库**（`reposIdForRemoteDocumentEdit=1`，BaseFunction.java:206，无后台配置入口），ID 分配调整为 1=协同编辑服务仓库/2=我的桌面/3=我的下载；ID 保留需 SQLite DDL 加 AUTOINCREMENT + 序列推到 100；挂点 addFirstAdminUser）。**新 session 开工第一步：确认卡 §5 裁定项（含 ID1 专用仓库创建与否、命名），然后按卡 §6 实施；自测走"备份→清空→恢复"脚本，绝不动 dev 现役库不恢复。**
 
 - 上一任务 = **在线压缩与解压功能（提取 / 添加到压缩包）——已收尾归档 2026-11-15，用户实测"非常完美"**：工作卡 `DevAgentControl/已完成/CURRENT_STATE_在线压缩与解压.md`。提交 `36c4917fd`（新特性：后端三异步接口+批次导入通道、前端菜单/弹窗/zipViewer三变体）+ `e7ded085d`（优化：菜单改名解压缩/压缩、低频项移到回收站前加分隔线）。顺带修复既有缺陷：checkAndCreateFolderUploadAction lockDoc 失败 NPE。验证：后端自测 38 项全过 + 浏览器 E2E 全过；§8 剩余真机项（只读用户/分享页/GBK zip/1000+文件）用户未逐项反馈即验收通过。
 - **Office 无法打开/保存文件逐个分析**（2026-11-07 用户指定继续）——方法论与环境速查见 **`DevAgentControl/OFFICE文件排查方法与经验总结.md`**（标准流程 DiagTiming→堆栈→x2t 交叉验证→精准修复；已修复清单；十大坑）。工作卡式文件：本方法文档 + 下方各历史卡。

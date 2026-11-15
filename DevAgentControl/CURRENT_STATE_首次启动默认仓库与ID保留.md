@@ -7,7 +7,7 @@
 
 ## 一句话
 
-Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创建三个系统仓库——**ID1 协同编辑临时仓库**（第三方在线编辑 fileLink 拉取落点，对应 `reposIdForRemoteDocumentEdit=1` 默认值）、**ID2 我的桌面**、**ID3 我的下载**（REAL_DOC_PATH 指向用户桌面/下载目录），为个人版"首启即用"铺路；同时把**仓库 ID 1-100 设为系统保留区**，用户自建仓库从 101 起。
+Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创建三个系统仓库——**ID1 协同编辑服务仓库**（第三方在线编辑 fileLink 拉取落点，对应 `reposIdForRemoteDocumentEdit=1` 默认值）、**ID2 我的桌面**、**ID3 我的下载**（REAL_DOC_PATH 指向用户桌面/下载目录），为个人版"首启即用"铺路；同时把**仓库 ID 1-100 设为系统保留区**，用户自建仓库从 101 起。
 
 ## 2. 需求原文整理
 
@@ -64,10 +64,10 @@ Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创�
 - 不采用的备选：addRepos 显式算 ID 并 floor 到 101——每次插入查 max 有并发竞态（syncLockForRepos 按 name 锁不覆盖），改动面大收益小。
 
 ### B. 默认仓库定义（系统仓库，显式固定 ID；**2026-11-15 修正 ID 分配：ID1 留给协同编辑服务**）
-| 字段 | 协同编辑临时仓库 | 我的桌面 | 我的下载 |
+| 字段 | 协同编辑服务仓库 | 我的桌面 | 我的下载 |
 |---|---|---|---|
 | ID | **1**（对应 reposIdForRemoteDocumentEdit 默认值） | **2** | **3** |
-| NAME | 协同编辑临时仓库（名字待裁定 §5.1b） | 我的桌面 | 我的下载 |
+| NAME | 协同编辑服务仓库（名字待裁定 §5.1b） | 我的桌面 | 我的下载 |
 | REAL_DOC_PATH | **空**（用仓库数据目录，绝不指向用户目录） | 探测的桌面目录 | 探测的下载目录 |
 | TYPE/VER_CTRL | 1（FSM）/ 0 | 同左 | 同左 |
 | PATH（仓库数据目录） | getDefaultReposRootPath()（`<root>/1/`） | 同左（`<root>/2/`） | 同左（`<root>/3/`） |
@@ -75,8 +75,9 @@ Windows/Mac 系统首次启动（创建第一个超级管理员）时自动创�
 | 回收站/全文索引 | 不开/不开 | 待裁定 §5.2/§5.3 | 同左 |
 
 - **ID1 专用仓库的意义**：`reposIdForRemoteDocumentEdit` 默认值 1 保持不动（改默认值会引入兼容风险且该配置无后台入口），首启显式创建 ID=1 仓库即让第三方在线编辑服务开箱即用（文件按 fileKey/fileName 组织在该仓库内，RemoteDocumentEditSave 的回传判定自然成立）；开源版无该授权也无副作用（就是普通仓库）。**不创建它的话**（若裁定 §5.1a 选否），ID 1 也必须空置，且"我的桌面/下载"仍从 ID 2 起。
+- **命名裁定（2026-11-15 用户）**：叫「协同编辑服务仓库」，不叫"临时仓库"——防误导用户删除。配套防误删守卫见 §5.1d（deleteRepos 拒绝删 ID==1）。
 - 走内部 service 直插（reposService.addRepos 设显式 ID——Mapper 已支持），**不走 addRepos HTTP 接口**（该接口拒绝普通用户且带超管权限检查，绕开以免语义混淆；复用 checkReposInfoForAdd 做路径冲突校验）。
-- 探测失败（目录不存在/不可写/非 Win/Mac 平台）→ **跳过该仓库 + 系统日志记录原因**，首启不失败（协同编辑临时仓库无目录探测依赖，Win/Mac/Linux 均创建）。
+- 探测失败（目录不存在/不可写/非 Win/Mac 平台）→ **跳过该仓库 + 系统日志记录原因**，首启不失败（协同编辑服务仓库无目录探测依赖，Win/Mac/Linux 均创建）。
 
 ### C. 创建时机与幂等
 - 挂点：addFirstAdminUser 的 addUser 成功后调用 `createDefaultReposForFirstUser(user)`。
@@ -101,9 +102,10 @@ getUserStandardDir(dirType /*Desktop|Downloads*/, osType):
 ## 5. 待用户裁定（新 session 开工前确认，均有推荐默认值）
 
 1. **ID 分配**（2026-11-15 修正后）：
-   - 1a. **首启显式创建 ID=1「协同编辑临时仓库」**（REAL_DOC_PATH 空、指向仓库数据目录，第三方在线编辑开箱即用）？（推荐：**是**）
-   - 1b. 若创建，仓库名叫什么？（推荐：「协同编辑临时仓库」；备选「在线编辑缓存」）
+   - 1a. **首启显式创建 ID=1「协同编辑服务仓库」**（REAL_DOC_PATH 空、指向仓库数据目录，第三方在线编辑开箱即用）？（推荐：**是**）
+   - 1b. ~~若创建，仓库名叫什么？~~ **✅ 已裁定（2026-11-15 用户）：「协同编辑服务仓库」**——不用"临时"字样，避免用户误以为可随意删除/清理。
    - 1c. 我的桌面=ID 2、我的下载=ID 3（推荐）；或其他分配？
+   - 1d.（新增，承接命名裁定）**系统仓库防误删**：deleteRepos 对 ID==1 是否直接拒绝（提示"系统服务仓库，不可删除"）？对 ID 2/3（我的桌面/下载）是否二次强确认？（推荐：ID1 拒绝删除；ID2/3 允许删但确认文案提示默认仓库；实现仅后端 deleteRepos 一处守卫 + 前端文案）
 2. **桌面/下载仓库默认开回收站？**（推荐：开——技术上不污染桌面（回收站在仓库数据目录），误删可恢复；注意语义=删除桌面文件会把它从真实桌面移走）
 3. **默认开全文索引？**（推荐：关——桌面/下载文件多且杂，首启即建索引体感差，用户可后开）
 4. **Windows OneDrive 重定向：注册表权威路径优先？**（推荐：是，reg query 失败退化 user.home）
@@ -112,15 +114,15 @@ getUserStandardDir(dirType /*Desktop|Downloads*/, osType):
 
 ## 6. 实施顺序（新 session 按此开工，每完成一段更新本卡进展）
 
-- **P0-后端**：getUserStandardDir 探测（DataRootService）→ createDefaultReposForFirstUser（挂 addFirstAdminUser，含幂等/跳过/系统日志）→ ID 序列推进（SQLite DDL 改 AUTOINCREMENT + sqlite_sequence 初始化；MySQL ALTER）。
-- **P0-自测**（**绝不动 dev 现役库**）：备份 `C:/TomcatForDocSysDev/docsys/tomcat/DocSystem.db` → 清空 user/repos 相关表模拟全新首启 → 浏览器走 addFirstAdminUser 全流程 → 验证两仓库（ID/指向/权限）+ 下一自建仓库 ID=101 → 恢复备份。脚本化（备份/清空/恢复三步），防中途失败留脏库。
+- **P0-后端**：getUserStandardDir 探测（DataRootService）→ createDefaultReposForFirstUser（挂 addFirstAdminUser，含幂等/跳过/系统日志）→ ID 序列推进（SQLite DDL 改 AUTOINCREMENT + sqlite_sequence 初始化；MySQL ALTER）→ deleteRepos 系统仓库守卫（§5.1d，若采纳）。
+- **P0-自测**（**绝不动 dev 现役库**）：备份 `C:/TomcatForDocSysDev/docsys/tomcat/DocSystem.db` → 清空 user/repos 相关表模拟全新首启 → 浏览器走 addFirstAdminUser 全流程 → 验证三仓库（ID/指向/权限）+ 下一自建仓库 ID=101 + deleteRepos(ID1) 被拒 → 恢复备份。脚本化（备份/清空/恢复三步），防中途失败留脏库。
 - **P1-真机**：Mac 环境验证（用户参与）；Windows OneDrive 重定向机器验证。
 - **收尾**：回归（§7）+ 提交（commit 格式 `【新特性】首次启动默认创建我的桌面/我的下载仓库`）+ 本卡归档。
 
 ## 7. 验证清单
 
 **新装首启（Windows，dev 实例模拟）**
-- [ ] 建超管后自动出现 ID=1 协同编辑临时仓库（REAL_DOC_PATH 空）、ID=2 我的桌面（REAL_DOC_PATH=真实桌面）、ID=3 我的下载
+- [ ] 建超管后自动出现 ID=1 协同编辑服务仓库（REAL_DOC_PATH 空）、ID=2 我的桌面（REAL_DOC_PATH=真实桌面）、ID=3 我的下载
 - [ ] **第三方编辑回归**：调 `getDocInfoForRemoteDocumentEdit.do`（test.html:818 有现成测试页）→ 文件落在 ID=1 仓库内、不落桌面；保存回传判定成立（需商业版授权环境，开源版至少验证 getReposEx(1) 仓库存在）
 - [ ] 桌面/下载文件在仓库中可见、上传直接落到真实目录、下载/重命名/删除正常
 - [ ] 之后用户自建仓库 ID=101（不是 4）
@@ -133,7 +135,8 @@ getUserStandardDir(dirType /*Desktop|Downloads*/, osType):
 - [ ] repos 表非空时（模拟异常）→ 不创建
 - [ ] 同名/同 REAL_DOC_PATH 已存在 → 跳过该项
 - [ ] 探测失败（目录不存在/不可写）→ 跳过+日志+首启成功
-- [ ] Linux（或 OSType 强制）→ 不创建+日志
+- [ ] Linux（或 OSType 强制）→ 桌面/下载不创建+日志（ID1 服务仓库仍创建，若 §5.6 裁定如此）
+- [ ] **deleteRepos(ID=1) → 拒绝**（"系统服务仓库，不可删除"）；ID2/3 删除确认文案提示（若 §5.1d 采纳）
 
 **兼容**
 - [ ] 旧库升级路径：现有 dev 库恢复后 addRepos 正常（ID 继续 max+1，无迁移副作用）
