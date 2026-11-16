@@ -1,6 +1,8 @@
 # CURRENT_STATE_AutoFilter保存失败（缺陷卡）
 
-> 状态：**已定性，待立项修复**（2026-10-07 建立）
+> 状态：**已缓解（lOe 补丁逐条 skip 毒 change），挂起观察**（2026-10-07 建立；2026-11-17 用户实测更新）
+> 2026-11-17 实测：加 AutoFilter 后保存**成功且结果正确**——`Qf`/`lF`×2/`b6` 四条毒 change 均被 `lOe` 补丁（d56a0149）捕获跳过，转换 ret=0、提交/版本库推送正常。日志中 `[sdkjs-patch] lOe skip one change: ...` 属预期输出。
+> 根治需改 sdkjs 逻辑（用户裁定暂不做，保持与 OnlyOffice 后续版本兼容；sdk-all.js 升级时注意重打 `sdkjs-patch` 标记的三处补丁：lOe / commentLock-typeGuard / cell 版 lOe）。
 > 归属：**JS 路径（sdkjs / sdk-all.js）的既有缺陷** —— 与本轮 GraalJS 迁移**无关**
 > 严重程度：**高**（用户改了存不下去，修改丢失）
 
