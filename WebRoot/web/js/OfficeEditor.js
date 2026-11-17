@@ -115,7 +115,12 @@ var OfficeEditor = (function () {
 		console.log("isExternalOffice:", isExternalOffice);
 		
 	    fileType = getFileSuffix(docInfo.name);
-	    fileType = convertWpsToOfficeType(fileType);
+	    fileType = convertWpsToOfficeType(fileType); //server-provided real ext by magic wins (fake-ext: sdkjs openCmd.format from filename takes wrong branch)
+	    if(docInfo.realSuffix && docInfo.realSuffix != fileType)
+	    {
+	        console.log("realSuffix " + docInfo.realSuffix + " overrides fileType " + fileType);
+	        fileType = docInfo.realSuffix;
+	    }
 	    documentType = getDocumentType(fileType);
 	    title = docInfo.name;
 	    dockey = docInfo.docId + "";

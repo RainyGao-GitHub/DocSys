@@ -102,6 +102,12 @@ function buildRequestParamStrForDoc(docInfo, langType)
 		urlParamStr += andFlag + "name=" + base64_encode(docInfo.name);
 		andFlag = "&";
 	}
+
+	if(docInfo.realSuffix)
+	{
+		urlParamStr += andFlag + "realSuffix=" + docInfo.realSuffix;
+		andFlag = "&";
+	}
 	
 	if(docInfo.docType)
 	{
@@ -253,6 +259,12 @@ function getDocInfoFromRequestParamStr()
 		name = "";
 	}
 	docInfo.name = name;
+	var realSuffix = getQueryString("realSuffix");
+	if(realSuffix && realSuffix != null)
+	{
+		docInfo.realSuffix = realSuffix;
+	}
+
 	
 	var docType = getQueryString("docType");
 	if(docType && docType != null)
