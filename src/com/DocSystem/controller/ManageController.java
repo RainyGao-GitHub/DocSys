@@ -65,6 +65,7 @@ import com.DocSystem.common.DataRootService;
 import com.DocSystem.common.FileUtil;
 import com.DocSystem.common.Log;
 import com.DocSystem.common.LogFileUtil;
+import com.DocSystem.common.NativeLibPruner;
 import com.DocSystem.common.OS;
 import com.DocSystem.common.UserListImporter;
 import com.DocSystem.common.Path;
@@ -2785,17 +2786,27 @@ public class ManageController extends BaseController{
 		{
 			FileUtil.moveFileOrDir(upgradePath, "DocSystem-tmp", upgradePath, "DocSystem", false);			
 		}
-		queryTask.info = "安装包检查完成";	
+		queryTask.info = "安装包检查完成";
 		Log.debug("upgradeSystem() " + queryTask.info);
 
 		//可能已被用户取消了
 		if(queryTask.stopFlag == true)
 		{
 			queryTask.status = -1;
-			queryTask.info = "升级任务已被终止";	
-			return;			
+			queryTask.info = "升级任务已被终止";
+			return;
 		}
-		
+
+		//按平台裁剪升级包（与发布打包脚本 build_release.py 同源规则，2026-11-17 裁定）：
+		//升级 war 是跨平台通用包，带着全部平台的原生库与 office-editor 二进制；其中
+		//32 位 lwjgl-natives-windows-x86.jar 会触发 Defender Trojan:Win32/Vigorf.A 误报，
+		//必须在交给 monitor 脚本替换 webapps 前剔掉本平台用不到的部分
+		//（best-effort：识别不了平台或删除失败都不阻断升级）
+		queryTask.status = 2;
+		queryTask.info = "按平台裁剪升级包";
+		Log.debug("upgradeSystem() " + queryTask.info);
+		NativeLibPruner.pruneDocSystem(upgradePath + "DocSystem");
+
 		//解压成功，删除升级包
 		FileUtil.delFile(upgradePath + name);	//删除压缩包
 		
