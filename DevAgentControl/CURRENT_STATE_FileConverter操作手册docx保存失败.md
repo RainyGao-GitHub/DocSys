@@ -56,7 +56,26 @@
 
 ## 遗留（用户侧动作）
 
-1. Eclipse touch 3 文件（NExtractToolsStatic/CChangesWorker/nullable_bool）+ 重启 dev
-2. 服务端实测：打开 23 号仓库该文档 → 确认保存失败通知/自动重试成功（或重新编辑保存一次）
-3. 提交（office 仓库 3 文件）
-4. 方法论文档与 CLAUDE.md 已同步更新（本卡收尾后归档）
+1. ~~Eclipse touch 3 文件 + 重启 dev~~ ✅
+2. ~~服务端实测~~ ✅（2026-11-20 用户实测验证通过："非常完美的解决了问题"）
+3. ~~提交~~ ✅ office 仓库 `fcb982f7`【BugFix】Word文件修改后保存失败（用户提交，工作区 clean）
+
+## 延伸：本修复同时解决了 issue IKWODZ（Office 另存为 PDF 失败/无文字、打印预览失败）——2026-11-20 分析定案
+
+**结论：同根。** `getDoctXml` 是**所有"以编辑态为输入"的转换链共用**的 changes 清单装配点：保存链 `apply_changes`（:944）、**打印/预览链 `doct_bin2pdf`（:3102，bin+changes→pdf.bin→PDF）**、epub/fb2/html 导出（:2954/:2994）。changes 目录被上一轮保存的图片污染时，修复前这些链**全部**要么崩、要么输出被污染——修复（只列 .json）一次性治好。
+
+**实证（2026-11-20，真·修复前基线 = `fcb982f7^` 编译到 scratch classpath 前置）**：
+
+| 实验 | 结果 |
+|---|---|
+| 打印/预览链（8193→513 withchanges，中毒数据） | **AIOOBE 317404 @ doct_bin2pdf:3093**——与保存线同款堆栈，直接实证 |
+| 同数据修复后 | ret=0、PDF 2456209B、%PDF-1.7 + Tj/TJ 文本操作符齐全 |
+| 不崩变体（人工给每张 PNG 尾部补 0x22 终止符后跑修复前基线） | ret=0 不崩，产物与干净版**仅差时间戳元数据**（docProps/core.xml modified、PDF /CreationDate）——本组数据下垃圾 change 未伤内容 |
+
+**两个症状的归属**：
+- "另存为PDF失败/打印预览失败" = 崩溃变体（PNG 尾部无 0x22 终止符 → 内层越界）——已实证，同根闭环。
+- "PDF里没有文字" = 嫌疑变体：不崩时 PNG 解出的垃圾 change 记录会附加在真实 changes 后喂给 sdkjs asc_nativeApplyChanges2（本组数据实测无害=被静默吞掉，但垃圾记录按随机 type 分发到真实 change 类时具备破坏内容的**数据依赖**潜力）；另一部分可能由更早的 GID 修复覆盖（`dafdf463`【BugFix】Excel文件另存为PDF失败，症状恰为 PDF 截断/文字丢失）。用户实测整 issue 已恢复，不再深挖。
+- 边界：编辑器前端直传 pdf.bin 的分支（executeSaveCommand default → fromCanvasPdf → bin2pdf）不读 changes 目录，与本缺陷无关。
+
+**排查过程坑（防再踩）**：做"修复前对照"时 `git show HEAD:` 取到的是**已含修复的版本**（用户已提交 fcb982f7，HEAD 前移）——对照基线必须取 `fcb982f7^`，且要用 `-verbose:class` 验证 scratch class 真被加载。
+
