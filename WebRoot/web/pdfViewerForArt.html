@@ -9,7 +9,7 @@
 <!-- DocSys -->
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/base64.js"></script>
-<script type="text/javascript" src="js/DocSys.js"></script>
+<script type="text/javascript" src="js/DocSys.js?v=20261120"></script>
 
 <style>
 #printLoadingBox {
@@ -134,7 +134,34 @@
 	    	}
 	    	else
 	    	{
-	    		getDocFileLinkForPreview(docInfo, showPDF, showErrorMessage, "REST");
+	    		// 预览流程（弹窗先行模式）：页面内部发请求获取链接（Office 文件后端同步转换，可能耗时较长）
+	    		showLoading();
+	    		var successCallback = function(link, dataEx) {
+	    			if(dataEx == "pdfViewOnly")
+	    			{
+	    				// 无下载权限，切换为只读模式查看
+	    				docInfo.fileLink = link;
+	    				var viewerMode = "viewOnly";
+	    				var src = buildPdfViewerSrc(link, viewerMode, 0, 0);
+	    				$('#pdfPlayer').html('<iframe frameBorder="0" scrolling="no" src="' + src + '" style="width:100%; height:100%;"></iframe>');
+	    			}
+	    			else
+	    			{
+	    				showPDF(link);
+	    			}
+	    		};
+	    		var errorCallback = function(errMsg) {
+	    			showPrintError(errMsg);
+	    		};
+	    		if(isOffice(docInfo.fileSuffix))
+	    		{
+	    			// Office 文件预览走 getDocOfficeLink（后端同步转 PDF）
+	    			getDocOfficeLinkForPreview(docInfo, successCallback, errorCallback);
+	    		}
+	    		else
+	    		{
+	    			getDocFileLinkForPdfPreview(docInfo, successCallback, errorCallback, "REST");
+	    		}
 	    	}
 	    }
 	    else

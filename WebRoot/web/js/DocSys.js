@@ -426,6 +426,87 @@ function getDocFileLinkForPrint(docInfo, successCallback, errorCallback, urlStyl
 	});
 }
 
+// 预览专用（弹窗先行模式）：pdfViewerForArt.html 页面内部调用，preview 固定为 "pdf"（保持与 openPdf 旧链路一致的权限降级语义）
+function getDocFileLinkForPdfPreview(docInfo, successCallback, errorCallback, urlStyle)
+{
+	var url = (docInfo.isZip && docInfo.isZip == 1)
+		? "/DocSystem/Doc/getZipDocFileLink.do"
+		: "/DocSystem/Doc/getDocFileLink.do";
+
+	$.ajax({
+		url: url,
+		type: "post",
+		dataType: "json",
+		data: {
+			reposId: docInfo.vid,
+			path: docInfo.path,
+			name: docInfo.name,
+			commitId: docInfo.commitId,
+			historyType: docInfo.historyType,
+			isZip: docInfo.isZip,
+			rootPath: docInfo.rootPath,
+			rootName: docInfo.rootName,
+			shareId: docInfo.shareId,
+			authCode: docInfo.authCode,
+			urlStyle: urlStyle,
+			preview: "pdf",
+			videoConvertType: docInfo.videoConvertType,
+		},
+		success: function(ret) {
+			console.log("getDocFileLinkForPdfPreview ret", ret);
+			if ("ok" == ret.status) {
+				var fileLink = buildFullLink(ret.data);
+				// 后端可能返回 pdfViewOnly（无下载权限），通过 dataEx 传回
+				successCallback && successCallback(fileLink, ret.dataEx);
+			} else {
+				errorCallback && errorCallback(ret.msgInfo || "获取文件信息失败");
+			}
+		},
+		error: function() {
+			errorCallback && errorCallback("服务器异常");
+		}
+	});
+}
+
+// Office 文件预览专用（弹窗先行模式）：pdfViewerForArt.html 页面内部调用 getDocOfficeLink.do，
+// preview 固定为 "pdf"（后端同步转 PDF，可能耗时较长；按下载权限 dataEx 返回 "pdf"/"pdfViewOnly"）
+function getDocOfficeLinkForPreview(docInfo, successCallback, errorCallback)
+{
+	var url = (docInfo.isZip && docInfo.isZip == 1)
+		? "/DocSystem/Bussiness/getZipDocOfficeLink.do"
+		: "/DocSystem/Bussiness/getDocOfficeLink.do";
+
+	$.ajax({
+		url: url,
+		type: "post",
+		dataType: "json",
+		data: {
+			reposId: docInfo.vid,
+			path: docInfo.path,
+			name: docInfo.name,
+			rootPath: docInfo.rootPath,
+			rootName: docInfo.rootName,
+			commitId: docInfo.commitId,
+			historyType: docInfo.historyType,
+			shareId: docInfo.shareId,
+			authCode: docInfo.authCode,
+			preview: "pdf",  //预览模式下 office 文件转成 pdf
+		},
+		success: function(ret) {
+			console.log("getDocOfficeLinkForPreview ret", ret);
+			if ("ok" == ret.status) {
+				var fileLink = buildFullLink(ret.data);
+				successCallback && successCallback(fileLink, ret.dataEx);
+			} else {
+				errorCallback && errorCallback(ret.msgInfo || "获取文件信息失败");
+			}
+		},
+		error: function() {
+			errorCallback && errorCallback("服务器异常");
+		}
+	});
+}
+
 function getDocFileLinkBasic(docInfo, successCallback, errorCallback, urlStyle, preview)
 {
 	var fileLink = "";
@@ -1812,7 +1893,15 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId, authCode
 			break;
 		}
 		docInfo.fileLink = ""; //copyDocInfo的fileLink不是RESTLink，因此需要清空，保证showPdf接口重新获取RESTLINK
-		openPdf(docInfo, openInNewPage, preview);
+		if(openInNewPage == "openInArtDialog")
+		{
+			//弹窗先行：立即弹窗，页面内部负责发请求获取链接并显示 loading/error（与打印链一致）
+			showPdf(docInfo, openInNewPage);
+		}
+		else
+		{
+			openPdf(docInfo, openInNewPage, preview);
+		}
 	}
 	else if(isOffice(docInfo.fileSuffix))
 	{
@@ -1826,7 +1915,17 @@ function openDoc(doc, showUnknownFile, openInNewPage, preview, shareId, authCode
 			preview = "pdf";
 			break;
 		}
-		openOffice(docInfo, openInNewPage, preview);
+		if(openInNewPage == "openInArtDialog" && preview == "pdf")
+		{
+			//预览（转PDF）模式弹窗先行：立即弹窗，页面内部负责发请求获取链接并显示 loading/error
+			//office 编辑器打开（preview == "office"）路径保持原有 ajax 先行（编辑器自身有加载态）
+			docInfo.fileLink = ""; //清空fileLink，保证弹窗内页面走页内取链通道
+			showPdf(docInfo, openInNewPage);
+		}
+		else
+		{
+			openOffice(docInfo, openInNewPage, preview);
+		}
 	}
 	else if(isCad(docInfo.fileSuffix))
 	{
