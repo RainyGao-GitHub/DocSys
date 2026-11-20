@@ -73,7 +73,10 @@ var dialogList = {
         elem && api)
             return api.follow(elem).zIndex().focus();
         if (api)
-            return api.zIndex().focus().display(!0),
+            return api.DOM.wrap.hasClass("dialog-min-size") && (api.DOM.wrap.removeClass("dialog-min-size"),
+                api.dialogResize(),
+                api.resetTitleLength()),
+                api.zIndex().focus().display(!0),
             $.fn.flash && api.DOM.wrap.flash(),
                 api;
         $.isArray(config.button) || (config.button = config.button ? [config.button] : []),
