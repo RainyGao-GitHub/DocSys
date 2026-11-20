@@ -136,6 +136,10 @@
 .dropdown-submenu > .dropdown-menu.drop-left{
 	left:-100%;
 }
+.dropdown-submenu > .dropdown-menu.drop-up{
+	top:auto;
+	bottom:-6px;
+}
 .dropdown-submenu:hover .dropdown-menu {
 	display: block;
 }

@@ -1,6 +1,6 @@
 # CURRENT_STATE_文件最小化后双击恢复窗口（任务卡）
 
-> 状态：**已实现+dev 实测通过（2026-11-20），待用户实测确认+提交**（Issue：https://gitee.com/RainyGao/DocSys/issues/IKWM0U）
+> 状态：**用户实测通过（2026-11-20），待用户提交**（"最小化的文件双击后可以恢复成默认大小了"——用户确认语；Issue：https://gitee.com/RainyGao/DocSys/issues/IKWM0U）
 > Issue：https://gitee.com/RainyGao/DocSys/issues/IKWM0U
 > 归属：**主仓库前端**（WebRoot/web/js/artDialog.js 为主 + 引用页版本号），后端不动
 

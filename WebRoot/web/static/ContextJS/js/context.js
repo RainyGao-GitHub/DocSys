@@ -22,7 +22,7 @@ var context = context || (function () {
 		
 		$(document).on('click', 'html', function () {
 			$('.dropdown-context').fadeOut(options.fadeSpeed, function(){
-				$('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');
+				$('.dropdown-context').css({display:''}).find('.drop-left,.drop-up').removeClass('drop-left drop-up');
 			});
 		});
 		if(options.preventDoubleContext){
@@ -37,6 +37,14 @@ var context = context || (function () {
 				collision = (subWidth+subLeft) > window.innerWidth;
 			if(collision){
 				$sub.addClass('drop-left');
+			}
+			//Vertical collision: expand upwards when submenu bottom would pass its parent menu bottom (Rainy)
+			//Note: $sub itself carries class dropdown-context, so closest() must start from its parent element
+			var $parentMenu = $sub.parent().closest('.dropdown-context'),
+				subBottom = $sub.offset().top + $sub.outerHeight(),
+				parentBottom = $parentMenu.offset().top + $parentMenu.outerHeight();
+			if(subBottom > parentBottom){
+				$sub.addClass('drop-up');
 			}
 		});
 		
