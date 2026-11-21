@@ -610,13 +610,10 @@ public class DataRootService {
     /**
      * 探测当前用户的标准目录（Desktop/Downloads），用于首启默认仓库「我的桌面/我的下载」。
      * 与 getDefaultRoots 同风格：user.home 拼接 + 规范化 + 存在/可写校验；
-     * 仅支持 Windows/Mac（Linux 服务器场景无此语义），失败返回 null，调用方跳过创建。
+     * 全平台探测（Linux 同样适用 ~/Desktop、~/Downloads），目录不存在或不可写返回 null，调用方跳过创建。
      */
     public static String getUserStandardDir(String dirName, int osType) {
         if(dirName == null || dirName.trim().isEmpty()) {
-            return null;
-        }
-        if(OS.isWinOS(osType) == false && osType != OS.MacOS) {
             return null;
         }
         String userHome = System.getProperty("user.home");

@@ -3176,7 +3176,7 @@ public class ManageController extends BaseController{
 
 	//首次启动时为首个超管创建系统默认仓库：
 	//ID1 协同编辑服务仓库（reposIdForRemoteDocumentEdit 默认值，第三方在线编辑的文件拉取落点，全平台创建）
-	//ID2 我的桌面 / ID3 我的下载（REAL_DOC_PATH 指向当前用户桌面/下载目录，仅 Windows/Mac，探测失败跳过）
+	//ID2 我的桌面 / ID3 我的下载（REAL_DOC_PATH 指向当前用户桌面/下载目录，全平台探测，探测失败跳过）
 	private void createDefaultReposForFirstUser(User user, HttpServletRequest request)
 	{
 		//幂等防御：仅全新系统（repos 表为空）才创建，防止升级或异常场景误触发
