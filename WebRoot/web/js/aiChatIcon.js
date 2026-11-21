@@ -38,7 +38,26 @@ window.AI_CHAT_ZINDEX = 9998;	//高于业务弹窗（artDialog 自增序列/moda
 		} catch(e) {}
 
 		var started = false, dragging = false, lastUpWasDrag = false;
-		var startX = 0, startY = 0, origX = 0, origY = 0;
+		var startX = 0, startY = 0, origX = 0, origY = 0, iconW = 60, iconH = 60;
+		var dragMasks = [];
+
+		//拖动期间给所有 iframe 盖透明遮罩（仿 zTree showIfameMask）：iframe 会捕获 mousemove/mouseup
+		//导致图标拖进其区域后卡死、松手后从边缘瞬移；pointer-events:none 方案对 iframe 命中测试无效，必须物理遮挡
+		function makeDragMasks() {
+			var masks = [];
+			var iframes = document.querySelectorAll("iframe");
+			for(var i = 0; i < iframes.length; i++) {
+				var r = iframes[i].getBoundingClientRect();
+				if(r.width < 2 || r.height < 2) continue;	//隐藏的 iframe 无需遮盖
+				var mask = document.createElement("div");
+				//fixed + 视口坐标即可（拖动期间页面不滚动）；z-index 低于图标(9999)，高于 iframe 及页面内容
+				mask.style.cssText = "position:fixed;left:" + r.left + "px;top:" + r.top
+					+ "px;width:" + r.width + "px;height:" + r.height + "px;z-index:9997;background:transparent;";
+				document.body.appendChild(mask);
+				masks.push(mask);
+			}
+			return masks;
+		}
 
 		icon.addEventListener("mousedown", function(e) {
 			if(e.button !== 0) return;
@@ -47,6 +66,13 @@ window.AI_CHAT_ZINDEX = 9998;	//高于业务弹窗（artDialog 自增序列/moda
 			lastUpWasDrag = false;	//新一轮按下，清除上一次的抑制标记
 			startX = e.clientX;
 			startY = e.clientY;
+			//参照 zTree 拖动（干净代理元素无任何过渡）：拖动跟随走 transform（只触发合成，不重排/不重绘渐变阴影），
+			//并临时禁掉 hover/:active 的 transform 过渡——否则快速拖动时鼠标在图标边界移进移出，
+			//scale/rotate 会以 0.3s 缓动反复震荡，视觉上表现为卡顿
+			icon.style.transition = "none";
+			icon.style.transform = "scale(1)";
+			iconW = icon.offsetWidth || 60;
+			iconH = icon.offsetHeight || 60;
 			var rect = icon.getBoundingClientRect();
 			origX = rect.left;
 			origY = rect.top;
@@ -61,25 +87,48 @@ window.AI_CHAT_ZINDEX = 9998;	//高于业务弹窗（artDialog 自增序列/moda
 				dragging = true;
 				icon.style.cursor = "grabbing";
 				document.body.style.userSelect = "none";
+				dragMasks = makeDragMasks();
 			}
-			applyPos(origX + dx, origY + dy);
+			//视口内钳制；尺寸用 mousedown 时缓存的值，mousemove 内只写不读，避免每帧强制布局
+			var nx = Math.max(0, Math.min(origX + dx, window.innerWidth - iconW));
+			var ny = Math.max(0, Math.min(origY + dy, window.innerHeight - iconH));
+			icon.style.transform = "translate(" + (nx - origX) + "px," + (ny - origY) + "px)";
 		});
 
 		document.addEventListener("mouseup", function() {
 			if(!started) return;
+			endDrag();
+		});
+
+		//兜底：鼠标移出窗口（Alt+Tab 等）时 mouseup 丢失，同样要结束拖动并还原样式
+		window.addEventListener("blur", function() {
+			if(started && dragging) endDrag();
+		});
+
+		function endDrag() {
 			started = false;
+			icon.style.transition = "";
+			for(var i = 0; i < dragMasks.length; i++) { dragMasks[i].remove(); }
+			dragMasks = [];
 			if(dragging) {
 				dragging = false;
 				lastUpWasDrag = true;
 				icon.style.cursor = "grab";
 				document.body.style.userSelect = "";
-				//记忆拖动后位置
+				//落定：把 transform 位移折算进 left/top 后清掉 transform，恢复纯布局定位
 				var rect = icon.getBoundingClientRect();
+				icon.style.transform = "";
+				applyPos(rect.left, rect.top);
+				//transition 需等 transform 清稳后再恢复（下一帧），否则清 translate 的瞬间会
+				//触发一次 transform 过渡，图标看起来像松手后弹回
+				requestAnimationFrame(function() { icon.style.transition = ""; });
 				try {
 					localStorage.setItem(STORE_KEY, JSON.stringify({left: rect.left, top: rect.top}));
 				} catch(e) {}
+			} else {
+				icon.style.transform = "";	//未拖动（纯点击）：恢复 hover/:active 的原生表现
 			}
-		});
+		}
 
 		//拖动结束后的那次 click 不应打开弹窗：capture 阶段拦截（早于 onclick 属性执行）
 		icon.addEventListener("click", function(e) {
