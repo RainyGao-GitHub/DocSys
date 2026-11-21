@@ -343,3 +343,36 @@ core-fonts 不在 bin 目录下，剥不到 ⇒ 需把它升级为**真正的 re
 2. 字体集变化时插入点之后的序号会移动（font_selection.bin/AllFonts.js/fonts/ 同次重写自洽；浏览器旧缓存属既有 R3 行为）。
 3. 重生成后序号收缩会在 fonts/ 留下无引用的孤儿文件（无危害，未做清理）。
 4. 全量 Fonts.zip（~600 字体）的真实预生成耗时/内存同 §7.4-1，首次发布实跑后回填。
+---
+
+## 9. 三期：字体库产物入库（2026-11-05 提出，**同日撤销**）
+
+> ⚠️ **已撤销**：office-editor 仓库需 +775MB（字体文件 git 压缩率低），超出 gitee 私有仓库 500MB / 开源 1GB 容量上限，用户裁定不入库。Fonts.zip 已恢复 562 文件基准（备份 `Fonts.zip.bak-20261105` 已还原并删除）；WebRoot 的 core-fonts 由用户通过 git 回退恢复；拷入的产物作为**本地未跟踪文件保留**（回退 .gitignore 后自动回到忽略态）——这正是撤销后的实际收益形态：
+>
+> **产物放 WebRoot 本地（不入库）即可解决开发痛点**：根因是 Eclipse publish 把 WebRoot 状态镜像到 tmp0（WebRoot 无产物时 tmp0 产物被清、触发重新生成）。产物留在 WebRoot（被 .gitignore 忽略、不进仓库）后，重启/clean republish 都会原样带到 tmp0，ready=true 不再生成。仅全新 clone 的机器需要一次性自动生成（约 20 分钟，本就是设计内行为）。
+
+
+> 背景：发布已实现预生成，但 dev 工作区（WebRoot）无产物——Eclipse publish 把 WebRoot 状态镜像到 tmp0，每次重启/clean republish 后产物被清，前端自动生成要跑 20 分钟。
+> 裁定（用户提议）：**预生成产物直接提交进 office-editor 仓库，core-fonts 从仓库删除**——字体数据的唯一形态就是 fonts/（二期已让它自足：相对路径 + 兼作重生成源）。
+
+### 9.1 落地内容
+
+1. **Fonts.zip 基准升级**（D8 基准变更）：原 562 文件（Windows 字体）+ core-fonts 全部开源字体 185 个 = **747 文件 / 797.9MB 未压缩 / 469MB zip**（原包备份 `Fonts.zip.bak-20261105`）。目的：仓库删除 core-fonts 后，发布 staging 合并 Fonts.zip 重建的源仍是全集（开源+Windows），产物不缩水。
+2. **产物入库**：从 2.02.90 发布 staging 拷贝验证过的产物到 WebRoot office-editor——`fonts/`（552 文件 775MB）、`bin/{font_selection.bin, AllFonts.js, fonts.log}`、`sdkjs/common/AllFonts.js`、缩略图 20 个。
+3. **core-fonts 从 WebRoot 删除**（215 个跟踪文件）。
+4. `.gitignore` 反转：产物不再忽略（入库形态）；保留忽略 `sdkjs/*/sdk-all.cache`、新增 `server/FileConverter/bin/x2tfonts/`（运行期物化，不入库）。
+5. 验证：WebRoot 上 CLI `--force false` → `skip generation!!`（fonts.log 与 fonts/ 扫描归一化匹配）✓；`添加字体`（addOfficeFonts）目标即 core-fonts 目录，按需重建，与双源去重设计兼容 ✓。
+
+### 9.2 效果与影响
+
+| 项 | 变化 |
+|---|---|
+| dev 重启 / Eclipse republish | 产物随 WebRoot 镜像，ready=true，**不再触发生成** |
+| 在线安装（onlineInstallOffice，office-editor 仓库为源） | 克隆即带产物（相对路径），装完 checkAndGenerateFonts 走 skip 分支，立即可用 |
+| 发布流程 | **不变**：war 排除产物 → staging 合并新 Fonts.zip（747 基准）→ 全量生成 → 删 core-fonts |
+| 增加新字体 | 管理员"添加字体"→ 按需重建 core-fonts → 字体集变化 → 正常触发生成（双源去重合并） |
+| office-editor 仓库体积 | **+552 文件 / ~775MB**（字体 git 压缩率低）——提交与托管容量需自行评估（gitee 私有仓库 500MB/开源 1GB 上限需注意） |
+
+### 9.3 待用户执行
+
+- office-editor 仓库提交：215 删除（core-fonts）+ 25 新增（产物）+ 1 修改（.gitignore）。
