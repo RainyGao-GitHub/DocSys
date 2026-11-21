@@ -3163,13 +3163,32 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		//2. 数据根目录配置：当前配置已指向该备份所在根时（典型如旧版布局 C:/DocSysReposes 直挂盘符、
-		//重装后配置仍保留原路径），不改写配置、保持原布局恢复；否则写入 docSys.ini 用户配置副本
-		//（不直接改 WEB-INF/classes，由 docSysInit(true) 在启动初始化中统一应用）
+		//2. 数据库不存在则建库（覆盖 sqlite DB 文件被删的场景）
+		if(testDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)
+		{
+			String dbName = getDBNameFromUrl(DB_TYPE, DB_URL);
+			createDB(DB_TYPE, dbName, DB_URL, DB_USER, DB_PASS);
+		}
+
+		//3. 清库重建当前版本表结构并导入 JSON 备份（docsystem_data.json 为对象级序列化，跨数据库类型安全）
+		//   此阶段不写任何配置，失败仅清库回滚，保证零副作用
+		String backupPath = root + DataRootService.DIR_REPOS + "/" + DataRootService.DIR_BACKUP + "/" + backupDir + "/";
+		if(restoreDatabaseFromJson(backupPath) == false || isFirstAdminUserExists() == false)
+		{
+			//失败回滚：清库回空表结构，保证"全新启动"选项仍可用（配置未动）
+			rebuildDBSchema(DB_TYPE, DB_URL, DB_USER, DB_PASS);
+			docSysErrorLog("恢复失败：备份数据导入异常或备份不完整，请更换备份重试或选择全新启动", rt);
+			return;
+		}
+
+		//4. 数据已恢复成功，应用数据根目录配置：当前配置已指向该备份所在根时
+		//   （典型如旧版布局 C:/DocSysReposes 直挂盘符、重装后配置仍保留原路径），不改写配置、保持原布局；
+		//   否则写入 docSys.ini 用户配置副本（不直接改 WEB-INF/classes，由 docSysInit(true) 在启动初始化中统一应用）
 		if(DataRootService.isCurrentDataRoot(root, OSType) == false)
 		{
 			if(applyDataRootToUserConfig(validation, rt) == false)
 			{
+				docSysErrorLog("数据已恢复，但数据根目录配置保存失败，请检查 " + docSysIniPath + " 目录权限", rt);
 				return;
 			}
 		}
@@ -3178,24 +3197,7 @@ public class ManageController extends BaseController{
 			Log.info("restoreSystemData() 当前配置已指向备份所在数据根，跳过配置改写 root:" + root);
 		}
 
-		//3. 数据库不存在则建库（覆盖 sqlite DB 文件被删的场景）
-		if(testDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)
-		{
-			String dbName = getDBNameFromUrl(DB_TYPE, DB_URL);
-			createDB(DB_TYPE, dbName, DB_URL, DB_USER, DB_PASS);
-		}
-
-		//4+5. 清库重建当前版本表结构并导入 JSON 备份（docsystem_data.json 为对象级序列化，跨数据库类型安全）
-		String backupPath = root + DataRootService.DIR_REPOS + "/" + DataRootService.DIR_BACKUP + "/" + backupDir + "/";
-		if(restoreDatabaseFromJson(backupPath) == false || isFirstAdminUserExists() == false)
-		{
-			//失败回滚：清库回空表结构，保证"全新启动"选项仍可用
-			rebuildDBSchema(DB_TYPE, DB_URL, DB_USER, DB_PASS);
-			docSysErrorLog("恢复失败：备份数据导入异常或备份不完整，请更换备份重试或选择全新启动", rt);
-			return;
-		}
-
-		//6. 走启动初始化：应用 docSys.ini 配置并完成全部初始化（数据路径/定时任务/Agent），无需重启
+		//5. 走启动初始化：应用 docSys.ini 配置并完成全部初始化（数据路径/定时任务/Agent），无需重启
 		String ret = docSysInit(true);
 		if("ok".equals(ret) == false)
 		{

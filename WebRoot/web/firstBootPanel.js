@@ -182,7 +182,7 @@ FirstBootPanel.renderRecord = function()
 		$("#fbSelectedBox").hide();
 		return;
 	}
-	$("#fbRecordName").text(selected.root);
+	$("#fbRecordName").text(selected.reposPath || selected.root);
 	$("#fbRecordTime").text(selected.timeText);
 	$("#fbRecordLatest").toggle(selected.latest);
 	$("#fbSelectedBox").show();

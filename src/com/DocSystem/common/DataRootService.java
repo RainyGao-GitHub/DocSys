@@ -497,6 +497,12 @@ public class DataRootService {
             if(json.isFile() == false || json.length() <= 0) {
                 continue;
             }
+            //仅含超管账号（type=2）的备份可用于恢复：空库/仅普通用户的半初始化系统恢复后无法登录，直接过滤
+            String content = FileUtil.readDocContentFromFile(entry.getPath() + "/", BACKUP_NAME + ".json", "UTF-8");
+            if(hasSuperAdminInBackup(content) == false) {
+                Log.debug("DataRootService.listRestoreBackups() 跳过无超管账号的备份: " + entry.getPath());
+                continue;
+            }
             long time = parseBackupTime(entry.getName());
             if(time <= 0) {
                 time = entry.lastModified();
@@ -517,6 +523,33 @@ public class DataRootService {
             }
         });
         return backups;
+    }
+
+    /**
+     * 判断备份内容是否包含超管账号（user 段存在 type=2 的用户）。
+     * 导出文件键名不带引号（手工拼接），fastjson 宽松模式可解析；解析失败按无超管处理。
+     */
+    private static boolean hasSuperAdminInBackup(String content) {
+        if(content == null || content.isEmpty()) {
+            return false;
+        }
+        try {
+            JSONObject jobj = JSONObject.parseObject(content);
+            JSONArray users = jobj == null ? null : jobj.getJSONArray("user");
+            if(users == null) {
+                return false;
+            }
+            for(int i=0; i<users.size(); i++) {
+                JSONObject u = users.getJSONObject(i);
+                if(u != null && u.getIntValue("type") == 2) {
+                    return true;
+                }
+            }
+        } catch(Exception e) {
+            Log.debug("DataRootService.hasSuperAdminInBackup() parse failed: " + e.getMessage());
+            return false;
+        }
+        return false;
     }
 
     /**
