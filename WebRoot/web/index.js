@@ -32,7 +32,8 @@ function pageInit(lang)
                 
             	if(ret.data && ret.data == "needAddFirstAdmin")
                 {
-            		showAddFirstAdminUserPanel();
+            		//首启入口：优先显示启动方式选择面板（存在可恢复备份时），否则直接弹首管弹窗
+            		showFirstBootEntry();
                 }
 
             }

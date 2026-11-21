@@ -377,6 +377,170 @@ public class DataRootService {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time));
     }
 
+    /**
+     * 首启恢复候选（getRestoreCandidates.do 后端）：
+     * 复用 getCandidates 的扫描与排序，过滤出含有效 JSON 备份的数据根目录。
+     * 恢复一律使用 docsystem_data.json（对象级序列化，跨数据库类型安全），
+     * 仅有 SQL 的备份目录不进入恢复列表。
+     */
+    public static JSONObject getRestoreCandidates(int osType, JSONObject currentPaths) {
+        JSONObject result = new JSONObject();
+        result.put("os", osName(osType));
+
+        JSONArray roots = new JSONArray();
+        JSONObject candidates = getCandidates(osType, currentPaths);
+        JSONArray list = candidates.getJSONArray("candidates");
+        if(list != null) {
+            for(int i=0; i<list.size(); i++) {
+                JSONObject c = list.getJSONObject(i);
+                if(c.getBooleanValue("hasValidBackup") == false) {
+                    continue;
+                }
+                JSONArray backups = listRestoreBackups(c.getString("root"), osType);
+                if(backups == null || backups.isEmpty()) {
+                    continue;
+                }
+                JSONObject item = new JSONObject(true);
+                item.put("root", c.getString("root"));
+                item.put("reposPath", c.getString("root") + DIR_REPOS + "/");
+                item.put("backupCount", backups.size());
+                item.put("lastBackupTimeText", c.getString("lastBackupTimeText"));
+                item.put("writable", c.getBooleanValue("writable"));
+                item.put("recommended", c.getBooleanValue("recommended"));
+                item.put("backups", backups);
+                roots.add(item);
+            }
+        }
+
+        //标记全局最新备份（所有根的所有备份中时间最大的一个，供前端默认选中）
+        JSONObject latestBackup = null;
+        long latestTime = 0;
+        for(int i=0; i<roots.size(); i++) {
+            JSONArray backups = roots.getJSONObject(i).getJSONArray("backups");
+            for(int j=0; j<backups.size(); j++) {
+                JSONObject b = backups.getJSONObject(j);
+                if(b.getLongValue("time") > latestTime) {
+                    latestTime = b.getLongValue("time");
+                    latestBackup = b;
+                }
+            }
+        }
+        if(latestBackup != null) {
+            latestBackup.put("latest", true);
+        }
+
+        result.put("roots", roots);
+        return result;
+    }
+
+    /**
+     * 当前配置（MxsDocDataRoot，或由各存储路径反推的根）是否已指向 root。
+     * 用于首启恢复：配置已指向备份所在根时（典型如旧版布局 C:/DocSysReposes 直挂盘符、
+     * 重装后配置仍保留原路径），无需改写任何配置，保持原布局恢复。
+     */
+    public static boolean isCurrentDataRoot(String root, int osType) {
+        String normalized = normalizeRoot(root, osType);
+        if(normalized == null) {
+            return false;
+        }
+        JSONObject currentPaths = getCurrentPaths();
+        if(matchesCurrentRoot(normalized, currentPaths.getString(KEY_DATA_ROOT), osType)) {
+            return true;
+        }
+        for(Object value : currentPaths.values()) {
+            String r = rootFromStorePath(String.valueOf(value), osType);
+            if(matchesCurrentRoot(normalized, r, osType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean matchesCurrentRoot(String normalized, String candidate, int osType) {
+        if(candidate == null || candidate.trim().isEmpty()) {
+            return false;
+        }
+        String c = normalizeRoot(candidate, osType);
+        if(c == null) {
+            return false;
+        }
+        if(OS.isWinOS(osType)) {
+            return normalized.toLowerCase(Locale.ROOT).equals(c.toLowerCase(Locale.ROOT));
+        }
+        return normalized.equals(c);
+    }
+
+    /** 列出数据根目录下所有可恢复的备份目录（docsystem_data.json 存在且非空，按时间倒序） */
+    public static JSONArray listRestoreBackups(String root, int osType) {
+        JSONArray backups = new JSONArray();
+        String normalized = normalizeRoot(root, osType);
+        if(normalized == null) {
+            return backups;
+        }
+        File backupDir = new File(normalized + DIR_REPOS + "/" + DIR_BACKUP);
+        if(backupDir.isDirectory() == false) {
+            return backups;
+        }
+        File[] entries = backupDir.listFiles();
+        if(entries == null) {
+            return backups;
+        }
+        int checked = 0;
+        for(File entry : entries) {
+            if(entry == null || entry.isDirectory() == false) {
+                continue;
+            }
+            if(++checked > BACKUP_LIST_LIMIT) {
+                break;
+            }
+            File json = new File(entry, BACKUP_NAME + ".json");
+            if(json.isFile() == false || json.length() <= 0) {
+                continue;
+            }
+            long time = parseBackupTime(entry.getName());
+            if(time <= 0) {
+                time = entry.lastModified();
+            }
+            JSONObject item = new JSONObject(true);
+            item.put("dir", entry.getName());
+            item.put("time", time);
+            item.put("timeText", formatTime(time));
+            item.put("jsonSize", json.length());
+            backups.add(item);
+        }
+        Collections.sort(backups, new Comparator<Object>() {
+            @Override
+            public int compare(Object a, Object b) {
+                long at = ((JSONObject) a).getLongValue("time");
+                long bt = ((JSONObject) b).getLongValue("time");
+                return at > bt ? -1 : (at < bt ? 1 : 0);
+            }
+        });
+        return backups;
+    }
+
+    /**
+     * 校验并返回可恢复的备份：backupDir 必须是 root 的 DocSysReposes/DBBackup/ 下
+     * 含有效 docsystem_data.json 的目录（名称做安全校验，防目录穿越）。
+     */
+    public static JSONObject findRestoreBackup(String root, String backupDir, int osType) {
+        if(root == null || backupDir == null) {
+            return null;
+        }
+        String dirName = backupDir.trim();
+        if(dirName.isEmpty() || dirName.contains("/") || dirName.contains("\\") || dirName.contains("..")) {
+            return null;
+        }
+        JSONArray backups = listRestoreBackups(root, osType);
+        for(int i=0; i<backups.size(); i++) {
+            JSONObject b = backups.getJSONObject(i);
+            if(dirName.equals(b.getString("dir"))) {
+                return b;
+            }
+        }
+        return null;
+    }
+
     /** 当前进程是否能写该目录（真实创建临时文件；不存在的根测试最近父目录） */
     public static boolean testWritable(File root) {
         if(root == null) {
@@ -452,6 +616,7 @@ public class DataRootService {
         JSONObject pathsJson = new JSONObject();
         JSONObject pathStatus = new JSONObject();
         JSONArray existingDirs = new JSONArray();
+        boolean allPathsExist = true;
         for(Map.Entry<String, String> entry : paths.entrySet()) {
             String key = entry.getKey();
             String path = entry.getValue();
@@ -461,11 +626,15 @@ public class DataRootService {
                 if(file.isDirectory() == false) {
                     errors.add("路径不是文件夹: " + path);
                     pathStatus.put(key, "invalid");
+                } else if(checkWrite && testWritable(file) == false) {
+                    errors.add("目录不可写: " + path);
+                    pathStatus.put(key, "invalid");
                 } else {
                     pathStatus.put(key, "existing");
                     existingDirs.add(displayDirName(key));
                 }
             } else {
+                allPathsExist = false;
                 File parent = file.getParentFile();
                 while(parent != null && parent.exists() == false) {
                     parent = parent.getParentFile();
@@ -484,6 +653,12 @@ public class DataRootService {
         result.put("warnings", warnings);
 
         boolean writable = checkWrite ? testWritable(rootFile) : isWritable(rootFile);
+        if(writable == false && allPathsExist && errors.size() == 0) {
+            //根目录本身不可写不一定无效：全部派生目录均已存在且可写时
+            //（典型如旧版布局 DocSysReposes 等直挂盘符 C:/，Windows 默认禁止进程在盘符根创建文件），
+            //运行期不会在根目录创建任何内容，按可写处理
+            writable = true;
+        }
         result.put("writable", writable);
         if(writable == false) {
             errors.add("数据根目录不可写: " + normalized);

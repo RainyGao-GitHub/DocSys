@@ -3068,6 +3068,237 @@ public class ManageController extends BaseController{
 		return false;
 	}
 
+	//首启数据恢复互斥锁（防止并发重复触发恢复）
+	private static final java.util.concurrent.atomic.AtomicBoolean systemDataRestoring = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+	/********** 首启恢复：获取可恢复的数据备份列表 ***************/
+	@RequestMapping("/getRestoreCandidates.do")
+	public void getRestoreCandidates(HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getRestoreCandidates.do ***********************");
+		ReturnAjax rt = new ReturnAjax();
+		if(dataRootAccessCheck(session, rt) == false)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject data = DataRootService.getRestoreCandidates(OSType, DataRootService.getCurrentPaths());
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
+	/********** 首启恢复：从指定数据备份恢复系统数据 ***************/
+	@RequestMapping("/restoreSystemData.do")
+	public void restoreSystemData(String dataRoot, String backupDir, HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** restoreSystemData.do ***********************");
+		Log.info("restoreSystemData dataRoot:" + dataRoot + " backupDir:" + backupDir);
+		ReturnAjax rt = new ReturnAjax();
+
+		//系统已初始化（已有超管）后禁止恢复（防止登录用户清库），仅首启窗口内与 addFirstAdminUser 同级开放
+		if(isFirstAdminUserExists() == true)
+		{
+			docSysErrorLog("系统管理员已存在，禁止恢复系统数据！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		//集群部署共享数据库，禁止单点恢复
+		if(redisEn)
+		{
+			docSysErrorLog("集群部署模式下禁止恢复系统数据！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		if(dataRoot == null || dataRoot.trim().isEmpty() || backupDir == null || backupDir.trim().isEmpty())
+		{
+			docSysErrorLog("数据根目录或备份目录不能为空！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		if(systemDataRestoring.compareAndSet(false, true) == false)
+		{
+			docSysErrorLog("系统数据恢复正在进行中，请稍候！", rt);
+			writeJson(rt, response);
+			return;
+		}
+
+		try
+		{
+			restoreSystemDataEx(dataRoot.trim(), backupDir.trim(), request, rt);
+		}
+		finally
+		{
+			systemDataRestoring.set(false);
+		}
+		writeJson(rt, response);
+	}
+
+	//恢复流程：校验 → 数据根目录配置写入 docSys.ini 用户配置 → 建库(如缺) → 清库重建表结构并导入 JSON 备份 → docSysInit(true) 应用配置并完成初始化
+	private void restoreSystemDataEx(String dataRoot, String backupDir, HttpServletRequest request, ReturnAjax rt)
+	{
+		//1. 校验数据根目录与备份目录（backupDir 必须位于 dataRoot 的 DBBackup 下且 docsystem_data.json 有效）
+		JSONObject validation = DataRootService.validateRoot(dataRoot, OSType, docSysWebPath, true);
+		if(validation.getBooleanValue("valid") == false)
+		{
+			String error = validation.getString("error");
+			docSysErrorLog(error == null || error.isEmpty() ? "数据根目录校验失败！" : error, rt);
+			return;
+		}
+		String root = validation.getString("root");
+		JSONObject backup = DataRootService.findRestoreBackup(root, backupDir, OSType);
+		if(backup == null)
+		{
+			docSysErrorLog("备份不存在或不可用：" + backupDir, rt);
+			return;
+		}
+
+		//二次确认：防止校验期间系统已被并发初始化
+		if(isFirstAdminUserExists() == true)
+		{
+			docSysErrorLog("系统管理员已存在，禁止恢复系统数据！", rt);
+			return;
+		}
+
+		//2. 数据根目录配置：当前配置已指向该备份所在根时（典型如旧版布局 C:/DocSysReposes 直挂盘符、
+		//重装后配置仍保留原路径），不改写配置、保持原布局恢复；否则写入 docSys.ini 用户配置副本
+		//（不直接改 WEB-INF/classes，由 docSysInit(true) 在启动初始化中统一应用）
+		if(DataRootService.isCurrentDataRoot(root, OSType) == false)
+		{
+			if(applyDataRootToUserConfig(validation, rt) == false)
+			{
+				return;
+			}
+		}
+		else
+		{
+			Log.info("restoreSystemData() 当前配置已指向备份所在数据根，跳过配置改写 root:" + root);
+		}
+
+		//3. 数据库不存在则建库（覆盖 sqlite DB 文件被删的场景）
+		if(testDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)
+		{
+			String dbName = getDBNameFromUrl(DB_TYPE, DB_URL);
+			createDB(DB_TYPE, dbName, DB_URL, DB_USER, DB_PASS);
+		}
+
+		//4+5. 清库重建当前版本表结构并导入 JSON 备份（docsystem_data.json 为对象级序列化，跨数据库类型安全）
+		String backupPath = root + DataRootService.DIR_REPOS + "/" + DataRootService.DIR_BACKUP + "/" + backupDir + "/";
+		if(restoreDatabaseFromJson(backupPath) == false || isFirstAdminUserExists() == false)
+		{
+			//失败回滚：清库回空表结构，保证"全新启动"选项仍可用
+			rebuildDBSchema(DB_TYPE, DB_URL, DB_USER, DB_PASS);
+			docSysErrorLog("恢复失败：备份数据导入异常或备份不完整，请更换备份重试或选择全新启动", rt);
+			return;
+		}
+
+		//6. 走启动初始化：应用 docSys.ini 配置并完成全部初始化（数据路径/定时任务/Agent），无需重启
+		String ret = docSysInit(true);
+		if("ok".equals(ret) == false)
+		{
+			//数据已恢复成功（超管已存在），初始化异常仅提示不回滚
+			docSysErrorLog("数据已恢复，但系统初始化异常：" + ret, rt);
+			return;
+		}
+		docSysIniState = 0;
+
+		Log.info("restoreSystemData() 系统数据恢复成功 root:" + root + " backupDir:" + backupDir);
+		addSystemLog(request, systemUser, "restoreSystemData", "restoreSystemData", "恢复系统数据", null, "成功", null, null, null, "从 " + backupPath + " 恢复系统数据成功");
+		rt.setMsgInfo("系统数据恢复成功！");
+	}
+
+	//清库重建当前版本表结构并导入 JSON 备份
+	private boolean restoreDatabaseFromJson(String backupPath)
+	{
+		if(rebuildDBSchema(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)
+		{
+			Log.info("restoreSystemData() rebuildDBSchema failed");
+			return false;
+		}
+
+		List<Integer> importTabList = new ArrayList<Integer>();
+		for(int i=0; i<DBTabNameMap.length; i++)
+		{
+			importTabList.add(i);
+		}
+
+		try
+		{
+			return importDatabaseFromJsonFile(importTabList, backupPath, DataRootService.BACKUP_NAME + ".json", DB_TYPE, DB_URL, DB_USER, DB_PASS);
+		}
+		catch(Exception e)
+		{
+			Log.info("restoreSystemData() importDatabaseFromJsonFile failed: " + e.getMessage());
+			Log.info(e);
+			return false;
+		}
+	}
+
+	//将数据根目录配置写入 docSys.ini 用户配置副本（docSysIniPath/docSysConfig.properties），
+	//供 docSysInit 在启动初始化时拷贝应用；恢复流程不在会话中直接修改 WEB-INF/classes 下的配置
+	private boolean applyDataRootToUserConfig(JSONObject validation, ReturnAjax rt)
+	{
+		String root = validation.getString("root");
+		JSONObject paths = validation.getJSONObject("paths");
+		if(root == null || root.isEmpty() || paths == null)
+		{
+			rt.setError("数据根目录信息不完整！");
+			return false;
+		}
+
+		for(String key : paths.keySet())
+		{
+			String path = paths.getString(key);
+			File dir = new File(path);
+			if(dir.exists())
+			{
+				if(dir.isDirectory() == false)
+				{
+					rt.setError("数据目录不是文件夹：" + path);
+					return false;
+				}
+			}
+			else if(dir.mkdirs() == false)
+			{
+				rt.setError("创建数据目录失败：" + path);
+				return false;
+			}
+		}
+
+		if(checkAndAddDocSysIniDir())
+		{
+			rt.setError("系统初始化目录创建失败！");
+			return false;
+		}
+
+		//以应用当前配置为底稿生成用户配置副本（docSys.ini），写入数据根目录配置
+		String docSystemConfigPath = docSysWebPath + "WEB-INF/classes/";
+		String userDocSystemConfigPath = docSysIniPath;
+		String configFileName = "docSysConfig.properties";
+		if(FileUtil.copyFile(docSystemConfigPath + configFileName, userDocSystemConfigPath + configFileName, true) == false)
+		{
+			rt.setError("创建用户配置文件失败！");
+			return false;
+		}
+		if(ReadProperties.setValue(userDocSystemConfigPath + configFileName, DataRootService.KEY_DATA_ROOT, root) == false)
+		{
+			rt.setError("保存数据根目录失败！");
+			return false;
+		}
+		for(String key : paths.keySet())
+		{
+			if(ReadProperties.setValue(userDocSystemConfigPath + configFileName, key, paths.getString(key)) == false)
+			{
+				rt.setError("保存数据目录配置失败：" + key);
+				return false;
+			}
+		}
+		return true;
+	}
+
 	@RequestMapping(value="addFirstAdminUser")
 	public void addFirstAdminUser(User user, String dataRoot, HttpSession session,HttpServletRequest request,HttpServletResponse response)
 	{

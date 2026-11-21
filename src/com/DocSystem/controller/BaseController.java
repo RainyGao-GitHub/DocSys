@@ -14975,12 +14975,29 @@ public class BaseController  extends BaseFunction{
 			Log.info("docSysInit() 数据库连接测试失败 force:" + force);
 			if(force == false)
 			{
-				Log.info("docSysInit() 数据库连接测试失败 (SytemtStart triggered docSysInit)");
-				//系统启动时的初始化force要设置成false,否则数据库初始化时间过长会导致服务器重启
-				Log.info("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!【注意这只是提示信息不是报错，请直接登录系统】");		
+				if("sqlite".equals(DB_TYPE))
+				{
+					//sqlite 为嵌入式库：DB 文件缺失/为空时自动建库建表，把"数据库不存在"归一化为"空库"，
+					//让首启流程（含数据恢复入口）可以正常进入；mysql 等外部库仍走安装页引导
+					Log.info("docSysInit() sqlite 数据库不存在，自动创建并初始化");
+					createDB(DB_TYPE, dbName, DB_URL, DB_USER, DB_PASS);
+					if(initDB(DB_TYPE, DB_URL, DB_USER, DB_PASS) == false)
+					{
+						Log.info("docSysInit() sqlite 自动建库建表失败");
+						FileUtil.saveDocContentToFile("ERROR_intiDBFailed", docSysIniPath,  "docSysIniState", "UTF-8");
+						return "ERROR_intiDBFailed";
+					}
+					//建库建表成功，继续走"数据库已存在"的后续初始化流程
+				}
+				else
+				{
+					Log.info("docSysInit() 数据库连接测试失败 (SytemtStart triggered docSysInit)");
+					//系统启动时的初始化force要设置成false,否则数据库初始化时间过长会导致服务器重启
+					Log.info("docSysInit() 数据库无法连接（数据库不存在或用户名密码错误），进入用户自定义安装页面!【注意这只是提示信息不是报错，请直接登录系统】");
 
-				FileUtil.saveDocContentToFile("ERROR_DBNotExists", docSysIniPath,  "docSysIniState", "UTF-8");
-				return "ERROR_DBNotExists";
+					FileUtil.saveDocContentToFile("ERROR_DBNotExists", docSysIniPath,  "docSysIniState", "UTF-8");
+					return "ERROR_DBNotExists";
+				}
 			}
 			else
 			{
@@ -19500,6 +19517,52 @@ public class BaseController  extends BaseFunction{
 			deleteDBTab(AgentDBTabNameMap[i].toLowerCase(), type, url, user, pwd);
 		}
 		return true;
+	}
+
+	//首启数据恢复用：清空并按当前版本重建库表
+	//主表（DBTabNameMap）drop 后按当前版本重建；附加表（system_setting / Agent 表）保留表结构仅清空数据，
+	//保证随后的 JSON 备份导入能恢复其内容（表不存在则跳过清空，后续初始化会按需补建）
+	protected static boolean rebuildDBSchema(String type, String url, String user, String pwd)
+	{
+		for(int i=0; i< DBTabNameMap.length; i++)
+		{
+			deleteDBTab(DBTabNameMap[i].toUpperCase(), type, url, user, pwd);
+			deleteDBTab(DBTabNameMap[i].toLowerCase(), type, url, user, pwd);
+		}
+		clearDBTabs(buildExtraDBTabList(), type, url, user, pwd);
+		return initDBTables(type, url, user, pwd);
+	}
+
+	//清空指定表的数据（表不存在时跳过，不影响其它表）
+	private static void clearDBTabs(List<String> tabList, String type, String url, String user, String pwd)
+	{
+		Connection conn = null;
+		Statement stmt = null;
+		try {
+			Class.forName(getJdbcDriverName(type));
+			conn = getDBConnection(type, url, user, pwd);
+			if(conn == null)
+			{
+				return;
+			}
+			stmt = conn.createStatement();
+			for(String tabName : tabList)
+			{
+				try {
+					stmt.executeUpdate("delete from " + tabName);
+				} catch(Exception e) {
+					Log.info("clearDBTabs() 跳过表 " + tabName + ": " + e.getMessage());
+				}
+			}
+		} catch(Exception e) {
+			Log.info("clearDBTabs() failed: " + e.getMessage());
+		} finally {
+			try {
+				if(stmt != null) stmt.close();
+			} catch(Exception e) {
+			}
+			closeDBConnection(conn);
+		}
 	}
 
 	protected static boolean initDB(String type, String url, String user, String pwd) 

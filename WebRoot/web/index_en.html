@@ -53,6 +53,52 @@
             width: 100%;
         }
     </style>
+
+    <!-- First boot: system startup mode panel (shown when needAddFirstAdmin and restorable backups exist) -->
+    <style type="text/css">
+        .fb-overlay { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 1035; background: rgba(15,35,60,0.45); display: flex; align-items: center; justify-content: center; padding: 24px; overflow-y: auto; }
+        .fb-card { width: 640px; max-width: 100%; background: #fff; border-radius: 12px; box-shadow: 0 18px 44px rgba(15,35,60,0.25); padding: 28px 32px 24px; }
+        .fb-title { font-size: 20px; font-weight: 600; color: #22324a; }
+        .fb-tips { margin-top: 6px; margin-bottom: 18px; font-size: 13px; color: #6d8095; }
+        .fb-choice { position: relative; border: 1px solid #d8e4f2; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; cursor: pointer; transition: all .15s; }
+        .fb-choice:hover { background: #f5f9ff; }
+        .fb-choice.fb-active { border-color: #7ba2d6; background: #eef5fd; }
+        .fb-choice input[type="radio"] { position: absolute; opacity: 0; }
+        .fb-choice-main { display: flex; align-items: center; cursor: pointer; font-weight: normal; margin: 0; }
+        .fb-radio { flex: none; width: 16px; height: 16px; border: 2px solid #c3d4e8; border-radius: 50%; margin-right: 12px; position: relative; }
+        .fb-choice.fb-active .fb-radio { border-color: #7ba2d6; }
+        .fb-choice.fb-active .fb-radio:after { content: ""; position: absolute; left: 3px; top: 3px; width: 6px; height: 6px; border-radius: 50%; background: #7ba2d6; }
+        .fb-copy strong { display: block; font-size: 15px; color: #22324a; }
+        .fb-copy small { display: block; font-size: 12px; color: #8a9bb0; margin-top: 2px; }
+        .fb-btn { display: inline-block; border: 1px solid #7ba2d6; background: #7ba2d6; color: #fff; border-radius: 8px; font-size: 14px; padding: 9px 22px; cursor: pointer; }
+        .fb-btn:hover { background: #6a94cc; }
+        .fb-btn:disabled { border-color: #c3d4e8; background: #c3d4e8; cursor: not-allowed; }
+        .fb-btn-ghost { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: #fff; color: #4a6fa5; }
+        .fb-btn-ghost:hover { background: #eef5fd; }
+        .fb-record { display: flex; align-items: center; background: #f5f9ff; border: 1px solid #e1ecf9; border-radius: 8px; padding: 8px 12px; margin: -2px 0 12px 28px; cursor: pointer; }
+        .fb-record i { color: #7ba2d6; margin-right: 8px; }
+        .fb-record-name { flex: 1; font-size: 13px; color: #22324a; word-break: break-all; }
+        .fb-record-meta { flex: none; font-size: 12px; color: #6d8095; margin-left: 10px; }
+        .fb-latest { display: inline-block; font-style: normal; font-size: 11px; color: #2e8b57; border: 1px solid #bfe3cf; border-radius: 4px; padding: 0 4px; margin-left: 6px; background: #effaf3; }
+        .fb-remove { flex: none; border: 0; background: transparent; color: #8a9bb0; font-size: 16px; line-height: 1; padding: 0 2px; margin-left: 8px; cursor: pointer; }
+        .fb-remove:hover { color: #d9534f; }
+        .fb-backup-list { max-height: 240px; overflow-y: auto; border: 1px solid #e6eef8; border-radius: 8px; padding: 8px; margin-bottom: 12px; }
+        .fb-group-root { font-size: 12px; font-weight: 600; color: #6d8095; padding: 8px 8px 4px; word-break: break-all; }
+        .fb-backup-item { display: flex; align-items: center; padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+        .fb-backup-item:hover { background: #eef5fd; }
+        .fb-backup-item.fb-active { background: #e3effc; }
+        .fb-radio-dot { flex: none; width: 10px; height: 10px; border: 2px solid #c3d4e8; border-radius: 50%; margin-right: 10px; }
+        .fb-backup-item.fb-active .fb-radio-dot { border-color: #7ba2d6; background: #7ba2d6; }
+        .fb-backup-time { font-size: 13px; color: #22324a; }
+        .fb-backup-meta { margin-left: auto; font-size: 12px; color: #8a9bb0; }
+        .fb-footer { text-align: center; margin-top: 18px; }
+        .fb-restore-body { text-align: center; padding: 36px 12px 24px; }
+        .fb-restore-spin { font-size: 34px; color: #7ba2d6; }
+        .fb-restore-ok { font-size: 34px; color: #5cb85c; }
+        .fb-restore-fail { font-size: 34px; color: #d9534f; }
+        .fb-restore-text { font-size: 15px; color: #22324a; margin-top: 14px; }
+        .fb-restore-detail { font-size: 12px; color: #8a9bb0; margin-top: 8px; word-break: break-all; }
+    </style>
 </head>
 
 <body>
@@ -155,6 +201,54 @@
     <!-- Add Arrows -->
     <div class="swiper-button-next"></div>
     <div class="swiper-button-prev"></div>
+</div>
+
+<!-- First boot: system startup mode panel (shown when needAddFirstAdmin and restorable backups exist) -->
+<div id="firstBootPanel" class="fb-overlay" style="display:none;">
+    <div class="fb-card">
+        <!-- View 1: startup mode choice -->
+        <div id="fbChoiceView">
+            <div class="fb-title">System Startup Mode</div>
+            <div class="fb-tips" id="fbTips"></div>
+            <div class="fb-choice" id="fbChoiceFresh">
+                <label class="fb-choice-main">
+                    <input type="radio" name="fbMode" value="fresh">
+                    <span class="fb-radio"></span>
+                    <span class="fb-copy">
+                        <strong>Start Fresh</strong>
+                        <small>Create brand-new system data and add the system administrator</small>
+                    </span>
+                </label>
+            </div>
+            <div class="fb-choice" id="fbChoiceRestore">
+                <label class="fb-choice-main">
+                    <input type="radio" name="fbMode" value="restore">
+                    <span class="fb-radio"></span>
+                    <span class="fb-copy">
+                        <strong>Restore from Existing Data</strong>
+                        <small>Restore system data to the state of the selected backup</small>
+                    </span>
+                </label>
+                <button type="button" class="fb-btn fb-btn-ghost" id="fbPickBackupBtn">Select Backup</button>
+                <div id="fbSelectedBox" style="display:none;">
+                    <div class="fb-record" id="fbRecord" title="Click to reselect a backup">
+                        <i class="fa fa-database"></i>
+                        <span class="fb-record-name" id="fbRecordName"></span>
+                        <span class="fb-record-meta"><span id="fbRecordTime"></span><em class="fb-latest" id="fbRecordLatest">Latest</em></span>
+                        <button type="button" class="fb-remove" id="fbRemoveBtn" title="Remove">&times;</button>
+                    </div>
+                </div>
+            </div>
+            <div class="fb-backup-list" id="fbBackupList" style="display:none;"></div>
+            <div class="fb-footer">
+                <button type="button" class="fb-btn" id="fbConfirmBtn">Next</button>
+            </div>
+        </div>
+        <!-- View 2: restoring / restore result -->
+        <div id="fbRestoreView" style="display:none;">
+            <div class="fb-restore-body" id="fbRestoreBody"></div>
+        </div>
+    </div>
 </div>
 
 <div class="main">
@@ -275,7 +369,27 @@
 <script type="text/javascript" src="static/swiper/swiper.min.js"></script>
 <script type="text/javascript" src="js/Banner.js"></script>	
 <script type="text/javascript" src="js/logon.js"></script>
-<script type="text/javascript" src="index.js"></script>	
+<script type="text/javascript" src="index.js?v=20261121"></script>
+<script type="text/javascript" src="firstBootPanel.js?v=202611212"></script>
+<script type="text/javascript">
+//First boot panel dynamic texts (maintained per language file)
+var FirstBootLang = {
+    tipsFormat: "Existing system data detected on this machine ({roots} data directories, {backups} backups)",
+    latest: "Latest",
+    nextStep: "Next",
+    startRestore: "Start Restore",
+    selectBackupFirst: "Select a backup first",
+    restoring: "Restoring system data, please wait...",
+    elapsed: "Elapsed",
+    seconds: "s",
+    backup: "Backup",
+    restoreSuccess: "System data restored successfully. Please log in with the original system administrator account!",
+    entering: "Entering the login page...",
+    restoreFailed: "System data restore failed",
+    rechoose: "Choose Startup Mode Again",
+    serverError: "Server error",
+};
+</script>
 <script type="text/javascript">
 	pageInit("en");
 </script>
