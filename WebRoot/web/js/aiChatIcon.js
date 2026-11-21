@@ -107,7 +107,6 @@ window.AI_CHAT_ZINDEX = 9998;	//高于业务弹窗（artDialog 自增序列/moda
 
 		function endDrag() {
 			started = false;
-			icon.style.transition = "";
 			for(var i = 0; i < dragMasks.length; i++) { dragMasks[i].remove(); }
 			dragMasks = [];
 			if(dragging) {
@@ -119,14 +118,15 @@ window.AI_CHAT_ZINDEX = 9998;	//高于业务弹窗（artDialog 自增序列/moda
 				var rect = icon.getBoundingClientRect();
 				icon.style.transform = "";
 				applyPos(rect.left, rect.top);
-				//transition 需等 transform 清稳后再恢复（下一帧），否则清 translate 的瞬间会
-				//触发一次 transform 过渡，图标看起来像松手后弹回
+				//transition 必须等 transform 清稳后再恢复（下一帧）：若在清 translate 前恢复，
+				//"translate→无"会被浏览器当成一次 0.3s 过渡播放，图标表现为从拖动起点方向快速滑入落定点
 				requestAnimationFrame(function() { icon.style.transition = ""; });
 				try {
 					localStorage.setItem(STORE_KEY, JSON.stringify({left: rect.left, top: rect.top}));
 				} catch(e) {}
 			} else {
 				icon.style.transform = "";	//未拖动（纯点击）：恢复 hover/:active 的原生表现
+				requestAnimationFrame(function() { icon.style.transition = ""; });
 			}
 		}
 
