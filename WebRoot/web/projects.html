@@ -199,6 +199,8 @@
 <script src="static/artDialog/dist/dialog.js"></script>
 <script src="static/artDialog/dist/dialog-plus.js"></script>
 <script src="js/artDialog.js?v=20261120"></script>
+<!-- AI 悬浮图标：拖动/位置记忆/Agent 弹窗置顶层级常量 -->
+<script src="js/aiChatIcon.js?v=20261121"></script>
 <script>
     // 在ArtDialog弹层中打开AI Agent页面（右侧停靠，不跳转页面，保留当前仓库/文件视图）
     function openAiChat()
@@ -208,7 +210,9 @@
     	var existing = artDialog.list && artDialog.list[dialogId];
     	if(existing)
     	{
-    		existing.zIndex().focus();
+    		//重开不掉级：直接固定置顶层级，不走 zIndex() 全局自增序列（会掉回普通弹窗层级被后开的弹窗盖住）
+    		existing.DOM.wrap.css('zIndex', window.AI_CHAT_ZINDEX);
+    		existing.focus();
     		return;
     	}
 
@@ -251,6 +255,8 @@
     	$("#ai-chat-icon").hide();
     	// 按右侧停靠位置摆放
     	d.position(left, top);
+    	// Agent 弹窗置顶：固定高于业务弹窗自增序列，用户打开文件预览/编辑弹窗时 Agent 仍可交互
+    	d.DOM.wrap.css('zIndex', window.AI_CHAT_ZINDEX);
     }
 </script>
 <script type="text/html" id="tmpl-projects">

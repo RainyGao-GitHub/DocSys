@@ -199,6 +199,8 @@
 <script src="static/artDialog/dist/dialog.js"></script>
 <script src="static/artDialog/dist/dialog-plus.js"></script>
 <script src="js/artDialog.js?v=20261120"></script>
+<!-- AI floating icon: dragging / position memory / Agent dialog top z-index constant -->
+<script src="js/aiChatIcon.js?v=20261121"></script>
 <script>
     // Open the AI Agent page inside an ArtDialog layer (docked right, no page jump, keeps the current repos/file view)
     function openAiChat()
@@ -208,7 +210,9 @@
     	var existing = artDialog.list && artDialog.list[dialogId];
     	if(existing)
     	{
-    		existing.zIndex().focus();
+    		// Keep top z-index on reopen: set it directly instead of zIndex() (global counter would drop it back into the normal dialog stack)
+    		existing.DOM.wrap.css('zIndex', window.AI_CHAT_ZINDEX);
+    		existing.focus();
     		return;
     	}
 
@@ -251,6 +255,8 @@
     	$("#ai-chat-icon").hide();
     	// place it docked right
     	d.position(left, top);
+    	// Agent dialog stays on top of business dialogs so users can interact while previewing/editing files
+    	d.DOM.wrap.css('zIndex', window.AI_CHAT_ZINDEX);
     }
 </script>
 
