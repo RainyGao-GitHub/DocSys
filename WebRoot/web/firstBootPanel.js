@@ -50,6 +50,7 @@ FirstBootPanel.enter = function()
 	FirstBootPanel.mode = "fresh";
 	FirstBootPanel.selected = null;
 	FirstBootPanel.listOpen = false;
+	FirstBootPanel.expandedGroups = {};
 
 	FirstBootPanel.renderTips();
 	FirstBootPanel.selectMode("fresh");
@@ -114,6 +115,13 @@ FirstBootPanel.selectMode = function(mode)
 	{
 		FirstBootPanel.selectDefaultBackup();
 	}
+	if(mode != "restore")
+	{
+		//切走恢复模式时收起备份列表（所选记录行随 renderRecord 按模式隐藏）
+		FirstBootPanel.listOpen = false;
+		FirstBootPanel.renderBackupList();
+	}
+	FirstBootPanel.renderRecord();
 	FirstBootPanel.renderConfirmBtn();
 };
 
@@ -177,7 +185,8 @@ FirstBootPanel.clearSelected = function()
 FirstBootPanel.renderRecord = function()
 {
 	var selected = FirstBootPanel.selected;
-	if(selected == null)
+	//记录行仅在恢复模式下显示（切到全新启动时隐藏，切回时自动恢复显示）
+	if(selected == null || FirstBootPanel.mode != "restore")
 	{
 		$("#fbSelectedBox").hide();
 		return;
@@ -205,9 +214,35 @@ FirstBootPanel.renderConfirmBtn = function()
 	}
 };
 
-FirstBootPanel.toggleBackupList = function()
+FirstBootPanel.openBackupList = function()
 {
-	FirstBootPanel.listOpen = !FirstBootPanel.listOpen;
+	FirstBootPanel.listOpen = true;
+	FirstBootPanel.expandSelectedGroup();
+	FirstBootPanel.renderBackupList();
+};
+
+//打开备份列表时自动展开当前所选备份所在的组（未选过则展开第一组），其余组收起
+FirstBootPanel.expandSelectedGroup = function()
+{
+	var targetRoot = null;
+	if(FirstBootPanel.selected != null)
+	{
+		targetRoot = FirstBootPanel.selected.root;
+	}
+	else if(FirstBootPanel.roots.length > 0)
+	{
+		targetRoot = FirstBootPanel.roots[0].root;
+	}
+	FirstBootPanel.expandedGroups = {};
+	if(targetRoot != null)
+	{
+		FirstBootPanel.expandedGroups[targetRoot] = true;
+	}
+};
+
+FirstBootPanel.toggleBackupGroup = function(root)
+{
+	FirstBootPanel.expandedGroups[root] = FirstBootPanel.expandedGroups[root] != true;
 	FirstBootPanel.renderBackupList();
 };
 
@@ -226,21 +261,28 @@ FirstBootPanel.renderBackupList = function()
 	{
 		var rootInfo = FirstBootPanel.roots[i];
 		var groupLabel = rootInfo.reposPath || rootInfo.root;
-		html += '<div class="fb-group-root" title="' + FirstBootPanel.escapeHtml(groupLabel) + '">'
-			+ FirstBootPanel.escapeHtml(groupLabel) + '</div>';
 		var backups = rootInfo.backups || [];
-		for(var j = 0; j < backups.length; j++)
+		var expanded = FirstBootPanel.expandedGroups[rootInfo.root] == true;
+		html += '<div class="fb-group-root' + (expanded ? " fb-group-open" : "") + '" data-root="' + FirstBootPanel.escapeHtml(rootInfo.root) + '" title="' + FirstBootPanel.escapeHtml(groupLabel) + '">'
+			+ '<span class="fb-group-arrow">' + (expanded ? "&#9662;" : "&#9656;") + '</span>'
+			+ '<span class="fb-group-name">' + FirstBootPanel.escapeHtml(groupLabel) + '</span>'
+			+ '<span class="fb-group-count">' + backups.length + '</span>'
+			+ '</div>';
+		if(expanded)
 		{
-			var b = backups[j];
-			var isActive = selected && selected.root == rootInfo.root && selected.dir == b.dir;
-			html += '<div class="fb-backup-item' + (isActive ? " fb-active" : "") + '" data-root="'
-				+ FirstBootPanel.escapeHtml(rootInfo.root) + '" data-dir="' + FirstBootPanel.escapeHtml(b.dir) + '">'
-				+ '<span class="fb-radio-dot"></span>'
-				+ '<span class="fb-backup-time">' + FirstBootPanel.escapeHtml(b.timeText || b.dir) + '</span>'
-				+ '<span class="fb-backup-meta">' + FirstBootPanel.formatSize(b.jsonSize)
-				+ (b.latest ? ' · <em class="fb-latest">' + FirstBootPanel.lang("latest", "最新") + '</em>' : '')
-				+ '</span>'
-				+ '</div>';
+			for(var j = 0; j < backups.length; j++)
+			{
+				var b = backups[j];
+				var isActive = selected && selected.root == rootInfo.root && selected.dir == b.dir;
+				html += '<div class="fb-backup-item' + (isActive ? " fb-active" : "") + '" data-root="'
+					+ FirstBootPanel.escapeHtml(rootInfo.root) + '" data-dir="' + FirstBootPanel.escapeHtml(b.dir) + '">'
+					+ '<span class="fb-radio-dot"></span>'
+					+ '<span class="fb-backup-time">' + FirstBootPanel.escapeHtml(b.timeText || b.dir) + '</span>'
+					+ '<span class="fb-backup-meta">' + FirstBootPanel.formatSize(b.jsonSize)
+					+ (b.latest ? ' · <em class="fb-latest">' + FirstBootPanel.lang("latest", "最新") + '</em>' : '')
+					+ '</span>'
+					+ '</div>';
+			}
 		}
 	}
 	box.html(html).show();
@@ -415,16 +457,18 @@ $(function() {
 	});
 	$("#fbPickBackupBtn").on("click", function(event) {
 		event.stopPropagation();
-		FirstBootPanel.listOpen = true;
-		FirstBootPanel.renderBackupList();
+		FirstBootPanel.openBackupList();
 	});
 	$("#fbRecord").on("click", function() {
-		FirstBootPanel.listOpen = true;
-		FirstBootPanel.renderBackupList();
+		FirstBootPanel.openBackupList();
 	});
 	$("#fbRemoveBtn").on("click", function(event) {
 		event.stopPropagation();
 		FirstBootPanel.clearSelected();
+	});
+	$("#fbBackupList").on("click", ".fb-group-root", function(event) {
+		event.stopPropagation();
+		FirstBootPanel.toggleBackupGroup($(this).attr("data-root"));
 	});
 	$("#fbBackupList").on("click", ".fb-backup-item", function() {
 		var root = $(this).attr("data-root");

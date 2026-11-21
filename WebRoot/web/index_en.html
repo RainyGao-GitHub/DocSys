@@ -83,7 +83,11 @@
         .fb-remove { flex: none; border: 0; background: transparent; color: #8a9bb0; font-size: 16px; line-height: 1; padding: 0 2px; margin-left: 8px; cursor: pointer; }
         .fb-remove:hover { color: #d9534f; }
         .fb-backup-list { max-height: 240px; overflow-y: auto; border: 1px solid #e6eef8; border-radius: 8px; padding: 8px; margin-bottom: 12px; }
-        .fb-group-root { font-size: 12px; font-weight: 600; color: #6d8095; padding: 8px 8px 4px; word-break: break-all; }
+        .fb-group-root { display: flex; align-items: center; font-size: 12px; font-weight: 600; color: #6d8095; padding: 8px 8px; border-radius: 6px; cursor: pointer; word-break: break-all; }
+        .fb-group-root:hover { background: #eef5fd; }
+        .fb-group-arrow { flex: none; width: 14px; color: #7ba2d6; font-size: 12px; }
+        .fb-group-name { flex: 1; }
+        .fb-group-count { flex: none; margin-left: 8px; font-size: 11px; font-weight: normal; color: #6d8095; background: #eef5fd; border-radius: 9px; padding: 1px 7px; }
         .fb-backup-item { display: flex; align-items: center; padding: 8px 10px; border-radius: 6px; cursor: pointer; }
         .fb-backup-item:hover { background: #eef5fd; }
         .fb-backup-item.fb-active { background: #e3effc; }
@@ -370,7 +374,7 @@
 <script type="text/javascript" src="js/Banner.js"></script>	
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript" src="index.js?v=20261121"></script>
-<script type="text/javascript" src="firstBootPanel.js?v=202611213"></script>
+<script type="text/javascript" src="firstBootPanel.js?v=202611214"></script>
 <script type="text/javascript">
 //First boot panel dynamic texts (maintained per language file)
 var FirstBootLang = {
