@@ -127,7 +127,10 @@
                         <li id="mobileEnterSystemBtn">
                             <a href="projects_en.html" title="Enter System">Enter System</a>
                         </li>
-                        
+                        <li id="mobileOnlineUpgradeBtn" style="display:none">
+                            <a onclick="OnlineUpgrade.start()" title="Online Upgrade">Upgrade</a>
+                        </li>
+
                     </ul>
                 </div>    
 		<nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">	
@@ -150,6 +153,9 @@
                 </li>
                 <li id="enterSystemLink"  style="display:none">
                     <a href="projects_en.html">Go Go Go>></a>
+                </li>
+                <li id="onlineUpgradeBtn" style="display:none">
+                    <a onclick="OnlineUpgrade.start()" title="Online Upgrade">Upgrade</a>
                 </li>
 				<li id="languageDiv">
 							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>English</span><span class="caret"></span></a>
@@ -373,8 +379,22 @@
 <script type="text/javascript" src="static/swiper/swiper.min.js"></script>
 <script type="text/javascript" src="js/Banner.js"></script>	
 <script type="text/javascript" src="js/logon.js"></script>
-<script type="text/javascript" src="index.js?v=20261121"></script>
+<script type="text/javascript" src="index.js?v=20261122"></script>
 <script type="text/javascript" src="firstBootPanel.js?v=202611214"></script>
+<script type="text/javascript" src="onlineUpgrade.js?v=202611221"></script>
+<script type="text/javascript">
+//Online upgrade button dynamic texts (maintained per language file)
+var OnlineUpgradeLang = {
+    upgrade: "Upgrade",
+    upgrading: "Upgrading...",
+    confirmTitle: "System Upgrade",
+    confirmMsg: "New version {version} detected (size {size}). Upgrade the system now?<br><br><strong>The system will restart automatically during the upgrade. Do not close this page.</strong>",
+    upgradeFailed: "Online upgrade failed",
+    serverError: "Server error",
+    ok: "OK",
+    cancel: "Cancel",
+};
+</script>
 <script type="text/javascript">
 //First boot panel dynamic texts (maintained per language file)
 var FirstBootLang = {

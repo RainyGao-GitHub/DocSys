@@ -127,7 +127,10 @@
                         <li id="mobileEnterSystemBtn">
                             <a href="projects.html" title="进入系统">进入系统</a>
                         </li>
-                        
+                        <li id="mobileOnlineUpgradeBtn" style="display:none">
+                            <a onclick="OnlineUpgrade.start()" title="在线升级">升级</a>
+                        </li>
+
                     </ul>
                 </div>    
 		<nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">	
@@ -153,6 +156,9 @@
                 </li>
                 <li id="enterSystemLink"  style="display:none">
                     <a href="projects.html">进入系统>></a>
+                </li>
+                <li id="onlineUpgradeBtn" style="display:none">
+                    <a onclick="OnlineUpgrade.start()" title="在线升级">升级</a>
                 </li>
 				<li id="languageDiv">
 							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>中文</span><span class="caret"></span></a>
@@ -378,8 +384,22 @@
 <script type="text/javascript" src="static/swiper/swiper.min.js"></script>
 <script type="text/javascript" src="js/Banner.js"></script>
 <script type="text/javascript" src="js/logon.js"></script>
-<script type="text/javascript" src="index.js?v=20261121"></script>
+<script type="text/javascript" src="index.js?v=20261122"></script>
 <script type="text/javascript" src="firstBootPanel.js?v=202611214"></script>
+<script type="text/javascript" src="onlineUpgrade.js?v=202611221"></script>
+<script type="text/javascript">
+//在线升级按键动态文案（随语言文件维护）
+var OnlineUpgradeLang = {
+    upgrade: "升级",
+    upgrading: "系统升级中...",
+    confirmTitle: "系统升级",
+    confirmMsg: "检测到新版本 {version}（大小 {size}），是否升级系统？<br><br><strong>升级过程中系统将自动重启，请勿关闭页面。</strong>",
+    upgradeFailed: "在线升级失败",
+    serverError: "服务器异常",
+    ok: "确认",
+    cancel: "取消",
+};
+</script>
 <script type="text/javascript">
 //首启面板动态文案（随语言文件维护）
 var FirstBootLang = {

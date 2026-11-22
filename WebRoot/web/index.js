@@ -23,7 +23,8 @@ function pageInit(lang)
 				
             	//显示用户信息
             	ShowUserInfo(user);
-            	loginBtnCtrl(user);                	
+            	loginBtnCtrl(user);
+            	OnlineUpgradeEntry(user);	//在线升级按键：仅超级管理员显示（内部自查 type==2）
             }
             else 
             {

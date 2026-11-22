@@ -3,9 +3,13 @@ package com.DocSystem.controller;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -2727,67 +2731,91 @@ public class ManageController extends BaseController{
 			return;	
 		}
 		
-		String upgradePath = docSysIniPath + "upgrade/";
-		if(false == checkFileSizeAndCheckSum(upgradePath, name, size, null))
+		//防重入（与在线升级共用同一门禁，测试矩阵 #8）：内存升级任务未结束或 upgrade.trigger 未消费；
+		//"门禁检查 → 创建任务"整体加锁，避免并发请求双双通过检查创建出两个升级任务
+		LongTermTask queryTask = null;
+		synchronized(upgradeGateLock)
 		{
-			docSysErrorLog("文件校验失败", rt);
-			writeJson(rt, response);
-			return;
-		}
+			if(isSystemUpgrading())
+			{
+				docSysErrorLog("系统升级中，请勿重复发起", rt);
+				writeJson(rt, response);
+				return;
+			}
 
-		LongTermTask queryTask = createLongTermTask("upgradeSystem", "系统升级", rt);
+			String upgradePath = docSysIniPath + "upgrade/";
+			if(false == checkFileSizeAndCheckSum(upgradePath, name, size, null))
+			{
+				docSysErrorLog("文件校验失败", rt);
+				writeJson(rt, response);
+				return;
+			}
+
+			queryTask = createLongTermTask("upgradeSystem", "系统升级", rt);
+		}
 		if(queryTask == null)
 		{
 			writeJson(rt, response);
 			return;
 		}
 
-		queryTask.status = 0;  
+		queryTask.status = 0;
 		queryTask.info = "开始升级准备工作";
 		Log.debug("upgradeSystem() " + queryTask.info);
 		rt.setData(queryTask);
 		writeJson(rt, response);
 
+		executeWarUpgrade(name, queryTask);
+	}
+
+	//war 包已就位于 docSys.ini/upgrade/<warName> 后的升级执行流程（后台上传 war 升级与在线升级共用，
+	//2026-11-22 自 upgradeSystem.do 原样抽取，行为不变）：
+	//解压 → 规整为 upgrade/DocSystem → 按平台裁剪 → 删 war 包 → createMonitorTrigger("upgrade") → status=200
+	//状态码语义：1 解压中、2 检查/裁剪、3 创建升级任务、200 准备完成等待 monitor、-1 失败/终止
+	protected void executeWarUpgrade(String warName, LongTermTask queryTask)
+	{
+		String upgradePath = docSysIniPath + "upgrade/";
+
 		//开始解压
 		queryTask.status = 1;	//升级解压中
 		queryTask.info = "安装包解压";
-		Log.debug("upgradeSystem() " + queryTask.info);
-		if(extractZipFile(upgradePath, name, upgradePath + "DocSystem-tmp/") == false)
+		Log.debug("executeWarUpgrade() " + queryTask.info);
+		if(extractZipFile(upgradePath, warName, upgradePath + "DocSystem-tmp/") == false)
 		{
-			Log.debug("upgradeSystem() 安装包解压失败");
+			Log.debug("executeWarUpgrade() 安装包解压失败");
 			//docSysErrorLog("安装包解压失败", rt);
 			queryTask.status = -1;
-			queryTask.info = "安装包解压失败";	
+			queryTask.info = "安装包解压失败";
 			return;
 		}
-		queryTask.info = "安装包解压成功";	
-		Log.debug("upgradeSystem() " + queryTask.info);
-		
+		queryTask.info = "安装包解压成功";
+		Log.debug("executeWarUpgrade() " + queryTask.info);
+
 		//可能已被用户取消了
 		if(queryTask.stopFlag == true)
 		{
 			queryTask.status = -1;
-			queryTask.info = "升级任务已被终止";	
-			return;			
+			queryTask.info = "升级任务已被终止";
+			return;
 		}
 
 		//检查并处理解压后的升级包
 		queryTask.status = 2;
 		queryTask.info = "安装包检查";
-		Log.debug("upgradeSystem() " + queryTask.info);
+		Log.debug("executeWarUpgrade() " + queryTask.info);
 		File tmpDocSystem = new File(upgradePath + "DocSystem-tmp/");
 		File[] subEntrys = tmpDocSystem.listFiles();
 		if(subEntrys.length == 1)
 		{
-			Log.debug("upgradeSystem() subEntryName:" + subEntrys[0].getName());
+			Log.debug("executeWarUpgrade() subEntryName:" + subEntrys[0].getName());
 			FileUtil.moveFileOrDir(upgradePath + "DocSystem-tmp/", subEntrys[0].getName(), upgradePath, "DocSystem", false);
 		}
 		else
 		{
-			FileUtil.moveFileOrDir(upgradePath, "DocSystem-tmp", upgradePath, "DocSystem", false);			
+			FileUtil.moveFileOrDir(upgradePath, "DocSystem-tmp", upgradePath, "DocSystem", false);
 		}
 		queryTask.info = "安装包检查完成";
-		Log.debug("upgradeSystem() " + queryTask.info);
+		Log.debug("executeWarUpgrade() " + queryTask.info);
 
 		//可能已被用户取消了
 		if(queryTask.stopFlag == true)
@@ -2804,40 +2832,40 @@ public class ManageController extends BaseController{
 		//（best-effort：识别不了平台或删除失败都不阻断升级）
 		queryTask.status = 2;
 		queryTask.info = "按平台裁剪升级包";
-		Log.debug("upgradeSystem() " + queryTask.info);
+		Log.debug("executeWarUpgrade() " + queryTask.info);
 		NativeLibPruner.pruneDocSystem(upgradePath + "DocSystem");
 
 		//解压成功，删除升级包
-		FileUtil.delFile(upgradePath + name);	//删除压缩包
-		
+		FileUtil.delFile(upgradePath + warName);	//删除压缩包
+
 		//可能已被用户取消了
 		if(queryTask.stopFlag == true)
 		{
 			queryTask.status = -1;
-			queryTask.info = "升级任务已被终止";	
-			return;			
+			queryTask.info = "升级任务已被终止";
+			return;
 		}
-		
+
 		//开始升级
 		queryTask.status = 3;
 		queryTask.info = "创建升级任务";
-		Log.debug("upgradeSystem() " + queryTask.info);
+		Log.debug("executeWarUpgrade() " + queryTask.info);
 		if(createMonitorTrigger("upgrade") == false)
 		{
 			queryTask.status = -1;
-			queryTask.info = "升级任务创建失败";	
-			Log.debug("upgradeSystem() " + queryTask.info);
+			queryTask.info = "升级任务创建失败";
+			Log.debug("executeWarUpgrade() " + queryTask.info);
 			return;
 		}
 		queryTask.info = "升级任务创建完成";
-		Log.debug("upgradeSystem() " + queryTask.info);
-				
+		Log.debug("executeWarUpgrade() " + queryTask.info);
+
 		//monitor.sh会负责后续的升级工作
-		queryTask.status = 200;	//这里用比较大的数字，是为了以后可能中间需要增加状态，参照网络的成功状态值
+		queryTask.status = 200;	//这里用比较大的数字，是为了以后可能需要增加状态，参照网络的成功状态值
 		queryTask.info = "准备工作已完成，等待升级";
-		Log.debug("upgradeSystem() " + queryTask.info);
+		Log.debug("executeWarUpgrade() " + queryTask.info);
 	}
-	
+
 	/**************** getSystemVersion ******************/
 	@RequestMapping("/getSystemVersion.do")
 	public void getSystemVersion(HttpServletResponse response)
@@ -2850,6 +2878,521 @@ public class ManageController extends BaseController{
 		}
 		rt.setData(version);
 		writeJson(rt, response);
+	}
+
+	// ==================== 系统在线升级（GitHub Releases，2026-11-22） ====================
+	//版本源：https://github.com/RainyGao-GitHub/DocSys/releases，war 资产 DocSystem.war（旧版回退 DocSystem-C.war），
+	//tag 形如 DocSys_2.02.92；GitHub 匿名 API 限流 60 次/h/IP（本机实测超限过），检测结果必须静态缓存
+
+	//GitHub 检测缓存条目：_state=found|none|error，_fetchTime=拉取时刻；found 时含 version/assetName/downloadUrl/size
+	private static volatile JSONObject systemUpgradeCheckCache = null;
+	private static final long UPGRADE_CHECK_CACHE_OK_MS = 10 * 60 * 1000;	//成功（含"无可升级版本"）缓存 10 分钟
+	private static final long UPGRADE_CHECK_CACHE_FAIL_MS = 2 * 60 * 1000;	//失败（网络不可达）缓存 2 分钟，防限流放大
+	private static final String GITHUB_RELEASES_API = "https://api.github.com/repos/RainyGao-GitHub/DocSys/releases?per_page=5";
+	//两个升级入口（upgradeSystem/onlineUpgrade）"门禁检查 → 创建任务"的互斥锁
+	private static final Object upgradeGateLock = new Object();
+
+	/**************** checkSystemUpgrade（在线升级检测，超管） ******************/
+	@RequestMapping("/checkSystemUpgrade.do")
+	public void checkSystemUpgrade(String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** checkSystemUpgrade.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject release = getLatestUpgradeRelease(false);
+		if("error".equals(release.getString("_state")))
+		{
+			if(release.getBooleanValue("_rateLimited"))
+			{
+				docSysErrorLog("GitHub API 限流（匿名 60 次/小时），请稍后再试", rt);
+			}
+			else
+			{
+				docSysErrorLog("无法访问GitHub（检查网络或代理）", rt);
+			}
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject data = new JSONObject();
+		data.put("currentVersion", getLocalSystemVersion());
+		boolean hasNewVersion = false;
+		if("found".equals(release.getString("_state")))
+		{
+			Integer remoteVersion = encodeVersionToInt(release.getString("version"));
+			Integer localVersion = getVersionFromFile(docSysWebPath, "version");
+			if(remoteVersion != null && localVersion != null && remoteVersion > localVersion)
+			{
+				hasNewVersion = true;
+				data.put("newVersion", release.getString("version"));
+				data.put("downloadSize", release.getLong("size"));
+			}
+		}
+		data.put("hasNewVersion", hasNewVersion);
+		Log.debug("checkSystemUpgrade() hasNewVersion:" + hasNewVersion);
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
+	/**************** onlineUpgrade（在线升级执行，超管） ******************
+	 * 防重入（与上传升级共用门禁）→ 创建 LongTermTask(type=onlineUpgrade) 立即返回 taskId →
+	 * 后台线程流式下载 war 到 upgrade/DocSystem.war.downloading（进度写 task.info，检查 stopFlag 支持取消，
+	 * 大小校验后改名 DocSystem.war）→ 调 executeWarUpgrade（与后台上传 war 升级完全相同的执行流程）
+	 */
+	@RequestMapping("/onlineUpgrade.do")
+	public void onlineUpgrade(String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** onlineUpgrade.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		//防重入：内存升级任务未结束（上传或在线），或 monitor 侧还有未消费的 upgrade.trigger；
+		//"门禁检查 → 版本判定 → 创建任务"整体加锁，与 upgradeSystem.do 互斥（并发双开防重入）
+		final LongTermTask queryTask;
+		final JSONObject releaseInfo;
+		synchronized(upgradeGateLock)
+		{
+			if(isSystemUpgrading())
+			{
+				docSysErrorLog("系统升级中，请勿重复发起", rt);
+				writeJson(rt, response);
+				return;
+			}
+
+			//复用检测缓存里的最新版本信息（未缓存或已过期时现场拉取）
+			JSONObject release = getLatestUpgradeRelease(false);
+			if("found".equals(release.getString("_state")) == false)
+			{
+				docSysErrorLog("未获取到可用的升级版本信息", rt);
+				writeJson(rt, response);
+				return;
+			}
+			Integer remoteVersion = encodeVersionToInt(release.getString("version"));
+			Integer localVersion = getVersionFromFile(docSysWebPath, "version");
+			if(remoteVersion == null || localVersion == null || remoteVersion <= localVersion)
+			{
+				docSysErrorLog("当前已是最新版本", rt);
+				writeJson(rt, response);
+				return;
+			}
+
+			queryTask = createLongTermTask("onlineUpgrade", "在线升级", rt);
+			releaseInfo = release;
+		}
+		if(queryTask == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		queryTask.status = 0;	//下载中
+		queryTask.info = "开始在线升级";
+		Log.debug("onlineUpgrade() " + queryTask.info);
+		rt.setData(queryTask);
+		writeJson(rt, response);
+
+		//后台线程执行下载与升级（升级执行段与上传 war 升级完全共用）
+		final LongTermTask task = queryTask;
+		new Thread(new Runnable() {
+			@Override
+			public void run()
+			{
+				try
+				{
+					downloadAndExecuteUpgrade(task, releaseInfo);
+				}
+				catch(Exception e)
+				{
+					Log.debug(e);
+					task.status = -1;
+					task.info = "在线升级异常:" + e.getMessage();
+				}
+			}
+		}, "onlineUpgrade").start();
+	}
+
+	//在线升级后台执行：流式下载 war 到 .downloading 临时名 → 大小校验 → 改名 DocSystem.war → executeWarUpgrade
+	protected void downloadAndExecuteUpgrade(LongTermTask task, JSONObject release)
+	{
+		String upgradePath = docSysIniPath + "upgrade/";
+		String tmpName = "DocSystem.war.downloading";
+		String warName = "DocSystem.war";
+
+		if(downloadUpgradeWarFile(release.getString("downloadUrl"), upgradePath, tmpName, task) == false)
+		{
+			//失败/取消：清理半截文件（downloadUpgradeWarFile 已设置 status/info）
+			FileUtil.delFile(upgradePath + tmpName);
+			Log.info("downloadAndExecuteUpgrade() 下载失败:" + task.info);
+			return;
+		}
+
+		//大小校验（与上传升级同款校验口径）通过后改名为 DocSystem.war
+		Long expSize = release.getLong("size");
+		if(false == checkFileSizeAndCheckSum(upgradePath, tmpName, expSize, null))
+		{
+			task.status = -1;
+			task.info = "升级包大小校验失败";
+			FileUtil.delFile(upgradePath + tmpName);
+			Log.info("downloadAndExecuteUpgrade() " + task.info);
+			return;
+		}
+		FileUtil.moveFileOrDir(upgradePath, tmpName, upgradePath, warName, true);	//强制覆盖
+
+		//与后台上传 war 升级完全相同的执行流程（解压/裁剪/trigger/200）
+		executeWarUpgrade(warName, task);
+	}
+
+	//流式下载升级 war 包，进度写 task.info（每秒刷新），下载循环内检查 stopFlag 支持 stopLongTermTask.do 取消
+	protected boolean downloadUpgradeWarFile(String downloadUrl, String upgradePath, String tmpName, LongTermTask task)
+	{
+		HttpURLConnection conn = null;
+		InputStream is = null;
+		OutputStream os = null;
+		try
+		{
+			Log.info("downloadUpgradeWarFile() url:" + downloadUrl);
+			URL url = new URL(downloadUrl);
+			conn = (HttpURLConnection) url.openConnection();
+			conn.setConnectTimeout(30000);
+			conn.setReadTimeout(60000);
+			conn.setRequestProperty("User-Agent", "DocSystem-Upgrade");
+			int code = conn.getResponseCode();
+			if(code != 200)
+			{
+				task.status = -1;
+				task.info = "下载升级包失败(HTTP " + code + ")";
+				return false;
+			}
+
+			long totalSize = conn.getContentLengthLong();
+			is = conn.getInputStream();
+			os = new FileOutputStream(upgradePath + tmpName);
+			byte[] buffer = new byte[64 * 1024];
+			long downloaded = 0;
+			long lastLogTime = 0;
+			int n;
+			while((n = is.read(buffer)) != -1)
+			{
+				//可能已被用户取消了
+				if(task.stopFlag == true)
+				{
+					task.status = -1;
+					task.info = "升级任务已被终止";
+					return false;
+				}
+				os.write(buffer, 0, n);
+				downloaded += n;
+				long curTime = System.currentTimeMillis();
+				if(curTime - lastLogTime > 1000)
+				{
+					lastLogTime = curTime;
+					task.info = "正在下载升级包 " + formatUpgradeSize(downloaded) + "/" + formatUpgradeSize(totalSize);
+					Log.debug("downloadUpgradeWarFile() " + task.info);
+				}
+			}
+			os.flush();
+			task.info = "升级包下载完成(" + formatUpgradeSize(downloaded) + ")";
+			Log.info("downloadUpgradeWarFile() " + task.info);
+			return true;
+		}
+		catch(Exception e)
+		{
+			Log.debug(e);
+			task.status = -1;
+			task.info = "下载升级包异常:" + e.getMessage();
+			return false;
+		}
+		finally
+		{
+			try	{	if(os != null) os.close();	}catch(Exception e)	{}
+			try	{	if(is != null) is.close();	}catch(Exception e)	{}
+			if(conn != null) conn.disconnect();
+		}
+	}
+
+	/**************** getUpgradeTask（升级中状态查询，超管） ******************
+	 * 页面刷新/重开后没有 taskId，用本接口判定"系统升级中"：
+	 * 1. 内存升级任务（上传/在线且未失败）→ phase=prepare（下载/解压/裁剪/创建 trigger，200 表示等待重启）；
+	 * 2. upgrade.trigger 存在 → phase=monitor（monitor 替换 webapps/重启中，跨重启仍成立）
+	 */
+	@RequestMapping("/getUpgradeTask.do")
+	public void getUpgradeTask(String authCode,
+			HttpSession session,HttpServletRequest request,HttpServletResponse response)
+	{
+		Log.infoHead("****************** getUpgradeTask.do ***********************");
+
+		ReturnAjax rt = new ReturnAjax();
+		User accessUser = superAdminAccessCheck(authCode, "docSysInit", session, rt);
+		if(accessUser == null)
+		{
+			writeJson(rt, response);
+			return;
+		}
+
+		JSONObject data = new JSONObject();
+		LongTermTask upgradeTask = findRunningUpgradeTask();
+		if(upgradeTask != null)
+		{
+			data.put("upgrading", true);
+			data.put("phase", "prepare");
+			data.put("taskId", upgradeTask.id);
+			data.put("status", upgradeTask.status);
+			data.put("info", upgradeTask.info);
+		}
+		else if(isMonitorUpgradeTriggerExist())
+		{
+			data.put("upgrading", true);
+			data.put("phase", "monitor");
+		}
+		else
+		{
+			data.put("upgrading", false);
+		}
+		Log.debug("getUpgradeTask() " + data.toJSONString());
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
+	//升级中判定（防重入门禁共用）：内存升级任务未结束，或 monitor 侧 upgrade.trigger 仍未消费
+	protected boolean isSystemUpgrading()
+	{
+		if(findRunningUpgradeTask() != null)
+		{
+			return true;
+		}
+		return isMonitorUpgradeTriggerExist();
+	}
+
+	//扫描内存长任务中的升级任务（上传升级/在线升级）；status=200（trigger 已创建等待 monitor 重启）也算升级中，
+	//避免 trigger 已被 monitor 消费但服务尚未重启的窗口内放行第二次升级
+	protected LongTermTask findRunningUpgradeTask()
+	{
+		LongTermTask found = null;
+		for(LongTermTask task : longTermTaskHashMap.values())
+		{
+			if("upgradeSystem".equals(task.event) || "onlineUpgrade".equals(task.event))
+			{
+				if(task.status != -1 && (found == null || task.createTime > found.createTime))
+				{
+					found = task;
+				}
+			}
+		}
+		return found;
+	}
+
+	protected static boolean isMonitorUpgradeTriggerExist()
+	{
+		return FileUtil.isFileExist(docSysIniPath + "upgrade.trigger");
+	}
+
+	private static String getLocalSystemVersion()
+	{
+		String version = FileUtil.readDocContentFromFile(docSysWebPath, "version");
+		return version == null ? "" : version;
+	}
+
+	//与 BaseController.getVersionFromFile 同款版本编码（x.y.z 每段≤99、超过 3 段忽略），非法返回 null
+	protected static Integer encodeVersionToInt(String versionStr)
+	{
+		if(versionStr == null || versionStr.isEmpty())
+		{
+			return null;
+		}
+		try
+		{
+			versionStr = versionStr.trim();
+			int version = 0;
+			String [] versions = versionStr.split("\\.");
+			for(int i = 0; i < versions.length; i++)
+			{
+				if(i > 2)
+				{
+					break;
+				}
+				String tmp = versions[i];
+				if(tmp.isEmpty())
+				{
+					return null;
+				}
+				int tmpVersion = Integer.parseInt(tmp);
+				if(tmpVersion > 99)
+				{
+					return null;
+				}
+				if(i == 0)
+				{
+					tmpVersion = tmpVersion * 10000;
+				}
+				else if(i == 1)
+				{
+					tmpVersion = tmpVersion * 100;
+				}
+				version += tmpVersion;
+			}
+			return version;
+		}
+		catch(Exception e)
+		{
+			return null;
+		}
+	}
+
+	//取 GitHub 最新可升级 release（带静态缓存；forceRefresh=true 跳过缓存），返回缓存条目（_state 见上）
+	private static JSONObject getLatestUpgradeRelease(boolean forceRefresh)
+	{
+		long curTime = System.currentTimeMillis();
+		JSONObject cache = systemUpgradeCheckCache;
+		if(cache != null && forceRefresh == false)
+		{
+			boolean ok = !"error".equals(cache.getString("_state"));
+			long ttl = ok ? UPGRADE_CHECK_CACHE_OK_MS : UPGRADE_CHECK_CACHE_FAIL_MS;
+			if(curTime - cache.getLongValue("_fetchTime") < ttl)
+			{
+				return cache;
+			}
+		}
+
+		JSONObject release = fetchLatestUpgradeReleaseFromGitHub();
+		release.put("_fetchTime", curTime);
+		systemUpgradeCheckCache = release;
+		return release;
+	}
+
+	//调 GitHub Releases API：取最新的非 draft 且含 DocSystem.war 资产的 release（回退 DocSystem-C.war）
+	private static JSONObject fetchLatestUpgradeReleaseFromGitHub()
+	{
+		JSONObject result = new JSONObject();
+		result.put("_state", "error");	//默认失败（网络异常/HTTP 非 200/解析异常）
+		Log.info("fetchLatestUpgradeReleaseFromGitHub() " + GITHUB_RELEASES_API);
+		HttpURLConnection conn = null;
+		try
+		{
+			URL url = new URL(GITHUB_RELEASES_API);
+			conn = (HttpURLConnection) url.openConnection();
+			conn.setConnectTimeout(10000);
+			conn.setReadTimeout(10000);
+			conn.setRequestProperty("Accept", "application/vnd.github+json");
+			conn.setRequestProperty("User-Agent", "DocSystem-Upgrade");	//GitHub API 强制要求 User-Agent
+			int code = conn.getResponseCode();
+			if(code != 200)
+			{
+				Log.info("fetchLatestUpgradeReleaseFromGitHub() HTTP " + code);
+				//匿名限流（60 次/h/IP）是独立失败形态，提示语与网络不通区分
+				if(code == 403 || code == 429)
+				{
+					result.put("_rateLimited", true);
+				}
+				return result;
+			}
+
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			InputStream is = conn.getInputStream();
+			byte[] buffer = new byte[8 * 1024];
+			int n;
+			while((n = is.read(buffer)) != -1)
+			{
+				baos.write(buffer, 0, n);
+			}
+			is.close();
+
+			JSONArray releases = JSON.parseArray(baos.toString("UTF-8"));
+			for(int i = 0; i < releases.size(); i++)
+			{
+				JSONObject r = releases.getJSONObject(i);
+				if(r.getBooleanValue("draft"))
+				{
+					continue;
+				}
+				String tag = r.getString("tag_name");
+				if(tag == null || tag.startsWith("DocSys_") == false)
+				{
+					continue;
+				}
+				String version = tag.substring("DocSys_".length());
+				//线上 tag 实际形如 DocSys_V2.02.91（版本带 V 前缀），剥离后再按 x.y.z 解析
+				if(version.startsWith("V") || version.startsWith("v"))
+				{
+					version = version.substring(1);
+				}
+				if(encodeVersionToInt(version) == null)
+				{
+					continue;	//版本号不合法的 release 不作为升级目标
+				}
+				JSONObject asset = findUpgradeWarAsset(r.getJSONArray("assets"));
+				if(asset == null)
+				{
+					continue;	//无 war 资产（如仅源码包）的 release 不可升级，看下一个
+				}
+				result.put("_state", "found");
+				result.put("version", version);
+				result.put("assetName", asset.getString("name"));
+				result.put("downloadUrl", asset.getString("browser_download_url"));
+				result.put("size", asset.getLong("size"));
+				Log.info("fetchLatestUpgradeReleaseFromGitHub() version:" + version + " size:" + asset.getLong("size"));
+				return result;
+			}
+			//近期 release 均无可用 war 资产：视为"无可升级版本"（成功态，避免误报网络错误）
+			result.put("_state", "none");
+			return result;
+		}
+		catch(Exception e)
+		{
+			Log.info("fetchLatestUpgradeReleaseFromGitHub() 异常:" + e.getMessage());
+			return result;
+		}
+		finally
+		{
+			if(conn != null) conn.disconnect();
+		}
+	}
+
+	//在 release 资产里找 war 包：DocSystem.war（不区分大小写），回退 DocSystem-C.war
+	private static JSONObject findUpgradeWarAsset(JSONArray assets)
+	{
+		if(assets == null)
+		{
+			return null;
+		}
+		JSONObject fallback = null;
+		for(int i = 0; i < assets.size(); i++)
+		{
+			JSONObject asset = assets.getJSONObject(i);
+			String name = asset.getString("name");
+			if("DocSystem.war".equalsIgnoreCase(name))
+			{
+				return asset;
+			}
+			if("DocSystem-C.war".equalsIgnoreCase(name))
+			{
+				fallback = asset;
+			}
+		}
+		return fallback;
+	}
+
+	private static String formatUpgradeSize(long bytes)
+	{
+		if(bytes < 0)
+		{
+			return "?";
+		}
+		return String.format("%.1fMB", bytes / 1024.0 / 1024.0);
 	}
 
 	/**************** queryLongTermTask ******************/
