@@ -3,6 +3,13 @@
 > 状态：**T1-T5 实施完成 + dev 联调完成 + 检测源 Gitee 优先改造完成（2026-11-22）**。剩余：release 包 monitor 阶段全流程（T6 后半，需用户环境）；可选：dev 网络好时补一次完整 1.4GB 下载
 > 设计文档：`devDocs/系统在线升级方案.md`（含 §2.3 检测源裁定：Gitee 优先 + GitHub 兜底，下载固定 GitHub）
 
+## 增量改造 3：悬停面板可细读可跳转（2026-11-22 傍晚，用户裁定）
+
+- 原生 title 换成**自定义悬停面板**：悬停"升级"按键弹出（右对齐按键下方、420px 卡片、站点风格）；**鼠标移入面板不收起**（250ms 延时收起 + 移入取消，可细读长说明，内容超 60vh 内部滚动）；离开按键与面板都收起；**点击面板打开对应 release 页面**（新窗口）。
+- release 页面地址由后端返回 `releasePage`：Gitee 源 = `gitee.com/RainyGao/DocSys/releases/tag/<tag>`，GitHub 兜底源 = github 对应 tag 页（tag 原文带 V，URLEncoder 编码）。
+- 面板结构与样式由 onlineUpgrade.js 注入（不改宿主 HTML）；桌面按键不再挂原生 title（避免双提示），mobile 链接保留 title；面板正文用 .text() 填充防注入；页脚"点击查看完整发布信息"。
+- 实测：悬停显示/移入保持/移出 250ms 收起全过；右对齐精确（面板右缘=按键右缘）；点击实际打开 `gitee.com/RainyGao/DocSys/releases/tag/DocSys_V2.02.91` ✓；内容超高滚动 ✓。bump v=202611224。
+
 ## 增量改造 2：按键 UI（2026-11-22 傍晚，用户裁定）
 
 - 按键移到**导航栏最右侧（语言切换右侧）**（ch/en 两页；mobile 下拉保持原位）；文字只显示"升级"（不带版本号）；样式改为**带外框胶囊按钮**（站点绿 #2ABB9B 外框、hover 填充白字；升级中态琥珀色边框禁点）；CSS 内联在两 html（.online-upgrade-btn）。

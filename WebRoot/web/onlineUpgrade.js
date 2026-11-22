@@ -9,6 +9,7 @@ var OnlineUpgrade = {
 	size: null,			//新版本 war 大小（字节，仅 GitHub 检测源可知）
 	notes: null,		//新版本 release 更新说明（悬停提示用，可能取不到）
 	pubDate: null,		//新版本发布日期
+	releasePage: null,	//新版本 release 页面（悬停面板点击打开）
 	taskId: null,		//升级任务 id（getUpgradeTask/onlineUpgrade 返回）
 	timer: null,		//轮询定时器
 };
@@ -45,8 +46,10 @@ OnlineUpgrade.reset = function()
 	OnlineUpgrade.size = null;
 	OnlineUpgrade.notes = null;
 	OnlineUpgrade.pubDate = null;
+	OnlineUpgrade.releasePage = null;
 	OnlineUpgrade.taskId = null;
 	OnlineUpgrade.stopTimer();
+	OnlineUpgrade.hideTip();
 	$("#onlineUpgradeBtn").hide();
 	$("#mobileOnlineUpgradeBtn").hide();
 };
@@ -102,10 +105,12 @@ OnlineUpgrade.checkVersion = function()
 				OnlineUpgrade.size = ret.data.downloadSize;
 				OnlineUpgrade.notes = ret.data.releaseNotes || null;
 				OnlineUpgrade.pubDate = ret.data.releaseDate || null;
-				//按键只显示"升级"（不带版本号），版本与 release 更新说明放悬停提示
+				OnlineUpgrade.releasePage = ret.data.releasePage || null;
+				//按键只显示"升级"（不带版本号）；桌面端悬停弹自定义面板（可移入细读/点击进 release 页），
+				//故不再用原生 title（避免双提示）；mobile 无悬停，保留原生 title
 				var text = OnlineUpgrade.lang("upgrade", "升级");
 				var tooltip = OnlineUpgrade.buildTooltip();
-				$("#onlineUpgradeBtn a").text(text).attr("title", tooltip).removeClass("upgrading");
+				$("#onlineUpgradeBtn a").text(text).removeAttr("title").removeClass("upgrading");
 				$("#mobileOnlineUpgradeBtn a").text(text).attr("title", tooltip);
 				$("#onlineUpgradeBtn").show();
 				$("#mobileOnlineUpgradeBtn").show();
@@ -192,6 +197,7 @@ OnlineUpgrade.setUpgrading = function(taskId)
 {
 	OnlineUpgrade.state = "upgrading";
 	OnlineUpgrade.taskId = taskId || null;
+	OnlineUpgrade.hideTip();
 	var text = OnlineUpgrade.lang("upgrading", "系统升级中...");
 	$("#onlineUpgradeBtn a").text(text).attr("title", text).addClass("upgrading");
 	$("#mobileOnlineUpgradeBtn a").text(text).attr("title", text);
@@ -313,6 +319,115 @@ OnlineUpgrade.buildTooltip = function()
 	}
 	return text;
 };
+
+// ---- 悬停说明面板（替代原生 title）：鼠标移入面板不收起（方便细读），点击面板打开对应 release 页面 ----
+OnlineUpgrade.tipEl = null;
+OnlineUpgrade.tipHideTimer = null;
+
+OnlineUpgrade.ensureTipEl = function()
+{
+	if(OnlineUpgrade.tipEl)
+	{
+		return OnlineUpgrade.tipEl;
+	}
+	//面板结构与样式由 JS 注入（不改动宿主 HTML）
+	if($("#onlineUpgradeTipStyle").length == 0)
+	{
+		$("head").append(
+			"<style id='onlineUpgradeTipStyle'>" +
+			".online-upgrade-tip { position: fixed; z-index: 1080; width: 420px; max-width: 90vw; max-height: 60vh; overflow-y: auto;" +
+			" background: #fff; border: 1px solid #e1e8f0; border-radius: 10px; box-shadow: 0 10px 30px rgba(15,35,60,.18);" +
+			" padding: 14px 16px 10px; cursor: pointer; font-size: 13px; color: #22324a; line-height: 1.7; }" +
+			".online-upgrade-tip .ou-tip-head { font-weight: 600; font-size: 14px; color: #1f8a74; margin-bottom: 8px; }" +
+			".online-upgrade-tip .ou-tip-body { white-space: pre-wrap; word-break: break-word; }" +
+			".online-upgrade-tip .ou-tip-foot { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eef2f7; color: #4a90d9; font-size: 12px; }" +
+			".online-upgrade-tip:hover .ou-tip-foot { text-decoration: underline; }" +
+			"</style>");
+	}
+	var el = $("<div id='onlineUpgradeTip' class='online-upgrade-tip' style='display:none'></div>").appendTo("body");
+	el.on("mouseenter", function() { OnlineUpgrade.cancelHideTip(); });
+	el.on("mouseleave", function() { OnlineUpgrade.scheduleHideTip(); });
+	el.on("click", function() {
+		if(OnlineUpgrade.releasePage)
+		{
+			window.open(OnlineUpgrade.releasePage);	//新窗口打开
+		}
+	});
+	$(window).on("scroll", function() { OnlineUpgrade.hideTip(); });
+	OnlineUpgrade.tipEl = el;
+	return el;
+};
+
+//面板内容：版本头 + 更新说明 + "查看完整发布信息"页脚（内容用 .text() 填充，防注入）
+OnlineUpgrade.renderTip = function()
+{
+	var el = OnlineUpgrade.tipEl;
+	el.empty();
+	var head = OnlineUpgrade.version || "";
+	if(OnlineUpgrade.pubDate)
+	{
+		head += OnlineUpgrade.lang("releasedFormat", "（发布于 {date}）").replace("{date}", OnlineUpgrade.pubDate);
+	}
+	var notes = OnlineUpgrade.notes;
+	if(!notes)
+	{
+		notes = OnlineUpgrade.lang("noNotes", "暂无版本说明");
+	}
+	$("<div class='ou-tip-head'></div>").text(head).appendTo(el);
+	$("<div class='ou-tip-body'></div>").text(notes).appendTo(el);
+	$("<div class='ou-tip-foot'></div>").text(OnlineUpgrade.lang("viewRelease", "点击查看完整发布信息") + " >>").appendTo(el);
+};
+
+OnlineUpgrade.showTip = function()
+{
+	var el = OnlineUpgrade.ensureTipEl();
+	OnlineUpgrade.cancelHideTip();
+	OnlineUpgrade.renderTip();
+	//右对齐到按键下方（小屏时不出界）
+	var rect = $("#onlineUpgradeBtn a").get(0).getBoundingClientRect();
+	var left = Math.max(8, Math.min(rect.right - 420, $(window).width() - $(window).width() * 0.1));
+	el.css({ top: (rect.bottom + 8) + "px", left: left + "px" }).show();
+};
+
+OnlineUpgrade.hideTip = function()
+{
+	OnlineUpgrade.cancelHideTip();
+	if(OnlineUpgrade.tipEl)
+	{
+		OnlineUpgrade.tipEl.hide();
+	}
+};
+
+//离开按键/面板后延时 250ms 再收起：给鼠标从按键移到面板的时间；移入面板即取消
+OnlineUpgrade.scheduleHideTip = function()
+{
+	OnlineUpgrade.cancelHideTip();
+	OnlineUpgrade.tipHideTimer = setTimeout(function() {
+		OnlineUpgrade.hideTip();
+	}, 250);
+};
+
+OnlineUpgrade.cancelHideTip = function()
+{
+	if(OnlineUpgrade.tipHideTimer != null)
+	{
+		clearTimeout(OnlineUpgrade.tipHideTimer);
+		OnlineUpgrade.tipHideTimer = null;
+	}
+};
+
+//桌面端按键悬停事件（available 态才弹面板；mobile 无悬停）
+$(function(){
+	$("#onlineUpgradeBtn").on("mouseenter", function() {
+		if(OnlineUpgrade.state == "available")
+		{
+			OnlineUpgrade.showTip();
+		}
+	});
+	$("#onlineUpgradeBtn").on("mouseleave", function() {
+		OnlineUpgrade.scheduleHideTip();
+	});
+});
 
 OnlineUpgrade.formatSize = function(bytes)
 {

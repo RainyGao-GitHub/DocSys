@@ -2892,7 +2892,9 @@ public class ManageController extends BaseController{
 	private static final long UPGRADE_CHECK_CACHE_OK_MS = 10 * 60 * 1000;	//成功（含"无可升级版本"）缓存 10 分钟
 	private static final long UPGRADE_CHECK_CACHE_FAIL_MS = 2 * 60 * 1000;	//失败（网络不可达）缓存 2 分钟，防限流放大
 	private static final String GITEE_RELEASES_API = "https://gitee.com/api/v5/repos/RainyGao/DocSys/releases?page=1&per_page=5&direction=desc";
+	private static final String GITEE_RELEASES_PAGE = "https://gitee.com/RainyGao/DocSys/releases";
 	private static final String GITHUB_RELEASES_API = "https://api.github.com/repos/RainyGao-GitHub/DocSys/releases?per_page=5";
+	private static final String GITHUB_RELEASES_PAGE = "https://github.com/RainyGao-GitHub/DocSys/releases";
 	//两个升级入口（upgradeSystem/onlineUpgrade）"门禁检查 → 创建任务"的互斥锁
 	private static final Object upgradeGateLock = new Object();
 
@@ -2989,6 +2991,11 @@ public class ManageController extends BaseController{
 				if(pubDate != null)
 				{
 					data.put("releaseDate", pubDate);
+				}
+				String releasePage = releaseEntry.getString("releasePage");
+				if(releasePage != null)
+				{
+					data.put("releasePage", releasePage);
 				}
 			}
 		}
@@ -3416,7 +3423,7 @@ public class ManageController extends BaseController{
 				{
 					continue;	//tag 不含合法版本号的 release 不作为检测目标
 				}
-				//release 正文与发布时间（前端按键悬停提示用）
+				//release 正文/发布时间/release 页面（前端按键悬停面板用）
 				String notes = stripReleaseNotes(r.getString("body"));
 				if(notes != null)
 				{
@@ -3427,6 +3434,7 @@ public class ManageController extends BaseController{
 				{
 					result.put("pubDate", createdAt.substring(0, 10));
 				}
+				result.put("releasePage", GITEE_RELEASES_PAGE + "/tag/" + URLEncoder.encode(r.getString("tag_name"), "UTF-8"));
 				result.put("_state", "found");
 				result.put("version", version);
 				Log.info("fetchGiteeLatestRelease() version:" + version);
@@ -3518,7 +3526,7 @@ public class ManageController extends BaseController{
 				{
 					continue;	//无 war 资产（如仅源码包）的 release 不可升级，看下一个
 				}
-				//release 正文与发布时间（前端按键悬停提示用）
+				//release 正文/发布时间/release 页面（前端按键悬停面板用）
 				String notes = stripReleaseNotes(r.getString("body"));
 				if(notes != null)
 				{
@@ -3529,6 +3537,7 @@ public class ManageController extends BaseController{
 				{
 					result.put("pubDate", createdAt.substring(0, 10));
 				}
+				result.put("releasePage", GITHUB_RELEASES_PAGE + "/tag/" + URLEncoder.encode(r.getString("tag_name"), "UTF-8"));
 				result.put("_state", "found");
 				result.put("version", version);
 				result.put("assetName", asset.getString("name"));
