@@ -2880,19 +2880,26 @@ public class ManageController extends BaseController{
 		writeJson(rt, response);
 	}
 
-	// ==================== 系统在线升级（GitHub Releases，2026-11-22） ====================
-	//版本源：https://github.com/RainyGao-GitHub/DocSys/releases，war 资产 DocSystem.war（旧版回退 DocSystem-C.war），
-	//tag 形如 DocSys_2.02.92；GitHub 匿名 API 限流 60 次/h/IP（本机实测超限过），检测结果必须静态缓存
+	// ==================== 系统在线升级（2026-11-22；检测源 Gitee 优先 + GitHub 兜底，下载固定 GitHub） ====================
+	//检测源策略（2026-11-22 用户裁定）：版本检测先查 Gitee（国内可达、发版先行），Gitee 不可用再查 GitHub；
+	//war 安装包只在 GitHub Releases（Gitee 无 war 资产），在线升级下载固定走 GitHub——GitHub 网络不通时
+	//按键仍可显示（依据 Gitee），点击升级才报"无法访问GitHub"，避免"发了新版用户却看不到按键"的困惑
 
-	//GitHub 检测缓存条目：_state=found|none|error，_fetchTime=拉取时刻；found 时含 version/assetName/downloadUrl/size
-	private static volatile JSONObject systemUpgradeCheckCache = null;
+	//Gitee 检测缓存条目：_state=found|error，found 时含 version（Gitee 只有版本信息，无 war 资产）
+	private static volatile JSONObject giteeReleaseCache = null;
+	//GitHub war 资产缓存条目：_state=found|none|error(_rateLimited)，found 时含 version/assetName/downloadUrl/size
+	private static volatile JSONObject githubWarReleaseCache = null;
 	private static final long UPGRADE_CHECK_CACHE_OK_MS = 10 * 60 * 1000;	//成功（含"无可升级版本"）缓存 10 分钟
 	private static final long UPGRADE_CHECK_CACHE_FAIL_MS = 2 * 60 * 1000;	//失败（网络不可达）缓存 2 分钟，防限流放大
+	private static final String GITEE_RELEASES_API = "https://gitee.com/api/v5/repos/RainyGao/DocSys/releases?page=1&per_page=5&direction=desc";
 	private static final String GITHUB_RELEASES_API = "https://api.github.com/repos/RainyGao-GitHub/DocSys/releases?per_page=5";
 	//两个升级入口（upgradeSystem/onlineUpgrade）"门禁检查 → 创建任务"的互斥锁
 	private static final Object upgradeGateLock = new Object();
 
-	/**************** checkSystemUpgrade（在线升级检测，超管） ******************/
+	/**************** checkSystemUpgrade（在线升级检测，超管） ******************
+	 * 检测顺序（2026-11-22 用户裁定）：Gitee 优先（国内可达、发版先行，无 war 资产仅取版本号）→
+	 * Gitee 不可用时 GitHub 兜底（含 war 资产信息）。与本地 version 比较得出 hasNewVersion。
+	 */
 	@RequestMapping("/checkSystemUpgrade.do")
 	public void checkSystemUpgrade(String authCode,
 			HttpSession session,HttpServletRequest request,HttpServletResponse response)
@@ -2907,39 +2914,73 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		JSONObject release = getLatestUpgradeRelease(false);
+		//主源 Gitee：成功即用（此时完全不碰 GitHub，节省其匿名 API 配额）
+		JSONObject giteeRelease = getGiteeLatestRelease(false);
+		boolean giteeFound = "found".equals(giteeRelease.getString("_state"));
+		Integer giteeVersion = giteeFound ? encodeVersionToInt(giteeRelease.getString("version")) : null;
+		if(giteeFound && giteeVersion != null)
+		{
+			JSONObject data = buildUpgradeCheckData("gitee", giteeRelease.getString("version"), null);
+			Log.debug("checkSystemUpgrade() gitee " + data.toJSONString());
+			rt.setData(data);
+			writeJson(rt, response);
+			return;
+		}
+
+		//兜底 GitHub：拿最新含 war 资产的 release
+		JSONObject release = getGithubWarRelease(false);
 		if("error".equals(release.getString("_state")))
 		{
 			if(release.getBooleanValue("_rateLimited"))
 			{
-				docSysErrorLog("GitHub API 限流（匿名 60 次/小时），请稍后再试", rt);
+				docSysErrorLog("Gitee 不可达，GitHub API 限流（匿名 60 次/小时），请稍后再试", rt);
 			}
 			else
 			{
-				docSysErrorLog("无法访问GitHub（检查网络或代理）", rt);
+				docSysErrorLog("无法访问Gitee/GitHub（检查网络或代理）", rt);
 			}
 			writeJson(rt, response);
 			return;
 		}
 
+		JSONObject data = null;
+		if("found".equals(release.getString("_state")))
+		{
+			data = buildUpgradeCheckData("github", release.getString("version"), release.getLong("size"));
+		}
+		else
+		{
+			//none：近期均无可用版本
+			data = buildUpgradeCheckData(null, null, null);
+		}
+		Log.debug("checkSystemUpgrade() github " + data.toJSONString());
+		rt.setData(data);
+		writeJson(rt, response);
+	}
+
+	//组装 checkSystemUpgrade 返回体：targetVersion <= 本地时 hasNewVersion=false（大小仅 GitHub 源可知）
+	private static JSONObject buildUpgradeCheckData(String source, String newVersion, Long downloadSize)
+	{
 		JSONObject data = new JSONObject();
 		data.put("currentVersion", getLocalSystemVersion());
 		boolean hasNewVersion = false;
-		if("found".equals(release.getString("_state")))
+		if(newVersion != null)
 		{
-			Integer remoteVersion = encodeVersionToInt(release.getString("version"));
+			Integer remoteVersion = encodeVersionToInt(newVersion);
 			Integer localVersion = getVersionFromFile(docSysWebPath, "version");
 			if(remoteVersion != null && localVersion != null && remoteVersion > localVersion)
 			{
 				hasNewVersion = true;
-				data.put("newVersion", release.getString("version"));
-				data.put("downloadSize", release.getLong("size"));
+				data.put("newVersion", newVersion);
+				data.put("source", source);
+				if(downloadSize != null)
+				{
+					data.put("downloadSize", downloadSize);
+				}
 			}
 		}
 		data.put("hasNewVersion", hasNewVersion);
-		Log.debug("checkSystemUpgrade() hasNewVersion:" + hasNewVersion);
-		rt.setData(data);
-		writeJson(rt, response);
+		return data;
 	}
 
 	/**************** onlineUpgrade（在线升级执行，超管） ******************
@@ -2974,8 +3015,21 @@ public class ManageController extends BaseController{
 				return;
 			}
 
-			//复用检测缓存里的最新版本信息（未缓存或已过期时现场拉取）
-			JSONObject release = getLatestUpgradeRelease(false);
+			//下载源固定 GitHub（war 只在 GitHub Releases，检测可能来自 Gitee 的版本号）
+			JSONObject release = getGithubWarRelease(false);
+			if("error".equals(release.getString("_state")))
+			{
+				if(release.getBooleanValue("_rateLimited"))
+				{
+					docSysErrorLog("GitHub API 限流（匿名 60 次/小时），请稍后再试", rt);
+				}
+				else
+				{
+					docSysErrorLog("无法访问GitHub（检查网络或代理）", rt);
+				}
+				writeJson(rt, response);
+				return;
+			}
 			if("found".equals(release.getString("_state")) == false)
 			{
 				docSysErrorLog("未获取到可用的升级版本信息", rt);
@@ -2984,9 +3038,26 @@ public class ManageController extends BaseController{
 			}
 			Integer remoteVersion = encodeVersionToInt(release.getString("version"));
 			Integer localVersion = getVersionFromFile(docSysWebPath, "version");
-			if(remoteVersion == null || localVersion == null || remoteVersion <= localVersion)
+			if(remoteVersion == null || localVersion == null)
 			{
-				docSysErrorLog("当前已是最新版本", rt);
+				docSysErrorLog("未获取到可用的升级版本信息", rt);
+				writeJson(rt, response);
+				return;
+			}
+			if(remoteVersion <= localVersion)
+			{
+				//检测到的目标版本（可能来自 Gitee）比本地新，但 GitHub 的 war 还没同步到——
+				//发布流程是 Gitee 先行、war 稍后才传 GitHub（1.4GB 上传耗时），该窗口内给出明确提示
+				JSONObject giteeRelease = getGiteeLatestRelease(false);
+				Integer giteeVersion = "found".equals(giteeRelease.getString("_state")) ? encodeVersionToInt(giteeRelease.getString("version")) : null;
+				if(giteeVersion != null && giteeVersion > localVersion)
+				{
+					docSysErrorLog("新版本 " + giteeRelease.getString("version") + " 的安装包尚未同步到GitHub，请稍后再试", rt);
+				}
+				else
+				{
+					docSysErrorLog("当前已是最新版本", rt);
+				}
 				writeJson(rt, response);
 				return;
 			}
@@ -3001,7 +3072,7 @@ public class ManageController extends BaseController{
 		}
 
 		queryTask.status = 0;	//下载中
-		queryTask.info = "开始在线升级";
+		queryTask.info = "开始在线升级(" + releaseInfo.getString("version") + ")";
 		Log.debug("onlineUpgrade() " + queryTask.info);
 		rt.setData(queryTask);
 		writeJson(rt, response);
@@ -3253,25 +3324,118 @@ public class ManageController extends BaseController{
 		}
 	}
 
-	//取 GitHub 最新可升级 release（带静态缓存；forceRefresh=true 跳过缓存），返回缓存条目（_state 见上）
-	private static JSONObject getLatestUpgradeRelease(boolean forceRefresh)
+	//Gitee 最新版本（检测主源，带缓存；forceRefresh=true 跳过缓存），返回缓存条目（_state=found|error，found 含 version）
+	private static JSONObject getGiteeLatestRelease(boolean forceRefresh)
 	{
-		long curTime = System.currentTimeMillis();
-		JSONObject cache = systemUpgradeCheckCache;
-		if(cache != null && forceRefresh == false)
+		JSONObject cache = giteeReleaseCache;
+		if(cache != null && forceRefresh == false && isUpgradeCheckCacheFresh(cache))
 		{
-			boolean ok = !"error".equals(cache.getString("_state"));
-			long ttl = ok ? UPGRADE_CHECK_CACHE_OK_MS : UPGRADE_CHECK_CACHE_FAIL_MS;
-			if(curTime - cache.getLongValue("_fetchTime") < ttl)
-			{
-				return cache;
-			}
+			return cache;
 		}
+		JSONObject result = fetchGiteeLatestRelease();
+		result.put("_fetchTime", System.currentTimeMillis());
+		giteeReleaseCache = result;
+		return result;
+	}
 
-		JSONObject release = fetchLatestUpgradeReleaseFromGitHub();
-		release.put("_fetchTime", curTime);
-		systemUpgradeCheckCache = release;
-		return release;
+	//GitHub 最新含 war 资产的 release（检测兜底 + 在线升级下载源，带缓存），
+	//返回缓存条目（_state=found|none|error，error 时可能含 _rateLimited；found 含 version/assetName/downloadUrl/size）
+	private static JSONObject getGithubWarRelease(boolean forceRefresh)
+	{
+		JSONObject cache = githubWarReleaseCache;
+		if(cache != null && forceRefresh == false && isUpgradeCheckCacheFresh(cache))
+		{
+			return cache;
+		}
+		JSONObject result = fetchLatestUpgradeReleaseFromGitHub();
+		result.put("_fetchTime", System.currentTimeMillis());
+		githubWarReleaseCache = result;
+		return result;
+	}
+
+	private static boolean isUpgradeCheckCacheFresh(JSONObject cache)
+	{
+		long ttl = "error".equals(cache.getString("_state")) ? UPGRADE_CHECK_CACHE_FAIL_MS : UPGRADE_CHECK_CACHE_OK_MS;
+		return System.currentTimeMillis() - cache.getLongValue("_fetchTime") < ttl;
+	}
+
+	//调 Gitee Releases API：取最新的非 prerelease 且 tag 可解析的 release 版本号（Gitee 无 war 资产，仅用于检测显示）
+	private static JSONObject fetchGiteeLatestRelease()
+	{
+		JSONObject result = new JSONObject();
+		result.put("_state", "error");
+		Log.info("fetchGiteeLatestRelease() " + GITEE_RELEASES_API);
+		HttpURLConnection conn = null;
+		try
+		{
+			URL url = new URL(GITEE_RELEASES_API);
+			conn = (HttpURLConnection) url.openConnection();
+			conn.setConnectTimeout(10000);
+			conn.setReadTimeout(10000);
+			conn.setRequestProperty("User-Agent", "DocSystem-Upgrade");
+			int code = conn.getResponseCode();
+			if(code != 200)
+			{
+				Log.info("fetchGiteeLatestRelease() HTTP " + code);
+				return result;
+			}
+
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			InputStream is = conn.getInputStream();
+			byte[] buffer = new byte[8 * 1024];
+			int n;
+			while((n = is.read(buffer)) != -1)
+			{
+				baos.write(buffer, 0, n);
+			}
+			is.close();
+
+			JSONArray releases = JSON.parseArray(baos.toString("UTF-8"));
+			for(int i = 0; i < releases.size(); i++)
+			{
+				JSONObject r = releases.getJSONObject(i);
+				if(r.getBooleanValue("prerelease") || r.getBooleanValue("draft"))
+				{
+					continue;
+				}
+				String version = parseReleaseVersion(r.getString("tag_name"));
+				if(version == null)
+				{
+					continue;	//tag 不含合法版本号的 release 不作为检测目标
+				}
+				result.put("_state", "found");
+				result.put("version", version);
+				Log.info("fetchGiteeLatestRelease() version:" + version);
+				return result;
+			}
+			Log.info("fetchGiteeLatestRelease() 近期 release 中无合法版本号");
+			return result;
+		}
+		catch(Exception e)
+		{
+			Log.info("fetchGiteeLatestRelease() 异常:" + e.getMessage());
+			return result;
+		}
+		finally
+		{
+			if(conn != null) conn.disconnect();
+		}
+	}
+
+	//从 release tag 解析版本号：剥 DocSys_ 前缀（线上 tag 实为 DocSys_V2.02.91，版本带 V 前缀，一并剥离），
+	//非法（无前缀/版本号不可解析）返回 null
+	private static String parseReleaseVersion(String tag)
+	{
+		if(tag == null || tag.startsWith("DocSys_") == false)
+		{
+			return null;
+		}
+		String version = tag.substring("DocSys_".length());
+		if(version.startsWith("V") || version.startsWith("v"))
+		{
+			version = version.substring(1);
+		}
+		return encodeVersionToInt(version) != null ? version : null;
 	}
 
 	//调 GitHub Releases API：取最新的非 draft 且含 DocSystem.war 资产的 release（回退 DocSystem-C.war）
@@ -3320,17 +3484,8 @@ public class ManageController extends BaseController{
 					continue;
 				}
 				String tag = r.getString("tag_name");
-				if(tag == null || tag.startsWith("DocSys_") == false)
-				{
-					continue;
-				}
-				String version = tag.substring("DocSys_".length());
-				//线上 tag 实际形如 DocSys_V2.02.91（版本带 V 前缀），剥离后再按 x.y.z 解析
-				if(version.startsWith("V") || version.startsWith("v"))
-				{
-					version = version.substring(1);
-				}
-				if(encodeVersionToInt(version) == null)
+				String version = parseReleaseVersion(tag);
+				if(version == null)
 				{
 					continue;	//版本号不合法的 release 不作为升级目标
 				}

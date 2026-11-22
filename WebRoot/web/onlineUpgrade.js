@@ -125,8 +125,12 @@ OnlineUpgrade.start = function()
 		return;
 	}
 
-	var msg = OnlineUpgrade.lang("confirmMsg", "检测到新版本 {version}（大小 {size}），是否升级系统？\n\n升级过程中系统将自动重启，请勿关闭页面。");
-	msg = msg.replace("{version}", OnlineUpgrade.version || "").replace("{size}", OnlineUpgrade.formatSize(OnlineUpgrade.size));
+	//大小仅 GitHub 检测源可知（Gitee 只有版本号），未知时不显示大小片段
+	var sizePart = (OnlineUpgrade.size != null)
+		? OnlineUpgrade.lang("sizePart", "（大小 {size}）").replace("{size}", OnlineUpgrade.formatSize(OnlineUpgrade.size))
+		: "";
+	var msg = OnlineUpgrade.lang("confirmMsg", "检测到新版本 {version}{sizePart}，是否升级系统？<br><br><strong>升级过程中系统将自动重启，请勿关闭页面。</strong>");
+	msg = msg.replace("{version}", OnlineUpgrade.version || "").replace("{sizePart}", sizePart);
 
 	qiao.bs.confirm({
 		id: "onlineUpgradeConfirmDialog",

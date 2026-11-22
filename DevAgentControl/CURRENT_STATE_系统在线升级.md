@@ -1,9 +1,19 @@
 # CURRENT_STATE_系统在线升级（dev 联调完成，待用户验收）
 
-> 状态：**T1-T5 实施完成 + dev 联调完成（2026-11-22 单 session：开工→实现→联调→提交）**。剩余：release 包 monitor 阶段全流程（T6 后半，需用户环境）；可选：dev 网络好时补一次完整 1.4GB 下载（见下）
-> 设计文档：`devDocs/系统在线升级方案.md`（头部已标实施纠偏：tag 带 V 前缀、war 实际 1.4GB）
+> 状态：**T1-T5 实施完成 + dev 联调完成 + 检测源 Gitee 优先改造完成（2026-11-22）**。剩余：release 包 monitor 阶段全流程（T6 后半，需用户环境）；可选：dev 网络好时补一次完整 1.4GB 下载
+> 设计文档：`devDocs/系统在线升级方案.md`（含 §2.3 检测源裁定：Gitee 优先 + GitHub 兜底，下载固定 GitHub）
 
-## 实施内容（commit 见下方）
+## 增量改造（2026-11-22 下午，用户裁定"版本信息先查Gitee再查Github"）
+
+背景：用户发布流程为 Gitee 先行、war 稍后传 GitHub；GitHub 国内经常整体不通，检测依赖 GitHub 会导致"发了新版用户看不到按键"。
+
+- **checkSystemUpgrade.do**：先 Gitee（`gitee.com/api/v5/repos/RainyGao/DocSys/releases`，非 prerelease、tag 剥前缀取版本号；Gitee **无 draft 字段**、无 war 资产）→ 成功即用且**完全不碰 GitHub API**（省匿名配额）；Gitee 不可用再 GitHub 兜底（含 war 资产信息）。返回新增 `source`；`downloadSize` 仅 GitHub 源有。两路独立静态缓存（10min 成功/2min 失败）。都挂时报"无法访问Gitee/GitHub"（限流单独文案）。
+- **onlineUpgrade.do**：下载源固定 GitHub（war 只在 GitHub）。GitHub war 版本 <= 本地时细分：Gitee 目标 > 本地 → "新版本 x.y.z 的安装包尚未同步到GitHub，请稍后再试"（Gitee 先行/1.4GB 上传中的窗口）；否则"当前已是最新版本"。task 初始 info 带实际下载版本号。
+- **前端**：确认框大小片段条件显示（Gitee 源无 size 不显示"（大小 ）"空壳），lang 新增 sizePart；onlineUpgrade.js bump v=202611222。
+- **实测（恰逢 GitHub 全断 + Gitee 通的真实场景）**：检测走 Gitee → 按键显示"升级(2.02.91)"（source=gitee、无 size）✅；确认框无空大小片段 ✅；点击升级 → "无法访问GitHub（检查网络或代理）" + 按键保持可重试 ✅。未真机覆盖分支：Gitee 断/GitHub 通兜底（代码与改造前 GitHub 路径相同，昨日已验）、"尚未同步到GitHub"提示（逻辑简单，待真实发版窗口或下次联调补测）。
+- 网络：Gitee API 本机直连可用；GitHub 当日整体不通（Clash fake-ip 劫持 DNS，节点到 GitHub 挂）。
+
+## 实施内容（首轮，commit 3e3517852）
 
 - **T1**：`executeWarUpgrade(String warName, LongTermTask task)` 抽取自 upgradeSystem.do 执行段（逐行一致，仅日志前缀换名）；**upgradeSystem.do 也加了防重入门禁**（方案 4.3 只写 onlineUpgrade 侧，#8 要双向互斥）。
 - **T2**：`checkSystemUpgrade.do`（超管）：GitHub Releases API（per_page=5、Accept vnd.github+json、UA 必带）→ 非 draft + 含 DocSystem.war 资产（回退 DocSystem-C.war）+ tag 剥 `DocSys_`/`V` 后可解析 → 与本地 version 按 getVersionFromFile 同款编码比较；静态缓存成功/none 10 分钟、失败 2 分钟；403/429 单独提示"GitHub API 限流（匿名 60 次/小时）"。

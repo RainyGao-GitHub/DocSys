@@ -381,14 +381,15 @@
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript" src="index.js?v=20261122"></script>
 <script type="text/javascript" src="firstBootPanel.js?v=202611214"></script>
-<script type="text/javascript" src="onlineUpgrade.js?v=202611221"></script>
+<script type="text/javascript" src="onlineUpgrade.js?v=202611222"></script>
 <script type="text/javascript">
 //Online upgrade button dynamic texts (maintained per language file)
 var OnlineUpgradeLang = {
     upgrade: "Upgrade",
     upgrading: "Upgrading...",
     confirmTitle: "System Upgrade",
-    confirmMsg: "New version {version} detected (size {size}). Upgrade the system now?<br><br><strong>The system will restart automatically during the upgrade. Do not close this page.</strong>",
+    confirmMsg: "New version {version} detected{sizePart}. Upgrade the system now?<br><br><strong>The system will restart automatically during the upgrade. Do not close this page.</strong>",
+    sizePart: " (size {size})",
     upgradeFailed: "Online upgrade failed",
     serverError: "Server error",
     ok: "OK",

@@ -386,14 +386,15 @@
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript" src="index.js?v=20261122"></script>
 <script type="text/javascript" src="firstBootPanel.js?v=202611214"></script>
-<script type="text/javascript" src="onlineUpgrade.js?v=202611221"></script>
+<script type="text/javascript" src="onlineUpgrade.js?v=202611222"></script>
 <script type="text/javascript">
 //在线升级按键动态文案（随语言文件维护）
 var OnlineUpgradeLang = {
     upgrade: "升级",
     upgrading: "系统升级中...",
     confirmTitle: "系统升级",
-    confirmMsg: "检测到新版本 {version}（大小 {size}），是否升级系统？<br><br><strong>升级过程中系统将自动重启，请勿关闭页面。</strong>",
+    confirmMsg: "检测到新版本 {version}{sizePart}，是否升级系统？<br><br><strong>升级过程中系统将自动重启，请勿关闭页面。</strong>",
+    sizePart: "（大小 {size}）",
     upgradeFailed: "在线升级失败",
     serverError: "服务器异常",
     ok: "确认",
