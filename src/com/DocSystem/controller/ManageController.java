@@ -2920,7 +2920,7 @@ public class ManageController extends BaseController{
 		Integer giteeVersion = giteeFound ? encodeVersionToInt(giteeRelease.getString("version")) : null;
 		if(giteeFound && giteeVersion != null)
 		{
-			JSONObject data = buildUpgradeCheckData("gitee", giteeRelease.getString("version"), null);
+			JSONObject data = buildUpgradeCheckData("gitee", giteeRelease);
 			Log.debug("checkSystemUpgrade() gitee " + data.toJSONString());
 			rt.setData(data);
 			writeJson(rt, response);
@@ -2946,24 +2946,26 @@ public class ManageController extends BaseController{
 		JSONObject data = null;
 		if("found".equals(release.getString("_state")))
 		{
-			data = buildUpgradeCheckData("github", release.getString("version"), release.getLong("size"));
+			data = buildUpgradeCheckData("github", release);
 		}
 		else
 		{
 			//none：近期均无可用版本
-			data = buildUpgradeCheckData(null, null, null);
+			data = buildUpgradeCheckData(null, null);
 		}
 		Log.debug("checkSystemUpgrade() github " + data.toJSONString());
 		rt.setData(data);
 		writeJson(rt, response);
 	}
 
-	//组装 checkSystemUpgrade 返回体：targetVersion <= 本地时 hasNewVersion=false（大小仅 GitHub 源可知）
-	private static JSONObject buildUpgradeCheckData(String source, String newVersion, Long downloadSize)
+	//组装 checkSystemUpgrade 返回体：targetVersion <= 本地时 hasNewVersion=false
+	//（downloadSize 仅 GitHub 源可知；notes/pubDate 为 release 信息，前端按键悬停提示用）
+	private static JSONObject buildUpgradeCheckData(String source, JSONObject releaseEntry)
 	{
 		JSONObject data = new JSONObject();
 		data.put("currentVersion", getLocalSystemVersion());
 		boolean hasNewVersion = false;
+		String newVersion = releaseEntry != null ? releaseEntry.getString("version") : null;
 		if(newVersion != null)
 		{
 			Integer remoteVersion = encodeVersionToInt(newVersion);
@@ -2973,9 +2975,20 @@ public class ManageController extends BaseController{
 				hasNewVersion = true;
 				data.put("newVersion", newVersion);
 				data.put("source", source);
+				Long downloadSize = releaseEntry.getLong("size");
 				if(downloadSize != null)
 				{
 					data.put("downloadSize", downloadSize);
+				}
+				String notes = releaseEntry.getString("notes");
+				if(notes != null)
+				{
+					data.put("releaseNotes", notes);
+				}
+				String pubDate = releaseEntry.getString("pubDate");
+				if(pubDate != null)
+				{
+					data.put("releaseDate", pubDate);
 				}
 			}
 		}
@@ -3403,6 +3416,17 @@ public class ManageController extends BaseController{
 				{
 					continue;	//tag 不含合法版本号的 release 不作为检测目标
 				}
+				//release 正文与发布时间（前端按键悬停提示用）
+				String notes = stripReleaseNotes(r.getString("body"));
+				if(notes != null)
+				{
+					result.put("notes", notes);
+				}
+				String createdAt = r.getString("created_at");	//形如 2026-11-18T16:27:10+08:00
+				if(createdAt != null && createdAt.length() >= 10)
+				{
+					result.put("pubDate", createdAt.substring(0, 10));
+				}
 				result.put("_state", "found");
 				result.put("version", version);
 				Log.info("fetchGiteeLatestRelease() version:" + version);
@@ -3494,6 +3518,17 @@ public class ManageController extends BaseController{
 				{
 					continue;	//无 war 资产（如仅源码包）的 release 不可升级，看下一个
 				}
+				//release 正文与发布时间（前端按键悬停提示用）
+				String notes = stripReleaseNotes(r.getString("body"));
+				if(notes != null)
+				{
+					result.put("notes", notes);
+				}
+				String createdAt = r.getString("created_at");
+				if(createdAt != null && createdAt.length() >= 10)
+				{
+					result.put("pubDate", createdAt.substring(0, 10));
+				}
 				result.put("_state", "found");
 				result.put("version", version);
 				result.put("assetName", asset.getString("name"));
@@ -3515,6 +3550,27 @@ public class ManageController extends BaseController{
 		{
 			if(conn != null) conn.disconnect();
 		}
+	}
+
+	//release 正文转悬停提示用纯文本：截掉"软件下载"节（只留更新说明）、markdown 链接只留文字、限长 600 字
+	private static String stripReleaseNotes(String body)
+	{
+		if(body == null || body.trim().isEmpty())
+		{
+			return null;
+		}
+		String text = body.split("\\n\\s*[一二三四五六七八九十]+、\\s*软件下载")[0].trim();
+		text = text.replaceAll("\\[([^\\]]*)\\]\\([^)]*\\)", "$1");	//[微云](url) → 微云
+		text = text.trim();
+		if(text.isEmpty())
+		{
+			return null;
+		}
+		if(text.length() > 600)
+		{
+			text = text.substring(0, 600) + "...";
+		}
+		return text;
 	}
 
 	//在 release 资产里找 war 包：DocSystem.war（不区分大小写），回退 DocSystem-C.war

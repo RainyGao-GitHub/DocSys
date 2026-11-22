@@ -102,6 +102,34 @@
         .fb-restore-fail { font-size: 34px; color: #d9534f; }
         .fb-restore-text { font-size: 15px; color: #22324a; margin-top: 14px; }
         .fb-restore-detail { font-size: 12px; color: #8a9bb0; margin-top: 8px; word-break: break-all; }
+
+        /* Online upgrade button (navbar far right, right of language switch; hover title shows release notes) */
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn {
+            display: inline-block;
+            padding: 6px 18px;
+            margin: 8px 0 7px 12px;
+            line-height: 1.5;
+            border: 1px solid #2ABB9B;
+            border-radius: 16px;
+            color: #2ABB9B;
+            font-weight: 500;
+        }
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn:hover,
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn:focus {
+            background: #2ABB9B;
+            color: #fff;
+            text-decoration: none;
+        }
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn.upgrading {
+            border-color: #f0ad4e;
+            color: #f0ad4e;
+            cursor: default;
+        }
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn.upgrading:hover,
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn.upgrading:focus {
+            background: transparent;
+            color: #f0ad4e;
+        }
     </style>
 </head>
 
@@ -154,9 +182,6 @@
                 <li id="enterSystemLink"  style="display:none">
                     <a href="projects_en.html">Go Go Go>></a>
                 </li>
-                <li id="onlineUpgradeBtn" style="display:none">
-                    <a onclick="OnlineUpgrade.start()" title="Online Upgrade">Upgrade</a>
-                </li>
 				<li id="languageDiv">
 							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>English</span><span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
@@ -164,6 +189,9 @@
 								<li><a>English</a></li>
 							</ul>
 				</li>
+                <li id="onlineUpgradeBtn" style="display:none">
+                    <a class="online-upgrade-btn" onclick="OnlineUpgrade.start()" title="Online Upgrade">Upgrade</a>
+                </li>
                 <li style="list-style: none; display: inline">
                     <div class="clear"></div>
                 </li>
@@ -381,7 +409,7 @@
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript" src="index.js?v=20261122"></script>
 <script type="text/javascript" src="firstBootPanel.js?v=202611214"></script>
-<script type="text/javascript" src="onlineUpgrade.js?v=202611222"></script>
+<script type="text/javascript" src="onlineUpgrade.js?v=202611223"></script>
 <script type="text/javascript">
 //Online upgrade button dynamic texts (maintained per language file)
 var OnlineUpgradeLang = {
@@ -390,6 +418,7 @@ var OnlineUpgradeLang = {
     confirmTitle: "System Upgrade",
     confirmMsg: "New version {version} detected{sizePart}. Upgrade the system now?<br><br><strong>The system will restart automatically during the upgrade. Do not close this page.</strong>",
     sizePart: " (size {size})",
+    releasedFormat: " (released {date})",
     upgradeFailed: "Online upgrade failed",
     serverError: "Server error",
     ok: "OK",

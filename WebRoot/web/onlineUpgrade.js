@@ -6,7 +6,9 @@ var OnlineUpgrade = {
 	user: null,
 	state: "hidden",	//hidden | available | upgrading
 	version: null,		//检测到的新版本号
-	size: null,			//新版本 war 大小（字节）
+	size: null,			//新版本 war 大小（字节，仅 GitHub 检测源可知）
+	notes: null,		//新版本 release 更新说明（悬停提示用，可能取不到）
+	pubDate: null,		//新版本发布日期
 	taskId: null,		//升级任务 id（getUpgradeTask/onlineUpgrade 返回）
 	timer: null,		//轮询定时器
 };
@@ -41,6 +43,8 @@ OnlineUpgrade.reset = function()
 	OnlineUpgrade.state = "hidden";
 	OnlineUpgrade.version = null;
 	OnlineUpgrade.size = null;
+	OnlineUpgrade.notes = null;
+	OnlineUpgrade.pubDate = null;
 	OnlineUpgrade.taskId = null;
 	OnlineUpgrade.stopTimer();
 	$("#onlineUpgradeBtn").hide();
@@ -96,9 +100,13 @@ OnlineUpgrade.checkVersion = function()
 				OnlineUpgrade.state = "available";
 				OnlineUpgrade.version = ret.data.newVersion;
 				OnlineUpgrade.size = ret.data.downloadSize;
-				var text = OnlineUpgrade.lang("upgrade", "升级") + "(" + OnlineUpgrade.version + ")";
-				$("#onlineUpgradeBtn a").text(text).attr("title", text);
-				$("#mobileOnlineUpgradeBtn a").text(text).attr("title", text);
+				OnlineUpgrade.notes = ret.data.releaseNotes || null;
+				OnlineUpgrade.pubDate = ret.data.releaseDate || null;
+				//按键只显示"升级"（不带版本号），版本与 release 更新说明放悬停提示
+				var text = OnlineUpgrade.lang("upgrade", "升级");
+				var tooltip = OnlineUpgrade.buildTooltip();
+				$("#onlineUpgradeBtn a").text(text).attr("title", tooltip).removeClass("upgrading");
+				$("#mobileOnlineUpgradeBtn a").text(text).attr("title", tooltip);
 				$("#onlineUpgradeBtn").show();
 				$("#mobileOnlineUpgradeBtn").show();
 				return;
@@ -185,7 +193,7 @@ OnlineUpgrade.setUpgrading = function(taskId)
 	OnlineUpgrade.state = "upgrading";
 	OnlineUpgrade.taskId = taskId || null;
 	var text = OnlineUpgrade.lang("upgrading", "系统升级中...");
-	$("#onlineUpgradeBtn a").text(text).attr("title", text);
+	$("#onlineUpgradeBtn a").text(text).attr("title", text).addClass("upgrading");
 	$("#mobileOnlineUpgradeBtn a").text(text).attr("title", text);
 	$("#onlineUpgradeBtn").show();
 	$("#mobileOnlineUpgradeBtn").show();
@@ -289,6 +297,21 @@ OnlineUpgrade.pollState = function(delayTime)
 			}
 		});
 	}, delayTime);
+};
+
+//按键悬停提示：版本 +（发布日期）+ release 更新说明；取不到说明时只显示版本号
+OnlineUpgrade.buildTooltip = function()
+{
+	var text = OnlineUpgrade.version || "";
+	if(OnlineUpgrade.pubDate)
+	{
+		text += OnlineUpgrade.lang("releasedFormat", "（发布于 {date}）").replace("{date}", OnlineUpgrade.pubDate);
+	}
+	if(OnlineUpgrade.notes)
+	{
+		text += "\n\n" + OnlineUpgrade.notes;
+	}
+	return text;
 };
 
 OnlineUpgrade.formatSize = function(bytes)

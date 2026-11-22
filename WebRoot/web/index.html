@@ -102,6 +102,34 @@
         .fb-restore-fail { font-size: 34px; color: #d9534f; }
         .fb-restore-text { font-size: 15px; color: #22324a; margin-top: 14px; }
         .fb-restore-detail { font-size: 12px; color: #8a9bb0; margin-top: 8px; word-break: break-all; }
+
+        /* 在线升级按键（导航栏最右侧、语言切换右侧，带外框；悬停 title 显示新版本 release 信息） */
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn {
+            display: inline-block;
+            padding: 6px 18px;
+            margin: 8px 0 7px 12px;
+            line-height: 1.5;
+            border: 1px solid #2ABB9B;
+            border-radius: 16px;
+            color: #2ABB9B;
+            font-weight: 500;
+        }
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn:hover,
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn:focus {
+            background: #2ABB9B;
+            color: #fff;
+            text-decoration: none;
+        }
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn.upgrading {
+            border-color: #f0ad4e;
+            color: #f0ad4e;
+            cursor: default;
+        }
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn.upgrading:hover,
+        .navbar-nav.navbar-right #onlineUpgradeBtn > a.online-upgrade-btn.upgrading:focus {
+            background: transparent;
+            color: #f0ad4e;
+        }
     </style>
 </head>
 
@@ -157,9 +185,6 @@
                 <li id="enterSystemLink"  style="display:none">
                     <a href="projects.html">进入系统>></a>
                 </li>
-                <li id="onlineUpgradeBtn" style="display:none">
-                    <a onclick="OnlineUpgrade.start()" title="在线升级">升级</a>
-                </li>
 				<li id="languageDiv">
 							<a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span>中文</span><span class="caret"></span></a>
 							<ul class="dropdown-menu" role="menu">
@@ -167,6 +192,9 @@
 								<li><a href="/DocSystem/web/index_en.html">English</a></li>
 							</ul>
 				</li>
+                <li id="onlineUpgradeBtn" style="display:none">
+                    <a class="online-upgrade-btn" onclick="OnlineUpgrade.start()" title="在线升级">升级</a>
+                </li>
                 <li style="list-style: none; display: inline">
                     <div class="clear"></div>
                 </li>
@@ -386,7 +414,7 @@
 <script type="text/javascript" src="js/logon.js"></script>
 <script type="text/javascript" src="index.js?v=20261122"></script>
 <script type="text/javascript" src="firstBootPanel.js?v=202611214"></script>
-<script type="text/javascript" src="onlineUpgrade.js?v=202611222"></script>
+<script type="text/javascript" src="onlineUpgrade.js?v=202611223"></script>
 <script type="text/javascript">
 //在线升级按键动态文案（随语言文件维护）
 var OnlineUpgradeLang = {
@@ -395,6 +423,7 @@ var OnlineUpgradeLang = {
     confirmTitle: "系统升级",
     confirmMsg: "检测到新版本 {version}{sizePart}，是否升级系统？<br><br><strong>升级过程中系统将自动重启，请勿关闭页面。</strong>",
     sizePart: "（大小 {size}）",
+    releasedFormat: "（发布于 {date}）",
     upgradeFailed: "在线升级失败",
     serverError: "服务器异常",
     ok: "确认",

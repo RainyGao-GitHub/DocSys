@@ -3,6 +3,13 @@
 > 状态：**T1-T5 实施完成 + dev 联调完成 + 检测源 Gitee 优先改造完成（2026-11-22）**。剩余：release 包 monitor 阶段全流程（T6 后半，需用户环境）；可选：dev 网络好时补一次完整 1.4GB 下载
 > 设计文档：`devDocs/系统在线升级方案.md`（含 §2.3 检测源裁定：Gitee 优先 + GitHub 兜底，下载固定 GitHub）
 
+## 增量改造 2：按键 UI（2026-11-22 傍晚，用户裁定）
+
+- 按键移到**导航栏最右侧（语言切换右侧）**（ch/en 两页；mobile 下拉保持原位）；文字只显示"升级"（不带版本号）；样式改为**带外框胶囊按钮**（站点绿 #2ABB9B 外框、hover 填充白字；升级中态琥珀色边框禁点）；CSS 内联在两 html（.online-upgrade-btn）。
+- **悬停 title 显示新版本 release 信息**：`版本（发布于 日期）\n\n更新说明`——后端 checkSystemUpgrade 两路拉取均带出 release 正文与 created_at（缓存 10 分钟一并缓存），`stripReleaseNotes` 清洗（截掉"软件下载"节、markdown 链接只留文字、限长 600）；取不到说明时只显示版本号。
+- 实测（Gitee 源）：title = "2.02.91（发布于 2026-11-18）\n\n一、新增功能…"（微云/GitHub 下载链接已剥离）✅；截图确认按键位置/外框/对齐 ✅；en 页结构核对 ✅。onlineUpgrade.js bump v=202611223。
+- 设计文档 §5 已同步。
+
 ## 增量改造（2026-11-22 下午，用户裁定"版本信息先查Gitee再查Github"）
 
 背景：用户发布流程为 Gitee 先行、war 稍后传 GitHub；GitHub 国内经常整体不通，检测依赖 GitHub 会导致"发了新版用户看不到按键"。
