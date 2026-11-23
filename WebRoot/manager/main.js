@@ -2262,16 +2262,45 @@ function showSystemUpgrade(){
             		systemInfo.isOnlyOfficeUsed = 0;	//default use FileConverter
             	}
         		
-            	$Func.render($("#container"),"systemUpgrade" + langExt,{"value":systemInfo});
+            	$Func.render($("#container"),"systemUpgrade" + langExt,{"value":systemInfo}, bindSystemUpgradeSupportCheck);
             }
-            else 
+            else
             {
 	        	showErrorMessage(_Lang("获取系统信息失败", " : ", ret.msgInfo));
             	console.log(ret.msgInfo);
             }
         },
         error : function () {
-        	showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
+            showErrorMessage(_Lang("获取系统信息失败", " : ", "服务器异常"));
+        }
+    });
+}
+
+//系统升级能力判定（monitor 看门狗门禁）：不支持时禁用"系统升级"按钮并显示原因
+//（升级按钮走文件选择上传，若等用户传完 1.4GB war 才被后端拒绝体验太差，故入口先禁）
+var systemUpgradeDisabledReason = null;
+function bindSystemUpgradeSupportCheck(){
+	console.log("bindSystemUpgradeSupportCheck()");
+	systemUpgradeDisabledReason = null;
+	$.ajax({
+        url : "/DocSystem/Manage/checkSystemUpgrade.do",
+        type : "post",
+        dataType : "json",
+        data : {},
+        success : function (ret) {
+        	if( "ok" == ret.status && ret.data && ret.data.upgradeSupported === false)
+        	{
+        		systemUpgradeDisabledReason = ret.data.upgradeDisabledReason || "当前部署不支持在线升级";
+        		var btn = $("#btnUpgradeSystem");
+        		if(btn.length > 0)	//页面已切走时不处理
+        		{
+	        		btn.prop("disabled", true).attr("title", systemUpgradeDisabledReason);
+	        		$("#systemUpgradeDisableReason").text("（" + systemUpgradeDisabledReason + "）").show();
+        		}
+        	}
+        },
+        error : function () {
+        	console.log("bindSystemUpgradeSupportCheck() 查询升级能力失败，不改变默认可用状态");
         }
     });
 }
@@ -4156,7 +4185,14 @@ var gStatus = 0;
 
 function upgradeSystem(){
 	console.log("upgradeSystem()");
-	
+
+	//升级能力门禁兜底（按钮已禁用，此处防直接调用/页面未刷新）
+	if(systemUpgradeDisabledReason != null)
+	{
+		showErrorMessage(_Lang(systemUpgradeDisabledReason));
+		return;
+	}
+
 	switch(gStatus)
 	{
 	case 1:

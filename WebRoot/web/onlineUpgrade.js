@@ -98,6 +98,14 @@ OnlineUpgrade.checkVersion = function()
 		timeout: 60000,
 		data: {},
 		success: function(ret) {
+			if("ok" == ret.status && ret.data && ret.data.upgradeSupported === false)
+			{
+				//升级能力被禁用（无 monitor 看门狗/安装器部署）：不显示按键
+				//（原因见接口 upgradeDisabledReason，管理后台系统升级页有完整提示）
+				console.log("OnlineUpgrade.checkVersion 升级功能被禁用:", ret.data.upgradeDisabledReason);
+				OnlineUpgrade.reset();
+				return;
+			}
 			if("ok" == ret.status && ret.data && ret.data.hasNewVersion)
 			{
 				OnlineUpgrade.state = "available";

@@ -3,6 +3,16 @@
 > 状态：**T1-T5 实施完成 + dev 联调完成 + 检测源 Gitee 优先改造完成（2026-11-22）**。剩余：release 包 monitor 阶段全流程（T6 后半，需用户环境）；可选：dev 网络好时补一次完整 1.4GB 下载
 > 设计文档：`devDocs/系统在线升级方案.md`（含 §2.3 检测源裁定：Gitee 优先 + GitHub 兜底，下载固定 GitHub）
 
+## 增量改造 4：升级能力判定 monitor 门禁（2026-11-22 晚，用户裁定）
+
+背景：安装器部署无 monitor 看门狗，upgrade.trigger 无人消费会把系统卡死在"系统升级中"并锁死后续升级。用户裁定方案 = **"B 的体验 + A 的时机"合体**（入口禁用 + 请求时检测非启动打标），**不考虑老版本兼容**（存量用户手动升级为主）。
+
+- **判定顺序**（30s 缓存，`getUpgradeUnsupportedReason()`）：① `docSysConfig.properties` 的 `upgradeAllowNoMonitor=true` 强制放行（dev 逃生门，优先级最高）→ ② `docSys.ini/deployType=setup`（新安装器写入）→ 禁用"安装包部署…" → ③ `<包根>/tmp/monitor.pid` 存在且进程存活 → 放行 → ④ 其余 → 禁用"未检测到monitor进程…"。包根 = webappsPath 上两级；进程存活：Win tasklist /FI（找不到输出 INFO 且退出码 0，按输出判）/ Unix kill -0，3s 超时。
+- **三层门禁**：checkSystemUpgrade 早退返回 `upgradeSupported:false + upgradeDisabledReason`（不烧 Gitee/GitHub 配额）→ 首页按键隐藏（onlineUpgrade.js checkVersion 前置分支）；管理后台 systemUpgrade 页渲染后回调 `bindSystemUpgradeSupportCheck` 禁用"系统升级"按钮 + 红字原因（防 1.4GB 上传完才被拒）；onlineUpgrade/upgradeSystem 认证后第一步硬拒（upgradeSystem 的 monitor 门禁在文件名校验**之前**——部署级拒绝先于请求级校验）。
+- **dev 实测六场景全过**：① 无配置无 pid → 三接口拒绝+按键隐藏+管理后台按钮灰+红字原因（截图核对）② monitor.pid 写活 pid → 按键恢复 ③ 死 pid → 禁用（缓存过期后刷新页面隐藏）④ deployType=setup → 安装包专属文案 ⑤ 配置逃生门 → 强制放行（优先级高于 deployType）⑥ 撤/恢复配置 → 管理后台按钮随 30s 缓存联动。
+- **dev 常态**：`docSys.ini/docSysConfig.properties` 已留 `upgradeAllowNoMonitor=true`（注释标明生产不要配）；version 仍 2.02.90（用户测试用）。⚠️ 若管理后台"保存系统设置"会重写该 properties 文件，此 key 可能丢失，丢了重新加即可。
+- **遗留**：安装器构建工程需在安装时写 `deployType=setup`（否则走通用提示，功能等价）；manager"重启服务"（restart.trigger 同依赖 monitor）未纳入本期，可同机制扩展；onlineUpgrade.js bump v=202611225；manager main.js/main.html 无 ?v= 机制（部署后需硬刷新，历史已知）。
+
 ## 增量改造 3：悬停面板可细读可跳转（2026-11-22 傍晚，用户裁定）
 
 - 原生 title 换成**自定义悬停面板**：悬停"升级"按键弹出（右对齐按键下方、420px 卡片、站点风格）；**鼠标移入面板不收起**（250ms 延时收起 + 移入取消，可细读长说明，内容超 60vh 内部滚动）；离开按键与面板都收起；**点击面板打开对应 release 页面**（新窗口）。
