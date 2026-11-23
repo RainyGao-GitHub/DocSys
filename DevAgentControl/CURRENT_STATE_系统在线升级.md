@@ -3,7 +3,17 @@
 > 状态：**T1-T5 实施完成 + dev 联调完成 + 检测源 Gitee 优先改造完成（2026-11-22）**。剩余：release 包 monitor 阶段全流程（T6 后半，需用户环境）；可选：dev 网络好时补一次完整 1.4GB 下载
 > 设计文档：`devDocs/系统在线升级方案.md`（含 §2.3 检测源裁定：Gitee 优先 + GitHub 兜底，下载固定 GitHub）
 
-## 增量改造 4：升级能力判定 monitor 门禁（2026-11-22 晚，用户裁定）
+## 增量改造 5：门禁简化为仅 deployType 标记（2026-11-22 晚，用户二次裁定；**未提交，待用户确认**）
+
+用户裁定：只依赖 `docSys.ini/deployType=setup` 标记即可。**已删除** pid 存活检测（isMonitorProcessAlive/isPidProcessAlive/tasklist/kill -0）、30 秒缓存、`upgradeAllowNoMonitor` 逃生门（dev 的配置行也已删——无标记天然可用）；`getUpgradeUnsupportedReason()` 只剩读 deployType 文件一条路。三层门禁结构不变（首页隐藏/后台禁用+原因/接口硬拒）。
+
+放弃 pid 检测的理由（已写入方案文档 §4.5）：**包脚本/monitor 不随 war 升级更新**（docsys_upgrade 只替换 webapps），存量升级后跑老包 monitor（是否写 pid 不可考，`WebRoot/web/sales` 被 gitignore 仓库外维护），pid 误判会把主流网页升级路径永久锁死；标记零误伤。
+
+- dev 实测：① 无标记无配置 → 按键恢复、检测正常（不再需要逃生门）② 写 deployType=setup → 三接口拒绝（安装包文案）+ 首页隐藏 + 管理后台按钮灰红字 ③ 删标记 → 恢复。测试标记已清理。
+- ⚠️ `842d148ef`（混合方案）已提交；本次简化在工作区未提交，用户确认后自行提交（2026-11-22 用户指示：不要代为 commit）。
+- 安装器侧要求（实现标记写入时注意）：只有确认无 monitor 的安装器变体才写 setup——**Mac 控制台设计带 monitor 看门狗，Mac 安装器不应写**；Windows 安装器应写。
+
+## 增量改造 4：升级能力判定 monitor 门禁（2026-11-22 晚，用户裁定；**已被改造 5 简化取代**）
 
 背景：安装器部署无 monitor 看门狗，upgrade.trigger 无人消费会把系统卡死在"系统升级中"并锁死后续升级。用户裁定方案 = **"B 的体验 + A 的时机"合体**（入口禁用 + 请求时检测非启动打标），**不考虑老版本兼容**（存量用户手动升级为主）。
 

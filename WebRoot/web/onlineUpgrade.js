@@ -1,5 +1,5 @@
 //首页导航栏"在线升级"按键：仅超级管理员（type==2）可见
-//三态：隐藏（非超管/无新版/升级完成）/ "升级(x.y.z)"（GitHub 检测到新版本）/ "系统升级中..."（升级任务运行中或 monitor 重启中）
+//三态：隐藏（非超管/无新版/升级完成或被禁用）/ "升级"（Gitee 优先检测到新版本）/ "系统升级中..."（升级任务运行中或 monitor 重启中）
 //升级执行走后端 onlineUpgrade.do：GitHub 下载 war 后与后台上传 war 升级完全相同的流程（executeWarUpgrade）
 //升级中状态跨刷新/重开：页面加载时先查 getUpgradeTask.do 恢复显示；服务重启期间接口失败按"仍升级中"保持
 var OnlineUpgrade = {
@@ -100,7 +100,7 @@ OnlineUpgrade.checkVersion = function()
 		success: function(ret) {
 			if("ok" == ret.status && ret.data && ret.data.upgradeSupported === false)
 			{
-				//升级能力被禁用（无 monitor 看门狗/安装器部署）：不显示按键
+				//升级能力被禁用（deployType=setup 安装器部署）：不显示按键
 				//（原因见接口 upgradeDisabledReason，管理后台系统升级页有完整提示）
 				console.log("OnlineUpgrade.checkVersion 升级功能被禁用:", ret.data.upgradeDisabledReason);
 				OnlineUpgrade.reset();

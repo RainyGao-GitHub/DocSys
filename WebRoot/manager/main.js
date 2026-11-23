@@ -2276,7 +2276,7 @@ function showSystemUpgrade(){
     });
 }
 
-//系统升级能力判定（monitor 看门狗门禁）：不支持时禁用"系统升级"按钮并显示原因
+//系统升级能力判定（deployType=setup 安装器部署门禁）：不支持时禁用"系统升级"按钮并显示原因
 //（升级按钮走文件选择上传，若等用户传完 1.4GB war 才被后端拒绝体验太差，故入口先禁）
 var systemUpgradeDisabledReason = null;
 function bindSystemUpgradeSupportCheck(){

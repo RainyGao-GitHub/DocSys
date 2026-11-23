@@ -2731,7 +2731,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		//升级能力门禁（monitor 看门狗判定）：无 monitor 时升级会卡死在"等待升级"，直接拒绝
+		//升级能力门禁（deployType=setup 安装器部署判定）：安装器部署无法执行升级，直接拒绝
 		String unsupportedReason = getUpgradeUnsupportedReason();
 		if(unsupportedReason != null)
 		{
@@ -2907,144 +2907,24 @@ public class ManageController extends BaseController{
 	//两个升级入口（upgradeSystem/onlineUpgrade）"门禁检查 → 创建任务"的互斥锁
 	private static final Object upgradeGateLock = new Object();
 
-	// ==================== 升级能力判定（monitor 看门狗门禁，2026-11-22 用户裁定） ====================
+	// ==================== 升级能力判定（安装器部署门禁，2026-11-22 用户两次裁定后定稿） ====================
 	//安装器部署（Windows/Mac 安装程序）没有 monitor 看门狗：upgrade.trigger 创建后无人消费，
-	//系统会永久卡在"系统升级中"并锁死后续升级，因此升级功能需要禁用。
-	//判定为请求时惰性检测 + 短缓存（monitor 可中途启停，不做启动期一次性打标，避免时序与过期问题）：
-	//① docSysConfig.properties 配置 upgradeAllowNoMonitor=true 强制放行（dev/特殊场景逃生门）；
-	//② docSys.ini/deployType=setup（新安装器安装时写入的部署标记）→ 禁用，提示下载新安装包；
-	//③ <包根>/tmp/monitor.pid 存在且进程存活（monitor_start 启动时写入自己的 pid）→ 放行；
-	//④ 其余（无 pid 文件或进程已死）→ 禁用（2026-11-22 裁定：不考虑老版本兼容，存量用户以手动升级为主）
-	private static volatile JSONObject upgradeSupportCache = null;	//{_time, _supported, _reason}
-	private static final long UPGRADE_SUPPORT_CACHE_MS = 30 * 1000;
+	//系统会永久卡在"系统升级中"并锁死后续升级，因此升级功能（首页在线升级 + 管理后台上传升级）需要禁用。
+	//判定依据只有一个：docSys.ini/deployType 文件内容为 setup（新安装器安装时写入的部署标记）。
+	//不依赖 monitor.pid 存活检测——包脚本/monitor 不随 war 升级更新（docsys_upgrade 只替换 webapps），
+	//存量用户升级后跑的仍是老包 monitor（其是否写 pid 不可考），pid 检测一旦误判会把主流网页升级路径
+	//永久锁死；标记方案零误伤：被禁的恰好就是确实不能升级的安装器部署。
+	//注意：只有"确认无 monitor 的安装器变体"才应写 setup（Mac 控制台设计带 monitor 看门狗，不应写）。
 
-	//返回 null=支持在线升级；否则返回禁用原因（30 秒缓存）
+	//返回 null=支持在线升级；否则返回禁用原因
 	private static String getUpgradeUnsupportedReason()
 	{
-		JSONObject cache = upgradeSupportCache;
-		if(cache != null && System.currentTimeMillis() - cache.getLongValue("_time") < UPGRADE_SUPPORT_CACHE_MS)
-		{
-			return cache.getBooleanValue("_supported") ? null : cache.getString("_reason");
-		}
-		String reason = detectUpgradeUnsupportedReason();
-		JSONObject entry = new JSONObject();
-		entry.put("_time", System.currentTimeMillis());
-		entry.put("_supported", reason == null);
-		if(reason != null)
-		{
-			entry.put("_reason", reason);
-		}
-		upgradeSupportCache = entry;
-		Log.info("getUpgradeUnsupportedReason() " + (reason == null ? "supported" : reason));
-		return reason;
-	}
-
-	private static String detectUpgradeUnsupportedReason()
-	{
-		//① 逃生门：dev/特殊部署显式放开（用户级 ini 配置优先，回退 webapp 默认配置）
-		if(isUpgradeAllowNoMonitorConfigured(docSysIniPath + "docSysConfig.properties")
-			|| isUpgradeAllowNoMonitorConfigured(docSysWebPath + "WEB-INF/classes/docSysConfig.properties"))
-		{
-			return null;
-		}
-
-		//② 安装器部署标记（新安装器安装时写入）
 		String deployType = FileUtil.readDocContentFromFile(docSysIniPath, "deployType");
 		if(deployType != null && "setup".equals(deployType.trim()))
 		{
 			return "安装包部署不支持在线升级，请下载新版安装包升级";
 		}
-
-		//③ monitor 看门狗存活（pid 文件 + 进程存活双重判定；monitor_stop 只 kill 不删文件）
-		if(isMonitorProcessAlive())
-		{
-			return null;
-		}
-		return "未检测到monitor进程（升级需要monitor执行替换与重启），请用发行包的monitor_start启动系统或下载新版安装包";
-	}
-
-	private static boolean isUpgradeAllowNoMonitorConfigured(String configPath)
-	{
-		try
-		{
-			String allow = ReadProperties.getValue(configPath, "upgradeAllowNoMonitor");
-			return "true".equalsIgnoreCase(allow);
-		}
-		catch(Exception e)
-		{
-			return false;
-		}
-	}
-
-	//包根 = webapps 上两级（webapps → tomcat → 包根），monitor.pid 由 monitor_start 启动时写入
-	private static boolean isMonitorProcessAlive()
-	{
-		try
-		{
-			File pkgRoot = new File(webappsPath).getParentFile().getParentFile();
-			if(pkgRoot == null)
-			{
-				return false;
-			}
-			String pidStr = FileUtil.readDocContentFromFile(pkgRoot.getPath() + "/", "tmp/monitor.pid");
-			if(pidStr == null || pidStr.trim().isEmpty())
-			{
-				return false;
-			}
-			long pid = Long.parseLong(pidStr.trim());
-			return isPidProcessAlive(pid);
-		}
-		catch(Exception e)
-		{
-			Log.info("isMonitorProcessAlive() 异常:" + e.getMessage());
-			return false;
-		}
-	}
-
-	//跨平台进程存活检查：Windows tasklist /FI（找不到时输出 INFO 且退出码 0，须按输出判断）；Unix kill -0
-	private static boolean isPidProcessAlive(long pid)
-	{
-		Process p = null;
-		try
-		{
-			boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
-			if(isWindows)
-			{
-				p = Runtime.getRuntime().exec(new String[]{"tasklist", "/FI", "PID eq " + pid});
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				InputStream is = p.getInputStream();
-				byte[] buffer = new byte[4 * 1024];
-				int n;
-				while((n = is.read(buffer)) != -1)
-				{
-					baos.write(buffer, 0, n);
-				}
-				is.close();
-				if(p.waitFor(3, TimeUnit.SECONDS) == false)
-				{
-					return false;
-				}
-				String output = baos.toString();
-				return output.contains("No tasks") == false && output.matches("(?s).*\\b" + pid + "\\b.*");
-			}
-			else
-			{
-				p = Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", "kill -0 " + pid});
-				return p.waitFor(3, TimeUnit.SECONDS) && p.exitValue() == 0;
-			}
-		}
-		catch(Exception e)
-		{
-			Log.info("isPidProcessAlive(" + pid + ") 异常:" + e.getMessage());
-			return false;
-		}
-		finally
-		{
-			if(p != null)
-			{
-				p.destroy();
-			}
-		}
+		return null;
 	}
 
 	/**************** checkSystemUpgrade（在线升级检测，超管） ******************
@@ -3065,7 +2945,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		//升级能力门禁（monitor 看门狗判定）：不支持时直接返回，不消耗 Gitee/GitHub 检测配额
+		//升级能力门禁（deployType=setup 安装器部署判定）：不支持时直接返回，不消耗 Gitee/GitHub 检测配额
 		String unsupportedReason = getUpgradeUnsupportedReason();
 		if(unsupportedReason != null)
 		{
@@ -3185,7 +3065,7 @@ public class ManageController extends BaseController{
 			return;
 		}
 
-		//升级能力门禁（monitor 看门狗判定）：无 monitor 时升级会卡死在"等待升级"，直接拒绝
+		//升级能力门禁（deployType=setup 安装器部署判定）：安装器部署无法执行升级，直接拒绝
 		String unsupportedReason = getUpgradeUnsupportedReason();
 		if(unsupportedReason != null)
 		{
